@@ -2,130 +2,132 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const {
-  listOrganizations,
-  getOrganizationById,
-  getOfficersByOrganizationId,
   addOfficer,
-  removeOfficer,
+  archiveOrganization,
+  createOrganization,
+  getOrganizationById,
   getOrganizationsForStudentEmail,
   isStudentOfficerForOrg,
+  listOrganizations,
+  removeOfficer,
+  restoreOrganization,
+  updateOrganization,
   updateOrganizationBylaws,
 } = await import("../src/lib/organizationsRepo.js");
 
-const { query, queryOne } = await import("../src/lib/postgres.js");
+const { pool, query, queryOne } = await import("../src/lib/postgres.js");
 
-test("OSAS Organization & Whitelist Architecture", async (t) => {
-  await t.test("1. Seeded student organizations exist in PostgreSQL", async () => {
-    const orgs = await listOrganizations();
-    assert.ok(Array.isArray(orgs), "Should return array of organizations");
-    assert.ok(orgs.length >= 5, "Should have at least 5 seeded organizations");
+test.after(async () => pool.end());
 
-    const hhco = orgs.find((o) => o.id === "helping-hands");
-    assert.ok(hhco, "Helping Hands Community Organization should exist");
-    assert.equal(hhco.acronym, "HHCO");
-    assert.equal(hhco.category, "Non-Academic");
-    assert.equal(hhco.status, "Active");
+test("OSAS organization and officer CRUD", async (t) => {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const orgAId = `crud-audit-${suffix}-a`;
+  const orgBId = `crud-audit-${suffix}-b`;
+  const orgCId = `crud-audit-${suffix}-c`;
+  const orgDId = `crud-audit-${suffix}-d`;
+  const orgEId = `crud-audit-${suffix}-e`;
+  const officerEmail = `crud-audit-${suffix}@pup.local`;
+  const testFilename = `crud-audit-${suffix}.pdf`;
+  const orgIds = [orgAId, orgBId, orgCId, orgDId, orgEId];
 
-    const jpcs = orgs.find((o) => o.id === "jpcs");
-    assert.ok(jpcs, "JPCS should exist");
-    assert.equal(jpcs.acronym, "JPCS");
-    assert.equal(jpcs.category, "Academic");
+  t.after(async () => {
+    await query("DELETE FROM organization_bylaws_versions WHERE organization_id = ANY($1::text[])", [orgIds]);
+    await query("DELETE FROM organization_officers WHERE organization_id = ANY($1::text[])", [orgIds]);
+    await query("DELETE FROM student_organizations WHERE id = ANY($1::text[])", [orgIds]);
   });
 
-  await t.test("2. Whitelist correctly identifies marianocedrick412@gmail.com as President of Helping Hands", async () => {
-    const orgs = await getOrganizationsForStudentEmail("marianocedrick412@gmail.com");
-    assert.ok(Array.isArray(orgs), "Should return array");
-    assert.equal(orgs.length, 1, "Should have exactly 1 whitelisted organization");
-    assert.equal(orgs[0].organization_id, "helping-hands");
-    assert.equal(orgs[0].officer_position, "President");
-    assert.equal(orgs[0].student_name, "Cedrick Mariano");
-
-    const isOfficer = await isStudentOfficerForOrg("marianocedrick412@gmail.com", "helping-hands");
-    assert.ok(isOfficer, "Should be verified officer for helping-hands");
-    assert.equal(isOfficer.position, "President");
-
-    // Should NOT be officer for JPCS
-    const isJpcsOfficer = await isStudentOfficerForOrg("marianocedrick412@gmail.com", "jpcs");
-    assert.equal(isJpcsOfficer, null, "Should NOT be verified officer for jpcs");
-  });
-
-  await t.test("3. Whitelist correctly returns multiple affiliations for test.student@pup.local", async () => {
-    const orgs = await getOrganizationsForStudentEmail("test.student@pup.local");
-    assert.ok(orgs.length >= 2, "Should have at least 2 affiliations (Helping Hands & JPCS)");
-
-    const hhco = orgs.find((o) => o.organization_id === "helping-hands");
-    assert.ok(hhco, "Should be affiliated with Helping Hands");
-    assert.equal(hhco.officer_position, "Secretary");
-
-    const jpcs = orgs.find((o) => o.organization_id === "jpcs");
-    assert.ok(jpcs, "Should be affiliated with JPCS");
-    assert.equal(jpcs.officer_position, "Vice President");
-  });
-
-  await t.test("4. Unwhitelisted student email returns empty array and null verification", async () => {
-    const orgs = await getOrganizationsForStudentEmail("unauthorized.student@pup.local");
-    assert.deepEqual(orgs, [], "Unwhitelisted email should have no affiliations");
-
-    const isOfficer = await isStudentOfficerForOrg("unauthorized.student@pup.local", "helping-hands");
-    assert.equal(isOfficer, null, "Should return null for unwhitelisted student");
-  });
-
-  await t.test("5. Dynamic add and remove officer on whitelist", async () => {
-    const tempEmail = `temp.auditor.${Date.now()}@pup.local`;
-    const newOfficer = await addOfficer("helping-hands", {
-      email: tempEmail,
-      position: "Auditor",
-      studentName: "Audit Test Student",
-      studentNo: "2024-99999-SJ-0",
+  await t.test("creates, lists, reads, updates, archives, restores, and deletes organizations", async () => {
+    const created = await createOrganization({
+      id: orgAId,
+      name: `CRUD Audit Organization ${suffix}`,
+      acronym: `CRUD${suffix}`,
+      category: "Academic",
+      description: "Temporary fixture for the OSAS organization CRUD test.",
     });
-    assert.ok(newOfficer?.id, "New officer should have an ID");
-    assert.equal(newOfficer.email, tempEmail);
-    assert.equal(newOfficer.position, "Auditor");
+    assert.equal(created.id, orgAId);
+    assert.ok((await listOrganizations({ search: `CRUD Audit Organization ${suffix}` })).some((org) => org.id === orgAId));
 
-    // Verify lookup succeeds
-    const checkBefore = await isStudentOfficerForOrg(tempEmail, "helping-hands");
-    assert.ok(checkBefore, "Should find newly added officer");
+    const read = await getOrganizationById(orgAId);
+    assert.equal(read.name, `CRUD Audit Organization ${suffix}`);
 
-    // Remove officer
-    const removed = await removeOfficer("helping-hands", newOfficer.id);
-    assert.equal(removed, true, "Removal should succeed");
+    const updated = await updateOrganization(orgAId, {
+      name: `Updated CRUD Audit Organization ${suffix}`,
+      description: "Updated temporary fixture.",
+    });
+    assert.equal(updated.name, `Updated CRUD Audit Organization ${suffix}`);
+    assert.equal((await getOrganizationById(orgAId)).description, "Updated temporary fixture.");
 
-    // Verify lookup fails
-    const checkAfter = await isStudentOfficerForOrg(tempEmail, "helping-hands");
-    assert.equal(checkAfter, null, "Officer should no longer be found");
+    await archiveOrganization(orgAId);
+    assert.equal((await getOrganizationById(orgAId)).status, "Archived");
+    assert.ok(!(await listOrganizations({ search: `Updated CRUD Audit Organization ${suffix}` })).some((org) => org.id === orgAId));
+    assert.ok((await listOrganizations({ status: "Archived", search: `Updated CRUD Audit Organization ${suffix}` })).some((org) => org.id === orgAId));
+
+    await restoreOrganization(orgAId);
+    assert.equal((await getOrganizationById(orgAId)).status, "Active");
+    assert.ok((await listOrganizations({ search: `Updated CRUD Audit Organization ${suffix}` })).some((org) => org.id === orgAId));
+
+    await query("DELETE FROM student_organizations WHERE id = $1", [orgAId]);
+    assert.equal(await getOrganizationById(orgAId), null);
   });
 
-  await t.test("6. Constitution & By-Laws (CBL) metadata updates", async () => {
-    const testFilename = `test-cbl-${Date.now()}.pdf`;
-    const updated = await updateOrganizationBylaws("helping-hands", {
+  await t.test("adds, reads, and removes officer affiliations", async () => {
+    await createOrganization({ id: orgCId, name: `CRUD Officer Organization A ${suffix}` });
+    await createOrganization({ id: orgDId, name: `CRUD Officer Organization B ${suffix}` });
+
+    const officerA = await addOfficer(orgCId, {
+      email: officerEmail,
+      position: "President",
+      studentName: "CRUD Audit Student",
+      studentNo: `CRUD-${suffix}`,
+    });
+    const officerB = await addOfficer(orgDId, {
+      email: officerEmail,
+      position: "Secretary",
+      studentName: "CRUD Audit Student",
+      studentNo: `CRUD-${suffix}`,
+    });
+    assert.ok(officerA.id);
+    assert.ok(officerB.id);
+
+    const affiliations = await getOrganizationsForStudentEmail(officerEmail);
+    assert.deepEqual(
+      affiliations.map((entry) => entry.organization_id).sort(),
+      [orgCId, orgDId].sort(),
+    );
+    assert.equal((await isStudentOfficerForOrg(officerEmail, orgCId)).position, "President");
+
+    assert.equal(await removeOfficer(orgCId, officerA.id), true);
+    assert.equal(await isStudentOfficerForOrg(officerEmail, orgCId), null);
+    assert.equal((await isStudentOfficerForOrg(officerEmail, orgDId)).position, "Secretary");
+    assert.equal(await removeOfficer(orgDId, officerB.id), true);
+    assert.deepEqual(await getOrganizationsForStudentEmail(officerEmail), []);
+  });
+
+  await t.test("updates bylaws metadata and reads the approved version", async () => {
+    await createOrganization({ id: orgEId, name: `CRUD Bylaws Organization ${suffix}` });
+    const updated = await updateOrganizationBylaws(orgEId, {
       storageFilename: testFilename,
-      originalFilename: "Helping-Hands-Official-CBL-2026.pdf",
-      sizeBytes: 1048576,
+      originalFilename: "Temporary-CRUD-Audit-CBL.pdf",
+      sizeBytes: 32,
       mimeType: "application/pdf",
     });
-    assert.ok(updated, "Update should succeed");
     assert.equal(updated.bylaws_storage_filename, testFilename);
-    assert.equal(updated.bylaws_original_filename, "Helping-Hands-Official-CBL-2026.pdf");
-
-    const org = await getOrganizationById("helping-hands");
-    assert.equal(org.bylaws_storage_filename, testFilename);
+    assert.equal(updated.bylaws_original_filename, "Temporary-CRUD-Audit-CBL.pdf");
+    assert.equal((await getOrganizationById(orgEId)).bylaws_size_bytes, "32");
   });
 
-  await t.test("7. Module assignment: student_organizations is enabled for OSAS and disabled for Registrar", async () => {
+  await t.test("keeps OSAS module assignment enabled and Registrar disabled", async () => {
     const osasModule = await queryOne(
-      "SELECT enabled FROM office_modules WHERE office_id = 'osas' AND module_id = 'student_organizations'"
+      "SELECT enabled FROM office_modules WHERE office_id = 'osas' AND module_id = 'student_organizations'",
     );
-    assert.ok(osasModule, "OSAS module entry must exist");
-    assert.equal(osasModule.enabled, true, "student_organizations must be enabled for OSAS");
+    assert.equal(osasModule?.enabled, true);
 
-    const regModule = await queryOne(
-      "SELECT enabled FROM office_modules WHERE office_id = 'registrar' AND module_id = 'student_organizations'"
+    const registrarModule = await queryOne(
+      "SELECT enabled FROM office_modules WHERE office_id = 'registrar' AND module_id = 'student_organizations'",
     );
-    assert.ok(regModule, "Registrar module entry must exist");
-    assert.equal(regModule.enabled, false, "student_organizations must NOT be enabled for Registrar");
+    assert.equal(registrarModule?.enabled, false);
   });
 });

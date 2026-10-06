@@ -1,4 +1,5 @@
-import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { dbAll, dbGet, dbRun, postgresSql } from "./postgresCompat.js";
+import { transaction } from "./postgres.js";
 import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "./constants.js";
 import { decryptPII } from "./piiEncryption.js";
 
@@ -107,7 +108,7 @@ export async function listDocumentRequests({
   }
   if (q) {
     filters.push(
-      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sa.email,'') LIKE ? OR IFNULL(sa.first_name,'') LIKE ? OR IFNULL(sa.last_name,'') LIKE ?)"
+      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sip.email,'') LIKE ? OR IFNULL(sip.first_name,'') LIKE ? OR IFNULL(sip.last_name,'') LIKE ?)"
     );
     const like = `%${q}%`;
     params.push(like, like, like, like, like, like, like, like, like, like);
@@ -119,7 +120,7 @@ export async function listDocumentRequests({
 
   const validSortCols = {
     id: "dr.id",
-    student: "COALESCE(dr.requester_name, s.name, sa.last_name, sa.first_name, sa.email)",
+    student: "COALESCE(dr.requester_name, s.name, sip.last_name, sip.first_name, sip.email)",
     doc_type: "dr.doc_type",
     status: "dr.status",
     created_at: "dr.created_at",
@@ -133,10 +134,10 @@ export async function listDocumentRequests({
       dr.*,
       dr.requester_name AS raw_requester_name,
       s.name AS s_name,
-      sa.first_name AS sa_first_name,
-      sa.middle_name AS sa_middle_name,
-      sa.last_name AS sa_last_name,
-      sa.email AS sa_email,
+      sip.first_name AS sa_first_name,
+      sip.middle_name AS sa_middle_name,
+      sip.last_name AS sa_last_name,
+      sip.email AS sa_email,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       s.storage_room AS room,
@@ -145,7 +146,7 @@ export async function listDocumentRequests({
       (SELECT COUNT(*) FROM document_request_attachments dra WHERE dra.document_request_id = dr.id) AS attachment_count
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
-    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     ${where}
     ORDER BY ${sortCol} ${order}, dr.id DESC
@@ -208,7 +209,7 @@ export async function countDocumentRequests({
   }
   if (q) {
     filters.push(
-      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sa.email,'') LIKE ? OR IFNULL(sa.first_name,'') LIKE ? OR IFNULL(sa.last_name,'') LIKE ?)"
+      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sip.email,'') LIKE ? OR IFNULL(sip.first_name,'') LIKE ? OR IFNULL(sip.last_name,'') LIKE ?)"
     );
     const like = `%${q}%`;
     params.push(like, like, like, like, like, like, like, like, like, like);
@@ -220,7 +221,7 @@ export async function countDocumentRequests({
     SELECT COUNT(*) AS c
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
-    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     ${where}
     `,
@@ -242,10 +243,10 @@ export async function getDocumentRequestById(id, { officeId } = {}) {
       dr.*,
       dr.requester_name AS raw_requester_name,
       s.name AS s_name,
-      sa.first_name AS sa_first_name,
-      sa.middle_name AS sa_middle_name,
-      sa.last_name AS sa_last_name,
-      sa.email AS sa_email,
+      sip.first_name AS sa_first_name,
+      sip.middle_name AS sa_middle_name,
+      sip.last_name AS sa_last_name,
+      sip.email AS sa_email,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       s.storage_room AS room,
@@ -253,7 +254,7 @@ export async function getDocumentRequestById(id, { officeId } = {}) {
       s.storage_drawer AS drawer
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
-    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     WHERE ${filters.join(" AND ")}
     `,
@@ -307,35 +308,47 @@ export async function createDocumentRequest({
       ? Number(linkedDocumentId)
       : null;
 
-  const res = await dbRun(
-    `
-    INSERT INTO document_requests (
-      office_id, student_no, doc_type, status, notes, linked_document_id, client_type, course_code, requester_name, requester_relationship, requester_contact, student_account_id, created_by, updated_by
-    ) VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [officeId, sn, dt, notes ?? null, lid, ct, cc, rn, rr, rc, studentAccountId || null, createdBy ?? null, createdBy ?? null]
-  );
-  const id = res.lastInsertRowid;
+  const id = await transaction(async ({ query: run, queryOne: runOne }) => {
+    const inserted = await runOne(
+      `INSERT INTO document_requests (
+        office_id, student_no, doc_type, status, notes, linked_document_id,
+        client_type, course_code, requester_name, requester_relationship,
+        requester_contact, identity_profile_id, created_by, updated_by
+      ) VALUES ($1, $2, $3, 'Pending', $4, $5, $6, $7, $8, $9, $10,
+        COALESCE(
+          (SELECT identity_profile_id FROM student_accounts WHERE id = $11),
+          (SELECT identity_profile_id FROM students WHERE student_no = $12)
+        ), $13, $14)
+      RETURNING id`,
+      [officeId, sn, dt, notes ?? null, lid, ct, cc, rn, rr, rc,
+        studentAccountId || null, sn, createdBy ?? null, createdBy ?? null]
+    );
+    if (!inserted?.id) return null;
+    await run(
+      `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+       VALUES ($1, 'Pending', 'Request initiated by Registrar Staff.', $2)`,
+      [inserted.id, createdBy ?? null]
+    );
+    return inserted.id;
+  });
   if (!id) return null;
-
-  await dbRun(
-    `
-    INSERT INTO transaction_updates (document_request_id, status, message, created_by)
-    VALUES (?, 'Pending', 'Request initiated by Registrar Staff.', ?)
-    `,
-    [id, createdBy ?? null]
-  );
 
   return await getDocumentRequestById(id);
 }
 
 export async function updateDocumentRequest(id, fields) {
+  const updated = await transaction(async ({ query, queryOne }) => {
+  const dbGet = (sql, params = []) => queryOne(postgresSql(sql), params);
+  const dbRun = async (sql, params = []) => {
+    const rows = await query(`${postgresSql(sql)} RETURNING *`, params);
+    return { lastInsertRowid: rows[0]?.id, changes: rows.length };
+  };
   const scope = fields.officeId ? " AND office_id = ?" : "";
   const existing = await dbGet(
-    `SELECT id, office_id, status, notes FROM document_requests WHERE id = ?${scope}`,
+    `SELECT id, office_id, status, notes FROM document_requests WHERE id = ?${scope} FOR UPDATE`,
     fields.officeId ? [id, fields.officeId] : [id]
   );
-  if (!existing) return null;
+  if (!existing) return false;
 
   const cols = [];
   const vals = [];
@@ -345,7 +358,7 @@ export async function updateDocumentRequest(id, fields) {
 
   if (fields.status !== undefined) {
     const s = String(fields.status || "");
-    if (!isValidRequestStatus(s)) return null;
+    if (!isValidRequestStatus(s)) return false;
     if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s)) {
       throw new Error(`Cannot transition document request from status "${existing.status}" to "${s}". Terminal and progressed requests cannot be reverted.`);
     }
@@ -440,6 +453,9 @@ export async function updateDocumentRequest(id, fields) {
     }
   }
 
+  return true;
+  });
+  if (!updated) return null;
   return await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
 }
 

@@ -1,6 +1,6 @@
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { getSessionCookieName, signSessionToken, verifySessionToken } from "./jwt.js";
-import { query, queryOne } from "./postgres.js";
+import { query, queryOne, transaction } from "./postgres.js";
 import { getSessionVersion, isSessionActive, registerSessionToken } from "./authSessions.js";
 import { setCSRFTokenCookie } from "./csrfProtection.js";
 import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
@@ -30,10 +30,13 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
     throw new Error("A valid email address is required.");
   }
 
-  // 1. Check if an account already exists with this email
+  // 1. Check whether an identity profile already owns this email
   const existingEmail = await queryOne(
-    "SELECT id, student_no, email FROM student_accounts WHERE email = $1",
-    [encryptPII(cleanEmail)]
+    `SELECT id, email
+       FROM student_identity_profiles
+      WHERE email = $1 OR lower(coalesce(email, '')) = $2
+      LIMIT 1`,
+    [encryptPII(cleanEmail), cleanEmail]
   );
   if (existingEmail) {
     throw new Error("An account with this email address already exists. Please sign in.");
@@ -49,12 +52,22 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
   }
 
   // 3. Create the student_account (student_no can be NULL if left empty)
-  const newAccount = await queryOne(
-    `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
-     VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
-     RETURNING id, student_no, email, first_name, middle_name, last_name, client_type`,
-    [student ? student.student_no : null, encryptPII(cleanEmail), hashPassword(cleanPass), encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), resolvedClientType]
-  );
+  const newAccount = await transaction(async (tx) => {
+    const profile = await tx.queryOne(
+      `INSERT INTO student_identity_profiles (
+         first_name, middle_name, last_name, display_name, email, client_type
+       ) VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, first_name, middle_name, last_name, email, client_type`,
+      [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(fullName), encryptPII(cleanEmail), resolvedClientType]
+    );
+    const newAccount = await tx.queryOne(
+      `INSERT INTO student_accounts (student_no, identity_profile_id, password_hash, status)
+       VALUES ($1, $2, $3, 'Active')
+       RETURNING id, student_no`,
+      [student ? student.student_no : null, profile.id, hashPassword(cleanPass)]
+    );
+    return newAccount;
+  });
 
   return {
     id: newAccount.id,
@@ -69,16 +82,27 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   const rawId = studentNo || username || email || identifier || "";
   const cleanNo = String(rawId).trim().toUpperCase();
   const cleanEmail = String(rawId).trim().toLowerCase();
-  const rowQuery = await queryOne(
-    `SELECT sa.id, sa.student_no, sa.password_hash, sa.status, sa.email, sa.first_name, sa.middle_name, sa.last_name, sa.client_type, s.name
-     FROM student_accounts sa 
-     LEFT JOIN students s ON s.student_no = sa.student_no
-     WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = $1) 
-        OR coalesce(sa.email, '') = $2
-        OR lower(coalesce(sa.email, '')) = lower($3)`,
-    [cleanNo, encryptPII(cleanEmail), cleanEmail]
-  );
-  const row = decryptStudentRow(rowQuery);
+  const select = `SELECT sa.id, sa.student_no, sa.password_hash, sa.status,
+                         sip.email, sip.first_name, sip.middle_name, sip.last_name,
+                         sip.client_type, COALESCE(sip.display_name, s.name) AS name
+                    FROM student_accounts sa
+                    JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+                    LEFT JOIN students s ON s.student_no = sa.student_no`;
+  const matchingAccounts = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
+    ? await query(
+        `${select}
+          WHERE sip.email = $1 OR lower(coalesce(sip.email, '')) = $2
+          LIMIT 2`,
+        [encryptPII(cleanEmail), cleanEmail]
+      )
+    : await query(
+        `${select}
+          WHERE sa.student_no IS NOT NULL AND upper(sa.student_no) = $1
+          LIMIT 2`,
+        [cleanNo]
+      );
+  if (matchingAccounts.length !== 1) return null;
+  const row = decryptStudentRow(matchingAccounts[0]);
   if (!row || String(row.status).toLowerCase() !== "active") return null;
   let verification = verifyPasswordHash(password, row.password_hash);
   const isDemoStudent = cleanEmail === "student@pup.local" ||
@@ -138,25 +162,33 @@ export async function getStudentSession(req) {
     const payload = await verifySessionToken(token);
     if (payload?.role !== "Student" || !(await isSessionActive(payload))) return null;
 
-    const account = payload.account_id
-      ? await queryOne(
-          `SELECT sa.id, sa.student_no, sa.email, sa.status AS account_status,
-                  s.status AS student_status
-           FROM student_accounts sa
-           LEFT JOIN students s ON s.student_no = sa.student_no
-           WHERE sa.id = $1`,
-          [payload.account_id]
-        )
-      : await queryOne(
-          `SELECT sa.id, sa.student_no, sa.email, sa.status AS account_status,
-                  s.status AS student_status
-           FROM student_accounts sa
-           LEFT JOIN students s ON s.student_no = sa.student_no
-           WHERE (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($1))
-              OR coalesce(sa.email, '') = $2
-              OR lower(coalesce(sa.email, '')) = lower($3)`,
-          [payload.student_no || "", encryptPII((payload.email || "").toLowerCase()), (payload.email || "").toLowerCase()]
-        );
+    const sessionAccountSelect = `SELECT sa.id, sa.student_no, sip.email, sa.status AS account_status,
+                                         s.status AS student_status
+                                    FROM student_accounts sa
+                                    JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+                                    LEFT JOIN students s ON s.student_no = sa.student_no`;
+    let account = null;
+    if (payload.account_id) {
+      account = await queryOne(`${sessionAccountSelect} WHERE sa.id = $1`, [payload.account_id]);
+    } else if (payload.email) {
+      const matches = await query(
+        `${sessionAccountSelect}
+          WHERE sip.email = $1 OR lower(coalesce(sip.email, '')) = $2
+          LIMIT 2`,
+        [encryptPII(String(payload.email).trim().toLowerCase()), String(payload.email).trim().toLowerCase()]
+      );
+      if (matches.length !== 1) return null;
+      account = matches[0];
+    } else if (payload.student_no) {
+      const matches = await query(
+        `${sessionAccountSelect}
+          WHERE sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($1)
+          LIMIT 2`,
+        [payload.student_no]
+      );
+      if (matches.length !== 1) return null;
+      account = matches[0];
+    }
 
     if (!account || String(account.account_status).toLowerCase() !== "active") return null;
     if (account.student_status && String(account.student_status).toLowerCase() !== "active") return null;

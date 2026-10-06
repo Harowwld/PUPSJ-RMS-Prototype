@@ -2,8 +2,7 @@ import { Pool } from "pg";
 import dotenv from "dotenv";
 import { decryptPII } from "../src/lib/piiEncryption.js";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 function decryptField(val) {
   if (!val || typeof val !== "string") return val;
@@ -40,10 +39,10 @@ async function run() {
 
   // 2. Backfill rows where requester_name is null using decrypted student/account name
   const nullRows = await pool.query(`
-    SELECT dr.id, s.name AS s_name, sa.first_name AS sa_first, sa.middle_name AS sa_mid, sa.last_name AS sa_last, sa.email AS sa_email
+    SELECT dr.id, s.name AS s_name, sip.first_name AS sa_first, sip.middle_name AS sa_mid, sip.last_name AS sa_last, sip.email AS sa_email
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
-    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
     WHERE dr.requester_name IS NULL
   `);
 

@@ -11,15 +11,15 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { hashPassword } from "../src/lib/passwordHash.js";
+import { encryptPII } from "../src/lib/piiEncryption.js";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
 const { buildDefaultStorageLayout } = await import("../src/lib/storageLayoutDefaults.js");
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required. Start PostgreSQL and check next-app/.env.local.");
+  throw new Error("DATABASE_URL is required. Start PostgreSQL and check next-app/.env.");
 }
 
 const passwordHash = hashPassword(process.env.DEFAULT_STAFF_PASSWORD || "pupstaff");
@@ -463,11 +463,19 @@ export async function seed({ force: forceOverride } = {}) {
     }
 
     for (const [sNo, sEmail] of demoStudentAccounts) {
+      const profile = await queryOne(
+        `UPDATE student_identity_profiles sip
+         SET email = $1, client_type = 'Student', updated_at = NOW()
+         FROM students s
+         WHERE s.student_no = $2 AND sip.id = s.identity_profile_id
+         RETURNING sip.id`,
+        [encryptPII(sEmail.toLowerCase()), sNo],
+      );
       await run(
-        `INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
+        `INSERT INTO student_accounts (student_no, identity_profile_id, password_hash, status, updated_at)
          VALUES ($1, $2, $3, 'Active', NOW())
-         ON CONFLICT (email) DO UPDATE SET student_no=EXCLUDED.student_no, password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
-        [sNo, sEmail, studentPasswordHash],
+         ON CONFLICT (identity_profile_id) DO UPDATE SET student_no=EXCLUDED.student_no, password_hash=EXCLUDED.password_hash, status='Active', updated_at=NOW()`,
+        [sNo, profile?.id, studentPasswordHash],
       );
     }
 
@@ -511,9 +519,9 @@ export async function seed({ force: forceOverride } = {}) {
 
     for (const [legacyId, studentNo, docType, status, notes, actor] of requests) {
       const reqRow = await runOne(
-        `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, created_by, updated_by, legacy_id)
-         VALUES ('registrar',$1,$2,$3,$4,$5,$5,$6)
-         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by, updated_at=NOW()
+        `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, created_by, updated_by, legacy_id, identity_profile_id)
+         VALUES ('registrar',$1,$2,$3,$4,$5,$5,$6,(SELECT identity_profile_id FROM students WHERE student_no=$1))
+         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, identity_profile_id=EXCLUDED.identity_profile_id, doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by, updated_at=NOW()
          RETURNING id`,
         [studentNo, docType, status, notes, actor, legacyId],
       );
@@ -553,11 +561,11 @@ export async function seed({ force: forceOverride } = {}) {
       if (!propId) {
         const propRow = await runOne(
           `INSERT INTO event_proposals (
-             office_id, student_no, organization_id, title, organization_name, event_date, venue,
+             office_id, student_no, identity_profile_id, organization_id, title, organization_name, event_date, venue,
              description, storage_filename, original_filename, mime_type, size_bytes,
              status, review_note, reviewed_at, archived_at
            )
-           VALUES ('osas', $1, $2, $3, $4, $5, $6, $7, $8, $9, 'application/pdf', $10, $11, $12, $13, $14)
+           VALUES ('osas', $1, (SELECT identity_profile_id FROM students WHERE student_no=$1), $2, $3, $4, $5, $6, $7, $8, $9, 'application/pdf', $10, $11, $12, $13, $14)
            RETURNING id`,
           [studentNo, orgId, title, orgName, eventDate, venue, desc, storageFilename, filename, pdfBytes.length, status, reviewNote, reviewedAt, archivedAt || null],
         );
@@ -565,7 +573,7 @@ export async function seed({ force: forceOverride } = {}) {
       } else {
         await run(
           `UPDATE event_proposals
-           SET student_no=$1, organization_id=$2, event_date=$3, venue=$4, description=$5, status=$6, review_note=$7, reviewed_at=$8, archived_at=$9, size_bytes=$10, updated_at=NOW()
+           SET student_no=$1, identity_profile_id=(SELECT identity_profile_id FROM students WHERE student_no=$1), organization_id=$2, event_date=$3, venue=$4, description=$5, status=$6, review_note=$7, reviewed_at=$8, archived_at=$9, size_bytes=$10, updated_at=NOW()
            WHERE id=$11`,
           [studentNo, orgId, eventDate, venue, desc, status, reviewNote, reviewedAt, archivedAt || null, pdfBytes.length, propId],
         );

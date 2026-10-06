@@ -28,23 +28,23 @@ export async function GET(req, ctx) {
 
   // 1. Fetch document request
   const request = await queryOne(
-    "SELECT id, student_no, student_account_id, office_id FROM document_requests WHERE id = $1",
+    "SELECT id, student_no, identity_profile_id, office_id FROM document_requests WHERE id = $1",
     [requestId]
   );
-  if (!request) {
+  if (!request || String(request.office_id || "").trim().toLowerCase() !== "registrar") {
     return NextResponse.json({ ok: false, error: "Document request not found" }, { status: 404 });
   }
 
   // 2. Authorization check
   let authorized = false;
   if (user.principalType === "staff") {
-    if (isSystemAdminRole(user.role) || !user.officeId || user.officeId === "registrar") {
+    const officeId = String(user.officeId || user.office_id || "").trim().toLowerCase();
+    if (isSystemAdminRole(user.role) || officeId === "registrar") {
       authorized = true;
     }
   } else if (user.principalType === "student") {
     if (
-      (request.student_account_id && String(request.student_account_id) === String(user.accountId)) ||
-      (request.student_no && user.studentNo && request.student_no.toUpperCase() === user.studentNo.toUpperCase())
+      (request.identity_profile_id && String(request.identity_profile_id) === String(user.identityProfileId))
     ) {
       authorized = true;
     }
@@ -64,7 +64,11 @@ export async function GET(req, ctx) {
   }
 
   // 4. File on disk
-  const filePath = path.join(requestAttachmentsDir(), attachment.storage_filename);
+  const storageFilename = String(attachment.storage_filename || "");
+  if (!storageFilename || path.basename(storageFilename) !== storageFilename) {
+    return NextResponse.json({ ok: false, error: "Attachment storage reference is invalid" }, { status: 500 });
+  }
+  const filePath = path.join(requestAttachmentsDir(), storageFilename);
   if (!fs.existsSync(filePath)) {
     return NextResponse.json({ ok: false, error: "Attachment file missing from storage" }, { status: 404 });
   }

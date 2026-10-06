@@ -45,6 +45,10 @@ function officeResourceAccess(principal, resource) {
 
 function studentOwnerAccess(principal, resource) {
   if (!principalIsActive(principal) || !isStudentRole(principal.role) || !resource) return false;
+  const resourceIdentityId = resource.identityProfileId ?? resource.identity_profile_id;
+  if (normalizedId(resourceIdentityId)) {
+    return sameId(resourceIdentityId, principal.identityProfileId ?? principal.identity_profile_id);
+  }
   const resourceStudentNo = resource.studentNo ?? resource.student_no;
   const resourceAccountId = resource.accountId ?? resource.account_id ?? resource.studentAccountId ?? resource.student_account_id;
   const resourceEmail = resource.submitted_by_email ?? resource.submittedByEmail ?? resource.email;

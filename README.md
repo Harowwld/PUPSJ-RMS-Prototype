@@ -31,10 +31,10 @@ To run the stable `main` branch, omit `-b OCR-Improvements` from the clone comma
 
 ## Configure the environment
 
-Create `next-app/.env.local` from the example file:
+Create `next-app/.env` from the example file:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 At minimum, set a private JWT secret:
@@ -46,7 +46,7 @@ DEFAULT_STAFF_PASSWORD=pupstaff
 LOCAL_DATA_DIR=.local
 ```
 
-Do not commit `.env.local`. The default Docker Compose database values are intended for local development only.
+Do not commit `.env`. The default Docker Compose database values are intended for local development only.
 
 ## Start PostgreSQL and initialize the database
 
@@ -190,7 +190,7 @@ Start Docker Desktop, wait until it reports that Docker is running, then retry `
 
 ### `DATABASE_URL is required`
 
-Confirm that `next-app/.env.local` exists and contains `DATABASE_URL`, then run `docker compose up -d --wait postgres`.
+Confirm that `next-app/.env` exists and contains `DATABASE_URL`, then run `docker compose up -d --wait postgres`.
 
 ### PostgreSQL connection refused
 

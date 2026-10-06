@@ -15,17 +15,16 @@ export async function GET(req) {
 
   const rows = await query(
     `SELECT ep.*,
-            COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
+            COALESCE(sip.display_name, s.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS verified_org_name,
             so.acronym AS org_acronym,
             so.category AS org_category,
-            so.bylaws_original_filename AS bylaws_filename,
-            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN 'Active' ELSE 'Missing' END AS bylaws_status,
-            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN true ELSE false END AS has_bylaws
+            (SELECT obv.original_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_filename,
+            CASE WHEN EXISTS (SELECT 1 FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved') THEN 'Active' ELSE 'Missing' END AS bylaws_status,
+            EXISTS (SELECT 1 FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved') AS has_bylaws
      FROM event_proposals ep
      LEFT JOIN students s ON s.student_no = ep.student_no
-     LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id
-     LEFT JOIN students sa_student ON sa_student.student_no = sa.student_no
+     LEFT JOIN student_identity_profiles sip ON sip.id = ep.identity_profile_id
      LEFT JOIN student_organizations so ON so.id = ep.organization_id
      WHERE ep.office_id = 'osas'
        AND ep.archived_at IS NULL

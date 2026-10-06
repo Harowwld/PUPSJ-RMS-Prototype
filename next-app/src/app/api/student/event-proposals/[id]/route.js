@@ -64,12 +64,8 @@ export async function GET(req, ctx) {
      FROM event_proposals ep
      LEFT JOIN student_organizations so ON so.id = ep.organization_id
      WHERE ep.id = $1 AND ep.office_id = 'osas'
-       AND (
-         (ep.student_no IS NOT NULL AND ep.student_no = $2)
-         OR (ep.student_account_id IS NOT NULL AND ep.student_account_id = $3)
-         OR (ep.submitted_by_email IS NOT NULL AND lower(ep.submitted_by_email) = $4)
-       )`,
-    [id, access.user.studentNo || "", access.user.accountId || -1, (access.user.email || "").toLowerCase()]
+       AND ep.identity_profile_id = $2`,
+    [id, access.user.identityProfileId]
   );
 
   if (!proposal || !canAccessResource(access.user, "proposal", proposal)) {

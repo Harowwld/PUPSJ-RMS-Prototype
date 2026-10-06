@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStaffById, getStaffByUsername, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
+import { getStaffById, getStaffByUsername, hasAllSecurityAnswers, parseStaffPreferences } from "../../../../lib/staffRepo";
 import { encryptPII, decryptPII } from "../../../../lib/piiEncryption.js";
 import { getOfficeById } from "../../../../lib/officesRepo";
 import { getOfficeModules, listAllModules } from "../../../../lib/modulesRepo";
@@ -33,23 +33,24 @@ export async function GET(req) {
         SELECT 
           sa.id AS account_id,
           sa.student_no,
-          sa.email, 
-          sa.first_name, 
-          sa.middle_name, 
-          sa.last_name, 
-          sa.client_type,
+          sip.email,
+          sip.first_name,
+          sip.middle_name,
+          sip.last_name,
+          sip.client_type,
           sa.avatar_filename,
           sa.status AS account_status,
-          s.name, 
+          COALESCE(sip.display_name, s.name) AS name,
           s.status AS student_status, 
           s.course_code, 
           s.year_level, 
           s.section
         FROM student_accounts sa
+        JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
         LEFT JOIN students s ON s.student_no = sa.student_no
         WHERE (sa.id = $1 AND $1 IS NOT NULL)
-           OR (sa.email = $2 AND $2 IS NOT NULL)
-           OR (lower(sa.email) = lower($3) AND $3 IS NOT NULL)
+           OR (sip.email = $2 AND $2 IS NOT NULL)
+           OR (lower(sip.email) = lower($3) AND $3 IS NOT NULL)
            OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($4) AND $4 IS NOT NULL)
         LIMIT 1
       `, [
@@ -173,15 +174,10 @@ export async function GET(req) {
       high_contrast: false
     };
 
-    let preferences = {};
-    try {
-      preferences = {
-        ...defaultPreferences,
-        ...JSON.parse(staff?.preferences || "{}")
-      };
-    } catch (e) {
-      preferences = defaultPreferences;
-    }
+    const preferences = {
+      ...defaultPreferences,
+      ...parseStaffPreferences(staff?.preferences),
+    };
 
     return addSecurityHeaders(NextResponse.json({
       ok: true,

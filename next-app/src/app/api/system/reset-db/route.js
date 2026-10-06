@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { query, transaction } from "@/lib/postgres";
+import { query, queryOne, transaction } from "@/lib/postgres";
 import { createStaff } from "@/lib/staffRepo";
 import { clearHealthCache } from "@/lib/healthCache";
 import { buildDefaultStorageLayout, buildDefaultOsasStorageLayout } from "@/lib/storageLayoutDefaults";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 import { hashPassword } from "@/lib/passwordHash";
+import { encryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
 
@@ -31,7 +32,8 @@ async function handleResetDb(req) {
     await transaction(async ({ query: txQuery }) => {
       await txQuery(`TRUNCATE TABLE
         transaction_updates, event_proposals, document_requests, documents,
-        student_accounts, student_office_memberships, students, staff, global_audit_logs, backups,
+        student_identity_link_reviews, student_accounts, student_office_memberships,
+        students, student_identity_profiles, staff, global_audit_logs, backups,
         staff_notification_item_states, staff_notification_state, settings
         RESTART IDENTITY CASCADE`);
     });
@@ -242,13 +244,14 @@ async function handleResetDb(req) {
         fName = firstParts.join(" ");
       }
       const clientType = cCode === "ALUMNI" || sNo.startsWith("ALUM-") ? "Alumni" : "Student";
+      const encryptedName = encryptPII(sName);
 
       await query(
         `INSERT INTO students (student_no, name, course_code, year_level, section, status)
          VALUES ($1, $2, $3, $4, $5, 'Active')
          ON CONFLICT (student_no) DO UPDATE SET name = EXCLUDED.name, course_code = EXCLUDED.course_code,
            year_level = EXCLUDED.year_level, section = EXCLUDED.section, status = 'Active', updated_at = NOW()`,
-        [sNo, sName, cCode, yLevel, sSec]
+        [sNo, encryptedName, cCode, yLevel, sSec]
       );
       await query(
         `INSERT INTO student_office_memberships (student_no, office_id, status)
@@ -256,13 +259,21 @@ async function handleResetDb(req) {
          ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()`,
         [sNo],
       );
+      const profile = await queryOne(
+        `UPDATE student_identity_profiles sip
+         SET first_name = $1, middle_name = $2, last_name = $3, display_name = $4,
+             email = $5, client_type = $6, updated_at = NOW()
+         FROM students s
+         WHERE s.student_no = $7 AND sip.id = s.identity_profile_id
+         RETURNING sip.id`,
+        [encryptPII(fName), encryptPII(mName), encryptPII(lName), encryptedName, encryptPII(sEmail.toLowerCase()), clientType, sNo]
+      );
       await query(
-        `INSERT INTO student_accounts (student_no, email, password_hash, status, first_name, middle_name, last_name, client_type)
-         VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7)
-         ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash,
-           first_name = EXCLUDED.first_name, middle_name = EXCLUDED.middle_name, last_name = EXCLUDED.last_name,
-           client_type = EXCLUDED.client_type, status = 'Active', updated_at = NOW()`,
-        [sNo, sEmail, studentHash, fName, mName, lName, clientType]
+        `INSERT INTO student_accounts (student_no, identity_profile_id, password_hash, status)
+         VALUES ($1, $2, $3, 'Active')
+         ON CONFLICT (identity_profile_id) DO UPDATE SET student_no = EXCLUDED.student_no,
+           password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()`,
+        [sNo, profile.id, studentHash]
       );
     }
 

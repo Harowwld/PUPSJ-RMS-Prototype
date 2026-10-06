@@ -3,9 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import Database from "better-sqlite3";
+import { decryptPII, encryptPII } from "../src/lib/piiEncryption.js";
 
 dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const args = new Set(process.argv.slice(2));
 const option = name => {
@@ -20,6 +21,7 @@ if (!process.env.DATABASE_URL && !dryRun) throw new Error("DATABASE_URL is requi
 const { pool } = dryRun ? { pool: null } : await import("../src/lib/postgres.js");
 
 const report = { source: dataDir, dryRun, startedAt: new Date().toISOString(), tables: {}, files: { copied: 0, missing: 0 }, conflicts: [], warnings: [] };
+const studentAccountProfiles = new Map();
 const count = (name, amount = 1) => { report.tables[name] = (report.tables[name] || 0) + amount; };
 const normalizeName = value => String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 const tableExists = (db, table) => !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(table);
@@ -107,8 +109,10 @@ async function importStudents() {
     if (!db) continue;
     for (const row of rows(db, "students")) {
       const existing = dryRun ? null : (await client.query("SELECT * FROM students WHERE student_no = $1", [row.student_no])).rows[0];
-      if (existing && normalizeName(existing.name) !== normalizeName(row.name)) {
-        report.conflicts.push({ type: "student_identity", student_no: row.student_no, canonical_name: existing.name, source_name: row.name, source_office: officeId });
+      const sourceName = clearImportedPii(row.name, "student name", officeId, row.student_no);
+      const existingName = existing ? clearImportedPii(existing.name, "registry name", officeId, row.student_no) : null;
+      if (existing && normalizeName(existingName) !== normalizeName(sourceName)) {
+        report.conflicts.push({ type: "student_identity", student_no: row.student_no, source_office: officeId });
         continue;
       }
       await sql(`INSERT INTO students (student_no,name,course_code,year_level,section,status,storage_room,storage_cabinet,storage_drawer,created_at)
@@ -117,12 +121,138 @@ async function importStudents() {
         year_level=COALESCE(EXCLUDED.year_level,students.year_level),section=COALESCE(EXCLUDED.section,students.section),
         status=EXCLUDED.status,storage_room=COALESCE(EXCLUDED.storage_room,students.storage_room),
         storage_cabinet=COALESCE(EXCLUDED.storage_cabinet,students.storage_cabinet),storage_drawer=COALESCE(EXCLUDED.storage_drawer,students.storage_drawer),updated_at=NOW()`,
-        [row.student_no, row.name, row.course_code || null, row.year_level ?? null, row.section || null, row.status || "Active", row.room ?? null, row.cabinet ?? null, row.drawer ?? null, row.created_at || null]);
+        [row.student_no, encryptPII(sourceName), row.course_code || null, row.year_level ?? null, row.section || null, row.status || "Active", row.room ?? null, row.cabinet ?? null, row.drawer ?? null, row.created_at || null]);
       await sql(`INSERT INTO student_office_memberships (student_no, office_id, status)
         VALUES ($1, $2, 'Active')
         ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()`,
         [row.student_no, officeId]);
       count(`students:${officeId}`);
+    }
+  }
+}
+
+function clearImportedPii(value, field, officeId, accountId) {
+  if (!value) return null;
+  const clearValue = decryptPII(value);
+  if (String(value).startsWith("enc:v1:") && clearValue === value) {
+    throw new Error(`Cannot decrypt ${field} in ${officeId} student account ${accountId}; migration was rolled back.`);
+  }
+  return String(clearValue).trim() || null;
+}
+
+async function importStudentAccounts() {
+  for (const [officeId, db] of [["registrar", registrar], ["osas", osas]]) {
+    if (!db || !tableExists(db, "student_accounts")) continue;
+    for (const row of rows(db, "student_accounts")) {
+      const legacyId = row.id ?? row.student_no;
+      if (legacyId == null) {
+        report.warnings.push(`Skipped ${officeId} student account without a source ID.`);
+        continue;
+      }
+      if (!dryRun) {
+        const prior = await client.query(
+          "SELECT identity_profile_id FROM student_accounts WHERE legacy_source = $1 AND legacy_id = $2",
+          [officeId, String(legacyId)],
+        );
+        if (prior.rows[0]) {
+          studentAccountProfiles.set(`${officeId}:${legacyId}`, prior.rows[0].identity_profile_id);
+          continue;
+        }
+      }
+      if (!row.password_hash) {
+        report.warnings.push(`Skipped ${officeId} student account ${legacyId} because it has no password hash.`);
+        continue;
+      }
+
+      const firstName = clearImportedPii(row.first_name, "first_name", officeId, legacyId);
+      const middleName = clearImportedPii(row.middle_name, "middle_name", officeId, legacyId);
+      const lastName = clearImportedPii(row.last_name, "last_name", officeId, legacyId);
+      const displayName = clearImportedPii(row.display_name, "display_name", officeId, legacyId)
+        || [firstName, middleName, lastName].filter(Boolean).join(" ")
+        || clearImportedPii(row.name, "name", officeId, legacyId);
+      const email = clearImportedPii(row.email, "email", officeId, legacyId)?.toLowerCase() || null;
+      const encryptedEmail = encryptPII(email);
+      const originalStudentNo = row.student_no || null;
+
+      if (dryRun) {
+        count(`student_accounts:${officeId}`);
+        continue;
+      }
+
+      const student = originalStudentNo
+        ? (await client.query("SELECT identity_profile_id FROM students WHERE student_no = $1", [originalStudentNo])).rows[0]
+        : null;
+      let profileId = null;
+      if (student?.identity_profile_id) {
+        const accountOnStudentProfile = await client.query(
+          "SELECT 1 FROM student_accounts WHERE identity_profile_id = $1 LIMIT 1",
+          [student.identity_profile_id],
+        );
+        const registryProfile = (await client.query(
+          "SELECT id, email FROM student_identity_profiles WHERE id = $1",
+          [student.identity_profile_id],
+        )).rows[0];
+        const registryEmail = registryProfile?.email ? String(decryptPII(registryProfile.email)).trim().toLowerCase() : null;
+        if (!accountOnStudentProfile.rows.length && (!registryEmail || registryEmail === email)) {
+          profileId = student.identity_profile_id;
+        }
+      }
+
+      if (encryptedEmail) {
+        const emailOwner = (await client.query(
+          "SELECT id FROM student_identity_profiles WHERE email = $1 LIMIT 1",
+          [encryptedEmail],
+        )).rows[0];
+        if (emailOwner && emailOwner.id !== profileId) {
+          report.conflicts.push({ type: "student_account_email_collision", source_office: officeId, source_account_id: String(legacyId) });
+          throw new Error(`Duplicate student account email in source ${officeId}, account ${legacyId}; resolve the email collision before retrying.`);
+        }
+      }
+
+      if (!profileId) {
+        const profile = await client.query(
+          `INSERT INTO student_identity_profiles (first_name, middle_name, last_name, display_name, email, client_type)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          [encryptPII(firstName), encryptPII(middleName), encryptPII(lastName), encryptPII(displayName), encryptedEmail, row.client_type || "Student"],
+        );
+        profileId = profile.rows[0].id;
+      } else {
+        await client.query(
+          `UPDATE student_identity_profiles
+              SET first_name = COALESCE(first_name, $1), middle_name = COALESCE(middle_name, $2),
+                  last_name = COALESCE(last_name, $3), display_name = COALESCE(display_name, $4),
+                  email = COALESCE(email, $5), client_type = $6, updated_at = NOW()
+            WHERE id = $7`,
+          [encryptPII(firstName), encryptPII(middleName), encryptPII(lastName), encryptPII(displayName), encryptedEmail, row.client_type || "Student", profileId],
+        );
+      }
+
+      const validStudentNo = student ? originalStudentNo : null;
+      const inserted = await client.query(
+        `INSERT INTO student_accounts (
+           student_no, identity_profile_id, password_hash, status, last_active,
+           created_at, updated_at, avatar_filename, legacy_source, legacy_id
+         ) VALUES ($1, $2, $3, $4, $5::timestamptz,
+                   COALESCE($6::timestamptz, NOW()), COALESCE($7::timestamptz, NOW()), $8, $9, $10)
+         RETURNING id`,
+        [validStudentNo, profileId, row.password_hash, row.status || "Active", row.last_active || null,
+          row.created_at || null, row.updated_at || null, row.avatar_filename || null, officeId, String(legacyId)],
+      );
+      studentAccountProfiles.set(`${officeId}:${legacyId}`, profileId);
+      if (originalStudentNo && (!student || student.identity_profile_id !== profileId)) {
+        await client.query(
+          `INSERT INTO student_identity_link_reviews (
+             entity_type, entity_id, student_no, student_account_id,
+             registry_profile_id, account_profile_id
+           ) VALUES ('student_account', $1, $2, $1, $3, $4)
+           ON CONFLICT (entity_type, entity_id) DO NOTHING`,
+          [inserted.rows[0].id, originalStudentNo, student?.identity_profile_id || null, profileId],
+        );
+      }
+      if (originalStudentNo && !student) {
+        report.warnings.push(`Imported ${officeId} student account ${legacyId} without a matching registry student; its original student number is queued for review.`);
+      }
+      count(`student_accounts:${officeId}`);
     }
   }
 }
@@ -159,20 +289,39 @@ async function importOfficeRecords(officeId, db) {
   }
   const proposalIds = new Map();
   for (const row of rows(db, "event_proposals")) {
-    const result = await sql(`INSERT INTO event_proposals (office_id,student_no,title,organization_name,event_date,venue,description,storage_filename,original_filename,mime_type,size_bytes,status,reviewed_by,reviewed_at,review_note,created_at,updated_at)
-      VALUES ($1,$2,$3,$4,$5::date,$6,$7,$8,$9,$10,$11,$12,$13,$14::timestamptz,$15,COALESCE($16::timestamptz,NOW()),COALESCE($17::timestamptz,NOW()))
-      ON CONFLICT DO NOTHING RETURNING id`,
-      [officeId, row.student_no, row.title, row.organization_name, row.event_date || null, row.venue || null, row.description || null, row.storage_filename, row.original_filename, row.mime_type || "application/pdf", row.size_bytes || 0, row.status || "Submitted", row.reviewed_by || null, row.reviewed_at || null, row.review_note || null, row.created_at || null, row.updated_at || null]);
-    if (result.rows[0]) proposalIds.set(row.id, result.rows[0].id);
+    const accountProfileId = row.student_account_id
+      ? studentAccountProfiles.get(`${officeId}:${row.student_account_id}`) || null
+      : null;
+    const result = await sql(`INSERT INTO event_proposals (office_id,student_no,identity_profile_id,title,organization_name,event_date,venue,description,storage_filename,original_filename,mime_type,size_bytes,status,reviewed_by,reviewed_at,review_note,created_at,updated_at)
+      VALUES ($1,$2,COALESCE($18,(SELECT identity_profile_id FROM students WHERE student_no=$2)),$3,$4,$5::date,$6,$7,$8,$9,$10,$11,$12,$13,$14::timestamptz,$15,COALESCE($16::timestamptz,NOW()),COALESCE($17::timestamptz,NOW()))
+      ON CONFLICT DO NOTHING RETURNING id,identity_profile_id`,
+      [officeId, row.student_no, row.title, row.organization_name, row.event_date || null, row.venue || null, row.description || null, row.storage_filename, row.original_filename, row.mime_type || "application/pdf", row.size_bytes || 0, row.status || "Submitted", row.reviewed_by || null, row.reviewed_at || null, row.review_note || null, row.created_at || null, row.updated_at || null, accountProfileId]);
+    if (result.rows[0]) {
+      proposalIds.set(row.id, result.rows[0].id);
+      if (!result.rows[0].identity_profile_id) {
+        await sql(`INSERT INTO student_identity_link_reviews (entity_type,entity_id,student_no)
+          VALUES ('event_proposal',$1,$2) ON CONFLICT (entity_type,entity_id) DO NOTHING`,
+          [result.rows[0].id, row.student_no || null]);
+      }
+    }
     copyStorageFile(officeId, row.storage_filename);
     count(`event_proposals:${officeId}`);
   }
   for (const row of rows(db, "document_requests")) {
     const linked = row.linked_document_id ? documentIds.get(row.linked_document_id) || null : null;
-    await sql(`INSERT INTO document_requests (office_id,student_no,doc_type,status,notes,linked_document_id,created_by,updated_by,legacy_id,created_at,updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,COALESCE($10::timestamptz,NOW()),COALESCE($11::timestamptz,NOW()))
-      ON CONFLICT (office_id,legacy_id) DO UPDATE SET status=EXCLUDED.status,notes=EXCLUDED.notes,linked_document_id=EXCLUDED.linked_document_id,updated_by=EXCLUDED.updated_by,updated_at=EXCLUDED.updated_at`,
-      [officeId,row.student_no,row.doc_type,row.status || "Pending",row.notes || null,linked,row.created_by || null,row.updated_by || null,row.id,row.created_at || null,row.updated_at || null]);
+    const accountProfileId = row.student_account_id
+      ? studentAccountProfiles.get(`${officeId}:${row.student_account_id}`) || null
+      : null;
+    const result = await sql(`INSERT INTO document_requests (office_id,student_no,doc_type,status,notes,linked_document_id,created_by,updated_by,legacy_id,created_at,updated_at,identity_profile_id)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,COALESCE($10::timestamptz,NOW()),COALESCE($11::timestamptz,NOW()),COALESCE($12,(SELECT identity_profile_id FROM students WHERE student_no=$2)))
+      ON CONFLICT (office_id,legacy_id) DO UPDATE SET status=EXCLUDED.status,notes=EXCLUDED.notes,linked_document_id=EXCLUDED.linked_document_id,identity_profile_id=EXCLUDED.identity_profile_id,updated_by=EXCLUDED.updated_by,updated_at=EXCLUDED.updated_at
+      RETURNING id,identity_profile_id`,
+      [officeId,row.student_no,row.doc_type,row.status || "Pending",row.notes || null,linked,row.created_by || null,row.updated_by || null,row.id,row.created_at || null,row.updated_at || null,accountProfileId]);
+    if (result.rows[0] && !result.rows[0].identity_profile_id) {
+      await sql(`INSERT INTO student_identity_link_reviews (entity_type,entity_id,student_no)
+        VALUES ('document_request',$1,$2) ON CONFLICT (entity_type,entity_id) DO NOTHING`,
+        [result.rows[0].id, row.student_no || null]);
+    }
     count(`document_requests:${officeId}`);
   }
   for (const row of rows(db, "transaction_updates")) {
@@ -199,6 +348,7 @@ try {
   if (!dryRun) await client.query("BEGIN");
   await importSystem();
   await importStudents();
+  await importStudentAccounts();
   await importOfficeRecords("registrar", registrar);
   await importOfficeRecords("osas", osas);
   if (!dryRun) await client.query("COMMIT");

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/postgres";
+import { query, queryOne, transaction } from "@/lib/postgres";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { canAccessResource } from "@/lib/resourceAuthorization";
@@ -13,17 +13,16 @@ const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "A
 async function getAuthorizedProposal(id, access) {
   const proposal = await queryOne(
     `SELECT ep.*,
-            COALESCE(s.name, sa_student.name, ep.student_no, 'Student Officer') AS student_name,
+            COALESCE(sip.display_name, s.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS verified_org_name,
             so.acronym AS org_acronym,
             so.category AS org_category,
-            so.bylaws_original_filename AS bylaws_filename,
-            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN 'Active' ELSE 'Missing' END AS bylaws_status,
-            CASE WHEN so.bylaws_storage_filename IS NOT NULL THEN true ELSE false END AS has_bylaws
+            (SELECT obv.original_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_filename,
+            CASE WHEN EXISTS (SELECT 1 FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved') THEN 'Active' ELSE 'Missing' END AS bylaws_status,
+            EXISTS (SELECT 1 FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved') AS has_bylaws
      FROM event_proposals ep
      LEFT JOIN students s ON s.student_no = ep.student_no
-     LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id
-     LEFT JOIN students sa_student ON sa_student.student_no = sa.student_no
+     LEFT JOIN student_identity_profiles sip ON sip.id = ep.identity_profile_id
      LEFT JOIN student_organizations so ON so.id = ep.organization_id
      WHERE ep.id = $1 AND ep.office_id = 'osas'`,
     [id]
@@ -143,6 +142,16 @@ export async function PATCH(req, ctx) {
   const existingProposal = await getAuthorizedProposal(id, access);
   if (!existingProposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+  }
+  const unsupportedField = Object.keys(body).find((field) => !["status", "note"].includes(field));
+  if (unsupportedField) {
+    return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+  }
+  if (body.note !== undefined && typeof body.note !== "string") {
+    return NextResponse.json({ ok: false, error: "Note must be text." }, { status: 400 });
+  }
   const status = String(body?.status || "").trim();
   const note = String(body?.note || "").trim();
 
@@ -152,26 +161,12 @@ export async function PATCH(req, ctx) {
 
   const currentStatus = existingProposal.status || "Submitted";
 
-  // No-op if status is unchanged
-  if (status === currentStatus) {
-    if (note) {
-      await query(
-        `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by) VALUES ($1, $2, $3, $4)`,
-        [id, currentStatus, note, access.userId || null]
-      );
-      await writeGlobalAuditLog(req, "Added note to OSAS proposal", {
-        officeId: "osas",
-        details: `Added note to ${existingProposal.title}: ${note}`,
-        entity_type: "event_proposal",
-        entity_id: String(id),
-      });
-    }
-    return NextResponse.json({ ok: true, data: existingProposal });
-  }
+  // No-op if status is unchanged and no note was supplied.
+  if (status === currentStatus && !note) return NextResponse.json({ ok: true, data: existingProposal });
 
   // 1. Validate State Machine Transition
   const allowedNext = ALLOWED_TRANSITIONS[currentStatus] || [];
-  if (!allowedNext.includes(status)) {
+  if (status !== currentStatus && !allowedNext.includes(status)) {
     return NextResponse.json(
       {
         ok: false,
@@ -182,7 +177,7 @@ export async function PATCH(req, ctx) {
   }
 
   // 2. Guard: Revoking an Approved proposal requires a written justification note
-  if (currentStatus === "Approved" && (!note || note.length < 5)) {
+  if (status !== currentStatus && currentStatus === "Approved" && (!note || note.length < 5)) {
     return NextResponse.json(
       {
         ok: false,
@@ -193,7 +188,7 @@ export async function PATCH(req, ctx) {
   }
 
   // 3. Guard: Reopening a Declined proposal requires an appeal/reconsideration note
-  if (currentStatus === "Declined" && (!note || note.length < 5)) {
+  if (status !== currentStatus && currentStatus === "Declined" && (!note || note.length < 5)) {
     return NextResponse.json(
       {
         ok: false,
@@ -204,7 +199,7 @@ export async function PATCH(req, ctx) {
   }
 
   // 4. Guard: Requesting revisions requires instructions for the student organization
-  if (status === "Needs Revision" && (!note || note.length < 5)) {
+  if (status !== currentStatus && status === "Needs Revision" && (!note || note.length < 5)) {
     return NextResponse.json(
       {
         ok: false,
@@ -215,35 +210,61 @@ export async function PATCH(req, ctx) {
   }
 
   const studentNote = note || `Status updated to ${status} by OSAS.`;
-  const proposal = await queryOne(
-    `UPDATE event_proposals 
-     SET status = $1, 
-         archived_at = NULL, 
-         updated_at = NOW(),
-         post_event_status = CASE 
-           WHEN $1 = 'Approved' AND post_event_status = 'Not Applicable' THEN 'Pending Submission' 
-           WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN 'Not Applicable'
-           ELSE post_event_status 
-         END,
-         post_event_due_date = CASE 
-           WHEN $1 = 'Approved' AND post_event_due_date IS NULL THEN COALESCE(event_date + INTERVAL '10 days', (NOW() + INTERVAL '10 days')::DATE)
-           WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN NULL
-           ELSE post_event_due_date 
-         END
-     WHERE id = $2 AND office_id = 'osas' 
-     RETURNING *`,
-    [status, id]
-  );
+  let proposal;
+  try {
+    proposal = await transaction(async (tx) => {
+      const locked = await tx.queryOne(
+        "SELECT id, status, title FROM event_proposals WHERE id = $1 AND office_id = 'osas' FOR UPDATE",
+        [id],
+      );
+      if (!locked) return null;
+      if ((locked.status || "Submitted") !== currentStatus) {
+        const error = new Error("The proposal changed while it was being reviewed. Refresh and try again.");
+        error.code = "PROPOSAL_STATUS_CONFLICT";
+        throw error;
+      }
+
+      let updated = locked;
+      if (status !== currentStatus) {
+        updated = await tx.queryOne(
+          `UPDATE event_proposals
+              SET status = $1,
+                  archived_at = NULL,
+                  updated_at = NOW(),
+                  post_event_status = CASE
+                    WHEN $1 = 'Approved' AND post_event_status = 'Not Applicable' THEN 'Pending Submission'
+                    WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN 'Not Applicable'
+                    ELSE post_event_status
+                  END,
+                  post_event_due_date = CASE
+                    WHEN $1 = 'Approved' AND post_event_due_date IS NULL THEN COALESCE(event_date + INTERVAL '10 days', (NOW() + INTERVAL '10 days')::DATE)
+                    WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN NULL
+                    ELSE post_event_due_date
+                  END
+            WHERE id = $2 AND office_id = 'osas'
+            RETURNING *`,
+          [status, id],
+        );
+      }
+      await tx.query(
+        `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
+         VALUES ($1, $2, $3, $4)`,
+        [id, status, studentNote, access.userId || null],
+      );
+      return updated;
+    });
+  } catch (error) {
+    if (error?.code === "PROPOSAL_STATUS_CONFLICT") {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
+    throw error;
+  }
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-  await query(
-    `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by) VALUES ($1, $2, $3, $4)`,
-    [id, status, studentNote, access.userId || null]
-  );
-  await writeGlobalAuditLog(req, "Updated OSAS proposal status", {
+  await writeGlobalAuditLog(req, status === currentStatus ? "Added note to OSAS proposal" : "Updated OSAS proposal status", {
     officeId: "osas",
-    details: `Changed ${proposal.title} to ${status}. ${studentNote}`,
+    details: status === currentStatus ? `Added note to ${proposal.title}: ${note}` : `Changed ${proposal.title} to ${status}. ${studentNote}`,
     entity_type: "event_proposal",
     entity_id: String(id),
   });
-  return NextResponse.json({ ok: true, data: proposal });
+  return NextResponse.json({ ok: true, data: status === currentStatus ? existingProposal : proposal });
 }

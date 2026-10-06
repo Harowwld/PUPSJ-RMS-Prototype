@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/postgres";
+import { query, queryOne, transaction } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
@@ -26,23 +26,15 @@ export async function GET(req) {
     );
   }
 
-  const studentNo = access.user.studentNo || "";
-  const accountId = access.user.accountId || -1;
-  const studentEmail = (access.user.email || "").toLowerCase();
-
   const proposals = (
     await query(
       `SELECT ep.*, so.acronym AS org_acronym, so.category AS org_category
        FROM event_proposals ep
        LEFT JOIN student_organizations so ON so.id = ep.organization_id
        WHERE ep.office_id = 'osas'
-         AND (
-           (ep.student_no IS NOT NULL AND ep.student_no = $1)
-           OR (ep.student_account_id IS NOT NULL AND ep.student_account_id = $2)
-           OR (ep.submitted_by_email IS NOT NULL AND lower(ep.submitted_by_email) = $3)
-         )
+         AND ep.identity_profile_id = $1
        ORDER BY ep.created_at DESC`,
-      [studentNo, accountId, studentEmail]
+      [access.user.identityProfileId]
     )
   ).filter((item) => canAccessResource(access.user, "proposal", item));
 
@@ -89,6 +81,10 @@ export async function POST(req) {
       { status: 400 }
     );
   }
+  const parsedEventDate = new Date(`${eventDate}T00:00:00.000Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || Number.isNaN(parsedEventDate.getTime()) || parsedEventDate.toISOString().slice(0, 10) !== eventDate) {
+    return NextResponse.json({ ok: false, error: "Event date must be a valid calendar date in YYYY-MM-DD format." }, { status: 400 });
+  }
 
   // Verify whitelist affiliation for the student's email
   const studentEmail = access.user.email || "";
@@ -122,47 +118,65 @@ export async function POST(req) {
 
   const storageFilename = `${crypto.randomUUID()}.pdf`;
   const fileBytes = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(path.join(uploadsDir(), storageFilename), fileBytes);
+  const primaryFilePath = path.join(uploadsDir(), storageFilename);
+  const legacyDir = path.join(process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local"), "osas", "uploads");
+  const legacyFilePath = path.join(legacyDir, storageFilename);
+  const createdPaths = [];
+  let proposal;
 
   try {
-    const legacyDir = path.join(process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local"), "osas", "uploads");
+    fs.writeFileSync(primaryFilePath, fileBytes, { flag: "wx" });
+    createdPaths.push(primaryFilePath);
     fs.mkdirSync(legacyDir, { recursive: true });
-    fs.writeFileSync(path.join(legacyDir, storageFilename), fileBytes);
-  } catch {}
+    try {
+      fs.writeFileSync(legacyFilePath, fileBytes, { flag: "wx" });
+      createdPaths.push(legacyFilePath);
+    } catch {}
 
-  const proposal = await queryOne(
-    `INSERT INTO event_proposals (
-      office_id, student_no, student_account_id, organization_id, organization_name,
-      submitted_by_email, officer_position, is_verified_officer,
-      title, event_date, original_filename, storage_filename, mime_type, size_bytes, status
-    ) VALUES (
-      'osas', $1, $2, $3, $4, $5, $6, TRUE, $7, $8, $9, $10, $11, $12, 'Submitted'
-    ) RETURNING *`,
-    [
-      access.user.studentNo || officerRecord.student_no || null,
-      access.user.accountId || null,
-      resolvedOrgId,
-      resolvedOrgName,
-      studentEmail.toLowerCase(),
-      officerPosition,
-      title,
-      eventDate,
-      file.name || "event-proposal.pdf",
-      storageFilename,
-      file.type,
-      file.size,
-    ]
-  );
+    proposal = await transaction(async (tx) => {
+      const saved = await tx.queryOne(
+        `INSERT INTO event_proposals (
+          office_id, student_no, identity_profile_id, organization_id, organization_name,
+          submitted_by_email, officer_position, is_verified_officer,
+          title, event_date, original_filename, storage_filename, mime_type, size_bytes, status
+        ) VALUES (
+          'osas', $1, (SELECT identity_profile_id FROM student_accounts WHERE id = $2),
+          $3, $4, $5, $6, TRUE, $7, $8, $9, $10, $11, $12, 'Submitted'
+        ) RETURNING *`,
+        [
+          access.user.studentNo || officerRecord.student_no || null,
+          access.user.accountId || null,
+          resolvedOrgId,
+          resolvedOrgName,
+          studentEmail.toLowerCase(),
+          officerPosition,
+          title,
+          eventDate,
+          file.name || "event-proposal.pdf",
+          storageFilename,
+          file.type,
+          fileBytes.length,
+        ],
+      );
+      if (!saved || !canAccessResource(access.user, "proposal", saved)) {
+        const error = new Error("Proposal could not be submitted.");
+        error.code = "PROPOSAL_ACCESS_CHECK_FAILED";
+        throw error;
+      }
+      await tx.query(
+        `INSERT INTO transaction_updates (event_proposal_id, status, message)
+         VALUES ($1, 'Submitted', $2)`,
+        [saved.id, `Event proposal submitted by ${officerPosition} (${studentEmail}).`],
+      );
+      return saved;
+    });
 
-  if (!proposal || !canAccessResource(access.user, "proposal", proposal)) {
-    return NextResponse.json({ ok: false, error: "Proposal could not be submitted." }, { status: 500 });
+  } catch (error) {
+    for (const filePath of createdPaths) {
+      try { fs.unlinkSync(filePath); } catch {}
+    }
+    return NextResponse.json({ ok: false, error: error.message || "Failed to submit event proposal." }, { status: 500 });
   }
-
-  await query(
-    `INSERT INTO transaction_updates (event_proposal_id, status, message)
-     VALUES ($1, 'Submitted', $2)`,
-    [proposal.id, `Event proposal submitted by ${officerPosition} (${studentEmail}).`]
-  );
 
   await writeGlobalAuditLog(req, "Student event proposal submitted", {
     actor: studentEmail || access.user.studentNo || "Student Officer",
@@ -172,6 +186,5 @@ export async function POST(req) {
     entity_type: "event_proposal",
     entity_id: String(proposal.id),
   });
-
   return NextResponse.json({ ok: true, data: proposal }, { status: 201 });
 }

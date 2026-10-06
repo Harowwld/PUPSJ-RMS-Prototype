@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { decodeJwt } from "jose";
-import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
+import { shouldUseSecureCookie } from "./cookieSecurity.js";
 
 const API_CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'none'; style-src 'none'; img-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';";
 

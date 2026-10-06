@@ -181,6 +181,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     station_name: "",
     storage_path: "",
     inbound_path: "",
+    adminEmail: "",
     selectedModules: [],
   })
 
@@ -260,6 +261,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       station_name: "",
       storage_path: "",
       inbound_path: "",
+      adminEmail: "",
       selectedModules: defaultSelected,
     })
     setDialogOpen(true)
@@ -285,6 +287,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       station_name: office.station_name || "",
       storage_path: office.storage_path || "",
       inbound_path: office.inbound_path || "",
+      adminEmail: "",
       selectedModules: [],
     })
     setDialogOpen(true)
@@ -305,7 +308,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const cleanId = form.id.trim().toLowerCase().replace(/^-+|-+$/g, "")
-    if (!cleanId || !form.name.trim() || !form.short_name.trim()) {
+    if (!cleanId || !form.name.trim() || !form.short_name.trim() || (!isEditing && !form.adminEmail.trim())) {
       showToast("Please fill in all required fields", true)
       return
     }
@@ -326,6 +329,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         station_name: form.station_name.trim() || undefined,
         storage_path: form.storage_path.trim() || undefined,
         inbound_path: form.inbound_path.trim() || undefined,
+        adminEmail: form.adminEmail.trim() || undefined,
       }
 
       if (!isEditing) {
@@ -342,12 +346,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       if (res.ok && json.ok) {
         if (isEditing) {
           showToast("Office updated successfully")
-        } else if (json.admin && json.admin.created) {
-          showToast(
-            `Office created with default modules. Default admin ${json.admin.id} (password: ${json.admin.defaultPassword}) — change on first login.`
-          )
         } else {
-          showToast("Office created successfully")
+          showToast(
+            json.credentialEmail?.sent
+              ? "Office created. Admin credentials were emailed."
+              : "Office created, but the admin credential email could not be sent. Check SMTP settings.",
+            !json.credentialEmail?.sent,
+          )
         }
         setDialogOpen(false)
         invalidateDataCache("systemadmin_offices")
@@ -1383,6 +1388,26 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   required
                 />
               </div>
+
+              {!isEditing && (
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                    Office Administrator Email *
+                  </label>
+                  <Input
+                    type="email"
+                    value={form.adminEmail}
+                    onChange={(e) => setForm(prev => ({ ...prev, adminEmail: e.target.value }))}
+                    placeholder="administrator@example.edu"
+                    autoComplete="email"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                    required
+                  />
+                  <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
+                    The new administrator will receive their account ID and default password here.
+                  </p>
+                </div>
+              )}
 
               {/* Row 3: Description */}
               <div>

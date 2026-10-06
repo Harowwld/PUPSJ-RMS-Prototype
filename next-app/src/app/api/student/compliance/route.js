@@ -129,11 +129,12 @@ export async function GET(req) {
 
   if (!student && accountId) {
     const acc = await queryOne(
-      `SELECT sa.id, sa.student_no, sa.email, sa.first_name, sa.middle_name, sa.last_name, sa.client_type,
+      `SELECT sa.id, sa.student_no, sip.email, sip.first_name, sip.middle_name, sip.last_name, sip.client_type,
               s.name AS s_name, s.course_code, s.year_level, s.section, s.status,
               s.storage_room, s.storage_cabinet, s.storage_drawer,
               c.name AS course_name
          FROM student_accounts sa
+    JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
     LEFT JOIN students s ON s.student_no = sa.student_no
     LEFT JOIN courses c ON c.code = s.course_code AND c.office_id = 'registrar'
         WHERE sa.id = $1`,

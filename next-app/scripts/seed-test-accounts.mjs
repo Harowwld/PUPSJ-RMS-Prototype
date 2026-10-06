@@ -3,8 +3,7 @@ import { Pool } from "pg";
 import { hashPassword } from "../src/lib/passwordHash.js";
 import { encryptPII } from "../src/lib/piiEncryption.js";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const password = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 const staffHash = hashPassword(password);
@@ -95,11 +94,20 @@ try {
       ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()
     `, [sNo]);
 
+    const profile = await pool.query(
+      `UPDATE student_identity_profiles sip
+       SET email = $1, client_type = 'Student', updated_at = NOW()
+       FROM students s
+       WHERE s.student_no = $2 AND sip.id = s.identity_profile_id
+       RETURNING sip.id`,
+      [encryptPII(sEmail.toLowerCase()), sNo],
+    );
+    const identityProfileId = profile.rows[0]?.id;
     await pool.query(`
-      INSERT INTO student_accounts (student_no, email, password_hash, status, updated_at)
-      VALUES ($1, $2, $3, 'Active', NOW())
-      ON CONFLICT (email) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()
-    `, [sNo, encryptPII(sEmail.toLowerCase()), studentHash]);
+      INSERT INTO student_accounts (student_no, identity_profile_id, password_hash, status)
+      VALUES ($1, $2, $3, 'Active')
+      ON CONFLICT (identity_profile_id) DO UPDATE SET student_no = EXCLUDED.student_no, password_hash = EXCLUDED.password_hash, status = 'Active', updated_at = NOW()
+    `, [sNo, identityProfileId, studentHash]);
   }
 
   console.log("=== Demo Accounts Seeded Successfully ===");

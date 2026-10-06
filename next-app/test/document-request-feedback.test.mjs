@@ -2,8 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { query, queryOne } = await import("../src/lib/postgres.js");
 
@@ -14,16 +13,16 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
   t.before(async () => {
     // 1. Get or create a test student account and document request
     testStudentAccount = await queryOne(
-      "SELECT id, student_no, email FROM student_accounts WHERE status = 'Active' LIMIT 1"
+      "SELECT id, student_no, identity_profile_id FROM student_accounts WHERE status = 'Active' LIMIT 1"
     );
     assert.ok(testStudentAccount, "A test student account must exist in the database");
 
     // Create a disposable document request for this student
     testRequest = await queryOne(
-      `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, client_type, student_account_id)
-       VALUES ('registrar', $1, 'Certificate of Grades', 'Pending', 'Test request for feedback unit test', 'Student', $2)
+      `INSERT INTO document_requests (office_id, student_no, identity_profile_id, doc_type, status, notes, client_type)
+       VALUES ('registrar', $1, $2, 'Certificate of Grades', 'Pending', 'Test request for feedback unit test', 'Student')
        RETURNING *`,
-      [testStudentAccount.student_no, testStudentAccount.id]
+      [testStudentAccount.student_no, testStudentAccount.identity_profile_id]
     );
     assert.ok(testRequest, "Disposable document request should be created");
   });
@@ -40,7 +39,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
     await assert.rejects(
       async () => {
         await query(
-          `INSERT INTO document_request_feedback (document_request_id, student_account_id, rating)
+          `INSERT INTO document_request_feedback (document_request_id, identity_profile_id, rating)
            VALUES ($1, $2, 0)`,
           [testRequest.id, testStudentAccount.id]
         );
@@ -52,7 +51,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
     await assert.rejects(
       async () => {
         await query(
-          `INSERT INTO document_request_feedback (document_request_id, student_account_id, rating)
+          `INSERT INTO document_request_feedback (document_request_id, identity_profile_id, rating)
            VALUES ($1, $2, 6)`,
           [testRequest.id, testStudentAccount.id]
         );
@@ -66,7 +65,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
     const inserted = await queryOne(
       `INSERT INTO document_request_feedback (
          document_request_id,
-         student_account_id,
+         identity_profile_id,
          student_no,
          rating,
          aspect_tags,
@@ -78,7 +77,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
        RETURNING *`,
       [
         testRequest.id,
-        testStudentAccount.id,
+        testStudentAccount.identity_profile_id,
         testStudentAccount.student_no,
         5,
         ["Easy process", "Fast submission"],
@@ -97,7 +96,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
     await assert.rejects(
       async () => {
         await query(
-          `INSERT INTO document_request_feedback (document_request_id, student_account_id, rating)
+          `INSERT INTO document_request_feedback (document_request_id, identity_profile_id, rating)
            VALUES ($1, $2, 4)`,
           [testRequest.id, testStudentAccount.id]
         );
@@ -111,7 +110,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
     const updated = await queryOne(
       `INSERT INTO document_request_feedback (
          document_request_id,
-         student_account_id,
+         identity_profile_id,
          student_no,
          rating,
          aspect_tags,
@@ -129,7 +128,7 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
        RETURNING *`,
       [
         testRequest.id,
-        testStudentAccount.id,
+        testStudentAccount.identity_profile_id,
         testStudentAccount.student_no,
         4,
         ["Clear requirements"],
@@ -192,10 +191,10 @@ test("Student Document Request Feedback & Rating Test Suite", async (t) => {
   await t.test("7. Cascade deletion: deleting document_request deletes feedback", async () => {
     // Create a temporary request and feedback
     const tempReq = await queryOne(
-      `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, client_type)
-       VALUES ('registrar', $1, 'Certificate of Enrollment', 'Pending', 'Cascade test', 'Student')
+      `INSERT INTO document_requests (office_id, student_no, identity_profile_id, doc_type, status, notes, client_type)
+       VALUES ('registrar', $1, $2, 'Certificate of Enrollment', 'Pending', 'Cascade test', 'Student')
        RETURNING id`,
-      [testStudentAccount.student_no]
+      [testStudentAccount.student_no, testStudentAccount.identity_profile_id]
     );
 
     await query(

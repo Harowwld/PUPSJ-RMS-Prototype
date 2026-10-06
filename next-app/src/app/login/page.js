@@ -411,6 +411,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formattedName,
+          email: studentSignup.email.trim().toLowerCase(),
           firstName: studentSignup.firstName.trim(),
           middleName: studentSignup.middleName.trim(),
           lastName: studentSignup.lastName.trim(),
@@ -427,7 +428,11 @@ export default function Home() {
 
       localStorage.setItem("pup-session-recovered", Date.now().toString());
       localStorage.removeItem("pup-logout");
-      toast.success("Account Created", { description: "Welcome to eManage Student Portal!" });
+      toast.success("Account Created", {
+        description: json.credentialEmail?.sent
+          ? "Your login details were emailed to you. Welcome to eManage Student Portal!"
+          : "Your account is ready, but we could not send the credential email. You can still sign in with the password you chose.",
+      });
       resetStudentSignupState();
       router.push("/student");
     } catch (err) {

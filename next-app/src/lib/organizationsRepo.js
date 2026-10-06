@@ -1,5 +1,5 @@
-import { query, queryOne } from "./postgres.js";
-import { decryptPII } from "./piiEncryption.js";
+import { query, queryOne, transaction } from "./postgres.js";
+import { decryptPII, encryptPII } from "./piiEncryption.js";
 
 function slugify(text) {
   return String(text || "")
@@ -8,6 +8,42 @@ function slugify(text) {
     .replace(/[^\w\s-]/g, "")
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+export async function getStudentIdentityMapByEmails(emailValues = []) {
+  const emails = [...new Set(emailValues
+    .map((value) => String(value || "").trim().toLowerCase())
+    .filter(Boolean))];
+  if (!emails.length) return new Map();
+
+  const encryptedEmails = emails.map((email) => encryptPII(email));
+  const rows = await query(
+    `SELECT sip.id AS identity_profile_id, sip.email,
+            COALESCE(sip.display_name, s.name) AS student_name,
+            COALESCE(s.student_no, sa.student_no) AS student_no,
+            sa.id AS student_account_id, sa.avatar_filename
+       FROM student_identity_profiles sip
+       LEFT JOIN students s ON s.identity_profile_id = sip.id
+       LEFT JOIN student_accounts sa ON sa.identity_profile_id = sip.id
+      WHERE lower(sip.email) = ANY($1::text[])
+         OR sip.email = ANY($2::text[])`,
+    [emails, encryptedEmails],
+  );
+
+  const identities = new Map();
+  for (const row of rows) {
+    const email = String(decryptPII(row.email) || "").trim().toLowerCase();
+    if (!email) continue;
+    const identity = {
+      identity_profile_id: row.identity_profile_id,
+      student_name: row.student_name ? decryptPII(row.student_name) : null,
+      student_no: row.student_no || null,
+      student_account_id: row.student_account_id || null,
+      avatar_filename: row.avatar_filename || null,
+    };
+    identities.set(email, identities.has(email) ? null : identity);
+  }
+  return identities;
 }
 
 /**
@@ -65,6 +101,11 @@ export async function listOrganizations({ status, category, search } = {}) {
   const sql = `
     SELECT
       so.*,
+      (SELECT obv.storage_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_storage_filename,
+      (SELECT obv.original_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_original_filename,
+      (SELECT obv.size_bytes FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_size_bytes,
+      (SELECT obv.mime_type FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_mime_type,
+      (SELECT obv.updated_at FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_updated_at,
       COUNT(DISTINCT oo.id) FILTER (WHERE oo.status = 'Active')::int AS active_officer_count,
       COUNT(DISTINCT ep.id) FILTER (WHERE ep.archived_at IS NULL AND ep.status != 'Archived')::int AS proposal_count,
       (SELECT COUNT(*) FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Pending')::int AS pending_cbl_count
@@ -87,6 +128,11 @@ export async function getOrganizationById(id) {
 
   const org = await queryOne(
     `SELECT so.*,
+      (SELECT obv.storage_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_storage_filename,
+      (SELECT obv.original_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_original_filename,
+      (SELECT obv.size_bytes FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_size_bytes,
+      (SELECT obv.mime_type FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_mime_type,
+      (SELECT obv.updated_at FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_updated_at,
       COUNT(DISTINCT oo.id) FILTER (WHERE oo.status = 'Active')::int AS active_officer_count,
       COUNT(DISTINCT ep.id) FILTER (WHERE ep.archived_at IS NULL AND ep.status != 'Archived')::int AS proposal_count,
       (SELECT COUNT(*) FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Pending')::int AS pending_cbl_count
@@ -113,16 +159,16 @@ export async function getOrganizationById(id) {
          ELSE 6
        END,
        created_at ASC`,
-    [id]
+    [org.id]
   );
 
   const rawProposals = await query(
     `SELECT ep.*, s.name AS student_name
      FROM event_proposals ep
-     LEFT JOIN students s ON s.student_no = ep.student_no
-     WHERE ep.organization_id = $1 AND ep.archived_at IS NULL
-     ORDER BY ep.created_at DESC`,
-    [id]
+      LEFT JOIN students s ON s.student_no = ep.student_no
+      WHERE ep.organization_id = $1 AND ep.archived_at IS NULL
+      ORDER BY ep.created_at DESC`,
+    [org.id]
   );
   const proposals = rawProposals.map((p) => ({
     ...p,
@@ -224,9 +270,12 @@ export async function updateOrganization(id, data) {
     }
   }
 
-  const requestedStatus = data.status || data.status;
-  if (requestedStatus === "Active") {
-    fields.push("archived_at = NULL");
+  if (data.status !== undefined) {
+    if (!["Active", "Inactive", "Archived"].includes(String(data.status))) {
+      throw new Error("Organization status must be Active, Inactive, or Archived.");
+    }
+    params.push(data.status === "Archived");
+    fields.push(`archived_at = CASE WHEN $${params.length} THEN COALESCE(archived_at, NOW()) ELSE NULL END`);
   }
 
   if (fields.length === 0) {
@@ -282,19 +331,23 @@ export async function updateOrganizationBylaws(id, {
 }) {
   if (!id) throw new Error("Organization ID is required.");
 
-  return queryOne(
-    `UPDATE student_organizations
-     SET
-       bylaws_storage_filename = $2,
-       bylaws_original_filename = $3,
-       bylaws_size_bytes = $4,
-       bylaws_mime_type = $5,
-       bylaws_updated_at = NOW(),
-       updated_at = NOW()
-     WHERE id = $1
-     RETURNING *`,
-    [id, storageFilename, originalFilename, sizeBytes, mimeType]
-  );
+  await transaction(async (tx) => {
+    await tx.query(
+      `UPDATE organization_bylaws_versions
+       SET status = 'Superseded', updated_at = NOW()
+       WHERE organization_id = $1 AND status = 'Approved'`,
+      [id]
+    );
+    await tx.query(
+      `INSERT INTO organization_bylaws_versions (
+         organization_id, version_tag, storage_filename, original_filename,
+         size_bytes, mime_type, amendment_summary, status, effective_date, created_at, updated_at
+       ) VALUES ($1, 'Staff Archived', $2, $3, $4, $5,
+         'Archived directly by OSAS Staff', 'Approved', CURRENT_DATE, NOW(), NOW())`,
+      [id, storageFilename, originalFilename, sizeBytes, mimeType]
+    );
+  });
+  return getOrganizationById(id);
 }
 
 /**
@@ -307,22 +360,23 @@ export async function listOrganizationBylawsVersions(orgId) {
        obv.*,
        obv.version_tag AS version_number,
        obv.review_note AS review_notes,
-       s.name AS submitted_by_name,
-       s.student_no AS submitted_by_student_no,
        st.fname || ' ' || st.lname AS approved_by_name
      FROM organization_bylaws_versions obv
-     LEFT JOIN student_accounts sa ON lower(sa.email) = lower(obv.submitted_by_email)
-     LEFT JOIN students s ON s.student_no = sa.student_no
      LEFT JOIN staff st ON st.id = obv.approved_by
      WHERE obv.organization_id = $1
      ORDER BY obv.created_at DESC`,
     [orgId]
   );
-  return rows.map((r) => ({
-    ...r,
-    submitted_by_name: r.submitted_by_name ? decryptPII(r.submitted_by_name) : (r.submitted_by_email || null),
-    file_url: `/api/osas/organizations/${orgId}/bylaws?file=1&versionId=${r.id}`,
-  }));
+  const identitiesByEmail = await getStudentIdentityMapByEmails(rows.map((row) => row.submitted_by_email));
+  return rows.map((r) => {
+    const identity = identitiesByEmail.get(String(r.submitted_by_email || "").trim().toLowerCase());
+    return {
+      ...r,
+      submitted_by_name: identity?.student_name || r.submitted_by_email || null,
+      submitted_by_student_no: identity?.student_no || null,
+      file_url: `/api/osas/organizations/${orgId}/bylaws?file=1&versionId=${r.id}`,
+    };
+  });
 }
 
 /**
@@ -340,6 +394,14 @@ export async function getOrganizationBylawsVersionById(versionId) {
   );
 }
 
+export async function getOrganizationBylawsVersionByStorageFilename(storageFilename) {
+  if (!storageFilename) return null;
+  return queryOne(
+    "SELECT id FROM organization_bylaws_versions WHERE storage_filename = $1 LIMIT 1",
+    [storageFilename],
+  );
+}
+
 /**
  * Create a new CBL version submission from student officer
  */
@@ -350,6 +412,8 @@ export async function createOrganizationBylawsSubmission({
   originalFilename,
   amendmentSummary,
   submittedByEmail,
+  sizeBytes,
+  mimeType = "application/pdf",
 }) {
   if (!organizationId) throw new Error("Organization ID is required.");
   if (!storageFilename || !originalFilename) throw new Error("File details are required.");
@@ -357,14 +421,16 @@ export async function createOrganizationBylawsSubmission({
   return queryOne(
     `INSERT INTO organization_bylaws_versions (
        organization_id, version_tag, storage_filename, original_filename,
-       amendment_summary, submitted_by_email, status, created_at, updated_at
-     ) VALUES ($1, $2, $3, $4, $5, $6, 'Pending', NOW(), NOW())
+       size_bytes, mime_type, amendment_summary, submitted_by_email, status, created_at, updated_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', NOW(), NOW())
      RETURNING *`,
     [
       organizationId,
       versionTag || `Amendment ${new Date().getFullYear()}`,
       storageFilename,
       originalFilename,
+      sizeBytes ?? null,
+      mimeType,
       amendmentSummary || null,
       submittedByEmail ? String(submittedByEmail).trim().toLowerCase() : null,
     ]
@@ -398,39 +464,25 @@ export async function reviewOrganizationBylawsVersion(versionId, {
   }
 
   if (status === "Approved") {
-    // 1. Mark this version as Approved
-    const updated = await queryOne(
-      `UPDATE organization_bylaws_versions
-       SET status = 'Approved',
-           approved_by = $2,
-           review_note = $3,
-           effective_date = COALESCE($4::DATE, CURRENT_DATE),
-           updated_at = NOW()
-       WHERE id = $1
-       RETURNING *`,
-      [versionId, staffId || null, reviewNote ? reviewNote.trim() : null, effectiveDate || null]
-    );
-
-    // 2. Mark previous Approved versions as Superseded
-    await query(
-      `UPDATE organization_bylaws_versions
-       SET status = 'Superseded', updated_at = NOW()
-       WHERE organization_id = $1 AND id != $2 AND status = 'Approved'`,
-      [existing.organization_id, versionId]
-    );
-
-    // 3. Update student_organizations table to reflect the current active charter
-    await query(
-      `UPDATE student_organizations
-       SET bylaws_storage_filename = $2,
-           bylaws_original_filename = $3,
-           bylaws_updated_at = NOW(),
-           updated_at = NOW()
-       WHERE id = $1`,
-      [existing.organization_id, existing.storage_filename, existing.original_filename]
-    );
-
-    return updated;
+    return transaction(async (tx) => {
+      await tx.query(
+        `UPDATE organization_bylaws_versions
+         SET status = 'Superseded', updated_at = NOW()
+         WHERE organization_id = $1 AND id != $2 AND status = 'Approved'`,
+        [existing.organization_id, versionId]
+      );
+      return tx.queryOne(
+        `UPDATE organization_bylaws_versions
+         SET status = 'Approved',
+             approved_by = $2,
+             review_note = $3,
+             effective_date = COALESCE($4::DATE, CURRENT_DATE),
+             updated_at = NOW()
+         WHERE id = $1
+         RETURNING *`,
+        [versionId, staffId || null, reviewNote ? reviewNote.trim() : null, effectiveDate || null]
+      );
+    });
   }
 
   // Needs Revision or Declined
@@ -459,30 +511,24 @@ export async function archiveOrganizationBylawsDirectly(orgId, {
   amendmentSummary = "Archived directly by OSAS Staff",
   effectiveDate,
 }) {
-  const updatedOrg = await updateOrganizationBylaws(orgId, {
-    storageFilename,
-    originalFilename,
-    sizeBytes,
-    mimeType,
+  const newVersion = await transaction(async (tx) => {
+    await tx.query(
+      `UPDATE organization_bylaws_versions
+       SET status = 'Superseded', updated_at = NOW()
+       WHERE organization_id = $1 AND status = 'Approved'`,
+      [orgId]
+    );
+    return tx.queryOne(
+      `INSERT INTO organization_bylaws_versions (
+         organization_id, version_tag, storage_filename, original_filename,
+         size_bytes, mime_type, amendment_summary, approved_by, status, effective_date, created_at, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Approved', COALESCE($9::DATE, CURRENT_DATE), NOW(), NOW())
+       RETURNING *`,
+      [orgId, versionTag, storageFilename, originalFilename, sizeBytes, mimeType, amendmentSummary, staffId || null, effectiveDate || null]
+    );
   });
 
-  await query(
-    `UPDATE organization_bylaws_versions
-     SET status = 'Superseded', updated_at = NOW()
-     WHERE organization_id = $1 AND status = 'Approved'`,
-    [orgId]
-  );
-
-  const newVersion = await queryOne(
-    `INSERT INTO organization_bylaws_versions (
-       organization_id, version_tag, storage_filename, original_filename,
-       amendment_summary, approved_by, status, effective_date, created_at, updated_at
-     ) VALUES ($1, $2, $3, $4, $5, $6, 'Approved', COALESCE($7::DATE, CURRENT_DATE), NOW(), NOW())
-     RETURNING *`,
-    [orgId, versionTag, storageFilename, originalFilename, amendmentSummary, staffId || null, effectiveDate || null]
-  );
-
-  return { organization: updatedOrg, version: newVersion };
+  return { organization: await getOrganizationById(orgId), version: newVersion };
 }
 
 /**
@@ -491,12 +537,8 @@ export async function archiveOrganizationBylawsDirectly(orgId, {
 export async function getOfficersByOrganizationId(orgId) {
   if (!orgId) return [];
   const rows = await query(
-    `SELECT oo.*,
-            coalesce(oo.student_no, sa.student_no) AS student_no,
-            sa.avatar_filename,
-            sa.id AS student_account_id
+    `SELECT oo.*
      FROM organization_officers oo
-     LEFT JOIN student_accounts sa ON lower(sa.email) = lower(oo.email)
      WHERE oo.organization_id = $1
      ORDER BY
        CASE
@@ -510,15 +552,23 @@ export async function getOfficersByOrganizationId(orgId) {
        oo.created_at ASC`,
     [orgId]
   );
-  return rows.map((r) => ({
-    ...r,
-    student_name: r.student_name ? decryptPII(r.student_name) : r.student_name,
-    email: r.email ? decryptPII(r.email) : r.email,
-    avatarFilename: r.avatar_filename || null,
-    avatar_filename: r.avatar_filename || null,
-    studentAccountId: r.student_account_id || null,
-    student_account_id: r.student_account_id || null,
-  }));
+  const identitiesByEmail = await getStudentIdentityMapByEmails(rows.map((row) => row.email));
+  return rows.map((r) => {
+    const identity = identitiesByEmail.get(String(r.email || "").trim().toLowerCase());
+    const studentName = r.student_name ? decryptPII(r.student_name) : identity?.student_name || null;
+    const studentNo = r.student_no || identity?.student_no || null;
+    const studentAccountId = identity?.student_account_id || null;
+    const avatarFilename = identity?.avatar_filename || null;
+    return {
+      ...r,
+      student_name: studentName,
+      student_no: studentNo,
+      avatarFilename,
+      avatar_filename: avatarFilename,
+      studentAccountId,
+      student_account_id: studentAccountId,
+    };
+  });
 }
 
 /**
@@ -595,8 +645,8 @@ export async function getOrganizationsForStudentEmail(email) {
       so.category,
       so.adviser_name,
       so.description,
-      so.bylaws_storage_filename,
-      so.bylaws_original_filename,
+      (SELECT obv.storage_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_storage_filename,
+      (SELECT obv.original_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_original_filename,
       oo.id AS officer_id,
       oo.position AS officer_position,
       oo.student_name,

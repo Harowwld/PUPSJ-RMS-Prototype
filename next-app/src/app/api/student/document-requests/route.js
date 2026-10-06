@@ -3,11 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { getStudentSession } from "@/lib/studentAuth";
-import { query, queryOne } from "@/lib/postgres";
+import { query, queryOne, transaction } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
-import { addRequestAttachment } from "@/lib/documentRequestsRepo";
 import { decryptPII, encryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
@@ -43,8 +42,11 @@ export async function GET(req) {
 
   if (!accountId && email) {
     const acc = await queryOne(
-      "SELECT id, student_no FROM student_accounts WHERE lower(coalesce(email, '')) = lower($1)",
-      [email]
+      `SELECT sa.id, sa.student_no
+         FROM student_accounts sa
+         JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+        WHERE sip.email = $1 OR lower(coalesce(sip.email, '')) = lower($2)`,
+      [encryptPII(email.toLowerCase()), email]
     );
     if (acc) {
       accountId = acc.id;
@@ -67,12 +69,9 @@ export async function GET(req) {
      LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
      LEFT JOIN document_request_feedback rf ON rf.document_request_id = dr.id
      WHERE dr.office_id = 'registrar'
-       AND (
-         (dr.student_account_id IS NOT NULL AND dr.student_account_id = $1)
-         OR ($2::text IS NOT NULL AND dr.student_no = $2)
-       )
+       AND dr.identity_profile_id = $1
      ORDER BY dr.created_at DESC`,
-    [accountId, studentNo]
+    [access.user.identityProfileId]
   );
   const authorizedRequests = requests.filter((item) => canAccessResource(access.user, "request", item));
 
@@ -182,13 +181,19 @@ export async function POST(req) {
   let acc = null;
   if (accountId) {
     acc = await queryOne(
-      "SELECT id, first_name, middle_name, last_name, email, client_type, student_no FROM student_accounts WHERE id = $1",
+      `SELECT sa.id, sip.first_name, sip.middle_name, sip.last_name, sip.email, sip.client_type, sa.student_no
+         FROM student_accounts sa
+         JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+        WHERE sa.id = $1`,
       [accountId]
     );
   } else if (session.email) {
     acc = await queryOne(
-      "SELECT id, first_name, middle_name, last_name, email, client_type, student_no FROM student_accounts WHERE lower(coalesce(email, '')) = lower($1)",
-      [session.email]
+      `SELECT sa.id, sip.first_name, sip.middle_name, sip.last_name, sip.email, sip.client_type, sa.student_no
+         FROM student_accounts sa
+         JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+        WHERE sip.email = $1 OR lower(coalesce(sip.email, '')) = lower($2)`,
+      [encryptPII(session.email.toLowerCase()), session.email]
     );
     if (acc) accountId = acc.id;
   }
@@ -278,84 +283,119 @@ export async function POST(req) {
   const rawBodyName = body?.requesterName ? decryptField(String(body.requesterName).trim()) : null;
   const finalRequesterName = rawBodyName || defaultRequesterName;
 
-  // If a student number is provided, ensure the student record exists in students table
-  if (effectiveStudentNo) {
-    const existingStudent = await queryOne(
-      "SELECT student_no, course_code FROM students WHERE upper(student_no) = upper($1)",
-      [effectiveStudentNo]
-    );
-    if (!existingStudent) {
-      const studentDisplayName = finalRequesterName || effectiveStudentNo;
-      await query(
-        `INSERT INTO students (student_no, name, status, course_code)
-         VALUES ($1, $2, 'Active', $3)
-         ON CONFLICT (student_no) DO NOTHING`,
-        [effectiveStudentNo, encryptPII(studentDisplayName), courseCode || null]
-      );
+  const createdPaths = [];
+  let request;
+  let savedAttachments = [];
+  try {
+    const preparedAttachments = [];
+    for (const item of uploadedFiles) {
+      const buffer = Buffer.from(await item.file.arrayBuffer());
+      const ext = path.extname(item.file.name) || ".pdf";
+      const storageFilename = `${crypto.randomUUID()}${ext}`;
+      const destPath = path.join(requestAttachmentsDir(), storageFilename);
+      fs.writeFileSync(destPath, buffer, { flag: "wx" });
+      createdPaths.push(destPath);
+      preparedAttachments.push({
+        originalFilename: item.file.name,
+        storageFilename,
+        mimeType: item.file.type || "application/octet-stream",
+        sizeBytes: buffer.length,
+        attachmentType: item.attachmentType || "evidence",
+      });
     }
-  }
 
-  const request = await queryOne(
-    `INSERT INTO document_requests (
-       office_id, student_no, doc_type, status, notes, client_type, student_account_id, course_code, requester_name, requester_relationship, requester_contact
-     ) VALUES ('registrar', $1, $2, 'Pending', $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-    [
-      effectiveStudentNo,
-      docType,
-      notes,
-      clientType,
-      accountId || null,
-      courseCode,
-      finalRequesterName,
-      requesterRelationship,
-      requesterContact,
-    ]
-  );
+    const result = await transaction(async ({ query: run, queryOne: runOne }) => {
+      if (effectiveStudentNo) {
+        const existingStudent = await runOne(
+          "SELECT student_no FROM students WHERE upper(student_no) = upper($1)",
+          [effectiveStudentNo],
+        );
+        if (!existingStudent) {
+          const studentDisplayName = finalRequesterName || effectiveStudentNo;
+          await run(
+            `INSERT INTO students (student_no, name, status, course_code)
+             VALUES ($1, $2, 'Active', $3)
+             ON CONFLICT (student_no) DO NOTHING`,
+            [effectiveStudentNo, encryptPII(studentDisplayName), courseCode || null],
+          );
+        }
+      }
 
-  if (!request || !canAccessResource(access.user, "request", request)) {
+      const createdRequest = await runOne(
+        `INSERT INTO document_requests (
+           office_id, student_no, doc_type, status, notes, client_type, course_code, requester_name, requester_relationship, requester_contact, identity_profile_id
+         ) VALUES ('registrar', $1, $2, 'Pending', $3, $4, $6, $7, $8, $9,
+           COALESCE(
+             (SELECT identity_profile_id FROM student_accounts WHERE id = $5),
+             (SELECT identity_profile_id FROM students WHERE student_no = $1)
+           )) RETURNING *`,
+        [
+          effectiveStudentNo,
+          docType,
+          notes,
+          clientType,
+          accountId || null,
+          courseCode,
+          finalRequesterName,
+          requesterRelationship,
+          requesterContact,
+        ],
+      );
+      if (!createdRequest || !canAccessResource(access.user, "request", createdRequest)) {
+        throw new Error("Request could not be completed");
+      }
+
+      const attachments = [];
+      for (const item of preparedAttachments) {
+        attachments.push(await runOne(
+          `INSERT INTO document_request_attachments (
+             document_request_id, original_filename, storage_filename, mime_type,
+             size_bytes, attachment_type, uploaded_by
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+          [
+            createdRequest.id,
+            item.originalFilename,
+            item.storageFilename,
+            item.mimeType,
+            item.sizeBytes,
+            item.attachmentType,
+            finalRequesterName || access.user.email || "Requester",
+          ],
+        ));
+      }
+
+      const initialMessage = attachments.length > 0
+        ? `Request submitted with ${attachments.length} supporting attachment(s)${clientType === "Parent" ? " including Special Power of Attorney (SPA)" : ""}.`
+        : "Request submitted.";
+      await run(
+        `INSERT INTO transaction_updates (document_request_id, status, message)
+         VALUES ($1, 'Pending', $2)`,
+        [createdRequest.id, initialMessage],
+      );
+      return { request: createdRequest, attachments };
+    });
+    request = result.request;
+    savedAttachments = result.attachments;
+  } catch (error) {
+    for (const filePath of createdPaths) {
+      try { fs.unlinkSync(filePath); } catch {}
+    }
+    console.error("Student document request creation failed:", error);
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 500 });
   }
 
-  // Save attachments
-  const savedAttachments = [];
-  for (const item of uploadedFiles) {
-    const bytes = await item.file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const ext = path.extname(item.file.name) || ".pdf";
-    const storageFilename = `${crypto.randomUUID()}${ext}`;
-    const destPath = path.join(requestAttachmentsDir(), storageFilename);
-    fs.writeFileSync(destPath, buffer);
-
-    const saved = await addRequestAttachment({
-      documentRequestId: request.id,
-      originalFilename: item.file.name,
-      storageFilename,
-      mimeType: item.file.type || "application/octet-stream",
-      sizeBytes: item.file.size,
-      attachmentType: item.attachmentType || "evidence",
-      uploadedBy: finalRequesterName || access.user.email || "Requester",
+  try {
+    await writeGlobalAuditLog(req, "Student document request created", {
+      actor: accEmail || effectiveStudentNo || "Requester",
+      role: "Student",
+      officeId: "registrar",
+      details: `Requested ${docType} (${clientType})${effectiveStudentNo ? ` for ${effectiveStudentNo}` : ""}${savedAttachments.length > 0 ? ` with ${savedAttachments.length} attachment(s)` : ""}`,
+      entity_type: "document_request",
+      entity_id: String(request.id),
     });
-    savedAttachments.push(saved);
+  } catch (error) {
+    console.error("Student document request audit log failed:", error);
   }
-
-  const initialMessage = savedAttachments.length > 0
-    ? `Request submitted with ${savedAttachments.length} supporting attachment(s)${clientType === "Parent" ? " including Special Power of Attorney (SPA)" : ""}.`
-    : "Request submitted.";
-
-  await query(
-    `INSERT INTO transaction_updates (document_request_id, status, message)
-     VALUES ($1, 'Pending', $2)`,
-    [request.id, initialMessage]
-  );
-
-  await writeGlobalAuditLog(req, "Student document request created", {
-    actor: accEmail || effectiveStudentNo || "Requester",
-    role: "Student",
-    officeId: "registrar",
-    details: `Requested ${docType} (${clientType})${effectiveStudentNo ? ` for ${effectiveStudentNo}` : ""}${savedAttachments.length > 0 ? ` with ${savedAttachments.length} attachment(s)` : ""}`,
-    entity_type: "document_request",
-    entity_id: String(request.id),
-  });
 
   request.attachments = savedAttachments;
   return NextResponse.json({ ok: true, data: request }, { status: 201 });

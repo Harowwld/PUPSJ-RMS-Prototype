@@ -37,16 +37,16 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const rawTicket = searchParams.get("ticket") || "";
-    const cleanDigits = rawTicket.replace(/[^0-9]/g, "");
-    
-    if (!cleanDigits) {
+    const ticketMatch = rawTicket.trim().toUpperCase().match(/^(?:REQ-\d{4}-)?(\d+)$/);
+
+    if (!ticketMatch) {
       return NextResponse.json(
         { ok: false, error: "Please enter a valid ticket number (e.g. 104 or REQ-2026-0104)." },
         { status: 400 }
       );
     }
 
-    const ticketId = parseInt(cleanDigits, 10);
+    const ticketId = Number(ticketMatch[1]);
     if (!Number.isFinite(ticketId) || ticketId <= 0) {
       return NextResponse.json(
         { ok: false, error: "Invalid ticket reference number." },
@@ -65,12 +65,12 @@ export async function GET(req) {
         dr.client_type,
         dr.requester_name,
         s.name AS s_name,
-        sa.first_name AS sa_first_name,
-        sa.last_name AS sa_last_name,
-        sa.email AS sa_email
+        sip.first_name AS sa_first_name,
+        sip.last_name AS sa_last_name,
+        sip.email AS sa_email
       FROM document_requests dr
       LEFT JOIN students s ON s.student_no = dr.student_no
-      LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+      LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
       WHERE dr.id = ?
       `,
       [ticketId]

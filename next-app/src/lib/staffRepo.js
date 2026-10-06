@@ -269,6 +269,17 @@ export async function restoreStaff(id, { officeId } = {}) {
   return await getStaffById(id, { officeId });
 }
 
+export function parseStaffPreferences(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value !== "string" || !value.trim()) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function deleteStaff(id) {
   // We prefer archiving (soft-delete) to preserve audit trails, 
   // but we keep this method name for compatibility with existing code.

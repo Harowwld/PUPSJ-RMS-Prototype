@@ -1,4 +1,5 @@
 import { query } from "./postgres.js";
+import { getStudentIdentityMapByEmails } from "./organizationsRepo.js";
 
 /**
  * Get comprehensive student organization compliance summary for OSAS
@@ -59,7 +60,11 @@ export async function getOrganizationComplianceSummary({
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const orgs = await query(
-    `SELECT so.*
+    `SELECT so.*,
+            (SELECT obv.storage_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_storage_filename,
+            (SELECT obv.original_filename FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_original_filename,
+            (SELECT obv.size_bytes FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_size_bytes,
+            (SELECT obv.updated_at FROM organization_bylaws_versions obv WHERE obv.organization_id = so.id AND obv.status = 'Approved' ORDER BY obv.effective_date DESC NULLS LAST, obv.created_at DESC, obv.id DESC LIMIT 1) AS bylaws_updated_at
      FROM student_organizations so
      ${whereClause}
      ORDER BY so.name ASC`,
@@ -69,11 +74,8 @@ export async function getOrganizationComplianceSummary({
   // 2. Fetch all active officers grouped by organization_id
   const officers = await query(
     `SELECT oo.id, oo.organization_id, oo.email, oo.student_name,
-            coalesce(oo.student_no, sa.student_no) AS student_no,
-            oo.position, oo.status, oo.created_at,
-            sa.avatar_filename, sa.id AS student_account_id
+            oo.student_no, oo.position, oo.status, oo.created_at
      FROM organization_officers oo
-     LEFT JOIN student_accounts sa ON lower(sa.email) = lower(oo.email)
      ORDER BY
        CASE
          WHEN lower(oo.position) = 'president' THEN 1
@@ -85,6 +87,15 @@ export async function getOrganizationComplianceSummary({
        END,
        oo.created_at ASC`
   );
+
+  const identitiesByEmail = await getStudentIdentityMapByEmails(officers.map((officer) => officer.email));
+  for (const officer of officers) {
+    const identity = identitiesByEmail.get(String(officer.email || "").trim().toLowerCase());
+    officer.student_name = officer.student_name || identity?.student_name || null;
+    officer.student_no = officer.student_no || identity?.student_no || null;
+    officer.avatar_filename = identity?.avatar_filename || null;
+    officer.student_account_id = identity?.student_account_id || null;
+  }
 
   const officersByOrg = new Map();
   for (const officer of officers) {

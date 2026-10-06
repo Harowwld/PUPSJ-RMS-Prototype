@@ -51,14 +51,13 @@ export async function POST(req, props) {
 
   const comments = String(body?.comments || "").trim().slice(0, 1000) || null;
 
-  const studentAccountId = access.user.accountId || docRequest.student_account_id || null;
   const studentNo = access.user.studentNo || docRequest.student_no || null;
 
   const feedback = await queryOne(
     `INSERT INTO document_request_feedback (
        document_request_id,
-       student_account_id,
        student_no,
+       identity_profile_id,
        rating,
        aspect_tags,
        comments,
@@ -71,9 +70,10 @@ export async function POST(req, props) {
        rating = EXCLUDED.rating,
        aspect_tags = EXCLUDED.aspect_tags,
        comments = EXCLUDED.comments,
+       identity_profile_id = EXCLUDED.identity_profile_id,
        updated_at = NOW()
      RETURNING *`,
-    [requestId, studentAccountId, studentNo, rawRating, aspectTags, comments]
+    [requestId, studentNo, access.user.identityProfileId || docRequest.identity_profile_id, rawRating, aspectTags, comments]
   );
 
   await writeGlobalAuditLog(req, "Student document request feedback submitted", {

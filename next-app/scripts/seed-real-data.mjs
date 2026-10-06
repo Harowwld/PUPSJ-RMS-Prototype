@@ -2,8 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env" });
 
 const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
 
@@ -305,11 +304,11 @@ async function main() {
     const status = reqStatuses[rIdx % reqStatuses.length];
 
     await query(
-      `INSERT INTO document_requests (
-         office_id, student_no, doc_type, status, notes,
+       `INSERT INTO document_requests (
+         office_id, student_no, identity_profile_id, doc_type, status, notes,
          created_by, updated_by, created_at, updated_at
        )
-       VALUES ('registrar', $1, $2, $3, $4, 'PUPREGISTRAR-002', 'PUPREGISTRAR-003', NOW() - interval '${rIdx * 5} hours', NOW())`,
+       VALUES ('registrar', $1, (SELECT identity_profile_id FROM students WHERE student_no = $1), $2, $3, $4, 'PUPREGISTRAR-002', 'PUPREGISTRAR-003', NOW() - interval '${rIdx * 5} hours', NOW())`,
       [student.studentNo, reqInfo.docType, status, reqInfo.note]
     );
   }

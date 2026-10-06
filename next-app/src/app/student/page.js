@@ -697,7 +697,14 @@ export default function StudentDashboard() {
     const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const json = await res.json();
     if (!res.ok || !json.ok) { const error = json.error || "Unable to continue."; setMessage(error); showToast("Sign-in failed", error, true); return; }
-    showToast(authMode === "register" ? "Account created" : "Signed in", authMode === "register" ? "Your Student ODRS account is ready." : "Welcome to Student ODRS.");
+    const registrationNotice = json.credentialEmail?.sent
+      ? "Your login details were emailed to you."
+      : "The account is ready, but the credential email could not be sent. You can sign in with your chosen password.";
+    showToast(
+      authMode === "register" ? "Account created" : "Signed in",
+      authMode === "register" ? registrationNotice : "Welcome to Student ODRS.",
+      authMode === "register" && !json.credentialEmail?.sent,
+    );
     await load();
     } catch (error) {
       const message = error.message || "Unable to continue."; setMessage(message); showToast("Connection failed", message, true);

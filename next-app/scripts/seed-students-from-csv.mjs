@@ -1,104 +1,106 @@
 import fs from "node:fs";
 import path from "node:path";
-import { dbRun, getDb, reloadDb } from "../src/lib/sqlite.js";
-import { createStudent } from "../src/lib/studentsRepo.js";
+import dotenv from "dotenv";
 
-async function main() {
-  const importOfficeId = String(process.env.STUDENT_IMPORT_OFFICE_ID || "").trim().toLowerCase();
-  if (!importOfficeId) {
-    throw new Error("Set STUDENT_IMPORT_OFFICE_ID before running the student import.");
-  }
-  console.log("Wiping active student and document records...");
+dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env" });
 
-  const db = await getDb();
-  db.exec("PRAGMA foreign_keys = OFF;");
-  db.exec("DELETE FROM documents;");
-  db.exec("DELETE FROM students;");
-  db.exec("DELETE FROM document_requests;");
-  db.exec("DELETE FROM sqlite_sequence WHERE name IN ('documents', 'document_requests');");
+const officeId = String(process.env.STUDENT_IMPORT_OFFICE_ID || "").trim().toLowerCase();
+if (!officeId) throw new Error("Set STUDENT_IMPORT_OFFICE_ID before running the student import.");
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
 
-  console.log("Reading cleaned_student_data.csv...");
-  const csvPath = path.join(process.cwd(), "../_SAMPLE_DATA/cleaned_student_data.csv");
-  if (!fs.existsSync(csvPath)) {
-    throw new Error(`CSV not found at: ${csvPath}`);
-  }
+const csvPath = path.resolve(process.cwd(), "../_SAMPLE_DATA/cleaned_student_data.csv");
+if (!fs.existsSync(csvPath)) throw new Error(`CSV not found at: ${csvPath}`);
 
-  const content = fs.readFileSync(csvPath, "utf8");
-  const lines = content.split(/\r?\n/).filter(Boolean);
-  
-  const headers = lines[0].split(",");
-  const seen = new Set();
-  let addedCount = 0;
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
-    if (cols.length < 8) continue;
-    const [studentNo, rawName, courseCode, academicYear, section, room, cabinet, drawer] = cols.map(c => c.trim());
-
-    if (seen.has(studentNo)) {
-      console.log(`- Skipping duplicate student number: ${studentNo}`);
-      continue;
-    }
-    seen.add(studentNo);
-
-    // Format name to "LN, FN MI." with deterministic middle initials
-    const words = rawName.toUpperCase().split(/\s+/).filter(Boolean);
-    let lastName = "";
-    let restWords = [];
-
-    if (words[0] === "DEL" && words[1] === "ROSARIO") {
-      lastName = "DEL ROSARIO";
-      restWords = words.slice(2);
-    } else if (words[0] === "DE" && words[1] === "LEON") {
-      lastName = "DE LEON";
-      restWords = words.slice(2);
-    } else if (words[0] === "DELA" && words[1] === "PENA") {
-      lastName = "DELA PENA";
-      restWords = words.slice(2);
-    } else if (words[0] === "DELA" && words[1] === "PEÑA") {
-      lastName = "DELA PEÑA";
-      restWords = words.slice(2);
-    } else if (words[0] === "DE" || words[0] === "DEL" || words[0] === "DELA") {
-      lastName = words.slice(0, 2).join(" ");
-      restWords = words.slice(2);
+function parseCsvLine(line) {
+  const fields = [];
+  let value = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (char === '"' && quoted && line[i + 1] === '"') {
+      value += '"';
+      i += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      fields.push(value.trim());
+      value = "";
     } else {
-      lastName = words[0];
-      restWords = words.slice(1);
+      value += char;
     }
+  }
+  fields.push(value.trim());
+  return fields;
+}
 
-    let firstName = restWords.join(" ");
-    let mi = "";
+function formatName(rawName) {
+  const words = rawName.toUpperCase().split(/\s+/).filter(Boolean);
+  if (!words.length) throw new Error("Student name is empty.");
+  let lastName;
+  let restWords;
+  if (words[0] === "DEL" && words[1] === "ROSARIO") {
+    lastName = "DEL ROSARIO";
+    restWords = words.slice(2);
+  } else if (words[0] === "DE" && words[1] === "LEON") {
+    lastName = "DE LEON";
+    restWords = words.slice(2);
+  } else if (words[0] === "DELA" && ["PENA", "PEÑA"].includes(words[1])) {
+    lastName = "DELA PEÑA";
+    restWords = words.slice(2);
+  } else if (["DE", "DEL", "DELA"].includes(words[0])) {
+    lastName = words.slice(0, 2).join(" ");
+    restWords = words.slice(2);
+  } else {
+    lastName = words[0];
+    restWords = words.slice(1);
+  }
+  let middleInitial = "";
+  if (restWords.length > 1 && restWords.at(-1).length === 1) {
+    middleInitial = `${restWords.pop()}.`;
+  }
+  return `${lastName}, ${restWords.join(" ")}${middleInitial ? ` ${middleInitial}` : ""}`;
+}
 
-    if (restWords.length > 1 && restWords[restWords.length - 1].length === 1) {
-      mi = restWords.pop() + ".";
-      firstName = restWords.join(" ");
-    }
+const { pool } = await import("../src/lib/postgres.js");
+const { getStudentByStudentNo, upsertStudent } = await import("../src/lib/studentsRepo.js");
 
-    const unifiedName = `${lastName}, ${firstName} ${mi}`;
+try {
+  const lines = fs.readFileSync(csvPath, "utf8").split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) throw new Error("CSV contains no student rows.");
+
+  const seen = new Set();
+  let imported = 0;
+  let existing = 0;
+  for (const [index, line] of lines.slice(1).entries()) {
+    const cols = parseCsvLine(line);
+    if (cols.length < 8) throw new Error(`CSV row ${index + 2} has fewer than 8 columns.`);
+    const [studentNo, rawName, courseCode, academicYear, section, room, cabinet, drawer] = cols;
+    if (!studentNo) throw new Error(`CSV row ${index + 2} has no student number.`);
+    if (seen.has(studentNo)) continue;
+    seen.add(studentNo);
 
     const studentRow = {
       studentNo,
-      name: unifiedName,
+      name: formatName(rawName),
       courseCode,
-      yearLevel: parseInt(academicYear, 10),
-      section: section, // Align sections schema (e.g. 1-2)
-      room: parseInt(room, 10),
+      yearLevel: Number.parseInt(academicYear, 10),
+      section,
+      room: Number.parseInt(room, 10),
       cabinet,
-      drawer: parseInt(drawer, 10),
+      drawer: Number.parseInt(drawer, 10),
+      officeId,
     };
+    if (!Number.isInteger(studentRow.yearLevel) || !Number.isInteger(studentRow.room) || !Number.isInteger(studentRow.drawer)) {
+      throw new Error(`CSV row ${index + 2} has invalid year or storage values.`);
+    }
 
-    await createStudent({ ...studentRow, officeId: importOfficeId });
-    addedCount++;
+    const prior = await getStudentByStudentNo(studentNo);
+    await upsertStudent(studentRow);
+    if (prior) existing += 1;
+    else imported += 1;
   }
-
-  console.log(`Successfully cleared database and seeded ${addedCount} unified students with middle initials!`);
-  await new Promise(r => setTimeout(r, 200));
-}
-
-try {
-  await main();
-} catch (err) {
-  console.error("Execution failed:", err);
+  console.log(`Student CSV import finished for ${officeId}: ${imported} added, ${existing} already existed.`);
 } finally {
-  reloadDb();
+  await pool.end();
 }

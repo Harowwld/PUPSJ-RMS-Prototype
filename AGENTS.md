@@ -292,7 +292,7 @@ staff_security_answers (
 
 ## 5. Environment Variables
 
-Create a `.env.local` file in `next-app/` with these variables:
+Create a `.env` file in `next-app/` with these variables:
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|

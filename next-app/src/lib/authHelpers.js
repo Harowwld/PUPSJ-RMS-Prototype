@@ -7,6 +7,7 @@ import { queryOne } from "./postgres.js";
 import { isStudentRole, isSystemAdminRole, normalizeRole } from "./roleUtils.js";
 import { checkCSRFProtection } from "./csrfProtection.js";
 import { decryptStudentRow } from "./studentAuth.js";
+import { isStaffOfficeActive } from "./officeAccess.js";
 
 /**
  * Validates session and returns user information with role verification
@@ -46,9 +47,11 @@ export async function getAuthenticatedPrincipal(req) {
 
     if (isStudentRole(tokenRole)) {
       const account = await queryOne(
-        `SELECT sa.id, sa.student_no, sa.email, sa.first_name, sa.middle_name, sa.last_name, sa.avatar_filename,
-                sa.status AS account_status, s.status AS student_status, s.name
+        `SELECT sa.id, sa.identity_profile_id, sa.student_no, sip.email, sip.first_name, sip.middle_name, sip.last_name, sa.avatar_filename,
+                sa.status AS account_status, s.status AS student_status,
+                COALESCE(sip.display_name, s.name) AS name
            FROM student_accounts sa
+           JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
            LEFT JOIN students s ON s.student_no = sa.student_no
           WHERE sa.id = $1`,
         [payload.account_id || userId]
@@ -62,6 +65,7 @@ export async function getAuthenticatedPrincipal(req) {
       return {
         id: String(decryptedAccount.id),
         accountId: decryptedAccount.id,
+        identityProfileId: decryptedAccount.identity_profile_id,
         principalType: "student",
         role: "Student",
         officeId: null,
@@ -83,6 +87,13 @@ export async function getAuthenticatedPrincipal(req) {
     const currentRole = normalizeRole(staff?.role);
     if (!staff || staff.status !== "Active" || !currentRole || currentRole !== tokenRole) {
       await logInvalidSession(req, "Missing, inactive, or role-changed staff account", { userId });
+      return null;
+    }
+    if (!(await isStaffOfficeActive(staff.office_id, currentRole))) {
+      await logUnauthorizedAccess(req, "Staff account belongs to an inactive office", {
+        userId,
+        officeId: staff.office_id,
+      });
       return null;
     }
 

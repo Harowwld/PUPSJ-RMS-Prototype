@@ -27,9 +27,9 @@ export async function GET(req) {
     SELECT
       dr.*,
       s.name AS s_name,
-      sa.first_name AS sa_first_name,
-      sa.last_name AS sa_last_name,
-      sa.email AS sa_email,
+      sip.first_name AS sa_first_name,
+      sip.last_name AS sa_last_name,
+      sip.email AS sa_email,
       COALESCE(dr.course_code, s.course_code) AS course_code,
       c.name AS course_name,
       rf.id AS feedback_id,
@@ -40,7 +40,7 @@ export async function GET(req) {
       (SELECT COUNT(*)::int FROM document_request_attachments dra WHERE dra.document_request_id = dr.id) AS attachment_count
     FROM document_requests dr
     LEFT JOIN students s ON s.student_no = dr.student_no
-    LEFT JOIN student_accounts sa ON sa.id = dr.student_account_id
+    LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     LEFT JOIN document_request_feedback rf ON rf.document_request_id = dr.id
     WHERE dr.office_id = 'registrar'

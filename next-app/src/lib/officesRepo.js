@@ -1,6 +1,6 @@
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import crypto from "node:crypto";
-import { query, queryOne } from "./postgres.js";
+import { query, queryOne, transaction } from "./postgres.js";
 import { hashPassword } from "./passwordHash.js";
 export const DEFAULT_STAFF_PASSWORD=process.env.DEFAULT_STAFF_PASSWORD||"pupstaff";
 export const getDefaultOfficeAdminId=id=>`PUP${String(id||"").trim().toUpperCase()}-001`;
@@ -47,39 +47,78 @@ export async function createOffice({
   ingest_token,
   scanner_model,
   inbound_path,
+  adminEmail,
   moduleIds,
 }) {
-  if (!id || !name || !short_name) throw Error("Office id, name, and short_name are required.");
+  if (!id || !name || !short_name) {
+    const error = new Error("Office ID, full name, and short name are required.");
+    error.code = "OFFICE_REQUIRED_FIELDS";
+    throw error;
+  }
   const oid = String(id).trim().toLowerCase().replace(/^-+|-+$/g, "");
-  if (!/^[a-z0-9-]+$/.test(oid)) throw Error("Office id must contain only lowercase letters, numbers, and dashes (no spaces or symbols).");
-  if (await getOfficeById(oid)) throw Error(`Office with id '${oid}' already exists.`);
+  if (!/^[a-z0-9-]+$/.test(oid)) {
+    const error = new Error("Office ID can contain only lowercase letters, numbers, and dashes.");
+    error.code = "OFFICE_INVALID_ID";
+    throw error;
+  }
 
   const defaultStorage = storage_path || `.local/storage/${oid}/uploads`;
+  const email = String(adminEmail || "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const error = new Error("A valid email address is required for the office administrator account.");
+    error.code = "OFFICE_ADMIN_EMAIL_INVALID";
+    throw error;
+  }
   const defaultStation = station_name || `${oid.toUpperCase()}-STATION-01`;
   const defaultToken = ingest_token || `token_${oid}_${crypto.randomBytes(8).toString("hex")}`;
   const defaultScanner = scanner_model || "High-Speed Document Scanner";
   const defaultInbound = inbound_path || ".local/hot-folder/INBOUND";
 
-  await query(
-    `INSERT INTO offices(id, name, short_name, description, icon, accent_color, station_name, storage_path, inbound_path, ingest_token, scanner_model, last_station_ping)
-     VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
-    [oid, name, short_name, description || null, icon || null, accent_color || "#800000", defaultStation, defaultStorage, defaultInbound, defaultToken, defaultScanner]
-  );
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const duplicate = await runOne("SELECT id FROM offices WHERE id = $1", [oid]);
+    if (duplicate) {
+      const error = new Error(`An office with ID '${oid}' already exists.`);
+      error.code = "OFFICE_DUPLICATE_ID";
+      throw error;
+    }
 
-  const allMods = await query("SELECT id, is_system FROM modules");
-  const enabledSet = new Set(Array.isArray(moduleIds) && moduleIds.length > 0 ? moduleIds.map(String) : allMods.map((m) => m.id));
-  for (const m of allMods) {
-    await query(
-      `INSERT INTO office_modules(office_id, module_id, enabled, updated_at) 
-       VALUES($1, $2, $3, NOW()) 
-       ON CONFLICT(office_id, module_id) DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = NOW()`,
-      [oid, m.id, Boolean(m.is_system || enabledSet.has(m.id))]
+    await run(
+      `INSERT INTO offices(id, name, short_name, description, icon, accent_color, station_name, storage_path, inbound_path, ingest_token, scanner_model, last_station_ping)
+       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+      [oid, name, short_name, description || null, icon || null, accent_color || "#800000", defaultStation, defaultStorage, defaultInbound, defaultToken, defaultScanner]
     );
-  }
-  const a = await createDefaultOfficeAdmin({ officeId: oid, shortName: short_name });
-  const o = await getOfficeById(oid);
-  Object.defineProperty(o, "_admin", { value: a, enumerable: false });
-  return o;
+
+    const allMods = (await run("SELECT id, is_system FROM modules")).rows;
+    const enabledSet = new Set(Array.isArray(moduleIds) && moduleIds.length > 0 ? moduleIds.map(String) : allMods.map((m) => m.id));
+    for (const m of allMods) {
+      await run(
+        `INSERT INTO office_modules(office_id, module_id, enabled, updated_at)
+         VALUES($1, $2, $3, NOW())
+         ON CONFLICT(office_id, module_id) DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = NOW()`,
+        [oid, m.id, Boolean(m.is_system || enabledSet.has(m.id))]
+      );
+    }
+
+    const adminId = getDefaultOfficeAdminId(oid);
+    const existingAdmin = await runOne("SELECT id FROM staff WHERE id = $1 OR email = $2", [adminId, encryptPII(email.toLowerCase())]);
+    let admin;
+    if (existingAdmin) {
+      const error = new Error("The default administrator account conflicts with an existing staff account.");
+      error.code = "OFFICE_ADMIN_CONFLICT";
+      throw error;
+    }
+    await run(
+      "INSERT INTO staff(id,office_id,fname,lname,role,section,status,email,password_hash,password_last_changed,updated_at) VALUES($1,$2,$3,$4,'Admin','Administrative','Active',$5,$6,NOW(),NOW())",
+      [adminId, oid, encryptPII(short_name || oid), encryptPII("Admin"), encryptPII(email), hashPassword(DEFAULT_STAFF_PASSWORD)]
+    );
+    admin = { id: adminId, email, defaultPassword: DEFAULT_STAFF_PASSWORD, created: true };
+
+    const office = await runOne("SELECT * FROM offices WHERE id = $1", [oid]);
+    return { office, admin };
+  }).then(({ office, admin }) => {
+    Object.defineProperty(office, "_admin", { value: admin, enumerable: false });
+    return office;
+  });
 }
 
 export async function updateOffice(id, p) {

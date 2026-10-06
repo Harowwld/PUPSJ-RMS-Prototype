@@ -377,19 +377,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     return result
   }, [authUser?.enabled_modules, pendingReviewCount])
 
-  const [defaultPwOpen, setDefaultPwOpen] = useState(false)
-  const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("")
-  const [defaultReturnedPw, setDefaultReturnedPw] = useState("")
-  const [copied, setCopied] = useState(false)
-
-  const handleCopyPassword = useCallback(() => {
-    if (!defaultReturnedPw) return
-    navigator.clipboard.writeText(defaultReturnedPw).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
-  }, [defaultReturnedPw])
-
   const [declinePromptOpen, setDeclinePromptOpen] = useState(false)
   const [declineReason, setDeclineReason] = useState("")
   const [pendingDeclineDocId, setPendingDeclineDocId] = useState(null)
@@ -1200,13 +1187,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setStaffData((prev) => [json.data, ...prev])
       showToast({
         title: "Account Created",
-        description: `Staff account for ${createForm.fname} ${createForm.lname} is now active.`,
+        description: `Staff account for ${createForm.fname} ${createForm.lname} was created and awaits activation. ${json.credentialEmail?.sent ? "Credentials were emailed to the account." : "Credential email was not sent; check SMTP settings."}`,
       })
-      setDefaultPwUserLabel(
-        `${createForm.fname} ${createForm.lname}`.trim() || createForm.id
-      )
-      setDefaultReturnedPw(json.defaultPassword || "pupstaff")
-      setDefaultPwOpen(true)
       setCreateForm({
         id: "",
         role: "",
@@ -2262,75 +2244,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         onClose={() => setPreviewOpen(false)}
         preview={previewData}
       />
-
-      <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card flex flex-col gap-0">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
-            <div className="flex items-start gap-4">
-              <div className="min-w-0">
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                  Staff Account Created
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
-                  Securely record the temporary credentials below before closing this window.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-5 p-6 pb-4">
-            <div className="bg-transparent p-0 border-none">
-              <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                Temporary Password for{" "}
-                <span className="text-pup-maroon dark:text-red-400">
-                  {defaultPwUserLabel}
-                </span>
-              </label>
-
-              <div 
-                className="flex items-center justify-between rounded-xl border border-border bg-white p-[10px_14px] dark:border-border dark:bg-zinc-900/30"
-              >
-                <code className="text-[14px] font-bold text-pup-maroon dark:text-red-400 tracking-wider">
-                  {defaultReturnedPw}
-                </code>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopyPassword}
-                  className={cn(
-                    "text-[12px] font-medium bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none",
-                    copied ? "text-emerald-600" : "text-pup-maroon dark:text-red-400"
-                  )}
-                >
-                  {copied ? "copied" : "copy"}
-                </Button>
-              </div>
-
-              <div className="mt-3 text-[11px] font-normal text-gray-500 dark:text-zinc-500 p-0 border-none bg-transparent">
-                This password is temporary and expires after first login. Ensure the user receives it securely.
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDefaultPwOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Close
-            </Button>
-            <Button
-              onClick={() => setDefaultPwOpen(false)}
-              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white px-5 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Acknowledge
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <TOTPChallengeModal
         open={totpModalOpen}

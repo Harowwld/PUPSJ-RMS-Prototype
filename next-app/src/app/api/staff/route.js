@@ -8,6 +8,7 @@ import { canManageStaffRole, canAccessOffice, isSystemAdminRole, normalizeRole }
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
+import { sendAccountCredentialsNotice } from "@/lib/accountEmail";
 
 export const runtime = "nodejs";
 
@@ -102,6 +103,9 @@ export async function POST(req) {
       { status: 400 }
     );
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
+  }
   if (!passwordPolicy.valid || (process.env.NODE_ENV === "production" && body.password === undefined)) {
     return NextResponse.json({ ok: false, error: "A non-default password is required." }, { status: 400 });
   }
@@ -142,13 +146,27 @@ export async function POST(req) {
     if (!row || !canAccessResource(user, "staff", row)) {
       return NextResponse.json({ ok: false, error: "Staff account could not be created" }, { status: 500 });
     }
+    const credentialEmail = await sendAccountCredentialsNotice({
+      to: email,
+      fullName: `${fname} ${lname}`,
+      accountType: `${normalizeRole(role)} staff account`,
+      accountId: id,
+      requiresActivation: true,
+      username: email,
+      password,
+    });
+
     await writeAuditLog(req, `Create Staff Account`, {
       details: `provisioned new personnel account for '${fname} ${lname}' (ID: ${id}, Role: ${normalizeRole(role)}, Section: ${section}, Office: ${officeId || "Global"})`,
       entity_type: "User",
       entity_id: id
     });
 
-    return NextResponse.json({ ok: true, data: row }, { status: 201 });
+    return NextResponse.json({
+      ok: true,
+      data: sanitizeUser(row),
+      credentialEmail,
+    }, { status: 201 });
   } catch (e) {
     const msg = String(e?.message || "");
     if (isUniqueViolation(e)) {

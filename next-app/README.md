@@ -32,10 +32,10 @@ To run the stable `main` branch, omit `-b OCR-Improvements` from the clone comma
 
 ## Configure the environment
 
-Create `next-app/.env.local` from the example file:
+Create `next-app/.env` from the example file:
 
 ```bash
-cp -n .env.example .env.local
+cp -n .env.example .env
 ```
 
 Set private values for the JWT secret and default staff password. Set a hot-folder token if you want the scanner watcher enabled during host-based development:
@@ -46,9 +46,18 @@ JWT_SECRET=replace_with_a_long_random_value
 DEFAULT_STAFF_PASSWORD=replace_with_a_private_password
 HOT_FOLDER_INGEST_TOKEN=replace_with_a_random_token_at_least_32_chars
 LOCAL_DATA_DIR=.local
+APP_URL=http://localhost:3000
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-smtp-username
+SMTP_PASSWORD=your-smtp-password
+SMTP_FROM="PUPSJ RMS <no-reply@example.com>"
 ```
 
-Do not commit `.env.local` or `.env`. The default Docker Compose database values are intended for local development only.
+Do not commit `.env`. The default Docker Compose database values are intended for local development only.
+
+SMTP settings are needed for credential emails after staff creation, office-admin provisioning, and student self-registration. `SMTP_FROM` must be an address permitted by your mail provider. Use port 465 with `SMTP_SECURE=true`, or port 587 with `SMTP_SECURE=false`. Docker Compose passes these values to the app container. Without SMTP configured, account creation still succeeds and its API response reports `credentialEmail.sent: false`. Newly provisioned accounts receive their assigned password; student self-registration confirms the email username and tells the student to use the password they chose, without repeating it in email.
 
 ## Run the complete application with Docker
 
@@ -117,15 +126,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Default demo & local accounts
 
-The system includes pre-seeded demo accounts for all administrative, office, and student roles. Personnel use the `DEFAULT_STAFF_PASSWORD` value configured in `.env` (Docker) or `.env.local` (host development). Student demo credentials depend on which seed script created the account.
+The system includes pre-seeded demo accounts for all administrative, office, and student roles. Personnel use the `DEFAULT_STAFF_PASSWORD` value configured in `.env`. Student demo credentials depend on which seed script created the account.
 
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
 |---|---|---|---|---|---|
-| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/systemadmin` (System-wide administration, office provisioning, system health) |
-| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
-| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
-| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/admin` (OSAS records review, student organization event proposals) |
-| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env.local` | `/staff` (Student organization operations and OSAS workflows) |
+| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
+| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
+| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/admin` (OSAS records review, student organization event proposals) |
+| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/staff` (Student organization operations and OSAS workflows) |
 | **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
 
 > **Note**: Demo personnel accounts are pre-seeded with recovery answers so they bypass first-time password setup modals during presentations. You can also use the **Demo Accounts** quick-fill pills located on the sign-in page (`/`).
@@ -191,7 +200,7 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. Running the command starts the reset without prompts. It uses `DEFAULT_STAFF_PASSWORD` from `.env.local` (or `pupstaff` if unset); set `RESET_PASSWORD` or `RESET_USERNAME` to override the login values:
+Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. Running the command starts the reset without prompts. It uses `DEFAULT_STAFF_PASSWORD` from `.env` (or `pupstaff` if unset); set `RESET_PASSWORD` or `RESET_USERNAME` to override the login values:
 
 ```bash
 pnpm reset-db
@@ -223,7 +232,7 @@ Start Docker Desktop, wait until it reports that Docker is running, then retry `
 
 ### `DATABASE_URL is required`
 
-Confirm that `next-app/.env.local` exists and contains `DATABASE_URL`, then run `docker compose up -d --wait postgres`.
+Confirm that `next-app/.env` exists and contains `DATABASE_URL`, then run `docker compose up -d --wait postgres`.
 
 ### PostgreSQL connection refused
 
