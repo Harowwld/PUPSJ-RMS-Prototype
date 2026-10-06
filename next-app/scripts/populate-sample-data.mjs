@@ -406,28 +406,29 @@ export async function seed({ force: forceOverride } = {}) {
 
     // Recognized OSAS student organizations from the campus list.
     const organizations = [
-      ["jfinex", "Junior Financial Executives (JFINEX)", "JFINEX", "Academic"],
-      ["yes", "YES", "YES", "Non-Academic"],
-      ["jpia", "JPIA", "JPIA", "Academic"],
-      ["ceo", "CEO", "CEO", "Academic"],
-      ["hm-society", "HM Society", "HM Society", "Academic"],
-      ["glitch", "GLITCH", "GLITCH", "Non-Academic"],
-      ["psysoc", "PSYSOC", "PSYSOC", "Academic"],
-      ["pylon-esports", "PYLON E-Sports", "PYLON E-Sports", "Non-Academic"],
-      ["rotaract", "Rotaract", "Rotaract", "Non-Academic"],
-      ["hhc", "HHC", "HHC", "Non-Academic"],
-      ["adc", "ADC", "ADC", "Academic"],
-      ["paraseist", "PARASEIST", "PARASEIST", "Non-Academic"],
-      ["sa", "SA", "SA", "Non-Academic"],
-      ["lente-filikulas", "Lente Filikulas", "Lente Filikulas", "Non-Academic"],
+      ["jfinex", "Junior Financial Executives (JFINEX)", "JFINEX", "Academic", "ACADEMIC ORGANIZATIONS", "1"],
+      ["yes", "Young Educators Society (YES)", "YES", "Academic", "ACADEMIC ORGANIZATIONS", "2"],
+      ["jpia", "Junior Philippine Institute of Accountants (JPIA)", "JPIA", "Academic", "ACADEMIC ORGANIZATIONS", "3"],
+      ["ceo", "Collegiate Entrepreneurs' Organization (CEO)", "CEO", "Academic", "ACADEMIC ORGANIZATIONS", "4"],
+      ["hm-society", "Hospitality Management Society (HM Society)", "HM SOCIETY", "Academic", "ACADEMIC ORGANIZATIONS", "5"],
+      ["glitch", "Governing League of I.T. Challengers (GLITCH)", "GLITCH", "Academic", "ACADEMIC ORGANIZATIONS", "6"],
+      ["psysoc", "Psychological Society (PSYSOC)", "PSYSOC", "Academic", "ACADEMIC ORGANIZATIONS", "7"],
+      ["pylon-esports", "PYLON E-Sports", "PYLON", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "1"],
+      ["rotaract", "Rotaract Club of PUP San Juan", "ROTARACT", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "2"],
+      ["hhc", "Helping Hands Community (HHC)", "HHC", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "3"],
+      ["adc", "Alab Danse Club (ADC)", "ADC", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "4"],
+      ["paraseist", "The Paraseist", "PARASEIST", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "5"],
+      ["sa", "Student Assembly (SA)", "SA", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "6"],
+      ["lente-filikulas", "PUP Lente Filikulas", "LENTE FILIKULAS", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "7"],
     ];
-    for (const [id, name, acronym, category] of organizations) {
+    for (const [id, name, acronym, category, cabinet, drawer] of organizations) {
       await run(
-        `INSERT INTO student_organizations (id, name, acronym, category, status, description)
-         VALUES ($1, $2, $3, $4, 'Active', 'Recognized PUP San Juan student organization under OSAS.')
+        `INSERT INTO student_organizations (id, name, acronym, category, status, storage_room, storage_cabinet, storage_drawer, description)
+         VALUES ($1, $2, $3, $4, 'Active', 1, $5, $6, 'Recognized PUP San Juan student organization under OSAS.')
          ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, acronym=EXCLUDED.acronym,
-           category=EXCLUDED.category, status='Active', updated_at=NOW()`,
-        [id, name, acronym, category],
+           category=EXCLUDED.category, storage_cabinet=EXCLUDED.storage_cabinet, storage_drawer=EXCLUDED.storage_drawer,
+           status='Active', updated_at=NOW()`,
+        [id, name, acronym, category, cabinet, drawer],
       );
     }
 
