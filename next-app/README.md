@@ -2,7 +2,32 @@
 
 Local records-management application for PUP San Juan. The current development setup uses **PostgreSQL running locally through Docker Compose**. SQLite is retained only for legacy migration utilities; it is not the active application database.
 
-## Prerequisites
+## One-click desktop installation
+
+### macOS
+
+On a supported macOS release, download and extract the project ZIP, then double-click `next-app/installer/mac/Install-PUPSJRMS.command`. It downloads the official Docker Desktop build for Apple silicon or Intel when needed, installs the app and database containers, creates private secrets, secures the initial staff password, and adds Start/Stop launchers to your Desktop. No Homebrew, Git, Node.js, or pnpm is required.
+
+The Mac needs internet access for Docker Desktop and the first container build, and an administrator password may be required to install Docker. Open Docker Desktop and accept its first-run terms if prompted. Docker Desktop currently supports the latest macOS release and the two previous major releases, with at least 4 GB of RAM. The RMS app and `.env` are stored under `~/Library/Application Support/PUPSJ-RMS`; the `.env` is readable only by your Mac user. Database and uploaded files persist in Docker volumes when the app is stopped. The scanner inbox is in the same application support folder.
+
+If macOS blocks the downloaded `.command` file, use Finder's **Open** action for the installer. To update, extract the newer project ZIP and run its installer; it preserves `.env` and Docker volumes. Back up the system before upgrades that include database migrations.
+
+### Windows
+
+For a Windows 10/11 workstation, use the installer in `installer/windows`. It installs Docker Desktop if needed, builds the application and PostgreSQL containers, creates private secrets, secures the initial staff password, and adds Start/Stop shortcuts to the Public Desktop. No Git, Node.js, pnpm, or manual Docker commands are needed on the workstation.
+
+1. Download and extract the project ZIP on the workstation.
+2. Open `next-app/installer/windows` and double-click `Install-PUPSJRMS.bat`.
+3. Approve the Windows administrator prompt, then choose an initial staff password with at least 12 letters or numbers.
+4. Open **PUPSJ RMS** on the desktop, or visit [http://localhost:3000](http://localhost:3000).
+
+The workstation needs internet access for Docker Desktop and the initial container build. The installer uses Windows Package Manager (`winget`); if it is missing, install or update **App Installer** from Microsoft Store. Docker Desktop may ask for first-run approval or a Windows restart. Re-run the installer after restarting if setup did not finish. The app and database run locally in Docker; database and upload data persist in Docker volumes when the app is stopped. The scanner inbox is at `C:\ProgramData\PUPSJ-RMS\hot-folder`.
+
+The installer's `.env` is stored under `C:\ProgramData\PUPSJ-RMS\app` and access is restricted to Windows administrators and SYSTEM. Keep the chosen staff password private. The initial SuperAdmin account is `superadmin@pup.local`. Start and Stop desktop shortcuts control the local services.
+
+To install an application update, extract the newer project ZIP and run its installer again. It reuses the existing `.env` and Docker volumes. Back up the system before upgrades that include database migrations.
+
+## Developer prerequisites
 
 - Git
 - Node.js 20 or newer
@@ -18,7 +43,7 @@ corepack enable
 corepack prepare pnpm@latest --activate
 ```
 
-## Clone and install
+## Clone and install for development
 
 Clone the branch you want to run. The latest OCR work is on `OCR-Improvements`:
 
