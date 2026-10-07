@@ -5,8 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { Select } from "@/components/ui/select";
+import { toast } from "sonner";
 import { PageTransition } from "@/components/ui/motion";
 import {
   Tooltip,
@@ -174,18 +174,17 @@ export default function Home() {
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotIdentifier, setForgotIdentifier] = useState("");
-  const [forgotUserId, setForgotUserId] = useState(null);
-  const [forgotQuestionId, setForgotQuestionId] = useState(null);
+  const [forgotMethod, setForgotMethod] = useState("email");
+  const [forgotAccountId, setForgotAccountId] = useState("");
   const [forgotQuestions, setForgotQuestions] = useState([]);
+  const [forgotQuestionId, setForgotQuestionId] = useState("");
   const [forgotAnswer, setForgotAnswer] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
   const [forgotIdentifierFocused, setForgotIdentifierFocused] = useState(false);
-  const [answerFocused, setAnswerFocused] = useState(false);
-  const [newPassFocused, setNewPassFocused] = useState(false);
-  const [confirmPassFocused, setConfirmPassFocused] = useState(false);
 
   useEffect(() => {
     // Clear logout sync flag when on login page
@@ -222,19 +221,18 @@ export default function Home() {
   const resetForgotState = () => {
     setForgotStep(1);
     setForgotIdentifier("");
-    setForgotUserId(null);
-    setForgotQuestionId(null);
+    setForgotMethod("email");
+    setForgotAccountId("");
     setForgotQuestions([]);
+    setForgotQuestionId("");
     setForgotAnswer("");
     setForgotNewPassword("");
     setForgotConfirmPassword("");
+    setForgotMessage("");
     setForgotError("");
     setForgotLoading(false);
     setLoginStep(1);
     setForgotIdentifierFocused(false);
-    setAnswerFocused(false);
-    setNewPassFocused(false);
-    setConfirmPassFocused(false);
   };
 
   const handleForgotIdentify = async (e) => {
@@ -246,7 +244,7 @@ export default function Home() {
     setForgotError("");
     setForgotLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password/identify", {
+      const res = await fetch(forgotMethod === "questions" ? "/api/auth/forgot-password/security-questions" : "/api/auth/forgot-password/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: forgotIdentifier.trim() })
@@ -255,10 +253,18 @@ export default function Home() {
       if (!res.ok || !json.ok) {
         throw new Error(json.error || "Failed to identify account.");
       }
-      setForgotUserId(json.data.id);
-      setForgotQuestions(json.data.questions);
-      setForgotQuestionId(json.data.questions[0]?.id || null);
-      setForgotStep(2);
+      if (forgotMethod === "questions") {
+        if (!json.data?.id || !json.data?.questions?.length) {
+          throw new Error("Security question recovery is unavailable. Use an email reset link instead.");
+        }
+        setForgotAccountId(json.data.id);
+        setForgotQuestions(json.data.questions);
+        setForgotQuestionId(String(json.data.questions[0].id));
+        setForgotStep(3);
+      } else {
+        setForgotMessage(json.data?.message || "If an eligible account exists, a password reset link has been sent to its registered email.");
+        setForgotStep(2);
+      }
     } catch (err) {
       setForgotError(err.message);
     } finally {
@@ -266,7 +272,7 @@ export default function Home() {
     }
   };
 
-  const handleForgotReset = async (e) => {
+  const handleForgotQuestionReset = async (e) => {
     e.preventDefault();
     if (!forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword) {
       setForgotError("Please fill all fields.");
@@ -277,7 +283,7 @@ export default function Home() {
       return;
     }
     if (forgotNewPassword.length < 8) {
-      setForgotError("New password must be at least 8 characters long.");
+      setForgotError("New password must be at least 8 characters.");
       return;
     }
     setForgotError("");
@@ -286,20 +292,13 @@ export default function Home() {
       const res = await fetch("/api/auth/forgot-password/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: forgotUserId,
-          questionId: forgotQuestionId,
-          answer: forgotAnswer.trim(),
-          newPassword: forgotNewPassword
-        })
+        body: JSON.stringify({ id: forgotAccountId, questionId: Number(forgotQuestionId), answer: forgotAnswer.trim(), newPassword: forgotNewPassword })
       });
       const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to reset password.");
-      }
+      if (!res.ok || !json.ok) throw new Error(json.error || "Failed to reset password.");
       toast.success("Password Reset Successful", { description: "You can now log in with your new password." });
-      setView("login");
       resetForgotState();
+      setView("login");
     } catch (err) {
       setForgotError(err.message);
     } finally {
@@ -796,10 +795,11 @@ export default function Home() {
                         forgotError ? "has-error" : ""
                       }`}>
                         <div className={`field-wrapper ${forgotIdentifierFocused || forgotIdentifier.length > 0 ? "active" : ""}`}>
-                          <label>Email Address or Staff ID</label>
+                          <label htmlFor="forgotIdentifier">Email Address or Staff ID</label>
                           <Input
                             type="text"
                             id="forgotIdentifier"
+                            disabled={forgotLoading}
                             placeholder=" "
                             className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
                             autoFocus
@@ -814,28 +814,44 @@ export default function Home() {
                         </div>
                       </div>
 
+                      <p className="mt-4 text-[13px] text-gray-500 dark:text-zinc-400">
+                        {forgotMethod === "questions" ? "Answer a security question you previously set up to reset your password." : "Receive a reset link at your registered email address."}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={forgotLoading}
+                        onClick={() => {
+                          const nextMethod = forgotMethod === "email" ? "questions" : "email";
+                          resetForgotState();
+                          setForgotMethod(nextMethod);
+                        }}
+                        className="mt-2 text-[13px] text-[#0A84FF] hover:underline focus-visible:underline disabled:opacity-50 font-normal"
+                      >
+                        {forgotMethod === "email" ? "Use security questions" : "Use an email reset link"}
+                      </button>
+
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                        <div role="alert" className="mt-1.5 text-left flex items-start gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                           <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
-                          <p className="text-[12px] font-normal leading-none">
+                          <p className="text-[12px] font-normal leading-snug">
                             {forgotError}
                           </p>
                         </div>
                       )}
                     </div>
 
-                    {/* Locate Account Button (Always visible at the bottom) */}
+                    {/* Request Button (Always visible at the bottom) */}
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotIdentifier.trim()}
-                        title="Locate Account"
+                        title="Request Password Reset"
                         className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
                           <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                         ) : (
-                          <span>Locate</span>
+                          <span>Request</span>
                         )}
                       </Button>
                     </div>
@@ -844,6 +860,7 @@ export default function Home() {
                     <div className="absolute bottom-[38px] left-[52px] right-[52px] text-center">
                       <button
                         type="button"
+                        disabled={forgotLoading}
                         onClick={() => {
                           setView("login");
                           resetForgotState();
@@ -854,119 +871,66 @@ export default function Home() {
                       </button>
                     </div>
                   </form>
-                ) : (
-                  <form onSubmit={handleForgotReset} className="w-full flex-1 flex flex-col justify-between">
-                    <div className="w-full text-left">
-                      {/* Merged Field Container */}
-                      <div className={`merged-container bg-white dark:bg-zinc-800 ${
-                        forgotError ? "has-error" : ""
-                      }`}>
-                        {/* Challenge Question select wrapper */}
-                        <div className="field-wrapper border-b border-border dark:border-border/50 select-wrapper active">
-                          <label className="text-gray-400 dark:text-zinc-500">Challenge Question</label>
-                          <Select
-                            className="border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 dark:border-none dark:bg-transparent dark:hover:bg-transparent h-[52px] pt-[16px] px-[14px] text-[15px] font-normal"
-                            value={forgotQuestionId || ""}
-                            onChange={(e) => setForgotQuestionId(Number(e.target.value))}
-                          >
-                            {forgotQuestions.map(q => (
-                              <option key={q.id} value={q.id}>{q.question}</option>
-                            ))}
-                          </Select>
-                        </div>
-
-                        {/* Security Answer input */}
-                        <div className={`field-wrapper border-b border-border dark:border-border/50 ${answerFocused || forgotAnswer.length > 0 ? "active" : ""}`}>
-                          <label>Security Answer</label>
-                          <Input
-                            type="password"
-                            placeholder=" "
-                            className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
-                            value={forgotAnswer}
-                            onFocus={() => setAnswerFocused(true)}
-                            onBlur={() => setAnswerFocused(false)}
-                            onChange={(e) => {
-                              setForgotAnswer(e.target.value);
-                              if (forgotError) setForgotError("");
-                            }}
-                            required
-                          />
-                        </div>
-
-                        {/* New Password input */}
-                        <div className={`field-wrapper border-b border-border dark:border-border/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
-                          <label>New Password</label>
-                          <Input
-                            type="password"
-                            placeholder=" "
-                            className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
-                            value={forgotNewPassword}
-                            onFocus={() => setNewPassFocused(true)}
-                            onBlur={() => setNewPassFocused(false)}
-                            onChange={(e) => {
-                              setForgotNewPassword(e.target.value);
-                              if (forgotError) setForgotError("");
-                            }}
-                            required
-                          />
-                        </div>
-
-                        {/* Confirm Password input */}
-                        <div className={`field-wrapper ${confirmPassFocused || forgotConfirmPassword.length > 0 ? "active" : ""}`}>
-                          <label>Confirm Password</label>
-                          <Input
-                            type="password"
-                            placeholder=" "
-                            className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
-                            value={forgotConfirmPassword}
-                            onFocus={() => setConfirmPassFocused(true)}
-                            onBlur={() => setConfirmPassFocused(false)}
-                            onChange={(e) => {
-                              setForgotConfirmPassword(e.target.value);
-                              if (forgotError) setForgotError("");
-                            }}
-                            required
-                          />
-                        </div>
+                ) : forgotStep === 3 ? (
+                  <form onSubmit={handleForgotQuestionReset} className="w-full flex-1 flex flex-col pb-24">
+                    <div className="w-full text-left space-y-3">
+                      <div>
+                        <label htmlFor="forgotQuestionId" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Question</label>
+                        <Select
+                          id="forgotQuestionId"
+                          aria-label="Security Question"
+                          value={forgotQuestionId}
+                          disabled={forgotLoading}
+                          onChange={(e) => { setForgotQuestionId(String(e.target.value)); setForgotAnswer(""); setForgotError(""); }}
+                          className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none"
+                          menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                          optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5"
+                        >
+                          {forgotQuestions.map((question) => <option key={question.id} value={String(question.id)}>{question.question}</option>)}
+                        </Select>
                       </div>
-
-                      {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                          <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
-                          <p className="text-[12px] font-normal leading-none">
-                            {forgotError}
-                          </p>
-                        </div>
-                      )}
+                      <div>
+                        <label htmlFor="forgotAnswer" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Answer</label>
+                        <Input id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                      </div>
+                      <div>
+                        <label htmlFor="forgotNewPassword" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">New Password</label>
+                        <Input id="forgotNewPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotNewPassword} onChange={(e) => { setForgotNewPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                      </div>
+                      <div>
+                        <label htmlFor="forgotConfirmPassword" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Confirm Password</label>
+                        <Input id="forgotConfirmPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotConfirmPassword} onChange={(e) => { setForgotConfirmPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                      </div>
+                      {forgotError && <p role="alert" className="text-[12px] text-[#E5484D]">{forgotError}</p>}
                     </div>
-
-                    {/* Reset Password Button (Always visible at the bottom) */}
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
-                      <Button
-                        type="submit"
-                        disabled={forgotLoading || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword}
-                        title="Reset Password"
-                        className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
-                      >
-                        {forgotLoading ? (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
-                        ) : (
-                          <span>Reset</span>
-                        )}
+                      <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white disabled:opacity-50">
+                        {forgotLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-lg" /> : "Reset"}
                       </Button>
                     </div>
-
-                    {/* Previous Step Link */}
                     <div className="absolute bottom-[38px] left-[52px] right-[52px] text-center">
-                      <button
-                        type="button"
-                        onClick={() => setForgotStep(1)}
-                        className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal"
-                      >
-                        Back
-                      </button>
+                      <button type="button" disabled={forgotLoading} onClick={resetForgotState} className="text-[13px] text-[#0A84FF] hover:underline focus-visible:underline font-normal">Back</button>
                     </div>
                   </form>
+                ) : (
+                  <div className="w-full flex-1 flex flex-col justify-between">
+                    <div className="w-full text-left" role="status">
+                      <p className="text-[16px] font-semibold text-[#1D1D1F] dark:text-zinc-50 mb-3">Check your email</p>
+                      <p className="text-[13px] text-gray-500 dark:text-zinc-400">
+                        {forgotMessage} Open the email and click Reset Password. The link expires in 15 minutes. Check spam too.
+                      </p>
+                    </div>
+                    <div className="absolute bottom-[64px] left-[52px] right-[52px]">
+                      <Button type="button" onClick={() => { setView("login"); resetForgotState(); }} className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 transition-all">
+                        Done
+                      </Button>
+                    </div>
+                    <div className="absolute bottom-[38px] left-[52px] right-[52px] text-center">
+                      <button type="button" onClick={resetForgotState} className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal">
+                        Request a new link
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (

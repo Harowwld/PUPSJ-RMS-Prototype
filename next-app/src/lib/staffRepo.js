@@ -380,6 +380,18 @@ export async function hasAllSecurityAnswers(id, role = "Staff") {
   return true;
 }
 
+export async function getStaffRecoveryQuestions(staffId) {
+  return query(
+    `SELECT q.id, q.question
+       FROM security_questions q
+       JOIN staff_security_answers a ON a.question_id = q.id
+       JOIN staff s ON s.id = a.staff_id
+      WHERE a.staff_id = $1 AND s.status = 'Active'
+      ORDER BY q.id`,
+    [staffId],
+  );
+}
+
 /**
  * Generates 10 single-use recovery codes for a staff member.
  * Existing unused codes are invalidated.

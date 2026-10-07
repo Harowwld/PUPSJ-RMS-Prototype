@@ -58,6 +58,41 @@ function getTransporter() {
   return { transporter, from };
 }
 
+export function assertAccountEmailConfigured() {
+  getTransporter();
+}
+
+export async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
+  const recipient = String(to || "").trim();
+  if (!recipient || !resetUrl) throw new Error("A recipient and reset link are required.");
+  const mailer = getTransporter();
+  const name = String(fullName || "there").trim() || "there";
+  const result = await mailer.transporter.sendMail({
+    from: mailer.from,
+    to: recipient,
+    subject: "Reset your eManage password",
+    text: [
+      `Hello ${name},`,
+      "",
+      "Reset your password using this link:",
+      resetUrl,
+      "",
+      "This link expires in 15 minutes and can be used once. Do not share it.",
+      "If you did not request this reset, you can ignore this email. Your password has not changed.",
+    ].join("\n"),
+    html: `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
+      <p>Hello ${escapeHtml(name)},</p>
+      <p>Choose a new password for your eManage account.</p>
+      <p><a href="${escapeHtml(resetUrl)}" style="display:inline-block;padding:12px 24px;background:#800000;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">Reset Password</a></p>
+      <p>If the button does not open, <a href="${escapeHtml(resetUrl)}">open the password reset page</a>.</p>
+      <p>This link expires in 15 minutes and can be used once. Do not share it.</p>
+      <p>If you did not request this reset, you can ignore this email. Your password has not changed.</p>
+    </body></html>`,
+  });
+  if (!result.accepted?.length) throw new Error("Password reset email was not accepted.");
+  return { messageId: result.messageId };
+}
+
 export async function sendAccountCredentialsEmail({
   to,
   fullName,

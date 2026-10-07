@@ -11,6 +11,7 @@ const PUBLIC_SESSION_PATHS = new Set([
   "/api/auth/me",
   "/api/auth/refresh",
   "/api/auth/forgot-password/identify",
+  "/api/auth/forgot-password/security-questions",
   "/api/auth/forgot-password/reset",
 ]);
 

@@ -1,28 +1,50 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const linkRead = useRef(false);
 
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotIdentifier, setForgotIdentifier] = useState("");
+  const [forgotMethod, setForgotMethod] = useState("email");
+  const [forgotAccountId, setForgotAccountId] = useState("");
+  const [forgotQuestions, setForgotQuestions] = useState([]);
+  const [forgotQuestionId, setForgotQuestionId] = useState("");
+  const [forgotAnswer, setForgotAnswer] = useState("");
   const [forgotResetToken, setForgotResetToken] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
   const [forgotIdentifierFocused, setForgotIdentifierFocused] = useState(false);
-  const [resetTokenFocused, setResetTokenFocused] = useState(false);
   const [newPassFocused, setNewPassFocused] = useState(false);
   const [confirmPassFocused, setConfirmPassFocused] = useState(false);
 
   useEffect(() => {
+    if (linkRead.current) return;
+    linkRead.current = true;
+    const fragment = window.location.hash;
+    if (fragment) {
+      const token = new URLSearchParams(fragment.slice(1)).get("token");
+      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+      queueMicrotask(() => {
+        if (token && /^[A-Za-z0-9_-]{43}$/.test(token)) {
+          setForgotResetToken(token);
+          setForgotStep(3);
+        } else {
+          setForgotError("This reset link is invalid. Request a new link below.");
+        }
+      });
+    }
     if (typeof window !== "undefined") {
       document.documentElement.style.setProperty("--brand-accent", "#800000");
       document.documentElement.style.setProperty("--brand-foreground", "#ffffff");
@@ -41,13 +63,18 @@ export default function ForgotPasswordPage() {
   const resetForgotState = () => {
     setForgotStep(1);
     setForgotIdentifier("");
+    setForgotMethod("email");
+    setForgotAccountId("");
+    setForgotQuestions([]);
+    setForgotQuestionId("");
+    setForgotAnswer("");
     setForgotResetToken("");
+    setForgotMessage("");
     setForgotNewPassword("");
     setForgotConfirmPassword("");
     setForgotError("");
     setForgotLoading(false);
     setForgotIdentifierFocused(false);
-    setResetTokenFocused(false);
     setNewPassFocused(false);
     setConfirmPassFocused(false);
   };
@@ -61,7 +88,7 @@ export default function ForgotPasswordPage() {
     setForgotError("");
     setForgotLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password/identify", {
+      const res = await fetch(forgotMethod === "questions" ? "/api/auth/forgot-password/security-questions" : "/api/auth/forgot-password/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: forgotIdentifier.trim() })
@@ -70,7 +97,21 @@ export default function ForgotPasswordPage() {
       if (!res.ok || !json.ok) {
         throw new Error(json.error || "Failed to identify account.");
       }
-      setForgotStep(2);
+      setForgotResetToken("");
+      setForgotNewPassword("");
+      setForgotConfirmPassword("");
+      if (forgotMethod === "questions") {
+        if (!json.data?.id || !json.data?.questions?.length) {
+          throw new Error("Security question recovery is unavailable. Use an email reset link instead.");
+        }
+        setForgotAccountId(json.data.id);
+        setForgotQuestions(json.data.questions);
+        setForgotQuestionId(String(json.data.questions[0].id));
+        setForgotStep(4);
+      } else {
+        setForgotMessage(json.data?.message || "If an eligible account exists, a password reset link has been sent to its registered email.");
+        setForgotStep(2);
+      }
     } catch (err) {
       setForgotError(err.message);
     } finally {
@@ -80,7 +121,7 @@ export default function ForgotPasswordPage() {
 
   const handleForgotReset = async (e) => {
     e.preventDefault();
-    if (!forgotResetToken.trim() || !forgotNewPassword || !forgotConfirmPassword) {
+    if ((forgotStep === 4 ? !forgotAnswer.trim() : !forgotResetToken.trim()) || !forgotNewPassword || !forgotConfirmPassword) {
       setForgotError("Please fill all fields.");
       return;
     }
@@ -98,7 +139,12 @@ export default function ForgotPasswordPage() {
       const res = await fetch("/api/auth/forgot-password/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.stringify(forgotStep === 4 ? {
+          id: forgotAccountId,
+          questionId: Number(forgotQuestionId),
+          answer: forgotAnswer.trim(),
+          newPassword: forgotNewPassword
+        } : {
           resetToken: forgotResetToken.trim(),
           newPassword: forgotNewPassword
         })
@@ -109,12 +155,8 @@ export default function ForgotPasswordPage() {
       }
       toast.success("Password Reset Successful", { description: "You can now log in with your new password." });
       
-      // Close window if opened in new tab, otherwise go to home
-      if (window.opener) {
-        window.close();
-      } else {
-        router.push("/");
-      }
+      resetForgotState();
+      router.push("/login");
     } catch (err) {
       setForgotError(err.message);
     } finally {
@@ -123,11 +165,8 @@ export default function ForgotPasswordPage() {
   };
 
   const handleClose = () => {
-    if (window.opener) {
-      window.close();
-    } else {
-      router.push("/");
-    }
+    resetForgotState();
+    router.push("/login");
   };
 
   return (
@@ -142,7 +181,7 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-[550px] p-4 z-10">
         <div
-          className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative rms-forgot-card"
+          className={`bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative rms-forgot-card ${forgotStep === 4 ? "h-auto!" : ""}`}
         >
           {/* APP ICON WITH CONCENTRIC CIRCLES */}
           <div className="relative w-[160px] h-[160px] flex items-center justify-center mb-3 select-none shrink-0">
@@ -223,10 +262,11 @@ export default function ForgotPasswordPage() {
                     forgotError ? "has-error" : ""
                   }`}>
                     <div className={`field-wrapper ${forgotIdentifierFocused || forgotIdentifier.length > 0 ? "active" : ""}`}>
-                      <label>Email Address or Staff ID</label>
+                      <label htmlFor="forgotIdentifier">Email Address or Staff ID</label>
                       <Input
                         type="text"
                         id="forgotIdentifier"
+                        disabled={forgotLoading}
                         placeholder=" "
                         className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
                         autoFocus
@@ -241,28 +281,44 @@ export default function ForgotPasswordPage() {
                     </div>
                   </div>
 
+                  <p className="mt-4 text-[13px] text-gray-500 dark:text-zinc-400">
+                    {forgotMethod === "questions" ? "Answer a security question you previously set up to reset your password." : "Receive a reset link at your registered email address."}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={forgotLoading}
+                    onClick={() => {
+                      const nextMethod = forgotMethod === "email" ? "questions" : "email";
+                      resetForgotState();
+                      setForgotMethod(nextMethod);
+                    }}
+                    className="mt-2 text-[13px] text-[#0A84FF] hover:underline focus-visible:underline disabled:opacity-50 font-normal"
+                  >
+                    {forgotMethod === "email" ? "Use security questions" : "Use an email reset link"}
+                  </button>
+
                   {forgotError && (
-                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                    <div role="alert" className="mt-1.5 text-left flex items-start gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                       <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
-                      <p className="text-[12px] font-normal leading-none">
+                      <p className="text-[12px] font-normal leading-snug">
                         {forgotError}
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* Locate Account Button */}
+                {/* Request Button */}
                 <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                   <Button
                     type="submit"
                     disabled={forgotLoading || !forgotIdentifier.trim()}
-                    title="Locate Account"
+                    title="Request Password Reset"
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
                     {forgotLoading ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                     ) : (
-                      <span>Locate</span>
+                      <span>Request</span>
                     )}
                   </Button>
                 </div>
@@ -271,6 +327,7 @@ export default function ForgotPasswordPage() {
                 <div className="absolute bottom-[28px] left-[52px] right-[52px] text-center">
                   <button
                     type="button"
+                    disabled={forgotLoading}
                     onClick={handleClose}
                     className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal"
                   >
@@ -278,41 +335,69 @@ export default function ForgotPasswordPage() {
                   </button>
                 </div>
               </form>
+            ) : forgotStep === 2 ? (
+              <div className="w-full flex-1 flex flex-col justify-between">
+                <div className="w-full text-left" role="status">
+                  <p className="text-[16px] font-semibold text-[#1D1D1F] dark:text-zinc-50 mb-3">Check your email</p>
+                  <p className="text-[13px] text-gray-500 dark:text-zinc-400">
+                    {forgotMessage} Open the email and click Reset Password. The link expires in 15 minutes. Check spam too.
+                  </p>
+                </div>
+                <div className="absolute bottom-[64px] left-[52px] right-[52px]">
+                  <Button type="button" onClick={handleClose} className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all">
+                    Done
+                  </Button>
+                </div>
+                <div className="absolute bottom-[28px] left-[52px] right-[52px] text-center">
+                  <button type="button" onClick={resetForgotState} className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal">
+                    Request a new link
+                  </button>
+                </div>
+              </div>
             ) : (
-              <form onSubmit={handleForgotReset} className="w-full flex-1 flex flex-col justify-between">
+              <form onSubmit={handleForgotReset} className={`w-full flex-1 flex flex-col justify-between ${forgotStep === 4 ? "pb-24" : ""}`}>
                 <div className="w-full text-left">
+                  {forgotStep === 4 && (
+                    <div className="mb-3 space-y-3">
+                      <div>
+                        <label htmlFor="forgotQuestionId" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Question</label>
+                        <Select
+                          id="forgotQuestionId"
+                          aria-label="Security Question"
+                          value={forgotQuestionId}
+                          disabled={forgotLoading}
+                          onChange={(e) => { setForgotQuestionId(String(e.target.value)); setForgotAnswer(""); setForgotError(""); }}
+                          className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none"
+                          menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                          optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5"
+                        >
+                          {forgotQuestions.map((question) => <option key={question.id} value={String(question.id)}>{question.question}</option>)}
+                        </Select>
+                      </div>
+                      <div>
+                        <label htmlFor="forgotAnswer" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Answer</label>
+                        <Input id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                      </div>
+                    </div>
+                  )}
                   {/* Merged Field Container */}
                   <div className={`merged-container bg-white dark:bg-zinc-800 ${
                     forgotError ? "has-error" : ""
                   }`}>
-                    <div className={`field-wrapper border-b border-border dark:border-border/50 ${resetTokenFocused || forgotResetToken.length > 0 ? "active" : ""}`}>
-                      <label>Reset Token</label>
-                      <Input
-                        type="text"
-                        placeholder=" "
-                        className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
-                        value={forgotResetToken}
-                        onFocus={() => setResetTokenFocused(true)}
-                        onBlur={() => setResetTokenFocused(false)}
-                        onChange={(e) => {
-                          setForgotResetToken(e.target.value);
-                          if (forgotError) setForgotError("");
-                        }}
-                        required
-                      />
-                    </div>
-
                     <p className="px-[14px] py-3 text-[12px] text-gray-500 dark:text-zinc-400">
-                      Paste the one-time token from your registered recovery email. It expires after 15 minutes.
+                      {forgotStep === 4 ? "Choose a new password with at least 8 characters." : "Choose a new password with at least 8 characters. This link expires in 15 minutes and can be used once."}
                     </p>
 
                     {/* New Password input */}
                     <div className={`field-wrapper border-b border-border dark:border-border/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
-                      <label>New Password</label>
+                      <label htmlFor="forgotNewPassword">New Password</label>
                       <Input
                         type="password"
                         placeholder=" "
                         className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        id="forgotNewPassword"
+                        autoComplete="new-password"
+                        minLength={8}
                         value={forgotNewPassword}
                         onFocus={() => setNewPassFocused(true)}
                         onBlur={() => setNewPassFocused(false)}
@@ -326,11 +411,14 @@ export default function ForgotPasswordPage() {
 
                     {/* Confirm Password input */}
                     <div className={`field-wrapper ${confirmPassFocused || forgotConfirmPassword.length > 0 ? "active" : ""}`}>
-                      <label>Confirm Password</label>
+                      <label htmlFor="forgotConfirmPassword">Confirm Password</label>
                       <Input
                         type="password"
                         placeholder=" "
                         className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        id="forgotConfirmPassword"
+                        autoComplete="new-password"
+                        minLength={8}
                         value={forgotConfirmPassword}
                         onFocus={() => setConfirmPassFocused(true)}
                         onBlur={() => setConfirmPassFocused(false)}
@@ -344,9 +432,9 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   {forgotError && (
-                    <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                    <div role="alert" className="mt-1.5 text-left flex items-start gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
                       <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
-                      <p className="text-[12px] font-normal leading-none">
+                      <p className="text-[12px] font-normal leading-snug">
                         {forgotError}
                       </p>
                     </div>
@@ -357,7 +445,7 @@ export default function ForgotPasswordPage() {
                 <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                   <Button
                     type="submit"
-                    disabled={forgotLoading || !forgotResetToken.trim() || !forgotNewPassword || !forgotConfirmPassword}
+                    disabled={forgotLoading || (forgotStep === 4 ? !forgotQuestionId || !forgotAnswer.trim() : !forgotResetToken.trim()) || !forgotNewPassword || !forgotConfirmPassword}
                     title="Reset Password"
                     className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                   >
@@ -373,10 +461,11 @@ export default function ForgotPasswordPage() {
                 <div className="absolute bottom-[28px] left-[52px] right-[52px] text-center">
                   <button
                     type="button"
-                    onClick={() => setForgotStep(1)}
+                    disabled={forgotLoading}
+                    onClick={resetForgotState}
                     className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none font-normal"
                   >
-                    Back
+                    {forgotStep === 4 ? "Back" : "Request a new link"}
                   </button>
                 </div>
               </form>
