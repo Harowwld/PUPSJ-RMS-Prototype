@@ -2,18 +2,9 @@ import { NextResponse } from "next/server";
 import { POST as login } from "../login/route";
 import { isLocalhostRequest, shouldUseSecureCookie } from "@/lib/cookieSecurity";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
+import { isDemoAccount } from "@/lib/demoAccounts";
 
 export const runtime = "nodejs";
-
-const DEMO_ACCOUNTS = new Set([
-  "superadmin@pup.local",
-  "admin.registrar@pup.local",
-  "staff.registrar@pup.local",
-  "admin.osas@pup.local",
-  "staff.osas@pup.local",
-  "student@pup.local",
-  "test.student@pup.local",
-]);
 
 export async function POST(req) {
   if (process.env.NODE_ENV === "production" && !isLocalhostRequest(req)) {
@@ -27,7 +18,7 @@ export async function POST(req) {
 
   const body = await req.json().catch(() => null);
   const username = String(body?.username || "").trim().toLowerCase();
-  if (!DEMO_ACCOUNTS.has(username)) {
+  if (!isDemoAccount(username)) {
     return NextResponse.json({ ok: false, error: "Demo account not found" }, { status: 404 });
   }
 

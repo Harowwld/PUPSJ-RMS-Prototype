@@ -9,6 +9,7 @@ import { getRoleBranding } from "@/lib/roleBranding";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { verifyPasswordHash } from "../../../../lib/passwordHash.js";
+import { isDemoAccount } from "@/lib/demoAccounts";
 
 export const runtime = "nodejs";
 
@@ -135,7 +136,7 @@ export async function GET(req) {
       verifyPasswordHash(defaultPassword, staff.password_hash).valid ||
       verifyPasswordHash("pupstaff", staff.password_hash).valid
     ) : false;
-    const mustChangePassword = Boolean(isDefaultPassword || sessionPayload.mustChangePassword);
+    const mustChangePassword = !isDemoAccount(staff?.email) && Boolean(isDefaultPassword || sessionPayload.mustChangePassword);
     authDebug("session_check.profile_loaded", { staffId: userId, found: Boolean(staff), status: currentStatus, mustChangePassword, mustSetSecurityQuestions: !hasSecurity });
 
     // Multi-office context resolution

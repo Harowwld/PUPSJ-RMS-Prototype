@@ -16,6 +16,7 @@ import { checkAuth2FARateLimit, resetAuth2FARateLimit } from "@/lib/rateLimiter"
 import { getSessionVersion, isSessionActive, revokeSession } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
+import { isDemoAccount } from "@/lib/demoAccounts";
 
 export const runtime = "nodejs";
 
@@ -128,7 +129,7 @@ export async function POST(req) {
   const isDefaultPassword =
     verifyPasswordHash(defaultPassword, staff.password_hash).valid ||
     verifyPasswordHash("pupstaff", staff.password_hash).valid;
-  const mustChangePassword = Boolean(isDefaultPassword);
+  const mustChangePassword = !isDemoAccount(staff.email) && Boolean(isDefaultPassword);
 
   const sessionPayload = {
     sub: staff.id,

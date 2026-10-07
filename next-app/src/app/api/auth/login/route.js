@@ -20,6 +20,7 @@ import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 import { isStaffOfficeActive } from "@/lib/officeAccess";
+import { isDemoAccount } from "@/lib/demoAccounts";
 
 export const runtime = "nodejs";
 
@@ -264,7 +265,7 @@ async function _POST(req) {
     password === "pupstaff" ||
     verifyPasswordHash(defaultPassword, touched.password_hash).valid ||
     verifyPasswordHash("pupstaff", touched.password_hash).valid;
-  const mustChangePassword = Boolean(isDefaultPassword);
+  const mustChangePassword = !isDemoAccount(touched.email) && Boolean(isDefaultPassword);
   authDebug("login.session_issued", {
     staffId: touched.id,
     role: touched.role || "Staff",
