@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import chokidar from "chokidar";
 import { Pool } from "pg";
 import { waitForStableFile } from "./fileStability.mjs";
+import { cleanupDoneFiles } from "./cleanup.mjs";
 
 const nextAppRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(nextAppRoot, ".env"), override: true });
@@ -107,16 +108,19 @@ async function processOne(filePath) {
 
     const processingPath = path.join(PROCESSING_DIR, `${Date.now()}-${fileName}`);
     fs.renameSync(filePath, processingPath);
+    let row;
     try {
-      const row = await sendToIngest(processingPath, fileName);
-      const donePath = path.join(DONE_DIR, path.basename(processingPath));
-      fs.renameSync(processingPath, donePath);
-      console.log(`[hot-folder] ✓ Uploaded ${fileName} -> ingest #${row.id}`);
+      row = await sendToIngest(processingPath, fileName);
     } catch (e) {
       const failedPath = path.join(FAILED_DIR, path.basename(processingPath));
       fs.renameSync(processingPath, failedPath);
       console.error(`[hot-folder] ✗ Failed ${fileName}: ${e.message}`);
+      return;
     }
+    console.log(`[hot-folder] ✓ Uploaded ${fileName} -> ingest #${row.id}`);
+    const donePath = path.join(DONE_DIR, path.basename(processingPath));
+    fs.renameSync(processingPath, donePath);
+    cleanupDoneFiles(DONE_DIR);
   } catch (e) {
     console.error(`[hot-folder] Error ${fileName}: ${e.message}`);
   } finally {
@@ -162,6 +166,7 @@ let watcherGeneration = 0;
 
 function attachWatcher() {
   ensureHotFolderDirs();
+  cleanupDoneFiles(DONE_DIR);
   const generation = ++watcherGeneration;
   console.log(`[hot-folder] Watching ${INBOUND_DIR}`);
 
@@ -216,6 +221,7 @@ async function main() {
   DONE_DIR = path.join(parentDir, "DONE");
   FAILED_DIR = path.join(parentDir, "FAILED");
   attachWatcher();
+  setInterval(() => cleanupDoneFiles(DONE_DIR), 60000);
   // Office settings can change while the dev server is running.
   setInterval(() => reloadConfiguredWatcher().catch((error) => {
     console.warn(`[hot-folder] Could not reload inbound path: ${error.message}`);
