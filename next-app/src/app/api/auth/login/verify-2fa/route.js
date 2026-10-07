@@ -8,11 +8,11 @@ import {
   hasAllSecurityAnswers,
 } from "@/lib/staffRepo";
 import { getSessionCookieName, verifySessionToken, signSessionToken } from "@/lib/jwt";
+import { attachRefreshSession } from "@/lib/refreshSessions";
 import { verifyTOTP, decryptSecret } from "@/lib/totp";
 import { createSession } from "@/lib/sessionStore";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { checkAuth2FARateLimit, resetAuth2FARateLimit } from "@/lib/rateLimiter";
-import { setCSRFTokenCookie } from "../../../../../lib/csrfProtection";
 import { getSessionVersion, isSessionActive, revokeSession } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
@@ -20,6 +20,7 @@ import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 export const runtime = "nodejs";
 
 function addSecurityHeaders(response) {
+  response.headers.set("Cache-Control", "no-store");
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -71,7 +72,7 @@ export async function POST(req) {
     if (payload.purpose !== "2fa") {
       throw new Error("Invalid token purpose");
     }
-    if (!(await isSessionActive(payload))) {
+    if (!(await isSessionActive(payload, { purpose: "2fa" }))) {
       throw new Error("Challenge already used or revoked");
     }
   } catch (err) {
@@ -174,5 +175,5 @@ export async function POST(req) {
     path: "/",
   });
 
-  return addSecurityHeaders(setCSRFTokenCookie(res, token, req));
+  return addSecurityHeaders(await attachRefreshSession(res, token, req));
 }

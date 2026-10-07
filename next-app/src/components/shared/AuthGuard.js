@@ -32,9 +32,18 @@ export function AuthGuard({ children, redirectTo = "/" }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    let stopped = false;
+    let retryTimer;
     const checkAuth = async () => {
+      let retrying = false;
       try {
         const session = await getClientSession()
+        if (stopped) return;
+        if (session.status >= 500 || session.status === 429) {
+          retrying = true;
+          retryTimer = setTimeout(checkAuth, 30_000);
+          return;
+        }
         console.info("[auth-debug] route_guard.session_response", { path: window.location.pathname, status: session.status })
 
         if (!session.ok) {
@@ -84,12 +93,19 @@ export function AuthGuard({ children, redirectTo = "/" }) {
         setIsAuthorized(true)
       } catch (err) {
         console.error("[AuthGuard] Validation error:", err)
-        router.push(redirectTo)
+        if (!stopped) {
+          retrying = true;
+          retryTimer = setTimeout(checkAuth, 30_000);
+        }
       } finally {
-        setIsLoading(false)
+        if (!stopped && !retrying) setIsLoading(false)
       }
     };
     checkAuth();
+    return () => {
+      stopped = true;
+      clearTimeout(retryTimer);
+    };
   }, [router, redirectTo])
 
   useEffect(() => {

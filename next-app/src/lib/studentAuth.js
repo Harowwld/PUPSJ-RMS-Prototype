@@ -1,11 +1,10 @@
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { getSessionCookieName, signSessionToken, verifySessionToken } from "./jwt.js";
+import { attachRefreshSession } from "./refreshSessions.js";
 import { query, queryOne, transaction } from "./postgres.js";
 import { getSessionVersion, isSessionActive, registerSessionToken } from "./authSessions.js";
-import { setCSRFTokenCookie } from "./csrfProtection.js";
 import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
 import { validatePasswordPolicy } from "./passwordPolicy.js";
-import { shouldUseSecureCookie } from "./cookieSecurity.js";
 
 export async function registerStudent({ studentNo, name, firstName, lastName, middleName, password, email, clientType }) {
   const cleanEmail = String(email || "").trim().toLowerCase();
@@ -205,12 +204,8 @@ export async function getStudentSession(req) {
   }
 }
 
-export function setStudentSessionCookie(response, token, req) {
-  response.cookies.set({
-    name: getSessionCookieName(), value: token, httpOnly: true, sameSite: "lax",
-    secure: shouldUseSecureCookie(req), path: "/",
-  });
-  return setCSRFTokenCookie(response, token, req);
+export async function setStudentSessionCookie(response, token, req) {
+  return attachRefreshSession(response, token, req);
 }
 
 export function decryptStudentRow(row) {

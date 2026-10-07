@@ -52,13 +52,13 @@ export async function POST(req) {
     const { getStaffByUsername, touchStaffLastActiveById } = await import("../../../../lib/staffRepo.js");
     const { getSessionCookieName, signSessionToken } = await import("../../../../lib/jwt.js");
     const { createSession } = await import("../../../../lib/sessionStore.js");
-    const { setCSRFTokenCookie } = await import("../../../../lib/csrfProtection.js");
+    const { attachRefreshSession } = await import("../../../../lib/refreshSessions.js");
     const { getSessionVersion } = await import("@/lib/authSessions");
     const { queryOne } = await import("@/lib/postgres");
     const { resetAuthLoginRateLimit } = await import("../../../../lib/rateLimiter.js");
 
     const staff = await getStaffByUsername(username);
-    if (staff && staff.status !== "Archived" && staff.status !== "Inactive") {
+    if (staff && !staff.totp_enabled && staff.status !== "Archived" && staff.status !== "Inactive") {
       let touched = process.env.DATABASE_URL
         ? await queryOne("UPDATE staff SET last_active = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *", [staff.id])
         : await touchStaffLastActiveById(staff.id);
@@ -97,7 +97,7 @@ export async function POST(req) {
           secure: shouldUseSecureCookie(req),
           path: "/",
         });
-        return setCSRFTokenCookie(res, token, req);
+        return attachRefreshSession(res, token, req);
       }
     }
   }

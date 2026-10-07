@@ -211,10 +211,10 @@ export default function Home() {
     fetch("/api/auth/login-options", { cache: "no-store" })
       .then((response) => response.json())
       .then((result) => {
-        if (active) setDemoAccountsEnabled(result?.data?.showDemoAccounts !== false);
+        if (active) setDemoAccountsEnabled(result?.ok === true && result?.data?.showDemoAccounts === true);
       })
       .catch(() => {
-        if (active) setDemoAccountsEnabled(true);
+        if (active) setDemoAccountsEnabled(false);
       });
     return () => { active = false; };
   }, []);

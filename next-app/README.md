@@ -19,13 +19,25 @@ For a Windows 10/11 workstation, use the installer in `installer/windows`. It in
 1. Download and extract the project ZIP on the workstation.
 2. Open `next-app/installer/windows` and double-click `Install-PUPSJRMS.bat`.
 3. Approve the Windows administrator prompt, then choose an initial staff password with at least 12 letters or numbers.
-4. Open **PUPSJ RMS** on the desktop, or visit [http://localhost:3000](http://localhost:3000).
+4. Open **PUPSJ RMS** on the desktop, or visit the HTTP address printed by the installer (normally `http://127.0.0.1:3000/`).
 
 The workstation needs internet access for Docker Desktop and the initial container build. The installer uses Windows Package Manager (`winget`); if it is missing, install or update **App Installer** from Microsoft Store. Docker Desktop may ask for first-run approval or a Windows restart. Re-run the installer after restarting if setup did not finish. The app and database run locally in Docker; database and upload data persist in Docker volumes when the app is stopped. The scanner inbox is at `C:\ProgramData\PUPSJ-RMS\hot-folder`.
 
 The installer's `.env` is stored under `C:\ProgramData\PUPSJ-RMS\app` and access is restricted to Windows administrators and SYSTEM. Keep the chosen staff password private. The initial SuperAdmin account is `superadmin@pup.local`. Start and Stop desktop shortcuts control the local services.
 
+The installer and Start shortcut read all of Docker's published ports for the app's internal port `3000`, then check HTTP directly from Windows without a proxy. Each retry tries IPv4 loopback (`http://127.0.0.1:<port>/`) first, then falls back to IPv6 loopback (`http://[::1]:<port>/`). Setup reports success only after an address returns a successful response; the Start shortcut opens that exact validated address in your default browser. Docker Desktop and the Windows host must expose the port on the address family used; the installer does not enable IPv6 or change Docker networking. If every address fails, the error lists the IPv4 and IPv6 addresses tested, their last errors, and Docker commands to inspect the app. Container health alone does not confirm Windows can reach the published port.
+
+To use another Windows port, change `APP_PORT` in the installed `.env` (for example, `APP_PORT=3001`), then use the Start shortcut to recreate the app's port mapping. Docker still uses port `3000` inside the app container.
+
 To install an application update, extract the newer project ZIP and run its installer again. It reuses the existing `.env` and Docker volumes. Back up the system before upgrades that include database migrations.
+
+## Session renewal
+
+New sign-ins receive a 15-minute access JWT and an HTTP-only refresh cookie with a fixed seven-day expiry. The browser renews before access expires and retries a same-origin API request once after a `401`. A `403` remains a permission error and is not retried. Refresh credentials stay in cookies; the database stores their hashes and rotates them on each renewal. Replay outside a short window for simultaneous requests revokes that browser session. This follows the rotation and reuse-detection pattern described in [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14).
+
+Staff and student sign-ins, completed two-factor authentication, and password changes issue refresh credentials. Pending two-factor challenges cannot renew. Logout revokes the browser session even after its access JWT has expired. Password resets, account or role changes, inactive offices, and session revocation continue to prevent renewal. Refresh does not change office or document permissions.
+
+Apply migration `071_auth_refresh_tokens.sql` with `pnpm db:migrate` before starting this version (Docker startup applies migrations automatically). Existing eight-hour access sessions remain valid until their original expiry; sign in again to receive refresh credentials. Cookies retain the existing HTTP behavior for `localhost`, `127.0.0.1`, and `[::1]`, and use secure cookies for hosted production addresses. Refresh does not transfer a login between these different hosts. After restoring a full system backup, rotate `JWT_SECRET` and restart the app to invalidate credentials restored with the backup.
 
 ## Developer prerequisites
 

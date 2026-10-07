@@ -120,6 +120,9 @@ try {
   Pop-Location
 }
 
+$urlHelper = Join-Path $appRoot "installer\windows\Get-PUPSJRMSUrl.ps1"
+$appUrl = & $urlHelper -AppRoot $appRoot -DockerCli $dockerCli
+
 $startFile = Join-Path $installRoot "Start PUPSJ RMS.cmd"
 $stopFile = Join-Path $installRoot "Stop PUPSJ RMS.cmd"
 @"
@@ -136,7 +139,8 @@ exit /b 1
 cd /d "$appRoot"
 "$dockerCli" compose up -d --wait
 if errorlevel 1 (pause & exit /b 1)
-start "" http://localhost:3000
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$urlHelper" -AppRoot "$appRoot" -DockerCli "$dockerCli" -OpenBrowser
+if errorlevel 1 (pause & exit /b 1)
 "@ | Set-Content -Path $startFile -Encoding ascii
 @"
 @echo off
@@ -158,7 +162,7 @@ foreach ($shortcut in @(
 }
 
 Write-Host ""
-Write-Host "PUPSJ RMS is installed and running at http://localhost:3000"
+Write-Host "PUPSJ RMS is installed and responding at $appUrl"
 Write-Host "Initial SuperAdmin login: superadmin@pup.local"
 Write-Host "The password is the one you chose during setup. Keep it private."
 Write-Host "Start and Stop shortcuts were added to the Public Desktop."

@@ -13,6 +13,7 @@ import { verifyPasswordHash } from "../../../../lib/passwordHash.js";
 export const runtime = "nodejs";
 
 function addSecurityHeaders(response) {
+  response.headers.set("Cache-Control", "no-store");
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -97,6 +98,7 @@ export async function GET(req) {
       return addSecurityHeaders(NextResponse.json({
         ok: true,
         data: {
+          sessionExpiresAt: sessionPayload.exp,
           id: student.student_no || String(student.account_id),
           account_id: student.account_id,
           role: "Student",
@@ -189,6 +191,7 @@ export async function GET(req) {
     return addSecurityHeaders(NextResponse.json({
       ok: true,
       data: {
+        sessionExpiresAt: sessionPayload.exp,
         id: userId,
         role: currentRole,
         status: currentStatus,

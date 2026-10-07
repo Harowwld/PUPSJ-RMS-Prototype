@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "./src/lib/jwt";
-import { isPublicSessionPath } from "./src/lib/middlewarePolicy.js";
+import { getSessionCookieName, getRefreshCookieName } from "./src/lib/jwt";
+import { isPublicSessionPath, resolveMiddlewareSession } from "./src/lib/middlewarePolicy.js";
 import { canAccessPage } from "./src/lib/roleUtils.js";
 
 function constantTimeEqual(a, b) {
@@ -25,6 +25,7 @@ function continueWithNonce(req, nonce) {
 }
 
 function addSecurityHeaders(response, nonce) {
+  response.headers.set("Cache-Control", "no-store");
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -65,25 +66,15 @@ export async function middleware(req) {
   // The student portal is a public login/register entry point when there is
   // no session. Authenticated users still pass through the normal role gate.
   if ((pathname === "/student" || pathname.startsWith("/student/")) &&
-      !req.cookies.get(getSessionCookieName())?.value) {
+      !req.cookies.get(getSessionCookieName())?.value && !req.cookies.get(getRefreshCookieName())?.value) {
     return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
 
   // 4. Session validation for all other protected routes
   const token = req.cookies.get(getSessionCookieName())?.value || "";
-  if (!token) {
-    if (pathname.startsWith("/api/")) {
-      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 }), nonce);
-    }
-    const url = req.nextUrl.clone();
-    url.pathname = "/";
-    return addSecurityHeaders(NextResponse.redirect(url), nonce);
-  }
-
-  let payload;
-  try {
-    payload = await verifySessionToken(token);
-  } catch (err) {
+  const payload = await resolveMiddlewareSession(token, req.cookies.get(getRefreshCookieName())?.value,
+    { allowRefresh: !pathname.startsWith("/api/") });
+  if (!payload) {
     if (pathname.startsWith("/api/")) {
       return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 }), nonce);
     }

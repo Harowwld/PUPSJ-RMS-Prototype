@@ -8,6 +8,7 @@ import {
   hasAllSecurityAnswers,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
+import { attachRefreshSession } from "@/lib/refreshSessions";
 import { createSession } from "../../../../lib/sessionStore";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "../../../../lib/rateLimiter";
@@ -15,7 +16,6 @@ import { LoginSchema } from "../../../../lib/authSchemas";
 import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
 import { authenticateStudent, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
-import { setCSRFTokenCookie } from "../../../../lib/csrfProtection";
 import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
@@ -40,6 +40,7 @@ async function audit(req, action, details, severity = "INFO", actorMeta = {}) {
 }
 
 function addSecurityHeaders(response) {
+  response.headers.set("Cache-Control", "no-store");
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -144,7 +145,7 @@ async function _POST(req) {
           name: student.name,
         },
       });
-      return addSecurityHeaders(setStudentSessionCookie(studentRes, token, req));
+      return addSecurityHeaders(await setStudentSessionCookie(studentRes, token, req));
     }
 
     authDebug("login.account_missing", { identifierLength: cleanUsername.length });
@@ -320,5 +321,5 @@ async function _POST(req) {
     path: "/",
   });
 
-  return addSecurityHeaders(setCSRFTokenCookie(res, token, req));
+  return addSecurityHeaders(await attachRefreshSession(res, token, req));
 }

@@ -13,8 +13,8 @@ import { authDebug } from "@/lib/authDebug";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { bumpSessionVersion, getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
-import { setCSRFTokenCookie } from "@/lib/csrfProtection";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
+import { attachRefreshSession } from "@/lib/refreshSessions";
 import { query, queryOne } from "@/lib/postgres";
 
 export const runtime = "nodejs";
@@ -156,7 +156,7 @@ export async function POST(req) {
       secure: shouldUseSecureCookie(req),
       path: "/",
     });
-    return setCSRFTokenCookie(res, nextToken, req);
+    return attachRefreshSession(res, nextToken, req);
   } else {
     // Student password change
     const studentAccount = await queryOne(
@@ -184,6 +184,7 @@ export async function POST(req) {
 
     const nextPayload = {
       ...session,
+      jti: undefined,
       sub: id,
       role: "Student",
       mustChangePassword: false,
@@ -205,6 +206,6 @@ export async function POST(req) {
       secure: shouldUseSecureCookie(req),
       path: "/",
     });
-    return setCSRFTokenCookie(res, nextToken, req);
+    return attachRefreshSession(res, nextToken, req);
   }
 }

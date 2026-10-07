@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
+import { getSessionCookieName, getRefreshCookieName } from "../../../../lib/jwt";
+import { getLogoutPayload } from "@/lib/refreshSessions";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
 import { revokeSession } from "@/lib/authSessions";
@@ -9,6 +10,7 @@ import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 export const runtime = "nodejs";
 
 function addSecurityHeaders(response) {
+  response.headers.set("Cache-Control", "no-store");
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -22,20 +24,18 @@ export async function POST(req) {
   }
 
   const sessionName = getSessionCookieName();
-  const token = req.cookies.get(sessionName)?.value || req.cookies.get("pup_session")?.value;
+  const payload = await getLogoutPayload(req);
+  if (payload?.jti) {
+    await revokeSession(payload.jti, { principalId: payload.sub, reason: "logout" });
+  }
 
-  if (token) {
+  if (payload) {
     // Signing out ends this browser session only. It must not deactivate the
     // personnel account itself; otherwise the next valid login is redirected
     // away by AuthGuard as an inactive user.
     try {
-      const payload = await verifySessionToken(token);
       const userId = payload?.sub;
       const username = payload?.username;
-
-      if (payload?.jti) {
-        await revokeSession(payload.jti, { principalId: userId, reason: "logout" });
-      }
 
       const isStudent = String(payload?.role || "").toLowerCase() === "student" || payload?.principal_type === "student";
 
@@ -67,12 +67,12 @@ export async function POST(req) {
         });
       }
     } catch {
-      // Ignore token verification errors
+      // Audit failure must not prevent clearing a revoked browser session.
     }
   }
 
   const res = NextResponse.json({ ok: true });
-  const cookieNamesToClear = Array.from(new Set([sessionName, "pup_session", "pup_auth_token", "pup_csrf"]));
+  const cookieNamesToClear = Array.from(new Set([sessionName, getRefreshCookieName(), "pup_session", "pup_auth_token", "pup_csrf"]));
   for (const name of cookieNamesToClear) {
     res.cookies.set({
       name,
