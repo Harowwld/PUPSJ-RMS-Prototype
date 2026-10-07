@@ -464,7 +464,7 @@ export async function seed({ force: forceOverride } = {}) {
     }
 
     for (const [sNo, sEmail] of demoStudentAccounts) {
-      const profile = await queryOne(
+      const profile = await runOne(
         `UPDATE student_identity_profiles sip
          SET email = $1, client_type = 'Student', updated_at = NOW()
          FROM students s
