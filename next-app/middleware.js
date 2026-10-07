@@ -18,9 +18,15 @@ function createRequestNonce() {
   return btoa(crypto.randomUUID());
 }
 
+function contentSecurityPolicy(nonce) {
+  const developmentScriptPolicy = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
+  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentScriptPolicy}; style-src 'self' 'nonce-${nonce}'; style-src-attr 'none'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';`;
+}
+
 function continueWithNonce(req, nonce) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", contentSecurityPolicy(nonce));
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
@@ -30,7 +36,7 @@ function addSecurityHeaders(response, nonce) {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Content-Security-Policy', `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'; style-src 'self' 'nonce-${nonce}'; style-src-attr 'none'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';`);
+  response.headers.set('Content-Security-Policy', contentSecurityPolicy(nonce));
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   return response;
 }

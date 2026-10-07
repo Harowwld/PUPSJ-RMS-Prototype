@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import DynamicFavicon from "@/components/shared/DynamicFavicon";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
 
 const jakarta = localFont({
   src: "../../public/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2",
@@ -24,7 +25,8 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const nonce = (await headers()).get("x-nonce") || undefined;
   return (
     <html lang="en" className={`${jakarta.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
@@ -33,6 +35,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="antialiased font-sans">
         <ThemeProvider
+          nonce={nonce}
           attribute="class"
           defaultTheme="light"
           forcedTheme="light"
