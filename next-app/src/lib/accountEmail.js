@@ -62,6 +62,28 @@ export function assertAccountEmailConfigured() {
   getTransporter();
 }
 
+export async function sendSmtpTestEmail({ to }) {
+  const recipient = String(to || "").trim();
+  if (recipient.length > 254 || !/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(recipient)) {
+    const error = new Error("Enter one valid recipient email address.");
+    error.code = "MAIL_INVALID_RECIPIENT";
+    throw error;
+  }
+  const mailer = getTransporter();
+  const result = await mailer.transporter.sendMail({
+    from: mailer.from,
+    to: recipient,
+    subject: "PUPSJ-RMS test email",
+    text: "This is a test email from PUPSJ-RMS email setup. Receiving it confirms that this mailbox can receive messages from the configured SMTP server.",
+  });
+  if (!result.accepted?.length || result.rejected?.length) {
+    const error = new Error("The SMTP server did not accept the test recipient.");
+    error.code = "MAIL_RECIPIENT_REJECTED";
+    throw error;
+  }
+  return { messageId: result.messageId };
+}
+
 export async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
   const recipient = String(to || "").trim();
   if (!recipient || !resetUrl) throw new Error("A recipient and reset link are required.");

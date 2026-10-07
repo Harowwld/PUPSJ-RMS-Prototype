@@ -14,16 +14,20 @@ If macOS blocks the downloaded `.command` file, use Finder's **Open** action for
 
 ### Windows
 
-For a Windows 10/11 workstation, use the installer in `installer/windows`. It installs Docker Desktop if needed, builds the application and PostgreSQL containers, creates private secrets, secures the initial staff password, and adds Start/Stop shortcuts to the Public Desktop. No Git, Node.js, pnpm, or manual Docker commands are needed on the workstation.
+For a Windows 10/11 workstation, use the installer in `installer/windows`. It installs Docker Desktop if needed, builds the application and PostgreSQL containers, creates private secrets, secures the initial staff password, and adds Start/Stop and Configure Email shortcuts to the Public Desktop. No Git, Node.js, pnpm, or manual Docker commands are needed on the workstation.
 
 1. Download and extract the project ZIP on the workstation.
 2. Open `next-app/installer/windows` and double-click `Install-PUPSJRMS.bat`.
 3. Approve the Windows administrator prompt, then choose an initial staff password with at least 12 letters or numbers.
-4. Open **PUPSJ RMS** on the desktop, or visit the HTTP address printed by the installer (normally `http://127.0.0.1:3000/`).
+4. Choose whether to configure email. The optional wizard asks for SMTP host, port, encryption, authentication, sender address, and the application address recipients can access. SMTP passwords are hidden. You can skip this step and configure email later.
+5. After setup, optionally send a test email to an address you choose. A successful SMTP response means the mail server accepted it; check the recipient's Inbox and Spam folder to confirm delivery.
+6. Open **PUPSJ RMS** on the desktop, or visit the HTTP address printed by the installer (normally `http://127.0.0.1:3000/`).
 
 The workstation needs internet access for Docker Desktop and the initial container build. The installer uses Windows Package Manager (`winget`); if it is missing, install or update **App Installer** from Microsoft Store. Docker Desktop may ask for first-run approval or a Windows restart. Re-run the installer after restarting if setup did not finish. The app and database run locally in Docker; database and upload data persist in Docker volumes when the app is stopped. The scanner inbox is at `C:\ProgramData\PUPSJ-RMS\hot-folder`.
 
 The installer's `.env` is stored under `C:\ProgramData\PUPSJ-RMS\app` and access is restricted to Windows administrators and SYSTEM. Keep the chosen staff password private. The initial SuperAdmin account is `superadmin@pup.local`. Start and Stop desktop shortcuts control the local services.
+
+Use **Configure Email** on the Public Desktop to change email settings later, or run `Configure-PUPSJRMSEmail.bat` from the installed `installer/windows` folder. The same wizard preserves other `.env` settings and keeps existing values when you accept their defaults. Saving changes recreates the app container so they take effect; it does not reset accounts or the database. Use an application URL recipients can reach, such as the workstation's LAN address, for recovery links. If email setup is skipped, security-question recovery remains available for accounts with saved answers; sending account emails and email-link recovery require SMTP.
 
 The installer and Start shortcut read all of Docker's published ports for the app's internal port `3000`, then check HTTP directly from Windows without a proxy. Each retry tries IPv4 loopback (`http://127.0.0.1:<port>/`) first, then falls back to IPv6 loopback (`http://[::1]:<port>/`). Setup reports success only after an address returns a successful response; the Start shortcut opens that exact validated address in your default browser. Docker Desktop and the Windows host must expose the port on the address family used; the installer does not enable IPv6 or change Docker networking. If every address fails, the error lists the IPv4 and IPv6 addresses tested, their last errors, and Docker commands to inspect the app. Container health alone does not confirm Windows can reach the published port.
 

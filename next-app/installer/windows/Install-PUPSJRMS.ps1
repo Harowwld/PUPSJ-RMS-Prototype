@@ -77,6 +77,7 @@ if ($LASTEXITCODE -ge 8) { throw "Copying application files failed (robocopy exi
 # Allow standard Windows users to place scanned files in the inbound folder.
 & icacls $hotFolder /grant "*S-1-5-32-545:(OI)(CI)M" /T | Out-Null
 
+. (Join-Path $appRoot "installer\windows\PUPSJRMSEmail.ps1")
 $envPath = Join-Path $appRoot ".env"
 if (-not (Test-Path $envPath)) {
   $jwt = New-RandomHex 32
@@ -90,7 +91,7 @@ if (-not (Test-Path $envPath)) {
     throw "Use at least 12 letters or numbers for the initial staff password, then run the installer again."
   }
 
-  $envContent = Get-Content (Join-Path $appRoot ".env.example")
+  Copy-Item (Join-Path $appRoot ".env.example") $envPath
   $values = @{
     POSTGRES_PASSWORD = $dbPassword
     JWT_SECRET = $jwt
@@ -98,15 +99,11 @@ if (-not (Test-Path $envPath)) {
     HOT_FOLDER_INGEST_TOKEN = $ingestToken
     HOT_FOLDER_HOST_PATH = ($hotFolder -replace "\\", "/")
   }
-  foreach ($key in $values.Keys) {
-    $pattern = "^" + [Regex]::Escape($key) + "=.*$"
-    $replacement = "$key=$($values[$key])"
-    $envContent = $envContent -replace $pattern, $replacement
-  }
-  $envContent | Set-Content -Path $envPath -Encoding utf8
-  $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-  & icacls $envPath /inheritance:r /grant:r "${currentUser}:(R,W)" "*S-1-5-32-544:(F)" "*S-1-5-18:(F)" | Out-Null
+  Set-PUPSJEnv $envPath $values
+  Protect-PUPSJEnv $envPath
 }
+
+$emailSetup = Invoke-PUPSJEmailWizard $envPath
 
 Push-Location $appRoot
 try {
@@ -116,6 +113,7 @@ try {
 
   & $dockerCli compose exec -T app node scripts/secure-installed-accounts.mjs
   if ($LASTEXITCODE -ne 0) { throw "Could not secure the initial staff accounts." }
+  if ($emailSetup.Changed) { Invoke-PUPSJEmailTest $dockerCli }
 } finally {
   Pop-Location
 }
@@ -152,7 +150,8 @@ pause
 $shell = New-Object -ComObject WScript.Shell
 foreach ($shortcut in @(
   @{ Name = "PUPSJ RMS.lnk"; Target = $startFile; Description = "Start PUPSJ RMS" },
-  @{ Name = "Stop PUPSJ RMS.lnk"; Target = $stopFile; Description = "Stop PUPSJ RMS" }
+  @{ Name = "Stop PUPSJ RMS.lnk"; Target = $stopFile; Description = "Stop PUPSJ RMS" },
+  @{ Name = "Configure Email.lnk"; Target = (Join-Path $appRoot "installer\windows\Configure-PUPSJRMSEmail.bat"); Description = "Configure PUPSJ RMS email" }
 )) {
   $link = $shell.CreateShortcut((Join-Path $desktop $shortcut.Name))
   $link.TargetPath = $shortcut.Target
@@ -165,5 +164,5 @@ Write-Host ""
 Write-Host "PUPSJ RMS is installed and responding at $appUrl"
 Write-Host "Initial SuperAdmin login: superadmin@pup.local"
 Write-Host "The password is the one you chose during setup. Keep it private."
-Write-Host "Start and Stop shortcuts were added to the Public Desktop."
+Write-Host "Start, Stop, and Configure Email shortcuts were added to the Public Desktop."
 Read-Host "Installation complete. Press Enter to close"
