@@ -239,13 +239,13 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. The local helper requires the app to be running and a SuperAdmin account. Running the command starts the reset without prompts. It uses `DEFAULT_STAFF_PASSWORD` from `.env` (or `pupstaff` if unset); set `RESET_PASSWORD` or `RESET_USERNAME` to override the login values:
+Resetting the database is destructive. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. Running the command starts the reset without prompts and seeds the demo staff accounts using `DEFAULT_STAFF_PASSWORD` (or `pupstaff` if unset):
 
 ```bash
 pnpm reset-db
 ```
 
-After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` to restore sample records.
+The package command supplies the required `--confirm` flag. Direct invocation also requires confirmation: `node scripts/reset-db.mjs --confirm`. After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` to restore sample records.
 
 To clear current rate-limit hits and lockouts without changing the configured protections, run:
 
