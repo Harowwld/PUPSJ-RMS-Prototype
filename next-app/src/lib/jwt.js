@@ -3,7 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "pup_session";
 const JWT_ISSUER = process.env.JWT_ISSUER || "pupsj-rms";
 const JWT_AUDIENCE = process.env.JWT_AUDIENCE || "pupsj-rms-app";
-const DEFAULT_SESSION_EXPIRY = "8h";
+const DEFAULT_SESSION_EXPIRY = "15m";
 
 function generateJti() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -24,12 +24,17 @@ export function getSessionCookieName() {
   return COOKIE_NAME;
 }
 
+export function getRefreshCookieName() {
+  return process.env.REFRESH_COOKIE_NAME || "pup_refresh";
+}
+
 export async function signSessionToken(payload, expiryOptions = {}) {
   const secret = getJwtSecret();
   const options = typeof expiryOptions === "string" ? { expiresIn: expiryOptions } : expiryOptions || {};
   const expiresIn = options.expiresIn || DEFAULT_SESSION_EXPIRY;
   const tokenPayload = {
     ...(payload || {}),
+    purpose: payload?.purpose || "access",
     jti: payload?.jti || generateJti(),
   };
   const builder = new SignJWT(tokenPayload)

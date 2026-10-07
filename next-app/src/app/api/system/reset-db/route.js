@@ -31,6 +31,7 @@ async function handleResetDb(req) {
   try {
     await transaction(async ({ query: txQuery }) => {
       await txQuery(`TRUNCATE TABLE
+        auth_refresh_tokens, auth_sessions, auth_session_versions, auth_session_revocations,
         transaction_updates, event_proposals, document_requests, documents,
         student_identity_link_reviews, student_accounts, student_office_memberships,
         students, student_identity_profiles, staff, global_audit_logs, backups,

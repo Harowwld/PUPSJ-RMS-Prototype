@@ -1,3 +1,4 @@
+import SessionRefresh from "@/components/shared/SessionRefresh";
 import ScrollIndicator from "@/components/shared/ScrollIndicator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
           forcedTheme="light"
           enableSystem={false}
         >
+          <SessionRefresh />
           <DynamicFavicon />
           <ScrollIndicator />
           <TooltipProvider>{children}</TooltipProvider>

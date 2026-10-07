@@ -85,8 +85,10 @@ export async function isSessionRevoked(jti) {
   return Boolean(row);
 }
 
-export async function isSessionActive(payload) {
+export async function isSessionActive(payload, { purpose = "access" } = {}) {
   if (!payload?.sub || !payload?.jti) return false;
+  if ((payload.purpose || "access") !== purpose) return false;
+  if (!Number.isFinite(Number(payload.exp)) || Number(payload.exp) <= Date.now() / 1000) return false;
   if (await isSessionRevoked(payload.jti)) return false;
   const session = await queryOne(
     `SELECT principal_id, revoked_at, expires_at

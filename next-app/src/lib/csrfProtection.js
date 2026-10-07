@@ -25,7 +25,7 @@ function signCSRFToken(sessionId, expiresAt, nonce) {
     .digest("hex");
 }
 
-const DEFAULT_CSRF_MAX_AGE_MS = 8 * 60 * 60 * 1000; // 8 hours (matches session token lifetime)
+const DEFAULT_CSRF_MAX_AGE_MS = 8 * 60 * 60 * 1000; // Independent CSRF lifetime; renewal issues a fresh token.
 
 export function generateCSRFToken(sessionId, maxAge = DEFAULT_CSRF_MAX_AGE_MS) {
   const requestedAge = Number(maxAge);
@@ -161,7 +161,7 @@ export function setCSRFTokenCookie(response, sessionToken, req) {
     sameSite: "lax",
     secure,
     path: "/",
-    maxAge: 8 * 60 * 60, // 8 hours (matches session token lifetime)
+    maxAge: 8 * 60 * 60,
   });
   return response;
 }

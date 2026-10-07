@@ -8,6 +8,7 @@ export const getRlsContext = cache(async () => {
     const token = cookieStore.get(getSessionCookieName())?.value;
     if (token) {
       const payload = await verifySessionToken(token);
+      if (payload.purpose && payload.purpose !== "access") return null;
       return {
         userId: payload.sub,
         role: payload.role,
