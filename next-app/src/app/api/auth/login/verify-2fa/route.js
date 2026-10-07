@@ -124,7 +124,10 @@ export async function POST(req) {
   await revokeSession(payload.jti, { principalId: staff.id, reason: "2fa-challenge-used" });
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const hasSecurity = await hasAllSecurityAnswers(staff.id);
-  const mustChangePassword = verifyPasswordHash(defaultPassword, staff.password_hash).valid && !hasSecurity;
+  const isDefaultPassword =
+    verifyPasswordHash(defaultPassword, staff.password_hash).valid ||
+    verifyPasswordHash("pupstaff", staff.password_hash).valid;
+  const mustChangePassword = Boolean(isDefaultPassword);
 
   const sessionPayload = {
     sub: staff.id,

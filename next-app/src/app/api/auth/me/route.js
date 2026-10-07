@@ -8,6 +8,7 @@ import { authDebug } from "@/lib/authDebug";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { verifyPasswordHash } from "../../../../lib/passwordHash.js";
 
 export const runtime = "nodejs";
 
@@ -127,7 +128,13 @@ export async function GET(req) {
     // the recovery-question step silently disappear after a first password
     // change.
     const hasSecurity = userId ? await hasAllSecurityAnswers(userId) : true;
-    authDebug("session_check.profile_loaded", { staffId: userId, found: Boolean(staff), status: currentStatus, mustSetSecurityQuestions: !hasSecurity });
+    const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+    const isDefaultPassword = staff?.password_hash ? (
+      verifyPasswordHash(defaultPassword, staff.password_hash).valid ||
+      verifyPasswordHash("pupstaff", staff.password_hash).valid
+    ) : false;
+    const mustChangePassword = Boolean(isDefaultPassword || sessionPayload.mustChangePassword);
+    authDebug("session_check.profile_loaded", { staffId: userId, found: Boolean(staff), status: currentStatus, mustChangePassword, mustSetSecurityQuestions: !hasSecurity });
 
     // Multi-office context resolution
     let officeName = null;
@@ -194,7 +201,7 @@ export async function GET(req) {
         username: principal.email || sessionPayload.username || null,
         fname: staff?.fname || "",
         lname: staff?.lname || "",
-        mustChangePassword: Boolean(sessionPayload.mustChangePassword),
+        mustChangePassword,
         mustSetSecurityQuestions: !hasSecurity,
         totp_enabled: Boolean(staff?.totp_enabled),
         last_active: sessionPayload.last_active || null,

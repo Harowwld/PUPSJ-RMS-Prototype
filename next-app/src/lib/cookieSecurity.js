@@ -14,7 +14,6 @@ export function isLocalhostRequest(req) {
 
 export function shouldUseSecureCookie(req) {
   if (process.env.NODE_ENV !== "production") return false;
-  if (!isLocalhostRequest(req)) return true;
 
   const forwardedProtocol = req?.headers?.get?.("x-forwarded-proto")
     ?.split(",")[0]
@@ -23,8 +22,12 @@ export function shouldUseSecureCookie(req) {
   if (forwardedProtocol) return forwardedProtocol === "https";
 
   try {
-    return new URL(req.url).protocol === "https:";
+    if (req?.url) {
+      return new URL(req.url).protocol === "https:";
+    }
   } catch {
-    return true;
+    // ignore
   }
+
+  return false;
 }

@@ -9,6 +9,16 @@ const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
 const port = Number(process.env.PORT || 3000);
 process.env.HOT_FOLDER_API_URL ||= `http://localhost:${port}/api/ingest/hot-folder`;
 
+try {
+  spawnSync("docker", ["compose", "up", "-d", "--wait", "postgres"], {
+    stdio: "inherit",
+    cwd: process.cwd(),
+    shell: isWindows,
+  });
+} catch {
+  // Docker may not be available if external Postgres is used
+}
+
 const migration = spawnSync(pnpmCommand, ["db:migrate"], {
   stdio: "inherit",
   cwd: process.cwd(),
