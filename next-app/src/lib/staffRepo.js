@@ -328,7 +328,8 @@ export async function updateStaffPreferences(staffId, prefs) {
     theme: "light",
     navigation_layout: "sidebar",
     skip_registration_confirmation: false,
-    high_contrast: false
+    high_contrast: false,
+    zoom_node: 3,
   };
 
   const currentPrefs = parseStaffPreferences(staff.preferences);
@@ -345,8 +346,12 @@ export async function updateStaffPreferences(staffId, prefs) {
 
 export function getStaffDisplayName(staff) {
   if (!staff) return "System";
-  const fullName = `${staff.fname || ""} ${staff.lname || ""}`.trim();
-  return fullName || staff.email || staff.id;
+  const fname = staff.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname : "";
+  const lname = staff.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname : "";
+  const fullName = `${fname} ${lname}`.trim();
+  if (fullName) return fullName;
+  if (staff.email && !staff.email.startsWith("enc:v1:")) return staff.email;
+  return staff.id || "Staff Member";
 }
 
 export async function hasAllSecurityAnswers(id, role = "Staff") {

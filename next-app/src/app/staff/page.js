@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
+import { useLayoutZoom } from "@/hooks/useLayoutZoom";
 import { PageTransition } from "@/components/ui/motion";
 import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 
@@ -110,6 +111,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
+  const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser);
 
   const roleBranding = getRoleBranding(authUser);
   const brandAccent = "#0070e2";
@@ -154,48 +156,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
   }, [searchParams, authUser])
   const [loading, setLoading] = useState(!initialAuthUser);
-  const [zoomNode, setZoomNode] = useState(3); // 0 to 6 (7 nodes)
-  const handleZoomMouseDown = (e) => {
-    // Avoid text selection or default drag triggers
-    e.preventDefault();
-    const track = e.currentTarget;
-    
-    const updateZoom = (clientX) => {
-      const rect = track.getBoundingClientRect();
-      const clickX = clientX - rect.left;
-      const percentage = clickX / rect.width;
-      const node = Math.max(0, Math.min(6, Math.round(percentage * 6)));
-      setZoomNode(node);
-    };
-
-    const isTouch = e.type === "touchstart";
-    const startX = isTouch ? e.touches[0].clientX : e.clientX;
-    updateZoom(startX);
-
-    const handleMove = (moveEvent) => {
-      const clientX = moveEvent.type === "touchmove" ? moveEvent.touches[0].clientX : moveEvent.clientX;
-      updateZoom(clientX);
-    };
-
-    const handleEnd = () => {
-      if (isTouch) {
-        document.removeEventListener("touchmove", handleMove);
-        document.removeEventListener("touchend", handleEnd);
-      } else {
-        document.removeEventListener("mousemove", handleMove);
-        document.removeEventListener("mouseup", handleEnd);
-      }
-    };
-
-    if (isTouch) {
-      document.addEventListener("touchmove", handleMove, { passive: true });
-      document.addEventListener("touchend", handleEnd);
-    } else {
-      document.addEventListener("mousemove", handleMove);
-      document.addEventListener("mouseup", handleEnd);
-    }
-  };
-
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
   const sidebarItems = useMemo(() => {
@@ -1176,17 +1136,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [switchView]);
 
   useEffect(() => {
-    const handleZoomChange = (e) => {
-      const { action } = e.detail || {};
-      if (action === "in") setZoomNode((prev) => Math.min(6, prev + 1));
-      else if (action === "out") setZoomNode((prev) => Math.max(0, prev - 1));
-      else if (action === "reset") setZoomNode(3);
-    };
-    window.addEventListener("change-zoom", handleZoomChange);
-    return () => window.removeEventListener("change-zoom", handleZoomChange);
-  }, []);
-
-  useEffect(() => {
     const locateNo = searchParams?.get("locate");
     if (locateNo && students.length > 0 && processedLocateRef.current !== locateNo) {
       processedLocateRef.current = locateNo;
@@ -2125,7 +2074,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
-            style={{ transform: `scale(${[0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]})`, transformOrigin: 'top left', width: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%`, minHeight: `${100 / [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]}%` }}
+            style={zoomStyle}
           >
             <TabsContent value="students" className="h-full m-0 border-0 focus-visible:ring-0">
             <StudentDirectoryTab

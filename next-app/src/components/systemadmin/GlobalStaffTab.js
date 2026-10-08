@@ -49,6 +49,19 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   )
 }
 
+const getStaffCleanName = (staff) => {
+  const f = staff?.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname.trim() : ""
+  const l = staff?.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname.trim() : ""
+  const full = `${f} ${l}`.trim()
+  if (full) return full
+  return staff?.id ? `Staff (${staff.id})` : "Staff Member"
+}
+
+const getStaffCleanEmail = (staff) => {
+  if (staff?.email && !staff.email.startsWith("enc:v1:")) return staff.email
+  return "—"
+}
+
 export default function GlobalStaffTab({ authUser, showToast }) {
   const router = useRouter()
   const [staff, setStaff] = useState([])
@@ -304,7 +317,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           next.delete(archiveTarget.id)
           return next
         })
-        showToast(`Personnel account for ${archiveTarget.fname} ${archiveTarget.lname} has been archived.`)
+        showToast(`Personnel account for ${getStaffCleanName(archiveTarget)} has been archived.`)
         setArchiveTarget(null)
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")
@@ -336,7 +349,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           next.delete(restoreTarget.id)
           return next
         })
-        showToast(`Personnel account for ${restoreTarget.fname} ${restoreTarget.lname} has been restored to Active.`)
+        showToast(`Personnel account for ${getStaffCleanName(restoreTarget)} has been restored to Active.`)
         setRestoreTarget(null)
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")
@@ -406,12 +419,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     const selectedOffices = staffFilters.office || [];
 
     const list = staff.filter((member) => {
+      const cleanName = getStaffCleanName(member).toLowerCase()
+      const cleanEmail = getStaffCleanEmail(member).toLowerCase()
       // Search query filter
       const matchesSearch = 
         !search ||
-        member.fname.toLowerCase().includes(search.toLowerCase()) ||
-        member.lname.toLowerCase().includes(search.toLowerCase()) ||
-        member.email.toLowerCase().includes(search.toLowerCase()) ||
+        cleanName.includes(search.toLowerCase()) ||
+        cleanEmail.includes(search.toLowerCase()) ||
         member.id.toLowerCase().includes(search.toLowerCase())
       
       // Office filter
@@ -442,8 +456,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       let valA = ""
       let valB = ""
       if (sortBy === "name") {
-        valA = `${a.fname} ${a.lname}`.toLowerCase()
-        valB = `${b.fname} ${b.lname}`.toLowerCase()
+        valA = getStaffCleanName(a).toLowerCase()
+        valB = getStaffCleanName(b).toLowerCase()
       } else if (sortBy === "id") {
         valA = (a.id || "").toLowerCase()
         valB = (b.id || "").toLowerCase()
@@ -1105,10 +1119,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <td className="py-2 px-4 align-middle">
                       <div className="flex flex-col min-w-0">
                         <span className={cn("text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate", isSelf && "font-semibold")}>
-                          {member.fname} {member.lname} {isSelf && "(You)"}
+                          {getStaffCleanName(member)} {isSelf && "(You)"}
                         </span>
                         <span className="truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
-                          {member.email}
+                          {getStaffCleanEmail(member)}
                         </span>
                       </div>
                     </td>
@@ -1499,7 +1513,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
         selectedItems={[
-          archiveTarget ? `${archiveTarget.fname} ${archiveTarget.lname}` : "",
+          archiveTarget ? getStaffCleanName(archiveTarget) : "",
         ]}
         isPersonnelModal={true}
         isAppleStyled={true}
@@ -1519,7 +1533,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
         selectedItems={[
-          restoreTarget ? `${restoreTarget.fname} ${restoreTarget.lname}` : "",
+          restoreTarget ? getStaffCleanName(restoreTarget) : "",
         ]}
         isPersonnelModal={true}
         isAppleStyled={true}

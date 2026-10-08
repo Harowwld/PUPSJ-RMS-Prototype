@@ -10,6 +10,7 @@ const PREFERENCE_VALIDATORS = {
   navigation_layout: (value) => ["sidebar", "topbar"].includes(value),
   skip_registration_confirmation: (value) => typeof value === "boolean",
   high_contrast: (value) => typeof value === "boolean",
+  zoom_node: (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 6,
 };
 
 export async function GET(req) {
@@ -24,7 +25,8 @@ export async function GET(req) {
       theme: "light",
       navigation_layout: "sidebar",
       skip_registration_confirmation: false,
-      high_contrast: false
+      high_contrast: false,
+      zoom_node: 3,
     };
 
     const preferences = {

@@ -20,15 +20,7 @@ export function isValidRequestStatus(s) {
 
 export function decryptField(val) {
   if (!val || typeof val !== "string") return val;
-  if (!val.includes("enc:v1:")) return val;
-  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
-    return decryptPII(val);
-  }
-  return val
-    .split(/\s+/)
-    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
-    .join(" ")
-    .trim();
+  return decryptPII(val);
 }
 
 export function formatDocumentRequestRow(row) {
@@ -41,15 +33,28 @@ export function formatDocumentRequestRow(row) {
   const saFullName = [saFirst, saMiddle, saLast].filter(Boolean).join(" ");
   const saEmail = decryptField(row.sa_email ?? row.requester_email);
 
-  const resolvedName = decRequesterName || decStudentName || saFullName || saEmail || "Requester";
-  const resolvedEmail = saEmail || null;
+  const safeVal = (v) => (v && typeof v === "string" && !v.startsWith("enc:v1:") ? v.trim() : null);
+  const cleanRequester = safeVal(decRequesterName);
+  const cleanStudent = safeVal(decStudentName);
+  const cleanSaFull = safeVal(saFullName);
+  const cleanEmail = safeVal(saEmail);
+  const fallbackLabel = row.student_no ? `Student (${row.student_no})` : "Requester";
+
+  const resolvedName = cleanRequester || cleanStudent || cleanSaFull || cleanEmail || fallbackLabel;
+  const resolvedEmail = cleanEmail || null;
 
   return {
     ...row,
-    requester_name: decRequesterName || resolvedName,
-    student_name: resolvedName,
+    s_name: cleanStudent || resolvedName,
+    raw_requester_name: cleanRequester || resolvedName,
+    sa_email: resolvedEmail,
+    sa_first_name: safeVal(saFirst) || null,
+    sa_middle_name: safeVal(saMiddle) || null,
+    sa_last_name: safeVal(saLast) || null,
+    requester_name: cleanRequester || resolvedName,
+    student_name: cleanStudent || resolvedName,
     requester_email: resolvedEmail,
-    requester_contact: decryptField(row.requester_contact),
+    requester_contact: safeVal(decryptField(row.requester_contact)) || null,
   };
 }
 

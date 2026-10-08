@@ -54,6 +54,7 @@ export async function GET(req) {
     const readableRows = rows.map((row) => ({
       ...row,
       actor: decryptPII(row.actor),
+      details: decryptPII(row.details),
     }));
 
     return NextResponse.json({ ok: true, data: readableRows, total });

@@ -210,10 +210,15 @@ export async function setStudentSessionCookie(response, token, req) {
 
 export function decryptStudentRow(row) {
   if (!row) return row;
-  if (row.name) row.name = decryptPII(row.name);
-  if (row.email) row.email = decryptPII(row.email);
-  if (row.first_name) row.first_name = decryptPII(row.first_name);
-  if (row.middle_name) row.middle_name = decryptPII(row.middle_name);
-  if (row.last_name) row.last_name = decryptPII(row.last_name);
+  const clean = (val) => {
+    if (!val) return val;
+    const dec = decryptPII(val);
+    return dec && !dec.startsWith("enc:v1:") ? dec : null;
+  };
+  if (row.name) row.name = clean(row.name) || (row.student_no ? `Student (${row.student_no})` : "Student");
+  if (row.email) row.email = clean(row.email) || "";
+  if (row.first_name) row.first_name = clean(row.first_name) || "";
+  if (row.middle_name) row.middle_name = clean(row.middle_name) || "";
+  if (row.last_name) row.last_name = clean(row.last_name) || "";
   return row;
 }

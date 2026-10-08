@@ -117,7 +117,7 @@ export async function GET(req) {
           section: student.section || "",
           avatar_filename: student.avatar_filename || null,
           enabled_modules: [],
-          preferences: { theme: "light", navigation_layout: "sidebar" },
+          preferences: { theme: "light", navigation_layout: "sidebar", zoom_node: 3 },
         },
       }));
     }
@@ -181,7 +181,8 @@ export async function GET(req) {
       theme: "light",
       navigation_layout: "sidebar",
       skip_registration_confirmation: false,
-      high_contrast: false
+      high_contrast: false,
+      zoom_node: 3,
     };
 
     const preferences = {

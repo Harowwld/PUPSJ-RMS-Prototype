@@ -9,6 +9,7 @@ import Header from "@/components/layout/Header"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
+import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
@@ -106,6 +107,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   const initialAuth = propAuthUser || contextUser || null
   const [authUser, setAuthUser] = useState(initialAuth)
   const [loading, setLoading] = useState(!initialAuth)
+  const { zoomNode, setZoomNode, handleZoomMouseDown, zoomFactor, zoomStyle } = useLayoutZoom(authUser)
   
   const initialView = VALID_VIEWS.includes(searchParams?.get("view"))
     ? searchParams.get("view")
@@ -113,7 +115,6 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
   const [view, setView] = useState(initialView)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [zoomNode, setZoomNode] = useState(3) // Apple Photos style zoom
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -157,57 +158,6 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     window.addEventListener("switch-view", handleSwitch)
     return () => window.removeEventListener("switch-view", handleSwitch)
   }, [router])
-
-  useEffect(() => {
-    const handleZoomChange = (e) => {
-      const { action } = e.detail || {}
-      if (action === "in") setZoomNode((prev) => Math.min(6, prev + 1))
-      else if (action === "out") setZoomNode((prev) => Math.max(0, prev - 1))
-      else if (action === "reset") setZoomNode(3)
-    }
-    window.addEventListener("change-zoom", handleZoomChange)
-    return () => window.removeEventListener("change-zoom", handleZoomChange)
-  }, [])
-
-  const handleZoomMouseDown = (e) => {
-    e.preventDefault()
-    const track = e.currentTarget
-    
-    const updateZoom = (clientX) => {
-      const rect = track.getBoundingClientRect()
-      const clickX = clientX - rect.left
-      const percentage = clickX / rect.width
-      const node = Math.max(0, Math.min(6, Math.round(percentage * 6)))
-      setZoomNode(node)
-    }
-
-    const isTouch = e.type === "touchstart"
-    const startX = isTouch ? e.touches[0].clientX : e.clientX
-    updateZoom(startX)
-
-    const handleMove = (moveEvent) => {
-      const clientX = moveEvent.type === "touchmove" ? moveEvent.touches[0].clientX : moveEvent.clientX
-      updateZoom(clientX)
-    }
-
-    const handleEnd = () => {
-      if (isTouch) {
-        document.removeEventListener("touchmove", handleMove)
-        document.removeEventListener("touchend", handleEnd)
-      } else {
-        document.removeEventListener("mousemove", handleMove)
-        document.removeEventListener("mouseup", handleEnd)
-      }
-    }
-
-    if (isTouch) {
-      document.addEventListener("touchmove", handleMove, { passive: true })
-      document.addEventListener("touchend", handleEnd)
-    } else {
-      document.addEventListener("mousemove", handleMove)
-      document.addEventListener("mouseup", handleEnd)
-    }
-  }
 
   const showToast = useCallback((msg, typeOrIsError = false) => {
     const isRich = msg && typeof msg === "object" && msg.title
@@ -305,8 +255,6 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     )
   }
 
-  const zoomFactor = [0.94, 1.04, 1.15, 1.25, 1.35, 1.46, 1.56][zoomNode]
-
   return (
     <div className="font-jakarta flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
       {/* Dynamic Glassmorphism Blobs */}
@@ -334,7 +282,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
-            style={{ transform: `scale(${zoomFactor})`, transformOrigin: 'top left', width: `${100 / zoomFactor}%`, minHeight: `${100 / zoomFactor}%` }}
+            style={zoomStyle}
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
             {view === "branding" && <InstitutionalBrandingTab showToast={showToast} />}

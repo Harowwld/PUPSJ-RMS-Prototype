@@ -8,15 +8,7 @@ export const runtime = "nodejs";
 
 function decryptField(val) {
   if (!val || typeof val !== "string") return val;
-  if (!val.includes("enc:v1:")) return val;
-  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
-    return decryptPII(val);
-  }
-  return val
-    .split(/\s+/)
-    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
-    .join(" ")
-    .trim();
+  return decryptPII(val);
 }
 
 export async function GET(req) {
@@ -70,19 +62,24 @@ export async function GET(req) {
   const processedRows = rows
     .filter((row) => canAccessResource(access, "request", row))
     .map((row) => {
-      const reqName = row.requester_name ? decryptField(row.requester_name) : null;
-      const sName = row.s_name ? decryptField(row.s_name) : null;
-      const saFirst = row.sa_first_name ? decryptField(row.sa_first_name) : "";
-      const saLast = row.sa_last_name ? decryptField(row.sa_last_name) : "";
-      const saEmail = row.sa_email ? decryptField(row.sa_email) : "";
+      const safeVal = (v) => (v && typeof v === "string" && !v.startsWith("enc:v1:") ? v.trim() : null);
+      const cleanReqName = safeVal(decryptField(row.requester_name));
+      const cleanSName = safeVal(decryptField(row.s_name));
+      const saFirst = safeVal(decryptField(row.sa_first_name)) || "";
+      const saLast = safeVal(decryptField(row.sa_last_name)) || "";
+      const cleanEmail = safeVal(decryptField(row.sa_email)) || null;
       const saFullName = [saFirst, saLast].filter(Boolean).join(" ");
-      const resolvedName = reqName || sName || saFullName || saEmail || "Requester";
+      const resolvedName = cleanReqName || cleanSName || saFullName || (cleanEmail ? cleanEmail : "Requester");
       return {
         ...row,
-        requester_name: reqName || resolvedName,
-        student_name: resolvedName,
-        requester_email: saEmail || null,
-        requester_contact: decryptField(row.requester_contact),
+        s_name: cleanSName || resolvedName,
+        sa_email: cleanEmail,
+        sa_first_name: saFirst || null,
+        sa_last_name: saLast || null,
+        requester_name: cleanReqName || resolvedName,
+        student_name: cleanSName || resolvedName,
+        requester_email: cleanEmail,
+        requester_contact: safeVal(decryptField(row.requester_contact)) || null,
         attachment_count: Number(row.attachment_count || 0),
         attachments: attachmentsByRequest[String(row.id)] || [],
         feedback: row.feedback_id

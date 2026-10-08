@@ -13,15 +13,7 @@ export const runtime = "nodejs";
 
 function decryptField(val) {
   if (!val || typeof val !== "string") return val;
-  if (!val.includes("enc:v1:")) return val;
-  if (val.startsWith("enc:v1:") && !val.includes(" ")) {
-    return decryptPII(val);
-  }
-  return val
-    .split(/\s+/)
-    .map((part) => (part.startsWith("enc:v1:") ? decryptPII(part) : part))
-    .join(" ")
-    .trim();
+  return decryptPII(val);
 }
 
 function requestAttachmentsDir() {
@@ -115,7 +107,8 @@ export async function GET(req) {
   }, {});
 
   authorizedRequests.forEach((item) => {
-    item.requester_name = decryptField(item.requester_name);
+    const safeVal = (v) => (v && typeof v === "string" && !v.startsWith("enc:v1:") ? v.trim() : null);
+    item.requester_name = safeVal(decryptField(item.requester_name)) || "Student / Alumnus";
     item.updates = updatesByRequest[String(item.id)] || [];
     item.attachments = attachmentsByRequest[String(item.id)] || [];
     item.feedback = item.feedback_id

@@ -96,7 +96,7 @@ test("Document Requests PII Decryption Unit Suite", async (t) => {
     if (req36) {
       assert.ok(!req36.student_name.includes("enc:v1:"));
       assert.ok(!req36.requester_name.includes("enc:v1:"));
-      assert.equal(req36.student_name, "student@pup.local");
+      assert.equal(req36.student_name, "DELA CRUZ, JUAN A.");
       assert.equal(req36.requester_name, "student@pup.local");
     }
   });

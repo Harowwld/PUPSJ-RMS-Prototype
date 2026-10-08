@@ -118,32 +118,38 @@ export default function Header({ authUser, onLogout, children }) {
     }
   }, [authUser?.role, pathname, hasAdminRights, isSuperAdmin, isAdmin]);
 
+  const cleanFirst = authUser?.fname && !authUser.fname.startsWith("enc:v1:") ? authUser.fname.trim() : "";
+  const cleanLast = authUser?.lname && !authUser.lname.startsWith("enc:v1:") ? authUser.lname.trim() : "";
+  const cleanName = authUser?.name && !authUser.name.startsWith("enc:v1:") ? authUser.name.trim() : "";
+  const cleanEmail = authUser?.email && !authUser.email.startsWith("enc:v1:") ? authUser.email.trim() : "";
+  const cleanUsername = authUser?.username && !authUser.username.startsWith("enc:v1:") ? authUser.username.trim() : "";
+
   const displayName = (() => {
-    const fromParts = [authUser?.fname, authUser?.lname].filter(Boolean).join(" ").trim();
+    const fromParts = [cleanFirst, cleanLast].filter(Boolean).join(" ").trim();
     if (fromParts) return fromParts;
-    if (authUser?.name && authUser.name.trim()) return authUser.name.trim();
-    if (authUser?.email) return authUser.email;
-    if (authUser?.username) return authUser.username;
+    if (cleanName) return cleanName;
+    if (cleanEmail) return cleanEmail;
+    if (cleanUsername) return cleanUsername;
     if (authUser?.student_no) return authUser.student_no;
     return isStudent ? "Student" : "Account";
   })();
 
   const initials = (() => {
-    if (authUser?.fname && authUser?.lname) {
-      return (authUser.fname[0] + authUser.lname[0]).toUpperCase();
+    if (cleanFirst && cleanLast) {
+      return (cleanFirst[0] + cleanLast[0]).toUpperCase();
     }
-    if (authUser?.fname) {
-      return authUser.fname.slice(0, 2).toUpperCase();
+    if (cleanFirst) {
+      return cleanFirst.slice(0, 2).toUpperCase();
     }
-    if (authUser?.name) {
-      const parts = authUser.name.trim().split(/\s+/);
+    if (cleanName) {
+      const parts = cleanName.split(/\s+/);
       if (parts.length >= 2) {
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       }
-      return authUser.name.slice(0, 2).toUpperCase();
+      return cleanName.slice(0, 2).toUpperCase();
     }
-    if (authUser?.email) {
-      return authUser.email.slice(0, 2).toUpperCase();
+    if (cleanEmail) {
+      return cleanEmail.slice(0, 2).toUpperCase();
     }
     return isStudent ? "ST" : "AD";
   })();

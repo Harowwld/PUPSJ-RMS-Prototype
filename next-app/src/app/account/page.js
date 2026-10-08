@@ -39,6 +39,7 @@ import {
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
+import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom";
 import { renderToStaticMarkup } from "react-dom/server";
 
 function AccountPageContent() {
@@ -241,6 +242,42 @@ function AccountPageContent() {
       setUserPreferences(oldPrefs);
       toast.error("Save Failed", {
         description: error.message || "Could not update your preference."
+      });
+    }
+  };
+
+  const activeZoomNode = typeof userPreferences?.zoom_node === "number"
+    ? userPreferences.zoom_node
+    : (typeof window !== "undefined" && (localStorage.getItem(`pup_zoom_node_${authUser?.id}`) || localStorage.getItem("pup_zoom_node")) !== null
+        ? parseInt(localStorage.getItem(`pup_zoom_node_${authUser?.id}`) || localStorage.getItem("pup_zoom_node"), 10)
+        : 3);
+
+  const handleZoomPreferenceChange = async (node) => {
+    const oldPrefs = { ...userPreferences };
+    setUserPreferences((prev) => ({ ...prev, zoom_node: node }));
+    if (typeof window !== "undefined") {
+      if (authUser?.id) {
+        localStorage.setItem(`pup_zoom_node_${authUser.id}`, String(node));
+      }
+      localStorage.setItem("pup_zoom_node", String(node));
+      window.dispatchEvent(new Event("storage"));
+    }
+
+    try {
+      const res = await fetch("/api/auth/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: { zoom_node: node } }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      toast.success("Zoom Preference Saved", {
+        description: `Default layout scale set to ${ZOOM_PERCENTAGES[node] ?? 100}%.`
+      });
+    } catch (error) {
+      setUserPreferences(oldPrefs);
+      toast.error("Save Failed", {
+        description: error.message || "Could not update zoom preference."
       });
     }
   };
@@ -791,7 +828,8 @@ function AccountPageContent() {
                   <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1.5">
                     {[
                       { id: "profile", label: "Profile", icon: "ph-user-circle" },
-                      { id: "security", label: "Security", icon: "ph-shield-star" }
+                      { id: "security", label: "Security", icon: "ph-shield-star" },
+                      { id: "preferences", label: "Preferences", icon: "ph-gear-six" }
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.id}
@@ -1483,6 +1521,182 @@ function AccountPageContent() {
                     )}
                   </div>
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preferences" className="m-0 border-0 focus-visible:ring-0">
+              <div className="p-8 space-y-8 divide-y divide-border dark:divide-border">
+                {/* Interface Layout Zoom Section */}
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                        Interface Layout Zoom
+                      </h3>
+                      <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                        Choose your default viewport scaling level. Your preferred zoom persists across all dashboard sessions.
+                      </p>
+                    </div>
+                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                      Active: {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
+                    </span>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+                      {ZOOM_PERCENTAGES.map((pct, idx) => {
+                        const isSelected = activeZoomNode === idx;
+                        const label = idx === 0 ? "Compact (75%)" : idx === 3 ? "Default (100%)" : idx === 6 ? "Large (125%)" : `${pct}%`;
+                        return (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => handleZoomPreferenceChange(idx)}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all cursor-pointer select-none",
+                              isSelected
+                                ? "border-pup-maroon bg-pup-maroon/5 text-pup-maroon font-semibold shadow-xs dark:border-red-500 dark:bg-red-500/10 dark:text-red-400 ring-1 ring-pup-maroon/20 dark:ring-red-500/20"
+                                : "border-border bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60 hover:border-gray-300 dark:hover:border-white/10"
+                            )}
+                          >
+                            <span className="text-base font-bold tracking-tight">{pct}%</span>
+                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-1">
+                              {idx === 0 ? "Compact" : idx === 3 ? "Default" : idx === 6 ? "Large" : `Node ${idx}`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <p className="text-[12px] text-gray-400 font-normal mt-3 ml-1 dark:text-zinc-500 flex items-center gap-1.5">
+                      <HugeIcon className="ph-bold ph-info text-sm" />
+                      <span>You can also dynamically adjust this scale at any time from the zoom slider in the sidebar.</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Navigation Layout Section */}
+                <div className="pt-8">
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Navigation Bar Layout
+                    </h3>
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Choose how main navigation is presented across the system.
+                    </p>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => handleUserPreferenceToggle("navigation_layout", "sidebar")}
+                      className={cn(
+                        "flex items-start gap-4 p-5 rounded-2xl border text-left transition-all cursor-pointer",
+                        (userPreferences?.navigation_layout || "sidebar") === "sidebar"
+                          ? "border-pup-maroon bg-pup-maroon/5 text-gray-900 dark:text-zinc-100 shadow-xs ring-1 ring-pup-maroon/20 dark:border-red-500 dark:bg-red-500/10"
+                          : "border-border bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
+                      )}
+                    >
+                      <HugeIcon className="ph-bold ph-sidebar text-2xl text-pup-maroon dark:text-red-400 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-100">Sidebar (Default)</h4>
+                        <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-1">
+                          Vertical navigation pinned to the side of the screen with quick collapse.
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUserPreferenceToggle("navigation_layout", "topbar")}
+                      className={cn(
+                        "flex items-start gap-4 p-5 rounded-2xl border text-left transition-all cursor-pointer",
+                        userPreferences?.navigation_layout === "topbar"
+                          ? "border-pup-maroon bg-pup-maroon/5 text-gray-900 dark:text-zinc-100 shadow-xs ring-1 ring-pup-maroon/20 dark:border-red-500 dark:bg-red-500/10"
+                          : "border-border bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
+                      )}
+                    >
+                      <HugeIcon className="ph-bold ph-browsers text-2xl text-pup-maroon dark:text-red-400 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-100">Top Horizontal Bar</h4>
+                        <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-1">
+                          Compact horizontal header tabs maximizing horizontal screen width.
+                        </p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Accessibility Section */}
+                <div className="pt-8">
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Accessibility
+                    </h3>
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Display settings to improve text visibility and readability.
+                    </p>
+                  </div>
+
+                  <div className="mt-6 space-y-4">
+                    <div className="p-5 bg-gray-50 rounded-2xl border border-border dark:bg-white/5 dark:border-border flex items-center justify-between gap-6">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">High Contrast Mode</h4>
+                        <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                          Enhances border boundaries, text contrast, and focused outlines across data tables and panels.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={!!userPreferences.high_contrast}
+                          onChange={(e) => handleAccessibilityToggle("high_contrast", e.target.checked)}
+                        />
+                        <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-zinc-700"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Workflow Preferences (Admin-only) */}
+                {hasAdminPrivileges(authUser?.role) && (
+                  <div className="pt-8">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                          Workflow Preferences
+                        </h3>
+                        <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                          Personal administrative workflow shortcuts.
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="h-5 px-2 bg-red-50 border-red-200 text-red-600 font-semibold text-[9px] uppercase dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400">
+                        Personal
+                      </Badge>
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="p-5 bg-gray-50 rounded-2xl border border-border dark:bg-white/5 dark:border-border flex items-center justify-between gap-6">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Skip Registration Confirmation</h4>
+                          <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                            When enabled, the final review modal is bypassed for faster account provisioning.
+                          </p>
+                        </div>
+                        <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only peer"
+                            checked={!!userPreferences.skip_registration_confirmation}
+                            onChange={(e) => handleUserPreferenceToggle("skip_registration_confirmation", e.target.checked)}
+                          />
+                          <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-zinc-700"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </div>

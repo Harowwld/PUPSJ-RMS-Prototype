@@ -9,7 +9,8 @@ let reviewColumnsEnsured = false;
 function decryptDocumentRow(row) {
   if (!row) return row;
   if (row.student_name) {
-    row.student_name = decryptPII(row.student_name);
+    const dec = decryptPII(row.student_name);
+    row.student_name = dec && !dec.startsWith("enc:v1:") ? dec : (row.student_no ? `Student (${row.student_no})` : "Student");
   }
   return row;
 }

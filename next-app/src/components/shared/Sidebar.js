@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { getRoleBranding } from "@/lib/roleBranding"
+import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom"
 
 // Icon and color map matching Apple Photos Light Sidebar spec
 const ICON_MAP = {
@@ -134,7 +135,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <button
                   type="button"
                   onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
-                  title="Zoom Out"
+                  title={`Zoom Out (${zoomNode > 0 ? (ZOOM_PERCENTAGES[zoomNode - 1] ?? 75) + "%" : "Min 75%"})`}
                   className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75 shrink-0"
                 >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -144,7 +145,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <div 
                   onMouseDown={handleZoomMouseDown}
                   onTouchStart={handleZoomMouseDown}
-                  title="Adjust Layout Scale (Drag slider or click Reset to restore)"
+                  title={`Layout Scale: ${ZOOM_PERCENTAGES[zoomNode] ?? 100}% (Drag slider or click Reset)`}
                   className="relative w-[50px] h-[14px] flex items-center group cursor-pointer shrink-0"
                 >
                   <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
@@ -160,7 +161,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <button
                   type="button"
                   onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
-                  title="Zoom In"
+                  title={`Zoom In (${zoomNode < 6 ? (ZOOM_PERCENTAGES[zoomNode + 1] ?? 125) + "%" : "Max 125%"})`}
                   className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75 shrink-0"
                 >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">

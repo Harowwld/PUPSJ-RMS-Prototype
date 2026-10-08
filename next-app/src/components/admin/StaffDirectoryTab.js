@@ -74,6 +74,19 @@ const formatLastLoginDate = (dateStr) => {
   return dateStr
 }
 
+const getStaffCleanName = (staff) => {
+  const f = staff?.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname.trim() : ""
+  const l = staff?.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname.trim() : ""
+  const full = `${f} ${l}`.trim()
+  if (full) return full
+  return staff?.id ? `Staff (${staff.id})` : "Staff Member"
+}
+
+const getStaffCleanEmail = (staff) => {
+  if (staff?.email && !staff.email.startsWith("enc:v1:")) return staff.email
+  return "—"
+}
+
 const StaffTableRow = React.memo(({ 
   s, 
   isCurrentUser, 
@@ -113,11 +126,11 @@ const StaffTableRow = React.memo(({
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 text-[14px] font-medium text-[#111111] dark:text-zinc-50">
             <span className={cn("truncate", isCurrentUser && "font-semibold")}>
-              {s.fname} {s.lname}
+              {getStaffCleanName(s)}
             </span>
           </div>
           <div className="truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
-            {s.email}
+            {getStaffCleanEmail(s)}
           </div>
         </div>
       </td>
@@ -405,11 +418,13 @@ export default function StaffDirectoryTab({
 
   const filteredStaff = useMemo(() => {
     const q = search.toLowerCase()
-    return officeStaff.filter((s) => {
+    return (officeStaff || []).filter((s) => {
+      const cleanName = getStaffCleanName(s).toLowerCase()
+      const cleanEmail = getStaffCleanEmail(s).toLowerCase()
       const matchesSearch =
-          `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
-          s.id.toLowerCase().includes(q) ||
-          (s.email || "").toLowerCase().includes(q)
+        cleanName.includes(q) ||
+        s.id.toLowerCase().includes(q) ||
+        cleanEmail.includes(q)
 
       const matchesRole = roleFilters.length === 0 || roleFilters.includes(s.role)
       const matchesStatus = statusFilters.length === 0 || statusFilters.includes(s.status)
@@ -455,8 +470,8 @@ export default function StaffDirectoryTab({
       let valB = b[sortBy]
 
       if (sortBy === "fname") {
-        valA = `${a.fname} ${a.lname}`.toLowerCase()
-        valB = `${b.fname} ${b.lname}`.toLowerCase()
+        valA = getStaffCleanName(a).toLowerCase()
+        valB = getStaffCleanName(b).toLowerCase()
       } else if (sortBy === "id") {
         return sortOrder === "ASC"
           ? a.id.localeCompare(b.id, undefined, { numeric: true })
