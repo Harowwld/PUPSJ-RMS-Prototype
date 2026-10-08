@@ -105,6 +105,8 @@ if (-not (Test-Path $envPath)) {
 
 Save-PUPSJInstallRoot -InstallRoot $installRoot
 $emailSetup = Invoke-PUPSJEmailWizard $envPath
+. (Join-Path $appRoot 'installer\windows\PUPSJRMSExternalBackup.ps1')
+Initialize-PUPSJExternalBackup $appRoot
 
 Push-Location $appRoot
 try {

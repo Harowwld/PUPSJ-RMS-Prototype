@@ -166,7 +166,7 @@ function detectLinuxDrives() {
           for (const m of mounts) {
             const fullMount = path.join(/*turbopackIgnore: true*/ userPath, m);
             try {
-              if (fs.statSync(/*turbopackIgnore: true*/ fullMount).isDirectory()) {
+              if (fs.statSync(/*turbopackIgnore: true*/ fullMount).isDirectory() && fs.statSync(fullMount).dev !== fs.statSync(userPath).dev) {
                 const alreadyFound = drives.some((d) => d.mountPoint === fullMount);
                 if (!alreadyFound) {
                   const space = getDiskSpace(fullMount);
@@ -215,6 +215,8 @@ function detectMacDrives() {
       const fullPath = path.join(/*turbopackIgnore: true*/ volumesDir, entry);
       try {
         if (fs.statSync(/*turbopackIgnore: true*/ fullPath).isDirectory()) {
+          const info = execFileSync("diskutil", ["info", "-plist", fullPath], { encoding: "utf8", timeout: 2500 });
+          if (!/<key>Internal<\/key>\s*<false\s*\/>/.test(info)) continue;
           const space = getDiskSpace(fullPath);
           const isWritable = isDirectoryWritable(fullPath);
           drives.push({
@@ -239,21 +241,24 @@ function detectMacDrives() {
 }
 
 /**
- * Windows: Check drive letters D:\ through Z:\
+ * Windows: USB disks and removable volumes only
  */
 function detectWindowsDrives() {
   const drives = [];
   try {
-    // Check drive letters
-    for (let c = 68; c <= 90; c++) {
-      const letter = `${String.fromCharCode(c)}:\\`;
+    const script = "$letters = @(); Get-CimInstance Win32_DiskDrive | Where-Object { $_.InterfaceType -eq 'USB' } | ForEach-Object { $letters += @(Get-Partition -DiskNumber $_.Index -ErrorAction SilentlyContinue | Where-Object DriveLetter | ForEach-Object { [string]$_.DriveLetter }) }; $letters += @(Get-Volume | Where-Object { $_.DriveType -eq 'Removable' -and $_.DriveLetter } | ForEach-Object { [string]$_.DriveLetter }); ConvertTo-Json -Compress -InputObject @($letters | Select-Object -Unique)";
+    const raw = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], { encoding: "utf8", timeout: 5000 });
+    const letters = JSON.parse(raw.trim() || "[]");
+    for (const driveLetter of letters) {
+      if (!/^[A-Z]$/i.test(driveLetter)) continue;
+      const letter = `${driveLetter}:\\`;
       try {
         if (fs.existsSync(letter)) {
           const space = getDiskSpace(letter);
           const isWritable = isDirectoryWritable(letter);
           drives.push({
             name: letter,
-            label: `Drive ${String.fromCharCode(c)}`,
+            label: `Drive ${driveLetter}`,
             mountPoint: letter,
             size: space?.totalFormatted || "External",
             fstype: "ntfs/exfat",
@@ -323,7 +328,9 @@ export function detectExternalDrive(options = {}) {
       const root = path.parse(resolved).root;
 
       // Verify root exists
-      if (fs.existsSync(root) && fs.existsSync(resolved)) {
+      const stats = fs.statSync(resolved);
+      const requireMount = process.env.EXTERNAL_BACKUP_REQUIRE_MOUNT === "true" && os.platform() !== "win32";
+      if (fs.existsSync(root) && stats.isDirectory() && (!requireMount || stats.dev !== fs.statSync(path.dirname(resolved)).dev)) {
         const isWritable = isDirectoryWritable(resolved);
         const space = getDiskSpace(resolved);
         let label = path.basename(resolved);
@@ -359,6 +366,12 @@ export function detectExternalDrive(options = {}) {
     } catch {
       // Unreachable configured path
     }
+    return {
+      configured: true, connected: false, path: null, mountPoint: null,
+      label: null, isWritable: false, isRemovable: false, isEmulated: false,
+      freeBytes: null, totalBytes: null, freeFormatted: null, totalFormatted: null, drives: [],
+      message: "Configured external backup volume is unavailable or is not mounted. Reconnect the configured drive.",
+    };
   }
 
   // 3. Scan physical hardware / removable USB devices
@@ -375,7 +388,7 @@ export function detectExternalDrive(options = {}) {
 
   // If physical drives are found
   if (detectedDrives.length > 0) {
-    const primary = detectedDrives[0];
+    const primary = detectedDrives.find((drive) => drive.isWritable) || detectedDrives[0];
     return {
       configured: Boolean(configuredPath),
       connected: true,

@@ -41,7 +41,8 @@ services:
       HOT_FOLDER_SOURCE_STATION: ${HOT_FOLDER_SOURCE_STATION:-Docker-Scanner}
       HOT_FOLDER_OFFICE_ID: ${HOT_FOLDER_OFFICE_ID:-registrar}
       HOT_FOLDER_ROOT: /app/.local/hot-folder
-      EXTERNAL_BACKUP_PATH: /app/.local/external_media
+      TZ: Asia/Manila
+      EXTERNAL_BACKUP_PATH: ""
       NODE_ENV: production
     ports:
       - "${APP_PORT:-3000}:3000"

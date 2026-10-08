@@ -29,6 +29,10 @@ The installer's `.env` is stored under the chosen installation folder at `app\.e
 
 The app and database run locally in Docker; database and upload data persist in Docker volumes when the app is stopped. Choosing a different RMS installation folder does not move Docker Desktop's internal storage or migrate an existing installation.
 
+Connect a USB external drive before installing or launching **PUPSJ RMS**. The Windows installer and Start shortcut detect one connected removable or USB disk, create `PUPSJ-RMS-Backups` on it, and generate `docker-compose.external-backup.yml` to mount that folder at `/backups/external`. Internal drives, including an alternate internal installation drive, are excluded. If several external drives are connected, set `EXTERNAL_BACKUP_HOST_PATH=E:/PUPSJ-RMS-Backups` (using your drive letter) in the existing `app\.env` to select one. No new secrets or extra environment file are needed. When no eligible drive is available or the folder is not writable, the app starts with local backups only; reconnect the drive and use Start again to configure it. Docker Desktop must allow sharing the selected drive. Keep the drive connected during scheduled backups. This provides the external copy; an offsite copy still needs separate storage.
+
+Enable each office's automatic backup schedule in its Backup & Recovery page. The Docker app uses `Asia/Manila` for the schedule time. The installer configures storage without enabling or changing schedules. Scheduled backups retain the local archive if the external copy fails. SuperAdmin platform backups and office backups cover different data; schedule both where needed.
+
 Use **Configure Email** on the Public Desktop to change email settings later, or run `Configure-PUPSJRMSEmail.bat` from the installed `installer/windows` folder. The same wizard preserves other `.env` settings and keeps existing values when you accept their defaults. Saving changes recreates the app container so they take effect; it does not reset accounts or the database. Use an application URL recipients can reach, such as the workstation's LAN address, for recovery links. If email setup is skipped, security-question recovery remains available for accounts with saved answers; sending account emails and email-link recovery require SMTP.
 
 The installer and Start shortcut read all of Docker's published ports for the app's internal port `3000`, then check HTTP directly from Windows without a proxy. Each retry tries IPv4 loopback (`http://127.0.0.1:<port>/`) first, then falls back to IPv6 loopback (`http://[::1]:<port>/`). Setup reports success only after an address returns a successful response; the Start shortcut opens that exact validated address in your default browser. Docker Desktop and the Windows host must expose the port on the address family used; the installer does not enable IPv6 or change Docker networking. If every address fails, the error lists the IPv4 and IPv6 addresses tested, their last errors, and Docker commands to inspect the app. Container health alone does not confirm Windows can reach the published port.
@@ -75,11 +79,13 @@ To run the stable `main` branch, omit `-b OCR-Improvements` from the clone comma
 
 ## Configure the environment
 
-Create `next-app/.env` from the example file:
+Development scripts and Docker Compose use the same `next-app/.env` file. From `next-app/`, create it from the example file if it does not already exist:
 
 ```bash
 cp -n .env.example .env
 ```
+
+If you previously used `.env.local`, merge its settings into `.env`, preserving any existing values you still need, then remove `.env.local`. Next.js gives `.env.local` priority over `.env`, so leaving the old file can override your updated settings. Restart the development server after changing `.env`; for Docker Compose, run `docker compose up -d --build --wait` to apply the changes.
 
 Set private values for the JWT secret and default staff password. Set a hot-folder token if you want the scanner watcher enabled during host-based development:
 
@@ -110,7 +116,7 @@ Set `APP_URL` to the address recipients can reach, such as the registrar PC's LA
 
 ## Run the complete application with Docker
 
-From `next-app/`, create the Compose environment file and replace the sample secrets:
+From `next-app/`, use the same `.env` configured above. If it does not exist yet, create it and replace the sample secrets:
 
 ```bash
 cp -n .env.example .env
@@ -181,11 +187,11 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
 |---|---|---|---|---|---|
-| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
-| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
-| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
-| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/admin` (OSAS records review, student organization event proposals) |
-| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/staff` (Student organization operations and OSAS workflows) |
+| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
+| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
+| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (OSAS records review, student organization event proposals) |
+| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Student organization operations and OSAS workflows) |
 | **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
 
 > **Note**: Demo personnel accounts are pre-seeded with recovery answers so they bypass first-time password setup modals during presentations. You can also use the **Demo Accounts** quick-fill pills located on the sign-in page (`/`).

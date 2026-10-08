@@ -4,6 +4,7 @@
 .local
 node_modules
 coverage
+docker-compose.external-backup.yml
 .env
 .env.*
 !.env.example

@@ -1,5 +1,5 @@
-import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
-import { executeSystemBackup, executeOfficeBackup } from "./backupsRepo.js";
+import { dbAll, dbRun } from "./postgresCompat.js";
+import { executeSystemBackup, executeOfficeBackup, syncBackupExternally } from "./backupsRepo.js";
 import { createAuditLog } from "./auditLogsRepo.js";
 
 /**
@@ -33,7 +33,17 @@ async function startBackupScheduler() {
   }, CHECK_INTERVAL_MS);
 }
 
-async function checkAndRunScheduledBackups() {
+export async function checkAndRunScheduledBackups() {
+  if (globalThis.__backupSchedulerRunning) return;
+  globalThis.__backupSchedulerRunning = true;
+  try {
+    await runScheduledBackups();
+  } finally {
+    globalThis.__backupSchedulerRunning = false;
+  }
+}
+
+async function runScheduledBackups() {
   const now = new Date();
 
   // Find any custom auto_backup_schedule* keys configured by administrators
@@ -77,6 +87,16 @@ async function checkAndRunScheduledBackups() {
       schedule.lastRunFilename = record?.filename || null;
       delete schedule.lastRunError;
 
+      try {
+        await syncBackupExternally(record.id);
+        schedule.lastRunExternalStatus = "success";
+        delete schedule.lastRunExternalError;
+      } catch (externalErr) {
+        schedule.lastRunExternalStatus = "failed";
+        schedule.lastRunExternalError = externalErr.message;
+        console.error("[AutoBackup] Local backup saved; external copy failed:", externalErr.message);
+      }
+
       await dbRun(
         `UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?`,
         [JSON.stringify(schedule), row.key]
@@ -116,6 +136,9 @@ async function checkAndRunScheduledBackups() {
         schedule.lastRunAt = now.toISOString();
         schedule.lastRunStatus = "failed";
         schedule.lastRunError = err.message;
+        delete schedule.lastRunFilename;
+        delete schedule.lastRunExternalStatus;
+        delete schedule.lastRunExternalError;
 
         await dbRun(
           `UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?`,

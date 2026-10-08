@@ -75,31 +75,18 @@ export function canAccessBackup(backup, user) {
 
 export function getExternalBackupsDir() {
   const driveInfo = detectExternalDrive();
-  if (driveInfo.connected && driveInfo.path) {
+  if (driveInfo.connected && driveInfo.isWritable && driveInfo.path) {
     let targetDir = driveInfo.path;
-    if (!targetDir.includes("external_media") && !targetDir.includes("PUPSJ_BACKUPS")) {
+    if (!driveInfo.isEmulated && path.basename(targetDir) !== "PUPSJ_BACKUPS") {
       targetDir = path.join(targetDir, "PUPSJ_BACKUPS");
     }
     if (!fs.existsSync(/*turbopackIgnore: true*/ targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+      fs.mkdirSync(targetDir);
     }
     return targetDir;
   }
 
-  const explicit = process.env.EXTERNAL_BACKUP_PATH;
-  if (explicit) {
-    try {
-      const root = path.parse(explicit).root;
-      if (fs.existsSync(root)) {
-        if (!fs.existsSync(explicit)) fs.mkdirSync(explicit, { recursive: true });
-        return explicit;
-      }
-    } catch {
-      // Fall through to the same explicit no-drive error below.
-    }
-  }
-
-  throw new Error("Cannot sync: No external hard drive detected. Please connect an external storage drive to sync.");
+  throw new Error("Cannot sync: No writable external drive detected. Reconnect the configured external storage drive.");
 }
 
 export async function createBackupRecord({
@@ -276,12 +263,8 @@ export async function deleteBackupAndFile(id, backupRecord) {
 }
 
 export async function syncBackupExternally(id) {
+  let temporaryPath;
   try {
-    console.log(`[SYNC DEBUG] Starting background sync for ID: ${id}`);
-    
-    // Give the database a moment to fully settle the initial record
-    await new Promise(r => setTimeout(r, 1000));
-
     const backup = await getBackupById(id);
     if (!backup) {
       console.error(`[SYNC DEBUG] CRITICAL: Backup record ${id} not found in DB.`);
@@ -302,19 +285,32 @@ export async function syncBackupExternally(id) {
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     const dailyDir = path.join(/*turbopackIgnore: true*/ externalDir, today);
     if (!fs.existsSync(/*turbopackIgnore: true*/ dailyDir)) {
-      fs.mkdirSync(dailyDir, { recursive: true });
+      fs.mkdirSync(dailyDir);
     }
 
     const destPath = getBackupFilePath(backup.filename, dailyDir);
     
-    // Physical copy into the daily subfolder
-    fs.copyFileSync(sourcePath, destPath);
+    temporaryPath = `${destPath}.${crypto.randomBytes(8).toString("hex")}.partial`;
+    fs.copyFileSync(sourcePath, temporaryPath, fs.constants.COPYFILE_EXCL);
+    const copiedChecksum = crypto.createHash("sha256").update(fs.readFileSync(/*turbopackIgnore: true*/ temporaryPath)).digest("hex");
+    if (!backup.checksum || copiedChecksum !== backup.checksum) {
+      throw new Error("External backup checksum verification failed.");
+    }
+    fs.renameSync(temporaryPath, destPath);
+    temporaryPath = null;
 
     // Update DB status
     await updateBackupStatus(id, "status_external", "Success");
     
     return { ok: true };
   } catch (error) {
+    if (temporaryPath) {
+      try {
+        fs.unlinkSync(temporaryPath);
+      } catch (cleanupError) {
+        if (cleanupError.code !== "ENOENT") console.error("Failed to remove incomplete external backup:", cleanupError.message);
+      }
+    }
     console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
     try {
       await updateBackupStatus(id, "status_external", "Failed");

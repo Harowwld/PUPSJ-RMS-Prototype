@@ -33,6 +33,7 @@ coverage/
 **/.local/
 *.tsbuildinfo
 next-env.d.ts
+docker-compose.external-backup.yml
 
 # "hot" folders (temporary/hot-reload artifacts)
 hot/
