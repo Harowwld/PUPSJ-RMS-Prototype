@@ -11,6 +11,7 @@ if (-not $paths.Cli -or -not (Test-Path -LiteralPath $paths.Cli -PathType Leaf))
   throw 'Docker Desktop or its CLI was not found. Repair Docker Desktop, then try again.'
 }
 if ($Stop) {
+  $env:COMPOSE_FILE = 'docker-compose.yml'
   Push-Location $AppRoot
   try {
     & $paths.Cli compose down
@@ -28,6 +29,9 @@ for ($attempt = 0; $attempt -lt 60; $attempt++) {
   Start-Sleep -Seconds 5
 }
 if (-not $ready) { throw 'Docker Desktop did not become ready. Open it and resolve any first-run prompts, then try again.' }
+. (Join-Path $PSScriptRoot 'PUPSJRMSEmail.ps1')
+. (Join-Path $PSScriptRoot 'PUPSJRMSExternalBackup.ps1')
+Initialize-PUPSJExternalBackup $AppRoot
 Push-Location $AppRoot
 try {
   & $paths.Cli compose up -d --wait

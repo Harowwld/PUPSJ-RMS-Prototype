@@ -35,6 +35,8 @@ if ($result.Changed) {
     }
     if (-not $ready) { throw 'Settings were saved, but Docker Desktop is not ready. Complete its prompts, then rerun Configure Email.' }
   }
+  . (Join-Path $PSScriptRoot 'PUPSJRMSExternalBackup.ps1')
+  Initialize-PUPSJExternalBackup $appRoot
   Push-Location $appRoot
   try {
     Write-Host 'Ensuring the database is ready...'
