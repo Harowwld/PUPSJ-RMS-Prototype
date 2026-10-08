@@ -10,20 +10,22 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
   Start-Process powershell.exe -Verb RunAs -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$($MyInvocation.MyCommand.Path)`"")
   exit
 }
-$appRoot = Join-Path $env:ProgramData 'PUPSJ-RMS\app'
+. (Join-Path $PSScriptRoot 'PUPSJRMSInstallLocation.ps1')
+$appRoot = Join-Path (Get-PUPSJInstalledRoot) 'app'
 $envPath = Join-Path $appRoot '.env'
 if (-not (Test-Path $envPath)) { throw 'PUPSJ RMS is not installed. Run Install-PUPSJRMS.bat first.' }
 . (Join-Path $PSScriptRoot 'PUPSJRMSEmail.ps1')
 $result = Invoke-PUPSJEmailWizard $envPath
 if ($result.Changed) {
-  $dockerCli = (Get-Command docker.exe -ErrorAction SilentlyContinue).Source
-  if (-not $dockerCli) { $dockerCli = Join-Path $env:ProgramFiles 'Docker\Docker\resources\bin\docker.exe' }
-  if (-not (Test-Path $dockerCli)) { throw 'Settings were saved, but Docker was not found. Install Docker Desktop, then rerun Configure Email.' }
+  . (Join-Path $PSScriptRoot 'PUPSJRMSDocker.ps1')
+  $dockerPaths = Get-PUPSJDockerPaths
+  $dockerCli = $dockerPaths.Cli
+  if (-not $dockerCli -or -not (Test-Path -LiteralPath $dockerCli -PathType Leaf)) { throw 'Settings were saved, but Docker was not found. Repair Docker Desktop, then rerun Configure Email.' }
   & $dockerCli info *> $null
   if ($LASTEXITCODE -ne 0) {
-    $desktop = Join-Path $env:ProgramFiles 'Docker\Docker\Docker Desktop.exe'
-    if (-not (Test-Path $desktop)) { throw 'Settings were saved. Open Docker Desktop, then rerun Configure Email.' }
-    Start-Process $desktop
+    $desktop = $dockerPaths.Desktop
+    if (-not $desktop) { throw 'Settings were saved. Open Docker Desktop, then rerun Configure Email.' }
+    Start-PUPSJDockerDesktop $desktop
     $ready = $false
     for ($attempt = 0; $attempt -lt 60; $attempt++) {
       & $dockerCli info *> $null

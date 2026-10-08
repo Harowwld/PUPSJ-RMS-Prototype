@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 trap {
   Write-Host "Installation stopped: $_" -ForegroundColor Red
+  if ($_.InvocationInfo.ScriptLineNumber) { Write-Host "Installer line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red }
   Read-Host "Press Enter to close"
   exit 1
 }
@@ -28,36 +29,35 @@ if (-not (Test-IsAdministrator)) {
 }
 
 $sourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
-$installRoot = Join-Path $env:ProgramData "PUPSJ-RMS"
+. (Join-Path $PSScriptRoot "PUPSJRMSInstallLocation.ps1")
+$installRoot = Select-PUPSJInstallRoot -SourceRoot $sourceRoot
 $appRoot = Join-Path $installRoot "app"
 $hotFolder = Join-Path $installRoot "hot-folder"
 $desktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
 
 Write-Host "Installing PUPSJ RMS to $installRoot"
 
-if (-not (Get-Command winget.exe -ErrorAction SilentlyContinue)) {
-  throw "Windows Package Manager (winget) was not found. Install or update 'App Installer' from Microsoft Store, then run this installer again."
-}
-
-if (-not (Get-Command docker.exe -ErrorAction SilentlyContinue)) {
+. (Join-Path $PSScriptRoot "PUPSJRMSDocker.ps1")
+$dockerPaths = Get-PUPSJDockerPaths
+if (-not $dockerPaths.Desktop) {
+  if (-not (Get-Command winget.exe -ErrorAction SilentlyContinue)) {
+    throw "Docker Desktop was not found, and winget is unavailable. Install or update 'App Installer' from Microsoft Store, then run this installer again."
+  }
   Write-Host "Installing Docker Desktop. Windows may ask you to approve the installation."
   winget install --id Docker.DockerDesktop --exact --accept-package-agreements --accept-source-agreements
   if ($LASTEXITCODE -ne 0) { throw "Docker Desktop installation failed (winget exit code $LASTEXITCODE)." }
+  $dockerPaths = Get-PUPSJDockerPaths
 }
-
-$dockerCli = (Get-Command docker.exe -ErrorAction SilentlyContinue).Source
-if (-not $dockerCli) {
-  $dockerCli = Join-Path $env:ProgramFiles "Docker\Docker\resources\bin\docker.exe"
-  if (-not (Test-Path $dockerCli)) { throw "Docker Desktop installed, but its Docker CLI was not found. Restart Windows and rerun this installer." }
-  $env:Path = "$(Split-Path $dockerCli);$env:Path"
+if (-not $dockerPaths.Desktop) {
+  throw "Docker Desktop executable was not found after installation in its registered location or standard folders. Restart Windows and rerun this installer; if it is still missing, repair Docker Desktop."
 }
-
-$dockerDesktop = Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe"
-if (Test-Path $dockerDesktop) {
-  Start-Process $dockerDesktop
-} else {
-  Start-Process "Docker Desktop"
+$dockerDesktop = $dockerPaths.Desktop
+$dockerCli = $dockerPaths.Cli
+if (-not $dockerCli -or -not (Test-Path -LiteralPath $dockerCli -PathType Leaf)) {
+  throw "Docker Desktop was found at '$dockerDesktop', but its Docker CLI was not found. Repair Docker Desktop and rerun this installer."
 }
+$env:Path = "$(Split-Path $dockerCli);$env:Path"
+Start-PUPSJDockerDesktop $dockerDesktop
 
 $engineReady = $false
 for ($attempt = 0; $attempt -lt 60; $attempt++) {
@@ -103,6 +103,7 @@ if (-not (Test-Path $envPath)) {
   Protect-PUPSJEnv $envPath
 }
 
+Save-PUPSJInstallRoot -InstallRoot $installRoot
 $emailSetup = Invoke-PUPSJEmailWizard $envPath
 
 Push-Location $appRoot
@@ -125,25 +126,12 @@ $startFile = Join-Path $installRoot "Start PUPSJ RMS.cmd"
 $stopFile = Join-Path $installRoot "Stop PUPSJ RMS.cmd"
 @"
 @echo off
-start "" "$dockerDesktop"
-for /l %%i in (1,1,60) do (
-  "$dockerCli" info >nul 2>&1 && goto :engine_ready
-  timeout /t 5 /nobreak >nul
-)
-echo Docker Desktop did not start. Open it, resolve any prompts, then try again.
-pause
-exit /b 1
-:engine_ready
-cd /d "$appRoot"
-"$dockerCli" compose up -d --wait
-if errorlevel 1 (pause & exit /b 1)
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$urlHelper" -AppRoot "$appRoot" -DockerCli "$dockerCli" -OpenBrowser
-if errorlevel 1 (pause & exit /b 1)
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0app\installer\windows\Start-PUPSJRMS.ps1" -AppRoot "%~dp0app"
+if errorlevel 1 exit /b 1
 "@ | Set-Content -Path $startFile -Encoding ascii
 @"
 @echo off
-cd /d "$appRoot"
-"$dockerCli" compose down
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0app\installer\windows\Start-PUPSJRMS.ps1" -AppRoot "%~dp0app" -Stop
 pause
 "@ | Set-Content -Path $stopFile -Encoding ascii
 
