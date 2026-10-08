@@ -18,6 +18,7 @@ function run(command, args, label) {
 }
 
 try {
+  run(pnpmCommand, ["exec", "node", "scripts/ensure-docker.mjs"], "Docker Engine startup");
   console.log("[dev] Starting local PostgreSQL with Docker Compose...");
   run("docker", ["compose", "up", "-d", "--wait", "postgres"], "Docker Compose");
   console.log("[dev] PostgreSQL is ready. Running migrations...");

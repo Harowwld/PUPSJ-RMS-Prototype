@@ -169,7 +169,9 @@ For host-based development, use:
 pnpm dev
 ```
 
-This starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set. If Docker is not running, start Docker Desktop (or verify Docker daemon) and run the command again.
+This opens Docker Desktop on macOS when it is not already running, waits up to 60 seconds for the Docker Engine, starts PostgreSQL, waits for it to become healthy, runs migrations, and starts Next.js. On Linux, start the Docker daemon first. The hot-folder watcher starts only when `HOT_FOLDER_INGEST_TOKEN` is set.
+
+For a host-based production run, `pnpm start` first builds the app, then opens Docker Desktop on macOS if needed and waits up to 60 seconds for the Docker Engine. It starts PostgreSQL through Docker Compose and waits for it to become healthy before applying migrations and launching Next.js. On Linux, start the Docker daemon first.
 
 In System Admin → Office Management → Edit Office Details → Scanning Workstation, use **Browse** beside **Scanner Inbound Watch Path** to choose a folder on the computer running `pnpm dev`. The native folder picker supports macOS, Windows, and Linux desktops; the selected path is checked for read/write access, saved, and the watcher switches to it automatically. On a headless Linux host, install `zenity` and run the app in a graphical session. A folder on a different computer must be mounted or shared on the watcher host first. Docker deployments need the selected host folder mounted into the app container at the same path.
 
@@ -285,7 +287,7 @@ pnpm reset-rate-limit
 
 ### Docker API or socket error
 
-Start Docker Desktop, wait until it reports that Docker is running, then retry `pnpm dev`.
+`pnpm dev` and `pnpm start` open Docker Desktop on macOS and wait up to 60 seconds for its engine. If Docker still is not ready, finish Docker Desktop first-run setup or start the Docker daemon, then retry.
 
 ### `DATABASE_URL is required`
 

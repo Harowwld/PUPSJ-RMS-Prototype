@@ -10,13 +10,24 @@ const port = Number(process.env.PORT || 3000);
 process.env.HOT_FOLDER_API_URL ||= `http://localhost:${port}/api/ingest/hot-folder`;
 
 try {
-  spawnSync("docker", ["compose", "up", "-d", "--wait", "postgres"], {
-    stdio: "inherit",
-    cwd: process.cwd(),
-    shell: isWindows,
+  const dockerStartup = spawnSync(pnpmCommand, ["exec", "node", "scripts/ensure-docker.mjs"], {
+    stdio: "inherit", cwd: process.cwd(), shell: isWindows,
   });
-} catch {
-  // Docker may not be available if external Postgres is used
+  if (dockerStartup.error || dockerStartup.status !== 0) {
+    throw new Error(`Docker Engine startup failed${dockerStartup.error ? `: ${dockerStartup.error.message}` : ` (exit ${dockerStartup.status})`}`);
+  }
+  console.log("[start] Starting local PostgreSQL with Docker Compose...");
+  const docker = spawnSync("docker", ["compose", "up", "-d", "--wait", "postgres"], {
+    stdio: "inherit", cwd: process.cwd(), shell: isWindows,
+  });
+  if (docker.error || docker.status !== 0) {
+    throw new Error(`Docker Compose failed${docker.error ? `: ${docker.error.message}` : ` (exit ${docker.status})`}`);
+  }
+  console.log("[start] PostgreSQL is ready. Running migrations...");
+} catch (error) {
+  console.error(`[start] ${error.message}`);
+  console.error("[start] Make sure Docker Desktop is running and try pnpm start again.");
+  process.exit(1);
 }
 
 const migration = spawnSync(pnpmCommand, ["db:migrate"], {
