@@ -12,6 +12,7 @@ import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import GlobalFailedBatchReviewModal from "@/components/staff/GlobalFailedBatchReviewModal";
 import {
   Tabs,
   TabsList,
@@ -2835,6 +2836,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         variant="success"
         isRestoreModal={true}
       />
+      <GlobalFailedBatchReviewModal officeId={authUser?.office_id} showToast={showToast} />
     </div>
   );
 }
