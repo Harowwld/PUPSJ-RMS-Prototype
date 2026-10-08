@@ -8,6 +8,8 @@ The runnable Next.js application and its setup instructions are in [`next-app/`]
 - **Windows:** Follow the [one-click installer instructions](next-app/README.md#windows) in `next-app/installer/windows/`.
 - **Development:** Follow the [developer setup guide](next-app/README.md#developer-prerequisites).
 
+For development and manual Docker Compose setup, use one environment file: `next-app/.env`, copied from `next-app/.env.example`. See [Configure the environment](next-app/README.md#configure-the-environment) for the required settings.
+
 ## Project references
 
 - [Agent and maintainer guide](AGENTS.md)

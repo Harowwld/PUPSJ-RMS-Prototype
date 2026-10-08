@@ -75,11 +75,13 @@ To run the stable `main` branch, omit `-b OCR-Improvements` from the clone comma
 
 ## Configure the environment
 
-Create `next-app/.env` from the example file:
+Development scripts and Docker Compose use the same `next-app/.env` file. From `next-app/`, create it from the example file if it does not already exist:
 
 ```bash
 cp -n .env.example .env
 ```
+
+If you previously used `.env.local`, merge its settings into `.env`, preserving any existing values you still need, then remove `.env.local`. Next.js gives `.env.local` priority over `.env`, so leaving the old file can override your updated settings. Restart the development server after changing `.env`; for Docker Compose, run `docker compose up -d --build --wait` to apply the changes.
 
 Set private values for the JWT secret and default staff password. Set a hot-folder token if you want the scanner watcher enabled during host-based development:
 
@@ -110,7 +112,7 @@ Set `APP_URL` to the address recipients can reach, such as the registrar PC's LA
 
 ## Run the complete application with Docker
 
-From `next-app/`, create the Compose environment file and replace the sample secrets:
+From `next-app/`, use the same `.env` configured above. If it does not exist yet, create it and replace the sample secrets:
 
 ```bash
 cp -n .env.example .env
@@ -181,11 +183,11 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
 |---|---|---|---|---|---|
-| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
-| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
-| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
-| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/admin` (OSAS records review, student organization event proposals) |
-| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` or `.env` | `/staff` (Student organization operations and OSAS workflows) |
+| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
+| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
+| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (OSAS records review, student organization event proposals) |
+| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Student organization operations and OSAS workflows) |
 | **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
 
 > **Note**: Demo personnel accounts are pre-seeded with recovery answers so they bypass first-time password setup modals during presentations. You can also use the **Demo Accounts** quick-fill pills located on the sign-in page (`/`).
