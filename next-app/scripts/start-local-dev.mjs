@@ -28,9 +28,10 @@ try {
   const devCommands = [
     "\"next dev\"",
     "\"wait-on tcp:3000 && node scripts/warm-local-routes.mjs\"",
+    "\"wait-on tcp:3000 && node scripts/warm-ocr.mjs\"",
   ];
-  const processNames = ["next", "warmup"];
-  const colors = ["cyan", "yellow"];
+  const processNames = ["next", "warmup", "ocr"];
+  const colors = ["cyan", "yellow", "magenta"];
   if (process.env.HOT_FOLDER_INGEST_TOKEN) {
     devCommands.push("\"wait-on tcp:3000 && node scripts/hot-folder-watcher/watch.mjs\"");
     processNames.push("hot-folder");

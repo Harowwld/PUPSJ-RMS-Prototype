@@ -1,17 +1,16 @@
 import fs from "node:fs";
 import { performNativeOcr } from "./appleVisionOcr.js";
-import { createDocument, getDocumentBySourceIngestId } from "./documentsRepo.js";
+import { createDocument } from "./documentsRepo.js";
+import { rotateDocumentBuffer } from "./documentOrientation.js";
+import { createAuditLog } from "./auditLogsRepo.js";
 import {
   detectDocType,
-  detectName,
-  detectStudentNo,
   extractNameFromCoordinates,
   rotateOcrPages,
-  findStudentsInText,
-  findStudentsByOcrName,
 } from "./ocrClient.js";
 import { query } from "./postgres.js";
-import { calculateOcrConfidence } from "./ocrConfidence.js";
+import { matchStudentsByConfiguredOcrName } from "./studentNameMatcher.js";
+import { getOcrStudentRoster } from "./ocrStudentRoster.js";
 import {
   claimNextBatchItem,
   findDuplicateIngest,
@@ -20,7 +19,6 @@ import {
   markIngestPromoted,
   saveOcrResult,
 } from "./ingestQueueRepo.js";
-import { rotateDocumentBuffer } from "./documentOrientation.js";
 
 function extractNameCandidate(text) {
   return String(text || "")
@@ -30,32 +28,6 @@ function extractNameCandidate(text) {
       const words = line.split(/\s+/).filter(Boolean);
       return words.length >= 2 && words.length <= 6 && words.every((word) => word.length > 1 || /^[A-Z]\.?$/i.test(word));
     }) || null;
-}
-
-async function promoteUniqueMatch(item, student, docType, officeId, rotation = 0) {
-  const existing = await getDocumentBySourceIngestId(item.id, { officeId });
-  if (existing) {
-    await markIngestPromoted(item.id, existing.id, null, { officeId });
-    return existing;
-  }
-  const sourcePath = getIngestFilePath(item.storage_filename);
-  if (!fs.existsSync(sourcePath)) throw new Error("Ingest source file is missing from disk.");
-  const sourceBuffer = fs.readFileSync(sourcePath);
-  const buffer = await rotateDocumentBuffer(sourceBuffer, item.original_filename, rotation);
-  const document = await createDocument({
-    officeId,
-    studentNo: student.student_no,
-    studentName: student.name,
-    docType,
-    originalFilename: item.original_filename,
-    mimeType: item.mime_type,
-    sizeBytes: buffer.length,
-    buffer,
-    sourceIngestId: item.id,
-  });
-  await markIngestPromoted(item.id, document.id, null, { officeId });
-  try { fs.unlinkSync(sourcePath); } catch {}
-  return document;
 }
 
 export async function processNextBatchItem(batchId, officeId) {
@@ -69,29 +41,26 @@ export async function processNextBatchItem(batchId, officeId) {
   }
 
   try {
-    const [ocrResult, students, docTypes] = await Promise.all([
-      performNativeOcr(filePath),
-      query(`SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
-                    s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer
-               FROM students s
-              WHERE s.status = 'Active'
-                AND EXISTS (SELECT 1 FROM student_office_memberships som
-                             WHERE som.student_no = s.student_no
-                               AND som.office_id = $1
-                               AND som.status = 'Active')`, [officeId]),
+    const totalStartedAt = performance.now();
+    const ocrStartedAt = performance.now();
+    let ocrMs = 0;
+    const [ocrResult, docTypes] = await Promise.all([
+      performNativeOcr(filePath).then((result) => {
+        ocrMs = performance.now() - ocrStartedAt;
+        return result;
+      }),
       query("SELECT name FROM document_types WHERE office_id = $1 AND status = 'Active' ORDER BY lower(name)", [officeId]),
     ]);
     const text = String(ocrResult?.text || "").trim();
     if (!text && (!ocrResult?.pages || !ocrResult.pages.some((page) => page.observations?.length))) {
-      return saveOcrResult(item.id, { text, name: null, studentNo: null, docType: null, confidence: 0, candidates: [], error: "OCR engine returned no text or observations." }, { officeId });
+      return saveOcrResult(item.id, { text, name: null, docType: null, error: "OCR engine returned no text or observations." }, { officeId });
     }
 
-    const studentNo = detectStudentNo(text);
-    const exactStudent = studentNo ? students.find((student) => String(student.student_no).toUpperCase() === studentNo) : null;
     const docType = detectDocType(text, docTypes.map((row) => row.name));
 
     // Continuous Scanning must use the same saved coordinate recognition setup
     // as Scan & Upload. Templates are selected after document-type detection.
+    const templateStartedAt = performance.now();
     const templates = docType
       ? await query(
         `SELECT rt.*, dt.name AS document_type
@@ -102,129 +71,108 @@ export async function processNextBatchItem(batchId, officeId) {
         [officeId, docType],
       )
       : [];
+    const templateMs = performance.now() - templateStartedAt;
     let templateName = null;
     let coordinateRecognition = null;
     let detectedRotation = 0;
-    const orientationCandidates = [0, 90, 180, 270].flatMap((rotation) =>
-      templates.flatMap((template) => {
-        const recognition = extractNameFromCoordinates(rotateOcrPages(ocrResult.pages, rotation), template);
-        if (!recognition?.extractedName) return [];
-        const templateMatches = findStudentsByOcrName(recognition.extractedName, students);
-        return templateMatches.length > 0 ? [{ rotation, recognition, templateMatches }] : [];
-      })
-    );
-    const selectedOrientation = orientationCandidates[0];
-    if (selectedOrientation) {
-      templateName = selectedOrientation.recognition.extractedName;
-      coordinateRecognition = selectedOrientation.recognition;
-      detectedRotation = selectedOrientation.rotation;
-    } else {
+    for (const rotation of [0, 90, 180, 270]) {
       for (const template of templates) {
-        const recognition = extractNameFromCoordinates(ocrResult.pages, template);
+        const recognition = extractNameFromCoordinates(rotateOcrPages(ocrResult.pages, rotation), template);
         if (!coordinateRecognition && recognition) coordinateRecognition = recognition;
+        if (recognition?.extractedName) {
+          templateName = recognition.extractedName;
+          coordinateRecognition = recognition;
+          detectedRotation = rotation;
+          break;
+        }
       }
+      if (templateName) break;
     }
 
-    const fullPageName = detectName(text.split(/\r?\n/).filter(Boolean), { engine: "apple-vision" }) || extractNameCandidate(text);
-    const templateApplied = Boolean(coordinateRecognition);
-    // If the configured template regions are empty, fall back to the
-    // natural-language full-page name detector instead of abandoning the item.
-    const fallbackName = templateName || fullPageName;
-    const templateMatches = templateName ? findStudentsByOcrName(templateName, students) : [];
-    const fallbackNameMatches = fallbackName ? findStudentsByOcrName(fallbackName, students) : [];
-    const textMatches = findStudentsInText(text, students, fallbackName);
-    const fuzzyMatches = exactStudent
-      ? [exactStudent]
-      : templateMatches.length
-        ? templateMatches
-        : templateApplied
-            ? (textMatches.length ? textMatches : fallbackNameMatches)
-            : textMatches.length
-              ? textMatches
-              : fallbackNameMatches;
-    const candidates = fuzzyMatches.map((student) => ({ studentNo: student.student_no, name: student.name }));
-    const proposed = exactStudent || (fuzzyMatches.length === 1 ? fuzzyMatches[0] : null);
-    // Preserve the OCR/template extraction for review. The database candidate
-    // must not overwrite the name that was actually read from the document.
-    const ocrName = templateName || fallbackName || proposed?.name;
-    const conflictingCandidates = templateName
-      ? textMatches.filter((student) => String(student.student_no) !== String(proposed?.student_no || ""))
-        .map((student) => ({ studentNo: student.student_no, name: student.name }))
-      : [];
-    const reviewCandidates = [...new Map([...candidates, ...conflictingCandidates].map((candidate) => [candidate.studentNo, candidate])).values()];
-    const hasMultipleMatches = reviewCandidates.length > 1;
-    const resolvedProposed = hasMultipleMatches ? null : proposed;
-    const fallbackSingleMatch = templateApplied && !templateMatches.length && !hasMultipleMatches && Boolean(resolvedProposed);
-    const scored = calculateOcrConfidence({
-      // Full-page OCR often starts with a document label or a QR/parser
-      // artefact. When the text matcher has already found a unique student,
-      // score that match against the student's matched name instead of the
-      // unrelated first line. Keep `ocrName` above unchanged for review.
-      extractedName: templateName || (textMatches.length === 1 ? textMatches[0].name : fallbackName) || ocrName,
-      candidate: resolvedProposed,
-      candidates: reviewCandidates,
-      studentNumberMatched: Boolean(exactStudent),
-      extractionSource: exactStudent ? "student_number" : templateName && templateMatches.length ? "template" : templateApplied && (textMatches.length || fallbackNameMatches.length) ? "full_document" : fallbackName ? "full_page" : "none",
-      templateFields: coordinateRecognition?.regions || {},
-      text,
-      observations: ocrResult.pages?.flatMap((page) => page.observations || []) || [],
-      conflictingCandidates,
-    });
-    scored.evidence = { ...scored.evidence, detectedRotation };
+    let studentMatches = [];
+    let matchingMs = 0;
+    if (templateName) {
+      const matchingStartedAt = performance.now();
+      studentMatches = matchStudentsByConfiguredOcrName(templateName, await getOcrStudentRoster(officeId));
+      matchingMs = performance.now() - matchingStartedAt;
+    }
+    const confidentMatches = studentMatches.filter((match) => match.mismatchRatio < 0.10);
+    const autoMatchedStudent = confidentMatches.length === 1 ? confidentMatches[0] : null;
+    const studentCandidates = studentMatches.map(({ studentNo, mismatchPercent }) => ({ studentNo, mismatchPercent }));
     const duplicate = await findDuplicateIngest(item.id, item.content_sha256, { officeId });
 
     const saved = await saveOcrResult(item.id, {
       text,
-      name: ocrName,
-      studentNo: resolvedProposed?.student_no || null,
+      name: templateName || extractNameCandidate(text),
       docType: docType || null,
-      confidence: scored.matchConfidence,
-      qualityScore: scored.ocrQualityScore,
-      evidence: scored.evidence,
-      method: scored.matchMethod,
-      matchStatus: hasMultipleMatches ? "Conflict" : fallbackSingleMatch ? "Matched" : scored.matchStatus,
-      candidates: reviewCandidates,
+      studentNo: !duplicate ? autoMatchedStudent?.studentNo : null,
+      studentCandidates,
+      detectedRotation,
       regions: coordinateRecognition?.regions || null,
       pageIndex: coordinateRecognition?.pageIndex ?? null,
-      status: duplicate ? "Duplicate" : hasMultipleMatches ? "Conflict" : fallbackSingleMatch ? "Confirmed" : "Needs Review",
+      status: duplicate ? "Duplicate" : "Needs Review",
       error: duplicate ? `Duplicate content matches ingest item #${duplicate.id}.` : null,
     }, { officeId });
 
-    const canAutoUpload = !duplicate
-      && reviewCandidates.length === 1
-      && resolvedProposed
-      && Boolean(docType);
-    if (!canAutoUpload) return saved;
-
-    try {
-      const document = await promoteUniqueMatch(item, resolvedProposed, docType, officeId, detectedRotation);
-      return { ...saved, status: "promoted", review_status: "Confirmed", promoted_document_id: document.id, auto_promoted: true };
-    } catch (error) {
-      return saveOcrResult(item.id, {
-        text,
-        name: ocrName,
-        studentNo: resolvedProposed.student_no,
-        docType: docType || null,
-        confidence: scored.matchConfidence,
-        qualityScore: scored.ocrQualityScore,
-        evidence: { ...scored.evidence, autoUploadError: error.message || "Automatic upload failed." },
-        method: scored.matchMethod,
-        matchStatus: "Matched",
-        candidates: reviewCandidates,
-        regions: coordinateRecognition?.regions || null,
-        pageIndex: coordinateRecognition?.pageIndex ?? null,
-        status: "Needs Review",
-        error: `Automatic student-folder upload failed: ${error.message || "Unknown error"}`,
-      }, { officeId });
+    if (!duplicate && autoMatchedStudent && docType) {
+      try {
+        const sourceBuffer = fs.readFileSync(filePath);
+        const promotedBuffer = await rotateDocumentBuffer(sourceBuffer, item.original_filename, detectedRotation);
+        const document = await createDocument({
+          officeId,
+          studentNo: autoMatchedStudent.studentNo,
+          studentName: autoMatchedStudent.name,
+          docType,
+          originalFilename: item.original_filename,
+          mimeType: item.mime_type,
+          sizeBytes: promotedBuffer.length,
+          buffer: promotedBuffer,
+          sourceIngestId: item.id,
+        });
+        const promoted = await markIngestPromoted(item.id, document.id, null, { officeId });
+        try { fs.unlinkSync(filePath); } catch {}
+        try {
+          await createAuditLog({
+            actor: "OCR Auto Confirmation",
+            role: "System",
+            officeId,
+            action: "Batch scan auto-confirmed",
+            details: `Automatically matched scanned name '${templateName}' to student '${autoMatchedStudent.name}' (${autoMatchedStudent.studentNo}) at ${autoMatchedStudent.mismatchPercent}% difference and created document #${document.id}.`,
+            entity_type: "Document",
+            entity_id: document.id,
+          });
+        } catch (auditError) {
+          console.warn("[OCR] Could not record auto-confirmation audit entry:", auditError.message);
+        }
+        console.info("[OCR timing] Continuous Scan", JSON.stringify({
+          officeId,
+          itemId: item.id,
+          ocrMs,
+          templateMs,
+          matchingMs,
+          totalMs: performance.now() - totalStartedAt,
+          autoConfirmed: true,
+        }));
+        return promoted;
+      } catch (promotionError) {
+        console.warn(`[OCR] Auto-confirmation failed for ingest item ${item.id}; leaving it in Needs Review:`, promotionError.message);
+      }
     }
+
+    console.info("[OCR timing] Continuous Scan", JSON.stringify({
+      officeId,
+      itemId: item.id,
+      ocrMs,
+      templateMs,
+      matchingMs,
+      totalMs: performance.now() - totalStartedAt,
+    }));
+    return saved;
   } catch (error) {
     return saveOcrResult(item.id, {
       text: "",
       name: null,
-      studentNo: null,
       docType: null,
-      confidence: 0,
-      candidates: [],
       error: error?.message || "OCR processing failed.",
     }, { officeId });
   }

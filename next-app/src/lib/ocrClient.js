@@ -1,16 +1,16 @@
+export { matchStudentsByConfiguredOcrName } from "./studentNameMatcher.js";
+
 /**
  * ocrClient.js — Offline OCR pipeline for PUPSJ Records Management System
  *
  * Exports consumed by staff/page.js and useHotFolderInbox.js:
- *   - scanFileForSuggestion({ file, students, docTypes })  → suggestion object
+ *   - scanFileForSuggestion({ file, docTypes, rotation })   → extracted fields and strict name candidates
  *   - scanPdfForSuggestion(…)                               → alias
  *   - warmupOcrWorker()                                     → pre-initialise worker
  *   - normalizeExtractedName(raw)                           → "LASTNAME, FIRSTNAME MI."
  *
- * Return shape of scanFileForSuggestion includes transparent match and OCR quality scores.
+ * Student candidates are compared only against configured name-region extraction and always require staff selection.
  */
-
-import { calculateOcrConfidence } from "./ocrConfidence.js";
 
 // ─── Singleton state ────────────────────────────────────────────────────────
 let _nlpPromise = null;
@@ -952,263 +952,6 @@ export function rotateOcrPages(pages, rotation = 0) {
 }
 
 
-// ─── 6. STUDENT MATCHING ────────────────────────────────────────────────────
-
-/** Regex matching PUP Student Number format allowing common OCR replacements for digits */
-const STUDENT_NO_PATTERN = /\b[0-9OILTZEGSB]{4}[-\s]?[0-9OILTZEGSB]{5}[-\s]?[A-Z]{2}[-\s]?[0-9OILTZEGSB]\b/gi;
-
-function sanitizeStudentNoCandidate(s) {
-  const clean = s.toUpperCase().replace(/[\s-]/g, "");
-  if (clean.length !== 12) return null;
-  
-  let yyyy = clean.slice(0, 4);
-  let nnnnn = clean.slice(4, 9);
-  const aa = clean.slice(9, 11);
-  let d = clean.slice(11);
-  
-  const mapToDigit = (str) => {
-    return str
-      .replace(/O/g, "0")
-      .replace(/I/g, "1")
-      .replace(/L/g, "1")
-      .replace(/T/g, "1")
-      .replace(/Z/g, "2")
-      .replace(/S/g, "5")
-      .replace(/G/g, "6")
-      .replace(/B/g, "8");
-  };
-  
-  yyyy = mapToDigit(yyyy);
-  nnnnn = mapToDigit(nnnnn);
-  d = mapToDigit(d);
-  
-  if (/^\d{4}$/.test(yyyy) && /^\d{5}$/.test(nnnnn) && /^[A-Z]{2}$/.test(aa) && /^\d$/.test(d)) {
-    return `${yyyy}-${nnnnn}-${aa}-${d}`;
-  }
-  return null;
-}
-
-export function detectStudentNo(rawText) {
-  if (!rawText) return null;
-  const matches = rawText.match(STUDENT_NO_PATTERN);
-  if (!matches) return null;
-  for (const m of matches) {
-    const sanitized = sanitizeStudentNoCandidate(m);
-    if (sanitized) return sanitized;
-  }
-  return null;
-}
-
-function normNameMatch(v) {
-  return lo(v).replace(/[.,''\u2019`]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function stripMiddleInitial(normalizedName) {
-  const words = normalizedName.split(/\s+/);
-  if (words.length > 2 && words[words.length - 1].length === 1) {
-    return words.slice(0, words.length - 1).join(" ");
-  }
-  return normalizedName;
-}
-
-
-function levenshteinSimilarity(s1, s2) {
-  const a = String(s1 || "").trim().toUpperCase();
-  const b = String(s2 || "").trim().toUpperCase();
-  if (a === b) return 1.0;
-  if (!a || !b) return 0.0;
-
-  const matrix = [];
-  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
-        );
-      }
-    }
-  }
-
-  const distance = matrix[b.length][a.length];
-  const maxLength = Math.max(a.length, b.length);
-  return 1.0 - distance / maxLength;
-}
-
-export function findStudentsByOcrName(ocrName, students) {
-  if (!ocrName || !Array.isArray(students)) return [];
-  
-  // Normalize the input OCR name to "Last, First MI." standard format to align with DB format
-  const formatted = formatToLNFnMi(ocrName) || ocrName;
-  const o = normNameMatch(formatted);
-  if (o.length < 2) return [];
-  
-  // 1. Exact normalized match
-  const exact = students.filter((s) => {
-    const dbNorm = normNameMatch(s?.name || s?.Name || "");
-    return dbNorm === o || dbNorm === normNameMatch(ocrName);
-  });
-  if (exact.length > 0) return exact;
-  
-  // 2. Fuzzy match stripping middle initial
-  const oStripped = stripMiddleInitial(o);
-  const rawOStripped = stripMiddleInitial(normNameMatch(ocrName));
-  const strippedMatches = students.filter((s) => {
-    const dbNorm = normNameMatch(s?.name || s?.Name || "");
-    const dbStripped = stripMiddleInitial(dbNorm);
-    return dbStripped === oStripped || dbStripped === rawOStripped;
-  });
-  if (strippedMatches.length > 0) return strippedMatches;
-
-  // 3. Token-based intersection matching (extremely robust for split 3-field formats)
-  // Splits both name strings into individual word tokens and checks for heavy overlap.
-  const getAlphaTokens = (str) =>
-    str
-      .toLowerCase()
-      .replace(/[^a-z\s]/g, " ")
-      .split(/\s+/)
-      .filter((t) => t.length > 1); // skip single-letter initials like "E"
-  
-  const ocrTokens = getAlphaTokens(o);
-  const rawOcrTokens = getAlphaTokens(normNameMatch(ocrName));
-  
-  if (ocrTokens.length >= 2 || rawOcrTokens.length >= 2) {
-    const tokenMatches = students.filter((s) => {
-      const dbNorm = normNameMatch(s?.name || s?.Name || "");
-      const dbTokens = getAlphaTokens(dbNorm);
-      if (dbTokens.length < 2) return false;
-      
-      // Check if DB tokens exist in the OCR tokens (with fuzzy tolerance for typos)
-      const matchesCount = dbTokens.filter((dt) => 
-        ocrTokens.some((ot) => ot === dt || levenshteinSimilarity(ot, dt) >= 0.75) ||
-        rawOcrTokens.some((ot) => ot === dt || levenshteinSimilarity(ot, dt) >= 0.75)
-      ).length;
-      
-      const matchRatio = matchesCount / Math.min(dbTokens.length, Math.max(ocrTokens.length, rawOcrTokens.length));
-      return matchRatio >= 0.80; // 80% token overlap
-    });
-    if (tokenMatches.length > 0) {
-      return tokenMatches;
-    }
-  }
-
-  // 4. 70% Levenshtein similarity fuzzy match
-  const fuzzyCandidates = students
-    .map((s) => {
-      const dbNorm = normNameMatch(s?.name || s?.Name || "");
-      // Compare both full name and space-separated versions
-      const simDirect = levenshteinSimilarity(o, dbNorm);
-      const simNoComma = levenshteinSimilarity(
-        o.replace(/,/g, " ").replace(/\s+/g, " "),
-        dbNorm.replace(/,/g, " ").replace(/\s+/g, " ")
-      );
-      
-      const simDirectRaw = levenshteinSimilarity(normNameMatch(ocrName), dbNorm);
-      const simNoCommaRaw = levenshteinSimilarity(
-        normNameMatch(ocrName).replace(/,/g, " ").replace(/\s+/g, " "),
-        dbNorm.replace(/,/g, " ").replace(/\s+/g, " ")
-      );
-      
-      const score = Math.max(simDirect, simNoComma, simDirectRaw, simNoCommaRaw);
-      return { student: s, score };
-    })
-    .filter((c) => c.score >= 0.70)
-    .sort((a, b) => b.score - a.score);
-
-  if (fuzzyCandidates.length > 0) {
-    // Return all matching students above 70% sorted by score (for quality autocomplete)
-    return fuzzyCandidates.map((c) => c.student);
-  }
-
-  return [];
-}
-
-export function findStudentsInText(rawText, students, focusName = "") {
-  if (!rawText || !Array.isArray(students)) return [];
-  const hay = up(rawText).replace(/\s+/g, " ");
-  const genericNameTokens = new Set(["STUDENT"]);
-
-  // Tokenize the whole OCR raw text into clean uppercase alphanumeric words
-  const ocrTokens = up(rawText)
-    .replace(/[^A-Z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((t) => t.length > 1);
-
-  const matches = [];
-  for (const s of students) {
-    const name = up(s?.name || s?.Name || "").replace(/\s+/g, " ").trim();
-    if (name.length < 5) continue;
-
-    // 1. Direct sub-string match check (ultra-fast exact match)
-    if (hay.includes(name)) { matches.push(s); continue; }
-
-    // Without comma  "DELA CRUZ MARIA" vs "DELA CRUZ, MARIA"
-    const noComma = name.replace(/,/g, " ").replace(/\s+/g, " ").trim();
-    if (noComma !== name && hay.includes(noComma)) { matches.push(s); continue; }
-
-    // 2. Reversed exact check
-    if (name.includes(",")) {
-      const [last, first] = name.split(",").map((x) => x.trim());
-      if (first && last && hay.includes(`${first} ${last}`)) { matches.push(s); continue; }
-      
-      const firstStripped = stripMiddleInitial(lo(first)).toUpperCase();
-      if (firstStripped && last && hay.includes(`${firstStripped} ${last}`)) {
-        matches.push(s);
-        continue;
-      }
-    }
-
-    // 3. Robust token-based fuzzy/typo-tolerant matching
-    // Extract tokens from the DB name (ignoring commas and single-letter initials)
-    const dbTokens = name
-      .replace(/[^A-Z0-9\s]/g, " ")
-      .split(/\s+/)
-      .filter((t) => t.length > 1 && !genericNameTokens.has(t));
-
-    if (dbTokens.length >= 2) {
-      const matchedTokensCount = dbTokens.filter((dt) =>
-        ocrTokens.some((ot) => !genericNameTokens.has(ot) && (ot === dt || levenshteinSimilarity(dt, ot) >= 0.75))
-      ).length;
-
-      const matchRatio = matchedTokensCount / dbTokens.length;
-      if (matchedTokensCount >= 2 && matchRatio >= 0.75) {
-        matches.push(s);
-      }
-    }
-  }
-  const focusTokens = up(focusName)
-    .replace(/[^A-Z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((token) => token.length > 1);
-
-  // When OCR has already produced a plausible name, ignore unrelated names
-  // elsewhere in the document (parents, informants, registrars, etc.).
-  if (focusTokens.length >= 2) {
-    const focusedMatches = matches.filter((student) => {
-      const studentTokens = up(student?.name || student?.Name || "")
-        .replace(/[^A-Z0-9\s]/g, " ")
-        .split(/\s+/)
-        .filter((token) => token.length > 1);
-      const matchedTokens = studentTokens.filter((studentToken) =>
-        focusTokens.some((focusToken) => levenshteinSimilarity(focusToken, studentToken) >= 0.75)
-      ).length;
-      return matchedTokens >= Math.min(2, studentTokens.length);
-    });
-    // Name detection can select a plausible-looking label or sentence from
-    // a resume/form instead of the person's name. Do not erase a valid
-    // full-document match when the focus filter finds nothing.
-    return focusedMatches.length ? focusedMatches : matches;
-  }
-
-  return matches;
-}
-
 // ─── 7. NLP FALLBACK (compromise.js) ────────────────────────────────────────
 
 async function loadNlp() {
@@ -1232,8 +975,9 @@ export async function scanPdfForSuggestion(payload) {
   return scanFileForSuggestion(payload);
 }
 
-export async function scanFileForSuggestion({ file, students, docTypes }) {
+export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matchStudents = true, ocrContext = null }) {
   if (!file) throw new Error("Missing file");
+  const totalStartedAt = performance.now();
 
   const mime = lo(file?.type);
   const isPdf = mime === "application/pdf" || /\.pdf$/i.test(file?.name ?? "");
@@ -1241,15 +985,20 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
   if (!isPdf && !isImg) throw new Error("Unsupported file type");
 
   // ── Extract raw text ──
-  let rawText = "";
+  let rawText = String(ocrContext?.rawText || "");
   let usedNative = false;
   let ocrErrorMsg = "";
   // ocrEngine is returned by the server so detectName() picks the correct layout
   // strategy without sniffing navigator.userAgent (client OS !== server OS).
   let ocrEngine = "unknown";
-  let ocrPages = [];
+  let ocrPages = Array.isArray(ocrContext?.pages) ? ocrContext.pages : [];
+  let ocrMs = 0;
 
-  try {
+  if (ocrContext) {
+    usedNative = true;
+    ocrEngine = ocrContext.engine || "cached";
+  } else try {
+    const ocrStartedAt = performance.now();
     const formPayload = new FormData();
     formPayload.append("file", file);
     const res = await fetch("/api/ingest/ocr", {
@@ -1262,6 +1011,7 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
       ocrPages = Array.isArray(data.pages) ? data.pages : [];
       usedNative = true;
       ocrEngine = data?.engine ?? "unknown";
+      ocrMs = Number(data?.timings?.ocrMs) || (performance.now() - ocrStartedAt);
       console.log(`[OCR] Platform-native offline OCR complete (engine: ${ocrEngine})`);
     } else {
       ocrErrorMsg = data?.error || `Server returned status ${res.status}`;
@@ -1291,8 +1041,9 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
   // ── Detect doc type ──
   const docType = detectDocType(rawText, docTypes);
 
-  let coordinateTemplates = [];
-  if (docType) {
+  let coordinateTemplates = Array.isArray(ocrContext?.templates) ? ocrContext.templates : [];
+  const templateStartedAt = performance.now();
+  if (docType && !ocrContext) {
     try {
       const templateResponse = await fetch(`/api/recognition/templates?documentType=${encodeURIComponent(docType)}`, { cache: "no-store" });
       const templateData = await templateResponse.json().catch(() => null);
@@ -1303,52 +1054,14 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
       console.warn("[OCR] Coordinate template lookup failed:", error);
     }
   }
-
-  // ── Detect student number ──
-  const extractedStudentNo = detectStudentNo(rawText);
-  let matchedStudent = null;
-  let nameMatchesByName = [];
-
-  if (extractedStudentNo && Array.isArray(students)) {
-    matchedStudent = students.find((s) => {
-      const dbNo = String(s?.studentNo || s?.student_no || "").trim().toUpperCase();
-      return dbNo === extractedStudentNo;
-    });
-    if (matchedStudent) {
-      nameMatchesByName = [matchedStudent];
-    }
-  }
+  const templateMs = performance.now() - templateStartedAt;
 
   let coordinateRecognition = null;
-  let coordinateNameMatches = [];
-  if (!matchedStudent) {
-    for (const template of coordinateTemplates) {
-      const candidate = extractNameFromCoordinates(ocrPages, template);
-      if (!coordinateRecognition && candidate) coordinateRecognition = candidate;
-      if (!candidate?.extractedName) continue;
-
-      try {
-        const matchResponse = await fetch("/api/recognition/match?strict=1", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ extractedName: candidate.extractedName }),
-        });
-        const matchData = await matchResponse.json().catch(() => null);
-        if (matchResponse.ok && matchData?.ok) {
-          coordinateNameMatches = (matchData.data || []).map((candidateMatch) => ({
-            ...candidateMatch,
-            studentNo: candidateMatch.studentNo || candidateMatch.student_no,
-            student_no: candidateMatch.studentNo || candidateMatch.student_no,
-          }));
-          if (coordinateNameMatches.length > 0) {
-            coordinateRecognition = candidate;
-            break;
-          }
-        }
-      } catch (error) {
-        console.warn("[OCR] Database name matching failed for coordinate template:", error);
-      }
-    }
+  const pagesAtRotation = rotateOcrPages(ocrPages, rotation);
+  for (const template of coordinateTemplates) {
+    const candidate = extractNameFromCoordinates(pagesAtRotation, template);
+    if (!coordinateRecognition || candidate?.extractedName) coordinateRecognition = candidate;
+    if (candidate?.extractedName) break;
   }
 
   // ── Load NLP engine if available ──
@@ -1356,70 +1069,52 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
 
   const templateExtractedName = coordinateRecognition?.extractedName || "";
   const naturalLanguageName = detectName(lines, { nlp });
-  const rawExtracted = matchedStudent ? "" : templateExtractedName || naturalLanguageName;
-
-  // ── Detect name (fallback when student number did not match) ──
-  if (!matchedStudent) {
-    if (templateExtractedName) {
-      nameMatchesByName = coordinateNameMatches;
+  const rawExtracted = templateExtractedName || naturalLanguageName;
+  const suggestedName = rawExtracted ? formatToLNFnMi(rawExtracted) : "";
+  const matchingStartedAt = performance.now();
+  let studentMatches = [];
+  if (templateExtractedName && matchStudents) {
+    try {
+      const csrfToken = typeof document === "undefined"
+        ? ""
+        : decodeURIComponent(document.cookie.match(/(?:^|;\s*)pup_csrf=([^;]+)/)?.[1] || "");
+      const response = await fetch("/api/recognition/student-match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+        },
+        body: JSON.stringify({ extractedName: templateExtractedName }),
+        cache: "no-store",
+      });
+      const data = await response.json().catch(() => null);
+      if (response.ok && data?.ok && Array.isArray(data.data)) studentMatches = data.data;
+    } catch (error) {
+      console.warn("[OCR] Student candidate lookup failed:", error);
     }
-    if ((!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
-      nameMatchesByName = findStudentsInText(rawText, students);
-    }
-    if ((!nameMatchesByName || nameMatchesByName.length === 0) && rawExtracted && Array.isArray(students)) {
-      nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
-    }
-    matchedStudent = templateExtractedName ? null : nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
   }
-
-  // ── Build final suggested name ──
-  let suggestedName = "";
-  if (matchedStudent) {
-    suggestedName = up(matchedStudent.name || matchedStudent.Name || "").trim();
-  } else if (rawExtracted) {
-    suggestedName = formatToLNFnMi(rawExtracted);
-  }
+  const matchingMs = performance.now() - matchingStartedAt;
 
   const nameComponents = splitNameComponents(suggestedName);
-  const fullTextMatches = Array.isArray(students) ? findStudentsInText(rawText, students) : [];
-  const coordinateStudentNos = new Set(nameMatchesByName.map((student) => String(student?.studentNo || student?.student_no || "")));
-  const conflictingCandidates = coordinateRecognition?.extractedName
-    ? fullTextMatches
-      .filter((student) => !coordinateStudentNos.has(String(student?.studentNo || student?.student_no || "")))
-      .map((student) => ({ studentNo: student.studentNo || student.student_no, name: student.name }))
-    : [];
-  const scored = calculateOcrConfidence({
-    extractedName: coordinateRecognition?.extractedName || rawExtracted || suggestedName,
-    candidate: matchedStudent || (nameMatchesByName.length === 1 ? nameMatchesByName[0] : null),
-    candidates: nameMatchesByName,
-    studentNumberMatched: Boolean(extractedStudentNo && matchedStudent),
-    extractionSource: extractedStudentNo && matchedStudent ? "student_number" : templateExtractedName && coordinateNameMatches.length ? "template" : nameMatchesByName.length || naturalLanguageName ? "full_document" : "none",
-    templateFields: coordinateRecognition?.regions || {},
-    text: rawText,
-    observations: ocrPages.flatMap((page) => page.observations || []),
-    conflictingCandidates,
-  });
 
-  return {
+  const suggestion = {
     name: suggestedName,
     firstName: nameComponents.firstName,
     middleName: nameComponents.middleName,
     lastName: nameComponents.lastName,
     docType,
-    matchedStudent,
-    nameMatchesByName,
-    requiresConfirmation: Boolean(nameMatchesByName.length > 0),
     coordinateRecognition,
+    studentMatches,
+    ocrContext: ocrContext || { rawText, pages: ocrPages, engine: ocrEngine, docType, templates: coordinateTemplates },
     ocrTextPreview: rawText.slice(0, 2000),
     ocrLinesPreview: lines.slice(0, 18),
-    matchConfidence: scored.matchConfidence,
-    matchPercent: scored.matchPercent,
-    matchBand: scored.matchBand,
-    ocrQualityScore: scored.ocrQualityScore,
-    ocrQualityPercent: scored.ocrQualityPercent,
-    ocrQualityBand: scored.ocrQualityBand,
-    matchMethod: scored.matchMethod,
-    matchStatus: scored.matchStatus,
-    matchEvidence: scored.evidence,
+    timings: {
+      ocrMs,
+      templateMs,
+      matchingMs,
+      totalMs: performance.now() - totalStartedAt,
+    },
   };
+  console.info("[OCR timing] Scan & Upload", JSON.stringify(suggestion.timings));
+  return suggestion;
 }

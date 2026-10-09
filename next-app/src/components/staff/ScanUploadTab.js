@@ -24,7 +24,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
-import { findStudentsByOcrName, splitNameComponents } from "@/lib/ocrClient"
+import { splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
 
 const COORDINATE_REGION_LABELS = {
@@ -153,11 +153,6 @@ export default function ScanUploadTab({
   const filteredNameSuggestions = useMemo(() => {
     const q = (newRec.name || "").trim();
     if (!q || uploadStudentIsExisting) return [];
-
-    const fuzzyMatches = findStudentsByOcrName(q, students);
-    if (fuzzyMatches && fuzzyMatches.length > 0) {
-      return fuzzyMatches.slice(0, 5);
-    }
 
     const qLo = q.toLowerCase();
     return students.filter(s => {
@@ -336,34 +331,28 @@ export default function ScanUploadTab({
 
   const hf = useHotFolderInbox({
     enabled: uploadMode === "pdf",
-    students,
+    students: isOsas ? [] : students,
     docTypes,
     showToast,
     onPromoted: onIngestPromoted,
     onOcrResult: (suggestion) => {
       if (!suggestion) return
-      // Always set the docType from OCR regardless of student match
+      // OCR fills extracted fields; staff selects the student separately.
       const ocrDocType =
         suggestion.docType && String(suggestion.docType).trim()
           ? String(suggestion.docType).trim()
           : ""
-      if (suggestion.matchedStudent) {
-        // Existing student matched — lock the form fields to their record.
-        onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType)
-      } else {
-        // No match — only fill in the name/docType, leave form unlocked for manual entry.
-        const parsed = splitNameComponents(suggestion.name || "");
-        setNewRec?.((p) => ({
-          ...p,
-          name: suggestion.name
-            ? String(suggestion.name).trim().replace(/\s+/g, " ").toUpperCase()
-            : p.name,
-          firstName: suggestion.firstName || parsed.firstName || p.firstName,
-          middleName: suggestion.middleName || parsed.middleName || p.middleName,
-          lastName: suggestion.lastName || parsed.lastName || p.lastName,
-          docType: ocrDocType || p.docType,
-        }))
-      }
+      const parsed = splitNameComponents(suggestion.name || "");
+      setNewRec?.((p) => ({
+        ...p,
+        name: suggestion.name
+          ? String(suggestion.name).trim().replace(/\s+/g, " ").toUpperCase()
+          : p.name,
+        firstName: suggestion.firstName || parsed.firstName || p.firstName,
+        middleName: suggestion.middleName || parsed.middleName || p.middleName,
+        lastName: suggestion.lastName || parsed.lastName || p.lastName,
+        docType: ocrDocType || p.docType,
+      }))
     },
   })
 
@@ -1587,14 +1576,6 @@ export default function ScanUploadTab({
                   <div className="p-5 bg-white dark:bg-transparent">
                     {uploadMode === "pdf" ? (
                       <div className="space-y-5">
-                        {ocrSuggestion && (
-                          <div className="grid grid-cols-2 gap-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 dark:border-blue-400/20 dark:bg-blue-950/20">
-                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">{isOsas ? "Organization match" : "Student match"}</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{ocrSuggestion.matchPercent != null ? `${ocrSuggestion.matchPercent}%` : "—"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{ocrSuggestion.matchBand || ocrSuggestion.matchStatus || "Not scored"}</div></div>
-                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">OCR read quality</div><div className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{ocrSuggestion.ocrQualityPercent != null ? `${ocrSuggestion.ocrQualityPercent}%` : "—"}</div><div className="text-[11px] text-emerald-700 dark:text-emerald-300">{ocrSuggestion.ocrQualityBand || "Not scored"}</div></div>
-                            {ocrSuggestion.matchEvidence?.reason && <div className="col-span-2 border-t border-blue-100 pt-2 text-[11px] text-gray-600 dark:border-blue-400/20 dark:text-zinc-300">{ocrSuggestion.matchEvidence.reason}</div>}
-                          </div>
-                        )}
-
                         {isOsas ? (
                           <div className="space-y-4">
                             {/* Segmented control: Recognized Organization vs Register New Organization */}
@@ -2070,6 +2051,34 @@ export default function ScanUploadTab({
                                         setNewRec((p) => ({ ...p, name: e.target.value }))
                                       }}
                                     />
+                                    {ocrSuggestion?.studentMatches?.length > 0 && !uploadStudentIsExisting && (
+                                      <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
+                                        <p className="mb-2 text-[11px] text-blue-800 dark:text-blue-200">
+                                          Configured name fields found records within 10% letter difference. Select one to assign it.
+                                        </p>
+                                        <div className="space-y-1">
+                                          {ocrSuggestion.studentMatches.map((candidate) => {
+                                            const studentNo = candidate.studentNo || candidate.student_no;
+                                            const student = candidate.student || students.find((item) => String(item.studentNo || item.student_no) === String(studentNo));
+                                            if (!student) return null;
+                                            return (
+                                              <button
+                                                key={studentNo}
+                                                type="button"
+                                                onClick={() => handleSelectStudent(student)}
+                                                className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-white dark:hover:bg-zinc-900 cursor-pointer"
+                                              >
+                                                <span className="min-w-0">
+                                                  <span className="block truncate font-semibold text-gray-900 dark:text-zinc-100">{student.name}</span>
+                                                  <span className="text-[11px] text-gray-600 dark:text-zinc-400">{studentNo}</span>
+                                                </span>
+                                                <span className="shrink-0 text-[11px] text-gray-600 dark:text-zinc-400">{candidate.mismatchPercent}% difference</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    )}
                                     {showNameSuggestions && filteredNameSuggestions.length > 0 && (
                                       <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
                                         {filteredNameSuggestions.map((s) => {

@@ -23,12 +23,23 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { cn } from "@/lib/utils";
 
 const STATUS_TABS = [
-  { id: "Conflict", label: "Needs Review" },
+  { id: "Needs Review", label: "Needs Review" },
   { id: "Confirmed", label: "Confirmed" },
   { id: "Failed", label: "Failed" },
   { id: "", label: "All" },
 ];
 const PAGE_SIZE = 6;
+
+function readStudentCandidates(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 const REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
@@ -36,29 +47,11 @@ const REGION_LABELS = {
   lastName: { label: "Last name", color: "#dc2626" },
 };
 
-function parseMatchCandidates(value) {
-  if (Array.isArray(value)) return value;
-  if (typeof value !== "string") return [];
-  try {
-    return JSON.parse(value || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function getMatchReason(item, candidates) {
-  if (candidates.length > 1) return "Multiple student matches found.";
-  if (candidates.length === 0) return "No matching student found.";
-  if (item.match_confidence != null && Number(item.match_confidence) < 0.5) return "Low OCR confidence.";
-  if (item.match_evidence?.reason) return item.match_evidence.reason;
-  return item.match_status || "Student match requires validation.";
-}
-
 export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [] }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [statusFilters, setStatusFilters] = useState(["Conflict"]);
+  const [statusFilters, setStatusFilters] = useState(["Needs Review"]);
   const [docTypeFilters, setDocTypeFilters] = useState([]);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -156,7 +149,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       id: "status",
       label: "Review Status",
       options: [
-        { value: "Conflict", label: "Needs Review", indicatorColor: "bg-amber-500" },
+        { value: "Needs Review", label: "Needs Review", indicatorColor: "bg-amber-500" },
         { value: "Confirmed", label: "Confirmed", indicatorColor: "bg-emerald-500" },
         { value: "Failed", label: "Failed", indicatorColor: "bg-rose-500" },
         { value: "Processing", label: "Processing", indicatorColor: "bg-blue-500" },
@@ -202,7 +195,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       });
     }
     statusFilters.forEach((st) => {
-      const label = st === "Conflict" ? "Needs Review" : st;
+      const label = st;
       chips.push({
         id: `status-${st}`,
         label: `Status: ${label}`,
@@ -276,17 +269,14 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     title: selected?.original_filename || "Scanned document",
   });
   const ocrRegions = selected?.ocr_regions && typeof selected.ocr_regions === "object" ? selected.ocr_regions : {};
-  const matchCandidates = useMemo(() => parseMatchCandidates(selected?.match_candidates), [selected]);
-  const matchingStudentNumbers = useMemo(() => {
-    const candidates = matchCandidates;
-    return new Set(candidates.map((candidate) => String(candidate?.studentNo || candidate?.student_no || "")));
-  }, [matchCandidates]);
-  const matchingStudents = useMemo(
-    () => students.filter((student) => matchingStudentNumbers.has(String(student.studentNo || student.student_no || ""))),
-    [matchingStudentNumbers, students]
+  const ocrStudentCandidates = useMemo(
+    () => readStudentCandidates(selected?.ocr_student_candidates),
+    [selected?.ocr_student_candidates],
+  );
+  const assignedStudent = students.find(
+    (student) => String(student.studentNo || student.student_no) === String(selected?.staff_selected_student_no || ""),
   );
   const assignmentStudents = useMemo(() => {
-    if (matchingStudents.length > 0) return matchingStudents;
     const search = studentAssignmentQuery.trim().toLowerCase();
     if (!search) return [];
     return students.filter((student) =>
@@ -294,8 +284,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         String(value || "").toLowerCase().includes(search)
       )
     );
-  }, [matchingStudents, studentAssignmentQuery, students]);
-  const matchReason = selected ? getMatchReason(selected, matchCandidates) : "";
+  }, [studentAssignmentQuery, students]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -305,7 +294,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           <PageHeader
             icon="ph-check-square"
             title="Batch Review"
-            description="Verify OCR proposals before creating formal student records."
+            description="Assign a student and document type before creating formal records."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -495,11 +484,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               )}>
                                 {row.review_status || "Needs Review"}
                               </span>
-                              <span className="rounded-lg bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-gray-600 dark:text-zinc-400">
-                                {row.match_confidence != null
-                                  ? `${Math.round(Number(row.match_confidence) * 100)}% match`
-                                  : "No match"}
-                              </span>
                             </div>
                           </button>
                         );
@@ -652,47 +636,48 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Student Assignment
                         </label>
-                        {matchingStudents.length > 0 ? (
-                          <div className="space-y-2">
-                            {matchingStudents.map((student) => {
-                              const studentNo = student.studentNo || student.student_no;
-                              const isSelected = selected.proposed_student_no === studentNo;
+                        {assignedStudent && (
+                          <p className="text-[11px] text-gray-700 dark:text-zinc-300">
+                            Assigned: <span className="font-semibold">{assignedStudent.name}</span> ({assignedStudent.studentNo || assignedStudent.student_no})
+                          </p>
+                        )}
+                        {ocrStudentCandidates.length > 0 && (
+                          <div className="space-y-1.5 rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
+                            <p className="text-[11px] text-blue-800 dark:text-blue-200">
+                              Configured name fields found candidates within 10% letter difference. Choose a record to assign it.
+                            </p>
+                            {ocrStudentCandidates.map((candidate) => {
+                              const studentNo = candidate.studentNo || candidate.student_no;
+                              const studentName = candidate.name || students.find((item) => String(item.studentNo || item.student_no) === String(studentNo))?.name;
+                              if (!studentName) return null;
+                              const isSelected = String(selected.staff_selected_student_no || "") === String(studentNo);
                               return (
-                                <label
+                                <button
                                   key={studentNo}
+                                  type="button"
+                                  aria-pressed={isSelected}
+                                  onClick={() => {
+                                    setStudentAssignmentQuery(studentName);
+                                    update({ studentNo }).catch((error) =>
+                                      showToast({ title: "Save failed", description: error.message }, true)
+                                    );
+                                  }}
                                   className={cn(
-                                    "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all",
-                                    isSelected
-                                      ? "border-pup-maroon/50 bg-red-50/50 shadow-xs dark:border-red-500/40 dark:bg-red-950/20"
-                                      : "border-border bg-white hover:border-border dark:border-border dark:bg-zinc-800/60"
+                                    "flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-xs transition-colors",
+                                    isSelected ? "bg-white ring-1 ring-pup-maroon/30 dark:bg-zinc-900" : "hover:bg-white dark:hover:bg-zinc-900",
                                   )}
                                 >
-                                  <input
-                                    type="radio"
-                                    name={`student-assignment-${selected.id}`}
-                                    value={studentNo}
-                                    checked={isSelected}
-                                    onChange={() =>
-                                      update({ studentNo }).catch((error) =>
-                                        showToast({ title: "Save failed", description: error.message }, true)
-                                      )
-                                    }
-                                    className="mt-0.5 h-4 w-4 accent-pup-maroon cursor-pointer"
-                                  />
                                   <span className="min-w-0">
-                                    <span className="block truncate text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                                      {student.name}
-                                    </span>
-                                    <span className="mt-0.5 block text-[11px] font-normal text-gray-900 dark:text-zinc-300">
-                                      {studentNo}
-                                    </span>
+                                    <span className="block truncate font-semibold text-gray-900 dark:text-zinc-100">{studentName}</span>
+                                    <span className="text-[11px] text-gray-600 dark:text-zinc-400">{studentNo}</span>
                                   </span>
-                                </label>
+                                  <span className="shrink-0 text-[11px] text-gray-600 dark:text-zinc-400">{candidate.mismatchPercent}% difference</span>
+                                </button>
                               );
                             })}
                           </div>
-                        ) : (
-                          <div className="relative">
+                        )}
+                        <div className="relative">
                             <Input
                               value={studentAssignmentQuery}
                               onChange={(event) => setStudentAssignmentQuery(event.target.value)}
@@ -716,7 +701,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                         key={studentNo}
                                         type="button"
                                         role="option"
-                                        aria-selected={selected.proposed_student_no === studentNo}
+                                        aria-selected={selected.staff_selected_student_no === studentNo}
                                         onClick={() => {
                                           setStudentAssignmentQuery(student.name);
                                           update({ studentNo }).catch((error) =>
@@ -739,12 +724,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                 )}
                               </div>
                             )}
-                          </div>
-                        )}
+                        </div>
                         <span className="block text-[11px] font-normal text-gray-900 dark:text-zinc-300">
-                          {matchingStudents.length > 0
-                            ? "Select one of the OCR-matched student candidates."
-                            : "No OCR match. Type to search students by name or number."}
+                          Search by name or student number, then select the student for this document.
                         </span>
                       </div>
 
@@ -771,21 +753,21 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         </Select>
                       </div>
 
-                      {/* Conflict Reason Banner */}
-                      {(selected.match_status === "Conflict" || status === "Conflict") && (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
-                          <strong>Conflict reason:</strong> {matchReason}
-                        </div>
-                      )}
-
-                      {/* OCR Response Text */}
+                      {/* Scanned Name */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                          OCR Raw Text
+                        <label htmlFor={`scanned-name-${selected.id}`} className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                          Scanned Name
                         </label>
-                        <pre className="max-h-32 overflow-auto rounded-xl border border-border bg-gray-50/80 p-2.5 text-[11px] whitespace-pre-wrap text-gray-700 dark:border-border dark:bg-zinc-900/70 dark:text-zinc-300">
-                          {selected.last_error || selected.ocr_text || "No OCR text returned."}
-                        </pre>
+                        <Input
+                          id={`scanned-name-${selected.id}`}
+                          value={selected.ocr_name || ""}
+                          readOnly
+                          placeholder="No name was extracted"
+                          className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-900 text-xs text-gray-700 dark:text-zinc-200 shadow-none"
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
+                          Name recognized from the scan. Confirm the student assignment above.
+                        </p>
                       </div>
 
                       {/* Review Note */}
@@ -808,14 +790,14 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           size="sm"
                           onClick={() =>
                             action("confirm", {
-                              studentNo: selected.proposed_student_no,
-                              studentName: selected.ocr_name,
+                              studentNo: selected.staff_selected_student_no,
+              studentName: studentAssignmentQuery,
                               docType: selected.proposed_doc_type,
                             })
                           }
                           disabled={
                             saving ||
-                            !selected.proposed_student_no ||
+                            !selected.staff_selected_student_no ||
                             !selected.proposed_doc_type
                           }
                           className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
@@ -862,7 +844,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           Select a Document
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
-                          Choose an item from the review queue on the left to inspect its scanned preview, OCR regions, and match proposals.
+                          Choose an item from the review queue on the left to inspect its scanned preview and extracted OCR fields.
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>

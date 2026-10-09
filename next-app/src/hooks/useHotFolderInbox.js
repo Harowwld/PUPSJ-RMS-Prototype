@@ -5,7 +5,7 @@ import { scanFileForSuggestion } from "@/lib/ocrClient";
 
 export function useHotFolderInbox({
   enabled,
-  students,
+  students = [],
   docTypes,
   showToast,
   onPromoted,

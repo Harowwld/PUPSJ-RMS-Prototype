@@ -4,8 +4,10 @@ import { clearHealthCache } from "./healthCache.js";
 import { buildDefaultStorageLayout, buildDefaultOsasStorageLayout } from "./storageLayoutDefaults.js";
 import { hashPassword } from "./passwordHash.js";
 import { encryptPII } from "./piiEncryption.js";
+import { invalidateOcrStudentRoster } from "./ocrStudentRoster.js";
 
 export async function resetDatabase() {
+  invalidateOcrStudentRoster();
   await transaction(async ({ query: txQuery }) => {
     await txQuery(`TRUNCATE TABLE
       auth_refresh_tokens, auth_sessions, auth_session_versions, auth_session_revocations,
@@ -278,4 +280,5 @@ export async function resetDatabase() {
   );
 
   clearHealthCache();
+  invalidateOcrStudentRoster();
 }

@@ -6,6 +6,7 @@ import { canAccessResource } from "@/lib/resourceAuthorization";
 import { getIngestFilePath } from "../../../../lib/ingestQueueRepo";
 import { publishIngestEvent } from "@/lib/ingestEvents";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { decryptStudentRow } from "../../../../lib/studentAuth";
 
 export const runtime = "nodejs";
 
@@ -29,11 +30,7 @@ export async function GET(req) {
     if (rawTokens.length > 0) {
       const expanded = [];
       for (const tok of rawTokens) {
-        if (tok === "Conflict") {
-          expanded.push("Conflict", "Needs Review");
-        } else {
-          expanded.push(tok);
-        }
+        expanded.push(tok);
       }
       const uniqueStatuses = Array.from(new Set(expanded));
       const placeholders = uniqueStatuses.map((_, i) => `$${values.length + 1 + i}`);
@@ -56,7 +53,40 @@ export async function GET(req) {
   const where = filters.join(" AND ");
   const rows = await query(`SELECT * FROM ingest_queue WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`, [...values, limit, offset]);
   const count = await query(`SELECT COUNT(*)::int AS count FROM ingest_queue WHERE ${where}`, values);
-  return NextResponse.json({ ok: true, data: { rows: rows.filter((row) => canAccessResource(user, "ingest", row)), total: Number(count[0]?.count || 0), limit, offset } });
+  const accessibleRows = rows.filter((row) => canAccessResource(user, "ingest", row));
+  const candidateStudentNos = [...new Set(accessibleRows.flatMap((row) =>
+    (Array.isArray(row.ocr_student_candidates) ? row.ocr_student_candidates : [])
+      .map((candidate) => String(candidate?.studentNo || candidate?.student_no || "").trim())
+      .filter(Boolean)
+  ))];
+  const candidateStudents = candidateStudentNos.length
+    ? await query(
+      `SELECT s.student_no, s.name
+         FROM students s
+        WHERE s.student_no = ANY($1::text[])
+          AND s.status = 'Active'
+          AND EXISTS (SELECT 1 FROM student_office_memberships som
+                       WHERE som.student_no = s.student_no
+                         AND som.office_id = $2
+                         AND som.status = 'Active')`,
+      [candidateStudentNos, officeId],
+    )
+    : [];
+  const candidatesByStudentNo = new Map(candidateStudents.map((row) => {
+    const student = decryptStudentRow(row);
+    return [String(student.student_no), student.name];
+  }));
+  const enrichedRows = accessibleRows.map((row) => ({
+    ...row,
+    ocr_student_candidates: (Array.isArray(row.ocr_student_candidates) ? row.ocr_student_candidates : [])
+      .map((candidate) => {
+        const studentNo = String(candidate?.studentNo || candidate?.student_no || "");
+        const name = candidatesByStudentNo.get(studentNo);
+        return name ? { ...candidate, studentNo, name } : null;
+      })
+      .filter(Boolean),
+  }));
+  return NextResponse.json({ ok: true, data: { rows: enrichedRows, total: Number(count[0]?.count || 0), limit, offset } });
 }
 
 export async function DELETE(req) {

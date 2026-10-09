@@ -149,13 +149,13 @@ Run these checks for every modal/sheet in the modal inventory.
 - [ ] Drag-and-drop, browse file picker, multi-file queue, queue selection/removal, rotation, and file metadata display work.
 - [ ] Reject unsupported, corrupt, empty, and oversized uploads without creating a document.
 - [ ] Existing-student lookup and new-record fields correctly validate student number, course, section, storage room/cabinet/drawer, and document type.
-- [ ] OCR start, spinner, no-engine error, unreadable file, suggested match, manual override, confidence display, and OCR prompt actions work.
+- [ ] OCR start, spinner, no-engine error, unreadable file, configured-field student suggestions at the 10% mismatch boundary, and staff-selected assignment work.
 - [ ] Duplicate-document warning identifies the correct duplicate; Cancel preserves state and Confirm follows the intended replacement/continue rule exactly once.
 - [ ] Successful upload creates an office-scoped document, file preview works, and the document appears after refresh.
 - [ ] CSV student/document import accepts valid rows, reports row-level errors, permits selection, applies bulk storage assignment, and does not import invalid/unselected rows.
 - [ ] Continuous scanner shows queued/processing/succeeded/failed totals, bounded progress, open-review action, retry behavior, and safe empty state.
-- [ ] Batch Review filters, selection, preview, candidate list, retry, confirm/promote, reject, pagination, and refreshed item state work.
-- [ ] Promotion requires exactly one eligible student match and preserves source/review data according to the workflow; rejected/failed items are not silently promoted.
+- [ ] Batch Review filters, selection, preview, staff student search, retry, confirm/promote, reject, pagination, and refreshed item state work.
+- [ ] Promotion requires an explicitly staff-selected eligible student and preserves source/review data according to the workflow; rejected/failed items are not silently promoted.
 
 ### Registrar document, request, archive, storage, and notification workflows
 
@@ -202,7 +202,7 @@ Run these checks for every modal/sheet in the modal inventory.
 - [ ] Courses, Sections, and Document Types: add, edit, archive/restore/delete as available, duplicate prevention, search/filter/sort/pagination, and related-record restrictions.
 - [ ] DocTypeModal shows correct title and saves/cancels without stale values.
 - [ ] Bulk Import accepts valid file, previews validation results, imports only eligible rows, reports failures, and is idempotent on retry.
-- [ ] PSA Recognition Templates: type selection, PDF/image load, field selection, draw/clear normalized regions, save/update/delete template, preview/OCR matching, and missing OCR engine behavior work.
+- [ ] PSA Recognition Templates: type selection, PDF/image load, field selection, draw/clear normalized regions, save/update/delete template, preview/field extraction, and missing OCR engine behavior work.
 
 ### Backup, health, rate limiting, and audit logs
 
@@ -256,7 +256,7 @@ Use the shared dialog checks for each item below. This inventory prevents a moda
 | --- | --- |
 | Shared | AccountSetupModal, DefaultPasswordModal, ConfirmModal, PromptModal, DocTypeModal, PDFPreviewModal, TOTPChallengeModal, UserGuideModal, RecoveryCodesModal |
 | Account | recovery-codes dialog, profile avatar picker, TOTP setup/disable flows, security questions TOTP challenge modal |
-| Staff | RegisterStudentModal, EditStudentModal, StudentProfileModal, StudentProfileSheet, OCRPromptModal, duplicate-upload confirmation, archive/restore confirmations |
+| Staff | RegisterStudentModal, EditStudentModal, StudentProfileModal, StudentProfileSheet, duplicate-upload confirmation, archive/restore confirmations |
 | Staff requests/docs | request detail/status dialogs, document preview, batch-review detail/preview/reject/confirm dialogs |
 | Admin staff | RegisterAccountTab dialog, EditUserModal, archive/restore/delete/bulk confirmations |
 | Admin review/analytics | document review dialog, compliance row detail, SLA detail, audit LogDetailSheet, audit PDF preview |
@@ -275,7 +275,7 @@ This is the auditable source inventory. Test every control exposed by each compo
 | --- | --- |
 | Public | `LandingNavbar`, `LandingHero`, `OfficeDirectory`, `DocumentCatalog`, `DocumentCardPreview`, `ProcessWorkflow`, `FAQSection`, `PublicTracker`, `LandingBento`, `LandingFooter`, `LandingStats` |
 | Shared | `Header`, `Footer`, `Sidebar`, `PageHeader`, `RefreshButton`, `FloatingActionBar`, `ConfirmModal`, `PromptModal`, `DocTypeModal`, `PDFPreviewModal`, `UserGuideModal`, `AccountSetupModal`, `DefaultPasswordModal`, `TOTPChallengeModal`, `RecoveryCodesModal`, UI `Select`, `Tabs`, `Dialog`, `Sheet`, `Tooltip`, `Calendar` |
-| Staff | `StudentDirectoryTab`, `RegisterStudentModal`, `EditStudentModal`, `StudentProfileModal`, `StudentProfileSheet`, `ScanUploadTab`, `OCRPromptModal`, `ContinuousScanningPanel`, `BatchReviewTab`, `DocumentsTab`, `OfficeDocumentsTable`, `DocumentRequestsTab`, `RegistrarODRSTab`, `OsasMonitoringTab`, `RecordsArchiveTab`, `StorageExplorerTab`, `RoomMap2D`, `NotificationsTab` |
+| Staff | `StudentDirectoryTab`, `RegisterStudentModal`, `EditStudentModal`, `StudentProfileModal`, `StudentProfileSheet`, `ScanUploadTab`, `ContinuousScanningPanel`, `BatchReviewTab`, `DocumentsTab`, `OfficeDocumentsTable`, `DocumentRequestsTab`, `RegistrarODRSTab`, `OsasMonitoringTab`, `RecordsArchiveTab`, `StorageExplorerTab`, `RoomMap2D`, `NotificationsTab` |
 | Admin | `StaffDirectoryTab`, `RegisterAccountTab`, `EditUserModal`, `DigitalRecordsReviewTab`, `DigitizationComplianceTab`, `SLAAnalyticsTab`, `StorageLayoutEditorTab`, `CabinetCanvas`, `CabinetSidebar`, `ConflictResolutionModals`, `SystemConfigTab`, `CoursesTab`, `SectionsTab`, `DocTypesTab`, `BulkImportTab`, `RecognitionTemplatesTab`, `BackupTab`, `AutoBackupSchedule`, `BackupTable`, `BackupFilters`, `BackupPagination`, `HealthSidebar`, `RateLimitingTab`, `AuditLogsTab`, `LogFilters`, `LogTable`, `LogPagination`, `LogDetailSheet`, `PdfPreviewDialog` |
 | SuperAdmin | `OfficeManagementTab`, `ModuleConfigTab`, `GlobalStaffTab`, `SecurityQuestionsTab`, `CampusOperationsTab`, `GlobalAuditLogsTab`, `SystemBackupsTab`, `LandingPageCmsTab`, `LandingBentoCmsView`, `LandingCatalogCmsView`, `LandingWorkflowCmsView`, `LandingFaqCmsView`, `LandingFooterCmsView` |
 | Student | `StudentComplianceTab`, student dashboard request/proposal/activity/detail/PDF surfaces |

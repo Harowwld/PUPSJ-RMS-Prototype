@@ -154,45 +154,6 @@ test("OSAS Polymorphic Scan & Upload: Organization-Centric Documents", async (t)
     await query("DELETE FROM documents WHERE id = $1", [regDoc.id]);
   });
 
-  await t.test("7. OCR recognition match query resolves OSAS student organizations by name and acronym", async () => {
-    const extractedName = "Junior Philippine Computer Society";
-    const rows = await query(
-      `WITH input AS (
-         SELECT trim(regexp_replace(lower($1), '[^a-z0-9]+', ' ', 'g')) AS full_name
-       ), candidates AS (
-         SELECT so.id, so.id AS "studentNo", so.id AS "organizationId", so.name, so.acronym, so.category,
-                so.adviser_name AS "adviserName", so.storage_room AS room, so.storage_cabinet AS cabinet, so.storage_drawer AS drawer,
-                trim(regexp_replace(lower(so.name), '[^a-z0-9]+', ' ', 'g')) AS db_name,
-                trim(regexp_replace(lower(coalesce(so.acronym, '')), '[^a-z0-9]+', ' ', 'g')) AS db_acronym
-         FROM student_organizations so
-         WHERE so.status = 'Active'
-       )
-       SELECT "organizationId", "studentNo", name, acronym, category, "adviserName", room, cabinet, drawer,
-         round((CASE
-           WHEN db_name = input.full_name OR db_acronym = input.full_name THEN 1.0
-           WHEN db_name LIKE input.full_name || '%' OR input.full_name LIKE db_acronym || '%' THEN 0.95
-           WHEN db_name LIKE '%' || input.full_name || '%' OR input.full_name LIKE '%' || db_acronym || '%' THEN 0.90
-           ELSE similarity(db_name, input.full_name)
-         END)::numeric, 4) AS score
-       FROM candidates, input
-       WHERE db_name = input.full_name
-          OR db_acronym = input.full_name
-          OR db_name LIKE '%' || input.full_name || '%'
-          OR input.full_name LIKE '%' || db_acronym || '%'
-          OR similarity(db_name, input.full_name) >= 0.35
-       ORDER BY score DESC LIMIT 5`,
-      [extractedName.toLowerCase()]
-    );
-
-    assert.ok(rows.length > 0, "Should match at least one organization");
-    const matched = rows[0];
-    assert.equal(matched.organizationId, "jpcs");
-    assert.equal(matched.name, "Junior Philippine Computer Society");
-    assert.equal(matched.acronym, "JPCS");
-    assert.equal(matched.cabinet, "ACADEMIC ORGANIZATIONS");
-    assert.equal(Number(matched.score), 1.0, "Exact match should have score 1.0");
-  });
-
   await t.test("8. Batch organization CSV parsing and structure validation", async () => {
     const fs = await import("fs");
     const path = await import("path");

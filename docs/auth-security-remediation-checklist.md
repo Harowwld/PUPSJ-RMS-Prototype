@@ -268,7 +268,6 @@ Each row is one exported route method. Handler authorization is the source of tr
 | /api/osas/event-proposals/[id] | GET | Active staff + enabled office module | Office module and linked-record ownership | 401/403/404 |
 | /api/osas/event-proposals/[id] | PATCH | Active staff + enabled office module | Office module and linked-record ownership | 401/403/404 |
 | /api/osas/event-proposals | GET | Active staff + enabled office module | Office module and linked-record ownership | 401/403/404 |
-| /api/recognition/match | POST | Active Staff (machine bearer only for hot-folder POST) | Server-derived office and object ownership | 401/403/404 |
 | /api/recognition/templates/[id] | PATCH | Active Admin/SystemAdmin | Target template office must match principal; document type must match office | 401/403/404 |
 | /api/recognition/templates/[id] | DELETE | Active Admin/SystemAdmin | Target template office must match principal; document type must match office | 401/403/404 |
 | /api/recognition/templates | GET | Active Staff/SystemAdmin | Principal-derived office; SystemAdmin may select validated office | 401/403/404 |
@@ -420,7 +419,6 @@ Review every method under:
 - [x] `/api/ingest/review`
 - [x] `/api/ingest/ocr`
 - [x] `/api/recognition/templates`
-- [x] `/api/recognition/match`
 - [x] `/api/osas/event-proposals`
 - [x] `/api/notifications`
 - [x] `/api/storage-layout`
@@ -535,7 +533,7 @@ Target: [`csrfProtection.js`](../next-app/src/lib/csrfProtection.js#L27)
 Additional source-level isolation work completed in this review:
 
 - [x] Added `student_office_memberships` migration `036` and registrar backfill for the globally keyed student registry.
-- [x] Scoped student list/detail/mutation, document-linked student lookup, recognition matching, OCR matching, and physical-storage usage by active membership.
+- [x] Scoped student list/detail/mutation, document-linked student lookup, recognition-template access, and physical-storage usage by active membership.
 - [x] Scoped analytics and audit-log aggregation before pagination/aggregation; unscoped office principals fail closed.
 - [x] Moved storage layout/template settings to office-qualified keys in migration `037`.
 - [x] Scoped document and ingest detail reads/mutations, student linked-document status joins, staff detail operations, and notification item state changes to the server-derived office/resource boundary.

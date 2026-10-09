@@ -52,6 +52,10 @@ if (process.env.HOT_FOLDER_INGEST_TOKEN) {
   console.warn("[start] HOT_FOLDER_INGEST_TOKEN is not set; hot-folder watcher is disabled.");
 }
 
+commands.push(`"wait-on tcp:${port} && node scripts/warm-ocr.mjs"`);
+names.push("ocr");
+colors.push("yellow");
+
 const app = spawn(
   pnpmCommand,
   ["exec", "concurrently", "-n", names.join(","), "-c", colors.join(","), ...commands],

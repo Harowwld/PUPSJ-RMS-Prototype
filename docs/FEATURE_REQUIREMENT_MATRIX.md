@@ -44,8 +44,8 @@ The table below presents the primary mapping across all 15 operational features 
 
 | Feature ID | Feature Name | Primary Subsystem Modules | Core Requirements Summary | User Roles | Primary Implementation Artifacts |
 |---|---|---|---|---|---|
-| **F1** | **Record Upload & Digitization** | `scan_upload`, `ocrClient`, `documentsRepo`, `psaRecognitionRepo` | Multi-format upload, local native OCR text extraction, coordinate-based PSA template recognition, fuzzy student matching, UUID storage pipeline. | Staff, Admin | `ScanUploadTab.js`, `ContinuousScanningPanel.js`, `/api/documents`, `/api/ingest/ocr` |
-| **F2** | **Automated Ingest Pipeline & Batch Feeder Review** | `batch_review`, `ingest_queue`, `hot-folder-watcher` | Hot-folder scanner station monitoring (`chokidar`), multi-page batch splitting, OCR confidence scoring, side-by-side staging verification. | Staff | `BatchReviewTab.js`, `scripts/hot-folder-watcher.mjs`, `/api/ingest/batches/*`, `/api/ingest/review/*` |
+| **F1** | **Record Upload & Digitization** | `scan_upload`, `ocrClient`, `documentsRepo`, `psaRecognitionRepo` | Multi-format upload, local native OCR text extraction, coordinate-based PSA template field extraction, strict student suggestions at no more than 10% letter edit distance, staff-selected assignment, UUID storage pipeline. | Staff, Admin | `ScanUploadTab.js`, `ContinuousScanningPanel.js`, `/api/documents`, `/api/ingest/ocr` |
+| **F2** | **Automated Ingest Pipeline & Batch Feeder Review** | `batch_review`, `ingest_queue`, `hot-folder-watcher` | Hot-folder scanner station monitoring (`chokidar`), multi-page batch splitting, configured-field OCR candidates and staff assignment review. | Staff | `BatchReviewTab.js`, `scripts/hot-folder-watcher.mjs`, `/api/ingest/batches/*`, `/api/ingest/review/*` |
 | **F3** | **Digital Records Quality Review & Approval** | `records_review`, `documentsRepo`, `auditLogsRepo` | Administrative QA queue, zoomable/pan PDF preview, metadata verification, two-state approval (`Approved`/`Declined`), required rejection feedback. | Admin | `DigitalRecordsReviewTab.js`, `PDFPreviewModal.js`, `/api/documents/[id]` |
 | **F4** | **Student Master Directory & Profile Management** | `student_directory`, `studentsRepo`, `studentOfficeMembershipsRepo` | Master student records (`YYYY-XXXXX`), demographic profile CRUD, academic section assignment, physical storage coordinate mapping, bulk CSV batch import. | Staff, Admin | `StudentDirectoryTab.js`, `StudentProfileSheet.js`, `RegisterStudentModal.js`, `/api/students/*` |
 | **F5** | **2D Interactive Physical Archive & Storage Explorer** | `storage_layout`, `records_archive`, `storage_explorer`, `storageLayoutRepo` | AutoCAD-inspired 2D canvas room layout, normalized 0..1 coordinates, Room/Cabinet/Drawer allocation, real-time drawer occupancy calculation, deletion safeguard. | Staff, Admin | `StorageLayoutEditorTab.js`, `StorageExplorerTab.js`, `RecordsArchiveTab.js`, `RoomMap2D.js`, `/api/storage-layout` |
@@ -68,26 +68,25 @@ The table below presents the primary mapping across all 15 operational features 
 
 ### Feature 1 (F1): Record Upload & Digitization
 
-* **User Objective:** Enable office staff and administrators to ingest paper records into the digital archive through manual upload or flatbed/camera scanning, automatically identifying student identity and document type through local OCR.
+* **User Objective:** Enable office staff and administrators to ingest paper records into the digital archive through manual upload or flatbed/camera scanning, extracting document fields locally and assigning the student manually.
 * **Target Roles & Portals:** Registrar Staff, OSAS Staff, Office Admin (`/staff`, `/admin`).
 * **Required Subsystems & Modules:**
   1. `scan_upload` (Scan & Upload Module)
   2. `ocrClient.js` (Local OCR Engine Abstraction)
   3. `psaRecognitionRepo.js` (Coordinate-based PSA Template Engine)
   4. `documentsRepo.js` (Document Ingestion & File Storage Pipeline)
-  5. `nameMatcher.js` (Fuzzy Levenshtein & Token Matcher)
 
 #### Detailed Functional Requirements (FR):
 * **FR-1.1 (File Validation & Ingestion):** The system shall accept PDF, PNG, and JPEG formats up to 25MB per document. It must sanitize filenames, assign an immutable UUID filename, and persist physical assets into `.local/uploads/` (or office-isolated storage).
 * **FR-1.2 (Continuous & Feeder Scanning):** The system shall support rapid consecutive page captures via connected webcam or TWAIN/WIA scanner feeder without leaving the active session.
 * **FR-1.3 (Native Platform OCR Text Extraction):** The system shall utilize local native platform OCR binaries (`scripts/apple-vision-ocr/ocr.swift` on macOS or `scripts/windows-media-ocr` on Windows; fallback `tesseract.js`) to extract raw text blocks and normalized bounding box coordinates without external cloud telemetry.
 * **FR-1.4 (PSA Coordinate Template Extraction):** The system shall apply user-calibrated coordinate bounding boxes (`0..1` normalized rectangle coordinates) to extract First Name, Middle Name, and Last Name from standard Philippine Statistics Authority (PSA) birth certificates.
-* **FR-1.5 (Fuzzy Student Correlation):** The system shall query the active student database and rank candidates using token matching and Levenshtein distance, automatically proposing matching student numbers and names.
-* **FR-1.6 (Document Classification):** The system shall associate the file with an authorized document type taxonomy entry (e.g., Form 137 / SF10, PSA Birth Certificate, Good Moral Character) and register the document in `Pending` status.
+* **FR-1.5 (Strict OCR Student Suggestions):** Compare a name only when it was extracted from configured name regions. Return suggestions whose normalized letter-level Levenshtein distance is at most 10%; staff must select the student during upload or batch review before the document is filed.
+* **FR-1.6 (Document Classification):** OCR may suggest a document type from extracted text; staff verifies the type and assigns the student before the document is filed.
 
 #### Technical & Primary Source Traceability:
-* **UI Components:** [`ScanUploadTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/ScanUploadTab.js), [`ContinuousScanningPanel.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/ContinuousScanningPanel.js), [`OCRPromptModal.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/OCRPromptModal.js).
-* **API Routes:** [`POST /api/documents`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/documents/route.js), [`POST /api/ingest/ocr`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/ingest/ocr/route.js), [`POST /api/recognition/match`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/recognition/match/route.js), [`/api/recognition/templates`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/recognition/templates/route.js).
+* **UI Components:** [`ScanUploadTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/ScanUploadTab.js), [`ContinuousScanningPanel.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/ContinuousScanningPanel.js), [`BatchReviewTab.js`](file:///home/cendrink/Programming/School/PUPSJ-RMS-Prototype/next-app/src/components/staff/BatchReviewTab.js).
+* **API Routes:** [`POST /api/documents`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/documents/route.js), [`POST /api/ingest/ocr`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/ingest/ocr/route.js), [`/api/recognition/templates`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/recognition/templates/route.js).
 * **Database Tables:** `documents`, `psa_recognition_templates`, `document_types`.
 * **Migrations:** `001_initial.sql`, `013_psa_recognition_templates.sql`, `018_restore_scan_session_tables.sql`.
 

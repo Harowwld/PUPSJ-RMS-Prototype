@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractNameFromCoordinates, findStudentsInText, normalizeExtractedName } from "../src/lib/ocrClient.js";
-import { calculateOcrConfidence } from "../src/lib/ocrConfidence.js";
+import { extractNameFromCoordinates, matchStudentsByConfiguredOcrName, normalizeExtractedName, rotateOcrPages, scanFileForSuggestion } from "../src/lib/ocrClient.js";
 
 test("extracts PSA name fields from normalized coordinate regions", () => {
   const result = extractNameFromCoordinates([
@@ -51,51 +50,139 @@ test("normalizes extracted names into the project format", () => {
   assert.equal(normalizeExtractedName("DELA CRUZ, JUAN A."), "DELA CRUZ, JUAN A");
 });
 
-test("scores the same name strongly when OCR and database order differ", () => {
-  const result = calculateOcrConfidence({
-    extractedName: "GABRIEL MATEO SANTOS RAMIREZ",
-    candidate: { studentNo: "2025-60009-MN-2", name: "RAMIREZ, GABRIEL MATEO SANTOS" },
-    candidates: [{ studentNo: "2025-60009-MN-2", name: "RAMIREZ, GABRIEL MATEO SANTOS" }],
-    extractionSource: "template",
-  });
-  assert.ok(result.matchConfidence >= 0.9);
-  assert.equal(result.evidence.candidates[0].tokenSetSimilarity, 1);
-});
-
-test("keeps a strong unique match usable despite a non-primary document name conflict", () => {
-  const result = calculateOcrConfidence({
-    extractedName: "LIAM CARTER VALENCIA MERCADO",
-    candidate: { studentNo: "2025-60010-MN-0", name: "MERCADO, LIAM CARTER VALENCIA" },
-    candidates: [{ studentNo: "2025-60010-MN-0", name: "MERCADO, LIAM CARTER VALENCIA" }],
-    extractionSource: "template",
-    conflictingCandidates: [{ studentNo: "2022-10002-MN-2", name: "SANTOS, MARIA B." }],
-  });
-  assert.equal(result.matchBand, "Conflict");
-  assert.ok(result.matchConfidence >= 0.85);
-});
-
-test("does not turn generic OCR wording into a second student match", () => {
+test("configured-name matching allows up to 10 percent letter edits and rejects more", () => {
   const students = [
-    { student_no: "2025-10001-SJ-0", name: "DELA PEÑA, HAROLD PRINCE E." },
-    { student_no: "2023-00001-IT-1", name: "TEST STUDENT" },
+    { student_no: "2025-10001-SJ-0", name: "DELA CRUZ, JUAN" },
+    { student_no: "2025-10002-SJ-0", name: "DELA CRUZ, JOAN" },
   ];
-  const matches = findStudentsInText(
-    "Profile BSIT student with a strong academic record. Harold Prince E. dela Peña.",
-    students,
-  );
 
-  assert.deepEqual(matches.map((student) => student.student_no), ["2025-10001-SJ-0"]);
+  const oneTypo = matchStudentsByConfiguredOcrName("DELA CRUZ, JUANX", students);
+  assert.deepEqual(oneTypo.map((student) => student.studentNo), ["2025-10001-SJ-0"]);
+  assert.equal(oneTypo[0].mismatchPercent, 8);
+
+  const twoTypos = matchStudentsByConfiguredOcrName("DELA CRUX, JXXN", students);
+  assert.deepEqual(twoTypos, []);
 });
 
-test("keeps full-document matches when the detected focus is unrelated OCR text", () => {
-  const students = [
-    { student_no: "2025-10001-SJ-0", name: "DELA PEÑA, HAROLD PRINCE E." },
+test("bounded matcher preserves the previous edit-distance result across name lengths and accents", () => {
+  const referenceNormalize = (value) => normalizeExtractedName(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+  const referenceDistance = (left, right) => {
+    const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+    for (let i = 1; i <= left.length; i += 1) {
+      let diagonal = row[0];
+      row[0] = i;
+      for (let j = 1; j <= right.length; j += 1) {
+        const above = row[j];
+        row[j] = left[i - 1] === right[j - 1]
+          ? diagonal
+          : Math.min(diagonal + 1, row[j] + 1, row[j - 1] + 1);
+        diagonal = above;
+      }
+    }
+    return row[right.length];
+  };
+  const names = [
+    "DELA CRUZ, JUAN",
+    "NUÑEZ, MARÍA LUISA",
+    "VAN DER MEER, JOSEPHINE",
+    "SANTOS, ANA",
+    "GARCIA, CHRISTOPHER ANDREW",
   ];
-  const matches = findStudentsInText(
-    "BSIT student with a strong academic record. Harold Prince E. dela Peña.",
-    students,
-    "BSIT student with a strong",
-  );
+  const cases = names.flatMap((name) => {
+    const normalized = referenceNormalize(name);
+    return [name, `${name}X`, name.replace(/[AEIOU]/, "X"), `${name}XX`].map((ocrName) => ({ ocrName, name, normalized }));
+  });
+  const students = cases.map((item, index) => ({ student_no: `S${index}`, name: item.name }));
 
-  assert.deepEqual(matches.map((student) => student.student_no), ["2025-10001-SJ-0"]);
+  for (const { ocrName } of cases) {
+    const normalizedOcr = referenceNormalize(ocrName);
+    const expected = students.flatMap((student) => {
+      const normalizedStudent = referenceNormalize(student.name);
+      if (normalizedOcr.length < 8 || normalizedStudent.length < 8) return [];
+      const ratio = referenceDistance(normalizedOcr, normalizedStudent) / Math.max(normalizedOcr.length, normalizedStudent.length);
+      return ratio <= 0.10 ? [{ studentNo: student.student_no, mismatchPercent: Math.round(ratio * 100) }] : [];
+    }).sort((left, right) => left.mismatchPercent - right.mismatchPercent || left.studentNo.localeCompare(right.studentNo));
+    const actual = matchStudentsByConfiguredOcrName(ocrName, students)
+      .map(({ studentNo, mismatchPercent }) => ({ studentNo, mismatchPercent }));
+    assert.deepEqual(actual, expected, `matches differ for ${ocrName}`);
+  }
+});
+
+test("rotating OCR observations reuses OCR output and applies configured coordinates to the rotated page", () => {
+  const pages = [{ pageIndex: 0, width: 1000, height: 1400, observations: [
+    { text: "JUAN", x: 0.20, y: 0.20, width: 0.05, height: 0.02 },
+  ] }];
+  const rotated = rotateOcrPages(pages, 90);
+  assert.deepEqual([rotated[0].width, rotated[0].height], [1400, 1000]);
+  const result = extractNameFromCoordinates(rotated, {
+    page_index: 0,
+    regions: {
+      firstName: { x: 0.74, y: 0.19, width: 0.1, height: 0.1 },
+      middleName: { x: 0.4, y: 0.1, width: 0.1, height: 0.1 },
+      lastName: { x: 0.5, y: 0.1, width: 0.1, height: 0.1 },
+    },
+  });
+  assert.equal(result.regions.firstName.text, "JUAN");
+});
+
+test("rotation reuses prior OCR pages and templates without calling the OCR endpoint again", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url) => {
+    requests.push(String(url));
+    return { ok: true, json: async () => ({ ok: true, data: [] }) };
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  await scanFileForSuggestion({
+    file: { type: "application/pdf", name: "record.pdf" },
+    docTypes: [],
+    rotation: 90,
+    matchStudents: false,
+    ocrContext: {
+      rawText: "JUAN DELA CRUZ",
+      engine: "test",
+      pages: [{
+        pageIndex: 0,
+        width: 1000,
+        height: 1400,
+        observations: [{ text: "JUAN", x: 0.20, y: 0.20, width: 0.05, height: 0.02 }],
+      }],
+      templates: [{
+        page_index: 0,
+        regions: {
+          firstName: { x: 0.74, y: 0.19, width: 0.1, height: 0.1 },
+          middleName: { x: 0.4, y: 0.1, width: 0.1, height: 0.1 },
+          lastName: { x: 0.5, y: 0.1, width: 0.1, height: 0.1 },
+        },
+      }],
+    },
+  });
+
+  assert.deepEqual(requests, []);
+});
+
+test("OCR suggestion does not match full-page text without a configured name extraction", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith("/api/ingest/ocr")) {
+      return { ok: true, json: async () => ({ ok: true, text: "Student No. 2025-10001-SJ-0\nJuan Dela Cruz", pages: [], engine: "test" }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, data: [] }) };
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const suggestion = await scanFileForSuggestion({
+    file: { type: "application/pdf", name: "record.pdf" },
+    students: [{ student_no: "2025-10001-SJ-0", name: "DELA CRUZ, JUAN" }],
+    docTypes: [],
+  });
+
+  assert.equal(suggestion.docType, "");
+  assert.match(suggestion.ocrTextPreview, /2025-10001-SJ-0/);
+  assert.deepEqual(suggestion.studentMatches, []);
 });

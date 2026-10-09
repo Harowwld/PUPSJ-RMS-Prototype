@@ -9,7 +9,6 @@ import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
 import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
-import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import GlobalFailedBatchReviewModal from "@/components/staff/GlobalFailedBatchReviewModal";
 import {
@@ -294,9 +293,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [selectedQueuedFileIndex, setSelectedQueuedFileIndex] = useState(0);
   const fileInputRef = useRef(null);
+  const ocrContextRef = useRef(null);
+  const ocrContextFileRef = useRef(null);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrSuggestion, setOcrSuggestion] = useState(null);
-  const [ocrPromptOpen, setOcrPromptOpen] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [rotation, setRotation] = useState(0);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
@@ -1234,6 +1234,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
 
     const activeFile = incomingFiles[0];
+    if (!skipQueue || ocrContextFileRef.current !== activeFile) {
+      ocrContextRef.current = null;
+      ocrContextFileRef.current = activeFile;
+    }
     setUploadedFile(activeFile);
     clearUploadFieldError("pdfFile");
     setOcrError("");
@@ -1254,104 +1258,44 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setOcrLoading(true);
       try {
         const isOsas = authUser?.office_id === "osas";
-        const candidateEntities = isOsas
-          ? organizations.map((o) => ({
-              organizationId: o.id,
-              studentNo: o.id,
-              student_no: o.id,
-              name: o.name,
-              acronym: o.acronym,
-              category: o.category,
-              adviserName: o.adviser_name || o.adviserName,
-              room: o.storage_room,
-              cabinet: o.storage_cabinet,
-              drawer: o.storage_drawer,
-            }))
-          : students;
-
         const { scanFileForSuggestion } = await import("@/lib/ocrClient");
         const suggestion = await scanFileForSuggestion({
           file: activeFile,
-          students: candidateEntities,
           docTypes,
           rotation: rotationParam !== undefined ? rotationParam : rotation,
+          matchStudents: !isOsas,
+          ocrContext: rotationParam !== undefined && ocrContextFileRef.current === activeFile
+            ? ocrContextRef.current
+            : null,
         });
+        ocrContextRef.current = suggestion.ocrContext;
+        ocrContextFileRef.current = activeFile;
+        delete suggestion.ocrContext;
         lastRotationOcrRef.current =
           rotationParam !== undefined ? rotationParam : rotation;
         setOcrSuggestion(suggestion);
 
-        console.log("[OCR handleFileSelect] suggestion:", {
+        console.log("[OCR handleFileSelect] extracted fields:", {
           name: suggestion.name,
           docType: suggestion.docType,
-          matchedStudent: suggestion.matchedStudent?.organizationId || suggestion.matchedStudent?.studentNo || null,
-          matchCount: suggestion.nameMatchesByName?.length,
           docTypesAvailable: docTypes,
         });
-
-        const nameMatches = Array.isArray(suggestion.nameMatchesByName)
-          ? suggestion.nameMatchesByName
-          : [];
-        const ambiguous = nameMatches.length > 1;
-
-        if (suggestion.requiresConfirmation) {
-          console.log("[OCR] → COORDINATE MATCH branch, requiring staff confirmation");
-          setNewRec((p) => ({
-            ...p,
-            name: String(suggestion.name || p.name || "").trim().replace(/\s+/g, " ").toUpperCase(),
-            docType: suggestion.docType != null && String(suggestion.docType).trim() !== "" ? String(suggestion.docType).trim() : p.docType,
-          }));
-          setUploadStudentIsExisting(false);
-          clearAllUploadFieldErrors();
-          setOcrPromptOpen(true);
-        } else if (ambiguous) {
-          console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
-          setNewRec((p) => ({
-            ...p,
-            name: String(suggestion.name || p.name || "")
-              .trim()
-              .replace(/\s+/g, " ")
-              .toUpperCase(),
-            docType:
-              suggestion.docType != null && String(suggestion.docType).trim() !== ""
-                ? String(suggestion.docType).trim()
-                : p.docType,
-          }));
-          setUploadStudentIsExisting(false);
-          clearAllUploadFieldErrors();
-          setOcrPromptOpen(true);
-        } else if (suggestion.matchedStudent) {
-          console.log("[OCR] → MATCHED STUDENT branch, setting docType:", suggestion.docType);
-          applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType);
-          setUploadStudentIsExisting(true);
-          clearAllUploadFieldErrors();
-          setOcrPromptOpen(false);
-          checkDuplicate(
-            suggestion.matchedStudent.organizationId ||
-            suggestion.matchedStudent.id ||
-            suggestion.matchedStudent.studentNo ||
-            suggestion.matchedStudent.student_no,
-            suggestion.docType
-          );
-        } else {
-          console.log("[OCR] → NEW STUDENT / NEW ORG branch, setting docType:", suggestion.docType);
-          setNewRec((p) => ({
-            ...p,
-            name: String(suggestion.name || p.name || "")
-              .trim()
-              .replace(/\s+/g, " ")
-              .toUpperCase(),
-            room: p.room || (isOsas ? "1" : ""),
-            cabinet: p.cabinet || "",
-            drawer: p.drawer || (isOsas ? "1" : ""),
-            docType:
-              suggestion.docType != null && String(suggestion.docType).trim() !== ""
-                ? String(suggestion.docType).trim()
-                : p.docType,
-          }));
-          setUploadStudentIsExisting(false);
-          clearAllUploadFieldErrors();
-          setOcrPromptOpen(false);
-        }
+        setNewRec((p) => ({
+          ...p,
+          name: String(suggestion.name || p.name || "")
+            .trim()
+            .replace(/\s+/g, " ")
+            .toUpperCase(),
+          room: p.room || (isOsas ? "1" : ""),
+          cabinet: p.cabinet || "",
+          drawer: p.drawer || (isOsas ? "1" : ""),
+          docType:
+            suggestion.docType != null && String(suggestion.docType).trim() !== ""
+              ? String(suggestion.docType).trim()
+              : p.docType,
+        }));
+        setUploadStudentIsExisting(false);
+        clearAllUploadFieldErrors();
       } catch (err) {
         setOcrLoading(false);
         const message =
@@ -2679,7 +2623,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 applyStudentToPdfForm(student, ocrDocType || null);
                 setUploadStudentIsExisting(true);
                 clearAllUploadFieldErrors();
-                setOcrPromptOpen(false);
                 checkDuplicate(student.organizationId || student.id || student.studentNo || student.student_no, ocrDocType);
               }}
               onOpenBatchReview={() => switchView("batch_review")}
@@ -2793,18 +2736,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         preview={preview}
-      />
-      <OCRPromptModal
-        open={ocrPromptOpen}
-        onClose={() => setOcrPromptOpen(false)}
-        ocrSuggestion={ocrSuggestion}
-        onConfirmStudent={(s) => {
-          applyStudentToPdfForm(s, ocrSuggestion?.docType);
-          setUploadStudentIsExisting(true);
-          clearAllUploadFieldErrors();
-          setOcrPromptOpen(false);
-          checkDuplicate(s.organizationId || s.id || s.studentNo || s.student_no, ocrSuggestion?.docType);
-        }}
       />
       <ConfirmModal
         open={duplicateConfirmOpen}

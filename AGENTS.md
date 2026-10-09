@@ -605,7 +605,6 @@ src/components/
 │   ├── DocumentRequestsTab.js # Alumni request management
 │   ├── DocumentsTab.js        # Student document matrix
 │   ├── NotificationsTab.js
-│   ├── OCRPromptModal.js
 │   ├── RecordsArchiveTab.js   # Physical archive explorer
 │   └── ScanUploadTab.js       # Document scanning/upload
 ├── shared/                   # Cross-cutting components

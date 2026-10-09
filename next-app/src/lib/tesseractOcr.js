@@ -80,10 +80,14 @@ export async function performTesseractOcr(filePath) {
   try {
     const pages = [];
     const text = [];
-    for (const [pageIndex, imagePath] of imagePaths.entries()) {
-      const result = await recognizeImage(imagePath, pageIndex);
-      pages.push(result.page);
-      text.push(result.text);
+    for (let start = 0; start < imagePaths.length; start += 2) {
+      const results = await Promise.all(imagePaths.slice(start, start + 2).map((imagePath, index) =>
+        recognizeImage(imagePath, start + index)
+      ));
+      for (const result of results) {
+        pages.push(result.page);
+        text.push(result.text);
+      }
     }
     return { text: text.filter(Boolean).join("\n"), pages };
   } finally {

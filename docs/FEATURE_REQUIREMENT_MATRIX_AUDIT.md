@@ -56,8 +56,8 @@ The 8-feature by 5-requirement matrix presented in **Table 5** contains **four v
 * **Current Matrix State:** Checked under `R1: Record Digitization Module` (✓) and `R3: OCR Module` (✓).
 * **Codebase Implementation:**
   - Multipart Handling: [`POST /api/documents`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/documents/route.js#L51-L85) accepts PDF files up to 25MB, writes sanitized UUID files to `.local/uploads/`, and creates records in the `documents` table.
-  - OCR Pipeline: [`ScanUploadTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/ScanUploadTab.js#L1465-L1475) calls [`ocrClient.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/lib/ocrClient.js), passing scans to local native OCR (Apple Vision / Windows Media / Tesseract.js fallback) and fuzzy name matching.
-  - PSA Coordinate Recognition: [`POST /api/recognition/match`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/recognition/match/route.js) applies user-calibrated bounding box templates to extract names from birth certificates.
+  - OCR Pipeline: `ScanUploadTab.js` calls `ocrClient.js` to extract document text and configured fields locally. Only names from configured regions can produce student suggestions, limited to 10% letter edit distance; staff selects the student during upload or batch review.
+  - PSA Coordinate Recognition: `/api/recognition/templates` stores user-calibrated field regions used to extract names from birth certificates.
 * **Audit Finding:**
   - **Fully Aligned (Exact Match):** Record upload directly integrates file digitization (R1) with OCR extraction (R3).
 
