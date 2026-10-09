@@ -24,6 +24,18 @@ struct OcrPayload: Codable {
     let text: String
 }
 
+struct OcrWorkerRequest: Codable {
+    let id: String
+    let filePath: String?
+}
+
+struct OcrWorkerResponse: Codable {
+    let id: String
+    let ok: Bool
+    let result: OcrPayload?
+    let error: String?
+}
+
 struct OcrRecognition {
     let page: OcrPage
     let failed: Bool
@@ -179,60 +191,95 @@ func normalizeImage(_ image: CGImage) -> CGImage? {
     return context.makeImage()
 }
 
-// ─── Main Execution Entry ───
-let args = CommandLine.arguments
-guard args.count > 1 else {
-    print("Error: Missing file path. Usage: apple-vision-ocr <file-path>")
-    exit(1)
-}
-
-let filePath = args[1]
-let fileURL = URL(fileURLWithPath: filePath)
-
-guard FileManager.default.fileExists(atPath: filePath) else {
-    print("Error: File not found at path: \(filePath)")
-    exit(1)
-}
-
-// Handle PDF Document
-if fileURL.pathExtension.lowercased() == "pdf" {
-    guard let pdf = PDFDocument(url: fileURL) else {
-        print("Error: Could not load PDF document")
-        exit(1)
+func recognizeFile(at filePath: String) throws -> OcrPayload {
+    let fileURL = URL(fileURLWithPath: filePath)
+    guard FileManager.default.fileExists(atPath: filePath) else {
+        throw NSError(domain: "NativeOcr", code: 1, userInfo: [NSLocalizedDescriptionKey: "File not found at path: \(filePath)"])
     }
-    
-    var pages = [OcrPage]()
-    for batchStart in stride(from: 0, to: pdf.pageCount, by: 2) {
-        var images = [(Int, CGImage)]()
-        for pageIndex in batchStart..<min(batchStart + 2, pdf.pageCount) {
-            guard let page = pdf.page(at: pageIndex) else { continue }
-            let resolutionScale: CGFloat = 3.0
-            guard let rendered = renderPDFPage(page, scale: resolutionScale),
-                  let cgImg = normalizeImage(rendered) else {
-                fputs("Error: Could not render PDF page \(pageIndex)\n", stderr)
-                continue
-            }
-            images.append((pageIndex, cgImg))
+
+    if fileURL.pathExtension.lowercased() == "pdf" {
+        guard let pdf = PDFDocument(url: fileURL) else {
+            throw NSError(domain: "NativeOcr", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not load PDF document"])
         }
 
-        let recognized = recognizeImages(images)
-        pages.append(contentsOf: recognized.map(\.page))
+        var pages = [OcrPage]()
+        for batchStart in stride(from: 0, to: pdf.pageCount, by: 2) {
+            var images = [(Int, CGImage)]()
+            for pageIndex in batchStart..<min(batchStart + 2, pdf.pageCount) {
+                guard let page = pdf.page(at: pageIndex) else { continue }
+                let resolutionScale: CGFloat = 3.0
+                guard let rendered = renderPDFPage(page, scale: resolutionScale),
+                      let cgImg = normalizeImage(rendered) else {
+                    fputs("Error: Could not render PDF page \(pageIndex)\n", stderr)
+                    continue
+                }
+                images.append((pageIndex, cgImg))
+            }
+            let recognized = recognizeImages(images)
+            if let failedPage = recognized.first(where: { $0.failed }) {
+                throw NSError(domain: "NativeOcr", code: 4, userInfo: [NSLocalizedDescriptionKey: "Vision recognition failed for page \(failedPage.page.pageIndex) after retry"])
+            }
+            pages.append(contentsOf: recognized.map(\.page))
+        }
+        let fullText = pages.flatMap { $0.observations.map(\.text) }.joined(separator: "\n")
+        return OcrPayload(pages: pages, text: fullText.trimmingCharacters(in: .whitespacesAndNewlines))
     }
-    let fullText = pages.flatMap { $0.observations.map(\.text) }.joined(separator: "\n")
-    let payload = OcrPayload(pages: pages, text: fullText.trimmingCharacters(in: .whitespacesAndNewlines))
-    let data = try! JSONEncoder().encode(payload)
-    print(String(data: data, encoding: .utf8)!)
-    
-} else {
+
     // Handle standard images through ImageIO so Vision receives the source CGImage directly.
     guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
           let decoded = CGImageSourceCreateImageAtIndex(source, 0, nil),
           let cgImg = normalizeImage(decoded) else {
-        print("Error: Could not load image file")
+        throw NSError(domain: "NativeOcr", code: 3, userInfo: [NSLocalizedDescriptionKey: "Could not load image file"])
+    }
+    let recognized = recognizeImages([(0, cgImg)])
+    if let failedPage = recognized.first(where: { $0.failed }) {
+        throw NSError(domain: "NativeOcr", code: 4, userInfo: [NSLocalizedDescriptionKey: "Vision recognition failed for page \(failedPage.page.pageIndex) after retry"])
+    }
+    let page = recognized.first?.page ?? OcrPage(pageIndex: 0, width: cgImg.width, height: cgImg.height, observations: [])
+    let text = page.observations.map(\.text).joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    return OcrPayload(pages: [page], text: text)
+}
+
+func encodeWorkerResponse(_ response: OcrWorkerResponse) {
+    do {
+        let data = try JSONEncoder().encode(response)
+        print(String(data: data, encoding: .utf8) ?? "{}")
+        fflush(stdout)
+    } catch {
+        fputs("Could not encode OCR worker response: \(error.localizedDescription)\n", stderr)
+    }
+}
+
+// In server mode, one native process handles many input paths and keeps Vision
+// initialized between requests. The newline JSON protocol keeps stdout machine-readable.
+let args = CommandLine.arguments
+if args.count > 1 && args[1] == "--server" {
+    while let line = readLine() {
+        guard let data = line.data(using: .utf8),
+              let request = try? JSONDecoder().decode(OcrWorkerRequest.self, from: data) else {
+            fputs("Ignoring malformed OCR worker request.\n", stderr)
+            continue
+        }
+        do {
+            guard let filePath = request.filePath, !filePath.isEmpty else {
+                throw NSError(domain: "NativeOcr", code: 1, userInfo: [NSLocalizedDescriptionKey: "Worker request must include filePath."])
+            }
+            encodeWorkerResponse(OcrWorkerResponse(id: request.id, ok: true, result: try recognizeFile(at: filePath), error: nil))
+        } catch {
+            encodeWorkerResponse(OcrWorkerResponse(id: request.id, ok: false, result: nil, error: error.localizedDescription))
+        }
+    }
+} else {
+    guard args.count > 1 else {
+        print("Error: Missing file path. Usage: apple-vision-ocr [--server|<file-path>]")
         exit(1)
     }
-    let page = recognizeImages([(0, cgImg)]).first?.page ?? OcrPage(pageIndex: 0, width: cgImg.width, height: cgImg.height, observations: [])
-    let payload = OcrPayload(pages: [page], text: page.observations.map(\.text).joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines))
-    let data = try! JSONEncoder().encode(payload)
-    print(String(data: data, encoding: .utf8)!)
+    do {
+        let payload = try recognizeFile(at: args[1])
+        let data = try JSONEncoder().encode(payload)
+        print(String(data: data, encoding: .utf8) ?? "{}")
+    } catch {
+        fputs("\(error.localizedDescription)\n", stderr)
+        exit(1)
+    }
 }
