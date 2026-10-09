@@ -112,11 +112,18 @@ export async function listDocumentRequests({
     }
   }
   if (q) {
-    filters.push(
-      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sip.email,'') LIKE ? OR IFNULL(sip.first_name,'') LIKE ? OR IFNULL(sip.last_name,'') LIKE ?)"
-    );
-    const like = `%${q}%`;
-    params.push(like, like, like, like, like, like, like, like, like, like);
+    const rawQ = String(q).trim();
+    const tokens = rawQ.split(/[\s,]+/).filter(Boolean);
+    if (tokens.length > 0) {
+      for (const tok of tokens) {
+        filters.push(
+          "(dr.student_no ILIKE ? OR REPLACE(dr.student_no, '-', '') ILIKE ? OR dr.requester_name ILIKE ? OR REPLACE(COALESCE(dr.requester_name, ''), ',', ' ') ILIKE ? OR s.name ILIKE ? OR dr.doc_type ILIKE ? OR COALESCE(dr.notes,'') ILIKE ? OR COALESCE(dr.course_code,'') ILIKE ? OR COALESCE(c.name,'') ILIKE ? OR COALESCE(sip.email,'') ILIKE ? OR COALESCE(sip.first_name,'') ILIKE ? OR COALESCE(sip.last_name,'') ILIKE ?)"
+        );
+        const like = `%${tok}%`;
+        const strippedTok = tok.replace(/-/g, "");
+        params.push(like, `%${strippedTok}%`, like, like, like, like, like, like, like, like, like, like);
+      }
+    }
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
@@ -213,11 +220,18 @@ export async function countDocumentRequests({
     }
   }
   if (q) {
-    filters.push(
-      "(dr.student_no LIKE ? OR dr.requester_name LIKE ? OR s.name LIKE ? OR dr.doc_type LIKE ? OR IFNULL(dr.notes,'') LIKE ? OR IFNULL(dr.course_code,'') LIKE ? OR IFNULL(c.name,'') LIKE ? OR IFNULL(sip.email,'') LIKE ? OR IFNULL(sip.first_name,'') LIKE ? OR IFNULL(sip.last_name,'') LIKE ?)"
-    );
-    const like = `%${q}%`;
-    params.push(like, like, like, like, like, like, like, like, like, like);
+    const rawQ = String(q).trim();
+    const tokens = rawQ.split(/[\s,]+/).filter(Boolean);
+    if (tokens.length > 0) {
+      for (const tok of tokens) {
+        filters.push(
+          "(dr.student_no ILIKE ? OR REPLACE(dr.student_no, '-', '') ILIKE ? OR dr.requester_name ILIKE ? OR REPLACE(COALESCE(dr.requester_name, ''), ',', ' ') ILIKE ? OR s.name ILIKE ? OR dr.doc_type ILIKE ? OR COALESCE(dr.notes,'') ILIKE ? OR COALESCE(dr.course_code,'') ILIKE ? OR COALESCE(c.name,'') ILIKE ? OR COALESCE(sip.email,'') ILIKE ? OR COALESCE(sip.first_name,'') ILIKE ? OR COALESCE(sip.last_name,'') ILIKE ?)"
+        );
+        const like = `%${tok}%`;
+        const strippedTok = tok.replace(/-/g, "");
+        params.push(like, `%${strippedTok}%`, like, like, like, like, like, like, like, like, like, like);
+      }
+    }
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";

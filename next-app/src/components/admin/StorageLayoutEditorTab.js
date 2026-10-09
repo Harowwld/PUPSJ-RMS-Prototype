@@ -4,18 +4,10 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
 import {
   Card,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import StorageLayoutSkeleton from "@/components/admin/skeletons/StorageLayoutSkeleton"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults"
 
 import PageHeader from "@/components/shared/PageHeader"
@@ -31,10 +23,6 @@ import ConflictResolutionModals from "./storage-layout/ConflictResolutionModals"
 import { Select } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -49,10 +37,9 @@ import {
   clampToRoom,
   snapValue,
   calculatePath,
-  canonicalizeCabinetId,
 } from "@/lib/storageLayoutUtils"
 
-export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty, error = null, className }) {
+export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   // 1. BASE STATE
   const [layout, setLayout] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -541,7 +528,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }
   }, [activeRoom, selectedCabinet, layout, commitLayout])
 
-  const updateSelectedSizeNormalized = useCallback((nw, nh) => {
+  const updateSelectedSizeNormalized = useCallback((nw) => {
     if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
     const w = clamp(nw, MIN_SIZE, MAX_SIZE)
     const h = w * CABINET_ASPECT_RATIO 
@@ -781,7 +768,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     return () => clearTimeout(timer)
   }, [activeRoom, selectedCabinetIds])
 
-  const [simulationMode, setSimulationMode] = useState(false)
+  const simulationMode = false
 
   const activePath = useMemo(() => {
     if (simulationMode && selectedCabinet && !selectedCabinet.isDoor) {

@@ -10,12 +10,6 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -56,7 +50,7 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
   const effectivePreview = preview || (pdfUrl || title || filename ? { url: pdfUrl, title, filename } : null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  const docId = effectivePreview?.docId
+  const docId = effectivePreview?.docId || effectivePreview?.id
   const fileUrl = effectivePreview?.url || effectivePreview?.fileUrl || (docId ? `/api/documents/${docId}` : null)
   const hasFile = !!fileUrl || !!docId
 

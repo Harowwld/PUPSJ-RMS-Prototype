@@ -35,22 +35,16 @@ function formatLastSync(val) {
       minute: "2-digit",
       hour12: true
     })
-  } catch (e) {
+  } catch {
     return val
   }
 }
 
-const getGaugeColor = (percent) => {
-  if (percent <= 40) return "#30D158"
-  if (percent <= 60) return "#FF9F0A"
-  if (percent <= 80) return "#FF6B00"
-  return "#E5484D"
-}
-
-const getUsageColor = (percent) => {
-  if (percent <= 50) return "#30D158"
-  if (percent <= 80) return "#FF9F0A"
-  return "#E5484D"
+function formatBytes(bytes) {
+  if (!bytes || bytes <= 0) return "0 B"
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
 }
 
 export default function HealthSidebar({
@@ -86,6 +80,14 @@ export default function HealthSidebar({
   const diskUsed = diskTotal - diskFree
   const ramPercent = systemHealth?.memory?.percent || 0
   const cpuPercent = systemHealth?.cpu || 0
+
+  const extTotalBytes = Number(externalDrive?.totalBytes) || 0
+  const extFreeBytes = Number(externalDrive?.freeBytes) || 0
+  const extUsedBytes = Math.max(0, extTotalBytes - extFreeBytes)
+  const extUsedPercent = extTotalBytes > 0 ? Math.min(100, Math.max(0, Math.round((extUsedBytes / extTotalBytes) * 100))) : 0
+  const extTotalText = externalDrive?.totalFormatted || (extTotalBytes > 0 ? formatBytes(extTotalBytes) : null)
+  const extFreeText = externalDrive?.freeFormatted || (extFreeBytes > 0 ? formatBytes(extFreeBytes) : null)
+  const extUsedText = extTotalBytes > 0 ? formatBytes(extUsedBytes) : null
 
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
@@ -172,11 +174,51 @@ export default function HealthSidebar({
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-2 leading-relaxed">
-              {externalDrive?.connected
-                ? `Volume: ${externalDrive.label || "External Storage"}${externalDrive.freeFormatted ? ` · ${externalDrive.freeFormatted} free` : ""} · Path: ${externalDrive.path || "Mounted"}`
-                : "Connect an external USB drive to copy backups for safekeeping."}
-            </p>
+            {externalDrive?.connected ? (
+              <div className="mt-3 flex flex-col gap-2">
+                {/* Storage Metrics Summary */}
+                <div className="flex items-center justify-between text-[11px] leading-tight">
+                  <div className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-zinc-100">
+                    <span className="font-semibold">{extTotalText || "External Drive"}</span>
+                    {externalDrive.fsType && (
+                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded font-semibold">
+                        {externalDrive.fsType}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+                    <span>Free {extFreeText || "--"}</span>
+                    {extUsedText && (
+                      <span> · <span className="font-medium text-gray-700 dark:text-zinc-200">Used {extUsedText} ({extUsedPercent}%)</span></span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Horizontal capacity progress bar */}
+                {extTotalBytes > 0 && (
+                  <div className="w-full h-2 rounded-full bg-emerald-200/60 dark:bg-emerald-950/80 overflow-hidden flex">
+                    <div
+                      className="h-full bg-emerald-600 dark:bg-emerald-400 rounded-full transition-all duration-300"
+                      style={{ width: `${extUsedPercent}%` }}
+                    />
+                  </div>
+                )}
+
+                {/* Drive volume name & mount path */}
+                <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-zinc-400 pt-0.5">
+                  <span className="truncate max-w-[170px] font-medium" title={externalDrive.label || "External Storage"}>
+                    {externalDrive.label || "External Storage"}
+                  </span>
+                  <span className="truncate max-w-[130px] font-mono text-[10px]" title={externalDrive.path || "Mounted"}>
+                    {externalDrive.path || "Mounted"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-2 leading-relaxed">
+                Connect an external USB drive to copy backups for safekeeping.
+              </p>
+            )}
 
             {(onRescanDrive || onToggleSimulation) && (
               <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-black/5 dark:border-border">

@@ -51,11 +51,7 @@ export default function BackupTable({
   totalPages,
   startItem,
   endItem,
-  totalCount,
   itemsPerPage,
-  jumpPage,
-  setJumpPage,
-  handleJumpPage,
   handleItemsPerPageChange,
   scope = "office",
   externalDriveConnected = false,
@@ -64,13 +60,13 @@ export default function BackupTable({
     <>
       <div
         className={cn(
-          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px] isolate"
+          "w-full overflow-x-auto select-none isolate"
         )}
       >
         <table className={cn("min-w-full text-sm", sortedAndPaginatedBackups.length === 0 && "h-full")}>
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-              <th className="w-12 py-0 px-4 text-center align-middle">
+            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
+              <th className="w-12 p-4 text-center align-middle">
                 <input
                   type="checkbox"
                   className={cn(
@@ -90,7 +86,7 @@ export default function BackupTable({
                   onClick={() => handleSort("filename")}
                   className={cn(
                     "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "filename" ? "text-[#111111] dark:text-white font-semibold" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    sortBy === "filename" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                   )}
                 >
                   Backup Archive{" "}
@@ -106,7 +102,7 @@ export default function BackupTable({
                   onClick={() => handleSort("size_bytes")}
                   className={cn(
                     "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "size_bytes" ? "text-[#111111] dark:text-white font-semibold" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    sortBy === "size_bytes" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                   )}
                 >
                   Size{" "}
@@ -122,7 +118,7 @@ export default function BackupTable({
                   onClick={() => handleSort("created_at")}
                   className={cn(
                     "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "created_at" ? "text-[#111111] dark:text-white font-semibold" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                    sortBy === "created_at" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                   )}
                 >
                   Creation Date{" "}
@@ -134,7 +130,7 @@ export default function BackupTable({
                 </button>
               </th>
               {scope === "office" ? (
-                <th className="p-4 w-64 text-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                <th className="p-4 w-64 text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   <div className="inline-flex items-center justify-center gap-1.5">
                     <span>Backup Copies</span>
                     <Tooltip>
@@ -148,11 +144,11 @@ export default function BackupTable({
                   </div>
                 </th>
               ) : (
-                <th className="p-4 w-36 text-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                <th className="p-4 w-36 text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   Status
                 </th>
               )}
-              <th className="p-4 pr-6 w-32 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+              <th className="p-4 pr-6 w-32 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                 Actions
               </th>
             </tr>
@@ -206,7 +202,7 @@ export default function BackupTable({
                   <tr
                     key={b.id}
                     className={cn(
-                        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                     onClick={(e) => {
@@ -214,7 +210,7 @@ export default function BackupTable({
                       handleToggleRow(b.id)
                     }}
                   >
-                    <td className="py-0 px-4 align-middle text-center">
+                    <td className="w-12 p-4 align-middle text-center">
                       <input
                         type="checkbox"
                         className={cn(
@@ -225,28 +221,28 @@ export default function BackupTable({
                         onChange={() => handleToggleRow(b.id)}
                       />
                     </td>
-                    <td className="py-2 px-4 align-middle">
+                    <td className="p-4 align-middle min-w-[280px]">
                       <div className="flex items-center gap-3">
-                        <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
+                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[280px]" title={b.filename}>
                           {b.filename}
                         </span>
                       </div>
                     </td>
-                    <td className="py-2 px-4 align-middle text-center text-[13px] font-normal text-[#111111] dark:text-zinc-300">
+                    <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100">
                       {formatBytes(b.size_bytes)}
                     </td>
-                    <td className="py-2 px-4 align-middle">
+                    <td className="p-4 align-middle">
                       <div className="flex flex-col">
-                        <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50 leading-tight">
+                        <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 leading-tight">
                           {formatPHDateTime(b.created_at).split(' at ')[0]}
                         </span>
-                        <span className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px] leading-tight">
+                        <span className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">
                           {formatPHDateTime(b.created_at).split(' at ')[1]}
                         </span>
                       </div>
                     </td>
                     {scope === "office" ? (
-                      <td className="py-2 px-4 align-middle text-center">
+                      <td className="p-4 align-middle text-center">
                         <div className="flex mx-auto w-fit items-center justify-center gap-2">
                           {/* Node 1: Internal Storage */}
                           <Tooltip>
@@ -342,13 +338,13 @@ export default function BackupTable({
                         </div>
                       </td>
                     ) : (
-                      <td className="py-2 px-4 align-middle text-center">
-                        <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400">
+                      <td className="p-4 align-middle text-center">
+                        <div className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                           Ready
                         </div>
                       </td>
                     )}
-                    <td className="py-0 px-4 pr-6 text-right align-middle">
+                    <td className="p-4 pr-6 text-right align-middle whitespace-nowrap">
                       <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -397,9 +393,6 @@ export default function BackupTable({
           endItem={endItem}
           totalCount={backups.length}
           itemsPerPage={itemsPerPage}
-          jumpPage={jumpPage}
-          setJumpPage={setJumpPage}
-          handleJumpPage={handleJumpPage}
           handleItemsPerPageChange={handleItemsPerPageChange}
         />
       )}

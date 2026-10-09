@@ -13,12 +13,16 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { getOfficePrefix } from "@/lib/roleUtils"
 import { toast } from "sonner"
 
 export default function RegisterAccountTab({
   open,
   onClose,
   authUser,
+  officeId,
+  officeShortName,
+  offices,
   createForm,
   setCreateForm,
   staffCount = 0,
@@ -32,14 +36,13 @@ export default function RegisterAccountTab({
   const [isIdManual, setIsIdManual] = useState(false)
   const [isEmailManual, setIsEmailManual] = useState(false)
 
-  const defaultPassword =
-    process.env.NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD || "pupstaff"
+  const officePrefix = getOfficePrefix(officeShortName || officeId || authUser?.office_short_name || authUser?.office_id || "registrar", offices)
 
   const suggestedId = useMemo(() => {
     if (!createForm.fname && !createForm.lname) return ""
     const nextId = (staffCount + 1).toString().padStart(3, "0")
-    return `PUPREGISTRAR-${nextId}`
-  }, [createForm.fname, createForm.lname, staffCount])
+    return `PUP${officePrefix.toUpperCase()}-${nextId}`
+  }, [createForm.fname, createForm.lname, staffCount, officePrefix])
 
   const suggestedEmail = useMemo(() => {
     if (!createForm.lname || !createForm.role) return ""
@@ -127,7 +130,7 @@ export default function RegisterAccountTab({
                   Register Account
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
-                  Create new user credentials for registrar personnel and administrators.
+                  Create new user credentials for {officePrefix} personnel and administrators.
                 </DialogDescription>
               </div>
             </div>
@@ -195,7 +198,7 @@ export default function RegisterAccountTab({
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
                   >
-                    Registrar Staff
+                    {officePrefix} Staff
                   </button>
                   <button
                     type="button"
@@ -208,7 +211,7 @@ export default function RegisterAccountTab({
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
                   >
-                    Administrator
+                    {officePrefix ? `${officePrefix} Admin` : "Administrator"}
                   </button>
                 </div>
               </div>
@@ -227,7 +230,7 @@ export default function RegisterAccountTab({
                       "h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs",
                       lastAutoFilled.id && "border-emerald-500 dark:border-emerald-500"
                     )}
-                    placeholder={suggestedId || "PUPREGISTRAR-[XXX]"}
+                    placeholder={suggestedId || `PUP${officePrefix.toUpperCase()}-[XXX]`}
                     value={createForm.id}
                     onChange={(e) => {
                       const val = e.target.value

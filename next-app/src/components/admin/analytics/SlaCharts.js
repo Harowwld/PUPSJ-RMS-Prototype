@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
   PieChart,
   Pie,
   Cell,
@@ -24,10 +23,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
-  EmptyMedia,
 } from "@/components/ui/empty"
-import { Button } from "@/components/ui/button"
-import { STATUS_COLORS } from "@/lib/constants"
 
 /**
  * Custom Tooltip to ensure no "?" is shown
@@ -130,13 +126,12 @@ const formatDocTypeName = (value) => {
   return value;
 };
 
-const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView }) {
+const SlaCharts = React.memo(function SlaCharts({ data, pieData }) {
   const isDark = false
   const [timeGrain, setTimeGrain] = useState("monthly") // "monthly", "weekly", "daily"
   const [activeBarName, setActiveBarName] = useState(null)
   const [activePieIndex, setActivePieIndex] = useState(null)
   const [hoveredTrendPoint, setHoveredTrendPoint] = useState(null)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const totalSlaRequests = pieData.reduce((acc, curr) => acc + curr.value, 0)
 
@@ -148,11 +143,11 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
   const displayPoint = hoveredTrendPoint || latestTrendPoint
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-stretch">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
       <div className="lg:col-span-2 flex flex-col gap-6">
         {/* Card 1: Request Trends Chart */}
-        <div className="flex-1 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col justify-between">
+        <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
             <div className="flex flex-col">
               <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
@@ -199,7 +194,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
               ))}
             </div>
           </div>
-          <div className="flex-1 min-h-[270px] h-[270px] w-full flex flex-col justify-center">
+          <div className="h-[280px] w-full flex flex-col justify-center">
             {hasTrendData ? (
               <ResponsiveContainer width="100%" height="100%" debounce={100}>
                 <AreaChart
@@ -273,7 +268,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
         </div>
 
         {/* Card 2: Document Demand Chart (Horizontal Bar Chart) */}
-        <div className="flex-1 rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col justify-between">
+        <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
             <div className="flex flex-col">
               <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
@@ -294,7 +289,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
               </span>
             </div>
           </div>
-          <div className="flex-1 min-h-[270px] h-[270px] w-full flex flex-col justify-center">
+          <div className="h-[280px] w-full flex flex-col justify-center">
             {hasDemandData ? (
               <ResponsiveContainer width="100%" height="100%" debounce={100}>
                 <BarChart
@@ -387,14 +382,13 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
         </div>
       </div>
 
-      {/* Right Column (1 Col): Vertical Align (Status Distribution & Ranked Summary) */}
-      <div className="lg:col-span-1 flex flex-col">
-        <div className="flex-1 flex flex-col rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none h-full justify-between">
-          {/* Status Distribution */}
-          <div className="flex flex-col flex-1">
-            <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
-              Status Distribution
-            </h3>
+      {/* Right Column (1 Col): Status Distribution & Top Requested Documents */}
+      <div className="lg:col-span-1 flex flex-col gap-6">
+        {/* Card 3: Status Distribution */}
+        <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col">
+          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
+            Status Distribution
+          </h3>
             <div className="h-44 w-full relative flex items-center justify-center">
               {pieData.length > 0 ? (
                 <>
@@ -497,69 +491,73 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView })
                 )
               })}
             </div>
+        </div>
+
+        {/* Card 4: Top Requested Documents */}
+        <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col">
+          <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
+            <div className="flex flex-col">
+              <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
+                Top Requested Documents
+              </h3>
+              <span className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 mt-0.5">
+                Ranked by request volume
+              </span>
+            </div>
           </div>
-
-          <div className="h-px bg-gray-100 dark:bg-white/5 my-6" />
-
-          {/* Top Requested Documents */}
-          <div className="flex flex-col flex-1">
-            <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
-              Top Requested Documents
-            </h3>
-            <div className="flex-1 flex flex-col justify-center items-center w-full min-h-[160px]">
-              {data?.topDocTypes?.length > 0 ? (
-                <div className="flex flex-col w-full">
-                  {data.topDocTypes.map((dt, i) => (
-                    <div
-                      key={dt.name}
-                      onMouseEnter={() => setActiveBarName(dt.name)}
-                      onMouseLeave={() => setActiveBarName(null)}
-                      className={cn(
-                        "flex items-center justify-between h-[44px] border-b-[0.5px] border-border dark:border-border px-2 rounded-lg transition-all cursor-pointer",
-                        activeBarName === dt.name 
-                          ? "bg-orange-50/50 dark:bg-orange-950/20 font-bold" 
-                          : "hover:bg-gray-50/50 dark:hover:bg-zinc-800/20",
-                        i === data.topDocTypes.length - 1 && "border-b-0"
-                      )}
-                    >
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 w-4 shrink-0">
-                          {i + 1}
-                        </span>
-                        <span className="truncate text-[14px] font-medium text-gray-900 dark:text-zinc-50">
-                          {dt.name}
-                        </span>
-                      </div>
-                      <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-400">
-                        {dt.count} {dt.count === 1 ? "request" : "requests"}
+          <div className="flex flex-col w-full">
+            {data?.topDocTypes?.length > 0 ? (
+              <div className="flex flex-col w-full">
+                {data.topDocTypes.map((dt, i) => (
+                  <div
+                    key={dt.name}
+                    onMouseEnter={() => setActiveBarName(dt.name)}
+                    onMouseLeave={() => setActiveBarName(null)}
+                    className={cn(
+                      "flex items-center justify-between h-[44px] border-b-[0.5px] border-border dark:border-border px-2 rounded-lg transition-all cursor-pointer",
+                      activeBarName === dt.name 
+                        ? "bg-orange-50/50 dark:bg-orange-950/20 font-bold" 
+                        : "hover:bg-gray-50/50 dark:hover:bg-zinc-800/20",
+                      i === data.topDocTypes.length - 1 && "border-b-0"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 w-4 shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="truncate text-[14px] font-medium text-gray-900 dark:text-zinc-50">
+                        {dt.name}
                       </span>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <Empty data-compact="true" className="flex flex-1 flex-col items-center justify-center border-0 bg-transparent py-4 text-center p-0 w-full my-auto">
-                  <EmptyHeader className="flex flex-col items-center justify-center gap-0 max-w-[240px]">
-                    <div className="relative mb-3 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
-                        <HugeIcon className="ph-duotone ph-file-text text-2xl text-gray-400 dark:text-zinc-500" />
-                      </div>
+                    <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-400">
+                      {dt.count} {dt.count === 1 ? "request" : "requests"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty data-compact="true" className="flex flex-col items-center justify-center border-0 bg-transparent py-4 text-center p-0 w-full my-auto">
+                <EmptyHeader className="flex flex-col items-center justify-center gap-0 max-w-[240px]">
+                  <div className="relative mb-3 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
+                      <HugeIcon className="ph-duotone ph-file-text text-2xl text-gray-400 dark:text-zinc-500" />
                     </div>
-                    <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
-                      No requests recorded yet
-                    </EmptyTitle>
-                    <EmptyDescription className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 mt-1 max-w-[220px] text-center mx-auto">
-                      Top requested document types will appear here.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              )}
-            </div>
+                  </div>
+                  <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                    No requests recorded yet
+                  </EmptyTitle>
+                  <EmptyDescription className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 mt-1 max-w-[220px] text-center mx-auto">
+                    Top requested document types will appear here.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Card 4: Client Satisfaction Measurement (CSM) */}
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-col gap-6 lg:col-span-3">
+      {/* Card 5: Client Satisfaction Measurement (CSM) */}
+      <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col gap-6 lg:col-span-3">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">

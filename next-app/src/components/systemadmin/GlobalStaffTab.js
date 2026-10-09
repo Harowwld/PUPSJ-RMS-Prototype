@@ -3,13 +3,11 @@
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import DirectoryTableSkeleton from "@/components/systemadmin/skeletons/DirectoryTableSkeleton"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -33,10 +31,10 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty"
-import { cn } from "@/lib/utils"
+import { cn, formatTitleCase } from "@/lib/utils"
 import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
-import { isSystemAdminRole } from "@/lib/roleUtils"
+import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -53,7 +51,7 @@ const getStaffCleanName = (staff) => {
   const f = staff?.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname.trim() : ""
   const l = staff?.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname.trim() : ""
   const full = `${f} ${l}`.trim()
-  if (full) return full
+  if (full) return formatTitleCase(full)
   return staff?.id ? `Staff (${staff.id})` : "Staff Member"
 }
 
@@ -143,6 +141,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     if (Array.isArray(cachedStaff) && Array.isArray(cachedOffices)) {
       setStaff(cachedStaff)
       setOffices(cachedOffices)
+      registerOffices(cachedOffices)
       setLoading(false)
     }
 
@@ -161,9 +160,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       }
       if (resOffices.ok && jsonOffices.ok && Array.isArray(jsonOffices.data)) {
         setOffices(jsonOffices.data)
+        registerOffices(jsonOffices.data)
         setCachedData("systemadmin_offices", jsonOffices.data, 120000)
       }
-    } catch (err) {
+    } catch {
       if (!cachedStaff) {
         showToast("Failed to load directory data", true)
       }
@@ -293,7 +293,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       } else {
         showToast(json.error || "Failed to save personnel profile", true)
       }
-    } catch (err) {
+    } catch {
       showToast("Network error saving personnel", true)
     } finally {
       setSubmitLoading(false)
@@ -325,7 +325,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       } else {
         showToast(json.error || "Failed to archive personnel account", true)
       }
-    } catch (err) {
+    } catch {
       showToast("Network error archiving personnel account", true)
     } finally {
       setIsArchiving(false)
@@ -357,7 +357,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       } else {
         showToast(json.error || "Failed to restore personnel account", true)
       }
-    } catch (err) {
+    } catch {
       showToast("Network error restoring personnel account", true)
     } finally {
       setIsRestoring(false)
@@ -605,7 +605,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       invalidateDataCache("systemadmin_staff")
       invalidateDataCache("systemadmin_offices_stats")
       fetchData()
-    } catch (err) {
+    } catch {
       showToast("Network error archiving selected accounts", true)
     } finally {
       setBulkArchiveLoading(false)
@@ -641,7 +641,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       invalidateDataCache("systemadmin_staff")
       invalidateDataCache("systemadmin_offices_stats")
       fetchData()
-    } catch (err) {
+    } catch {
       showToast("Network error restoring selected accounts", true)
     } finally {
       setBulkRestoreLoading(false)
@@ -722,9 +722,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   ]
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
           icon="ph-users"
           title={
@@ -1015,8 +1015,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-                <th className="w-12 py-0 px-4 text-center align-middle">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
+                <th className="w-16 p-4 text-center align-middle">
                   <input
                     type="checkbox"
                     className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1033,61 +1033,61 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     }
                   />
                 </th>
-                <th className="p-4 min-w-[260px]">
+                <th className="p-4 min-w-[200px] max-w-[260px]">
                   <button
                     onClick={() => handleSort("name")}
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Staff Name / Contact{" "}
                     <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="p-4 w-44">
+                <th className="w-44 p-4">
                   <button
                     onClick={() => handleSort("id")}
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Staff ID{" "}
                     <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="p-4 w-48">
+                <th className="w-48 p-4">
                   <button
                     onClick={() => handleSort("office")}
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "office" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      sortBy === "office" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Office Partition{" "}
                     <SortIndicator column="office" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="p-4 w-44">
+                <th className="w-40 p-4">
                   <button
                     onClick={() => handleSort("role")}
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "role" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                      sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Privilege Level{" "}
                     <SortIndicator column="role" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   Actions
                 </th>
               </tr>
             </thead>
             
-            <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+            <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
               {paginatedStaff.map((member) => {
                 const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
                 const isSelf = member.id === authUser?.id
@@ -1098,12 +1098,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     key={member.id}
                     onClick={(e) => !isSelf && toggleSelect(member.id, e)}
                     className={cn(
-                      "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                      "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                       !isSelf && "cursor-pointer",
                       isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                   >
-                    <td className="py-0 px-4 align-middle text-center">
+                    <td className="w-16 p-4 align-middle text-center">
                       {!isSelf && (
                         <input
                           type="checkbox"
@@ -1116,23 +1116,25 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         />
                       )}
                     </td>
-                    <td className="py-2 px-4 align-middle">
+                    <td className="p-4 align-middle min-w-[200px] max-w-[260px]">
                       <div className="flex flex-col min-w-0">
-                        <span className={cn("text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate", isSelf && "font-semibold")}>
+                        <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")}>
                           {getStaffCleanName(member)} {isSelf && "(You)"}
                         </span>
-                        <span className="truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
+                        <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
                           {getStaffCleanEmail(member)}
                         </span>
                       </div>
                     </td>
-                    <td className="py-2 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
-                      {member.id}
+                    <td className="w-44 p-4 align-middle whitespace-nowrap">
+                      <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                        {member.id}
+                      </span>
                     </td>
-                    <td className="py-2 px-4 align-middle">
+                    <td className="w-48 p-4 align-middle">
                       {office ? (
                         <span 
-                          className="rms-office-accent inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
+                          className="rms-office-accent inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide border-0 select-none"
                           data-color={office.accent_color || "#800000"}
                           style={{
                             color: office.accent_color || "#800000",
@@ -1142,26 +1144,26 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {office.short_name}
                         </span>
                       ) : (
-                        <span className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-semibold tracking-[0.04em] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                        <span className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
                           Platform Level
                         </span>
                       )}
                     </td>
-                    <td className="py-2 px-4 align-middle">
+                    <td className="w-40 p-4 align-middle">
                       <div 
                         className={cn(
-                          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em]",
+                          "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
                           member.role === "SystemAdmin" || member.role === "SuperAdmin"
                             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
                             : member.role === "Admin"
-                              ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
-                              : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+                              ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                         )}
                       >
-                        {member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : member.role}
+                        {member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}
                       </div>
                     </td>
-                    <td className="py-0 px-4 pr-6 align-middle text-right">
+                    <td className="w-28 p-4 align-middle text-right whitespace-nowrap">
                       <div
                         className="flex items-center justify-end gap-1.5"
                         onClick={(e) => e.stopPropagation()}
@@ -1172,7 +1174,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               <button
                                 onClick={() => router.push("/account")}
                                 aria-label="My Account Settings"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
                                 <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                               </button>
@@ -1187,7 +1189,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   <button
                                     onClick={() => handleOpenEdit(member)}
                                     aria-label="Edit Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
                                     <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                                   </button>
@@ -1202,7 +1204,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   <button
                                     onClick={() => setRestoreTarget(member)}
                                     aria-label="Restore Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
                                     <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                                   </button>
@@ -1215,7 +1217,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   <button
                                     onClick={() => setArchiveTarget(member)}
                                     aria-label="Archive Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
                                     <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
                                   </button>
@@ -1432,8 +1434,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     {(!isEditing || targetIsExistingSysAdmin) && (
                       <option value="SystemAdmin">System Admin</option>
                     )}
-                    <option value="Admin">Administrator</option>
-                    <option value="Staff">Records Staff</option>
+                    <option value="Admin">{form.office_id ? `${getOfficePrefix(form.office_id, offices)} Admin` : "Administrator"}</option>
+                    <option value="Staff">{form.office_id ? `${getOfficePrefix(form.office_id, offices)} Staff` : "Staff"}</option>
                   </Select>
                 </div>
               </div>

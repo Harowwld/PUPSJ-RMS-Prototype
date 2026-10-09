@@ -2,13 +2,11 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { Skeleton } from "@/components/ui/skeleton"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Select } from "@/components/ui/select"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import PageHeader from "@/components/shared/PageHeader"
@@ -153,7 +151,7 @@ export default function ModuleConfigTab({ showToast }) {
       } else if (!cached) {
         showToast(json.error || "Failed to fetch module matrix", true)
       }
-    } catch (err) {
+    } catch {
       if (!getCachedData("systemadmin_module_matrix")) {
         showToast("Network error fetching module matrix", true)
       }
@@ -249,7 +247,7 @@ export default function ModuleConfigTab({ showToast }) {
         setMatrix((prev) => ({ ...prev, assignments: previousAssignments }))
         showToast(json.error || "Failed to update feature settings", true)
       }
-    } catch (err) {
+    } catch {
       // Rollback on network failure
       setMatrix((prev) => ({ ...prev, assignments: previousAssignments }))
       showToast("Network error updating feature", true)
@@ -307,7 +305,7 @@ export default function ModuleConfigTab({ showToast }) {
       } else {
         showToast(json.error || "Failed to update features", true)
       }
-    } catch (err) {
+    } catch {
       showToast("Network error updating features", true)
     } finally {
       setToggling((prev) => {
@@ -488,11 +486,6 @@ export default function ModuleConfigTab({ showToast }) {
     return counts
   }, [matrix])
 
-  const hasActiveFilters =
-    searchQuery !== "" ||
-    (moduleFilters?.category && moduleFilters.category.length > 0) ||
-    (moduleFilters?.status && moduleFilters.status.length > 0)
-
   const handleClearFilters = () => {
     setSearchQuery("")
     setModuleFilters({ category: [], status: [] })
@@ -541,7 +534,7 @@ export default function ModuleConfigTab({ showToast }) {
       </div>
     )
   }
-  const { offices, modules } = matrix
+  const { modules } = matrix
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -680,7 +673,7 @@ export default function ModuleConfigTab({ showToast }) {
         />
 
         {/* Content Section: By Office or Matrix inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
           {/* VIEW 1: BY OFFICE */}
           {viewMode === "office" && (
             <div className="flex flex-col flex-1">

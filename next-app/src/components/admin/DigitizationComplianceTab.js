@@ -4,22 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import ComplianceCalcSkeleton from "@/components/admin/skeletons/ComplianceCalcSkeleton";
 import ComplianceTableSkeleton from "@/components/admin/skeletons/ComplianceTableSkeleton";
-import { Badge } from "@/components/ui/badge";
-import { Toggle } from "@/components/ui/toggle";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipTrigger,
@@ -28,7 +18,6 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Reorder } from "framer-motion";
-import { formatPHDateTime } from "@/lib/timeFormat";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import {
@@ -51,7 +40,6 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
-import { Select } from "@/components/ui/select"
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -104,7 +92,6 @@ export default function DigitizationComplianceTab({
   const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") === "1");
 
   const [courses, setCourses] = useState([]);
-  const [coursesLoading, setCoursesLoading] = useState(true);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [manualLoading, setManualLoading] = useState(false);
@@ -154,7 +141,6 @@ export default function DigitizationComplianceTab({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setCoursesLoading(true);
       try {
         const res = await fetch("/api/courses", { cache: "no-store" });
         const json = await res.json().catch(() => null);
@@ -163,8 +149,6 @@ export default function DigitizationComplianceTab({
         if (!cancelled) setCourses(rows);
       } catch {
         if (!cancelled) setCourses([]);
-      } finally {
-        if (!cancelled) setCoursesLoading(false);
       }
     })();
     return () => {
@@ -412,7 +396,7 @@ export default function DigitizationComplianceTab({
       });
 
       showToast?.({ title: "Export Success", description: `The compliance dataset has been successfully exported as ${fileName}.` });
-    } catch (e) {
+    } catch {
        showToast?.({ title: "Export Failed", description: "An error occurred during the data export process." }, true);
     } finally {
       setIsExportingCsv(false);
@@ -474,9 +458,9 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 w-full gap-6 animate-fade-up font-jakarta">
+    <div className="flex flex-col min-h-full w-full gap-6 animate-fade-up font-jakarta">
       {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
           icon="ph-chart-pie"
           title="Compliance Analysis"
@@ -1003,7 +987,7 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="flex-1 overflow-visible rounded-b-2xl">
+            <div className="w-full overflow-x-auto rounded-b-2xl">
               {sortedByCourse.length > 0 ? (
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
@@ -1275,9 +1259,11 @@ export default function DigitizationComplianceTab({
               variant="ghost"
               size="icon"
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+              aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
+              title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
               className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <HugeIcon  className="ti ti-arrows-vertical text-[16px]"></HugeIcon>
+              <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"}></HugeIcon>
             </Button>
 
             <div className="flex items-center gap-2.5 ml-auto">

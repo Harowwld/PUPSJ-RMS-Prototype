@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import fs from "fs";
 import { createDocument, getDocumentBySourceIngestId } from "@/lib/documentsRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { createStudent } from "@/lib/studentsRepo";
@@ -89,7 +90,6 @@ export async function POST(req, ctx) {
         officeId,
       });
     } catch (e) {
-      const msg = String(e?.message || "Failed to create student");
       return NextResponse.json({ ok: false, error: isUniqueViolation(e) ? "Student already exists" : "Failed to create student" }, { status: isUniqueViolation(e) ? 409 : 400 });
     }
   }

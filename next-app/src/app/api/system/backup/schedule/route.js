@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
-import { getSessionCookieName, verifySessionToken } from "@/lib/jwt";
-import { getStaffById } from "@/lib/staffRepo";
+import { requireAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 
@@ -10,23 +9,9 @@ export const dynamic = "force-dynamic";
 
 function getUserOfficeId(user) {
   if (user?.office_id) return String(user.office_id).toLowerCase().trim();
+  if (user?.officeId) return String(user.officeId).toLowerCase().trim();
   if (user?.section) return String(user.section).toLowerCase().trim();
   return "registrar";
-}
-
-async function getAuthUser(req) {
-  const token = req.cookies.get(getSessionCookieName())?.value;
-  if (!token) return null;
-  try {
-    const payload = await verifySessionToken(token);
-    const user = await getStaffById(payload.sub);
-    if (!user) return null;
-    const role = String(user.role || "").toLowerCase().trim();
-    if (!["admin", "administrator", "superadmin"].includes(role)) return null;
-    return user;
-  } catch {
-    return null;
-  }
 }
 
 function getSettingsKey(user, reqScope, reqOfficeId) {
@@ -59,12 +44,9 @@ const VALID_FREQUENCIES = ["daily", "weekly"];
  * Returns the current auto backup schedule for the requesting admin.
  */
 export async function GET(req) {
-  const user = await getAuthUser(req);
-  if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 403 }
-    );
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Admin access required");
   }
 
   const { searchParams } = new URL(req.url);
@@ -116,12 +98,9 @@ export async function GET(req) {
  * Body: { enabled, frequency, time, dayOfWeek }
  */
 export async function POST(req) {
-  const user = await getAuthUser(req);
-  if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 403 }
-    );
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Admin access required");
   }
 
   const body = await req.json().catch(() => null);

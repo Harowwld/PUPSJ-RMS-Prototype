@@ -2,13 +2,12 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react"
-import { cn } from "@/lib/utils"
+import { cn, formatTitleCase } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
 import { formatPHDateTimeParts } from "@/lib/timeFormat"
 import {
   Empty,
@@ -72,11 +71,9 @@ function statusUi(status) {
 import NotificationsTableSkeleton from "@/components/staff/skeletons/NotificationsTableSkeleton"
 
 export default function NotificationsTab({
-  onPreviewDocument,
   onUnreadChange,
   onRescan,
   isLoading: propLoading,
-  onRefresh,
 }) {
   const onUnreadChangeRef = useRef(onUnreadChange)
   useEffect(() => {
@@ -89,10 +86,8 @@ export default function NotificationsTab({
   const [items, setItems] = useState([])
   const [total, setTotal] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [lastSeenReviewedAt, setLastSeenReviewedAt] = useState(null)
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
-  const [jumpPage, setJumpPage] = useState("1")
   const [sortBy, setSortBy] = useState("reviewed_at")
   const [sortOrder, setSortOrder] = useState("DESC")
   const [activeTab, setActiveTab] = useState("inbox")
@@ -161,7 +156,6 @@ export default function NotificationsTab({
       setUnreadCount(Number(data.unreadCount || 0))
       setInboxCount(Number(data.inboxCount || 0))
       setArchiveCount(Number(data.archiveCount || 0))
-      setLastSeenReviewedAt(data.lastSeenReviewedAt || null)
       onUnreadChangeRef.current?.(Number(data.unreadCount || 0))
     } catch (e) {
       setError(e?.message || "Failed to load notifications")
@@ -177,28 +171,8 @@ export default function NotificationsTab({
   }
 
   useEffect(() => {
-    setJumpPage(String(displayPage))
-  }, [displayPage])
-
-  useEffect(() => {
     setPage(1)
   }, [activeTab])
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setPage(val)
-      } else {
-        setJumpPage(String(displayPage))
-      }
-    }
-  }
-
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value))
-    setPage(1)
-  }
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -228,7 +202,6 @@ export default function NotificationsTab({
       }
       const nextUnread = Number(json?.data?.unreadCount || 0)
       setUnreadCount(nextUnread)
-      setLastSeenReviewedAt(json?.data?.lastSeenReviewedAt || null)
       onUnreadChangeRef.current?.(nextUnread)
       await load()
     } catch {
@@ -370,9 +343,9 @@ export default function NotificationsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
+      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-bell"
@@ -434,7 +407,7 @@ export default function NotificationsTab({
                   "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                   activeTab === "inbox"
                     ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
                 Inbox ({inboxCount})
@@ -446,7 +419,7 @@ export default function NotificationsTab({
                   "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                   activeTab === "archive"
                     ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
                 Archive ({archiveCount})
@@ -513,17 +486,17 @@ export default function NotificationsTab({
               </Empty>
             </div>
           ) : (
-            <div className="overflow-x-auto border-t border-border dark:border-border flex-1">
+            <div className="overflow-x-auto border-t border-border dark:border-border w-full">
               <table className="min-w-full table-fixed text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                     <th className="w-32 p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("decision")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "decision" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "decision" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Decision{" "}
@@ -540,7 +513,7 @@ export default function NotificationsTab({
                         onClick={() => handleSort("student_no")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "student_no" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "student_no" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Student No{" "}
@@ -551,13 +524,13 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-48 p-4">
+                    <th className="w-44 p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("student_name")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "student_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "student_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Name{" "}
@@ -568,13 +541,13 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-48 p-4">
+                    <th className="w-44 p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("doc_type")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Document Type{" "}
@@ -585,13 +558,13 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-64 p-4">
+                    <th className="min-w-[200px] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("file")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "file" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "file" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         File{" "}
@@ -608,7 +581,7 @@ export default function NotificationsTab({
                         onClick={() => handleSort("reviewed_by")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "reviewed_by" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "reviewed_by" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Reviewed By{" "}
@@ -625,7 +598,7 @@ export default function NotificationsTab({
                         onClick={() => handleSort("reviewed_at")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "reviewed_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "reviewed_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Reviewed{" "}
@@ -636,7 +609,7 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-40 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</th>
+                    <th className="w-36 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border">
@@ -696,11 +669,11 @@ export default function NotificationsTab({
                         <tr
                           key={n.id}
                           className={cn(
-                            "group h-[54px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                             isUnread && "bg-amber-50/60 dark:bg-amber-950/20"
                           )}
                         >
-                          <td className="py-0 px-4 align-middle">
+                          <td className="p-4 align-middle">
                             <div className="flex items-center gap-2">
                               <div
                                 className={cn(
@@ -718,13 +691,17 @@ export default function NotificationsTab({
                               ) : null}
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
-                            {n.student_no}
+                          <td className="p-4 align-middle">
+                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                              {n.student_no}
+                            </span>
                           </td>
-                          <td className="py-0 px-4 align-middle text-[14px] font-medium text-[#111111] dark:text-zinc-50">
-                            {n.student_name || "—"}
+                          <td className="p-4 align-middle">
+                            <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(n.student_name)}>
+                              {formatTitleCase(n.student_name) || "—"}
+                            </div>
                           </td>
-                          <td className="py-0 px-4 align-middle">
+                          <td className="p-4 align-middle">
                             <div
                               className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2.5 py-1 border border-pup-maroon/20 bg-pup-maroon/10 text-[11px] font-medium tracking-[0.02em] text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
                             >
@@ -732,19 +709,21 @@ export default function NotificationsTab({
                               {n.doc_type}
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle text-[#111111] dark:text-zinc-300">
-                            <div className="max-w-[200px] truncate text-[13px] font-normal">
+                          <td className="p-4 align-middle">
+                            <div className="max-w-[220px] truncate text-xs font-medium text-gray-900 dark:text-zinc-100" title={n.original_filename}>
                               {n.original_filename}
                             </div>
                             {n.review_note && (
-                              <div className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px] italic">
+                              <div className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 italic truncate" title={n.review_note}>
                                 Note: {n.review_note}
                               </div>
                             )}
                           </td>
-                          <td className="py-0 px-4 align-middle text-[#111111] dark:text-zinc-300">
-                            <div className="flex flex-col gap-0.5 text-[13px] font-normal">
-                              <span className="truncate text-[13px] font-normal text-[#111111] dark:text-zinc-300">{n.reviewed_by || "—"}</span>
+                          <td className="p-4 align-middle">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="truncate text-xs font-medium text-gray-900 dark:text-zinc-100" title={formatTitleCase(n.reviewed_by)}>
+                                {formatTitleCase(n.reviewed_by) || "—"}
+                              </span>
                               {n.reviewed_by && (
                                 n.is_previewed === 1 ? (
                                   <span className="inline-flex w-fit items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium tracking-[0.02em] text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
@@ -760,24 +739,24 @@ export default function NotificationsTab({
                               )}
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle text-[#111111] dark:text-zinc-300">
-                            <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#111111] dark:text-zinc-100">
+                          <td className="p-4 align-middle">
+                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">
                               {reviewed.date}
                             </div>
-                            <div className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
+                            <div className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">
                               {reviewed.time}
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1.5 flex-nowrap">
+                          <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1 flex-nowrap">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
                                     type="button"
                                     onClick={() => handleViewDetails(n)}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                   >
-                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
+                                    <HugeIcon  className="ph-bold ph-eye text-[15px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -792,9 +771,9 @@ export default function NotificationsTab({
                                     <button
                                       type="button"
                                       onClick={() => handleAction(n.id, isUnread ? "markRead" : "markUnread")}
-                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                     >
-                                      <HugeIcon  className={cn("ph-bold text-[16px]", isUnread ? "ph-checks" : "ph-envelope")}></HugeIcon>
+                                      <HugeIcon  className={cn("ph-bold text-[15px]", isUnread ? "ph-checks" : "ph-envelope")}></HugeIcon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -809,9 +788,9 @@ export default function NotificationsTab({
                                   <button
                                     type="button"
                                     onClick={() => handleAction(n.id, activeTab === "inbox" ? "archive" : "unarchive")}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                   >
-                                    <HugeIcon  className={cn("ph-bold text-[16px]", activeTab === "inbox" ? "ph-archive" : "ph-archive-restore")}></HugeIcon>
+                                    <HugeIcon  className={cn("ph-bold text-[15px]", activeTab === "inbox" ? "ph-archive" : "ph-archive-restore")}></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -901,7 +880,6 @@ export default function NotificationsTab({
                   disabled={displayPage <= 1}
                   onClick={() => {
                     setPage((p) => Math.max(1, p - 1))
-                    setJumpPage(String(Math.max(1, displayPage - 1)))
                   }}
                   className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                 >
@@ -917,7 +895,6 @@ export default function NotificationsTab({
                   disabled={displayPage >= totalPages}
                   onClick={() => {
                     setPage((p) => Math.min(totalPages, p + 1))
-                    setJumpPage(String(Math.min(totalPages, displayPage + 1)))
                   }}
                   className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                 >
@@ -997,11 +974,11 @@ export default function NotificationsTab({
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Name</label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_name || "—"}</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{formatTitleCase(selectedNotif?.student_name) || "—"}</p>
                     </div>
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Number</label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_no}</p>
+                      <p className="text-base font-semibold font-mono text-gray-900 dark:text-zinc-50">{selectedNotif?.student_no}</p>
                     </div>
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Document Category</label>
@@ -1050,7 +1027,7 @@ export default function NotificationsTab({
                       <div>
                         <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Reviewed By</label>
                         <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                          <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">{selectedNotif?.reviewed_by || "—"}</p>
+                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{formatTitleCase(selectedNotif?.reviewed_by) || "—"}</p>
                           {selectedNotif?.reviewed_by && (
                             selectedNotif.is_previewed === 1 ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-semibold text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
@@ -1084,6 +1061,7 @@ export default function NotificationsTab({
                       variant="outline"
                       size="icon"
                       onClick={() => setIsFullscreen(!isFullscreen)}
+                      aria-label={isFullscreen ? "Exit fullscreen preview" : "Enter fullscreen preview"}
                       className={cn(
                         "h-10 w-10 rounded-xl border border-border dark:border-border bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-xs cursor-pointer active:scale-95",
                         isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"

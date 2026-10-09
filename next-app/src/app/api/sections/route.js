@@ -35,7 +35,7 @@ export async function GET(req) {
       ? (sections || []).filter((s) => s && String(s.course_code || "").toUpperCase() === courseCode)
       : (sections || []);
     return NextResponse.json({ ok: true, data: scoped });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to list sections" },
       { status: 500 }
@@ -129,7 +129,7 @@ export async function PUT(req) {
        });
     }
     return NextResponse.json({ ok: true, data: updated });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }
@@ -179,7 +179,7 @@ export async function DELETE(req) {
       });
     }
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }

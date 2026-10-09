@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStaffById, getStaffByUsername, hasAllSecurityAnswers, parseStaffPreferences } from "../../../../lib/staffRepo";
+import { getStaffById, hasAllSecurityAnswers, parseStaffPreferences } from "../../../../lib/staffRepo";
 import { encryptPII, decryptPII } from "../../../../lib/piiEncryption.js";
 import { getOfficeById } from "../../../../lib/officesRepo";
 import { getOfficeModules, listAllModules } from "../../../../lib/modulesRepo";
@@ -7,11 +7,20 @@ import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { isSystemAdminRole } from "@/lib/roleUtils";
+import { getRefreshCookieName } from "../../../../lib/jwt";
+import { clearAuthCookies } from "@/lib/cookieSecurity";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { verifyPasswordHash } from "../../../../lib/passwordHash.js";
 import { isDemoAccount } from "@/lib/demoAccounts";
 
 export const runtime = "nodejs";
+
+function hasRefreshCookie(req) {
+  const name = getRefreshCookieName();
+  if (req?.cookies?.get?.(name)?.value) return true;
+  const cookieHeader = req?.headers?.get?.("cookie") || "";
+  return new RegExp(`(?:^|;\\s*)${name}=([^;]+)`).test(cookieHeader);
+}
 
 function addSecurityHeaders(response) {
   response.headers.set("Cache-Control", "no-store");
@@ -22,10 +31,17 @@ function addSecurityHeaders(response) {
   return response;
 }
 
+
 export async function GET(req) {
   try {
     const access = await requireAuth(req);
-    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    if (access.error || !access.user) {
+      const res = createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+      if (!hasRefreshCookie(req)) {
+        clearAuthCookies(res, req);
+      }
+      return addSecurityHeaders(res);
+    }
     const principal = access.user;
     const sessionPayload = principal.payload || {};
     const userId = principal.id || null;
@@ -141,6 +157,7 @@ export async function GET(req) {
 
     // Multi-office context resolution
     let officeName = null;
+    let officeShortName = null;
     let accentColor = "#800000"; // default maroon
     let enabledModules = [];
     let stationName = null;
@@ -152,6 +169,7 @@ export async function GET(req) {
         : await getOfficeById(staff.office_id);
       if (office) {
         officeName = office.name;
+        officeShortName = office.short_name;
         accentColor = office.accent_color || "#800000";
         stationName = office.station_name || `${staff.office_id.toUpperCase()}-STATION-01`;
         scannerModel = office.scanner_model || "High-Speed Document Scanner";
@@ -199,6 +217,7 @@ export async function GET(req) {
         status: currentStatus,
         office_id: staff?.office_id || null,
         office_name: officeName,
+        office_short_name: officeShortName || null,
         accent_color: accentColor,
         enabled_modules: enabledModules,
         station_name: stationName,
@@ -218,6 +237,10 @@ export async function GET(req) {
   } catch (err) {
     authDebug("session_check.failed", { message: err instanceof Error ? err.message : String(err) });
     console.error("[GET /api/auth/me Error]:", err);
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 }));
+    const res = NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
+    if (!hasRefreshCookie(req)) {
+      clearAuthCookies(res, req);
+    }
+    return addSecurityHeaders(res);
   }
 }

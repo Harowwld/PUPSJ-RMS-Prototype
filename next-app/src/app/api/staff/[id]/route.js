@@ -4,7 +4,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 import { isUniqueViolation } from "../../../../lib/dbErrors";
 import { requireAdmin, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
-import { canManageStaffRole, canAccessOffice, canDeactivateStaffAccount, isSystemAdminRole, normalizeRole } from "../../../../lib/roleUtils";
+import { canManageStaffRole, canDeactivateStaffAccount, isSystemAdminRole, normalizeRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 import { bumpSessionVersion } from "@/lib/authSessions";
@@ -241,7 +241,6 @@ export async function PATCH(req, ctx) {
 
     return NextResponse.json({ ok: true, data: sanitizeUser(row) });
   } catch (e) {
-    const msg = String(e?.message || "");
     if (isUniqueViolation(e)) {
       return NextResponse.json(
         { ok: false, error: "Staff ID already exists" },

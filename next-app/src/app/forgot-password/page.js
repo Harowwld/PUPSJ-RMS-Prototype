@@ -170,7 +170,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative bg-[#ffffff] dark:bg-zinc-950 font-sans p-8">
+    <div className="min-h-screen w-full flex items-center justify-center relative bg-[#ffffff] dark:bg-zinc-950 font-sans p-8 overflow-y-auto">
 
       {/* Top-Left Brand Logo & Name */}
       <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">

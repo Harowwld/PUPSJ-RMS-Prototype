@@ -1,6 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import Header from "@/components/layout/Header";
@@ -8,9 +8,9 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthGuard } from "@/components/shared/AuthGuard";
 import { getClientSession } from "@/lib/clientAuth";
+import { DEFAULT_AVATARS } from "@/lib/defaultAvatars";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Tabs,
   TabsList,
@@ -18,29 +18,21 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
+import RecoveryCodesModal from "@/components/shared/RecoveryCodesModal";
+import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
 import PageHeader from "@/components/shared/PageHeader";
-import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-import { FadeIn, SlideUp, StaggerContainer, StaggerItem, PageTransition } from "@/components/ui/motion";
+import { PageTransition } from "@/components/ui/motion";
 import {
-  isAdminRole,
-  isSystemAdminRole,
-  hasAdminPrivileges,
-  getRoleLabel,
+  getOfficeRoleLabel,
   getDefaultDashboardPath,
 } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom";
-import { renderToStaticMarkup } from "react-dom/server";
+import { setHighContrastPreference } from "@/lib/accessibility";
+
+const getNowTimestamp = () => Date.now();
 
 function AccountPageContent() {
   const router = useRouter();
@@ -62,7 +54,8 @@ function AccountPageContent() {
   // Avatar State
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-    const fileInputRef = useRef(null);
+  const [selectedDefaultAvatarId, setSelectedDefaultAvatarId] = useState(1);
+  const [avatarSaving, setAvatarSaving] = useState(false);
 
   // Profile Form State
   const [fname, setFname] = useState("");
@@ -103,13 +96,10 @@ function AccountPageContent() {
   const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [recoveryCodesCount, setRecoveryCodesCount] = useState(0);
   const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
+  const [showSecTOTPModal, setShowSecTOTPModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState("profile");
-  const [prefTab, setPrefTab] = useState("visuals");
 
-  // System Settings State (Global)
-  const [systemSettings, setSystemSettings] = useState({});
-  const [systemSettingsLoading, setSystemSettingsLoading] = useState(false);
 
   // User Preferences State (Personal)
   const [userPreferences, setUserPreferences] = useState({});
@@ -132,6 +122,10 @@ function AccountPageContent() {
         setAuthUser(user);
         if (user.avatar_filename) {
           setAvatarUrl(`/api/account/avatar?id=${user.id}&t=${Date.now()}`);
+          const match = user.avatar_filename.match(/default(\d)/);
+          if (match) {
+            setSelectedDefaultAvatarId(parseInt(match[1], 10));
+          }
         } else {
           setAvatarUrl(null);
         }
@@ -144,15 +138,6 @@ function AccountPageContent() {
         setUserPreferences(user.preferences || {});
 
 
-        // If admin or superadmin, fetch global system settings
-        if (hasAdminPrivileges(user.role)) {
-          fetch("/api/system/settings")
-            .then(res => res.json())
-            .then(json => {
-              if (json.ok) setSystemSettings(json.data);
-            })
-            .catch(err => console.error("Failed to fetch system settings:", err));
-        }
 
         const jsonUserSecurity = await resUserSecurity.json().catch(() => null);
         if (jsonUserSecurity?.ok && jsonUserSecurity.data) {
@@ -179,51 +164,12 @@ function AccountPageContent() {
   }, [router]);
 
 
-  useEffect(() => {
-    setAvatarLoaded(false);
-  }, [avatarUrl]);
-
-  const handleUserPreferenceToggle = async (key, checked) => {
-    const newValue = checked;
-    const oldPrefs = { ...userPreferences };
-    setUserPreferences((prev) => ({ ...prev, [key]: newValue }));
-    
-    if (key === "navigation_layout" && authUser?.id) {
-      localStorage.setItem(`pup_nav_layout_pref_${authUser.id}`, newValue);
-    }
-    
-    try {
-      const res = await fetch("/api/auth/preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: { [key]: newValue } }),
-      });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error);
-      toast.success("Preference Saved", {
-        description: "Your settings have been successfully updated."
-      });
-    } catch (error) {
-      setUserPreferences(oldPrefs);
-      toast.error("Save Failed", {
-        description: error.message || "Could not update your preference."
-      });
-    }
-  };
-
   const handleAccessibilityToggle = async (key, val) => {
     const oldPrefs = { ...userPreferences };
     setUserPreferences((prev) => ({ ...prev, [key]: val }));
     
-    if (authUser?.id) {
-      if (key === "high_contrast") {
-        localStorage.setItem(`pup_high_contrast_${authUser.id}`, String(val));
-        if (val) {
-          document.documentElement.classList.add("high-contrast");
-        } else {
-          document.documentElement.classList.remove("high-contrast");
-        }
-      }
+    if (key === "high_contrast") {
+      setHighContrastPreference(val, authUser?.id);
     }
     
     try {
@@ -237,9 +183,11 @@ function AccountPageContent() {
       toast.success("Preference Saved", {
         description: "Your accessibility settings have been updated successfully."
       });
-      window.dispatchEvent(new Event("storage"));
     } catch (error) {
       setUserPreferences(oldPrefs);
+      if (key === "high_contrast") {
+        setHighContrastPreference(Boolean(oldPrefs.high_contrast), authUser?.id);
+      }
       toast.error("Save Failed", {
         description: error.message || "Could not update your preference."
       });
@@ -282,10 +230,6 @@ function AccountPageContent() {
     }
   };
 
-  const handleThemeChange = async (newThemeOrEvent) => {
-    // Theme switching is disabled (system is locked in light mode)
-  };
-
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -296,27 +240,46 @@ function AccountPageContent() {
     window.location.href = "/login";
   };
 
-      const handleRemoveAvatar = async () => {
+  const handleSelectDefaultAvatar = async (avatarId) => {
+    if (avatarSaving) return;
+    if (selectedDefaultAvatarId === avatarId && authUser?.avatar_filename) return;
+    setAvatarSaving(true);
+    setSelectedDefaultAvatarId(avatarId);
     try {
       const res = await fetch("/api/account/avatar", {
-        method: "DELETE",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ defaultAvatarId: avatarId }),
       });
+
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Removal failed");
+        throw new Error(json.error || "Failed to save avatar");
       }
 
-      toast.success("Avatar Removed", {
-        description: "Your profile photo has been removed."
+      const timestamp = getNowTimestamp();
+      const newAvatarUrl = `/api/account/avatar?id=${authUser?.id || "me"}&t=${timestamp}`;
+      setAvatarLoaded(false);
+      setAvatarUrl(newAvatarUrl);
+      setAuthUser((prev) => ({ ...prev, avatar_filename: json.avatar_filename }));
+
+      window.dispatchEvent(
+        new CustomEvent("avatar-changed", {
+          detail: { avatar_filename: json.avatar_filename },
+        })
+      );
+
+      toast.success("Avatar Updated", {
+        description: `Profile avatar set to Avatar ${avatarId}.`,
       });
-      
-      setAvatarUrl(null);
-      setAuthUser(prev => ({ ...prev, avatar_filename: null }));
-      window.dispatchEvent(new Event("avatar-changed"));
     } catch (err) {
-      toast.error("Removal Failed", {
-        description: err.message || "Could not remove your avatar."
+      toast.error("Save Failed", {
+        description: err.message || "Could not save avatar.",
       });
+    } finally {
+      setAvatarSaving(false);
     }
   };
 
@@ -427,8 +390,8 @@ function AccountPageContent() {
     }
   };
 
-  const submitSecurity = async (e) => {
-    e.preventDefault();
+  const submitSecurity = async (e, totpToken = null) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (secLoading) return;
 
     const payload = [];
@@ -457,13 +420,35 @@ function AccountPageContent() {
     setSecError("");
     setSecLoading(true);
 
+    const headers = { "Content-Type": "application/json" };
+    if (typeof totpToken === "string") {
+      headers["X-TOTP-Token"] = totpToken;
+    }
+
     try {
       const res = await fetch("/api/staff/security", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ answers: payload }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
+
+      if (res.status === 403 && json?.requiresTOTP) {
+        setSecLoading(false);
+        if (totpToken) {
+          const cleanMsg = (json?.error || "Invalid verification code").replace("TOTP verification required: ", "");
+          throw new Error(cleanMsg);
+        }
+        if (json?.notConfigured) {
+          const msg = "Please configure Two-Factor Authentication or generate recovery codes before updating security questions.";
+          setSecError(msg);
+          toast.error("2FA Required", { description: msg });
+          return;
+        }
+        setShowSecTOTPModal(true);
+        return;
+      }
+
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to update security questions");
       }
@@ -471,6 +456,7 @@ function AccountPageContent() {
       toast.success("Security Questions Updated", {
         description: "Your answers have been saved.",
       });
+      setShowSecTOTPModal(false);
       setSecAnswers({});
       setEditingSecQuestions({});
 
@@ -483,10 +469,15 @@ function AccountPageContent() {
           setGlobalQuestions(jsonUserSecurity.data.questions);
         }
       }
+
+      // Refresh TOTP & recovery codes count (e.g. if a recovery code was used)
+      await refreshTOTPStatus();
     } catch (err) {
-      setSecError(err?.message || "Failed to update security questions");
+      const cleanMsg = (err?.message || "Failed to update security questions").replace("TOTP verification required: ", "");
+      if (totpToken) throw new Error(cleanMsg);
+      setSecError(cleanMsg);
       toast.error("Update Failed", {
-        description: err?.message || "Unable to save your security questions.",
+        description: cleanMsg,
       });
     } finally {
       setSecLoading(false);
@@ -730,10 +721,11 @@ function AccountPageContent() {
     >
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
-          {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <main className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col">
+        <PageTransition className="w-full flex-1">
+          <div className="w-full max-w-[1600px] 2xl:max-w-[1760px] mx-auto py-6 px-4 sm:px-8">
+            {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
+            <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
             <PageHeader
               icon="ph-user-gear"
               title="Account Settings"
@@ -770,7 +762,7 @@ function AccountPageContent() {
                     {/* Avatar: 80px, circular */}
                     <div className="flex flex-col items-center shrink-0">
                       <div 
-                                                className="relative w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-medium shadow-inner overflow-hidden mb-3"
+                        className="relative w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-medium shadow-inner overflow-hidden mb-3 select-none"
                       >
                         {avatarUrl ? (
                           <>
@@ -779,7 +771,10 @@ function AccountPageContent() {
                               alt="" 
                               className={`w-full h-full object-cover ${avatarLoaded ? "block" : "hidden"}`}
                               onLoad={() => setAvatarLoaded(true)}
-                              onError={() => setAvatarUrl(null)}
+                              onError={() => {
+                                setAvatarLoaded(false);
+                                setAvatarUrl(null);
+                              }}
                             />
                             {!avatarLoaded && (
                               <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
@@ -790,16 +785,7 @@ function AccountPageContent() {
                         ) : (
                           <span>{initials}</span>
                         )}
-                                              </div>
-                                            {avatarUrl && (
-                        <button
-                          type="button"
-                          onClick={handleRemoveAvatar}
-                          className="mt-1 text-[13px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
-                        >
-                          Remove
-                        </button>
-                      )}
+                      </div>
                     </div>
                     
                     {/* Identity Info */}
@@ -817,7 +803,7 @@ function AccountPageContent() {
                       {authUser?.role && (
                         <div className="mt-2.5">
                           <span className="text-sm font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                            {authUser.role === "Student" ? (clientType || "Student") : getRoleLabel(authUser.role)}
+                            {authUser.role === "Student" ? (clientType || "Student") : getOfficeRoleLabel(authUser.role, authUser)}
                           </span>
                         </div>
                       )}
@@ -873,156 +859,112 @@ function AccountPageContent() {
                       </div>
                     )}
 
-                    {authUser?.role === "Student" ? (
-                      <>
-                        <div className="merged-container bg-white dark:bg-zinc-800">
-                          <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
-                            <div className="flex-1 min-w-0">
-                              <div className={`field-wrapper ${fname ? "active" : ""}`}>
-                                <label>First Name</label>
-                                <Input
-                                  type="text"
-                                  placeholder=" "
-                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  value={fname}
-                                  onChange={(e) => setFname(e.target.value)}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className={`field-wrapper ${mname ? "active" : ""}`}>
-                                <label>Middle Name (Optional)</label>
-                                <Input
-                                  type="text"
-                                  placeholder=" "
-                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  value={mname}
-                                  onChange={(e) => setMname(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className={`field-wrapper ${lname ? "active" : ""}`}>
-                                <label>Last Name</label>
-                                <Input
-                                  type="text"
-                                  placeholder=" "
-                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  value={lname}
-                                  onChange={(e) => setLname(e.target.value)}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className={`field-wrapper active`}>
-                            <label>Email Address</label>
+                    <div className="merged-container bg-white dark:bg-zinc-800">
+                      <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
+                        <div className="flex-1 min-w-0">
+                          <div className={`field-wrapper ${fname ? "active" : ""}`}>
+                            <label>First Name</label>
                             <Input
-                              type="email"
+                              type="text"
                               placeholder=" "
-                              className="focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-400 cursor-not-allowed select-none bg-gray-50/50 dark:bg-white/5"
-                              value={username}
-                              readOnly
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                              value={fname}
+                              onChange={(e) => setFname(e.target.value)}
+                              required
                             />
                           </div>
                         </div>
-                        <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                          Your email is your account identifier and cannot be changed.
-                        </p>
-
-                        <div className="pt-4 border-t border-border dark:border-border space-y-4">
-                          <div>
-                            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                              Academic Information
-                            </h4>
-                            <p className="text-[14px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                              Manage your affiliation and student credentials for registrar records.
-                            </p>
-                          </div>
-
-                          <div className="merged-container bg-white dark:bg-zinc-800 mt-2">
-                            <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-border dark:divide-border/50">
-                              <div className="flex-1 min-w-0">
-                                <div className="field-wrapper select-wrapper active h-full">
-                                  <label className="text-gray-400 dark:text-zinc-500">Client Type</label>
-                                  <Select
-                                    value={clientType}
-                                    onChange={(e) => setClientType(e.target.value)}
-                                    className="border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 dark:border-none dark:bg-transparent dark:hover:bg-transparent h-[52px] pt-[16px] px-[14px] text-[15px] font-normal w-full"
-                                  >
-                                    <option value="Student">Student (Currently Enrolled)</option>
-                                    <option value="Alumni">Alumni (Graduate / Former Student)</option>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <div className={`field-wrapper ${studentNo ? "active" : ""}`}>
-                                  <label>Student Number (Optional)</label>
-                                  <Input
-                                    type="text"
-                                    placeholder=" "
-                                    className="focus-visible:ring-0 focus-visible:ring-offset-0 font-mono"
-                                    value={studentNo}
-                                    onChange={(e) => setStudentNo(e.target.value)}
-                                  />
-                                </div>
-                              </div>
+                        {authUser?.role === "Student" && (
+                          <div className="flex-1 min-w-0">
+                            <div className={`field-wrapper ${mname ? "active" : ""}`}>
+                              <label>Middle Name (Optional)</label>
+                              <Input
+                                type="text"
+                                placeholder=" "
+                                className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                                value={mname}
+                                onChange={(e) => setMname(e.target.value)}
+                              />
                             </div>
                           </div>
-                          <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                            Optional in your profile. Choose whether you are currently enrolled or requesting as an alumnus.
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className={`field-wrapper ${lname ? "active" : ""}`}>
+                            <label>Last Name</label>
+                            <Input
+                              type="text"
+                              placeholder=" "
+                              className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                              value={lname}
+                              onChange={(e) => setLname(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className={`field-wrapper active`}>
+                        <label>Email Address</label>
+                        <Input
+                          type="email"
+                          placeholder=" "
+                          className="focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-400 cursor-not-allowed select-none bg-gray-50/50 dark:bg-white/5"
+                          value={username}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
+                      {authUser?.role === "Student"
+                        ? "Your email is your account identifier and cannot be changed."
+                        : "Your email is managed by administrators and cannot be changed."}
+                    </p>
+
+                    {authUser?.role === "Student" && (
+                      <div className="pt-10 sm:pt-12 mt-10 sm:mt-12 border-t border-border dark:border-border space-y-4">
+                        <div>
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                            Academic Information
+                          </h4>
+                          <p className="text-[14px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                            Manage your affiliation and student credentials for registrar records.
                           </p>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="merged-container bg-white dark:bg-zinc-800">
-                          <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
+
+                        <div className="merged-container bg-white dark:bg-zinc-800 mt-2">
+                          <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-border dark:divide-border/50">
                             <div className="flex-1 min-w-0">
-                              <div className={`field-wrapper ${fname ? "active" : ""}`}>
-                                <label>First Name</label>
+                              <div className="field-wrapper select-wrapper active h-full">
+                                <label className="text-gray-400 dark:text-zinc-500">Client Type</label>
+                                <Select
+                                  value={clientType}
+                                  onChange={(e) => setClientType(e.target.value)}
+                                  className="border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 dark:border-none dark:bg-transparent dark:hover:bg-transparent h-[52px] pt-[16px] px-[14px] text-[15px] font-normal w-full"
+                                >
+                                  <option value="Student">Student (Currently Enrolled)</option>
+                                  <option value="Alumni">Alumni (Graduate / Former Student)</option>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className={`field-wrapper ${studentNo ? "active" : ""}`}>
+                                <label>Student Number (Optional)</label>
                                 <Input
                                   type="text"
                                   placeholder=" "
-                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  value={fname}
-                                  onChange={(e) => setFname(e.target.value)}
-                                  required
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0 font-mono"
+                                  value={studentNo}
+                                  onChange={(e) => setStudentNo(e.target.value)}
                                 />
                               </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className={`field-wrapper ${lname ? "active" : ""}`}>
-                                <label>Last Name</label>
-                                <Input
-                                  type="text"
-                                  placeholder=" "
-                                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  value={lname}
-                                  onChange={(e) => setLname(e.target.value)}
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className={`field-wrapper active`}>
-                            <label>Email Address</label>
-                            <Input
-                              type="email"
-                              placeholder=" "
-                              className="focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-400 cursor-not-allowed select-none bg-gray-50/50 dark:bg-white/5"
-                              value={username}
-                              readOnly
-                            />
                           </div>
                         </div>
                         <p className="text-[13px] text-gray-400 font-normal mt-1.5 ml-1 dark:text-zinc-500">
-                          Your email is managed by administrators and cannot be changed.
+                          Optional in your profile. Choose whether you are currently enrolled or requesting as an alumnus.
                         </p>
-                      </>
+                      </div>
                     )}
 
                     <div className="flex justify-end pt-4">
@@ -1043,9 +985,9 @@ function AccountPageContent() {
             </TabsContent>
 
             <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0">
-              <div className="p-8 space-y-8 divide-y divide-border dark:divide-border">
+              <div className="p-8 divide-y divide-border dark:divide-border">
                 {/* Password Rotation Section */}
-                <div>
+                <div className="pb-10 sm:pb-12">
                   <div>
                     <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Password
@@ -1154,7 +1096,7 @@ function AccountPageContent() {
                 </div>
 
                 {/* Security Questions Section */}
-                <div className="pt-8">
+                <div className="py-10 sm:py-12">
                   <div>
                     <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Security Questions
@@ -1259,7 +1201,7 @@ function AccountPageContent() {
                 </div>
 
                 {/* Two-Factor Authentication Section */}
-                <div className="pt-8">
+                <div className="pt-10 sm:pt-12">
                   <div>
                     <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Two-Factor Authentication
@@ -1525,9 +1467,72 @@ function AccountPageContent() {
             </TabsContent>
 
             <TabsContent value="preferences" className="m-0 border-0 focus-visible:ring-0">
-              <div className="p-8 space-y-8 divide-y divide-border dark:divide-border">
+              <div className="p-8 divide-y divide-border dark:divide-border">
+                {/* Profile Avatar Section */}
+                <div className="pb-10 sm:pb-12">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                        Profile Avatar
+                      </h3>
+                      <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                        Select one of the 4 default avatars to personalize your profile across all system views.
+                      </p>
+                    </div>
+                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                      Active: Avatar {selectedDefaultAvatarId}
+                    </span>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
+                      {DEFAULT_AVATARS.map((avatar) => {
+                        const isSelected = selectedDefaultAvatarId === avatar.id;
+                        return (
+                          <button
+                            key={avatar.id}
+                            type="button"
+                            disabled={avatarSaving}
+                            onClick={() => handleSelectDefaultAvatar(avatar.id)}
+                            className={cn(
+                              "group relative flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-95",
+                              isSelected
+                                ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500 dark:bg-red-500/10 shadow-xs ring-2 ring-pup-maroon/30 dark:ring-red-500/30"
+                                : "border-border bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800/60 hover:border-gray-300 dark:hover:border-white/10",
+                              avatarSaving && "opacity-70 cursor-wait"
+                            )}
+                            title={`Select ${avatar.name}`}
+                          >
+                            <div className={cn(
+                              "relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105",
+                              isSelected ? "ring-2 ring-pup-maroon dark:ring-red-500 shadow-sm" : "bg-gray-100 dark:bg-zinc-800"
+                            )}>
+                              <div className="w-full h-full flex items-center justify-center scale-[1.7]">
+                                {avatar.svg}
+                              </div>
+                            </div>
+
+                            <span className={cn(
+                              "text-xs font-semibold mt-3",
+                              isSelected ? "text-pup-maroon dark:text-red-400 font-bold" : "text-gray-700 dark:text-zinc-300"
+                            )}>
+                              {avatar.name}
+                            </span>
+
+                            {isSelected && (
+                              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs">
+                                <HugeIcon className="ph-bold ph-check text-[11px]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Interface Layout Zoom Section */}
-                <div>
+                <div className="py-10 sm:py-12">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                       <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
@@ -1546,7 +1551,6 @@ function AccountPageContent() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
                       {ZOOM_PERCENTAGES.map((pct, idx) => {
                         const isSelected = activeZoomNode === idx;
-                        const label = idx === 0 ? "Compact (75%)" : idx === 3 ? "Default (100%)" : idx === 6 ? "Large (125%)" : `${pct}%`;
                         return (
                           <button
                             key={pct}
@@ -1575,60 +1579,8 @@ function AccountPageContent() {
                   </div>
                 </div>
 
-                {/* Navigation Layout Section */}
-                <div className="pt-8">
-                  <div>
-                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                      Navigation Bar Layout
-                    </h3>
-                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                      Choose how main navigation is presented across the system.
-                    </p>
-                  </div>
-
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => handleUserPreferenceToggle("navigation_layout", "sidebar")}
-                      className={cn(
-                        "flex items-start gap-4 p-5 rounded-2xl border text-left transition-all cursor-pointer",
-                        (userPreferences?.navigation_layout || "sidebar") === "sidebar"
-                          ? "border-pup-maroon bg-pup-maroon/5 text-gray-900 dark:text-zinc-100 shadow-xs ring-1 ring-pup-maroon/20 dark:border-red-500 dark:bg-red-500/10"
-                          : "border-border bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
-                      )}
-                    >
-                      <HugeIcon className="ph-bold ph-sidebar text-2xl text-pup-maroon dark:text-red-400 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-100">Sidebar (Default)</h4>
-                        <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-1">
-                          Vertical navigation pinned to the side of the screen with quick collapse.
-                        </p>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleUserPreferenceToggle("navigation_layout", "topbar")}
-                      className={cn(
-                        "flex items-start gap-4 p-5 rounded-2xl border text-left transition-all cursor-pointer",
-                        userPreferences?.navigation_layout === "topbar"
-                          ? "border-pup-maroon bg-pup-maroon/5 text-gray-900 dark:text-zinc-100 shadow-xs ring-1 ring-pup-maroon/20 dark:border-red-500 dark:bg-red-500/10"
-                          : "border-border bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
-                      )}
-                    >
-                      <HugeIcon className="ph-bold ph-browsers text-2xl text-pup-maroon dark:text-red-400 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-100">Top Horizontal Bar</h4>
-                        <p className="text-[12px] text-gray-500 dark:text-zinc-400 mt-1">
-                          Compact horizontal header tabs maximizing horizontal screen width.
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Accessibility Section */}
-                <div className="pt-8">
+                <div className="pt-10 sm:pt-12">
                   <div>
                     <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
                       Accessibility
@@ -1658,116 +1610,37 @@ function AccountPageContent() {
                     </div>
                   </div>
                 </div>
-
-                {/* Workflow Preferences (Admin-only) */}
-                {hasAdminPrivileges(authUser?.role) && (
-                  <div className="pt-8">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                          Workflow Preferences
-                        </h3>
-                        <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                          Personal administrative workflow shortcuts.
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="h-5 px-2 bg-red-50 border-red-200 text-red-600 font-semibold text-[9px] uppercase dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400">
-                        Personal
-                      </Badge>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="p-5 bg-gray-50 rounded-2xl border border-border dark:bg-white/5 dark:border-border flex items-center justify-between gap-6">
-                        <div className="space-y-1">
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Skip Registration Confirmation</h4>
-                          <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
-                            When enabled, the final review modal is bypassed for faster account provisioning.
-                          </p>
-                        </div>
-                        <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={!!userPreferences.skip_registration_confirmation}
-                            onChange={(e) => handleUserPreferenceToggle("skip_registration_confirmation", e.target.checked)}
-                          />
-                          <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-zinc-700"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </TabsContent>
           </div>
         </Tabs>
       </Card>
 
+        {/* Security Questions Verification Modal */}
+        <TOTPChallengeModal
+          open={showSecTOTPModal}
+          onOpenChange={setShowSecTOTPModal}
+          onConfirm={async (token) => {
+            await submitSecurity(null, token);
+          }}
+          title="Security Verification Required"
+          description="Enter the 6-digit code from your authenticator app or an 8-character recovery code to update your security questions."
+          actionLabel="Confirm & Save"
+          isLoading={secLoading}
+        />
+
         {/* Recovery Codes Modal */}
-        <Dialog open={showRecoveryCodesDialog} onOpenChange={setShowRecoveryCodesDialog}>
-          <DialogContent hideClose={true} className="max-w-[560px] sm:max-w-[560px] rounded-[20px] border-[#E5E5EA] dark:border-border p-6 overflow-hidden bg-white shadow-2xl dark:bg-card">
-            <div className="relative pb-4">
-               <DialogClose asChild>
-                 <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer">
-                   <HugeIcon  className="ph-bold ph-x text-sm"></HugeIcon>
-                 </button>
-               </DialogClose>
-               <DialogTitle className="text-[20px] font-bold text-[#1C1C1E] dark:text-zinc-100 tracking-tight">Recovery Codes</DialogTitle>
-               <DialogDescription className="text-[13.5px] font-normal text-[#8E8E93] mt-1 dark:text-zinc-400">
-                  Generated codes for emergency access.
-               </DialogDescription>
-            </div>
-            
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                {recoveryCodes.map((code, idx) => (
-                  <div key={idx} className="font-jakarta text-[14.5px] font-semibold text-[#1C1C1E] dark:text-zinc-200 flex items-center gap-3 bg-[#F5F5F7] p-3 rounded-[10px] border border-[#E5E5EA] dark:bg-white/5 dark:border-zinc-850">
-                    <span className="text-[13px] text-[#636366] dark:text-zinc-400 font-bold bg-[#E5E5EA] dark:bg-zinc-800 w-5 h-5 flex items-center justify-center rounded-full shrink-0">
-                      {idx + 1}
-                    </span>
-                    <span className="tracking-widest font-jakarta">{code}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="p-4 bg-amber-50/70 border border-amber-200/50 rounded-[12px] dark:bg-amber-500/10 dark:border-amber-500/25">
-                 <p className="text-[13.5px] text-[#8A6D3B] dark:text-amber-300 font-medium leading-relaxed">
-                    WARNING: These codes are for emergency use only. Each code can be used once. Save them somewhere safe.
-                 </p>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-2.5">
-                  <Button 
-                    type="button"
-                    onClick={copyRecoveryCodes}
-                    variant="outline" 
-                    className="flex-1 h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  >
-                    Copy
-                  </Button>
-                  <Button 
-                    type="button"
-                    onClick={downloadRecoveryCodes}
-                    variant="outline" 
-                    className="flex-1 h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  >
-                    Save
-                  </Button>
-                </div>
-                <Button 
-                  type="button"
-                  onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Done
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <RecoveryCodesModal
+          open={showRecoveryCodesDialog}
+          onOpenChange={setShowRecoveryCodesDialog}
+          onClose={() => setShowRecoveryCodesDialog(false)}
+          recoveryCodes={recoveryCodes}
+          onCopy={copyRecoveryCodes}
+          onDownload={downloadRecoveryCodes}
+        />
         </div>
       </PageTransition>
+      </main>
     </div>
   );
 }

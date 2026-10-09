@@ -4,13 +4,11 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useEffect, useState, useMemo } from "react"
 import {
   Card,
-  CardContent,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import SlaKpiSkeleton from "@/components/admin/skeletons/SlaKpiSkeleton"
 import SlaChartsSkeleton from "@/components/admin/skeletons/SlaChartsSkeleton"
 import { Button } from "@/components/ui/button"
-import { formatPHDateTime } from "@/lib/timeFormat"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import {
   Empty,
@@ -26,17 +24,10 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog"
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { generateSLAAnalyticsPdf } from "@/lib/pdfGenerator"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
-import { STATUS_COLORS } from "@/lib/constants"
 import { downloadSlaCsv } from "@/lib/exportHelpers"
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
@@ -166,7 +157,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       const fileName = generateExportFilename("SLA-ANALYTICS", "DATA", "csv");
       downloadSlaCsv(data, total, completionRate, onLogAction, fileName);
       showToast?.({ title: "Export Successful", description: `The SLA data has been successfully exported to ${fileName}.` });
-    } catch (e) {
+    } catch {
       showToast?.({ title: "Export Failed", description: "Failed to export SLA analytics to CSV format." }, true);
     } finally {
       setIsExportingCsv(false);
@@ -176,9 +167,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const hasActiveFilters = startDate !== "" || endDate !== ""
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
@@ -262,7 +253,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               const [y, m, d] = dateStr.split("-").map(Number)
               if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr
               return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-            } catch (e) {
+            } catch {
               return dateStr
             }
           }
@@ -297,7 +288,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           )
         })()}
 
-        <CardContent className="bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
+        <div className="bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (
@@ -319,7 +310,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
             </div>
           ) : null}
-        </CardContent>
+        </div>
       </Card>
 
       {/* Report Preview Modal */}
@@ -424,9 +415,11 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               variant="ghost"
               size="icon"
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+              aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
+              title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
               className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
             >
-              <HugeIcon  className="ti ti-arrows-vertical text-[16px]"></HugeIcon>
+              <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"}></HugeIcon>
             </Button>
 
             <div className="flex items-center gap-2.5 ml-auto">

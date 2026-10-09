@@ -37,7 +37,7 @@ export async function POST(req) {
     }
     await writeAuditLog(req, "Batch scanning started", { details: `Started batch ${data.batchId} with ${data.claimed} item(s).`, entity_type: "ingest_batch", entity_id: data.batchId });
     return NextResponse.json({ ok: true, data }, { status: 201 });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Unable to start batch" }, { status: 500 });
   }
 }

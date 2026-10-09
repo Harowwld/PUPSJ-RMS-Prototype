@@ -1,4 +1,5 @@
 import SessionRefresh from "@/components/shared/SessionRefresh";
+import AccessibilitySync from "@/components/shared/AccessibilitySync";
 import ScrollIndicator from "@/components/shared/ScrollIndicator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -32,6 +33,12 @@ export default async function RootLayout({ children }) {
       <head>
         <link rel="icon" href="/assets/branding/black-icon.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/assets/branding/white-icon.png" media="(prefers-color-scheme: dark)" />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var h=localStorage.getItem("pup_high_contrast");if(!h){for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("pup_high_contrast_")===0&&localStorage.getItem(k)==="true"){h="true";break;}}}if(h==="true"){document.documentElement.classList.add("high-contrast");}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className="antialiased font-sans">
         <ThemeProvider
@@ -42,6 +49,7 @@ export default async function RootLayout({ children }) {
           enableSystem={false}
         >
           <SessionRefresh />
+          <AccessibilitySync />
           <DynamicFavicon />
           <ScrollIndicator />
           <TooltipProvider>{children}</TooltipProvider>

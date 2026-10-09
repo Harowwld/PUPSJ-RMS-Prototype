@@ -39,7 +39,7 @@ function pickFolder() {
   });
 }
 
-export async function POST(req, { params }) {
+export async function POST(req) {
   const auth = await requireSystemAdmin(req);
   if (auth.error || !auth.user) {
     return createAuthErrorResponse(auth.error || "System administrator access required", auth.error?.startsWith("Access denied") ? 403 : 401);

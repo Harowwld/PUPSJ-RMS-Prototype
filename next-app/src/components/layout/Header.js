@@ -8,8 +8,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
@@ -21,16 +19,31 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
-import { isAdminRole, getRoleLabel, isSystemAdminRole, hasAdminPrivileges, isStaffRole } from "@/lib/roleUtils";
-import { getRoleBranding, ROLE_BRANDING } from "@/lib/roleBranding";
+import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
+import { getRoleBranding } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
+import { matchesSearchQuery } from "@/lib/searchUtils";
+import {
+  getHighContrastPreference,
+  toggleHighContrastPreference,
+  HIGH_CONTRAST_EVENT,
+} from "@/lib/accessibility";
 
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isHighContrast, setIsHighContrast] = useState(false);
   const [preferredView, setPreferredView] = useState(null);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -41,15 +54,20 @@ export default function Header({ authUser, onLogout, children }) {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const commandInputRef = useRef(null);
 
-  const prevAvatarRef = useRef(authUser?.avatar_filename);
-  if (prevAvatarRef.current !== authUser?.avatar_filename) {
-    prevAvatarRef.current = authUser?.avatar_filename;
-    if (imageError) setImageError(false);
-    if (imageLoaded) setImageLoaded(false);
-  }
+  const [currentAvatarFilename, setCurrentAvatarFilename] = useState(authUser?.avatar_filename || null);
+  const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now());
 
   useEffect(() => {
-    const handleAvatarChanged = () => {
+    setCurrentAvatarFilename(authUser?.avatar_filename || null);
+    setAvatarTimestamp(Date.now());
+  }, [authUser?.avatar_filename, authUser?.updated_at]);
+
+  useEffect(() => {
+    const handleAvatarChanged = (e) => {
+      if (e?.detail && "avatar_filename" in e.detail) {
+        setCurrentAvatarFilename(e.detail.avatar_filename);
+      }
+      setAvatarTimestamp(Date.now());
       setImageError(false);
       setImageLoaded(false);
     };
@@ -76,6 +94,13 @@ export default function Header({ authUser, onLogout, children }) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Listen for mobile drawer toggle events
+  useEffect(() => {
+    const handleToggleMobile = () => setMobileDrawerOpen((prev) => !prev);
+    window.addEventListener("toggle-mobile-drawer", handleToggleMobile);
+    return () => window.removeEventListener("toggle-mobile-drawer", handleToggleMobile);
   }, []);
 
   // Autofocus input when command modal opens
@@ -183,6 +208,8 @@ export default function Header({ authUser, onLogout, children }) {
   };
 
   useEffect(() => {
+    setIsHighContrast(getHighContrastPreference(authUser?.id));
+
     const handleStorageChange = (e) => {
       if (e.key === "pup-logout") {
         setShowSessionExpired(true);
@@ -190,10 +217,24 @@ export default function Header({ authUser, onLogout, children }) {
       if (e.key === "pup-session-recovered") {
         setShowSessionExpired(false);
       }
+      if (!e.key || e.key === "pup_high_contrast" || e.key.startsWith("pup_high_contrast_")) {
+        setIsHighContrast(getHighContrastPreference(authUser?.id));
+      }
     };
+
+    const handleCustomChange = (e) => {
+      if (typeof e.detail?.enabled === "boolean") {
+        setIsHighContrast(e.detail.enabled);
+      }
+    };
+
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+    window.addEventListener(HIGH_CONTRAST_EVENT, handleCustomChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(HIGH_CONTRAST_EVENT, handleCustomChange);
+    };
+  }, [authUser?.id]);
 
   useEffect(() => {
     router.prefetch("/staff");
@@ -232,30 +273,15 @@ export default function Header({ authUser, onLogout, children }) {
       return "System Administrator";
     }
     if (activeView === "admin") {
-      return "Administrator";
+      return (authUser?.office_short_name || authUser?.office_id) ? `${getOfficePrefix(authUser)} Admin` : "Administrator";
     }
     if (activeView === "staff") {
-      return "Staff";
+      return (authUser?.office_short_name || authUser?.office_id) ? `${getOfficePrefix(authUser)} Staff` : "Staff";
     }
-    return getRoleLabel(authUser?.role);
+    return getOfficeRoleLabel(authUser?.role, authUser);
   })();
 
   const displayRole = isSuperAdmin ? "System Administrator" : currentViewRole;
-
-  const currentViewColor = (() => {
-    if (isStudent) return ROLE_BRANDING.red.color;
-    if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
-      return ROLE_BRANDING.black.color;
-    }
-    if (activeView === "admin") {
-      return branding.color;
-    }
-    if (activeView === "staff") {
-      return isStaffRole(authUser?.role) ? ROLE_BRANDING.yellow.color : branding.color;
-    }
-    return branding.color;
-  })();
-
 
   // Track active tab view to display "Active" indicator in Command Palette
   const [currentTab, setCurrentTab] = useState(() => {
@@ -734,6 +760,13 @@ export default function Header({ authUser, onLogout, children }) {
           breadcrumb: "Navigation • Action",
           keywords: "toggle sidebar collapse expand hide show drawer panel navigation view hide sidebar",
         },
+        {
+          label: isHighContrast ? "Disable High Contrast Mode" : "Enable High Contrast Mode",
+          action: "toggle-contrast",
+          icon: "ph-bold ph-circle-half",
+          breadcrumb: "Accessibility • Display",
+          keywords: "high contrast accessibility display contrast black white theme readability toggle colors",
+        },
         ...(!isStudent ? [
           {
             label: "Reset Scale / Zoom (100%)",
@@ -821,13 +854,9 @@ export default function Header({ authUser, onLogout, children }) {
     const filtered = allCandidateGroups
       .map((group) => {
         if (!q) return group;
-        const matchingItems = group.items.filter((item) => {
-          const matchLabel = item.label?.toLowerCase().includes(q);
-          const matchBreadcrumb = item.breadcrumb?.toLowerCase().includes(q);
-          const matchKeywords = item.keywords?.toLowerCase().includes(q);
-          const matchGroup = group.title?.toLowerCase().includes(q);
-          return matchLabel || matchBreadcrumb || matchKeywords || matchGroup;
-        });
+        const matchingItems = group.items.filter((item) =>
+          matchesSearchQuery([item.label, item.breadcrumb, item.keywords, group.title], searchQuery)
+        );
         return { ...group, items: matchingItems };
       })
       .filter((group) => group.items.length > 0);
@@ -836,7 +865,7 @@ export default function Header({ authUser, onLogout, children }) {
       filteredGroups: filtered,
       flatSuggestions: filtered.flatMap((g) => g.items),
     };
-  }, [searchQuery, activeView, authUser, isStudent, isSuperAdmin, hasAdminRights, isMac, pathname]);
+  }, [searchQuery, activeView, authUser, isStudent, isSuperAdmin, hasAdminRights, isMac, pathname, isHighContrast]);
 
   const handleSelectSuggestion = (item) => {
     setSearchQuery("");
@@ -845,6 +874,15 @@ export default function Header({ authUser, onLogout, children }) {
 
     if (item.action === "toggle-sidebar") {
       window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+      return;
+    }
+
+    if (item.action === "toggle-contrast") {
+      const next = toggleHighContrastPreference(authUser?.id);
+      setIsHighContrast(next);
+      toast.success(next ? "High Contrast Enabled" : "High Contrast Disabled", {
+        description: next ? "Enhanced border boundaries and text contrast are now active." : "Standard display contrast restored."
+      });
       return;
     }
 
@@ -946,7 +984,17 @@ export default function Header({ authUser, onLogout, children }) {
       <div className="w-full px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3">
         
         {/* LEFT: Branding & Workspace Context Pill (Changes per active view) */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {authUser && (
+            <button
+              type="button"
+              onClick={() => setMobileDrawerOpen(true)}
+              className="md:hidden flex h-10 w-10 min-w-[40px] min-h-[40px] items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 shrink-0"
+              aria-label="Open portal navigation menu"
+            >
+              <HugeIcon className="ph-bold ph-list text-xl" />
+            </button>
+          )}
           <div 
             className="flex items-center gap-2 cursor-pointer group/logo select-none"
             onClick={handleMainDashboardClick}
@@ -999,10 +1047,10 @@ export default function Header({ authUser, onLogout, children }) {
                   : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
               )}>
                 <div className="relative h-9 w-9 rounded-full bg-white flex items-center justify-center text-[13px] font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
-                  {authUser?.avatar_filename && !imageError ? (
+                  {currentAvatarFilename && !imageError ? (
                     <>
                       <img 
-                        src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || authUser.avatar_filename || "avatar"}`}
+                        src={`/api/account/avatar?id=${authUser.id}&t=${avatarTimestamp}`}
                         alt=""
                         className={cn("w-full h-full object-cover scale-[1.2]", imageLoaded ? "block" : "hidden")}
                         onLoad={() => setImageLoaded(true)}
@@ -1094,6 +1142,7 @@ export default function Header({ authUser, onLogout, children }) {
                       <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
                     </DropdownMenuItem>
                   )}
+
                </DropdownMenuGroup>
 
                <div className="border-t border-gray-100 dark:border-white/5 my-1 mx-1.5"></div>
@@ -1126,6 +1175,7 @@ export default function Header({ authUser, onLogout, children }) {
             <input
               ref={commandInputRef}
               type="text"
+              aria-label="Search views and actions"
               placeholder="Type a sidebar view or action to navigate..."
               value={searchQuery}
               onChange={(e) => {
@@ -1294,6 +1344,92 @@ export default function Header({ authUser, onLogout, children }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Navigation Drawer */}
+      <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
+        <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 max-w-[85vw] bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-white/10 flex flex-col">
+          <SheetHeader className="p-4 border-b border-gray-200/80 dark:border-white/10 flex flex-row items-center gap-2.5">
+            <img 
+              src={branding.iconSrc}
+              alt="eManage Logo" 
+              className={cn("h-7 w-7 object-contain", isStudent && "brightness-0 saturate-100")}
+              style={isStudent ? { filter: "brightness(0) saturate(100%) invert(13%) sepia(95%) saturate(3180%) hue-rotate(355deg) brightness(77%) contrast(118%)" } : undefined}
+            />
+            <div>
+              <SheetTitle className="font-bold text-base leading-tight text-gray-900 dark:text-zinc-50">
+                eManage
+              </SheetTitle>
+              <SheetDescription className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
+                {isStudent ? "Student Portal" : (activeView === "systemadmin" ? "System Admin" : (activeView === "admin" ? "Office Admin" : "Staff"))}
+              </SheetDescription>
+            </div>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto p-3 space-y-4 [scrollbar-width:thin]">
+            {filteredGroups.map((group) => (
+              <div key={group.id} className="space-y-1">
+                <div className="px-2.5 py-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                  {group.title}
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((item) => {
+                    const itemKey = item.section
+                      ? `${item.view}-${item.section}`
+                      : (item.view || item.url || item.action || item.label);
+                    const isActive =
+                      item.view &&
+                      !item.section &&
+                      item.view === activeTabKey &&
+                      (isStudent
+                        ? pathname?.startsWith("/student")
+                        : activeView === "systemadmin"
+                        ? pathname?.startsWith("/systemadmin") || pathname?.startsWith("/superadmin")
+                        : activeView === "admin"
+                        ? pathname?.startsWith("/admin")
+                        : pathname?.startsWith("/staff"));
+
+                    return (
+                      <button
+                        key={itemKey}
+                        type="button"
+                        onClick={() => {
+                          setMobileDrawerOpen(false);
+                          handleSelectSuggestion(item);
+                        }}
+                        className={cn(
+                          "w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer min-h-[44px]",
+                          isActive
+                            ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 font-semibold"
+                            : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5 active:scale-[0.98]"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                              isActive
+                                ? "bg-pup-maroon text-white dark:bg-white dark:text-zinc-900"
+                                : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
+                            )}
+                          >
+                            <HugeIcon className={cn(item.icon, "text-[16px]")} title={item.label} />
+                          </div>
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        {isActive && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                            Active
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Session Expired Modal */}
       <Dialog open={showSessionExpired} onOpenChange={setShowSessionExpired}>

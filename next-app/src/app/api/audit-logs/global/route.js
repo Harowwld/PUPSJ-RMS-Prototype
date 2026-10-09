@@ -58,7 +58,7 @@ export async function GET(req) {
     }));
 
     return NextResponse.json({ ok: true, data: readableRows, total });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

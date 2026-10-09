@@ -18,7 +18,7 @@ export async function listDocTypes({ includeArchived = false, officeId, scope } 
   const statusFilter = includeArchived ? "" : " AND status = 'Active'";
   let scopeFilter = "";
   if (scope === "requestable") {
-    scopeFilter = " AND is_requestable = TRUE";
+    scopeFilter = " AND is_requestable = TRUE AND is_compliance = FALSE";
   } else if (scope === "compliance") {
     scopeFilter = " AND is_compliance = TRUE";
   }
@@ -37,7 +37,7 @@ export async function listAllDocTypes({ includeArchived = false, officeId, scope
   const statusFilter = includeArchived ? "" : " AND status = 'Active'";
   let scopeFilter = "";
   if (scope === "requestable") {
-    scopeFilter = " AND is_requestable = TRUE";
+    scopeFilter = " AND is_requestable = TRUE AND is_compliance = FALSE";
   } else if (scope === "compliance") {
     scopeFilter = " AND is_compliance = TRUE";
   }

@@ -30,8 +30,6 @@ function buildGridCabinets({
 } = {}) {
   const w = GX * 3; // 3 units wide (0.075)
   const h = GY * 3; // 3 units high (0.12)
-  const gapX = GX;  // 1 unit gap
-  const gapY = GY;  // 1 unit gap
 
   const totalWUnits = cols * 3 + (cols - 1);
   const totalHUnits = rows * 3 + (rows - 1);

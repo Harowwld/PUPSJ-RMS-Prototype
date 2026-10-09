@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import { cn, formatTitleCase } from "@/lib/utils"
+import { matchesSearchQuery } from "@/lib/searchUtils"
 
 function getYear(document) {
   const year = Number(String(document?.student_no || "").split("-")[0])
@@ -27,14 +28,14 @@ export default function OfficeDocumentsTable({
   const selectedYear = Number(breadcrumbs?.find((item) => item.level === "students")?.label?.split(" ")[1])
 
   const rows = useMemo(() => {
-    const search = query.trim().toLowerCase()
     return documents
       .filter((document) => Number.isFinite(selectedYear) ? getYear(document) === selectedYear : true)
-      .filter((document) => {
-        if (!search) return true
-        return [document.student_no, document.student_name, document.doc_type, document.original_filename]
-          .some((value) => String(value || "").toLowerCase().includes(search))
-      })
+      .filter((document) =>
+        matchesSearchQuery(
+          [document.student_no, document.student_name, document.doc_type, document.original_filename],
+          query
+        )
+      )
       .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
   }, [documents, query, selectedYear])
 
@@ -81,39 +82,51 @@ export default function OfficeDocumentsTable({
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="border-b border-border dark:border-border bg-gray-50/50 dark:bg-white/5">
-                <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[#8E8E93] dark:text-zinc-500">
-                  <th className="px-6 py-3.5">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
-                  <th className="px-6 py-3.5">{officeLabel === "OSAS" ? "Officer / Submitter" : "Student Name"}</th>
-                  <th className="px-6 py-3.5">Document</th>
-                  <th className="px-6 py-3.5">Year</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Action</th>
+              <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
+                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <th className="w-44 p-4 font-medium">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
+                  <th className="p-4 min-w-[200px] max-w-[260px] font-medium">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
+                  <th className="p-4 min-w-[180px] font-medium">Document</th>
+                  <th className="w-24 p-4 font-medium">Year</th>
+                  <th className="w-28 p-4 font-medium">Status</th>
+                  <th className="w-24 p-4 text-right font-medium">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-transparent">
                 {visibleRows.map((document) => (
-                  <tr key={document.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-white/5">
-                    <td className="px-6 py-3.5 font-mono text-xs text-gray-700 dark:text-zinc-300">
-                      {officeLabel === "OSAS"
-                        ? (document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "—")
-                        : (document.student_no || "—")}
+                  <tr key={document.id} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
+                    <td className="w-44 p-4 whitespace-nowrap align-middle">
+                      {officeLabel === "OSAS" ? (
+                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                          {document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "—"}
+                        </span>
+                      ) : (
+                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                          {document.student_no || "—"}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-6 py-3.5 font-medium text-gray-900 dark:text-zinc-50">{document.student_name || "—"}</td>
-                    <td className="px-6 py-3.5">
-                      <div className="font-medium text-gray-800 dark:text-zinc-200">{document.doc_type}</div>
-                      <div className="max-w-[260px] truncate text-xs text-gray-500 dark:text-zinc-500">{document.original_filename}</div>
+                    <td className="p-4 min-w-[200px] max-w-[260px] align-middle">
+                      <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(document.student_name)}>
+                        {formatTitleCase(document.student_name) || "—"}
+                      </div>
                     </td>
-                    <td className="px-6 py-3.5 text-gray-600 dark:text-zinc-400">{getYear(document) || "—"}</td>
-                    <td className="px-6 py-3.5">
+                    <td className="p-4 min-w-[180px] align-middle">
+                      <div className="font-semibold text-xs text-gray-900 dark:text-zinc-100">{document.doc_type}</div>
+                      <div className="max-w-[260px] truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.original_filename}>{document.original_filename}</div>
+                    </td>
+                    <td className="w-24 p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                      {getYear(document) || "—"}
+                    </td>
+                    <td className="w-28 p-4 align-middle">
                       <Badge variant="outline" className={cn(
-                        "rounded-full text-[10px]",
+                        "rounded-full text-[10px] font-medium px-2.5 py-0.5",
                         document.approval_status === "Approved"
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                           : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
                       )}>{document.approval_status || "Pending"}</Badge>
                     </td>
-                    <td className="px-6 py-3.5 text-right">
+                    <td className="w-24 p-4 align-middle text-right">
                       <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                         <Tooltip>
                           <TooltipTrigger asChild>

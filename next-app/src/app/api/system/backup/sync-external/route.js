@@ -6,7 +6,6 @@ import {
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
-import { isSystemAdminRole } from "../../../../../lib/roleUtils";
 import { canAccessResource } from "../../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/DocumentRequestsTableSkeleton";
-import { cn } from "@/lib/utils";
+import { cn, formatTitleCase } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -43,14 +43,13 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { matchesSearchQuery } from "@/lib/searchUtils";
 import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
 } from "@/lib/constants";
 import {
-  getArtaClassification,
   getRequestCharterStatus,
-  ARTA_TIERS,
 } from "@/lib/citizenCharter";
 
 const STATUS_OPTIONS = [
@@ -196,13 +195,13 @@ export default function DocumentRequestsTab({
   }, [students]);
 
   const studentSuggestions = useMemo(() => {
-    const val = studentSearch.trim().toLowerCase();
+    const val = studentSearch.trim();
     if (val.length < 2) return [];
     return students
       .filter((s) => {
-        const sn = String(s.studentNo || s.student_no || "").toLowerCase();
-        const nm = String(s.name || "").toLowerCase();
-        return sn.includes(val) || nm.includes(val);
+        const sn = s.studentNo || s.student_no || "";
+        const nm = s.name || "";
+        return matchesSearchQuery([sn, nm, s.courseCode, s.section], val);
       })
       .slice(0, 5);
   }, [studentSearch, students]);
@@ -605,15 +604,11 @@ export default function DocumentRequestsTab({
     return chips;
   }, [q, statusFilters, clientTypeFilters, docTypeFilters, charterFilters]);
 
-  const hasActiveFilters = Boolean(
-    q.trim() || statusFilters.length > 0 || clientTypeFilters.length > 0 || docTypeFilters.length > 0 || charterFilters.length > 0
-  );
-
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
+      <div className={cn("font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up", displayedRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4", displayedRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-tray"
@@ -748,7 +743,7 @@ export default function DocumentRequestsTab({
                 </Empty>
               </div>
             ) : (
-              <div className="overflow-x-auto flex-1">
+              <div className="overflow-x-auto w-full">
                 <table className={cn("min-w-full text-sm table-fixed", displayedRows.length === 0 && "h-full")}>
                   <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
@@ -827,11 +822,11 @@ export default function DocumentRequestsTab({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={cn("divide-y divide-border dark:divide-border", displayedRows.length === 0 && "h-full")}>
+                  <tbody className={cn("divide-y divide-border dark:divide-border", displayedRows.length === 0 && "h-full flex-1 flex flex-col")}>
                     {displayedRows.length === 0 ? (
-                      <tr className="border-0 hover:bg-transparent h-full">
-                        <td colSpan={7} className="p-0 border-0 h-full">
-                          <Empty className="flex h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                      <tr className="border-0 hover:bg-transparent flex-1 flex">
+                        <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
+                          <Empty className="flex flex-1 h-full min-h-[480px] flex-col items-center justify-center border-0 bg-transparent text-center">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -863,22 +858,25 @@ export default function DocumentRequestsTab({
                           <tr
                             key={r.id}
                             className={cn(
-                              "group h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                              "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                               selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => openDetail(r.id)}
                           >
-                            <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
+                            <td className="p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400">
                               #{r.id}
                             </td>
-                            <td className="py-2.5 px-4 align-middle">
+                            <td className="p-4 align-middle">
                               <div className="flex items-center gap-2">
-                                <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate">
-                                  {r.student_name || r.requester_name || "—"}
+                                <span
+                                  className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
+                                  title={formatTitleCase(r.student_name || r.requester_name)}
+                                >
+                                  {formatTitleCase(r.student_name || r.requester_name) || "—"}
                                 </span>
                                 <span
                                   className={cn(
-                                    "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
+                                    "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
                                     isParent
                                       ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
                                       : isAlumni
@@ -890,7 +888,7 @@ export default function DocumentRequestsTab({
                                 </span>
                                 {Number(r.attachment_count) > 0 && (
                                   <span
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
                                     title={`${r.attachment_count} attachment(s)`}
                                   >
                                     <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
@@ -898,11 +896,13 @@ export default function DocumentRequestsTab({
                                   </span>
                                 )}
                               </div>
-                              <div className="flex flex-wrap items-center gap-2 mt-[2px] truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500">
+                              <div className="flex flex-wrap items-center gap-2 mt-1 truncate text-xs font-normal text-[#8E8E93] dark:text-zinc-500">
                                 {r.student_no ? (
-                                  <span>{r.student_no}</span>
+                                  <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                                    {r.student_no}
+                                  </span>
                                 ) : (
-                                  <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>
+                                  <span className="italic text-xs text-amber-600 dark:text-amber-400">No Student ID</span>
                                 )}
                                 {r.course_code && (
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
@@ -931,17 +931,17 @@ export default function DocumentRequestsTab({
                                 )}
                               </div>
                             </td>
-                            <td className="py-0 px-4 align-middle">
-                              <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-[10px] py-[2.5px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap">
+                            <td className="p-4 align-middle">
+                              <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200 whitespace-nowrap">
                                 {r.doc_type}
                               </div>
                             </td>
-                            <td className="py-0 px-4 align-middle">
-                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
+                            <td className="p-4 align-middle">
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                               </div>
                             </td>
-                            <td className="py-0 px-4 align-middle">
+                            <td className="p-4 align-middle">
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap", charter.tier.badgeClass)}>
@@ -957,10 +957,10 @@ export default function DocumentRequestsTab({
                                 </span>
                               </div>
                             </td>
-                            <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
+                            <td className="p-4 align-middle text-xs font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
                               {formatPHDateTime(r.created_at)}
                             </td>
-                            <td className="py-0 px-4 align-middle text-right">
+                            <td className="p-4 align-middle text-right">
                               <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1101,8 +1101,8 @@ export default function DocumentRequestsTab({
                       <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl p-4 flex flex-col justify-between space-y-2">
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-sm text-gray-900 dark:text-zinc-50 truncate">
-                              {detail.student_name || detail.requester_name || "—"}
+                            <span className="font-semibold text-sm text-gray-900 dark:text-zinc-50 truncate" title={formatTitleCase(detail.student_name || detail.requester_name)}>
+                              {formatTitleCase(detail.student_name || detail.requester_name) || "—"}
                             </span>
                             <span
                               className={cn(
@@ -1117,8 +1117,14 @@ export default function DocumentRequestsTab({
                               {detail.client_type === "Parent" ? "Parent/Guardian" : detail.client_type === "Alumni" ? "Alumni" : "Student"}
                             </span>
                           </div>
-                          <div className="text-xs text-[#8E8E93] dark:text-zinc-400 font-normal">
-                            {detail.student_no ? detail.student_no : <span className="italic text-amber-600 dark:text-amber-400">No Student ID</span>}
+                          <div>
+                            {detail.student_no ? (
+                              <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 inline-block">
+                                {detail.student_no}
+                              </span>
+                            ) : (
+                              <span className="italic text-xs text-amber-600 dark:text-amber-400">No Student ID</span>
+                            )}
                           </div>
                           {detail.client_type === "Parent" && (
                             <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal space-y-0.5 pt-1 border-t border-border/60 dark:border-border">

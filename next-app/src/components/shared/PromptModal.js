@@ -31,7 +31,6 @@ export default function PromptModal({
   itemsList = [], // Array of strings to display as a list
   inputLabel = "", // Text to display above the input
   variant = "default", // 'default' | 'danger' | 'warning'
-  buttonIcon: customButtonIcon,
   isDeclineModal = false,
 }) {
   const variantClasses = {

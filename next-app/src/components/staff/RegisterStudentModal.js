@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
-import { cn } from "@/lib/utils";
 
 export default function RegisterStudentModal({
   open,
@@ -23,7 +22,6 @@ export default function RegisterStudentModal({
   storageLayout = null,
   onSuccess,
   showToast,
-  authUser = null,
 }) {
   const currentYear = new Date().getFullYear();
 

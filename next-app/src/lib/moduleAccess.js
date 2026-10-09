@@ -20,12 +20,38 @@ async function getVerifiedStaffSession(req) {
   }
 }
 
+/**
+ * Require a verified SuperAdmin / SystemAdmin session.
+ *
+ * Return states:
+ * - `null`: Unauthenticated (caller must respond with 401 Unauthorized)
+ * - `false`: Authenticated but unauthorized (caller must respond with 403 Forbidden)
+ * - `session`: Authorized session object
+ *
+ * @param {Request} req
+ * @returns {Promise<object|null|false>}
+ */
 export async function requireSuperAdminSession(req) {
   const session = await getVerifiedStaffSession(req);
   if (session === null) return null;
   return isSystemAdminRole(session.role) ? session : false;
 }
 
+/**
+ * Require access to a specific office module.
+ *
+ * Return states:
+ * - `null`: Unauthenticated (caller must respond with 401 Unauthorized)
+ * - `false`: Authenticated but unauthorized / wrong role / student / wrong office / module disabled (caller must respond with 403 Forbidden)
+ * - `session`: Authorized session object
+ *
+ * @param {string} moduleId
+ * @param {object} [options]
+ * @param {string} [options.officeId]
+ * @param {string[]} [options.roles]
+ * @param {Request} req
+ * @returns {Promise<object|null|false>}
+ */
 export async function requireOfficeModule(moduleId, { officeId, roles = ["Admin", "Staff"] } = {}, req) {
   const session = await getVerifiedStaffSession(req);
   if (session === null) return null;

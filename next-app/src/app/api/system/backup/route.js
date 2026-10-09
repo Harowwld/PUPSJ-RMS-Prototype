@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { 
-  executeBackup, 
   executeSystemBackup,
   executeOfficeBackup,
   listBackups, 
@@ -254,7 +253,7 @@ export async function DELETE(req) {
         } else {
           errors.push("Backup no longer exists");
         }
-      } catch (err) {
+      } catch {
         errors.push("Error deleting backup");
       }
     }

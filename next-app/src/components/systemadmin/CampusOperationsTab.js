@@ -31,7 +31,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
-import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
+import { getCachedData, setCachedData } from "@/lib/dataCache"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -71,7 +71,7 @@ function formatStudentRequester(name, studentNo) {
   return name
 }
 
-export default function CampusOperationsTab({ showToast }) {
+export default function CampusOperationsTab() {
 const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -392,9 +392,9 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   ], [health])
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-activity"

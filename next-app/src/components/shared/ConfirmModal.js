@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useMemo, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 export default function ConfirmModal({
   open,
@@ -30,8 +30,6 @@ export default function ConfirmModal({
   confirmVariant,
   selectedItems = [],
   note,
-  icon: customIcon,
-  buttonIcon: customButtonIcon,
   confirmClassName,
   verificationValue = "",
   verificationTarget = "",
@@ -56,50 +54,6 @@ export default function ConfirmModal({
       }, 350); // Wait for fade-in animation
     }
   }, [open, verificationTarget]);
-
-  const variantClasses = {
-    danger: {
-      icon: "ph-duotone ph-warning-circle",
-      iconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-red-600 shadow-sm dark:border-border",
-      title: "text-gray-900 dark:text-zinc-50",
-      description: "text-gray-600 dark:text-zinc-300",
-      confirmVariant: "destructive",
-      buttonIcon: "ph-bold ph-trash",
-    },
-    brand: {
-      icon: "ph-duotone ph-user-gear",
-      iconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-pup-maroon shadow-sm dark:border-border",
-      title: "text-gray-900 dark:text-zinc-50",
-      description: "text-gray-600 dark:text-zinc-300",
-      confirmVariant: "default",
-      buttonIcon: "ph-bold ph-check",
-    },
-    warning: {
-      icon: "ph-duotone ph-warning",
-      iconWrap: "bg-amber-50 dark:bg-amber-950/30 border-amber-100 text-amber-600 shadow-sm dark:border-border",
-      title: "text-gray-900 dark:text-zinc-50",
-      description: "text-gray-600 dark:text-zinc-300",
-      confirmVariant: "default",
-      buttonIcon: "ph-bold ph-warning",
-      confirmStyle: "bg-orange-600 hover:bg-orange-700 border-0! border-none! shadow-[inset_0_1px_0_rgba(255,255,255,0.22),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_3px_rgba(0,0,0,0.2),0_1px_2px_-1px_rgba(0,0,0,0.1)]! text-white",
-    },
-    success: {
-      icon: "ph-duotone ph-archive-restore",
-      iconWrap: "bg-green-50 border-green-100 text-green-600 shadow-sm dark:bg-emerald-950/30 dark:border-border",
-      title: "text-gray-900 dark:text-zinc-50",
-      description: "text-gray-600 dark:text-zinc-300",
-      confirmVariant: "default",
-      buttonIcon: "ph-bold ph-check",
-    },
-    default: {
-      icon: "ph-duotone ph-info",
-      iconWrap: "bg-blue-50 dark:bg-blue-950/30 border-blue-100 text-blue-600 shadow-sm dark:border-border",
-      title: "text-gray-900 dark:text-zinc-50",
-      description: "text-gray-600 dark:text-zinc-300",
-      confirmVariant: "default",
-      buttonIcon: "ph-bold ph-check",
-    },
-  };
 
   const displayConfirmLabel = confirmLabel || confirmText || "Confirm";
   const displayMessage = message || description;
@@ -128,9 +82,6 @@ export default function ConfirmModal({
   }
 
   const normalizedVariant = resolvedVariant === "destructive" ? "danger" : (resolvedVariant || "danger");
-  const v = variantClasses[normalizedVariant] || variantClasses.default;
-  const displayIcon = customIcon || v.icon;
-  const displayButtonIcon = customButtonIcon || v.buttonIcon;
 
   const handleCancel = () => {
     if (typeof onCancel === "function") {

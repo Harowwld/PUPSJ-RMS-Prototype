@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import FloatingActionBar from "@/components/shared/FloatingActionBar";
@@ -24,13 +23,14 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn, formatTitleCase } from "@/lib/utils";
 import { Reorder } from "framer-motion";
 import RegisterStudentModal from "./RegisterStudentModal";
 import EditStudentModal from "./EditStudentModal";
 import StudentProfileSheet from "./StudentProfileSheet";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { matchesSearchQuery } from "@/lib/searchUtils";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -237,12 +237,9 @@ export default function StudentDirectoryTab({
 
     // Search query
     if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      result = result.filter((s) => {
-        const no = String(s.studentNo || "").toLowerCase();
-        const nm = String(s.name || "").toLowerCase();
-        return no.includes(q) || nm.includes(q);
-      });
+      result = result.filter((s) =>
+        matchesSearchQuery([s.studentNo, s.name, s.courseCode, s.section], searchQuery)
+      );
     }
 
     // Course filter
@@ -589,10 +586,18 @@ export default function StudentDirectoryTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-student-directory"
-        className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
+        className={cn(
+          "animate-fade-up font-jakarta flex h-auto w-full flex-col",
+          filteredStudents.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]"
+        )}
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card
+          className={cn(
+            "flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4",
+            filteredStudents.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]"
+          )}
+        >
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-users"
@@ -1023,7 +1028,7 @@ export default function StudentDirectoryTab({
           />
 
           {/* 4. Main Data Table */}
-          <div className={cn("flex-1 border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredStudents.length === 0 && "rounded-b-2xl")}>
+          <div className={cn("w-full border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredStudents.length === 0 && "rounded-b-2xl")}>
             {loading ? (
               <div className="p-6 space-y-3 rounded-b-2xl">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -1031,8 +1036,8 @@ export default function StudentDirectoryTab({
                 ))}
               </div>
             ) : paginatedStudents.length === 0 ? (
-              <div className="py-16 rounded-b-2xl">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
+              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px]">
+                <Empty className="flex flex-1 h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -1055,7 +1060,7 @@ export default function StudentDirectoryTab({
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
@@ -1065,7 +1070,7 @@ export default function StudentDirectoryTab({
                         />
                       </th>
 
-                      <th className="p-4">
+                      <th className="w-44 p-4">
                         <button
                           type="button"
                           onClick={() => handleSort("studentNo")}
@@ -1076,7 +1081,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4">
+                      <th className="p-4 min-w-[200px] max-w-[260px]">
                         <button
                           type="button"
                           onClick={() => handleSort("name")}
@@ -1087,7 +1092,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4">
+                      <th className="p-4 min-w-[170px]">
                         <button
                           type="button"
                           onClick={() => handleSort("courseCode")}
@@ -1098,7 +1103,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4">
+                      <th className="w-28 p-4">
                         <button
                           type="button"
                           onClick={() => handleSort("yearLevel")}
@@ -1109,9 +1114,9 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4">Physical Archive</th>
+                      <th className="p-4 min-w-[190px]">Physical Archive</th>
 
-                      <th className="p-4 text-center">
+                      <th className="w-24 p-4 text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("documents")}
@@ -1122,9 +1127,9 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 text-center">Status</th>
+                      <th className="w-28 p-4 text-center">Status</th>
 
-                      <th className="w-36 p-4 text-right">Actions</th>
+                      <th className="w-32 p-4 text-right">Actions</th>
                     </tr>
                   </thead>
 
@@ -1161,15 +1166,15 @@ export default function StudentDirectoryTab({
                             />
                           </td>
 
-                          <td className="p-4">
+                          <td className="w-44 p-4 whitespace-nowrap">
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {s.studentNo}
                             </span>
                           </td>
 
-                          <td className="p-4">
-                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                              {s.name}
+                          <td className="p-4 min-w-[200px] max-w-[260px]">
+                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
+                              {formatTitleCase(s.name)}
                             </div>
                           </td>
 
@@ -1181,18 +1186,18 @@ export default function StudentDirectoryTab({
                               >
                                 {s.courseCode || "N/A"}
                               </Badge>
-                              <span className="text-xs text-gray-900 dark:text-zinc-300 font-medium">
+                              <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium">
                                 Sec {s.section || "—"}
                               </span>
                             </div>
                           </td>
 
-                          <td className="p-4 text-xs font-medium text-gray-600 dark:text-zinc-400">
+                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400">
                             {s.yearLevel || "—"}
                           </td>
 
                           <td className="p-4">
-                            <div className="inline-flex items-center gap-1 text-xs text-gray-700 dark:text-zinc-300">
+                            <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400">
                               <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs"></HugeIcon>
                               <span>
                                 Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
@@ -1239,7 +1244,7 @@ export default function StudentDirectoryTab({
                                       setActiveStudent(s);
                                       setProfileOpen(true);
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
                                     <HugeIcon  className="ph-bold ph-eye text-[14px]"></HugeIcon>
                                   </button>
@@ -1256,7 +1261,7 @@ export default function StudentDirectoryTab({
                                       setActiveStudent(s);
                                       setEditOpen(true);
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-100 flex items-center justify-center transition-colors"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
                                     <HugeIcon  className="ph-bold ph-pencil-simple text-[14px]"></HugeIcon>
                                   </button>
@@ -1270,7 +1275,7 @@ export default function StudentDirectoryTab({
                                   <button
                                     type="button"
                                     onClick={() => onLocateStudent?.(s)}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 flex items-center justify-center transition-colors"
+                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
                                     <HugeIcon  className="ph-bold ph-compass text-[14px]"></HugeIcon>
                                   </button>
@@ -1288,7 +1293,7 @@ export default function StudentDirectoryTab({
                                         setRestoreTarget(s);
                                         setRestoreModalOpen(true);
                                       }}
-                                      className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors"
+                                      className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                     >
                                       <HugeIcon  className="ph-bold ph-archive-restore text-[14px]"></HugeIcon>
                                     </button>
@@ -1304,7 +1309,7 @@ export default function StudentDirectoryTab({
                                         setArchiveTarget(s);
                                         setArchiveModalOpen(true);
                                       }}
-                                      className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 flex items-center justify-center transition-colors"
+                                      className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                     >
                                       <HugeIcon  className="ph-bold ph-archive text-[14px]"></HugeIcon>
                                     </button>
@@ -1437,11 +1442,11 @@ export default function StudentDirectoryTab({
             setActiveStudent(s);
             setEditOpen(true);
           }}
-          onArchiveStudent={(sn) => {
+          onArchiveStudent={() => {
             setArchiveTarget(activeStudent);
             setArchiveModalOpen(true);
           }}
-          onRestoreStudent={(sn) => {
+          onRestoreStudent={() => {
             setRestoreTarget(activeStudent);
             setRestoreModalOpen(true);
           }}

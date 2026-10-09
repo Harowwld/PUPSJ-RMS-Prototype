@@ -8,7 +8,7 @@ import {
   restoreDocType
 } from "../../../lib/docTypesRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
-import { requireAdmin, requireStaff, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { requireAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
 
 export const runtime = "nodejs";
@@ -230,7 +230,7 @@ export async function PATCH(req) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }
@@ -261,7 +261,7 @@ export async function DELETE(req) {
         entity_id: id
     });
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }

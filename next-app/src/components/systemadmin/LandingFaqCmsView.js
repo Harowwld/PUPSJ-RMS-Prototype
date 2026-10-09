@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import LandingFaqSkeleton from "@/components/systemadmin/skeletons/LandingFaqSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -93,29 +92,7 @@ export default function LandingFaqCmsView({ showToast }) {
     [showToast]
   )
 
-  // Fetch current FAQ configuration
-  const fetchFaqData = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) {
-        setLoading(true)
-      }
-      try {
-        const res = await fetch("/api/landing/faq", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setFaqData(json.data)
-        } else {
-          notify(json.error || "Failed to load FAQ configuration", true)
-        }
-      } catch (err) {
-        console.error("[LandingFaqCmsView] Fetch error:", err)
-        notify("Network error fetching FAQ settings", true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [notify]
-  )
+
 
   useEffect(() => {
     let ignore = false

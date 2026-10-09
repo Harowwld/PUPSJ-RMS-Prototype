@@ -113,7 +113,6 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const archivedTemplates = useMemo(() => templates.filter((t) => t.status === "Archived"), [templates])
   const displayTemplates = templateFilter === "Archived" ? archivedTemplates : activeTemplates
 
-  const selectedTemplate = useMemo(() => templates.find((template) => template.id === selectedTemplateId), [templates, selectedTemplateId])
   const currentPage = ocrPages.find((page) => Number(page.pageIndex) === Number(pageIndex))
   const previewRegion = draftRegion?.width > 0 && draftRegion?.height > 0 ? draftRegion : regions[activeField]
   const previewText = (currentPage?.observations || [])
@@ -476,7 +475,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex flex-col flex-1 w-full min-h-0 select-none animate-fade-up">
+      <div className="flex flex-col w-full select-none animate-fade-up">
         <PageHeader
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -939,7 +938,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                   e.stopPropagation()
                                   setArchiveTemplateId(template.id)
                                 }}
-                                className="w-7 h-7 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
+                                className="w-7 h-7 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 dark:text-zinc-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
                                 <HugeIcon  className="ph-bold ph-archive text-sm" />
                               </button>
@@ -956,7 +955,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                   e.stopPropagation()
                                   setRestoreTemplateId(template.id)
                                 }}
-                                className="w-7 h-7 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
+                                className="w-7 h-7 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 dark:text-zinc-400 dark:hover:text-emerald-400 dark:hover:bg-emerald-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
                                 <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-sm" />
                               </button>
@@ -974,7 +973,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                 e.stopPropagation()
                                 setDeleteTemplateId(template.id)
                               }}
-                              className="w-7 h-7 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
+                              className="w-7 h-7 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-red-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                             >
                               <HugeIcon  className="ph-bold ph-trash text-sm" />
                             </button>

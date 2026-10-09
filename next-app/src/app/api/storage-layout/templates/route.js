@@ -30,7 +30,7 @@ export async function GET(req) {
   try {
     const templates = await getStorageTemplates({ officeId });
     return NextResponse.json({ ok: true, data: templates });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to load storage templates" },
       { status: 500 }
@@ -62,7 +62,7 @@ export async function PUT(req) {
     });
 
     return NextResponse.json({ ok: true, data: saved });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to update storage templates" },
       { status: 400 }
@@ -89,7 +89,7 @@ export async function DELETE(req) {
     });
 
     return NextResponse.json({ ok: true, data: restored });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to restore storage templates" },
       { status: 400 }

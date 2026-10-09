@@ -5,21 +5,29 @@ import { NextResponse } from "next/server";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { updateStaff } from "@/lib/staffRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { query } from "@/lib/postgres";
+import { query, queryOne } from "@/lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { getDefaultAvatarSvg, isDefaultAvatarId } from "@/lib/defaultAvatars";
 
 export const runtime = "nodejs";
 
 function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
-    ? process.env.LOCAL_DATA_DIR
-    : path.join(process.cwd(), ".local");
+    ? path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR)
+    : path.resolve(process.cwd(), ".local");
 }
 
 function getAvatarsDir() {
   const dir = path.join(getLocalDir(), "uploads", "avatars");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+function isValidAvatarFilename(fn) {
+  if (!fn || typeof fn !== "string") return false;
+  const base = path.basename(fn);
+  if (base !== fn) return false;
+  return /^avatar_[A-Za-z0-9_-]+\.(png|jpe?g|webp|gif|svg)$/i.test(fn);
 }
 
 function getAvatarPath(filename) {
@@ -52,7 +60,7 @@ function getSessionUser(principal) {
   };
 }
 
-// GET serves the avatar image
+// GET serves the avatar image (viewable by any authenticated user)
 export async function GET(req) {
   const auth = await requireAuth(req);
   if (auth.error || !auth.user) {
@@ -63,20 +71,66 @@ export async function GET(req) {
     if (!sessionUser) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
-    if (!canAccessResource(auth.user, "avatar", { ownerType: sessionUser.type, ownerId: sessionUser.account_id })) {
-      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
-    }
 
     const { searchParams } = new URL(req.url);
-    const targetId = searchParams.get("id") || sessionUser.id;
-    if (targetId !== sessionUser.id && String(targetId) !== String(sessionUser.account_id)) {
-      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
+    const targetId = (searchParams.get("id") || "").trim();
+    const filenameParam = (searchParams.get("filename") || "").trim();
+    const tParam = (searchParams.get("t") || "").trim();
+
+    let avatarFilename = null;
+
+    // 1. If explicit avatar filename is passed in `filename` or `t` (e.g. from officer views)
+    const candidateFile = filenameParam || (tParam.startsWith("avatar_") ? tParam : null);
+    if (candidateFile && isValidAvatarFilename(candidateFile)) {
+      try {
+        const filePath = getAvatarPath(candidateFile);
+        if (fs.existsSync(filePath)) {
+          avatarFilename = candidateFile;
+        }
+      } catch {
+        // invalid candidate
+      }
     }
 
-    const avatarFilename = sessionUser.avatar_filename;
+    // 2. If not found by candidate filename, resolve by targetId (or caller's own id)
+    if (!avatarFilename) {
+      const lookupId = targetId || sessionUser.id;
+      const isSelf = lookupId === sessionUser.id || String(lookupId) === String(sessionUser.account_id);
+
+      if (isSelf && sessionUser.avatar_filename) {
+        try {
+          const filePath = getAvatarPath(sessionUser.avatar_filename);
+          if (fs.existsSync(filePath)) {
+            avatarFilename = sessionUser.avatar_filename;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!avatarFilename) {
+        // Query DB for staff first
+        const staffRow = await queryOne(
+          "SELECT avatar_filename FROM staff WHERE id = $1",
+          [lookupId]
+        );
+        if (staffRow?.avatar_filename) {
+          avatarFilename = staffRow.avatar_filename;
+        } else {
+          // Query DB for student_accounts (match id or student_no)
+          const studentRow = await queryOne(
+            "SELECT avatar_filename FROM student_accounts WHERE id::text = $1 OR student_no = $1",
+            [lookupId]
+          );
+          if (studentRow?.avatar_filename) {
+            avatarFilename = studentRow.avatar_filename;
+          }
+        }
+      }
+    }
 
     if (!avatarFilename) {
-      return NextResponse.json({ ok: false, error: "No avatar uploaded" }, { status: 404 });
+      return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
     const filePath = getAvatarPath(avatarFilename);
@@ -101,6 +155,7 @@ export async function GET(req) {
       },
     });
   } catch (err) {
+    console.error("[Avatar GET Error]:", err);
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -120,43 +175,82 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
-    const form = await req.formData().catch(() => null);
-    if (!form) {
-      return NextResponse.json({ ok: false, error: "Invalid form data" }, { status: 400 });
+    let defaultAvatarId = null;
+    let file = null;
+
+    const contentTypeHeader = req.headers.get("content-type") || "";
+    if (contentTypeHeader.includes("application/json")) {
+      const jsonBody = await req.json().catch(() => null);
+      if (jsonBody?.defaultAvatarId !== undefined) {
+        defaultAvatarId = jsonBody.defaultAvatarId;
+      }
+    } else {
+      const form = await req.formData().catch(() => null);
+      if (form) {
+        if (form.get("defaultAvatarId") !== null) {
+          defaultAvatarId = form.get("defaultAvatarId");
+        } else {
+          file = form.get("avatar");
+        }
+      }
     }
 
-    const file = form.get("avatar");
-    if (!file || typeof file === "string") {
-      return NextResponse.json({ ok: false, error: "No avatar file provided" }, { status: 400 });
+    if (!defaultAvatarId && (!file || typeof file === "string")) {
+      return NextResponse.json({ ok: false, error: "No avatar selection or file provided" }, { status: 400 });
     }
 
-    // Validate size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ ok: false, error: "File size exceeds 5MB limit" }, { status: 400 });
+    // Lookup previous avatar from DB to guarantee cleanup
+    let oldFilename = sessionUser.avatar_filename;
+    if (sessionUser.type === "student") {
+      const prev = await queryOne("SELECT avatar_filename FROM student_accounts WHERE id = $1", [sessionUser.account_id]);
+      if (prev?.avatar_filename) oldFilename = prev.avatar_filename;
+    } else {
+      const prev = await queryOne("SELECT avatar_filename FROM staff WHERE id = $1", [sessionUser.id]);
+      if (prev?.avatar_filename) oldFilename = prev.avatar_filename;
     }
 
-    // Validate content type
-    const mime = String(file.type || "").toLowerCase();
-    if (!mime.startsWith("image/")) {
-      return NextResponse.json({ ok: false, error: "Only image files are allowed" }, { status: 400 });
-    }
-
-    const ext = mime === "image/jpeg" ? ".jpg"
-              : mime === "image/png" ? ".png"
-              : mime === "image/webp" ? ".webp"
-              : mime === "image/gif" ? ".gif"
-              : mime === "image/svg+xml" ? ".svg"
-              : path.extname(file.name || "").toLowerCase() || ".png";
-
-    // Save the replacement first; keep the current avatar until its DB reference changes.
-    const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 16);
     const identifier = sessionUser.type === "student" ? `STUDENT_${sessionUser.account_id}` : sessionUser.id;
     const safeId = String(identifier).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
-    const filename = `avatar_${safeId}_${uuid}${ext}`;
-    const absPath = path.join(getAvatarsDir(), filename);
+    let filename;
+    let absPath;
 
-    const buf = Buffer.from(await file.arrayBuffer());
-    fs.writeFileSync(absPath, buf, { flag: "wx" });
+    if (defaultAvatarId) {
+      if (!isDefaultAvatarId(defaultAvatarId)) {
+        return NextResponse.json({ ok: false, error: "Invalid default avatar ID. Must be between 1 and 4." }, { status: 400 });
+      }
+      const svgMarkup = getDefaultAvatarSvg(defaultAvatarId);
+      if (!svgMarkup) {
+        return NextResponse.json({ ok: false, error: "Default avatar not found" }, { status: 404 });
+      }
+      filename = `avatar_${safeId}_default${defaultAvatarId}.svg`;
+      absPath = path.join(getAvatarsDir(), filename);
+      fs.writeFileSync(absPath, svgMarkup, "utf8");
+    } else {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        return NextResponse.json({ ok: false, error: "File size exceeds 5MB limit" }, { status: 400 });
+      }
+
+      // Validate content type
+      const mime = String(file.type || "").toLowerCase();
+      if (!mime.startsWith("image/")) {
+        return NextResponse.json({ ok: false, error: "Only image files are allowed" }, { status: 400 });
+      }
+
+      const ext = mime === "image/jpeg" ? ".jpg"
+                : mime === "image/png" ? ".png"
+                : mime === "image/webp" ? ".webp"
+                : mime === "image/gif" ? ".gif"
+                : mime === "image/svg+xml" ? ".svg"
+                : path.extname(file.name || "").toLowerCase() || ".png";
+
+      const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 16);
+      filename = `avatar_${safeId}_${uuid}${ext}`;
+      absPath = path.join(getAvatarsDir(), filename);
+
+      const buf = Buffer.from(await file.arrayBuffer());
+      fs.writeFileSync(absPath, buf, { flag: "wx" });
+    }
 
     try {
       if (sessionUser.type === "student") {
@@ -171,24 +265,30 @@ export async function POST(req) {
       throw error;
     }
 
-    removeAvatarFile(sessionUser.avatar_filename);
+    if (oldFilename && oldFilename !== filename) {
+      removeAvatarFile(oldFilename);
+    }
+
+    const actionDetails = defaultAvatarId
+      ? `selected default profile avatar (Avatar ${defaultAvatarId})`
+      : `uploaded custom profile avatar icon for account`;
 
     if (sessionUser.type === "student") {
       await writeAuditLog(req, "Upload Avatar", {
-        details: `uploaded custom profile avatar icon for student account`,
+        details: actionDetails,
         entity_type: "Student",
         entity_id: String(sessionUser.account_id),
       });
     } else {
       await writeAuditLog(req, "Upload Avatar", {
-        details: `uploaded custom profile avatar icon for account`,
+        details: actionDetails,
         entity_type: "Staff",
         entity_id: sessionUser.id,
       });
     }
 
     return NextResponse.json({ ok: true, avatar_filename: filename });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -208,17 +308,22 @@ export async function DELETE(req) {
       return NextResponse.json({ ok: false, error: "Avatar not found" }, { status: 404 });
     }
 
+    let oldFilename = sessionUser.avatar_filename;
     let updated;
     if (sessionUser.type === "student") {
+      const prev = await queryOne("SELECT avatar_filename FROM student_accounts WHERE id = $1", [sessionUser.account_id]);
+      if (prev?.avatar_filename) oldFilename = prev.avatar_filename;
       const rows = await query("UPDATE student_accounts SET avatar_filename = NULL WHERE id = $1 RETURNING id", [sessionUser.account_id]);
       updated = rows.length > 0;
       if (!updated) return NextResponse.json({ ok: false, error: "Account not found" }, { status: 404 });
     } else {
+      const prev = await queryOne("SELECT avatar_filename FROM staff WHERE id = $1", [sessionUser.id]);
+      if (prev?.avatar_filename) oldFilename = prev.avatar_filename;
       updated = await updateStaff(sessionUser.id, { avatar_filename: null });
       if (!updated) return NextResponse.json({ ok: false, error: "Account not found" }, { status: 404 });
     }
 
-    removeAvatarFile(sessionUser.avatar_filename);
+    removeAvatarFile(oldFilename);
 
     if (sessionUser.type === "student") {
       await writeAuditLog(req, "Delete Avatar", {
@@ -235,7 +340,7 @@ export async function DELETE(req) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

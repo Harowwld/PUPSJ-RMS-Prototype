@@ -6,16 +6,12 @@ import { toast } from "sonner"
 import {
   PhShield,
   PhWarning,
-  PhX,
   PhChartLine,
   PhLock,
   PhUnlock,
   PhGauge,
-  PhUsers,
-  PhClock,
 } from "@phosphor-icons/react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import {
@@ -35,9 +31,9 @@ export default function RateLimitingTab() {
   const [activeTab, setActiveTab] = useState("overview")
   const [suspiciousIPs, setSuspiciousIPs] = useState([])
 
-  const fetchData = async () => {
+  const fetchData = async (showLoading = false) => {
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       const [response] = await Promise.all([
         fetch("/api/admin/rate-limits"),
         new Promise((resolve) => setTimeout(resolve, 600)), // Animation visible
@@ -89,27 +85,34 @@ export default function RateLimitingTab() {
     }
   }
 
-  const updateConfig = async (config) => {
-    try {
-      const response = await fetch("/api/admin/rate-limits", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      })
-
-      if (!response.ok) throw new Error("Failed to update configuration")
-
-      toast.success("Rate limit configuration updated")
-      fetchData()
-    } catch (error) {
-      toast.error("Failed to update configuration")
-      console.error(error)
-    }
-  }
-
   useEffect(() => {
-    fetchData()
-    fetchSuspiciousIPs()
+    let ignore = false
+    const init = async () => {
+      try {
+        const [res, suspRes] = await Promise.all([
+          fetch("/api/admin/rate-limits"),
+          fetch("/api/admin/security/suspicious-ips"),
+        ])
+        if (!ignore) {
+          if (res.ok) {
+            const result = await res.json()
+            if (result.ok) setData(result.data)
+          }
+          if (suspRes.ok) {
+            const suspResult = await suspRes.json()
+            if (suspResult.ok) setSuspiciousIPs(suspResult.data)
+          }
+        }
+      } catch (err) {
+        if (!ignore) console.error(err)
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+    init()
+    return () => {
+      ignore = true
+    }
   }, [])
 
   const formatTime = (timeString) => {

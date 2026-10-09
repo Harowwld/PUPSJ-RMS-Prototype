@@ -41,7 +41,7 @@ const ICON_MAP = {
   storage: { icon: "ti ti-folder-open" },
 }
 
-export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName, authUser, bottomContent, children }) {
+export default function Sidebar({ open = true, items, activeKey, onSelect, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName, authUser, bottomContent, children }) {
   const pathname = usePathname()
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)

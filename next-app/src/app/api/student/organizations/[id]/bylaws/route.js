@@ -12,6 +12,7 @@ import {
   createOrganizationBylawsSubmission,
 } from "@/lib/organizationsRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -93,6 +94,7 @@ export async function GET(req, ctx) {
       headers: {
         "Content-Type": targetMimeType,
         "Content-Disposition": `inline; filename="${targetOriginalName}"`,
+        ...FILE_SECURITY_HEADERS,
       },
     });
   }

@@ -1,4 +1,4 @@
-import { writeAuditLog } from "./auditLogRequest";
+import { writeAuditLog } from "./auditLogRequest.js";
 
 function formatTarget(targetUrl) {
   try {

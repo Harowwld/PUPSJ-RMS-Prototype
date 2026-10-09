@@ -4,8 +4,6 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
 import TaxonomyTableSkeleton from "@/components/admin/skeletons/TaxonomyTableSkeleton"
 import {
   Empty,
@@ -23,8 +21,6 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { Card, CardContent } from "@/components/ui/card"
-import { Select } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -74,7 +70,6 @@ export default function CoursesTab({
   handleExportCourses: handleExportProp,
 }) {
   const [localSearch, setLocalSearch] = useState(courseSearch)
-  const [jumpPage, setJumpPage] = useState(String(pageCourse))
   const [isExporting, setIsExporting] = useState(false)
 
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false)
@@ -162,7 +157,7 @@ export default function CoursesTab({
     }
   }
 
-  async function delCourse(id, code) {
+  async function delCourse(id) {
     try {
       const res = await fetch(`/api/courses?id=${id}`, { method: "DELETE" })
       const json = await res.json()
@@ -187,7 +182,7 @@ export default function CoursesTab({
     }
   }
 
-  async function resCourse(id, code) {
+  async function resCourse(id) {
     try {
       const res = await fetch(`/api/courses?id=${id}&restore=true`, {
         method: "DELETE",
@@ -215,10 +210,6 @@ export default function CoursesTab({
   }
 
   useEffect(() => {
-    setJumpPage(String(pageCourse))
-  }, [pageCourse])
-
-  useEffect(() => {
     const handler = setTimeout(() => {
       setCourseSearch(localSearch)
     }, 300)
@@ -233,18 +224,6 @@ export default function CoursesTab({
     const value = Number(e.target.value)
     setItemsPerPage(value)
     setPageCourse(1)
-  }
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      const totalPages = Math.ceil(filteredCoursesFull.length / itemsPerPage)
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setPageCourse(val)
-      } else {
-        setJumpPage(String(pageCourse))
-      }
-    }
   }
 
 
@@ -315,7 +294,7 @@ export default function CoursesTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="font-jakarta flex w-full flex-1 flex-col animate-fade-up min-h-0">
+      <div className="font-jakarta flex w-full flex-col animate-fade-up">
         <PageHeader
           icon="ph-books"
           showBorder={false}
@@ -442,14 +421,14 @@ export default function CoursesTab({
         />
 
         {/* Main Table Container (Seamless inside single card) */}
-        <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border bg-white dark:bg-card", filteredCourses.length === 0 && "rounded-b-2xl overflow-hidden")}>
-          <div className="w-full overflow-x-auto flex-1 select-none">
+        <div className={cn("w-full border-t border-border dark:border-border bg-white dark:bg-card", filteredCourses.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className="w-full overflow-x-auto select-none">
             {loading && courses.length === 0 ? (
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
             ) : (
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
@@ -462,42 +441,42 @@ export default function CoursesTab({
                           disabled={filteredCourses.length === 0}
                         />
                       </th>
-                      <th className="w-48 p-4 px-6">
+                      <th className="w-48 p-4">
                         <button
                           onClick={() => onSort("code")}
                           className={cn(
                             "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortCourse.key === "code" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                            sortCourse.key === "code" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
                           Code <SortIndicator sortState={sortCourse} column="code" />
                         </button>
                       </th>
-                      <th className="p-4 px-6">
+                      <th className="p-4">
                         <button
                           onClick={() => onSort("name")}
                           className={cn(
                             "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortCourse.key === "name" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                            sortCourse.key === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
                           Designation <SortIndicator sortState={sortCourse} column="name" />
                         </button>
                       </th>
-                      <th className="w-40 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
-                      <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                      <th className="w-36 p-4 text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Status</th>
+                      <th className="w-32 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
                     {!showArchived && (
                       <tr
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                          "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                           (newCourseCode.trim() || newCourseName.trim()) && "bg-emerald-50/40 dark:bg-emerald-950/10"
                         )}
                       >
-                        <td className="py-0 px-4 align-middle text-center"></td>
-                        <td className="py-0 px-6 align-middle">
+                        <td className="p-4 align-middle text-center"></td>
+                        <td className="p-4 align-middle">
                           <Input
                             placeholder="CODE (e.g. BSIT)"
                             value={newCourseCode}
@@ -510,7 +489,7 @@ export default function CoursesTab({
                             )}
                           />
                         </td>
-                        <td className="py-0 px-6 align-middle">
+                        <td className="p-4 align-middle">
                           <div className="flex items-center gap-2">
                             <Input
                               placeholder="Full program designation..."
@@ -554,18 +533,18 @@ export default function CoursesTab({
                             </Button>
                           </div>
                         </td>
-                        <td className="py-0 px-6 align-middle">
+                        <td className="p-4 align-middle">
                           {newCourseCode.trim() || newCourseName.trim() ? (
                             <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                               Draft
                             </div>
                           ) : (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-500">
+                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
                               New
                             </div>
                           )}
                         </td>
-                        <td className="py-0 px-6 text-right align-middle"></td>
+                        <td className="p-4 text-right align-middle"></td>
                       </tr>
                     )}
                     {filteredCourses.map((c) => {
@@ -581,13 +560,13 @@ export default function CoursesTab({
                             if (!isDisabled) toggleCourseSelected(c.id, e);
                           }}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             c.status === "Archived" && "opacity-75",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"
                           )}
                         >
-                          <td className="py-0 px-4 align-middle text-center">
+                          <td className="p-4 align-middle text-center">
                               <input
                               type="checkbox"
                               className={cn(
@@ -607,17 +586,17 @@ export default function CoursesTab({
                               disabled={isDisabled}
                             />
                           </td>
-                          <td className="py-0 px-6 align-middle">
-                            <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                          <td className="p-4 align-middle">
+                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                               {c.code}
                             </span>
                           </td>
-                          <td className="py-0 px-6 align-middle max-w-[400px]">
-                            <div className="truncate text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50" title={c.name}>
+                          <td className="p-4 align-middle max-w-[400px]">
+                            <div className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100" title={c.name}>
                               {c.name}
                             </div>
                           </td>
-                          <td className="py-0 px-6 align-middle text-left">
+                          <td className="p-4 align-middle text-left">
                             {c.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived
@@ -628,7 +607,7 @@ export default function CoursesTab({
                               </div>
                             )}
                           </td>
-                          <td className="py-0 px-6 text-right align-middle">
+                          <td className="p-4 text-right align-middle">
                             <div 
                               className="inline-flex items-center justify-end gap-1.5"
                               onClick={(e) => e.stopPropagation()}

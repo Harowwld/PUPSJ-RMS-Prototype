@@ -3,7 +3,6 @@ import fs from "node:fs";
 import { getBackupById, getBackupsDir, getBackupFilePath } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
-import { isSystemAdminRole } from "../../../../../lib/roleUtils";
 import { canAccessResource } from "../../../../../lib/resourceAuthorization";
 
 export const runtime = "nodejs";

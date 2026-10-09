@@ -297,7 +297,7 @@ function stripTrailing(s) {
  * @param {{ engine?: string }} opts  engine: "apple-vision"|"windows-media"|"unknown"
  * @returns {string}
  */
-export function detectName(lines, { engine = "unknown", nlp = null } = {}) {
+export function detectName(lines, { nlp = null } = {}) {
   const full = lines.join(" ");
   /** @type {{ name: string; score: number; strategy: string }[]} */
   const candidates = [];
@@ -1232,7 +1232,7 @@ export async function scanPdfForSuggestion(payload) {
   return scanFileForSuggestion(payload);
 }
 
-export async function scanFileForSuggestion({ file, students, docTypes, rotation = 0 }) {
+export async function scanFileForSuggestion({ file, students, docTypes }) {
   if (!file) throw new Error("Missing file");
 
   const mime = lo(file?.type);
@@ -1351,13 +1351,11 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     }
   }
 
-  const templateApplied = Boolean(coordinateRecognition);
-
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
 
   const templateExtractedName = coordinateRecognition?.extractedName || "";
-  const naturalLanguageName = detectName(lines, { engine: ocrEngine, nlp });
+  const naturalLanguageName = detectName(lines, { nlp });
   const rawExtracted = matchedStudent ? "" : templateExtractedName || naturalLanguageName;
 
   // ── Detect name (fallback when student number did not match) ──

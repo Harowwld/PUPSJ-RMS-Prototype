@@ -55,7 +55,7 @@ export function validateCSRFToken(token, sessionId, maxAge = DEFAULT_CSRF_MAX_AG
     const actualBytes = Buffer.from(signature, "hex");
     const expectedBytes = Buffer.from(expected, "hex");
     return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
-  } catch (error) {
+  } catch {
     return false;
   }
 }

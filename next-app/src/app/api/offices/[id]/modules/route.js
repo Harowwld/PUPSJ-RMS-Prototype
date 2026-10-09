@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
       FROM modules m LEFT JOIN office_modules om ON om.module_id = m.id AND om.office_id = $1
       ORDER BY m.category, m.sort_order`, [id]);
     return NextResponse.json({ ok: true, data: modules });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -103,7 +103,7 @@ export async function PUT(req, { params }) {
       entity_id: id,
     });
     return NextResponse.json({ ok: true, data: updated });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

@@ -15,23 +15,8 @@ import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-
-import { formatPHDateTimeParts, formatPHDateTime } from "@/lib/timeFormat";
-import {
-  isAdminRole,
-  isSystemAdminRole,
-  getRoleLabel,
-  getDefaultDashboardPath,
-} from "@/lib/roleUtils";
+import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRoleBranding } from "@/lib/roleBranding";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -42,13 +27,7 @@ import { generateExportFilename } from "@/lib/exportHelpers";
 import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import LogPagination from "@/components/admin/audit-logs/LogPagination";
-import {
-  FadeIn,
-  SlideUp,
-  StaggerContainer,
-  StaggerItem,
-  PageTransition,
-} from "@/components/ui/motion";
+import { PageTransition } from "@/components/ui/motion";
 import {
   Empty,
   EmptyHeader,
@@ -57,59 +36,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 
-
-// 1. ICONS & CONSTANTS
-function getActionIcon(action) {
-  const act = String(action || "").toLowerCase();
-  if (act.includes("report") || act.includes("generate")) return "ph-duotone ph-file-pdf";
-  if (act.includes("login")) return "ph-duotone ph-sign-in";
-  if (act.includes("logout")) return "ph-duotone ph-sign-out";
-  if (act.includes("create") || act.includes("add")) return "ph-duotone ph-plus-circle";
-  if (act.includes("delete") || act.includes("remove")) return "ph-duotone ph-trash";
-  if (act.includes("restore")) return "ph-duotone ph-arrow-counter-clockwise";
-  if (act.includes("update") || act.includes("edit")) return "ph-duotone ph-pencil-line";
-  if (act.includes("upload") || act.includes("ingest")) return "ph-duotone ph-cloud-arrow-up";
-  if (act.includes("download") || act.includes("export")) return "ph-duotone ph-download-simple";
-  if (act.includes("view") || act.includes("preview")) return "ph-duotone ph-eye";
-  if (act.includes("approve")) return "ph-duotone ph-check-circle";
-  if (act.includes("reject")) return "ph-duotone ph-x-circle";
-  if (act.includes("archive")) return "ph-duotone ph-archive";
-  if (act.includes("rotate") || act.includes("password")) return "ph-duotone ph-key";
-  if (act.includes("backup")) return "ph-duotone ph-database";
-  if (act.includes("security") || act.includes("auth")) return "ph-duotone ph-shield-check";
-  return "ph-duotone ph-activity";
-}
-
-function getSeverityConfig(sev) {
-  switch (String(sev || "").toUpperCase()) {
-    case "CRITICAL":
-      return {
-        bg: "bg-red-500/10",
-        text: "text-red-600 dark:text-red-400",
-        border: "border-red-500/20 dark:border-red-400/20",
-        dot: "bg-red-500",
-        icon: "ph-fill ph-warning-circle",
-      };
-    case "WARNING":
-      return {
-        bg: "bg-amber-500/10",
-        text: "text-amber-600 dark:text-amber-400",
-        border: "border-amber-500/20 dark:border-amber-400/20",
-        dot: "bg-amber-500",
-        icon: "ph-fill ph-warning",
-      };
-    default:
-      return {
-        bg: "bg-blue-500/10",
-        text: "text-blue-600 dark:text-blue-400",
-        border: "border-blue-500/20 dark:border-blue-400/20",
-        dot: "bg-blue-500",
-        icon: "ph-fill ph-info",
-      };
-  }
-}
-
-// 2. CHILD COMPONENTS
+// 1. CHILD COMPONENTS
 function StatCards({ isLoading, stats }) {
   const [selectedKpi, setSelectedKpi] = useState(null);
   const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
@@ -611,7 +538,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
         minute: "2-digit",
         hour12: true
       });
-    } catch (e) {
+    } catch {
       return log.created_at || log.time;
     }
   })();
@@ -715,8 +642,6 @@ function LogTable({
   setLogPage,
   itemsPerPage,
   setItemsPerPage,
-  jumpPage,
-  setJumpPage,
   handleSort,
   logSortBy,
   logSortOrder,
@@ -740,24 +665,6 @@ function LogTable({
       [id]: !prev[id],
     }));
   }, []);
-
-  const handleItemsPerPageChange = (e) => {
-    const value = Number(e.target.value);
-    setItemsPerPage(value);
-    setLogPage(1);
-  };
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage);
-      const maxPage = Math.max(1, Math.ceil(logTotal / itemsPerPage));
-      if (!isNaN(val) && val >= 1 && val <= maxPage) {
-        setLogPage(val);
-      } else {
-        setJumpPage(String(logPage));
-      }
-    }
-  };
 
   if (isLoading && !displayLogs.length) {
     return (
@@ -830,10 +737,6 @@ function LogTable({
       </div>
     );
   }
-
-  const startItem = (logPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(logPage * itemsPerPage, logTotal);
-  const totalPages = Math.max(1, Math.ceil(logTotal / itemsPerPage));
 
   return (
     <div className={cn("space-y-0", embedded ? "flex flex-1 flex-col min-h-0" : "")}>
@@ -1043,7 +946,6 @@ export default function AccountActivityPage() {
   const [previewFrameReady, setPreviewFrameReady] = useState(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
-  const [jumpPage, setJumpPage] = useState("1");
 
   const handleLogout = async () => {
     try {
@@ -1109,11 +1011,7 @@ export default function AccountActivityPage() {
     } catch { /* ignore */ }
   }, []);
 
-  // Sync state & debounced search
-  useEffect(() => {
-    setJumpPage(String(page));
-  }, [page]);
-
+  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (localSearch !== search) {
@@ -1158,10 +1056,6 @@ export default function AccountActivityPage() {
   };
 
   const handleSearchChange = (e) => setLocalSearch(e.target.value);
-  const handleSeverityChange = (e) => {
-    setSeverityFilter(e.target.value);
-    setPage(1);
-  };
 
   // Sorting
   const handleSort = (column) => {
@@ -1257,7 +1151,7 @@ export default function AccountActivityPage() {
       link.click();
       document.body.removeChild(link);
       toast.success("Download Success", { description: "Activity report has been downloaded." });
-    } catch (err) {
+    } catch {
       toast.error("Download Failed", { description: "Unable to download the PDF report." });
     }
   };
@@ -1267,8 +1161,6 @@ export default function AccountActivityPage() {
     navigator.clipboard.writeText(text);
     toast.success("Copied to Clipboard", { description: `${label} has been successfully copied.` });
   };
-
-  const hasActiveFilters = localSearch !== "" || severityFilter !== "All" || startDate !== "" || endDate !== "";
 
   if (loadingUser) {
     return (
@@ -1339,11 +1231,12 @@ export default function AccountActivityPage() {
     >
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="w-full max-w-[1920px] 2xl:max-w-[2560px] mx-auto py-6 px-4 sm:px-8">
-          <TooltipProvider delayDuration={200}>
-          {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <main className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col">
+        <PageTransition className="w-full flex-1">
+          <div className="w-full max-w-[1920px] 2xl:max-w-[2560px] mx-auto py-6 px-4 sm:px-8">
+            <TooltipProvider delayDuration={200}>
+            {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
+            <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
             <PageHeader
               icon="ph-clock-counter-clockwise"
               title="My Activity"
@@ -1373,7 +1266,7 @@ export default function AccountActivityPage() {
                     type="button"
                     onClick={handlePreviewPDF}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-[#0070e2] hover:bg-[#005bb8] text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                    className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
                     {isGeneratingPdf ? "Generating..." : "Report"}
                   </Button>
@@ -1459,8 +1352,6 @@ export default function AccountActivityPage() {
               setLogPage={setPage}
               itemsPerPage={perPage}
               setItemsPerPage={setPerPage}
-              jumpPage={jumpPage}
-              setJumpPage={setJumpPage}
               handleSort={handleSort}
               logSortBy={sortBy}
               logSortOrder={sortOrder}
@@ -1506,6 +1397,7 @@ export default function AccountActivityPage() {
         </TooltipProvider>
         </div>
         </PageTransition>
-        </div>
+      </main>
+    </div>
         );
         }

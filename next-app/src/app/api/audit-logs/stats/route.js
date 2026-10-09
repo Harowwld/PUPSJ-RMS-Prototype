@@ -49,7 +49,7 @@ export async function GET(req) {
 
     const stats = await getAuditLogStats(mine ? resolvedActors : "", mine ? "" : officeId);
     return NextResponse.json({ ok: true, data: stats });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Internal server error" },
       { status: 500 }

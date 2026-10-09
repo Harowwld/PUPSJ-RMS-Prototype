@@ -1,18 +1,9 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import Image from "next/image"
 import { useMemo, useState, useEffect } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
-import { cn } from "@/lib/utils"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { cn, formatTitleCase } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -20,11 +11,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import ScanUploadSkeleton from "@/components/staff/skeletons/ScanUploadSkeleton"
 import { Select } from "@/components/ui/select"
 import {
@@ -39,14 +26,6 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { findStudentsByOcrName, splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
-function toNormalCase(str) {
-  if (!str) return ""
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
-}
 
 const COORDINATE_REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
@@ -74,11 +53,9 @@ export default function ScanUploadTab({
   onFileSelect,
   onClearFile,
   ocrLoading,
-  ocrError,
   csvFile,
   csvRows,
   csvSelected,
-  toggleCsvSelectAll,
   toggleCsvRowSelected,
   setCsvRowField,
   storageLayout,
@@ -121,8 +98,9 @@ export default function ScanUploadTab({
   rotation = 0,
   setRotation,
   onOpenBatchReview,
+  isOsas: propIsOsas = null,
 }) {
-  const isOsas = authUser?.office_id === "osas"
+  const isOsas = Boolean(propIsOsas ?? ((authUser?.office_id || "").toLowerCase() === "osas"))
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
   const [showPagesSidebar, setShowPagesSidebar] = useState(true)
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
@@ -132,6 +110,13 @@ export default function ScanUploadTab({
   const [csvRowsPerPage, setCsvRowsPerPage] = useState(10)
   const [csvSearch, setCsvSearch] = useState("")
   const [localCsvSearch, setLocalCsvSearch] = useState("")
+  const [hideBulkCard, setHideBulkCard] = useState(false)
+
+  useEffect(() => {
+    if (!csvFile) {
+      setHideBulkCard(false)
+    }
+  }, [csvFile])
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -561,7 +546,7 @@ export default function ScanUploadTab({
       } else {
         showToast("No valid image or PDF in clipboard", "warning")
       }
-    } catch (err) {
+    } catch {
       showToast("Cannot read clipboard automatically. Try pressing Ctrl+V or Cmd+V.", "warning")
     }
   }
@@ -571,9 +556,9 @@ export default function ScanUploadTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-upload"
-        className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 focus:outline-none animate-fade-up"
+        className="font-jakarta w-full flex flex-col h-auto focus:outline-none animate-fade-up"
       >
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader
             icon="ph-scan"
             title="Scan & Upload"
@@ -722,7 +707,9 @@ export default function ScanUploadTab({
                 <section
                   className={cn(
                     "relative flex h-auto min-h-[580px] flex-col transition-all duration-normal",
-                    uploadMode === "csv" ? "w-full lg:w-[68%]" : "w-full lg:w-[48%]"
+                    uploadMode === "csv"
+                      ? (hideBulkCard ? "w-full" : "w-full lg:w-[68%]")
+                      : "w-full lg:w-[48%]"
                   )}
                 >
                   {uploadMode === "csv" ? (
@@ -748,8 +735,8 @@ export default function ScanUploadTab({
                               </div>
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-3">
-                            <div className="relative group w-48 sm:w-64">
+                          <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
+                            <div className="relative group w-44 sm:w-60">
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
                               </div>
@@ -761,11 +748,47 @@ export default function ScanUploadTab({
                                 onChange={(e) => setLocalCsvSearch(e.target.value)}
                               />
                             </div>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setHideBulkCard((prev) => !prev)}
+                              className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              title={hideBulkCard ? "Show Bulk Upload panel" : "Hide Bulk Upload card to expand table"}
+                            >
+                              {hideBulkCard ? "Show Panel" : "Hide Panel"}
+                            </Button>
+
+                            {hideBulkCard && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={importCsvStudents}
+                                disabled={csvLoading || Object.values(csvSelected).filter(Boolean).length === 0}
+                                className="h-9 px-3.5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                                style={{ color: "#ffffff" }}
+                                title={isOsas ? "Import Selected Organizations" : "Import Selected Students"}
+                              >
+                                {csvLoading ? (
+                                  <span className="flex items-center gap-1.5">
+                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                                    <span>Importing...</span>
+                                  </span>
+                                ) : (
+                                  <span>Import ({Object.values(csvSelected).filter(Boolean).length})</span>
+                                )}
+                              </Button>
+                            )}
+
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleCsvFileSelect(null)}
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              onClick={() => {
+                                setHideBulkCard(false);
+                                handleCsvFileSelect(null);
+                              }}
+                              className="h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Clear
                             </Button>
@@ -844,24 +867,24 @@ export default function ScanUploadTab({
                                   </th>
                                   {isOsas ? (
                                     <>
-                                      <th className="p-4 whitespace-nowrap">Organization Name</th>
-                                      <th className="p-4 whitespace-nowrap">Acronym</th>
-                                      <th className="p-4 whitespace-nowrap">Category</th>
-                                      <th className="p-4 whitespace-nowrap">Faculty Adviser</th>
+                                      <th className="p-4 min-w-[200px] whitespace-nowrap">Organization Name</th>
+                                      <th className="p-4 w-32 whitespace-nowrap">Acronym</th>
+                                      <th className="p-4 w-36 whitespace-nowrap">Category</th>
+                                      <th className="p-4 min-w-[180px] whitespace-nowrap">Faculty Adviser</th>
                                     </>
                                   ) : (
                                     <>
-                                      <th className="p-4 whitespace-nowrap">Student No</th>
-                                      <th className="p-4 whitespace-nowrap">Name</th>
-                                      <th className="p-4 whitespace-nowrap">Course</th>
-                                      <th className="p-4 whitespace-nowrap">Year</th>
-                                      <th className="p-4 whitespace-nowrap">Section</th>
+                                      <th className="p-4 w-44 whitespace-nowrap">Student No.</th>
+                                      <th className={cn("p-4 whitespace-nowrap", hideBulkCard ? "min-w-[220px]" : "min-w-[200px] max-w-[260px]")}>Full Name</th>
+                                      <th className="p-4 w-32 whitespace-nowrap">Course</th>
+                                      <th className="p-4 w-24 whitespace-nowrap">Year</th>
+                                      <th className="p-4 w-28 whitespace-nowrap">Section</th>
                                     </>
                                   )}
-                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Room</th>
-                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[120px]">Cabinet</th>
-                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Drawer</th>
-                                  <th className="p-4 text-right whitespace-nowrap">Status</th>
+                                  <th className="p-4 whitespace-nowrap text-left w-28">Room</th>
+                                  <th className="p-4 whitespace-nowrap text-left w-36">Cabinet</th>
+                                  <th className="p-4 whitespace-nowrap text-left w-28">Drawer</th>
+                                  <th className="p-4 text-right whitespace-nowrap w-24">Status</th>
                                 </tr>
                               </thead>
                               <tbody className="bg-transparent">
@@ -878,12 +901,12 @@ export default function ScanUploadTab({
                                     <tr
                                       key={r.index}
                                       className={cn(
-                                        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                                        "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                                       )}
                                       onClick={() => toggleCsvRowSelected(r.index)}
                                     >
-                                      <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                                      <td className="w-12 p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                                         <input
                                           type="checkbox"
                                           className={cn(
@@ -896,15 +919,15 @@ export default function ScanUploadTab({
                                       </td>
                                       {isOsas ? (
                                         <>
-                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
-                                            {r.organization?.name || r.student?.name}
+                                          <td className="p-4 min-w-[200px] align-middle font-semibold text-gray-900 dark:text-zinc-50 truncate" title={formatTitleCase(r.organization?.name || r.student?.name)}>
+                                            {formatTitleCase(r.organization?.name || r.student?.name)}
                                           </td>
-                                          <td className="py-0 px-4 align-middle whitespace-nowrap">
-                                            <span className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                                          <td className="w-32 p-4 align-middle whitespace-nowrap">
+                                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                               {r.organization?.acronym || r.student?.courseCode || "—"}
                                             </span>
                                           </td>
-                                          <td className="py-0 px-4 align-middle whitespace-nowrap">
+                                          <td className="w-36 p-4 align-middle whitespace-nowrap">
                                             <span className={cn(
                                               "inline-flex w-fit items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium",
                                               (r.organization?.category || "Academic") === "Academic"
@@ -914,32 +937,36 @@ export default function ScanUploadTab({
                                               {r.organization?.category || "Academic"}
                                             </span>
                                           </td>
-                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                          <td className="p-4 min-w-[180px] align-middle text-xs font-medium text-gray-700 dark:text-zinc-300 truncate">
                                             {r.organization?.adviserName || "—"}
                                           </td>
                                         </>
                                       ) : (
                                         <>
-                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
-                                            {r.student.studentNo}
+                                          <td className="w-44 p-4 align-middle whitespace-nowrap">
+                                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                                              {r.student.studentNo}
+                                            </span>
                                           </td>
-                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
-                                            {toNormalCase(r.student.name)}
+                                          <td className={cn("p-4 align-middle", hideBulkCard ? "min-w-[220px]" : "min-w-[200px] max-w-[260px]")}>
+                                            <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(r.student.name)}>
+                                              {formatTitleCase(r.student.name)}
+                                            </div>
                                           </td>
-                                          <td className="py-0 px-4 align-middle whitespace-nowrap">
-                                            <span className="inline-flex w-fit items-center justify-center rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                                          <td className="w-32 p-4 align-middle whitespace-nowrap">
+                                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
                                               {r.student.courseCode}
                                             </span>
                                           </td>
-                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                          <td className="w-24 p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                             {r.student.yearLevel}
                                           </td>
-                                          <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                          <td className="w-28 p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                             {r.student.section}
                                           </td>
                                         </>
                                       )}
-                                      <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
+                                      <td className="p-4 align-middle w-28" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(room || "")}
@@ -958,7 +985,7 @@ export default function ScanUploadTab({
                                           ))}
                                         </Select>
                                       </td>
-                                      <td className="py-0 px-2 align-middle w-[120px]" onClick={(e) => e.stopPropagation()}>
+                                      <td className="p-4 align-middle w-36" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-28 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(cabinet || "")}
@@ -988,7 +1015,7 @@ export default function ScanUploadTab({
                                           )}
                                         </Select>
                                       </td>
-                                      <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
+                                      <td className="p-4 align-middle w-28" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(drawer || "")}
@@ -1019,7 +1046,7 @@ export default function ScanUploadTab({
                                           )}
                                         </Select>
                                       </td>
-                                      <td className="py-0 px-4 align-middle text-right">
+                                      <td className="p-4 align-middle text-right w-24">
                                         <div className="inline-flex items-center justify-end">
                                           {r.error ? (
                                             <HugeIcon 
@@ -1176,9 +1203,8 @@ export default function ScanUploadTab({
                               href={isOsas ? "/sample_osas_organizations.csv" : "/sample_registrar_students.csv"}
                               download={isOsas ? "sample_osas_organizations.csv" : "sample_registrar_students.csv"}
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all cursor-pointer"
+                              className="inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all cursor-pointer"
                             >
-                              <HugeIcon className="ph-bold ph-download-simple text-sm" />
                               Download Sample CSV Template
                             </a>
                           </div>
@@ -1271,7 +1297,6 @@ export default function ScanUploadTab({
                                 handleClearPdf()
                               }}
                             >
-                              <HugeIcon  className="ph-bold ph-x text-xs mr-1" />
                               Close
                             </Button>
                           </div>
@@ -1489,9 +1514,8 @@ export default function ScanUploadTab({
                                 variant="outline"
                                 size="sm"
                                 onClick={handlePasteButtonClick}
-                                className="flex items-center gap-2 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               >
-                                <HugeIcon  className="ph-bold ph-clipboard-text text-sm"></HugeIcon>
                                 Paste
                               </Button>
                               <span className="text-[10px] text-gray-400 font-medium dark:text-zinc-500">
@@ -1528,20 +1552,36 @@ export default function ScanUploadTab({
                 <section
                   className={cn(
                     "font-jakarta flex h-fit flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-normal dark:border-border dark:bg-card dark:shadow-none",
-                    uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]"
+                    uploadMode === "csv"
+                      ? (hideBulkCard ? "hidden" : "w-full lg:w-[32%]")
+                      : "lg:w-[52%]"
                   )}
                 >
-                  <div className="flex flex-col gap-1 border-b border-border bg-transparent p-5 dark:border-border">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 m-0">
-                      {uploadMode === "csv" ? "Bulk Upload" : (isOsas ? "Organization Document" : "Label Document")}
-                    </h3>
-                    <p className="text-xs text-gray-900 dark:text-zinc-300 m-0 leading-normal">
-                      {uploadMode === "csv"
-                        ? "Review rows, bulk-edit locations, then import students."
-                        : uploadedFile
-                          ? (isOsas ? "Review detected organization details and assign storage." : "Review scanned information and fill in missing fields.")
-                          : (isOsas ? "Drop or select a file on the left, then associate an organization." : "Drop or select a file on the left, then fill in the form here.")}
-                    </p>
+                  <div className="flex items-start justify-between gap-4 border-b border-border bg-transparent p-5 dark:border-border">
+                    <div className="flex flex-col gap-1">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 m-0">
+                        {uploadMode === "csv" ? "Bulk Upload" : (isOsas ? "Organization Document" : "Label Document")}
+                      </h3>
+                      <p className="text-xs text-gray-900 dark:text-zinc-300 m-0 leading-normal">
+                        {uploadMode === "csv"
+                          ? "Review rows, bulk-edit locations, then import students."
+                          : uploadedFile
+                            ? (isOsas ? "Review detected organization details and assign storage." : "Review scanned information and fill in missing fields.")
+                            : (isOsas ? "Drop or select a file on the left, then associate an organization." : "Drop or select a file on the left, then fill in the form here.")}
+                      </p>
+                    </div>
+                    {uploadMode === "csv" && csvFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setHideBulkCard(true)}
+                        className="h-8 px-3 text-xs font-semibold rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0 ml-3"
+                        title="Hide Bulk Upload card to expand preview table"
+                      >
+                        Hide
+                      </Button>
+                    )}
                   </div>
 
                   <div className="p-5 bg-white dark:bg-transparent">

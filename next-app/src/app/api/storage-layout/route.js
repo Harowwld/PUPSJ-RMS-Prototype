@@ -72,7 +72,7 @@ export async function GET(req) {
   try {
     const layout = await getStorageLayout({ officeId });
     return NextResponse.json({ ok: true, data: layout });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to load storage layout" },
       { status: 500 }

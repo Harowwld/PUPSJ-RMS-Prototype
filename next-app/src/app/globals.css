@@ -1363,31 +1363,444 @@ button,
   --border: #000000 !important;
   --input: #000000 !important;
   --primary: #000000 !important;
+  --primary-foreground: #ffffff !important;
+  --secondary: #000000 !important;
+  --secondary-foreground: #ffffff !important;
+  --color-pup-border: #000000 !important;
+  --color-pup-text: #000000 !important;
+  --ring: #000000 !important;
+  --sidebar-border: #000000 !important;
+  --sidebar-foreground: #000000 !important;
 }
 
 .high-contrast.dark {
   --background: #000000 !important;
   --foreground: #ffffff !important;
-  --card: #000000 !important;
+  --card: #09090b !important;
   --card-foreground: #ffffff !important;
-  --popover: #000000 !important;
+  --popover: #09090b !important;
   --popover-foreground: #ffffff !important;
   --muted: #18181b !important;
   --muted-foreground: #ffffff !important;
   --border: #ffffff !important;
   --input: #ffffff !important;
   --primary: #ffffff !important;
+  --primary-foreground: #000000 !important;
+  --secondary: #ffffff !important;
+  --secondary-foreground: #000000 !important;
+  --color-pup-border: #ffffff !important;
+  --color-pup-text: #ffffff !important;
+  --ring: #ffffff !important;
+  --sidebar-border: #ffffff !important;
+  --sidebar-foreground: #ffffff !important;
 }
 
 .high-contrast * {
   text-shadow: none !important;
 }
 
+/* 1. Universal Text Contrast Overrides */
+.high-contrast .text-gray-400,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-600,
+.high-contrast .text-slate-400,
+.high-contrast .text-slate-500,
+.high-contrast .text-slate-600,
+.high-contrast .text-zinc-400,
+.high-contrast .text-zinc-500,
+.high-contrast .text-zinc-600,
+.high-contrast .text-muted-foreground,
+.high-contrast [class*="text-gray-400"],
+.high-contrast [class*="text-gray-500"],
+.high-contrast [class*="text-slate-400"],
+.high-contrast [class*="text-slate-500"],
+.high-contrast [class*="text-zinc-400"],
+.high-contrast [class*="text-zinc-500"] {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+.high-contrast.dark .text-gray-400,
+.high-contrast.dark .text-gray-500,
+.high-contrast.dark .text-gray-600,
+.high-contrast.dark .text-slate-400,
+.high-contrast.dark .text-slate-500,
+.high-contrast.dark .text-slate-600,
+.high-contrast.dark .text-zinc-400,
+.high-contrast.dark .text-zinc-500,
+.high-contrast.dark .text-zinc-600,
+.high-contrast.dark .text-muted-foreground,
+.high-contrast.dark [class*="text-gray-400"],
+.high-contrast.dark [class*="text-gray-500"],
+.high-contrast.dark [class*="text-slate-400"],
+.high-contrast.dark [class*="text-slate-500"],
+.high-contrast.dark [class*="text-zinc-400"],
+.high-contrast.dark [class*="text-zinc-500"] {
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+/* Full opacity for text and icons in high contrast */
+.high-contrast .opacity-30,
+.high-contrast .opacity-40,
+.high-contrast .opacity-50,
+.high-contrast .opacity-60,
+.high-contrast .opacity-70,
+.high-contrast [class*="text-"][class*="opacity-"] {
+  opacity: 1 !important;
+}
+
+/* Placeholders */
+.high-contrast ::placeholder,
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #374151 !important;
+  opacity: 1 !important;
+}
+
+.high-contrast.dark ::placeholder,
+.high-contrast.dark input::placeholder,
+.high-contrast.dark textarea::placeholder {
+  color: #d1d5db !important;
+  opacity: 1 !important;
+}
+
+/* 2. Universal Border & Divider Contrast Overrides */
+.high-contrast .border,
+.high-contrast .border-t,
+.high-contrast .border-b,
+.high-contrast .border-l,
+.high-contrast .border-r,
+.high-contrast .border-gray-100,
+.high-contrast .border-gray-200,
+.high-contrast .border-gray-300,
+.high-contrast .border-slate-100,
+.high-contrast .border-slate-200,
+.high-contrast .border-slate-300,
+.high-contrast .border-zinc-100,
+.high-contrast .border-zinc-200,
+.high-contrast .border-zinc-300,
+.high-contrast .border-border,
+.high-contrast .border-input,
+.high-contrast [class*="border-gray-"],
+.high-contrast [class*="border-slate-"],
+.high-contrast [class*="border-zinc-"] {
+  border-color: #000000 !important;
+}
+
+.high-contrast.dark .border,
+.high-contrast.dark .border-t,
+.high-contrast.dark .border-b,
+.high-contrast.dark .border-l,
+.high-contrast.dark .border-r,
+.high-contrast.dark .border-gray-100,
+.high-contrast.dark .border-gray-200,
+.high-contrast.dark .border-gray-300,
+.high-contrast.dark .border-slate-100,
+.high-contrast.dark .border-slate-200,
+.high-contrast.dark .border-slate-300,
+.high-contrast.dark .border-zinc-100,
+.high-contrast.dark .border-zinc-200,
+.high-contrast.dark .border-zinc-300,
+.high-contrast.dark .border-border,
+.high-contrast.dark .border-input,
+.high-contrast.dark [class*="border-gray-"],
+.high-contrast.dark [class*="border-slate-"],
+.high-contrast.dark [class*="border-zinc-"] {
+  border-color: #ffffff !important;
+}
+
+/* Dividers */
+.high-contrast .divide-gray-100 > * + *,
+.high-contrast .divide-gray-200 > * + *,
+.high-contrast .divide-slate-100 > * + *,
+.high-contrast .divide-slate-200 > * + *,
+.high-contrast .divide-zinc-100 > * + *,
+.high-contrast .divide-zinc-200 > * + *,
+.high-contrast .divide-border > * + *,
+.high-contrast .divide-y > * + * {
+  border-color: #000000 !important;
+}
+
+.high-contrast.dark .divide-gray-100 > * + *,
+.high-contrast.dark .divide-gray-200 > * + *,
+.high-contrast.dark .divide-slate-100 > * + *,
+.high-contrast.dark .divide-slate-200 > * + *,
+.high-contrast.dark .divide-zinc-100 > * + *,
+.high-contrast.dark .divide-zinc-200 > * + *,
+.high-contrast.dark .divide-border > * + *,
+.high-contrast.dark .divide-y > * + * {
+  border-color: #ffffff !important;
+}
+
+/* 3. Cards, Modals, Sheets, and Panels */
+.high-contrast [data-slot="card"],
+.high-contrast .rounded-2xl.border,
+.high-contrast .rounded-xl.border,
+.high-contrast [role="dialog"],
+.high-contrast [role="region"].border {
+  border: 2px solid #000000 !important;
+  box-shadow: none !important;
+}
+
+.high-contrast.dark [data-slot="card"],
+.high-contrast.dark .rounded-2xl.border,
+.high-contrast.dark .rounded-xl.border,
+.high-contrast.dark [role="dialog"],
+.high-contrast.dark [role="region"].border {
+  border: 2px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* 4. Data Tables & Data Grids */
+.high-contrast table thead,
+.high-contrast table thead tr {
+  background-color: #f3f4f6 !important;
+  border-bottom: 2px solid #000000 !important;
+}
+
+.high-contrast table thead th,
+.high-contrast table thead th * {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #000000 !important;
+}
+
+.high-contrast table tbody tr {
+  border-bottom: 1px solid #000000 !important;
+}
+
+.high-contrast table tbody td {
+  color: #000000 !important;
+}
+
+.high-contrast table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.high-contrast.dark table thead,
+.high-contrast.dark table thead tr {
+  background-color: #18181b !important;
+  border-bottom: 2px solid #ffffff !important;
+}
+
+.high-contrast.dark table thead th,
+.high-contrast.dark table thead th * {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #ffffff !important;
+}
+
+.high-contrast.dark table tbody tr {
+  border-bottom: 1px solid #3f3f46 !important;
+}
+
+.high-contrast.dark table tbody td {
+  color: #ffffff !important;
+}
+
+.high-contrast.dark table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 5. Form Inputs, Selects, and Textareas */
+.high-contrast input[type="text"],
+.high-contrast input[type="email"],
+.high-contrast input[type="password"],
+.high-contrast input[type="search"],
+.high-contrast input[type="number"],
+.high-contrast select,
+.high-contrast textarea,
+.high-contrast [data-slot="input"],
+.high-contrast [data-slot="select-trigger"] {
+  border: 2px solid #000000 !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+.high-contrast.dark input[type="text"],
+.high-contrast.dark input[type="email"],
+.high-contrast.dark input[type="password"],
+.high-contrast.dark input[type="search"],
+.high-contrast.dark input[type="number"],
+.high-contrast.dark select,
+.high-contrast.dark textarea,
+.high-contrast.dark [data-slot="input"],
+.high-contrast.dark [data-slot="select-trigger"] {
+  border: 2px solid #ffffff !important;
+  background-color: #09090b !important;
+  color: #ffffff !important;
+}
+
+/* Focus Outlines */
 .high-contrast button:focus-visible, 
 .high-contrast [role="button"]:focus-visible, 
-.high-contrast a:focus-visible {
-  outline: 2px solid currentColor !important;
+.high-contrast a:focus-visible,
+.high-contrast input:focus-visible,
+.high-contrast select:focus-visible,
+.high-contrast textarea:focus-visible,
+.high-contrast [tabindex]:focus-visible {
+  outline: 3px solid #000000 !important;
   outline-offset: 2px !important;
+}
+
+.high-contrast.dark button:focus-visible, 
+.high-contrast.dark [role="button"]:focus-visible, 
+.high-contrast.dark a:focus-visible,
+.high-contrast.dark input:focus-visible,
+.high-contrast.dark select:focus-visible,
+.high-contrast.dark textarea:focus-visible,
+.high-contrast.dark [tabindex]:focus-visible {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+
+/* 6. Outline & Secondary Buttons */
+.high-contrast button[class*="border"],
+.high-contrast button[class*="outline"],
+.high-contrast [role="button"][class*="border"] {
+  border-color: #000000 !important;
+  border-width: 2px !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+.high-contrast.dark button[class*="border"],
+.high-contrast.dark button[class*="outline"],
+.high-contrast.dark [role="button"][class*="border"] {
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* 7. Status Badges & Pills */
+.high-contrast [class*="rounded-full"][class*="px-2"],
+.high-contrast [class*="rounded-full"][class*="px-2.5"],
+.high-contrast [class*="badge"],
+.high-contrast [data-slot="badge"] {
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  font-weight: 700 !important;
+}
+
+.high-contrast [class*="bg-emerald-"],
+.high-contrast [class*="bg-green-"] {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #047857 !important;
+}
+
+.high-contrast [class*="bg-amber-"],
+.high-contrast [class*="bg-yellow-"],
+.high-contrast [class*="bg-orange-"] {
+  background-color: #fffbeb !important;
+  color: #78350f !important;
+  border-color: #b45309 !important;
+}
+
+.high-contrast [class*="bg-red-"],
+.high-contrast [class*="bg-rose-"] {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #b91c1c !important;
+}
+
+.high-contrast [class*="bg-blue-"],
+.high-contrast [class*="bg-sky-"] {
+  background-color: #eff6ff !important;
+  color: #1e40af !important;
+  border-color: #1d4ed8 !important;
+}
+
+.high-contrast.dark [class*="bg-emerald-"],
+.high-contrast.dark [class*="bg-green-"] {
+  background-color: #064e3b !important;
+  color: #a7f3d0 !important;
+  border-color: #34d399 !important;
+}
+
+.high-contrast.dark [class*="bg-amber-"],
+.high-contrast.dark [class*="bg-yellow-"],
+.high-contrast.dark [class*="bg-orange-"] {
+  background-color: #78350f !important;
+  color: #fde68a !important;
+  border-color: #fbbf24 !important;
+}
+
+.high-contrast.dark [class*="bg-red-"],
+.high-contrast.dark [class*="bg-rose-"] {
+  background-color: #7f1d1d !important;
+  color: #fecaca !important;
+  border-color: #f87171 !important;
+}
+
+.high-contrast.dark [class*="bg-blue-"],
+.high-contrast.dark [class*="bg-sky-"] {
+  background-color: #1e3a8a !important;
+  color: #bfdbfe !important;
+  border-color: #60a5fa !important;
+}
+
+/* 8. Structural Layout: Header & Sidebar */
+.high-contrast header {
+  background-color: #ffffff !important;
+  border-bottom: 2px solid #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.high-contrast.dark header {
+  background-color: #000000 !important;
+  border-bottom: 2px solid #ffffff !important;
+}
+
+.high-contrast .rms-sidebar,
+.high-contrast aside {
+  background-color: #ffffff !important;
+  border-right: 2px solid #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.high-contrast.dark .rms-sidebar,
+.high-contrast.dark aside {
+  background-color: #000000 !important;
+  border-right: 2px solid #ffffff !important;
+}
+
+/* 9. Scrollbar Visibility in High Contrast */
+.high-contrast * {
+  scrollbar-width: thin !important;
+  scrollbar-color: #000000 #f3f4f6 !important;
+}
+
+.high-contrast ::-webkit-scrollbar {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.high-contrast ::-webkit-scrollbar-track {
+  background: #f3f4f6 !important;
+}
+
+.high-contrast ::-webkit-scrollbar-thumb {
+  background: #000000 !important;
+  border-radius: 4px !important;
+}
+
+.high-contrast.dark * {
+  scrollbar-color: #ffffff #18181b !important;
+}
+
+.high-contrast.dark ::-webkit-scrollbar-track {
+  background: #18181b !important;
+}
+
+.high-contrast.dark ::-webkit-scrollbar-thumb {
+  background: #ffffff !important;
 }
 
 /* Unified Refresh Button Loading State Animation */

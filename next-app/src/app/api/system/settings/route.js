@@ -9,7 +9,7 @@ export async function GET(req) {
     if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
     const settings = await systemConfigRepo.getSettings();
     return NextResponse.json({ ok: true, data: settings });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -39,7 +39,7 @@ export async function POST(req) {
       entity_id: normalizedKey,
     });
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -65,7 +65,7 @@ export async function DELETE(req) {
       entity_id: key,
     });
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

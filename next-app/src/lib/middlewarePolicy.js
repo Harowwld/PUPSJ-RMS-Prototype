@@ -13,10 +13,23 @@ const PUBLIC_SESSION_PATHS = new Set([
   "/api/auth/forgot-password/identify",
   "/api/auth/forgot-password/security-questions",
   "/api/auth/forgot-password/reset",
+  "/api/public/track-request",
+  "/api/branding",
 ]);
 
-export function isPublicSessionPath(pathname) {
-  return PUBLIC_SESSION_PATHS.has(String(pathname || ""));
+const PUBLIC_GET_PREFIXES = [
+  "/api/landing/",
+  "/api/branding",
+];
+
+export function isPublicSessionPath(pathname, method = "GET") {
+  const path = String(pathname || "");
+  const normalizedMethod = String(method || "GET").toUpperCase();
+  if (PUBLIC_SESSION_PATHS.has(path)) return true;
+  if (normalizedMethod === "GET" && PUBLIC_GET_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    return true;
+  }
+  return false;
 }
 
 export async function resolveMiddlewareSession(accessToken, refreshToken, { allowRefresh = false } = {}) {

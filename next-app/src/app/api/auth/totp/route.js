@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStaffById } from "../../../../lib/staffRepo";
-import { dbGet, dbRun } from "../../../../lib/sqlite";
+import { dbRun } from "../../../../lib/sqlite";
 import {
   generateTOTPSecret,
   generateQRCode,
@@ -14,7 +14,6 @@ import {
   generateRecoveryCodes, 
   setSerialKey 
 } from "../../../../lib/staffRepo";
-import crypto from "node:crypto";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
@@ -42,37 +41,45 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const access = await requireAuth(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
-  if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
-  const user = { userId: access.user.id, payload: access.user.payload };
+  try {
+    const access = await requireAuth(req);
+    if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
+    const user = { userId: access.user.id, payload: access.user.payload };
 
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const action = body.action;
+
+    if (action === "setup") {
+      return handleSetup(req, user, body);
+    } else if (action === "verify") {
+      return handleVerify(req, user, body);
+    } else if (action === "disable") {
+      return handleDisable(req, user, body);
+    } else if (action === "validate") {
+      return handleValidate(req, user, body);
+    } else if (action === "generate-recovery-codes") {
+      return handleGenerateRecoveryCodes(req, user, body);
+    } else if (action === "get-recovery-codes-status") {
+      return handleGetRecoveryCodesStatus(req, user, body);
+    } else if (action === "disable-recovery-codes") {
+      return handleDisableRecoveryCodes(req, user, body);
+    } else if (action === "cancel-setup") {
+      return handleCancelSetup(req, user, body);
+    }
+
+    return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
+  } catch (err) {
+    console.error("[POST /api/auth/totp Error]:", err);
+    return NextResponse.json(
+      { ok: false, error: err?.message || "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  const action = body.action;
-
-  if (action === "setup") {
-    return handleSetup(req, user, body);
-  } else if (action === "verify") {
-    return handleVerify(req, user, body);
-  } else if (action === "disable") {
-    return handleDisable(req, user, body);
-  } else if (action === "validate") {
-    return handleValidate(req, user, body);
-  } else if (action === "generate-recovery-codes") {
-    return handleGenerateRecoveryCodes(req, user, body);
-  } else if (action === "get-recovery-codes-status") {
-    return handleGetRecoveryCodesStatus(req, user, body);
-  } else if (action === "disable-recovery-codes") {
-    return handleDisableRecoveryCodes(req, user, body);
-  } else if (action === "cancel-setup") {
-    return handleCancelSetup(req, user, body);
-  }
-
-  return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
 }
 
 function generateSerialKey() {
@@ -85,13 +92,14 @@ function generateSerialKey() {
   return key;
 }
 
-async function handleSetup(req, user, body) {
+async function handleSetup(req, user) {
   const staff = await getStaffById(user.userId);
   if (!staff) {
     return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
   }
 
-  if (staff.totp_enabled) {
+  // Only block if an active secret is already configured and enabled
+  if (staff.totp_enabled && staff.totp_secret) {
     return NextResponse.json({ ok: false, error: "TOTP already enabled" }, { status: 400 });
   }
 
@@ -131,7 +139,10 @@ async function handleVerify(req, user, body) {
 
   const decrypted = decryptSecret(staff.totp_secret);
   if (!decrypted) {
-    return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
+    return NextResponse.json({ 
+      ok: false, 
+      error: "Failed to decrypt TOTP secret. The server encryption key may have changed. Please re-run setup." 
+    }, { status: 400 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
@@ -165,7 +176,18 @@ async function handleDisable(req, user, body) {
 
   const decrypted = decryptSecret(staff.totp_secret);
   if (!decrypted) {
-    return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
+    // If decryption fails due to key change, allow clearing the broken secret so the user is not permanently locked
+    const recoveryCodesCount = await getRecoveryCodesCount(user.userId);
+    const nextTotpEnabled = recoveryCodesCount > 0;
+    await dbRun(
+      "UPDATE staff SET totp_secret = NULL, totp_enabled = ?, updated_at = datetime('now') WHERE id = ?",
+      [nextTotpEnabled, user.userId]
+    );
+    await writeAuditLog(req, "Reset corrupted TOTP authentication", {
+      actor: `${staff.fname} ${staff.lname}`,
+      role: staff.role,
+    });
+    return NextResponse.json({ ok: true, data: { enabled: false } });
   }
 
   const isValid = verifyTOTP(token, decrypted);
@@ -202,14 +224,17 @@ async function handleValidate(req, user, body) {
 
   const decrypted = decryptSecret(staff.totp_secret);
   if (!decrypted) {
-    return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
+    return NextResponse.json({ 
+      ok: false, 
+      error: "Failed to decrypt TOTP secret. Please reconfigure your two-factor authentication." 
+    }, { status: 400 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
   return NextResponse.json({ ok: isValid, data: { valid: isValid } });
 }
 
-async function handleGenerateRecoveryCodes(req, user, body) {
+async function handleGenerateRecoveryCodes(req, user) {
   const staff = await getStaffById(user.userId);
   if (!staff) {
     return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
@@ -230,12 +255,12 @@ async function handleGenerateRecoveryCodes(req, user, body) {
   return NextResponse.json({ ok: true, data: { codes } });
 }
 
-async function handleGetRecoveryCodesStatus(req, user, body) {
+async function handleGetRecoveryCodesStatus(req, user) {
   const count = await getRecoveryCodesCount(user.userId);
   return NextResponse.json({ ok: true, data: { count } });
 }
 
-async function handleDisableRecoveryCodes(req, user, body) {
+async function handleDisableRecoveryCodes(req, user) {
   const staff = await getStaffById(user.userId);
   if (!staff) {
     return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
@@ -258,7 +283,7 @@ async function handleDisableRecoveryCodes(req, user, body) {
   return NextResponse.json({ ok: true, data: { enabled: false } });
 }
 
-async function handleCancelSetup(req, user, body) {
+async function handleCancelSetup(req, user) {
   const staff = await getStaffById(user.userId);
   if (!staff) {
     return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });

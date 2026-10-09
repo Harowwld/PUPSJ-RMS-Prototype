@@ -1,7 +1,6 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CardTitle, CardDescription } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -9,7 +8,6 @@ import { cn } from "@/lib/utils"
 /**
  * A standardized header component for pages and tabs.
  * 
- * @param {string} icon - Phosphor icon class (e.g., "ph-hard-drives")
  * @param {string} title - Header title
  * @param {string} description - Header description
  * @param {React.ReactNode} leftAction - Optional slot for elements to the left of the icon (e.g., sidebar toggle)
@@ -21,7 +19,6 @@ import { cn } from "@/lib/utils"
  * @param {React.ReactNode} actions - Slot for action buttons (e.g., Add, Export, Refresh)
  */
 export default function PageHeader({
-  icon,
   title,
   description,
   leftAction,
@@ -32,7 +29,6 @@ export default function PageHeader({
   onSearchChange,
   filters,
   actions,
-  extraChips, // Optional array of { label, value, onClear }
   showBorder = true,
   titleClassName,
   descriptionClassName,

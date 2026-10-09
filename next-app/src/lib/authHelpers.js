@@ -1,13 +1,24 @@
-import { NextResponse } from "next/server";
-import { getSessionCookieName, verifySessionToken } from "./jwt";
-import { getStaffById } from "./staffRepo";
-import { logUnauthorizedAccess, logForbiddenAccess, logInvalidSession } from "./securityAuditLogger";
+import { NextResponse } from "next/server.js";
+import { getSessionCookieName, verifySessionToken } from "./jwt.js";
+import { getStaffById } from "./staffRepo.js";
+import { logUnauthorizedAccess, logForbiddenAccess, logInvalidSession } from "./securityAuditLogger.js";
 import { isSessionActive } from "./authSessions.js";
 import { queryOne } from "./postgres.js";
 import { isStudentRole, isSystemAdminRole, normalizeRole } from "./roleUtils.js";
 import { checkCSRFProtection } from "./csrfProtection.js";
 import { decryptStudentRow } from "./studentAuth.js";
 import { isStaffOfficeActive } from "./officeAccess.js";
+import { authDebug } from "./authDebug.js";
+
+export function isAuthMeRequest(req) {
+  try {
+    const url = req?.nextUrl?.pathname || (req?.url ? new URL(req.url).pathname : "");
+    return url === "/api/auth/me";
+  } catch {
+    const raw = String(req?.url || "");
+    return raw.includes("/api/auth/me");
+  }
+}
 
 /**
  * Validates session and returns user information with role verification
@@ -15,11 +26,14 @@ import { isStaffOfficeActive } from "./officeAccess.js";
  * @returns {Promise<{user: object, error: string|null}>}
  */
 export async function getAuthenticatedPrincipal(req) {
+  const isMeRoute = isAuthMeRequest(req);
   try {
     const token = extractTokenFromHeaders(req) || "";
     
     if (!token) {
-      await logUnauthorizedAccess(req, "Missing session token");
+      if (!isMeRoute) {
+        await logUnauthorizedAccess(req, "Missing session token");
+      }
       return null;
     }
 
@@ -30,18 +44,30 @@ export async function getAuthenticatedPrincipal(req) {
       return null;
     }
     if (payload?.purpose && payload.purpose !== "access") {
-      await logInvalidSession(req, "Non-access token used for an authenticated request");
+      if (!isMeRoute) {
+        await logInvalidSession(req, "Non-access token used for an authenticated request");
+      } else {
+        authDebug("auth.me_non_access_token", { purpose: payload.purpose });
+      }
       return null;
     }
     if (!(await isSessionActive(payload))) {
-      await logInvalidSession(req, "Revoked or incomplete session token");
+      if (!isMeRoute) {
+        await logInvalidSession(req, "Revoked or incomplete session token");
+      } else {
+        authDebug("auth.me_inactive_session", { sub: payload?.sub, jti: payload?.jti });
+      }
       return null;
     }
 
     const userId = String(payload?.sub || "").trim();
     const tokenRole = normalizeRole(payload?.role);
     if (!userId || !tokenRole) {
-      await logInvalidSession(req, "Missing principal identity or role in session payload");
+      if (!isMeRoute) {
+        await logInvalidSession(req, "Missing principal identity or role in session payload");
+      } else {
+        authDebug("auth.me_missing_principal_or_role");
+      }
       return null;
     }
 
@@ -58,7 +84,11 @@ export async function getAuthenticatedPrincipal(req) {
       );
       if (!account || String(account.account_status).toLowerCase() !== "active" ||
           (account.student_status && String(account.student_status).toLowerCase() !== "active")) {
-        await logUnauthorizedAccess(req, "Inactive or missing student account", { userId });
+        if (!isMeRoute) {
+          await logUnauthorizedAccess(req, "Inactive or missing student account", { userId });
+        } else {
+          authDebug("auth.me_student_account_inactive", { userId });
+        }
         return null;
       }
       const decryptedAccount = decryptStudentRow(account);
@@ -86,14 +116,22 @@ export async function getAuthenticatedPrincipal(req) {
     const staff = await getStaffById(userId);
     const currentRole = normalizeRole(staff?.role);
     if (!staff || staff.status !== "Active" || !currentRole || currentRole !== tokenRole) {
-      await logInvalidSession(req, "Missing, inactive, or role-changed staff account", { userId });
+      if (!isMeRoute) {
+        await logInvalidSession(req, "Missing, inactive, or role-changed staff account", { userId });
+      } else {
+        authDebug("auth.me_staff_account_inactive", { userId });
+      }
       return null;
     }
     if (!(await isStaffOfficeActive(staff.office_id, currentRole))) {
-      await logUnauthorizedAccess(req, "Staff account belongs to an inactive office", {
-        userId,
-        officeId: staff.office_id,
-      });
+      if (!isMeRoute) {
+        await logUnauthorizedAccess(req, "Staff account belongs to an inactive office", {
+          userId,
+          officeId: staff.office_id,
+        });
+      } else {
+        authDebug("auth.me_office_inactive", { userId, officeId: staff.office_id });
+      }
       return null;
     }
 
@@ -103,6 +141,8 @@ export async function getAuthenticatedPrincipal(req) {
       role: currentRole,
       officeId: staff.office_id || null,
       office_id: staff.office_id || null,
+      office_name: staff.office_name || null,
+      office_short_name: staff.office_short_name || null,
       section: staff.section || null,
       email: staff.email,
       fname: staff.fname,
@@ -117,7 +157,11 @@ export async function getAuthenticatedPrincipal(req) {
       payload,
     };
   } catch (err) {
-    await logInvalidSession(req, "Authentication principal resolution failed");
+    if (!isMeRoute) {
+      await logInvalidSession(req, "Authentication principal resolution failed");
+    } else {
+      authDebug("auth.me_resolution_failed", { message: err?.message || String(err) });
+    }
     return null;
   }
 }
@@ -217,7 +261,7 @@ export async function requireSuperAdmin(req) {
  * @returns {Promise<{user: object, error: string|null}>}
  */
 export async function requireStaff(req) {
-  return requireAuth(req, ["Staff", "Admin"]);
+  return requireAuth(req, ["Staff", "Admin", "SystemAdmin", "SuperAdmin"]);
 }
 
 /**

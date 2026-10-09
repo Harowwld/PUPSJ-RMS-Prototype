@@ -24,7 +24,7 @@ export async function POST(req) {
       data: { student_no: student.student_no, name: student.name },
       credentialEmail,
     }, { status: 201 }), token, req);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Registration failed" }, { status: 400 });
   }
 }

@@ -12,17 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty"
 import { toPct, fromPct } from "@/lib/storageLayoutUtils"
 
 const CabinetSidebar = memo(({
-  activeRoom,
   carouselIndex = 0,
   setCarouselIndex,
   selectedCabinetIds,
@@ -33,11 +25,9 @@ const CabinetSidebar = memo(({
   removeDrawerFromSelected,
   addDrawerToSelected,
   updateSelectedRectFromNormalized,
-  updateSelectedSizeNormalized,
   history = [],
   historyIndex = 0,
   revertToHistoryState,
-  studentDrawerUsage,
 }) => {
   const [activeTab, setActiveTab] = React.useState("properties")
 

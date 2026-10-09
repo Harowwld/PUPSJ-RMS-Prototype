@@ -7,14 +7,14 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
   return (
     <div
       className={cn(
-        "flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden isolate",
+        "w-full flex flex-col overflow-hidden isolate",
         embedded
           ? "rounded-b-2xl"
           : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card",
         className
       )}
     >
-      <div className="flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]">
+      <div className="w-full overflow-x-auto select-none">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">

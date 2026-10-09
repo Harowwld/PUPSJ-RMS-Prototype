@@ -254,8 +254,8 @@ Use the shared dialog checks for each item below. This inventory prevents a moda
 
 | Surface | Modal, sheet, or dialog to exercise |
 | --- | --- |
-| Shared | AccountSetupModal, DefaultPasswordModal, ConfirmModal, PromptModal, DocTypeModal, PDFPreviewModal, TOTPChallengeModal, UserGuideModal |
-| Account | recovery-codes dialog, profile avatar picker, TOTP setup/disable flows |
+| Shared | AccountSetupModal, DefaultPasswordModal, ConfirmModal, PromptModal, DocTypeModal, PDFPreviewModal, TOTPChallengeModal, UserGuideModal, RecoveryCodesModal |
+| Account | recovery-codes dialog, profile avatar picker, TOTP setup/disable flows, security questions TOTP challenge modal |
 | Staff | RegisterStudentModal, EditStudentModal, StudentProfileModal, StudentProfileSheet, OCRPromptModal, duplicate-upload confirmation, archive/restore confirmations |
 | Staff requests/docs | request detail/status dialogs, document preview, batch-review detail/preview/reject/confirm dialogs |
 | Admin staff | RegisterAccountTab dialog, EditUserModal, archive/restore/delete/bulk confirmations |
@@ -274,7 +274,7 @@ This is the auditable source inventory. Test every control exposed by each compo
 | Area | Source components covered |
 | --- | --- |
 | Public | `LandingNavbar`, `LandingHero`, `OfficeDirectory`, `DocumentCatalog`, `DocumentCardPreview`, `ProcessWorkflow`, `FAQSection`, `PublicTracker`, `LandingBento`, `LandingFooter`, `LandingStats` |
-| Shared | `Header`, `Footer`, `Sidebar`, `PageHeader`, `RefreshButton`, `FloatingActionBar`, `ConfirmModal`, `PromptModal`, `DocTypeModal`, `PDFPreviewModal`, `UserGuideModal`, `AccountSetupModal`, `DefaultPasswordModal`, `TOTPChallengeModal`, UI `Select`, `Tabs`, `Dialog`, `Sheet`, `Tooltip`, `Calendar` |
+| Shared | `Header`, `Footer`, `Sidebar`, `PageHeader`, `RefreshButton`, `FloatingActionBar`, `ConfirmModal`, `PromptModal`, `DocTypeModal`, `PDFPreviewModal`, `UserGuideModal`, `AccountSetupModal`, `DefaultPasswordModal`, `TOTPChallengeModal`, `RecoveryCodesModal`, UI `Select`, `Tabs`, `Dialog`, `Sheet`, `Tooltip`, `Calendar` |
 | Staff | `StudentDirectoryTab`, `RegisterStudentModal`, `EditStudentModal`, `StudentProfileModal`, `StudentProfileSheet`, `ScanUploadTab`, `OCRPromptModal`, `ContinuousScanningPanel`, `BatchReviewTab`, `DocumentsTab`, `OfficeDocumentsTable`, `DocumentRequestsTab`, `RegistrarODRSTab`, `OsasMonitoringTab`, `RecordsArchiveTab`, `StorageExplorerTab`, `RoomMap2D`, `NotificationsTab` |
 | Admin | `StaffDirectoryTab`, `RegisterAccountTab`, `EditUserModal`, `DigitalRecordsReviewTab`, `DigitizationComplianceTab`, `SLAAnalyticsTab`, `StorageLayoutEditorTab`, `CabinetCanvas`, `CabinetSidebar`, `ConflictResolutionModals`, `SystemConfigTab`, `CoursesTab`, `SectionsTab`, `DocTypesTab`, `BulkImportTab`, `RecognitionTemplatesTab`, `BackupTab`, `AutoBackupSchedule`, `BackupTable`, `BackupFilters`, `BackupPagination`, `HealthSidebar`, `RateLimitingTab`, `AuditLogsTab`, `LogFilters`, `LogTable`, `LogPagination`, `LogDetailSheet`, `PdfPreviewDialog` |
 | SuperAdmin | `OfficeManagementTab`, `ModuleConfigTab`, `GlobalStaffTab`, `SecurityQuestionsTab`, `CampusOperationsTab`, `GlobalAuditLogsTab`, `SystemBackupsTab`, `LandingPageCmsTab`, `LandingBentoCmsView`, `LandingCatalogCmsView`, `LandingWorkflowCmsView`, `LandingFaqCmsView`, `LandingFooterCmsView` |

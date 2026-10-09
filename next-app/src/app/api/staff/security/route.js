@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dbGet as sysDbGet, dbAll as sysDbAll } from "@/lib/postgresCompat";
+import { dbAll as sysDbAll } from "@/lib/postgresCompat";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
 import { hashPassword } from "@/lib/passwordHash";
@@ -78,12 +78,21 @@ export async function PUT(req) {
     const isStudent = user.role === "Student" || user.principalType === "student";
 
     if (!isStudent) {
-      const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
-      if (!totpResult.valid) {
-        return NextResponse.json(
-          { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
-          { status: 403 }
-        );
+      const session = access.user.payload || {};
+      const isInitialSetup = Boolean(session?.mustChangePassword);
+      if (!isInitialSetup) {
+        const totpResult = await requireTOTP(user.id, extractTOTPToken(req.headers), { requireEnabled: true });
+        if (!totpResult.valid) {
+          return NextResponse.json(
+            { 
+              ok: false, 
+              error: "TOTP verification required: " + totpResult.error, 
+              requiresTOTP: true,
+              notConfigured: Boolean(totpResult.notConfigured),
+            },
+            { status: 403 }
+          );
+        }
       }
     }
 

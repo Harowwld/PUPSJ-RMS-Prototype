@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedPrincipal } from "@/lib/authHelpers";
 import { queryOne } from "@/lib/postgres";
 import { isSystemAdminRole } from "@/lib/roleUtils";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -83,6 +84,7 @@ export async function GET(req, ctx) {
       "Content-Length": String(attachment.size_bytes || fileBytes.length),
       "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
       "Cache-Control": "private, max-age=3600",
+      ...FILE_SECURITY_HEADERS,
     },
   });
 }

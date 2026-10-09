@@ -5,7 +5,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
 import { revokeSession } from "@/lib/authSessions";
 import { isAllowedOrigin } from "@/lib/csrfProtection";
-import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
+import { shouldUseSecureCookie, clearAuthCookies } from "@/lib/cookieSecurity";
 
 export const runtime = "nodejs";
 
@@ -72,19 +72,6 @@ export async function POST(req) {
   }
 
   const res = NextResponse.json({ ok: true });
-  const cookieNamesToClear = Array.from(new Set([sessionName, getRefreshCookieName(), "pup_session", "pup_auth_token", "pup_csrf"]));
-  for (const name of cookieNamesToClear) {
-    res.cookies.set({
-      name,
-      value: "",
-      httpOnly: name !== "pup_csrf",
-      sameSite: "lax",
-      secure: shouldUseSecureCookie(req),
-      path: "/",
-      maxAge: 0,
-      expires: new Date(0), // Ensure immediate expiration
-    });
-  }
-
+  clearAuthCookies(res, req);
   return addSecurityHeaders(res);
 }

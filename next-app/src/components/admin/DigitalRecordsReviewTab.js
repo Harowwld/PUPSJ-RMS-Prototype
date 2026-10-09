@@ -5,16 +5,14 @@ import { useState, useMemo, useEffect, useRef } from "react"
 import { Reorder } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import RecordsReviewTableSkeleton from "@/components/admin/skeletons/RecordsReviewTableSkeleton"
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
-import { formatPHDateTime, formatPHDateTimeParts } from "@/lib/timeFormat"
+import { cn, formatTitleCase } from "@/lib/utils"
+import { formatPHDateTime } from "@/lib/timeFormat"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import {
   Empty,
@@ -35,8 +33,8 @@ import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { Select } from "@/components/ui/select"
 import { toast } from "sonner"
+import { matchesSearchQuery } from "@/lib/searchUtils"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -47,15 +45,6 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   ) : (
     <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   )
-}
-
-function toNormalCase(str) {
-  if (!str) return ""
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
 }
 
 const formatUploadedDate = (dateString) => {
@@ -93,7 +82,7 @@ function formatChipDate(dateStr) {
   try {
     const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00")
     return isNaN(d.getTime()) ? dateStr : format(d, "MMM d, yyyy")
-  } catch (e) {
+  } catch {
     return dateStr
   }
 }
@@ -125,7 +114,6 @@ export default function DigitalRecordsReviewTab({
     return statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
   })
   const [activeDocTypes, setActiveDocTypes] = useState([])
-  const [jumpPage, setJumpPage] = useState("1")
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("DESC")
   const [dateFrom, setDateFrom] = useState("")
@@ -298,10 +286,6 @@ export default function DigitalRecordsReviewTab({
     if (searchQuery === "") setLocalSearch("")
   }, [searchQuery])
 
-  useEffect(() => {
-    setJumpPage(String(currentPage))
-  }, [currentPage])
-
   // Clear selection when changing pages or status filter
   useEffect(() => {
     setSelectedIds(new Set())
@@ -422,7 +406,7 @@ export default function DigitalRecordsReviewTab({
             if (!isNaN(d.getTime())) {
               createdDate = format(d, "yyyy-MM-dd")
             }
-          } catch (e) {
+          } catch {
             createdDate = String(r.created_at).substring(0, 10)
           }
         }
@@ -430,19 +414,20 @@ export default function DigitalRecordsReviewTab({
         if (dateFrom && createdDate < dateFrom) return false
         if (dateTo && createdDate > dateTo) return false
       }
-      if (!searchQuery.trim()) return true
-      const query = searchQuery.toLowerCase()
-      return (
-        r.student_no?.toLowerCase().includes(query) ||
-        r.student_name?.toLowerCase().includes(query) ||
-        r.doc_type?.toLowerCase().includes(query) ||
-        r.original_filename?.toLowerCase().includes(query)
+      return matchesSearchQuery(
+        [r.student_no, r.student_name, r.doc_type, r.original_filename],
+        searchQuery
       )
     })
 
     return [...baseFiltered].sort((a, b) => {
       let valA = a[sortBy] ?? ""
       let valB = b[sortBy] ?? ""
+
+      if (sortBy === "student_no") {
+        valA = a.student_no || ""
+        valB = b.student_no || ""
+      }
 
       if (sortBy === "student_name") {
         valA = a.student_name || ""
@@ -463,17 +448,6 @@ export default function DigitalRecordsReviewTab({
 
   const totalPages = Math.ceil(sortedRecords.length / itemsPerPage) || 1
   const displayPage = Math.min(currentPage, totalPages)
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setCurrentPage(val)
-      } else {
-        setJumpPage(String(displayPage))
-      }
-    }
-  }
 
   const paginatedRecords = useMemo(() => {
     const start = (displayPage - 1) * itemsPerPage
@@ -561,7 +535,7 @@ export default function DigitalRecordsReviewTab({
           onClick: () => onSetStatus(id, "Pending", "Undo accidental approval"),
         },
       })
-    } catch (err) {
+    } catch {
       // error handled by parent onApprove
     }
   }
@@ -574,7 +548,7 @@ export default function DigitalRecordsReviewTab({
         setSelectedIds(new Set())
         await onBulkApprove(ids)
       }
-    } catch (err) {}
+    } catch {}
   }
 
   const handleBulkApprove = () => {
@@ -595,15 +569,6 @@ export default function DigitalRecordsReviewTab({
       Declined: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50",
     }
     return styles[status] || styles.Pending
-  }
-
-  const getStatusIcon = (status) => {
-    const icons = {
-      Pending: "ph-clock",
-      Approved: "ph-check-circle",
-      Declined: "ph-x-circle",
-    }
-    return icons[status] || "ph-clock"
   }
 
   const handlePreview = (record) => {
@@ -649,7 +614,7 @@ export default function DigitalRecordsReviewTab({
         try {
           const d = new Date(r.created_at)
           if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
-        } catch (e) {}
+        } catch {}
       }
       return dStr === today
     }).length
@@ -664,7 +629,7 @@ export default function DigitalRecordsReviewTab({
         try {
           const d = new Date(r.reviewed_at)
           if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
-        } catch (e) {}
+        } catch {}
       }
       return dStr === today
     }).length
@@ -679,7 +644,7 @@ export default function DigitalRecordsReviewTab({
         try {
           const d = new Date(r.reviewed_at)
           if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
-        } catch (e) {}
+        } catch {}
       }
       return dStr === today
     }).length
@@ -768,9 +733,9 @@ export default function DigitalRecordsReviewTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader
             icon="ph-seal-check"
             title="Records Review"
@@ -1244,7 +1209,7 @@ export default function DigitalRecordsReviewTab({
             </Empty>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
+          <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
@@ -1267,12 +1232,27 @@ export default function DigitalRecordsReviewTab({
                         }
                       />
                     </th>
-                    <th className="p-4">
+                    <th className="w-44 p-4">
                       <button
-                        onClick={() => handleSort("student_name")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                        type="button"
+                        onClick={() => handleSort("student_no")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
                       >
-                        Student Name{" "}
+                        Student No.{" "}
+                        <SortIndicator
+                          column="student_no"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 min-w-[200px] max-w-[260px]">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("student_name")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                      >
+                        Full Name{" "}
                         <SortIndicator
                           column="student_name"
                           sortBy={sortBy}
@@ -1280,10 +1260,11 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4">
+                    <th className="p-4 min-w-[160px]">
                       <button
+                        type="button"
                         onClick={() => handleSort("doc_type")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
                       >
                         Document Type{" "}
                         <SortIndicator
@@ -1293,11 +1274,14 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Filename</th>
-                    <th className="p-4">
+                    <th className="p-4 min-w-[180px] max-w-[240px] text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                      Filename
+                    </th>
+                    <th className="w-32 p-4 text-center">
                       <button
+                        type="button"
                         onClick={() => handleSort("approval_status")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                        className="group inline-flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
                       >
                         Status{" "}
                         <SortIndicator
@@ -1307,10 +1291,11 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4">
+                    <th className="w-36 p-4">
                       <button
+                        type="button"
                         onClick={() => handleSort("created_at")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
                       >
                         Upload Date{" "}
                         <SortIndicator
@@ -1320,13 +1305,15 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                    <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="bg-transparent">
+                <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {sortedRecords.length === 0 ? (
                     <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={7} className="border-0 p-0">
+                      <td colSpan={8} className="border-0 p-0">
                         <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <div className="relative mb-6">
@@ -1365,12 +1352,12 @@ export default function DigitalRecordsReviewTab({
                         <tr
                           key={r.id}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
                           onClick={(e) => toggleSelectRow(r.id, e)}
                         >
-                          <td className="py-0 px-4 align-middle text-center">
+                          <td className="w-12 p-4 text-center">
                             {r.approval_status === "Pending" ? (
                               <input
                                 type="checkbox"
@@ -1383,34 +1370,37 @@ export default function DigitalRecordsReviewTab({
                               />
                             ) : null}
                           </td>
-                          <td className="py-0 px-4 align-middle">
-                            <div className="flex flex-col overflow-hidden">
-                              <span className="truncate text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                                {toNormalCase(r.student_name)}
-                              </span>
-                              <span className="truncate text-[11px] font-normal text-gray-400 dark:text-zinc-500 mt-[2px]">
-                                {r.student_no}
-                              </span>
+                          <td className="w-44 p-4 whitespace-nowrap">
+                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              {r.student_no}
+                            </span>
+                          </td>
+                          <td className="p-4 min-w-[200px] max-w-[260px]">
+                            <div
+                              className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
+                              title={formatTitleCase(r.student_name)}
+                            >
+                              {formatTitleCase(r.student_name)}
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle">
-                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-[10px] py-[2.5px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                          <td className="p-4 min-w-[160px]">
+                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
                               {r.doc_type}
                             </span>
                           </td>
-                          <td className="py-0 px-4 align-middle">
+                          <td className="p-4 min-w-[180px] max-w-[240px]">
                             <span
-                              className="block max-w-[180px] truncate text-[13px] font-normal text-gray-400 dark:text-zinc-500"
+                              className="block truncate text-xs text-gray-600 dark:text-zinc-400 font-normal"
                               title={r.original_filename}
                             >
                               {r.original_filename}
                             </span>
                           </td>
-                          <td className="py-0 px-4 align-middle">
-                            <div className="flex items-center gap-3">
+                          <td className="w-32 p-4 text-center">
+                            <div className="flex items-center justify-center">
                               <span
                                 className={cn(
-                                  "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+                                  "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >
@@ -1418,18 +1408,18 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle">
+                          <td className="w-36 p-4">
                             <div className="flex flex-col">
-                              <span className="text-[13px] font-normal text-gray-900 dark:text-zinc-50">
+                              <span className="text-xs font-medium text-gray-900 dark:text-zinc-100">
                                 {formatUploadedDate(r.created_at).dateStr}
                               </span>
-                              <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 mt-[2px]">
+                              <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 mt-0.5">
                                 {formatUploadedDate(r.created_at).timeStr}
                               </span>
                             </div>
                           </td>
-                          <td className="py-0 px-4 align-middle text-right">
-                            <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
+                          <td className="w-28 p-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button

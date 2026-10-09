@@ -1,4 +1,4 @@
-import { sysDbAll as dbAll, sysDbGet as dbGet } from "./sqlite";
+import { sysDbAll as dbAll } from "./sqlite";
 import { createGlobalAuditLog } from "./auditLogsRepo";
 
 /**

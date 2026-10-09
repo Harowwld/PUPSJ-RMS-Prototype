@@ -975,9 +975,9 @@ export default function OsasMonitoringTab({ showToast }) {
   }
 
   return (
-    <div className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up select-none">
+    <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Kanban */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         {/* 1. Page Header */}
         <PageHeader
           icon="ph-calendar-check"
@@ -1203,8 +1203,8 @@ export default function OsasMonitoringTab({ showToast }) {
         {activeStream === "proposals" && (
           <>
             {viewMode === "list" ? (
-              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
-                <div className="overflow-x-auto flex-1">
+              <div className={cn("w-full flex flex-col border-t border-border dark:border-border", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
+                <div className="overflow-x-auto w-full">
                   <table className="w-full text-left text-xs">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
@@ -1548,8 +1548,8 @@ export default function OsasMonitoringTab({ showToast }) {
         {activeStream === "post_events" && (
           <>
             {viewMode === "list" ? (
-              <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
-                <div className="overflow-x-auto flex-1">
+              <div className={cn("w-full flex flex-col border-t border-border dark:border-border", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
+                <div className="overflow-x-auto w-full">
                   <table className="w-full text-left text-xs">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">

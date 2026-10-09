@@ -72,7 +72,6 @@ export async function markAllStaffNotificationsReadState(staffId, officeId, isRe
 export async function listDocumentReviewNotifications({
   limit = 20,
   offset = 0,
-  lastSeenReviewedAt = null,
   staffId = null,
   officeId = null,
   sortBy = "reviewed_at",

@@ -30,7 +30,7 @@ export async function PATCH(req, { params }) {
     const row = await updateRecognitionTemplate(templateId, { ...body, officeId, actorId: user.id });
     if (!row) return NextResponse.json({ ok: false, error: "Template not found" }, { status: 404 });
     return NextResponse.json({ ok: true, data: row });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 400 });
   }
 }

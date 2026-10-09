@@ -1,11 +1,9 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import BevelButton from "@/components/ui/bevel-button";
 import { getClientSession } from "@/lib/clientAuth";
 
 export default function LandingNavbar() {
@@ -27,7 +25,7 @@ export default function LandingNavbar() {
             setSessionUser(null);
           }
         }
-      } catch (err) {
+      } catch {
         if (isMounted) setSessionUser(null);
       }
     })();
@@ -209,10 +207,10 @@ export default function LandingNavbar() {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-black"
+                  className="md:hidden min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer text-black hover:bg-black/5 active:scale-95 transition-all"
                   aria-label="Toggle navigation drawer"
                 >
-                  <HugeIcon  className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-lg`} />
+                  <HugeIcon  className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-xl`} />
                 </button>
               </div>
             </div>

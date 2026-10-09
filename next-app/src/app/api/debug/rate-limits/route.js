@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dbGet, dbAll } from "../../../../lib/sqlite";
+import { dbAll } from "../../../../lib/sqlite";
 import { getRateLimitConfig, getRateLimitHits } from "../../../../lib/rateLimitRepo";
 import { requireSystemAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 

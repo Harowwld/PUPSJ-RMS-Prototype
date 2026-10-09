@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { getPostEventReportById, updatePostEventReportStatus } from "@/lib/osasPostEventRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,7 @@ export async function GET(req, ctx) {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${origName || "report.pdf"}"`,
+        ...FILE_SECURITY_HEADERS,
       },
     });
   }

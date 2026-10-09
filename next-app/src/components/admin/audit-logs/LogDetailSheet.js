@@ -1,7 +1,6 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -58,7 +57,7 @@ function formatLastSync(val) {
       minute: "2-digit",
       hour12: true
     })
-  } catch (e) {
+  } catch {
     return val
   }
 }

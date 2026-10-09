@@ -5,7 +5,6 @@ import {
   verifyPasswordHash,
   touchStaffLastActiveById,
   getStaffDisplayName,
-  hasAllSecurityAnswers,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { attachRefreshSession } from "@/lib/refreshSessions";
@@ -169,8 +168,11 @@ async function _POST(req) {
       "CRITICAL",
       { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
     );
+    const errorMsg = staff.status === "Inactive"
+      ? "This account has been deactivated. Please contact an administrator."
+      : "This account has been archived. Please contact an administrator.";
     return addSecurityHeaders(NextResponse.json(
-      { ok: false, error: "This account has been archived. Please contact an administrator." },
+      { ok: false, error: errorMsg },
       { status: 403 }
     ));
   }
@@ -259,7 +261,6 @@ async function _POST(req) {
   }
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-  const hasSecurity = await hasAllSecurityAnswers(touched.id);
   const isDefaultPassword =
     password === defaultPassword ||
     password === "pupstaff" ||

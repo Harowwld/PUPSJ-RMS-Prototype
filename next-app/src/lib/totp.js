@@ -18,29 +18,43 @@ export function encryptSecret(secret) {
 }
 
 export function decryptSecret(encrypted) {
-  if (!encrypted) return null;
+  if (!encrypted || typeof encrypted !== "string") return null;
   try {
     const parts = encrypted.split(":");
     if (parts.length !== 2) return null;
     const iv = Buffer.from(parts[0], "hex");
+    if (iv.length !== 16) return null;
     const decipher = crypto.createDecipheriv("aes-256-cbc", getEncryptionKey(), iv);
     let decrypted = decipher.update(parts[1], "hex", "utf8");
     decrypted += decipher.final("utf8");
     return decrypted;
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[TOTP] Failed to decrypt TOTP secret:", err?.message || err);
+    }
     return null;
   }
 }
 
-export function generateTOTPSecret(email, issuer = "PUPSJ Records Keeping System") {
+export function generateTOTPSecret(email, issuer = "PUPSJ-RMS") {
+  // RFC 6238 recommends 20 bytes (160 bits) for HMAC-SHA1
   const secret = speakeasy.generateSecret({
-    name: `${issuer} (${email})`,
-    length: 32,
+    length: 20,
+    name: `${issuer}:${email}`,
+  });
+  
+  // Standard RFC 6238 / Google Authenticator Key URI with percent-encoded label and explicit issuer
+  const encodedLabel = `${encodeURIComponent(issuer)}:${encodeURIComponent(email)}`;
+  const otpauthUrl = speakeasy.otpauthURL({
+    secret: secret.base32,
+    label: encodedLabel,
+    issuer: issuer,
+    encoding: "base32",
   });
   
   return {
     secret: secret.base32,
-    otpauthUrl: secret.otpauth_url,
+    otpauthUrl,
   };
 }
 
@@ -48,19 +62,21 @@ export async function generateQRCode(otpauthUrl) {
   return await QRCode.toDataURL(otpauthUrl);
 }
 
-export function verifyTOTP(token, secret) {
+export function verifyTOTP(token, secret, options = {}) {
   if (!token || !secret) return false;
   
-  const tokenStr = token.trim();
+  const tokenStr = String(token).trim();
   if (tokenStr.length !== 6) return false;
   
-  // Use speakeasy to verify - it handles time drift automatically
-  // speakeasy returns the expected token (string) on failure, true on success
+  // Allow window override via env or options (default to 2: ±60 seconds to absorb container/host/mobile drift)
+  const windowEnv = process.env.TOTP_WINDOW ? parseInt(process.env.TOTP_WINDOW, 10) : 2;
+  const windowVal = Number.isInteger(options.window) ? options.window : (Number.isInteger(windowEnv) ? windowEnv : 2);
+  
   const verified = speakeasy.totp.verify({
     secret: secret,
     encoding: "base32",
     token: tokenStr,
-    window: 1,
+    window: Math.max(1, Math.min(windowVal, 5)),
   });
   
   return verified === true;

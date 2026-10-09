@@ -13,7 +13,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
-import { Select } from "@/components/ui/select"
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -26,9 +25,7 @@ export default function LogFilters({
   localSearch,
   handleSearchChange,
   logRoleFilter,
-  handleRoleChange,
   logSeverityFilter,
-  handleSeverityChange,
   logStartDate,
   setLogStartDate,
   logEndDate,

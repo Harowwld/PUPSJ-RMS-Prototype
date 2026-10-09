@@ -1,10 +1,7 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { decryptPII } from "./piiEncryption.js";
-
-let reviewColumnsEnsured = false;
 
 function decryptDocumentRow(row) {
   if (!row) return row;
@@ -15,9 +12,7 @@ function decryptDocumentRow(row) {
   return row;
 }
 
-async function ensureReviewColumns() {
-  reviewColumnsEnsured = true;
-}
+async function ensureReviewColumns() {}
 
 function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
@@ -258,11 +253,18 @@ export async function listDocuments({
   }
 
   if (q) {
-    filters.push(
-      "(d.student_no LIKE ? OR d.student_name LIKE ? OR d.doc_type LIKE ? OR d.original_filename LIKE ? OR so.name LIKE ? OR so.acronym LIKE ?)"
-    );
-    const like = `%${q}%`;
-    params.push(like, like, like, like, like, like);
+    const rawQ = String(q).trim();
+    const tokens = rawQ.split(/[\s,]+/).filter(Boolean);
+    if (tokens.length > 0) {
+      for (const tok of tokens) {
+        filters.push(
+          "(d.student_no ILIKE ? OR REPLACE(d.student_no, '-', '') ILIKE ? OR d.student_name ILIKE ? OR REPLACE(COALESCE(d.student_name, ''), ',', ' ') ILIKE ? OR d.doc_type ILIKE ? OR d.original_filename ILIKE ? OR so.name ILIKE ? OR so.acronym ILIKE ?)"
+        );
+        const like = `%${tok}%`;
+        const strippedTok = tok.replace(/-/g, "");
+        params.push(like, `%${strippedTok}%`, like, like, like, like, like, like);
+      }
+    }
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";

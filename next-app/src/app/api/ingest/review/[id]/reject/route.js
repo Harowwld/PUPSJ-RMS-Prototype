@@ -3,6 +3,7 @@ import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../
 import { getIngestById, rejectIngest } from "../../../../../../lib/ingestQueueRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { publishIngestEvent } from "@/lib/ingestEvents";
 
 export const runtime = "nodejs";
 
@@ -40,6 +41,14 @@ export async function POST(req, ctx) {
   if (item.status === "rejected") return NextResponse.json({ ok: true, data: item, idempotent: true });
   const data = await rejectIngest(id, body.reason, user.id, { officeId });
   if (!data) return NextResponse.json({ ok: false, error: "Review item is no longer available for rejection." }, { status: 409 });
+  await publishIngestEvent({
+    type: "ocr_review_rejected",
+    officeId,
+    id,
+    batchId: data?.batch_id,
+    status: data?.status,
+    reviewStatus: data?.review_status,
+  });
   await writeAuditLog(req, "Batch review item rejected", { details: `Rejected ingest item #${id}.`, entity_type: "ingest_item", entity_id: id });
   return NextResponse.json({ ok: true, data });
 }

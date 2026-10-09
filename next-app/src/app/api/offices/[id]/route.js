@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { access, constants, mkdir } from "node:fs/promises";
+import { access as fsAccess, constants, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { getOfficeById, updateOffice, deactivateOffice } from "@/lib/officesRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
@@ -18,7 +18,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
     }
     return NextResponse.json({ ok: true, data: office });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -67,11 +67,11 @@ export async function PATCH(req, { params }) {
       if (!inboundPath) return NextResponse.json({ ok: false, error: "Scanner inbound folder is required" }, { status: 400 });
       const resolvedInboundPath = path.resolve(inboundPath);
       try {
-        await access(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
+        await fsAccess(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
       } catch (accessError) {
         try {
           await mkdir(resolvedInboundPath, { recursive: true });
-          await access(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
+          await fsAccess(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
         } catch (createError) {
           const permissionDenied = ["EACCES", "EPERM"].includes(accessError?.code) || ["EACCES", "EPERM"].includes(createError?.code);
           const message = process.platform === "darwin" && permissionDenied
@@ -139,7 +139,7 @@ export async function PATCH(req, { params }) {
     }
 
     return NextResponse.json({ ok: true, data: updated });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 400 });
   }
 }
@@ -168,7 +168,7 @@ export async function DELETE(req, { params }) {
     });
 
     return NextResponse.json({ ok: true, message: "Office archived successfully", data: updated });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

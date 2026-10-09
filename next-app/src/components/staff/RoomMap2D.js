@@ -18,37 +18,14 @@ export default function RoomMap2D({
   cabinets,
   roomDoor,
   selectedCabinetId,
-  drawerSlots,
   onCabinetClick,
-  onDrawerClick,
-  onPreviewDocument,
-  onUnfocusStudent,
   isPreview = false,
 }) {
   const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
   const trailColor = activeStudent ? theme.frontStart : "#06b6d4"
   const cabinetRects = useMemo(() => cabinets || [], [cabinets])
   const containerRef = useRef(null)
-  const [modalPosition, setModalPosition] = useState("right")
-  const [inspectorPos, setInspectorPos] = useState(null)
   const [drawnLength, setDrawnLength] = useState(0)
-
-  const lastChangeTimeRef = useRef(0)
-  const dragStartRef = useRef(null)
-
-  const [expandedDrawer, setExpandedDrawer] = useState(null)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInspectorPos(null)
-      if (activeStudent && areCabinetsEqual(activeStudent.cabinet, selectedCabinetId, cabinetRects)) {
-        setExpandedDrawer(activeStudent.drawer)
-      } else {
-        setExpandedDrawer(null)
-      }
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [selectedCabinetId, activeStudent, cabinetRects])
 
   // Wayfinder path generation logic
   const pathCoordinates = useMemo(() => {
@@ -231,69 +208,6 @@ export default function RoomMap2D({
       clearInterval(interval)
     }
   }, [pathCoordinates])
-
-  // Dynamically position modal opposite of the clicked cabinet on selection
-  useEffect(() => {
-    if (!selectedCabinetId) return
-    const selectedCab = cabinetRects.find((c) => areCabinetsEqual(c.cab, selectedCabinetId, cabinetRects))
-    if (selectedCab) {
-      const timer = setTimeout(() => {
-        const rect = getEffectiveRect(selectedCab)
-        setModalPosition(rect.x < 0.5 ? "right" : "left")
-        lastChangeTimeRef.current = Date.now() // Reset cooldown on select
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-  }, [selectedCabinetId, cabinetRects])
-
-  const handlePointerDown = (e) => {
-    e.preventDefault()
-    const target = e.currentTarget.parentElement
-    if (!target || !containerRef.current) return
-    
-    const rect = target.getBoundingClientRect()
-    const parentRect = containerRef.current.getBoundingClientRect()
-    
-    const startX = ((rect.left - parentRect.left) / parentRect.width) * 100
-    const startY = ((rect.top - parentRect.top) / parentRect.height) * 100
-
-    dragStartRef.current = {
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startY: e.clientY,
-      posLeft: startX,
-      posTop: startY,
-    }
-    e.currentTarget.setPointerCapture(e.pointerId)
-  }
-
-  const handlePointerMove = (e) => {
-    if (!dragStartRef.current || dragStartRef.current.pointerId !== e.pointerId) return
-    e.preventDefault()
-    
-    if (!containerRef.current) return
-    const parentRect = containerRef.current.getBoundingClientRect()
-    const dx = ((e.clientX - dragStartRef.current.startX) / parentRect.width) * 100
-    const dy = ((e.clientY - dragStartRef.current.startY) / parentRect.height) * 100
-
-    let newLeft = dragStartRef.current.posLeft + dx
-    let newTop = dragStartRef.current.posTop + dy
-
-    // Clamp within parent boundaries
-    newLeft = Math.max(0, Math.min(75, newLeft))
-    newTop = Math.max(0, Math.min(80, newTop))
-
-    setInspectorPos({ x: newLeft, y: newTop })
-  }
-
-  const handlePointerUp = (e) => {
-    if (dragStartRef.current && dragStartRef.current.pointerId === e.pointerId) {
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId)
-      } catch {}
-      dragStartRef.current = null
-    }
-  }
 
   return (
     <div

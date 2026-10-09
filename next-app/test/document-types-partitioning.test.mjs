@@ -36,6 +36,7 @@ async function runTests() {
   assert.ok(!requestableDocs.includes("Health Information Sheet"), "Must NOT include Health Information Sheet in requestable docs");
   assert.ok(!requestableDocs.includes("Birth Certificate"), "Must NOT include Birth Certificate in requestable docs");
   assert.ok(!requestableDocs.includes("Form 137"), "Must NOT include Form 137 in requestable docs");
+  assert.ok(!requestableDocs.includes("Clearance Form"), "Must NOT include Clearance Form in requestable docs");
   console.log("✓ listDocTypes({ scope: 'requestable' }) returned only requestable credentials.");
 
   // 2. Direct Repo Call - compliance scope filtering
@@ -45,6 +46,7 @@ async function runTests() {
   assert.ok(complianceDocs.includes("Health Information Sheet"), "Should include Health Information Sheet");
   assert.ok(complianceDocs.includes("Birth Certificate"), "Should include Birth Certificate");
   assert.ok(complianceDocs.includes("Form 137"), "Should include Form 137");
+  assert.ok(complianceDocs.includes("Clearance Form"), "Should include Clearance Form in compliance docs");
   assert.ok(!complianceDocs.includes("Diploma"), "Must NOT include Diploma in compliance docs");
   assert.ok(!complianceDocs.includes("Transcript of Records"), "Must NOT include Transcript of Records in compliance docs");
   console.log("✓ listDocTypes({ scope: 'compliance' }) returned only compliance requirements.");
@@ -83,6 +85,7 @@ async function runTests() {
   assert.ok(reqJson.data.includes("Transcript of Records"), "Must include Transcript of Records");
   assert.ok(!reqJson.data.includes("Health Information Sheet"), "Must NOT include Health Information Sheet");
   assert.ok(!reqJson.data.includes("Birth Certificate"), "Must NOT include Birth Certificate");
+  assert.ok(!reqJson.data.includes("Clearance Form"), "Must NOT include Clearance Form");
   console.log("✓ Student receives strictly requestable credentials from /api/doc-types?scope=requestable.");
 
   // 5. Test Student Request Rejection for Compliance-only document
@@ -109,6 +112,29 @@ async function runTests() {
   );
   console.log("✓ Request for 'Health Information Sheet' correctly rejected with HTTP 400.");
 
+  console.log("\n[Test 6b] Attempting to submit request for 'Clearance Form' (should be rejected)...");
+  const badClearanceRes = await fetch(`${BASE_URL}/api/student/document-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: studentAuth.cookieHeader,
+    },
+    body: JSON.stringify({
+      studentNo: "2022-10001-MN-1",
+      docType: "Clearance Form",
+      clientType: "Student",
+      notes: "Need clearance",
+    }),
+  });
+  assert.equal(badClearanceRes.status, 400, "Should reject request for Clearance Form with 400");
+  const badClearanceJson = await badClearanceRes.json();
+  assert.equal(badClearanceJson.ok, false);
+  assert.ok(
+    badClearanceJson.error.includes("inward compliance requirement"),
+    `Error message should explain it is a compliance requirement: ${badClearanceJson.error}`
+  );
+  console.log("✓ Request for 'Clearance Form' correctly rejected with HTTP 400.");
+
   // 6. Test Student Request Success for Requestable document
   console.log("\n[Test 7] Submitting request for 'Transcript of Records' (should succeed)...");
   const goodReqRes = await fetch(`${BASE_URL}/api/student/document-requests`, {
@@ -128,6 +154,46 @@ async function runTests() {
   const goodReqJson = await goodReqRes.json();
   assert.equal(goodReqJson.ok, true);
   console.log("✓ Request for 'Transcript of Records' successfully accepted.");
+
+  // 6b. Test Staff-mediated Document Request validation
+  console.log("\n[Test 7b] Testing Staff-mediated document request validation...");
+  const staffLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "staff.registrar@pup.local", password: process.env.DEFAULT_STAFF_PASSWORD || "pupstaff" }),
+  });
+  assert.equal(staffLoginRes.status, 200, "Staff login must succeed");
+  const staffAuth = extractCookies(staffLoginRes);
+
+  const staffReqRes = await fetch(`${BASE_URL}/api/doc-types?scope=requestable`, {
+    headers: { cookie: staffAuth.cookieHeader },
+  });
+  assert.equal(staffReqRes.status, 200);
+  const staffReqJson = await staffReqRes.json();
+  assert.equal(staffReqJson.ok, true);
+  assert.ok(!staffReqJson.data.includes("Health Information Sheet"), "Staff requestable scope must NOT include Health Information Sheet");
+  assert.ok(!staffReqJson.data.includes("Clearance Form"), "Staff requestable scope must NOT include Clearance Form");
+  assert.ok(staffReqJson.data.includes("Transcript of Records"), "Staff requestable scope must include Transcript of Records");
+
+  // Attempt staff creation for compliance document
+  const badStaffReqRes = await fetch(`${BASE_URL}/api/document-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: staffAuth.cookieHeader,
+    },
+    body: JSON.stringify({
+      studentNo: "2022-10001-MN-1",
+      docType: "Health Information Sheet",
+      clientType: "Student",
+      notes: "Counter request",
+    }),
+  });
+  assert.equal(badStaffReqRes.status, 400, "Staff request for compliance document must be rejected");
+  const badStaffJson = await badStaffReqRes.json();
+  assert.equal(badStaffJson.ok, false);
+  assert.ok(badStaffJson.error.includes("inward compliance document"));
+  console.log("✓ Staff request for 'Health Information Sheet' correctly rejected with HTTP 400.");
 
   // 7. Test Student Compliance Checklist endpoint
   console.log("\n[Test 8] Fetching /api/student/compliance...");

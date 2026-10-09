@@ -1,8 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 
 export const CATALOG_ITEMS = [
   {
@@ -92,9 +90,7 @@ export const CATALOG_ITEMS = [
 ];
 
 export default function DocumentCatalog() {
-  const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
   const [catalogData, setCatalogData] = useState({
     heading: "Academic Document Catalog",
     description:
@@ -124,8 +120,6 @@ export default function DocumentCatalog() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
-  const totalItems = items.length;
-  const safeActiveIndex = activeIndex < totalItems ? activeIndex : 0;
 
   const carouselRef = useRef(null);
   const scrollTimeout = useRef(null);
@@ -335,105 +329,115 @@ export default function DocumentCatalog() {
             </p>
           </div>
 
-          {/* Apple-style Horizontal Carousel */}
-          <div 
-            ref={carouselRef}
-            onScroll={handleScroll}
-            onMouseDown={(e) => { handleMouseDown(e); pauseAutoplayTemporarily(); }}
-            onMouseLeave={handleMouseLeave}
-            onMouseUp={handleMouseUp}
-            onMouseMove={(e) => { handleMouseMove(e); pauseAutoplayTemporarily(); }}
-            onTouchStart={pauseAutoplayTemporarily}
-            onTouchMove={pauseAutoplayTemporarily}
-            onWheel={pauseAutoplayTemporarily}
-            className={`w-full flex overflow-x-auto gap-4 pb-8 pt-8 hide-scrollbar snap-x snap-mandatory sm:snap-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`} 
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            <style dangerouslySetInnerHTML={{__html: `
-              .hide-scrollbar::-webkit-scrollbar { display: none; }
-            `}} />
-            {infiniteItems.map((doc, idx) => {
-              const isActive = (idx % items.length) === activeIndex;
-              return (
-                <div 
-                  key={`${doc.id || doc.title}-${idx}`}
-                  className={`shrink-0 w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[420px] flex flex-col bg-[#f5f5f7] rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 ease-out group snap-center sm:snap-align-none ${
-                    isDragging ? 'pointer-events-none' : 'hover:-translate-y-1'
-                  } ${
-                    isActive 
-                      ? 'scale-[1.05] shadow-none z-10' 
-                      : 'scale-[0.95] shadow-none z-0 opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                      {doc.client || "Student & Alumni"}
-                    </span>
-                    <span className="text-[10px] font-mono text-zinc-400 font-medium tracking-wide">
-                      Official Document
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-950 tracking-tight leading-snug mb-3 group-hover:text-[#800000] transition-colors">
-                    {doc.title}
-                  </h3>
-                  
-                  <p className="text-sm text-gray-500 leading-relaxed mb-8 flex-grow">
-                    {doc.description}
-                  </p>
-                  
-                  <div className="pt-5 border-t border-black/5 mt-auto">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-3 flex items-center gap-1.5">
-                      <HugeIcon  className="ph-bold ph-shield-check text-sm" />
-                      Filing Requirements
+          {items.length === 0 ? (
+            <div className="py-12 flex flex-col items-center justify-center text-center">
+              <p className="text-sm font-medium text-gray-500">No catalog documents available at this time.</p>
+            </div>
+          ) : (
+            <>
+              {/* Apple-style Horizontal Carousel */}
+              <div 
+                ref={carouselRef}
+                onScroll={handleScroll}
+                onMouseDown={(e) => { handleMouseDown(e); pauseAutoplayTemporarily(); }}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={(e) => { handleMouseMove(e); pauseAutoplayTemporarily(); }}
+                onTouchStart={pauseAutoplayTemporarily}
+                onTouchMove={pauseAutoplayTemporarily}
+                onWheel={pauseAutoplayTemporarily}
+                className={`w-full flex overflow-x-auto gap-4 pb-8 pt-8 hide-scrollbar snap-x snap-mandatory sm:snap-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`} 
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                <style dangerouslySetInnerHTML={{__html: `
+                  .hide-scrollbar::-webkit-scrollbar { display: none; }
+                `}} />
+                {infiniteItems.map((doc, idx) => {
+                  const isActive = items.length > 0 ? (idx % items.length) === activeIndex : false;
+                  return (
+                    <div 
+                      key={`${doc.id || doc.title}-${idx}`}
+                      className={`shrink-0 w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[420px] flex flex-col bg-[#f5f5f7] rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 ease-out group snap-center sm:snap-align-none ${
+                        isDragging ? 'pointer-events-none' : 'hover:-translate-y-1'
+                      } ${
+                        isActive 
+                          ? 'scale-[1.05] shadow-none z-10' 
+                          : 'scale-[0.95] shadow-none z-0 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-5">
+                        <span className="text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                          {doc.client || "Student & Alumni"}
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-400 font-medium tracking-wide">
+                          Official Document
+                        </span>
+                      </div>
+                      
+                      <h3 className="text-xl font-bold text-gray-950 tracking-tight leading-snug mb-3 group-hover:text-[#800000] transition-colors">
+                        {doc.title}
+                      </h3>
+                      
+                      <p className="text-sm text-gray-500 leading-relaxed mb-8 flex-grow">
+                        {doc.description}
+                      </p>
+                      
+                      <div className="pt-5 border-t border-black/5 mt-auto">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-3 flex items-center gap-1.5">
+                          <HugeIcon  className="ph-bold ph-shield-check text-sm" />
+                          Filing Requirements
+                        </div>
+                        <ul className="space-y-3 text-xs text-gray-600">
+                          {doc.requirements?.slice(0, 2).map((req, i) => (
+                            <li key={i} className="flex items-start gap-2.5 leading-relaxed">
+                              <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[8px] font-bold">
+                                <HugeIcon  className="ph-bold ph-check" />
+                              </span>
+                              <span className="line-clamp-2">{req}</span>
+                            </li>
+                          ))}
+                          {doc.requirements?.length > 2 && (
+                             <li className="text-gray-400 italic text-[11px] pl-6.5">+{doc.requirements.length - 2} more...</li>
+                          )}
+                        </ul>
+                      </div>
                     </div>
-                    <ul className="space-y-3 text-xs text-gray-600">
-                      {doc.requirements?.slice(0, 2).map((req, i) => (
-                        <li key={i} className="flex items-start gap-2.5 leading-relaxed">
-                          <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[8px] font-bold">
-                            <HugeIcon  className="ph-bold ph-check" />
-                          </span>
-                          <span className="line-clamp-2">{req}</span>
-                        </li>
-                      ))}
-                      {doc.requirements?.length > 2 && (
-                         <li className="text-gray-400 italic text-[11px] pl-6.5">+{doc.requirements.length - 2} more...</li>
-                      )}
-                    </ul>
+                  );
+                })}
+              </div>
+
+              {/* Apple-style Pagination Dots & Controls */}
+              {items.length > 1 && (
+                <div className="relative w-full max-w-7xl mx-auto px-6 flex items-center justify-center mt-2 mb-4 h-6">
+                  <div className="flex items-center justify-center gap-2 h-2">
+                    {items.map((_, idx) => {
+                      const dist = Math.abs(idx - activeIndex);
+                      let dotClass = "";
+                      
+                      if (activeIndex === idx) {
+                        dotClass = "w-6 h-1.5 bg-black";
+                      } else if (dist <= 2) {
+                        dotClass = "w-1.5 h-1.5 bg-gray-400 hover:bg-gray-500";
+                      } else if (dist === 3) {
+                        dotClass = "w-[5px] h-[5px] bg-gray-400 hover:bg-gray-500";
+                      } else {
+                        dotClass = "w-[3px] h-[3px] bg-gray-400 hover:bg-gray-500";
+                      }
+                      
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => scrollToDot(idx)}
+                          className={`transition-all duration-300 rounded-full flex-shrink-0 ${dotClass}`}
+                          aria-label={`Go to slide ${idx + 1}`}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Apple-style Pagination Dots & Controls */}
-          <div className="relative w-full max-w-7xl mx-auto px-6 flex items-center justify-center mt-2 mb-4 h-6">
-            <div className="flex items-center justify-center gap-2 h-2">
-              {items.map((_, idx) => {
-                const dist = Math.abs(idx - activeIndex);
-                let dotClass = "";
-                
-                if (activeIndex === idx) {
-                  dotClass = "w-6 h-1.5 bg-black";
-                } else if (dist <= 2) {
-                  dotClass = "w-1.5 h-1.5 bg-gray-400 hover:bg-gray-500";
-                } else if (dist === 3) {
-                  dotClass = "w-[5px] h-[5px] bg-gray-400 hover:bg-gray-500";
-                } else {
-                  dotClass = "w-[3px] h-[3px] bg-gray-400 hover:bg-gray-500";
-                }
-                
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => scrollToDot(idx)}
-                    className={`transition-all duration-300 rounded-full flex-shrink-0 ${dotClass}`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
+              )}
+            </>
+          )}
 
         </div>
       </div>

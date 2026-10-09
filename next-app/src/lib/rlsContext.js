@@ -15,7 +15,7 @@ export const getRlsContext = cache(async () => {
         officeId: payload.office_id || payload.officeId
       };
     }
-  } catch (e) {
+  } catch {
     // Fails silently if outside a request context or not in Next.js
   }
   return null;

@@ -116,33 +116,37 @@ async function runTests() {
   assert.equal(adminLoginRes.status, 200, "Admin login must succeed");
   const adminAuth = extractCookies(adminLoginRes);
 
-  console.log("\n[Test 4] Executing Bulk Import API with classification fields...");
+  const { dbRun } = await import("../src/lib/postgresCompat.js");
+  // Clean up test records from any previous runs
+  await dbRun("DELETE FROM sections WHERE office_id = 'registrar' AND name = '1-1' AND course_code = 'BSTEST'");
+  await dbRun("DELETE FROM courses WHERE office_id = 'registrar' AND code = 'BSTEST'");
+  await dbRun("DELETE FROM document_types WHERE office_id = 'registrar' AND name_norm IN ('bulk test compliance document', 'bulk test requestable document')");
+
+  console.log("\n[Test 4] Executing Bulk Import API with new classification rows...");
   const payloadRows = [
     {
       category: "DocumentType",
-      name: "Undertaking and Waiver of Right",
+      name: "Bulk Test Compliance Document",
       code: "",
       isCompliance: true,
       isRequestable: false,
-      complianceCategory: "Admission & Identity",
     },
     {
       category: "DocumentType",
-      name: "Diploma",
+      name: "Bulk Test Requestable Document",
       code: "",
       isCompliance: false,
       isRequestable: true,
-      complianceCategory: "Graduation & Exit Records",
     },
     {
       category: "Course",
-      name: "Bachelor of Science in Information Technology",
-      code: "BSIT",
+      name: "Bachelor of Science in Testing",
+      code: "BSTEST",
     },
     {
       category: "Section",
       name: "1-1",
-      code: "BSIT",
+      code: "BSTEST",
     },
   ];
 
@@ -162,25 +166,114 @@ async function runTests() {
   const importJson = await importRes.json();
   assert.equal(importJson.ok, true, "Bulk import response ok must be true");
   console.log("Import response:", importJson.data);
-  assert.equal(importJson.data.successCount, 4, "All 4 rows must be successfully imported/upserted");
-  assert.equal(importJson.data.failCount, 0, "Fail count must be 0");
+  assert.equal(importJson.data.successCount, 4, "All 4 new rows must be successfully imported");
+  assert.equal(importJson.data.failCount, 0, "Fail count must be 0 on first import");
   console.log("✓ Bulk import API parsed and applied classification metadata.");
 
   // 4. Verify in DB that document types reflect the imported classification
   console.log("\n[Test 5] Verifying DB records reflect classification...");
   const allRegistrarDocs = await listAllDocTypes({ officeId: "registrar" });
-  const waiverDoc = allRegistrarDocs.find((d) => d.name === "Undertaking and Waiver of Right");
-  assert.ok(waiverDoc, "Undertaking and Waiver of Right must exist");
+  const waiverDoc = allRegistrarDocs.find((d) => d.name === "Bulk Test Compliance Document");
+  assert.ok(waiverDoc, "Bulk Test Compliance Document must exist");
   assert.equal(waiverDoc.is_compliance, true);
   assert.equal(waiverDoc.is_requestable, false);
-  assert.equal(waiverDoc.compliance_category, "Admission & Identity");
 
-  const diplomaDoc = allRegistrarDocs.find((d) => d.name === "Diploma");
-  assert.ok(diplomaDoc, "Diploma must exist");
+  const diplomaDoc = allRegistrarDocs.find((d) => d.name === "Bulk Test Requestable Document");
+  assert.ok(diplomaDoc, "Bulk Test Requestable Document must exist");
   assert.equal(diplomaDoc.is_compliance, false);
   assert.equal(diplomaDoc.is_requestable, true);
-  assert.equal(diplomaDoc.compliance_category, "Graduation & Exit Records");
-  console.log("✓ Database records verified with accurate purpose and category attributes.");
+  console.log("✓ Database records verified with accurate purpose attributes.");
+
+  // 5. Test Re-importing the same CSV content: must report all 4 as duplicates (failCount: 4, successCount: 0)
+  console.log("\n[Test 6] Re-importing identical batch: verifying duplicate detection...");
+  const duplicateRes = await fetch(`${BASE_URL}/api/system/bulk-import`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: adminAuth.cookieHeader,
+    },
+    body: JSON.stringify({
+      officeId: "registrar",
+      rows: payloadRows,
+    }),
+  });
+  assert.equal(duplicateRes.status, 200, "Duplicate bulk import must return 200");
+  const duplicateJson = await duplicateRes.json();
+  assert.equal(duplicateJson.ok, true, "Duplicate response ok must be true");
+  console.log("Duplicate import response:", duplicateJson.data);
+  assert.equal(duplicateJson.data.successCount, 0, "0 new records must be added on duplicate re-import");
+  assert.equal(duplicateJson.data.failCount, 4, "All 4 records must be identified as duplicates/skipped");
+  console.log("✓ Duplicate detection verified: identical records are correctly skipped as duplicates.");
+
+  // Clean up test records
+  await dbRun("DELETE FROM sections WHERE office_id = 'registrar' AND name = '1-1' AND course_code = 'BSTEST'");
+  await dbRun("DELETE FROM courses WHERE office_id = 'registrar' AND code = 'BSTEST'");
+  await dbRun("DELETE FROM document_types WHERE office_id = 'registrar' AND name_norm IN ('bulk test compliance document', 'bulk test requestable document')");
+
+  // 6. Test Bulk Import and duplicate detection for OSAS office
+  console.log("\n[Test 7] Authenticating as OSAS Admin...");
+  const osasLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "admin.osas@pup.local", password: STAFF_PASSWORD }),
+  });
+  assert.equal(osasLoginRes.status, 200, "OSAS Admin login must succeed");
+  const osasAuth = extractCookies(osasLoginRes);
+
+  await dbRun("DELETE FROM document_types WHERE office_id = 'osas' AND name_norm IN ('osas test compliance doc', 'osas test requestable doc')");
+
+  const osasPayloadRows = [
+    {
+      category: "DocumentType",
+      name: "OSAS Test Compliance Doc",
+      code: "",
+      isCompliance: true,
+      isRequestable: false,
+    },
+    {
+      category: "DocumentType",
+      name: "OSAS Test Requestable Doc",
+      code: "",
+      isCompliance: false,
+      isRequestable: true,
+    },
+  ];
+
+  console.log("\n[Test 8] Executing OSAS Bulk Import and duplicate detection...");
+  const osasImportRes = await fetch(`${BASE_URL}/api/system/bulk-import`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: osasAuth.cookieHeader,
+    },
+    body: JSON.stringify({
+      officeId: "osas",
+      rows: osasPayloadRows,
+    }),
+  });
+  assert.equal(osasImportRes.status, 200, "OSAS bulk import must succeed");
+  const osasImportJson = await osasImportRes.json();
+  assert.equal(osasImportJson.data.successCount, 2, "2 OSAS rows must be successfully imported");
+  assert.equal(osasImportJson.data.failCount, 0, "0 failures on first OSAS import");
+
+  // Re-importing identical OSAS rows
+  const osasDuplicateRes = await fetch(`${BASE_URL}/api/system/bulk-import`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: osasAuth.cookieHeader,
+    },
+    body: JSON.stringify({
+      officeId: "osas",
+      rows: osasPayloadRows,
+    }),
+  });
+  const osasDuplicateJson = await osasDuplicateRes.json();
+  assert.equal(osasDuplicateJson.data.successCount, 0, "0 new records added on duplicate OSAS re-import");
+  assert.equal(osasDuplicateJson.data.failCount, 2, "Both OSAS records skipped as duplicates");
+  console.log("✓ OSAS bulk import and duplicate detection verified.");
+
+  await dbRun("DELETE FROM document_types WHERE office_id = 'osas' AND name_norm IN ('osas test compliance doc', 'osas test requestable doc')");
 
   console.log("\n=== ALL BULK IMPORT CLASSIFICATION TESTS PASSED ===");
   process.exit(0);

@@ -6,7 +6,7 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function ServiceStandardsSkeleton() {
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6 pb-6 select-none">
+    <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6 select-none">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Page Header */}
         <PageHeader

@@ -6,18 +6,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { getClientSession } from "@/lib/clientAuth"
 
+import {
+  applyHighContrastClass,
+  getHighContrastPreference,
+  setHighContrastPreference,
+} from "@/lib/accessibility"
+
 export const AuthUserContext = createContext(null)
 export const useAuthUser = () => useContext(AuthUserContext)
-
-function applyAccessibility(highContrast) {
-  if (typeof window === "undefined") return;
-  
-  if (highContrast) {
-    document.documentElement.classList.add("high-contrast");
-  } else {
-    document.documentElement.classList.remove("high-contrast");
-  }
-}
 
 /**
  * Higher-order component that protects routes requiring authentication
@@ -25,7 +21,7 @@ function applyAccessibility(highContrast) {
  * @param {React.ReactNode} props.children - Child components to render if authorized
  * @param {string} props.redirectTo - Path to redirect to if unauthorized (default: "/")
  */
-export function AuthGuard({ children, redirectTo = "/" }) {
+export function AuthGuard({ children, redirectTo = "/login" }) {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(null)
@@ -69,17 +65,13 @@ export function AuthGuard({ children, redirectTo = "/" }) {
 
         // Setup accessibility scaling and high contrast preferences
         if (user && user.id) {
-          const hcKey = `pup_high_contrast_${user.id}`;
-          
           let highContrast = user.preferences?.high_contrast;
-          
-          if (localStorage.getItem(hcKey) !== null) {
-            highContrast = localStorage.getItem(hcKey) === "true";
+          if (typeof highContrast === "boolean") {
+            setHighContrastPreference(highContrast, user.id);
           } else {
-            localStorage.setItem(hcKey, String(!!highContrast));
+            highContrast = getHighContrastPreference(user.id);
+            applyHighContrastClass(highContrast);
           }
-          
-          applyAccessibility(highContrast);
         }
 
         // Check if user is active (case-insensitive for safety)
@@ -110,19 +102,8 @@ export function AuthGuard({ children, redirectTo = "/" }) {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      // Re-read storage/preferences and apply
-      getClientSession()
-        .then(session => {
-          if (session.ok && session.data) {
-            const user = session.data;
-            const hcKey = `pup_high_contrast_${user.id}`;
-            
-            const highContrast = localStorage.getItem(hcKey) === "true";
-            
-            applyAccessibility(highContrast);
-          }
-        })
-        .catch(err => console.error(err));
+      const highContrast = getHighContrastPreference();
+      applyHighContrastClass(highContrast);
     };
     window.addEventListener("storage", handleStorageChange);
     return () => {

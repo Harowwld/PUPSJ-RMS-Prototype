@@ -53,7 +53,7 @@ export async function getInstitutionalBranding() {
           return parsed
         }
       }
-    } catch (e) {
+    } catch {
       // ignore cache read failure
     }
   }
@@ -69,11 +69,11 @@ export async function getInstitutionalBranding() {
           }
           try {
             localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
-          } catch (e) {}
+          } catch {}
           return json.data
         }
       }
-    } catch (e) {
+    } catch {
       // Offline or network error - fallback gracefully
     }
   }
@@ -155,7 +155,7 @@ export const getLogoAsPng = async (customSrc = null, fallbackToDefault = true) =
           const ctx = canvas.getContext("2d")
           ctx.drawImage(img, 0, 0)
           resolve(canvas.toDataURL("image/png"))
-        } catch (err) {
+        } catch {
           onFail()
         }
       }

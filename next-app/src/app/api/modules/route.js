@@ -10,7 +10,7 @@ export async function GET(req) {
   try {
     const modules = await listAllModules();
     return NextResponse.json({ ok: true, data: modules });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
-import { createOrganization, updateOrganization, getOrganizationById } from "@/lib/organizationsRepo";
+import { createOrganization, updateOrganization } from "@/lib/organizationsRepo";
 import { queryOne } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 

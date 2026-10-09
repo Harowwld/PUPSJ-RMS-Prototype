@@ -4,8 +4,8 @@ import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
 import { getStorageLayout } from "../../../lib/storageLayoutRepo";
 import { isUniqueViolation } from "../../../lib/dbErrors";
-import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
-import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
+import { requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 
@@ -28,9 +28,6 @@ export async function GET(req) {
   const yearLevel = searchParams.get("yearLevel") || "";
   const section = searchParams.get("section") || "";
   const includeArchived = searchParams.get("includeArchived") === "true";
-  if (includeArchived && !isSystemAdminRole(access.user.role) && normalizeRole(access.user.role) !== "Admin") {
-    return createAuthErrorResponse("Admin access required", 403);
-  }
   const limit = searchParams.get("limit") || "200";
   const offset = searchParams.get("offset") || "0";
   const officeId = resolveOfficeId(access.user, req);
@@ -160,9 +157,10 @@ export async function POST(req) {
     if (
       msg.includes("Invalid courseCode") ||
       msg.includes("Invalid section") ||
+      msg.includes("is not defined for course") ||
       msg.includes("is linked to")
     ) {
-      return NextResponse.json({ ok: false, error: "Invalid course or section relationship" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: msg || "Invalid course or section relationship" }, { status: 400 });
     }
 
     return NextResponse.json(

@@ -131,9 +131,11 @@ export default function PdfPreviewDialog({
             variant="ghost"
             size="icon"
             onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+            aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
+            title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
             className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
           >
-            <HugeIcon  className="ph-bold ph-arrows-out text-[16px]"></HugeIcon>
+            <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"}></HugeIcon>
           </Button>
 
           <div className="flex items-center gap-2.5 ml-auto">

@@ -5,6 +5,7 @@ import { query, queryOne } from "@/lib/postgres";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -93,6 +94,7 @@ export async function GET(req, ctx) {
       headers: {
         "Content-Type": proposal.mime_type || "application/pdf",
         "Content-Disposition": `inline; filename="${proposal.original_filename || "proposal.pdf"}"`,
+        ...FILE_SECURITY_HEADERS,
       },
     });
   }

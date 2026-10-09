@@ -2,7 +2,6 @@
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -63,8 +62,6 @@ function SortIndicator({ column, sortBy, sortOrder }) {
     <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
   );
 }
-
-const requestStatuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled"];
 
 const RATING_LABELS = {
   1: "Poor",
@@ -146,8 +143,6 @@ export default function StudentDashboard() {
   const [data, setData] = useState({ requests: [], documents: [], proposals: [] });
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [authMode, setAuthMode] = useState("login");
-  const [auth, setAuth] = useState({ studentNo: "", name: "", password: "" });
   const [requestForm, setRequestForm] = useState({
     studentNo: "",
     docType: "",
@@ -164,15 +159,10 @@ export default function StudentDashboard() {
   const [message, setMessage] = useState("");
   const [view, setView] = useState("odrs");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [paymentUploadRequestId, setPaymentUploadRequestId] = useState(null);
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [studentNoFocused, setStudentNoFocused] = useState(false);
-  const [studentNameFocused, setStudentNameFocused] = useState(false);
-  const [studentPasswordFocused, setStudentPasswordFocused] = useState(false);
-  const [showStudentPassword, setShowStudentPassword] = useState(false);
   const attachmentInputRef = useRef(null);
 
   // Table state for Request History
@@ -637,28 +627,6 @@ export default function StudentDashboard() {
     }
   }, [me, router]);
 
-  async function submitAuth(event) {
-    event.preventDefault(); setMessage(""); setAuthSubmitting(true);
-    try {
-    const endpoint = authMode === "register" ? "/api/auth/student/register" : "/api/auth/student/login";
-    const body = authMode === "register" ? auth : { studentNo: auth.studentNo, password: auth.password };
-    const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const json = await res.json();
-    if (!res.ok || !json.ok) { const error = json.error || "Unable to continue."; setMessage(error); showToast("Sign-in failed", error, true); return; }
-    const registrationNotice = json.credentialEmail?.sent
-      ? "Your login details were emailed to you."
-      : "The account is ready, but the credential email could not be sent. You can sign in with your chosen password.";
-    showToast(
-      authMode === "register" ? "Account created" : "Signed in",
-      authMode === "register" ? registrationNotice : "Welcome to Student ODRS.",
-      authMode === "register" && !json.credentialEmail?.sent,
-    );
-    await load();
-    } catch (error) {
-      const message = error.message || "Unable to continue."; setMessage(message); showToast("Connection failed", message, true);
-    } finally { setAuthSubmitting(false); }
-  }
-
   async function createRequest(event) {
     event.preventDefault(); setMessage(""); setRequestSubmitting(true);
     try {
@@ -1045,21 +1013,21 @@ export default function StudentDashboard() {
             />
           }
         />
-          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
+          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col">
             <div
-              className="flex min-h-0 w-full flex-1 flex-col p-4"
+              className="flex min-h-full w-full flex-col p-4"
               style={zoomStyle}
             >
-              <div className="w-full flex-1 flex flex-col min-h-0">
+              <div className="w-full flex flex-col">
 
               {message && <p role="alert" className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">{message}</p>}
               {view === "compliance" ? (
                 <StudentComplianceTab authUser={me} onLogout={handleLogout} />
               ) : view === "odrs" ? (
-                <div className="flex flex-col w-full flex-1 min-h-0">
+                <div className="flex flex-col w-full">
                   {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Active Filters, Table & Pagination */}
                   <Card
-                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
+                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 focus:outline-none"
                     onKeyDown={handleKeyDown}
                     tabIndex={0}
                   >
@@ -1543,7 +1511,7 @@ export default function StudentDashboard() {
                     />
 
                     {/* 5. Request History Table */}
-                    <div className="w-full overflow-x-auto border-t border-border dark:border-border flex-1">
+                    <div className="w-full overflow-x-auto border-t border-border dark:border-border">
                       <table className="min-w-full text-sm">
                         <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                           <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">

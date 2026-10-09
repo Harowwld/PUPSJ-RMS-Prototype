@@ -63,7 +63,7 @@ function getEmbedUrl(mapsUrl) {
     const url = new URL(mapsUrl || "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus")
     const q = url.searchParams.get("q") || "Polytechnic University of the Philippines San Juan Campus"
     return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
-  } catch (e) {
+  } catch {
     return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent("Polytechnic University of the Philippines San Juan Campus")}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
   }
 }
@@ -97,29 +97,7 @@ export default function LandingFooterCmsView({ showToast }) {
     [showToast]
   )
 
-  // Fetch current footer configuration
-  const fetchFooterData = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) {
-        setLoading(true)
-      }
-      try {
-        const res = await fetch("/api/landing/footer", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setFooterData(json.data)
-        } else {
-          notify(json.error || "Failed to load footer configuration", true)
-        }
-      } catch (err) {
-        console.error("[LandingFooterCmsView] Fetch error:", err)
-        notify("Network error fetching footer settings", true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [notify]
-  )
+
 
   useEffect(() => {
     let ignore = false

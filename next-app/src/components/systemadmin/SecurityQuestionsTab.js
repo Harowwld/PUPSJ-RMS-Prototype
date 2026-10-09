@@ -271,8 +271,8 @@ export default function SecurityQuestionsTab({ showToast }) {
   }
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+    <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-shield-check"

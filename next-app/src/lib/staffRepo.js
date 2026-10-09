@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { query, queryOne } from "./postgres.js";
+import { query } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";
@@ -109,24 +109,22 @@ export async function listStaff({
 
   if (officeId !== undefined) {
     if (officeId === null) {
-      filters.push("office_id IS NULL");
+      filters.push("s.office_id IS NULL");
     } else {
-      filters.push("LOWER(office_id) = LOWER(?)");
+      filters.push("LOWER(s.office_id) = LOWER(?)");
       params.push(officeId);
     }
   }
 
   if (role) {
-    filters.push("role = ?");
+    filters.push("s.role = ?");
     params.push(role);
   }
 
   if (status) {
-    filters.push("status = ?");
+    filters.push("s.status = ?");
     params.push(status);
   }
-
-
 
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
@@ -135,7 +133,7 @@ export async function listStaff({
   const isIdOnly = Boolean(cleanQ && /^PUP/i.test(cleanQ));
 
   if (isIdOnly) {
-    filters.push("LOWER(id) LIKE LOWER(?)");
+    filters.push("LOWER(s.id) LIKE LOWER(?)");
     params.push(`%${cleanQ}%`);
   }
 
@@ -143,14 +141,23 @@ export async function listStaff({
 
   let rows;
   if (!cleanQ || isIdOnly) {
-    const orderClause = isIdOnly ? "ORDER BY id ASC" : "ORDER BY updated_at DESC";
+    const orderClause = isIdOnly ? "ORDER BY s.id ASC" : "ORDER BY s.updated_at DESC";
     rows = await dbAll(
-      `SELECT * FROM staff ${where} ${orderClause} LIMIT ? OFFSET ?`,
+      `SELECT s.*, o.name AS office_name, o.short_name AS office_short_name
+       FROM staff s
+       LEFT JOIN offices o ON o.id = s.office_id
+       ${where} ${orderClause} LIMIT ? OFFSET ?`,
       [...params, lim, off]
     );
     return (rows || []).map(decryptStaffRow);
   } else {
-    rows = await dbAll(`SELECT * FROM staff ${where}`, [...params]);
+    rows = await dbAll(
+      `SELECT s.*, o.name AS office_name, o.short_name AS office_short_name
+       FROM staff s
+       LEFT JOIN offices o ON o.id = s.office_id
+       ${where}`,
+      [...params]
+    );
   }
 
   let decryptedRows = (rows || []).map(decryptStaffRow);
@@ -182,7 +189,14 @@ export async function listStaff({
 
 export async function getStaffById(id, { officeId } = {}) {
   const scope = buildStaffScope(officeId);
-  const row = await dbGet(`SELECT * FROM staff WHERE id = ?${scope.clause}`, [id, ...scope.params]);
+  const scopeClause = scope.clause.replace(/\boffice_id\b/g, "s.office_id");
+  const row = await dbGet(
+    `SELECT s.*, o.name AS office_name, o.short_name AS office_short_name
+     FROM staff s
+     LEFT JOIN offices o ON o.id = s.office_id
+     WHERE s.id = ?${scopeClause}`,
+    [id, ...scope.params]
+  );
   return decryptStaffRow(row) || null;
 }
 
@@ -191,7 +205,10 @@ export async function getStaffByUsername(username) {
   if (!u) return null;
   const normalized = u.toLowerCase();
   const row = await dbGet(
-    "SELECT * FROM staff WHERE email = ? OR lower(email) = lower(?) OR lower(id) = lower(?)",
+    `SELECT s.*, o.name AS office_name, o.short_name AS office_short_name
+     FROM staff s
+     LEFT JOIN offices o ON o.id = s.office_id
+     WHERE s.email = ? OR lower(s.email) = lower(?) OR lower(s.id) = lower(?)`,
     [encryptPII(normalized), u, u],
   );
   return decryptStaffRow(row) || null;

@@ -60,7 +60,7 @@ export async function GET(req) {
     const assignments = {};
     rows.forEach((row) => { assignments[row.office_id] ||= {}; assignments[row.office_id][row.module_id] = row; });
     return NextResponse.json({ ok: true, data: { offices: sanitizedOffices, modules: sanitizedModules, assignments } });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

@@ -55,7 +55,7 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Template not found" }, { status: 404 });
     }
     return NextResponse.json({ ok: true, data: row }, { status: 201 });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 400 });
   }
 }

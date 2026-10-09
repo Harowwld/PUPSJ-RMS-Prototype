@@ -117,7 +117,6 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function OSASOrganizationComplianceView({
   showToast,
   onLogAction,
-  officeId = "osas",
 }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -708,15 +707,11 @@ export default function OSASOrganizationComplianceView({
     }
   };
 
-  // Category counts derived from active filtered view
-  const academicCount = filteredSummary.academicCount;
-  const nonAcademicCount = filteredSummary.nonAcademicCount;
-
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
+      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* Unified Single Card Container: Header, Stats, Toolbar, Table & Footer */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-chart-bar"
@@ -1190,8 +1185,8 @@ export default function OSASOrganizationComplianceView({
           />
 
           {/* 5. Main Content Area: Organizations Compliance Table (5 Clean Columns) */}
-          <div className="flex flex-1 flex-col min-h-0 overflow-hidden border-t border-border dark:border-border bg-white dark:bg-card">
-            <div className="flex-1 overflow-x-auto">
+          <div className="flex flex-col border-t border-border dark:border-border bg-white dark:bg-card">
+            <div className="w-full overflow-x-auto">
               {sortedOrganizations.length > 0 ? (
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 bg-gray-50/80 backdrop-blur-sm dark:bg-zinc-900/70 border-b border-border dark:border-border">
@@ -1877,6 +1872,7 @@ export default function OSASOrganizationComplianceView({
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+                    aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
                     className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
                   >
                     <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"} />

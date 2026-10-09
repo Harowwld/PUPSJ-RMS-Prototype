@@ -53,7 +53,7 @@ export async function POST(req, ctx) {
       return NextResponse.json({ ok: false, error: "Batch not found" }, { status: 404 });
     }
     return NextResponse.json({ ok: true, data: { processed: items.length, items, batch } });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Batch processing failed" }, { status: 500 });
   }
 }

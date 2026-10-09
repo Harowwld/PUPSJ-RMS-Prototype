@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
 import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
@@ -15,16 +14,14 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import GlobalFailedBatchReviewModal from "@/components/staff/GlobalFailedBatchReviewModal";
 import {
   Tabs,
-  TabsList,
-  TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
+import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
-import { PageTransition } from "@/components/ui/motion";
 import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 
 const StaffTabLoading = () => <StaffTabSkeleton />;
@@ -35,7 +32,6 @@ const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab")
 const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: StaffTabLoading });
 const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: StaffTabLoading });
 const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: StaffTabLoading });
-const RegistrarODRSTab = dynamic(() => import("@/components/staff/RegistrarODRSTab"), { loading: StaffTabLoading });
 const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: StaffTabLoading });
 const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: StaffTabLoading });
 const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: StaffTabLoading });
@@ -111,6 +107,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
+  const isOsas = (authUser?.office_id || "").toLowerCase() === "osas";
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser);
 
   const roleBranding = getRoleBranding(authUser);
@@ -239,6 +236,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [archivedOrganizations, setArchivedOrganizations] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [docTypes, setDocTypes] = useState([]);
+  const [requestableDocTypes, setRequestableDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
   const [storageLayout, setStorageLayout] = useState(null);
@@ -302,8 +300,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [ocrError, setOcrError] = useState("");
   const [rotation, setRotation] = useState(0);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
-  const [pendingSubmission, setPendingSubmission] = useState(null);
-
 
   const [newRec, setNewRec] = useState({
     studentNo: "",
@@ -321,7 +317,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     adviserName: "",
     adviserEmail: "",
   });
-  const [newRecStudentNoHint, setNewRecStudentNoHint] = useState("");
+  const [newRecStudentNoHint] = useState("");
   const [newRecStudentNoTouched, setNewRecStudentNoTouched] = useState(false);
   const newStudentNoInputRef = useRef(null);
 
@@ -345,8 +341,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     studentName: "",
     docType: "",
   });
-  const [docsFile, setDocsFile] = useState(null);
-  const docsFileInputRef = useRef(null);
   const [docsRows, setDocsRows] = useState([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [docsError, setDocsError] = useState("");
@@ -378,23 +372,28 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, aRes, dRes, cRes, secRes, layoutRes, orgsRes] = await Promise.all([
+      const orgsPromise = isOsas
+        ? fetch("/api/osas/organizations?status=Active,Inactive,Archived").then(r => r.json()).catch(() => ({ ok: false, data: [] }))
+        : Promise.resolve({ ok: true, data: [] });
+
+      const [sRes, aRes, dRes, reqDRes, cRes, secRes, layoutRes, orgsData] = await Promise.all([
         fetch("/api/students"),
         fetch("/api/students?includeArchived=true"),
         fetch("/api/doc-types"),
+        fetch("/api/doc-types?scope=requestable"),
         fetch("/api/courses"),
         fetch("/api/sections"),
         fetch("/api/storage-layout"),
-        fetch("/api/osas/organizations?status=Active,Inactive,Archived"),
+        orgsPromise,
       ]);
-      const [sData, aData, dData, cData, secData, layoutData, orgsData] = await Promise.all([
+      const [sData, aData, dData, reqDData, cData, secData, layoutData] = await Promise.all([
         sRes.json(),
         aRes.json(),
         dRes.json(),
+        reqDRes.json().catch(() => ({ ok: false, data: [] })),
         cRes.json(),
         secRes.json(),
         layoutRes.json(),
-        orgsRes.json().catch(() => ({ ok: false, data: [] })),
       ]);
       
       setStudents((Array.isArray(sData.data) ? sData.data : []).map(normalizeStudentRow));
@@ -411,14 +410,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setArchivedOrganizations(allOrgs.filter(o => o.status === "Archived"));
 
       setDocTypes(dData.data || []);
+      setRequestableDocTypes(reqDData?.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
       setStorageLayout(layoutData?.data || { version: 2, rooms: [] });
       coreDataLoadedRef.current = true;
-    } catch (err) {
+    } catch {
       showToast({ title: "Sync Failed", description: "Unable to refresh data from the server." }, true);
     }
-  }, [showToast]);
+  }, [showToast, isOsas]);
 
   const refreshStorageLayout = useCallback(async () => {
     try {
@@ -433,13 +433,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const fetchAllDocs = useCallback(async () => {
     try {
-      const [res, proposalsRes] = await Promise.all([
+      const [res, proposalsData] = await Promise.all([
         fetch("/api/documents?excludeDeclined=1&limit=500"),
-        fetch("/api/osas/event-proposals", { cache: "no-store" }),
+        isOsas
+          ? fetch("/api/osas/event-proposals", { cache: "no-store" }).then(r => r.json()).catch(() => null)
+          : Promise.resolve(null),
       ]);
       const data = await res.json();
-      const proposalsData = await proposalsRes.json().catch(() => null);
-      const proposalDocuments = proposalsRes.ok && Array.isArray(proposalsData?.data)
+      const proposalDocuments = isOsas && Array.isArray(proposalsData?.data)
         ? proposalsData.data.map((proposal) => ({
             id: `event-proposal-${proposal.id}`,
             student_no: proposal.student_no,
@@ -464,7 +465,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     } catch {
       /* silent */
     }
-  }, []);
+  }, [isOsas]);
 
   const fetchNotificationsUnread = useCallback(async () => {
     try {
@@ -972,43 +973,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (linked.length > 0) return linked;
     return sections;
   }, [sections, newRec.course]);
-
-  const activeStudentDocs = useMemo(
-    () => {
-      if (!activeStudent) return [];
-      const orgId = activeStudent.rawOrg?.id || activeStudent.id || activeStudent.studentNo;
-      const isOsas = authUser?.office_id === "osas";
-
-      if (isOsas) {
-        const docs = [];
-        const bylawsFilename = activeStudent.bylawsStorageFilename || activeStudent.rawOrg?.bylaws_storage_filename;
-        if (bylawsFilename) {
-          docs.push({
-            id: `cbl-${orgId}`,
-            student_no: activeStudent.studentNo,
-            student_name: activeStudent.name,
-            doc_type: "Constitution & By-Laws (CBL)",
-            original_filename: activeStudent.rawOrg?.bylaws_original_filename || "CBL.pdf",
-            storage_filename: bylawsFilename,
-            approval_status: "Approved",
-            source_type: "bylaws",
-            file_url: `/api/osas/organizations/${encodeURIComponent(orgId)}/bylaws?file=1`,
-          });
-        }
-        const propDocs = staffDocs.filter((d) =>
-          d.organization_id === orgId ||
-          d.student_no === orgId ||
-          d.student_no === activeStudent.studentNo ||
-          (activeStudent.acronym && (d.student_no === activeStudent.acronym || d.org_acronym === activeStudent.acronym)) ||
-          (d.organization_name && activeStudent.name && d.organization_name.toLowerCase().includes(activeStudent.name.toLowerCase()))
-        );
-        return [...docs, ...propDocs];
-      }
-
-      return staffDocs.filter((d) => d.student_no === activeStudent.studentNo);
-    },
-    [activeStudent, staffDocs, authUser?.office_id],
-  );
 
   const locateStudent = useCallback(
     (s) => {
@@ -1579,7 +1543,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         if (needsConversion(uploadedFile)) {
           try {
             fileToUpload = await imageToPdf(uploadedFile);
-          } catch (convErr) {
+          } catch {
             showToast({ title: "Conversion Failed", description: "Could not convert image to PDF." }, true);
             return;
           }
@@ -1588,7 +1552,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     } else if (needsConversion(uploadedFile)) {
       try {
         fileToUpload = await imageToPdf(uploadedFile);
-      } catch (convErr) {
+      } catch {
         showToast({ title: "Conversion Failed", description: "Could not convert image to PDF. Try uploading a PDF directly." }, true);
         return;
       }
@@ -1738,14 +1702,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setDocsLoading(true);
       setDocsError("");
       try {
-        const trimmedNo = String(form.studentNo || "").trim().toLowerCase();
-        const trimmedName = String(form.studentName || "").trim().toLowerCase();
+        const query = String(form.q ?? form.searchQuery ?? (form.studentName || form.studentNo || "")).trim();
         const selectedTypes = Array.isArray(form.docTypes) && form.docTypes.length > 0
           ? form.docTypes
           : (form.docType ? [form.docType] : []);
         const hasTypeFilter = selectedTypes.length > 0;
 
-        if (!trimmedNo && !trimmedName && !hasTypeFilter) {
+        if (!query && !hasTypeFilter) {
           setDocsRows(staffDocs.filter((doc) => doc.source_type === "event_proposal").map((doc) => ({
             id: doc.id,
             student_no: doc.student_no,
@@ -1759,61 +1722,132 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           return;
         }
 
-        // Find matching students by student no or name
-        const matchingStudents = students.filter((s) => {
-          const studentNo = String(s.studentNo || "").toLowerCase();
-          const studentName = String(s.name || "").toLowerCase();
-          const matchIdField = trimmedNo ? studentNo.includes(trimmedNo) : true;
-          const matchNameField = trimmedName
-            ? studentName.includes(trimmedName) || studentNo.includes(trimmedName)
-            : true;
-          return matchIdField && matchNameField;
-        });
+        const hasExplicitStudentFilter =
+          Boolean(form.studentNo && form.studentName && form.studentNo !== form.studentName);
 
-        if (matchingStudents.length === 0) {
-          setDocsRows([]);
-          return;
-        }
+        const baseStudents = hasExplicitStudentFilter
+          ? students.filter(
+              (s) =>
+                matchesSearchQuery(s.studentNo, form.studentNo) &&
+                matchesSearchQuery(s.name, form.studentName)
+            )
+          : students;
 
         const rows = [];
-        for (const student of matchingStudents) {
+        const seenDocIds = new Set();
+
+        for (const student of baseStudents) {
           const studentDocs = staffDocs.filter(
             (d) => String(d.student_no || "") === String(student.studentNo || "")
           );
 
-          // 1. Show all ACTUAL documents the student has
           const seenTypes = new Set();
+
+          // 1. Show matching actual uploaded documents
           for (const doc of studentDocs) {
             if (hasTypeFilter && !selectedTypes.includes(doc.doc_type)) continue;
-            
+
+            const docMatches =
+              !query ||
+              matchesSearchQuery(
+                [
+                  student.studentNo,
+                  student.name,
+                  student.courseCode,
+                  student.section,
+                  doc.doc_type,
+                  ...getDocTypeSearchAliases(doc.doc_type),
+                  doc.original_filename,
+                  doc.review_note,
+                  doc.storage_filename,
+                ],
+                query
+              );
+
+            if (docMatches) {
+              seenDocIds.add(doc.id);
+              rows.push({
+                id: doc.id,
+                student_no: student.studentNo,
+                student_name: student.name,
+                doc_type: doc.doc_type,
+                status: "uploaded",
+                verificationStatus:
+                  doc.approval_status === "Approved" ? "verified" : "unverified",
+                doc: doc,
+                reviewDoc: doc,
+              });
+            }
+
             seenTypes.add(doc.doc_type);
+          }
+
+          // 2. For missing documents, show active docTypes as placeholders if they match
+          for (const type of docTypes) {
+            if (seenTypes.has(type)) continue; // Already added as "uploaded"
+            if (hasTypeFilter && !selectedTypes.includes(type)) continue;
+
+            const missingMatches =
+              !query ||
+              matchesSearchQuery(
+                [
+                  student.studentNo,
+                  student.name,
+                  student.courseCode,
+                  student.section,
+                  type,
+                  ...getDocTypeSearchAliases(type),
+                ],
+                query
+              );
+
+            if (missingMatches) {
+              rows.push({
+                id: `missing-${student.studentNo}-${type}`,
+                student_no: student.studentNo,
+                student_name: student.name,
+                doc_type: type,
+                status: "missing",
+                verificationStatus: "",
+                doc: null,
+                reviewDoc: null,
+              });
+            }
+          }
+        }
+
+        // 3. Include any documents in staffDocs not tied to baseStudents (e.g. event proposals or standalone documents)
+        for (const doc of staffDocs) {
+          if (seenDocIds.has(doc.id)) continue;
+          if (hasTypeFilter && !selectedTypes.includes(doc.doc_type)) continue;
+
+          const docMatches =
+            !query ||
+            matchesSearchQuery(
+              [
+                doc.student_no,
+                doc.student_name,
+                doc.doc_type,
+                ...getDocTypeSearchAliases(doc.doc_type),
+                doc.original_filename,
+                doc.review_note,
+                doc.storage_filename,
+              ],
+              query
+            );
+
+          if (docMatches) {
+            seenDocIds.add(doc.id);
             rows.push({
               id: doc.id,
-              student_no: student.studentNo,
-              student_name: student.name,
+              student_no: doc.student_no,
+              student_name: doc.student_name,
               doc_type: doc.doc_type,
               status: "uploaded",
               verificationStatus:
                 doc.approval_status === "Approved" ? "verified" : "unverified",
               doc: doc,
               reviewDoc: doc,
-            });
-          }
-
-          // 2. For missing documents, only show ACTIVE docTypes as placeholders
-          for (const type of docTypes) {
-            if (seenTypes.has(type)) continue; // Already added as "uploaded"
-            if (hasTypeFilter && !selectedTypes.includes(type)) continue;
-
-            rows.push({
-              id: `missing-${student.studentNo}-${type}`,
-              student_no: student.studentNo,
-              student_name: student.name,
-              doc_type: type,
-              status: "missing",
-              verificationStatus: "",
-              doc: null,
-              reviewDoc: null,
             });
           }
         }
@@ -2071,12 +2105,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
+        <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
           <div 
-            className="flex-1 p-4 flex flex-col min-h-0 w-full"
+            className="p-4 flex flex-col min-h-full w-full"
             style={zoomStyle}
           >
-            <TabsContent value="students" className="h-full m-0 border-0 focus-visible:ring-0">
+            <TabsContent value="students" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StudentDirectoryTab
               authUser={authUser}
               loading={!storageLayout || loading}
@@ -2093,7 +2127,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="search" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -2186,7 +2220,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="storage" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="storage" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StorageExplorerTab
               loading={!storageLayout}
               locatorModel={locatorModel}
@@ -2205,9 +2239,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="upload" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="upload" className="w-full min-h-full flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <ScanUploadTab
               authUser={authUser}
+              isOsas={isOsas}
               loading={!storageLayout}
               uploadMode={uploadMode}
               uploadStudentIsExisting={uploadStudentIsExisting}
@@ -2292,50 +2327,135 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 setCsvError("");
                 setCsvLoading(true);
                 const r = new FileReader();
+                r.onerror = () => {
+                  setCsvLoading(false);
+                  setCsvError("Unable to read the CSV file.");
+                  showToast({ title: "File Read Error", description: "Failed to read the selected CSV file." }, true);
+                };
                 r.onload = (e) => {
-                  const lines = e.target.result.split(/\r?\n/);
-                  const headers = lines[0]
-                    .split(",")
-                    .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
-                  
-                  if (isOsas) {
+                  try {
+                    const text = e.target?.result;
+                    if (!text || typeof text !== "string") {
+                      throw new Error("File is empty or could not be read.");
+                    }
+                    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+                    if (lines.length < 2) {
+                      throw new Error("CSV file must contain a header row and at least one record row.");
+                    }
+
+                    const parseCsvTokens = (line) => {
+                      const fields = [];
+                      let current = "";
+                      let inQuotes = false;
+                      for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') {
+                          if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                          } else {
+                            inQuotes = !inQuotes;
+                          }
+                        } else if (char === "," && !inQuotes) {
+                          fields.push(current.trim());
+                          current = "";
+                        } else {
+                          current += char;
+                        }
+                      }
+                      fields.push(current.trim());
+                      return fields;
+                    };
+
+                    const headers = parseCsvTokens(lines[0])
+                      .map((h) => h.toLowerCase().replace(/[\s_-]+/g, ""));
+                    
+                    const isOfficeOsas = Boolean(isOsas || (authUser?.office_id || "").toLowerCase() === "osas");
+                    if (isOfficeOsas) {
+                      const rows = lines
+                        .slice(1)
+                        .filter((l) => l.trim())
+                        .map((l, i) => {
+                          const vals = parseCsvTokens(l);
+                          const row = {};
+                          headers.forEach((h, idx) => (row[h] = vals[idx]?.trim() || ""));
+                          const name = row.organization || row.name || row.organizationname || "";
+                          const acronym = (row.acronym || "").toUpperCase();
+                          const category = row.category || "Academic";
+                          const adviserName = row.adviser || row.advisername || "";
+                          const adviserEmail = row.email || row.adviseremail || "";
+                          const room = parseInt(row.room) || 1;
+                          const defaultCab = category.toLowerCase().includes("non-academic") ? "NON-ACADEMIC ORGANIZATIONS" : "ACADEMIC ORGANIZATIONS";
+                          const cabinet = row.cabinet || defaultCab;
+                          const drawer = parseInt(row.drawer) || 1;
+                          return {
+                            index: i + 1,
+                            organization: {
+                              name,
+                              acronym,
+                              category,
+                              adviserName,
+                              adviserEmail,
+                              room,
+                              cabinet,
+                              drawer,
+                            },
+                            student: {
+                              studentNo: acronym || `ORG-${i + 1}`,
+                              name,
+                              courseCode: acronym,
+                              yearLevel: 1,
+                              section: category,
+                              room,
+                              cabinet,
+                              drawer,
+                            },
+                            error: "",
+                          };
+                        });
+                      setCsvRows(rows);
+                      const defaultSelection = {};
+                      rows.forEach((row) => {
+                        defaultSelection[row.index] = true;
+                      });
+                      setCsvSelected(defaultSelection);
+                      return;
+                    }
+
+                    // Use first valid location from layout as fallback if CSV data is missing/invalid
+                    const defaultRoomId = storageLayout?.rooms?.[0]?.id || 1;
+                    const defaultCabId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.id || "A";
+                    const defaultDrawerId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.drawerIds?.[0] || 1;
+
                     const rows = lines
                       .slice(1)
                       .filter((l) => l.trim())
                       .map((l, i) => {
-                        const vals = l.split(",");
+                        const vals = parseCsvTokens(l);
                         const row = {};
-                        headers.forEach((h, idx) => (row[h] = vals[idx]?.trim()));
-                        const name = row.organization || row.name || row.organizationname || "";
-                        const acronym = (row.acronym || "").toUpperCase();
-                        const category = row.category || "Academic";
-                        const adviserName = row.adviser || row.advisername || "";
-                        const adviserEmail = row.email || row.adviseremail || "";
-                        const room = parseInt(row.room) || 1;
-                        const defaultCab = category.toLowerCase().includes("non-academic") ? "NON-ACADEMIC ORGANIZATIONS" : "ACADEMIC ORGANIZATIONS";
-                        const cabinet = row.cabinet || defaultCab;
-                        const drawer = parseInt(row.drawer) || 1;
+                        headers.forEach((h, idx) => (row[h] = vals[idx]?.trim() || ""));
+                        const studentNo = row.studentno || row.student_no || "";
+                        let rawYear = parseInt(row.academicyear || row.yearlevel || row.year, 10);
+                        if (!Number.isInteger(rawYear) || (rawYear >= 1 && rawYear <= 5)) {
+                          const prefixMatch = studentNo.match(/^(\d{4})/);
+                          if (prefixMatch && Number(prefixMatch[1]) >= 2000 && Number(prefixMatch[1]) <= 2100) {
+                            rawYear = Number(prefixMatch[1]);
+                          } else {
+                            rawYear = new Date().getFullYear();
+                          }
+                        }
+
                         return {
                           index: i + 1,
-                          organization: {
-                            name,
-                            acronym,
-                            category,
-                            adviserName,
-                            adviserEmail,
-                            room,
-                            cabinet,
-                            drawer,
-                          },
                           student: {
-                            studentNo: acronym || `ORG-${i + 1}`,
-                            name,
-                            courseCode: acronym,
-                            yearLevel: 1,
-                            section: category,
-                            room,
-                            cabinet,
-                            drawer,
+                            studentNo,
+                            name: row.name || "",
+                            courseCode: (row.coursecode || row.course || "").toUpperCase(),
+                            yearLevel: rawYear,
+                            section: row.section || "",
+                            room: parseInt(row.room) || defaultRoomId,
+                            cabinet: row.cabinet || defaultCabId,
+                            drawer: parseInt(row.drawer) || defaultDrawerId,
                           },
                           error: "",
                         };
@@ -2346,45 +2466,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                       defaultSelection[row.index] = true;
                     });
                     setCsvSelected(defaultSelection);
+                  } catch (err) {
+                    setCsvError(err.message || "Failed to parse CSV file.");
+                    showToast({ title: "CSV Parsing Failed", description: err.message || "The CSV file format is invalid." }, true);
+                  } finally {
                     setCsvLoading(false);
-                    return;
                   }
-
-                  // Use first valid location from layout as fallback if CSV data is missing/invalid
-                  const defaultRoomId = storageLayout?.rooms?.[0]?.id || 1;
-                  const defaultCabId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.id || "A";
-                  const defaultDrawerId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.drawerIds?.[0] || 1;
-
-                  const rows = lines
-                    .slice(1)
-                    .filter((l) => l.trim())
-                    .map((l, i) => {
-                      const vals = l.split(",");
-                      const row = {};
-                      headers.forEach((h, idx) => (row[h] = vals[idx]?.trim()));
-                      return {
-                        index: i + 1,
-                        student: {
-                          studentNo: row.studentno || row.student_no || "",
-                          name: row.name || "",
-                          courseCode: (row.coursecode || row.course || "").toUpperCase(),
-                          yearLevel:
-                            parseInt(row.academicyear || row.yearlevel || row.year) || 1,
-                          section: row.section,
-                          room: parseInt(row.room) || defaultRoomId,
-                          cabinet: row.cabinet || defaultCabId,
-                          drawer: parseInt(row.drawer) || defaultDrawerId,
-                        },
-                        error: "",
-                      };
-                    });
-                  setCsvRows(rows);
-                  const defaultSelection = {};
-                  rows.forEach((row) => {
-                    defaultSelection[row.index] = true;
-                  });
-                  setCsvSelected(defaultSelection);
-                  setCsvLoading(false);
                 };
                 r.readAsText(f);
               }}
@@ -2427,7 +2514,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 }
                 setCsvLoading(true);
                 try {
-                  if (isOsas) {
+                  const isOfficeOsas = Boolean(isOsas || (authUser?.office_id || "").toLowerCase() === "osas");
+                  if (isOfficeOsas) {
                     const rs = await fetch("/api/osas/organizations/batch", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -2598,30 +2686,30 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="batch_review" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="batch_review" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
           </TabsContent>
 
-          <TabsContent value="requests" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="requests" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <DocumentRequestsTab
               students={students}
               courses={courses}
-              docTypes={docTypes}
+              docTypes={requestableDocTypes}
               staffDocs={staffDocs}
               onLocateOnMap={goToStorageMapFromRequest}
               showToast={showToast}
             />
           </TabsContent>
 
-          <TabsContent value="osas_monitoring" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="osas_monitoring" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <OsasMonitoringTab showToast={showToast} />
           </TabsContent>
 
-          <TabsContent value="organizations" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="organizations" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StudentOrganizationsTab showToast={showToast} />
           </TabsContent>
 
-          <TabsContent value="documents" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="documents" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <DocumentsTab
               docsForm={docsForm}
               setDocsForm={setDocsForm}
@@ -2690,7 +2778,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="notifications" className="h-full m-0 border-0 focus-visible:ring-0">
+          <TabsContent value="notifications" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <NotificationsTab
               onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
               onPreviewDocument={handlePreviewDocument}

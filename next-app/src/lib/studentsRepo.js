@@ -1,8 +1,9 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
-import { encryptPII, decryptPII } from "./piiEncryption.js";
+import { encryptPII } from "./piiEncryption.js";
 import { decryptStudentRow } from "./studentAuth.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
+import { matchesSearchQuery } from "./searchUtils.js";
 
 async function hasPhysicalStorage() {
   return true;
@@ -207,8 +208,9 @@ export async function listStudents({
   const isStudentNoOnly = Boolean(cleanQ && /^[\d-]+$/.test(cleanQ));
 
   if (isStudentNoOnly) {
-    filters.push("student_no LIKE ?");
-    params.push(`%${cleanQ}%`);
+    filters.push("(student_no ILIKE ? OR REPLACE(student_no, '-', '') ILIKE ?)");
+    const stripped = cleanQ.replace(/-/g, "");
+    params.push(`%${cleanQ}%`, `%${stripped}%`);
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
@@ -227,16 +229,13 @@ export async function listStudents({
 
   let decryptedRows = (rows || []).map(decryptStudentRow);
   if (cleanQ) {
-    const search = cleanQ.toLowerCase();
-    decryptedRows = decryptedRows.filter(r => {
-      if (r.student_no && r.student_no.toLowerCase().includes(search)) return true;
-      if (r.name && r.name.toLowerCase().includes(search)) return true;
-      return false;
-    });
+    decryptedRows = decryptedRows.filter((r) =>
+      matchesSearchQuery([r.student_no, r.name], cleanQ)
+    );
 
     decryptedRows.sort((a, b) => {
-      const nameA = (a.name || '').toLowerCase();
-      const nameB = (b.name || '').toLowerCase();
+      const nameA = (a.name || "").toLowerCase();
+      const nameB = (b.name || "").toLowerCase();
       return nameA.localeCompare(nameB);
     });
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listCourses, archiveCourse } from "../../../lib/coursesRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
-import { requireAdmin, requireStaff, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { requireAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
 import { transaction } from "../../../lib/postgres.js";
 
@@ -32,7 +32,7 @@ export async function GET(req) {
     if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
     const courses = await listCourses({ includeArchived, officeId });
     return NextResponse.json({ ok: true, data: courses });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to list courses" },
       { status: 500 }
@@ -99,7 +99,7 @@ export async function POST(req) {
         entity_id: normalizedCode
     });
     return NextResponse.json({ ok: true, data: newCourse }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }
@@ -258,7 +258,7 @@ export async function PUT(req) {
          });
     }
     return NextResponse.json({ ok: true, data: updated });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }
@@ -310,7 +310,7 @@ export async function DELETE(req) {
       });
     }
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Request could not be completed" },
       { status: 400 }

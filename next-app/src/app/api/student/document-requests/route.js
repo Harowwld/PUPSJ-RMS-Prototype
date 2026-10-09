@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { getStudentSession } from "@/lib/studentAuth";
 import { query, queryOne, transaction } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
@@ -251,13 +250,13 @@ export async function POST(req) {
   }
 
   const validType = await queryOne(
-    "SELECT id, name, is_requestable FROM document_types WHERE office_id = 'registrar' AND name = $1 AND status = 'Active'",
+    "SELECT id, name, is_requestable, is_compliance FROM document_types WHERE office_id = 'registrar' AND name = $1 AND status = 'Active'",
     [docType]
   );
   if (!validType) {
     return NextResponse.json({ ok: false, error: "Invalid document type." }, { status: 400 });
   }
-  if (!validType.is_requestable) {
+  if (!validType.is_requestable || validType.is_compliance) {
     return NextResponse.json(
       {
         ok: false,

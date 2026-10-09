@@ -1,15 +1,15 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+import HugeIcon from "@/components/shared/HugeIcon"
 import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
+import { formatPHDateTime } from "@/lib/timeFormat"
 
 import StatCards from "./audit-logs/StatCards"
 import LogFilters from "./audit-logs/LogFilters"
@@ -62,17 +62,12 @@ export default function AuditLogsTab({
   const [isExporting, setIsExporting] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
-  const [jumpPage, setJumpPage] = useState(String(logPage))
 
   // PDF Preview State
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
   const [previewFrameReady, setPreviewFrameReady] = useState(false)
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
-
-  useEffect(() => {
-    setJumpPage(String(logPage))
-  }, [logPage])
 
   // Debounced Search
   useEffect(() => {
@@ -86,8 +81,6 @@ export default function AuditLogsTab({
   }, [localSearch, logSearch, setLogSearch, setLogPage])
 
   const handleSearchChange = (e) => setLocalSearch(e.target.value)
-  const handleRoleChange = (e) => { setLogRoleFilter(e.target.value); setLogPage(1) }
-  const handleSeverityChange = (e) => { setLogSeverityFilter(e.target.value); setLogPage(1) }
   const handleSort = (column) => {
     if (logSortBy === column) {
       if (logSortOrder === "ASC") {
@@ -298,9 +291,7 @@ export default function AuditLogsTab({
             localSearch={localSearch}
             handleSearchChange={handleSearchChange}
             logRoleFilter={logRoleFilter}
-            handleRoleChange={handleRoleChange}
             logSeverityFilter={logSeverityFilter}
-            handleSeverityChange={handleSeverityChange}
             logStartDate={logStartDate}
             setLogStartDate={setLogStartDate}
             logEndDate={logEndDate}
@@ -396,8 +387,6 @@ export default function AuditLogsTab({
             logsPerPage={logsPerPage}
             setItemsPerPage={setItemsPerPage}
             setLogsPerPage={setLogsPerPage}
-            jumpPage={jumpPage}
-            setJumpPage={setJumpPage}
             handleSort={handleSort}
             logSortBy={logSortBy}
             logSortOrder={logSortOrder}

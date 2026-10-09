@@ -1,24 +1,48 @@
 import { NextResponse } from "next/server";
 import { listOffices, createOffice, listOfficesWithStats } from "@/lib/officesRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireSystemAdmin, requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
+import { isSystemAdminRole } from "@/lib/roleUtils";
 import { sendAccountCredentialsNotice } from "@/lib/accountEmail";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const access = await requireSystemAdmin(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status") || undefined;
+  const q = searchParams.get("q") || undefined;
+  const stats = searchParams.get("stats") === "true";
+
+  let user = null;
+  if (stats) {
+    const access = await requireSystemAdmin(req);
+    if (access.error || !access.user) {
+      return createAuthErrorResponse(access.error || "System administrator access required", access.error?.startsWith("Access denied") ? 403 : 401);
+    }
+    user = access.user;
+  } else {
+    const access = await requireAuth(req, ["Staff", "Admin", "SystemAdmin", "SuperAdmin"]);
+    if (access.error || !access.user) {
+      return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+    }
+    user = access.user;
+  }
 
   try {
-    const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status") || undefined;
-    const q = searchParams.get("q") || undefined;
-    const stats = searchParams.get("stats") === "true";
-
-    const offices = stats ? await listOfficesWithStats() : await listOffices({ status, q });
+    let offices = stats ? await listOfficesWithStats() : await listOffices({ status, q });
+    if (!isSystemAdminRole(user.role)) {
+      offices = offices.map((o) => ({
+        id: o.id,
+        name: o.name,
+        short_name: o.short_name,
+        description: o.description,
+        icon: o.icon,
+        accent_color: o.accent_color,
+        status: o.status,
+      }));
+    }
     return NextResponse.json({ ok: true, data: offices });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

@@ -11,10 +11,7 @@ export default function FloatingActionBar({
   onClearSelection,
   onAction,
   actionLabel,
-  actionIcon, // ignored to adhere to HIG text-only button guidelines
   actionVariant = "danger", // danger | success | neutral | outline | warning
-  selectionLabel,
-  selectionStatus,
   customContent,
   actions,
   children,

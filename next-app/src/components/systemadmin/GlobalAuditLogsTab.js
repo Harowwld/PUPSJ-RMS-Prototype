@@ -2,12 +2,10 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
 import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
-import { Badge } from "@/components/ui/badge"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import {
   Empty,
@@ -26,8 +24,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
-import { cn } from "@/lib/utils"
-import { Select } from "@/components/ui/select"
+import { cn, formatTitleCase } from "@/lib/utils"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -294,7 +291,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           setError(json.error || "Failed to fetch audit logs")
           showToast?.(json.error || "Failed to fetch audit logs", true)
         }
-      } catch (err) {
+      } catch {
         setError("Network error fetching audit logs")
         showToast?.("Network error fetching audit logs", true)
       } finally {
@@ -584,9 +581,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader
             icon="ph-shield-check"
             title="Platform Audit Trail"
@@ -874,18 +871,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
+            <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm table-fixed">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
+                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
                   <th className="w-12 p-4 text-center"></th>
                   <th className="p-4 w-[14%]">
                     <button
                       onClick={() => handleSort("created_at")}
                       className={cn(
                         "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Timestamp{" "}
@@ -897,7 +894,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onClick={() => handleSort("severity")}
                       className={cn(
                         "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "severity" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        sortBy === "severity" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Level{" "}
@@ -909,7 +906,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onClick={() => handleSort("actor")}
                       className={cn(
                         "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "actor" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        sortBy === "actor" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Actor{" "}
@@ -921,7 +918,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onClick={() => handleSort("office_id")}
                       className={cn(
                         "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "office_id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        sortBy === "office_id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Scope{" "}
@@ -933,25 +930,23 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onClick={() => handleSort("action")}
                       className={cn(
                         "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "action" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        sortBy === "action" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Action{" "}
                       <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                     Description
                   </th>
-                  <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-transparent">
                 {logs.map((log) => {
-                    const isCritical = log.severity === "CRITICAL"
-                    const isWarning = log.severity === "WARNING"
                     const severityInfo = getSeverityInfo(log.severity)
                     const isExpanded = !!expandedRows[log.id]
                     const isSelected = selectedLog && selectedLog.id === log.id
@@ -968,7 +963,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           minute: "2-digit",
                           hour12: true,
                         })
-                      } catch (e) {
+                      } catch {
                         return log.created_at || log.time
                       }
                     })()
@@ -978,32 +973,32 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         <tr
                           onClick={() => toggleRow(log.id)}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isExpanded && "bg-gray-50 dark:bg-white/8"
                           )}
                         >
                           {/* Accordion Chevron */}
-                          <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                          <td className="p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => toggleRow(log.id)}
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
-                              className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-200"
+                              className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors"
                             >
                               <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
                             </button>
                           </td>
 
                           {/* Timestamp */}
-                          <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+                          <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                             {formattedTimestamp}
                           </td>
 
                           {/* Level / Severity */}
-                          <td className="py-0 px-4 align-middle">
+                          <td className="p-4 align-middle">
                             <span
                               className={cn(
-                                "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+                                "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
                                 severityInfo.classes
                               )}
                             >
@@ -1012,19 +1007,19 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Actor */}
-                          <td className="py-0 px-4 align-middle">
+                          <td className="p-4 align-middle">
                             <div className="flex flex-col overflow-hidden">
-                              <span className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">
-                                {log.actor}
+                              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
+                                {formatTitleCase(log.actor)}
                               </span>
-                              <span className="truncate text-[12px] font-normal text-[#8E8E93] mt-[2px]">
+                              <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
                                 {log.role}
                               </span>
                             </div>
                           </td>
 
                           {/* Scope */}
-                          <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+                          <td className="p-4 align-middle text-xs font-medium text-gray-900 dark:text-zinc-100">
                             {log.office_id ? (
                               <span className="font-medium text-gray-800 dark:text-zinc-300">
                                 {log.scope}
@@ -1037,15 +1032,15 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Action */}
-                          <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+                          <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
                             {formatActionLabel(log.action)}
                           </td>
 
                           {/* Description Tooltip */}
-                          <td className="py-0 px-4 align-middle">
+                          <td className="p-4 align-middle">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="block max-w-[280px] truncate text-[13px] font-normal text-[#8E8E93]">
+                                <span className="block max-w-[280px] truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
                                   {log.details || "—"}
                                 </span>
                               </TooltipTrigger>
@@ -1059,8 +1054,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Actions: View Details in Sheet */}
-                          <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-[12px]">
+                          <td className="p-4 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1.5">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button

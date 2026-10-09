@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -144,28 +144,7 @@ export default function LandingCatalogCmsView({ showToast }) {
     [showToast]
   )
 
-  const fetchCatalogData = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) {
-        setLoading(true)
-      }
-      try {
-        const res = await fetch("/api/landing/catalog", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setCatalogData(json.data)
-        } else {
-          notify(json.error || "Failed to load document catalog configuration", true)
-        }
-      } catch (err) {
-        console.error("[LandingCatalogCmsView] Fetch error:", err)
-        notify("Network error fetching catalog settings", true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [notify]
-  )
+
 
   useEffect(() => {
     let ignore = false

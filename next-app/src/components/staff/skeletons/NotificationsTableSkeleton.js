@@ -22,7 +22,7 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
       </div>
       <div className="divide-y divide-border dark:divide-border flex-1">
         {Array.from({ length: rowCount }).map((_, i) => (
-          <div key={i} className="px-4 py-3.5 flex items-center justify-between">
+          <div key={i} className="p-4 flex items-center justify-between">
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 items-center">
               <div>
                 <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />

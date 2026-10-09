@@ -10,9 +10,10 @@ import {
   updateDocumentMetadata,
 } from "../../../../lib/documentsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
-import { isSystemAdminRole } from "../../../../lib/roleUtils";
+import { requireAuth, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
+import { isSystemAdminRole, isStudentRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "../../../../lib/resourceAuthorization";
+import { FILE_SECURITY_HEADERS } from "../../../../lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -28,8 +29,11 @@ function canAccessDocument(user, row) {
   return canAccessResource(user, "document", row);
 }
 
-async function requireDocumentAccess(req, rawId) {
-  const { user, error } = await requireStaff(req);
+async function requireDocumentAccess(req, rawId, { allowStudent = false } = {}) {
+  const allowedRoles = allowStudent
+    ? ["Staff", "Admin", "SystemAdmin", "SuperAdmin", "Student"]
+    : ["Staff", "Admin", "SystemAdmin", "SuperAdmin"];
+  const { user, error } = await requireAuth(req, allowedRoles);
   if (error || !user) {
     return { response: createAuthErrorResponse(error || "Authentication required", 401) };
   }
@@ -42,8 +46,9 @@ async function requireDocumentAccess(req, rawId) {
       ),
     };
   }
-  const officeId = isSystemAdminRole(user.role) ? null : getPrincipalOfficeId(user);
-  if (!isSystemAdminRole(user.role) && !officeId) {
+  const isStudent = isStudentRole(user.role);
+  const officeId = isSystemAdminRole(user.role) || isStudent ? null : getPrincipalOfficeId(user);
+  if (!isSystemAdminRole(user.role) && !isStudent && !officeId) {
     return { response: createAuthErrorResponse("Office scope is required", 403) };
   }
   const row = await getDocumentById(id, officeId ? { officeId } : {});
@@ -59,7 +64,7 @@ async function requireDocumentAccess(req, rawId) {
 export async function GET(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
-  const access = await requireDocumentAccess(req, raw);
+  const access = await requireDocumentAccess(req, raw, { allowStudent: true });
   if (access.response) return access.response;
   const { row } = access;
   const id = access.id ?? Number(row.id);
@@ -88,6 +93,7 @@ export async function GET(req, ctx) {
       "Content-Type": row.mime_type || "application/pdf",
       "Content-Length": String(bytes.length),
       "Content-Disposition": `inline; filename=\"${row.original_filename}\"`,
+      ...FILE_SECURITY_HEADERS,
     },
   });
 }
@@ -95,7 +101,7 @@ export async function GET(req, ctx) {
 export async function PATCH(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
-  const access = await requireDocumentAccess(req, raw);
+  const access = await requireDocumentAccess(req, raw, { allowStudent: false });
   if (access.response) return access.response;
   const { row: accessRow } = access;
   const id = access.id ?? Number(accessRow.id);
@@ -263,7 +269,7 @@ export async function PATCH(req, ctx) {
 export async function DELETE(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
-  const access = await requireDocumentAccess(req, raw);
+  const access = await requireDocumentAccess(req, raw, { allowStudent: false });
   if (access.response) return access.response;
   const { row: accessRow } = access;
   const id = access.id ?? Number(accessRow.id);

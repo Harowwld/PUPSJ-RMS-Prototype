@@ -5,6 +5,7 @@ export function postgresSql(sql) {
   return sql.replace(/\?/g, () => `$${++index}`)
     .replace(/datetime\('now'\)/g, "CURRENT_TIMESTAMP")
     .replace(/\bIFNULL\(/g, "COALESCE(")
+    .replace(/(?<!\(\s*)\bLIKE\b/gi, "ILIKE")
     .replace(/\btotp_enabled\s*=\s*1\b/gi, "totp_enabled = TRUE")
     .replace(/\btotp_enabled\s*=\s*0\b/gi, "totp_enabled = FALSE");
 }

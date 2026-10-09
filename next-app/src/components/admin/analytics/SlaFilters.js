@@ -35,7 +35,6 @@ export default function SlaFilters({
   endDate,
   setEndDate,
   isLoading,
-  onRefresh,
 }) {
   const [startOpen, setStartOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)

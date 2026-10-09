@@ -64,6 +64,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
   const [note, setNote] = useState("");
   const [studentAssignmentQuery, setStudentAssignmentQuery] = useState("");
   const [fullscreenPreview, setFullscreenPreview] = useState(null);
@@ -93,6 +94,62 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    let source = null;
+    let retryTimer = null;
+    let disposed = false;
+
+    const connect = () => {
+      if (typeof window === "undefined" || !("EventSource" in window)) return;
+      try {
+        source = new EventSource("/api/ingest/events");
+        source.addEventListener("ingest", () => {
+          load();
+        });
+        source.onerror = () => {
+          source?.close();
+          if (disposed) return;
+          retryTimer = setTimeout(connect, 5000);
+        };
+      } catch {
+        // Fallback to manual refresh
+      }
+    };
+
+    connect();
+    return () => {
+      disposed = true;
+      clearTimeout(retryTimer);
+      source?.close();
+    };
+  }, [load]);
+
+  const handleClearAllFailed = async () => {
+    setClearingAll(true);
+    try {
+      const response = await fetch("/api/ingest/review?status=Failed", {
+        method: "DELETE",
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.error || "Failed to clear failed documents");
+      }
+      showToast({
+        title: "Failed Documents Cleared",
+        description: `Successfully cleared ${data.clearedCount || 0} failed document(s).`,
+      });
+      setSelectedId(null);
+      await load();
+    } catch (err) {
+      showToast({
+        title: "Clear Failed Documents Failed",
+        description: err.message,
+      }, true);
+    } finally {
+      setClearingAll(false);
+    }
+  };
 
   const filterGroups = useMemo(() => [
     {
@@ -242,9 +299,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 focus:outline-none animate-fade-up overflow-auto">
+      <div className={cn("font-jakarta w-full flex flex-1 flex-col min-h-full focus:outline-none animate-fade-up", rows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
         {/* ONE Single Card Container */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1", rows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
           <PageHeader
             icon="ph-check-square"
             title="Batch Review"
@@ -254,11 +311,25 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
-              <RefreshButton
-                onRefresh={load}
-                isLoading={loading}
-                title="Refresh Review Queue"
-              />
+              <div className="flex items-center gap-2">
+                {statusFilters.length === 1 && statusFilters[0] === "Failed" && total > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={clearingAll || loading}
+                    onClick={handleClearAllFailed}
+                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                  >
+                    {clearingAll ? "Clearing..." : "Clear All Failed"}
+                  </Button>
+                )}
+                <RefreshButton
+                  onRefresh={load}
+                  isLoading={loading}
+                  title="Refresh Review Queue"
+                />
+              </div>
             }
           />
 
@@ -338,14 +409,28 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               <div className="flex min-h-0 flex-col border-b border-border dark:border-border lg:border-b-0 lg:border-r">
                 <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Review Queue</h3>
-                  <span className="text-xs text-gray-900 dark:text-zinc-300">
-                    {rows.length} loaded
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {statusFilters.length === 1 && statusFilters[0] === "Failed" && rows.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        disabled={clearingAll || loading}
+                        onClick={handleClearAllFailed}
+                        className="h-7 px-2.5 text-xs font-semibold rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                      >
+                        {clearingAll ? "Clearing..." : "Clear All Failed"}
+                      </Button>
+                    )}
+                    <span className="text-xs text-gray-900 dark:text-zinc-300">
+                      {rows.length} loaded
+                    </span>
+                  </div>
                 </div>
                 <div className="flex h-full min-h-0 flex-col overflow-auto p-3 flex-1">
                 {rows.length === 0 ? (
                   <div className="flex flex-1 items-center justify-center p-6">
-                    <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                    <Empty className="flex flex-1 h-full min-h-[420px] flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-5">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -752,13 +837,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           variant="destructive"
                           onClick={() =>
                             action("reject", {
-                              reason: note || "Rejected during review",
+                              reason: note || (selected.review_status === "Failed" ? "Dismissed from failed review" : "Rejected during review"),
                             })
                           }
                           disabled={saving}
                           className="h-10 px-4 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/70 dark:hover:bg-red-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                         >
-                          Reject
+                          {selected.review_status === "Failed" ? "Dismiss" : "Reject"}
                         </Button>
                       </div>
                     </div>

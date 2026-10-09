@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getStudentSession } from "@/lib/studentAuth";
 import { query } from "@/lib/postgres";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 

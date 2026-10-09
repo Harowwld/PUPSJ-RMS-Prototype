@@ -1,7 +1,7 @@
-import { getStaffById, verifyRecoveryCode } from "./staffRepo";
-import { verifyTOTP, decryptSecret, isValidToken } from "./totp";
+import { getStaffById, verifyRecoveryCode } from "./staffRepo.js";
+import { verifyTOTP, decryptSecret, isValidToken } from "./totp.js";
 
-export async function requireTOTP(userId, token, { requireEnabled = false } = {}) {
+export async function requireTOTP(userId, token) {
   if (!userId) {
     return { valid: false, error: "User ID required" };
   }
@@ -40,7 +40,7 @@ export async function requireTOTP(userId, token, { requireEnabled = false } = {}
 
     const decrypted = decryptSecret(staff.totp_secret);
     if (!decrypted) {
-      return { valid: false, error: "Failed to decrypt TOTP secret" };
+      return { valid: false, error: "Failed to decrypt TOTP secret. Please reconfigure your 2FA in Account settings." };
     }
 
     const isValid = verifyTOTP(token, decrypted);

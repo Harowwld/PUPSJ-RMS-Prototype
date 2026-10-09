@@ -133,6 +133,128 @@ export function getRoleLabel(role) {
   return role || "User";
 }
 
+// Runtime registry of dynamic offices created/loaded in the application
+const dynamicOfficeRegistry = new Map();
+
+/**
+ * Register dynamic office metadata into the runtime registry.
+ * @param {Array<object> | object} offices - Office object(s) with id, short_name, name
+ */
+export function registerOffices(offices) {
+  if (!offices) return;
+  const list = Array.isArray(offices) ? offices : [offices];
+  for (const o of list) {
+    if (!o) continue;
+    const id = String(o.id || o.office_id || "").toLowerCase().trim();
+    const shortName = o.short_name || o.office_short_name;
+    if (id && shortName) {
+      dynamicOfficeRegistry.set(id, shortName);
+    }
+  }
+}
+
+/**
+ * Format an office identifier string into a clean title or uppercase acronym fallback.
+ * @param {string} slug
+ * @returns {string}
+ */
+export function formatOfficeFallback(slug) {
+  const clean = String(slug || "").trim();
+  if (!clean) return "Registrar";
+
+  const lower = clean.toLowerCase();
+  if (dynamicOfficeRegistry.has(lower)) {
+    return dynamicOfficeRegistry.get(lower);
+  }
+
+  // If contains hyphens or underscores: title-case each segment
+  if (clean.includes("-") || clean.includes("_")) {
+    return clean
+      .split(/[-_]+/)
+      .filter(Boolean)
+      .map((part) => formatOfficeFallback(part))
+      .join(" ");
+  }
+
+  // If 4 chars or fewer (e.g. "osas", "ssc", "gco"), treat as acronym
+  if (clean.length <= 4 && !/[0-9]/.test(clean)) {
+    return clean.toUpperCase();
+  }
+
+  // Otherwise, Title Case the string (e.g. "guidance" -> "Guidance", "research" -> "Research")
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+/**
+ * Map an office ID, office object, or staff record to its canonical short prefix dynamically.
+ * Priority:
+ * 1. Explicit short_name or office_short_name on passed object
+ * 2. Lookup in passed optional offices list / array
+ * 3. Lookup in dynamic runtime registry
+ * 4. Fallback formatting
+ *
+ * @param {string | object} office - Office ID string, office object, or staff object
+ * @param {Array<object>} [offices] - Optional array of office records
+ * @returns {string} Canonical short prefix
+ */
+export function getOfficePrefix(office, offices = null) {
+  if (!office) return "Registrar";
+
+  // If passed an object (e.g. staff member or office record)
+  if (typeof office === "object") {
+    if (office.office_short_name) return office.office_short_name;
+    if (office.short_name) return office.short_name;
+    if (office.office_name) return office.office_name;
+    office = office.office_id || office.id;
+  }
+
+  const officeStr = String(office || "").trim();
+  if (!officeStr) return "Registrar";
+  const officeNorm = officeStr.toLowerCase();
+
+  // If an offices collection was provided, look it up dynamically
+  if (Array.isArray(offices) && offices.length > 0) {
+    const found = offices.find(
+      (o) =>
+        String(o?.id || "").toLowerCase() === officeNorm ||
+        String(o?.short_name || "").toLowerCase() === officeNorm
+    );
+    if (found?.short_name) {
+      dynamicOfficeRegistry.set(officeNorm, found.short_name);
+      return found.short_name;
+    }
+  }
+
+  // Check dynamic runtime registry
+  if (dynamicOfficeRegistry.has(officeNorm)) {
+    return dynamicOfficeRegistry.get(officeNorm);
+  }
+
+  // Fallback heuristic (no hardcoded closed map)
+  return formatOfficeFallback(officeStr);
+}
+
+/**
+ * Get an office-scoped role label dynamically
+ * @param {string} role - The raw role string ("Admin", "Staff", etc.)
+ * @param {string | object} office - The office identifier or record
+ * @param {Array<object>} [offices] - Optional array of office records
+ * @returns {string} Formatted label (e.g. "Guidance Staff", "OSAS Admin", "Registrar Staff")
+ */
+export function getOfficeRoleLabel(role, office, offices = null) {
+  if (isSystemAdminRole(role)) return "System Admin";
+  const normalized = normalizeRole(role);
+  const officePrefix = getOfficePrefix(office, offices);
+
+  if (normalized === "Admin") {
+    return officePrefix ? `${officePrefix} Admin` : "Administrator";
+  }
+  if (normalized === "Staff") {
+    return officePrefix ? `${officePrefix} Staff` : "Staff";
+  }
+  return role || "User";
+}
+
 /**
  * Get all valid role values for forms/dropdowns.
  * @param {boolean} includeSystemAdmin - Whether to include SystemAdmin in the list

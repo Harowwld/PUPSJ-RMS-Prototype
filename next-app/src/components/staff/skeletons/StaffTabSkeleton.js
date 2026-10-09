@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StaffTabSkeleton() {
   return (
-    <div className="flex flex-1 flex-col h-full min-h-0 w-full gap-4 animate-fade-up select-none font-jakarta">
+    <div className="flex flex-1 flex-col min-h-full w-full gap-4 animate-fade-up select-none font-jakarta">
       {/* ONE Single Container Card */}
       <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate font-jakarta">
         {/* Header Skeleton */}

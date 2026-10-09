@@ -4,15 +4,10 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
 import DirectoryTableSkeleton from "@/components/systemadmin/skeletons/DirectoryTableSkeleton"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
-  formatPHDateTime,
-  formatPHDateTimeParts,
   formatRelativeTime,
 } from "@/lib/timeFormat"
 import {
@@ -22,28 +17,22 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { cn } from "@/lib/utils"
+import { cn, formatTitleCase } from "@/lib/utils"
+import { matchesSearchQuery } from "@/lib/searchUtils"
+import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils"
 import React from "react"
-import { Select } from "@/components/ui/select"
 
 const formatLastLoginDate = (dateStr) => {
   if (!dateStr || dateStr === "—") return "—"
@@ -70,7 +59,7 @@ const formatLastLoginDate = (dateStr) => {
         year: "numeric"
       })
     }
-  } catch (e) {}
+  } catch {}
   return dateStr
 }
 
@@ -78,7 +67,7 @@ const getStaffCleanName = (staff) => {
   const f = staff?.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname.trim() : ""
   const l = staff?.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname.trim() : ""
   const full = `${f} ${l}`.trim()
-  if (full) return full
+  if (full) return formatTitleCase(full)
   return staff?.id ? `Staff (${staff.id})` : "Staff Member"
 }
 
@@ -89,10 +78,10 @@ const getStaffCleanEmail = (staff) => {
 
 const StaffTableRow = React.memo(({ 
   s, 
+  offices,
   isCurrentUser, 
   isSelected, 
   active, 
-  isArchived, 
   toggleSelect, 
   onEditUser, 
   onRestoreUser, 
@@ -104,12 +93,12 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
         !isCurrentUser && "cursor-pointer",
         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
       )}
     >
-      <td className="py-0 px-4 align-middle text-center">
+      <td className="w-16 p-4 align-middle text-center">
         {!isCurrentUser && (
           <input
             type="checkbox"
@@ -122,64 +111,65 @@ const StaffTableRow = React.memo(({
           />
         )}
       </td>
-      <td className="py-0 px-4 align-middle">
+      <td className="p-4 align-middle min-w-[200px] max-w-[260px]">
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2 text-[14px] font-medium text-[#111111] dark:text-zinc-50">
-            <span className={cn("truncate", isCurrentUser && "font-semibold")}>
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
+            <span className="truncate">
               {getStaffCleanName(s)}
             </span>
           </div>
-          <div className="truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
+          <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
             {getStaffCleanEmail(s)}
           </div>
         </div>
       </td>
-      <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
-        {s.id}
+      <td className="w-48 p-4 align-middle whitespace-nowrap">
+        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+          {s.id}
+        </span>
       </td>
-      <td className="py-0 px-4 align-middle">
+      <td className="w-40 p-4 align-middle">
         <div className={cn(
-          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+          "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
             : s.role === "Admin"
-              ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
-              : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+              ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
         )}>
-          {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : s.role}
+          {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
         </div>
       </td>
-      <td className="py-0 px-4 align-middle">
+      <td className="w-36 p-4 align-middle">
         {s.totp_enabled ? (
-          <span className="text-[13px] font-normal text-emerald-600 dark:text-emerald-400">
+          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             2FA Enabled
           </span>
         ) : (
-          <span className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500">
+          <span className="text-xs font-normal text-gray-500 dark:text-zinc-400">
             Off
           </span>
         )}
       </td>
-      <td className="py-0 px-4 align-middle">
+      <td className="w-56 p-4 align-middle">
         {(!active.relative && active.date === "—") ? (
-          <div className="text-[13px] font-normal text-[#C7C7CC] dark:text-zinc-600">
+          <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
             Never active
           </div>
         ) : (
           <div>
-            <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#111111] dark:text-zinc-100">
-              
+            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-900 dark:text-zinc-100">
               {active.relative || formatLastLoginDate(active.date)}
             </div>
             {active.relative && (
-              <div className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
+              <div className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
                 {formatLastLoginDate(active.date)}
               </div>
             )}
           </div>
         )}
       </td>
-      <td className="py-0 px-4 align-middle text-right">
+      <td className="w-28 p-4 align-middle text-right whitespace-nowrap">
         <div
           className="flex items-center justify-end gap-1.5"
           onClick={(e) => e.stopPropagation()}
@@ -190,7 +180,7 @@ const StaffTableRow = React.memo(({
                 <button
                   onClick={() => router.push("/account")}
                   aria-label="My Account Settings"
-                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
                   <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                 </button>
@@ -205,7 +195,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onEditUser(s.id)}
                       aria-label="Edit Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                     </button>
@@ -220,7 +210,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onRestoreUser(s.id)}
                       aria-label="Restore Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                     </button>
@@ -233,7 +223,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onDeleteUser(s.id)}
                       aria-label="Archive Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
                       <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
                     </button>
@@ -265,6 +255,8 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function StaffDirectoryTab({
   staffData,
   officeId = "registrar",
+  officeShortName,
+  offices,
   isLoading = false,
   error = null,
   currentUserId,
@@ -283,29 +275,25 @@ export default function StaffDirectoryTab({
   onRefresh,
 }) {
   const [activeTab, setActiveTab] = useState("active")
-  const [localSearch, setLocalSearch] = useState("")
+  const [localSearch, setLocalSearch] = useState(() => {
+    if (search) return search
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("staffDir_search")
+      if (saved !== null) return saved
+    }
+    return ""
+  })
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [jumpPage, setJumpPage] = useState("1")
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
-  const [roleFilters, setRoleFilters] = useState(() => {
+  const roleFilters = useMemo(() => {
     if (!roleFilter || roleFilter === "All") return []
     return roleFilter.split(",").map((s) => s.trim()).filter(Boolean)
-  })
+  }, [roleFilter])
   const [statusFilters, setStatusFilters] = useState([])
   const [twoFactorFilters, setTwoFactorFilters] = useState([])
-
-  // Synchronize roleFilters when external roleFilter prop changes
-  useEffect(() => {
-    if (!roleFilter || roleFilter === "All") {
-      setRoleFilters([])
-    } else {
-      const list = roleFilter.split(",").map((s) => s.trim()).filter(Boolean)
-      setRoleFilters(list)
-    }
-  }, [roleFilter])
 
   // Filter staff to the active office scope (excludes SuperAdmin/SystemAdmin and other offices like OSAS)
   const officeStaff = useMemo(() => {
@@ -323,6 +311,8 @@ export default function StaffDirectoryTab({
     })
   }, [staffData, officeId])
 
+  const officePrefix = useMemo(() => getOfficePrefix(officeShortName || officeId, offices), [officeShortName, officeId, offices])
+
   const filterCriteriaGroups = useMemo(() => {
     const list = officeStaff || []
     const adminCount = list.filter((s) => s.role === "Admin").length
@@ -337,12 +327,11 @@ export default function StaffDirectoryTab({
         id: "role",
         label: "Personnel Role",
         options: [
-          { id: "Admin", label: "Administrators", count: adminCount },
-          { id: "Staff", label: "Regular Staff", count: staffCount },
+          { id: "Admin", label: `${officePrefix} Admin`, count: adminCount },
+          { id: "Staff", label: `${officePrefix} Staff`, count: staffCount },
         ],
         selected: roleFilters,
         onChange: (vals) => {
-          setRoleFilters(vals)
           if (setRoleFilter) {
             setRoleFilter(vals.length === 1 ? vals[0] : (vals.length === 0 ? "All" : vals.join(",")))
           }
@@ -376,7 +365,7 @@ export default function StaffDirectoryTab({
         }
       }
     ]
-  }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter])
+  }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter, officePrefix])
 
 
   const hasActiveFilters = localSearch !== "" || roleFilters.length > 0 || statusFilters.length > 0 || twoFactorFilters.length > 0;
@@ -384,17 +373,11 @@ export default function StaffDirectoryTab({
   const handleClearFilters = useCallback(() => {
     setLocalSearch("")
     setSearch("")
-    setRoleFilters([])
     setStatusFilters([])
     setTwoFactorFilters([])
     setRoleFilter?.("All")
     setCurrentPage(1)
   }, [setSearch, setRoleFilter])
-
-  // Sync local search with external search prop initially
-  useEffect(() => {
-    if (search && !localSearch) setLocalSearch(search)
-  }, [])
 
   // Debounce search update
   useEffect(() => {
@@ -405,26 +388,17 @@ export default function StaffDirectoryTab({
     return () => clearTimeout(handler)
   }, [localSearch, setSearch])
 
-  // Load persisted search on mount
-  useEffect(() => {
-    const savedSearch = localStorage.getItem("staffDir_search")
-    if (savedSearch !== null) setLocalSearch(savedSearch)
-  }, [])
-
   // Persist search when it changes
   useEffect(() => {
     localStorage.setItem("staffDir_search", search)
   }, [search])
 
   const filteredStaff = useMemo(() => {
-    const q = search.toLowerCase()
     return (officeStaff || []).filter((s) => {
-      const cleanName = getStaffCleanName(s).toLowerCase()
-      const cleanEmail = getStaffCleanEmail(s).toLowerCase()
-      const matchesSearch =
-        cleanName.includes(q) ||
-        s.id.toLowerCase().includes(q) ||
-        cleanEmail.includes(q)
+      const matchesSearch = matchesSearchQuery(
+        [getStaffCleanName(s), s.id, getStaffCleanEmail(s)],
+        search
+      )
 
       const matchesRole = roleFilters.length === 0 || roleFilters.includes(s.role)
       const matchesStatus = statusFilters.length === 0 || statusFilters.includes(s.status)
@@ -495,15 +469,18 @@ export default function StaffDirectoryTab({
     return sortedStaff.slice(start, start + itemsPerPage)
   }, [sortedStaff, displayPage, itemsPerPage])
 
-  useEffect(() => {
-    setJumpPage(String(displayPage))
-  }, [displayPage])
-
-  // Clear selection when changing tabs or pages
-  useEffect(() => {
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setCurrentPage(1)
     onSelectionChange(new Set())
     setLastSelectedId(null)
-  }, [activeTab, displayPage, onSelectionChange])
+  }
+
+  const handlePageChange = useCallback((newPage) => {
+    setCurrentPage(newPage)
+    onSelectionChange(new Set())
+    setLastSelectedId(null)
+  }, [onSelectionChange])
 
   // Prune stale selected IDs when filtered staff updates
   useEffect(() => {
@@ -590,43 +567,29 @@ export default function StaffDirectoryTab({
     onSelectionChange(next)
   }
 
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setCurrentPage(val)
-      } else {
-        setJumpPage(String(displayPage))
-      }
-    }
-  }
-
   const handleKeyDown = useCallback(
     (e) => {
       // Only paginate if not typing in an input/select
       if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return
 
       if (e.key === "ArrowLeft") {
-        setCurrentPage((p) => Math.max(1, p - 1))
+        handlePageChange(Math.max(1, displayPage - 1))
       } else if (e.key === "ArrowRight") {
-        setCurrentPage((p) => Math.min(totalPages, p + 1))
+        handlePageChange(Math.min(totalPages, displayPage + 1))
       }
     },
-    [totalPages]
+    [totalPages, displayPage, handlePageChange]
   )
-
-  const startItem = (displayPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(displayPage * itemsPerPage, filteredStaff.length)
 
   return (
     <TooltipProvider delayDuration={200}>
       <div
-        className="font-jakarta w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up"
+        className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
       {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
           icon="ph-users"
           title={
@@ -635,7 +598,7 @@ export default function StaffDirectoryTab({
               
             </div>
           }
-          description="Manage system staff and administrative access."
+          description={`Manage ${officePrefix} personnel and administrative access.`}
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
@@ -666,24 +629,24 @@ export default function StaffDirectoryTab({
           <div className="flex items-center gap-6 shrink-0 select-none">
             <button
               type="button"
-              onClick={() => setActiveTab("active")}
+              onClick={() => handleTabChange("active")}
               className={cn(
                 "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 activeTab === "active"
                   ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               )}
             >
               Active ({officeStaff.filter((s) => s.status !== "Archived").length})
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab("archived")}
+              onClick={() => handleTabChange("archived")}
               className={cn(
                 "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 activeTab === "archived"
                   ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               )}
             >
               Archived ({officeStaff.filter((s) => s.status === "Archived").length})
@@ -726,11 +689,10 @@ export default function StaffDirectoryTab({
                 values: roleFilters,
                 onRemove: (val) => {
                   const next = roleFilters.filter((v) => v !== val)
-                  setRoleFilters(next)
                   setRoleFilter?.(next.length === 1 ? next[0] : (next.length === 0 ? "All" : next.join(",")))
                   setCurrentPage(1)
                 },
-                formatValue: (val) => (val === "Admin" ? "Administrators" : val === "Staff" ? "Regular Staff" : val)
+                formatValue: (val) => (val === "Admin" ? `${officePrefix} Admin` : val === "Staff" ? `${officePrefix} Staff` : val)
               },
               {
                 key: "status",
@@ -786,11 +748,11 @@ export default function StaffDirectoryTab({
             </Empty>
           </div>
         ) : (
-          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className={cn("w-full border-t border-border dark:border-border", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
             <div className="w-full overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                     <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
@@ -812,12 +774,12 @@ export default function StaffDirectoryTab({
                         }
                       />
                     </th>
-                    <th className="p-4 min-w-[280px]">
+                    <th className="p-4 min-w-[200px] max-w-[260px]">
                       <button
                         onClick={() => handleSort("fname")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "fname" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Staff Name{" "}
@@ -833,7 +795,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("id")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Staff ID{" "}
@@ -849,7 +811,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("role")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "role" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Role{" "}
@@ -865,7 +827,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("totp_enabled")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "totp_enabled" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "totp_enabled" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         2FA Status{" "}
@@ -881,7 +843,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("last_active")}
                         className={cn(
                           "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "last_active" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          sortBy === "last_active" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
                         Last Login{" "}
@@ -892,7 +854,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-32 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                    <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
@@ -945,10 +907,10 @@ export default function StaffDirectoryTab({
                       <StaffTableRow
                         key={s.id}
                         s={s}
+                        offices={offices}
                         isCurrentUser={s.id === currentUserId}
                         isSelected={selectedIds.has(s.id)}
                         active={formatRelativeTime(s.last_active)}
-                        isArchived={s.status === "Archived"}
                         toggleSelect={toggleSelect}
                         onEditUser={onEditUser}
                         onRestoreUser={onRestoreUser}
@@ -995,7 +957,7 @@ export default function StaffDirectoryTab({
                     variant="ghost"
                     size="sm"
                     disabled={displayPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    onClick={() => handlePageChange(Math.max(1, displayPage - 1))}
                     className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Prev
@@ -1009,7 +971,7 @@ export default function StaffDirectoryTab({
                     variant="ghost"
                     size="sm"
                     disabled={displayPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => handlePageChange(Math.min(totalPages, displayPage + 1))}
                     className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                   >
                     Next

@@ -6,6 +6,7 @@ import { requireOfficeModule } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { decryptPII } from "@/lib/piiEncryption";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
@@ -112,6 +113,7 @@ export async function GET(req, ctx) {
       headers: {
         "Content-Type": proposal.mime_type || "application/pdf",
         "Content-Disposition": `inline; filename="${proposal.original_filename || "proposal.pdf"}"`,
+        ...FILE_SECURITY_HEADERS,
       },
     });
   }

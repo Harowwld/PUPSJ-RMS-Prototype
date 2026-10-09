@@ -2,9 +2,7 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useCallback } from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Empty,
   EmptyHeader,
@@ -17,8 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatPHDateTimeParts } from "@/lib/timeFormat"
-import { cn } from "@/lib/utils"
+import { cn, formatTitleCase } from "@/lib/utils"
 
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"
@@ -81,8 +78,7 @@ const LogRow = React.memo(function LogRow({
   isExpanded,
   toggleRow,
   setSelectedLog,
-  handleCopy,
-  cn
+  handleCopy
 }) {
   const severityInfo = getSeverityInfo(log.severity)
   
@@ -98,7 +94,7 @@ const LogRow = React.memo(function LogRow({
         minute: "2-digit",
         hour12: true
       });
-    } catch (e) {
+    } catch {
       return log.created_at || log.time;
     }
   })();
@@ -107,7 +103,7 @@ const LogRow = React.memo(function LogRow({
     <React.Fragment>
       <tr
         className={cn(
-          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
@@ -115,45 +111,45 @@ const LogRow = React.memo(function LogRow({
           toggleRow(log.id);
         }}
       >
-        <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+        <td className="p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
             title={isExpanded ? "Collapse Details" : "Expand Details"}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-200"
+            className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors"
           >
             <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
           </button>
         </td>
-        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400">
           {formattedTimestamp}
         </td>
-        <td className="py-0 px-4 align-middle">
+        <td className="p-4 align-middle">
           <span
             className={cn(
-              "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+              "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
               severityInfo.classes
             )}
           >
             {severityInfo.label}
           </span>
         </td>
-        <td className="py-0 px-4 align-middle">
+        <td className="p-4 align-middle">
           <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">
-              {log.user}
+            <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
+              {formatTitleCase(log.user || log.actor)}
             </span>
-            <span className="truncate text-[12px] font-normal text-[#8E8E93] mt-[2px]">
+            <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
               {log.role}
             </span>
           </div>
         </td>
-        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
           {formatActionLabel(log.action)}
         </td>
-        <td className="py-0 px-4 align-middle">
+        <td className="p-4 align-middle">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[320px] truncate text-[13px] font-normal text-[#8E8E93]">
+              <span className="block max-w-[320px] truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
                 {log.details || "No known description"}
               </span>
             </TooltipTrigger>
@@ -165,8 +161,8 @@ const LogRow = React.memo(function LogRow({
             </TooltipContent>
           </Tooltip>
         </td>
-        <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end gap-[12px]">
+        <td className="p-4 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -206,8 +202,6 @@ export default function LogTable({
   logsPerPage,
   setItemsPerPage,
   setLogsPerPage,
-  jumpPage,
-  setJumpPage,
   handleSort,
   logSortBy,
   logSortOrder,
@@ -224,7 +218,6 @@ export default function LogTable({
   setLogEndDate,
   handleCopy,
   embedded = false,
-  cn,
 }) {
   const [expandedRows, setExpandedRows] = useState({})
 
@@ -264,9 +257,6 @@ export default function LogTable({
     )
   }
 
-  const totalPages = Math.ceil(logTotal / itemsPerPage) || 1
-  const displayPage = Math.min(logPage, totalPages)
-
   return (
     <div className={cn("flex flex-col", !embedded && "gap-6")}>
       <div className={cn(
@@ -278,7 +268,7 @@ export default function LogTable({
         <div className="w-full overflow-x-auto select-none">
           <table className={cn("min-w-full table-fixed text-sm", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                 <th className="w-12 p-4 text-center"></th>
                 <th className="p-4 w-[16%]">
                   <button
@@ -286,8 +276,8 @@ export default function LogTable({
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                       logSortBy === "created_at"
-                        ? "text-[#111111] dark:text-white font-semibold"
-                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        ? "text-gray-900 dark:text-white font-semibold"
+                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Timestamp{" "}
@@ -304,8 +294,8 @@ export default function LogTable({
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                       logSortBy === "severity"
-                        ? "text-[#111111] dark:text-white font-semibold"
-                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        ? "text-gray-900 dark:text-white font-semibold"
+                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Level{" "}
@@ -322,8 +312,8 @@ export default function LogTable({
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                       logSortBy === "actor"
-                        ? "text-[#111111] dark:text-white font-semibold"
-                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        ? "text-gray-900 dark:text-white font-semibold"
+                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Actor{" "}
@@ -340,8 +330,8 @@ export default function LogTable({
                     className={cn(
                       "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                       logSortBy === "action"
-                        ? "text-[#111111] dark:text-white font-semibold"
-                        : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        ? "text-gray-900 dark:text-white font-semibold"
+                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
                     Action{" "}
@@ -352,8 +342,8 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
-                <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Description</th>
+                <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("bg-transparent", displayLogs.length === 0 && "h-full")}>
@@ -410,7 +400,6 @@ export default function LogTable({
                     toggleRow={toggleRow}
                     setSelectedLog={setSelectedLog}
                     handleCopy={handleCopy}
-                    cn={cn}
                   />
                 ))
               )}

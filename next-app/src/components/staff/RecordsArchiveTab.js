@@ -15,9 +15,8 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton"
 import {
@@ -53,7 +52,7 @@ function getStudentFolderYear(s) {
 
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import OfficeDocumentsTable from "@/components/staff/OfficeDocumentsTable"
-import { cn } from "@/lib/utils"
+import { cn, formatTitleCase } from "@/lib/utils"
 
 
 function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
@@ -441,11 +440,11 @@ export default function RecordsArchiveTab({
   return (
     <div
       id="view-search"
-      className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-jakarta"
+      className="flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
       tabIndex={0}
     >
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
           icon="ph-archive"
           title="Records & Archive"
@@ -469,7 +468,7 @@ export default function RecordsArchiveTab({
                 "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 !showArchived
                   ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Active ({activeTabCount})
@@ -481,7 +480,7 @@ export default function RecordsArchiveTab({
                 "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                 showArchived
                   ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
               Archived ({archivedTabCount})
@@ -614,7 +613,7 @@ export default function RecordsArchiveTab({
                       "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                       listType === "card"
                         ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                        : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                     )}
                   >
                     Card
@@ -626,7 +625,7 @@ export default function RecordsArchiveTab({
                       "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
                       listType === "table"
                         ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                        : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                     )}
                   >
                     Table
@@ -635,7 +634,7 @@ export default function RecordsArchiveTab({
               )}
             </div>
 
-            <div className={cn("flex-1 bg-white dark:bg-card", isLeafLevel && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6")}>
+            <div className={cn("w-full bg-white dark:bg-card", isLeafLevel && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6")}>
               {loading ? (
                 <RecordsArchiveSkeleton />
               ) : students.length === 0 && !showArchived ? (
@@ -794,8 +793,8 @@ export default function RecordsArchiveTab({
                                 )}
                               </div>
 
-                              <h4 className="mt-2 text-[17px] font-bold text-white transition-colors line-clamp-2 leading-snug">
-                                {row.student.name}
+                              <h4 className="mt-2 text-[17px] font-bold text-white transition-colors line-clamp-2 leading-snug" title={formatTitleCase(row.student.name)}>
+                                {formatTitleCase(row.student.name)}
                               </h4>
 
                               {row.student.adviser && (
@@ -874,8 +873,8 @@ export default function RecordsArchiveTab({
                           <div className="flex items-start w-full">
                             <div className="min-w-0 flex-1 flex flex-col justify-center">
                               <div className="flex items-center min-w-0 mb-1">
-                                <h4 className="truncate text-[19px] font-bold text-white transition-colors">
-                                  {row.student.name}
+                                <h4 className="truncate text-[19px] font-bold text-white transition-colors" title={formatTitleCase(row.student.name)}>
+                                  {formatTitleCase(row.student.name)}
                                 </h4>
                               </div>
                               <div className="mt-2 flex items-center gap-2">
@@ -921,12 +920,12 @@ export default function RecordsArchiveTab({
               ) : (
                 <div 
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="w-full overflow-x-auto flex-1 animate-fade-up"
+                  className="w-full overflow-x-auto animate-fade-up"
                 >
                   <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-gray-50/50 dark:bg-white/5">
-                      <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[#8E8E93] dark:text-zinc-500">
-                        <th className="w-16 px-6 py-3.5 text-center font-medium">
+                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
+                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                        <th className="w-12 p-4 text-center font-medium">
                            <input
                              type="checkbox"
                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -934,11 +933,11 @@ export default function RecordsArchiveTab({
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
                         </th>
-                        <th className="w-36 px-6 py-3.5 font-medium">{isOsas ? "Acronym" : "Student No."}</th>
-                        <th className="px-6 py-3.5 font-medium">{isOsas ? "Organization Name" : "Full Name"}</th>
-                        {isOsas && <th className="w-40 px-6 py-3.5 font-medium">Category</th>}
-                        <th className="w-56 px-6 py-3.5 font-medium">Physical Location</th>
-                        <th className="w-32 px-6 py-3.5 text-right font-medium">{isOsas ? "Actions" : "Locate"}</th>
+                        <th className="w-44 p-4 font-medium">{isOsas ? "Acronym" : "Student No."}</th>
+                        <th className="p-4 min-w-[200px] max-w-[280px] font-medium">{isOsas ? "Organization Name" : "Full Name"}</th>
+                        {isOsas && <th className="w-40 p-4 font-medium">Category</th>}
+                        <th className="p-4 min-w-[200px] font-medium">Physical Location</th>
+                        <th className="w-28 p-4 text-right font-medium">{isOsas ? "Actions" : "Locate"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border dark:divide-border bg-transparent">
@@ -948,12 +947,12 @@ export default function RecordsArchiveTab({
                           <tr
                             key={row.key}
                             className={cn(
-                              "group h-[56px] transition-all duration-fast hover:bg-gray-50/50 dark:hover:bg-white/5 select-none",
+                              "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                               isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => handleLocateStudentClick(row.student)}
                           >
-                            <td className="py-0 px-6 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                            <td className="w-12 p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                                <input
                                  type="checkbox"
                                  className={cn(
@@ -964,14 +963,16 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="py-0 px-6 align-middle text-[13px] font-mono font-bold text-gray-700 dark:text-zinc-300">
-                              {row.student.acronym || row.student.studentNo}
+                            <td className="w-44 p-4 align-middle whitespace-nowrap">
+                              <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                                {row.student.acronym || row.student.studentNo}
+                              </span>
                             </td>
-                            <td className="py-0 px-6 align-middle">
+                            <td className="p-4 min-w-[200px] max-w-[280px] align-middle">
                               <div className="flex flex-col min-w-0">
-                                <div className="flex items-center gap-2 text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                                  <span className="truncate">
-                                    {row.student.name}
+                                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                  <span className="truncate" title={formatTitleCase(row.student.name)}>
+                                    {formatTitleCase(row.student.name)}
                                   </span>
                                   {isOsas && row.student.hasCbl && (
                                     <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
@@ -980,33 +981,34 @@ export default function RecordsArchiveTab({
                                   )}
                                 </div>
                                 {isOsas && row.student.adviser && (
-                                  <div className="truncate text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-[1px]">
+                                  <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
                                     Adviser: {row.student.adviser} · {row.student.activeOfficerCount ?? 0} Officers · {row.student.proposalCount ?? 0} Proposals
                                   </div>
                                 )}
                                 {showArchived && (
-                                  <div className="truncate text-[12px] font-normal text-red-650 dark:text-red-400 mt-[2px]">
+                                  <div className="truncate text-xs font-normal text-red-650 dark:text-red-400 mt-0.5">
                                     Archived Record
                                   </div>
                                 )}
                               </div>
                             </td>
                             {isOsas && (
-                              <td className="py-0 px-6 align-middle">
+                              <td className="w-40 p-4 align-middle">
                                 <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
                                   {row.student.category || "Academic"}
                                 </span>
                               </td>
                             )}
-                            <td className="py-0 px-6 align-middle">
-                               <div className="inline-flex w-fit items-center justify-center rounded-full bg-[#E5E5EA]/60 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.02em] text-gray-800 dark:text-zinc-300 whitespace-nowrap">
+                            <td className="p-4 min-w-[200px] align-middle">
+                               <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
                             </td>
-                            <td className="py-0 px-6 align-middle text-right">
+                            <td className="w-28 p-4 align-middle text-right">
                               <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                                  {isOsas && row.student.hasCbl && (
                                    <button
+                                     type="button"
                                      onClick={() => {
                                        onPreviewDocument(
                                          "Constitution and By-Laws",
@@ -1016,17 +1018,18 @@ export default function RecordsArchiveTab({
                                        );
                                      }}
                                      title="Preview Constitution and By-Laws"
-                                     className="w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                    >
-                                     <HugeIcon className="ph-bold ph-file-pdf text-[16px]"></HugeIcon>
+                                     <HugeIcon className="ph-bold ph-file-pdf text-[15px]"></HugeIcon>
                                    </button>
                                  )}
                                  <button
+                                   type="button"
                                    onClick={() => handleLocateStudentClick(row.student)}
                                    title="Locate Archive Drawer"
-                                   className="w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                  >
-                                   <HugeIcon  className="ph-bold ph-map-pin text-[16px]"></HugeIcon>
+                                   <HugeIcon  className="ph-bold ph-map-pin text-[15px]"></HugeIcon>
                                  </button>
                               </div>
                             </td>

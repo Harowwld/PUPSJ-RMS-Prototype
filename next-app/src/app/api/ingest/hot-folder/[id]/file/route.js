@@ -5,6 +5,7 @@ import { getDocumentById, getDocumentFilePath, setOfficeStoragePath } from "@/li
 import { getOfficeById } from "@/lib/officesRepo";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../../../lib/authHelpers";
 import { canAccessResource } from "../../../../../../lib/resourceAuthorization";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -45,6 +46,7 @@ export async function GET(req, ctx) {
       "Content-Type": previewRow.mime_type || "application/octet-stream",
       "Content-Length": String(bytes.length),
       "Content-Disposition": `inline; filename="${previewRow.original_filename || "scan.bin"}"`,
+      ...FILE_SECURITY_HEADERS,
     },
   });
 }

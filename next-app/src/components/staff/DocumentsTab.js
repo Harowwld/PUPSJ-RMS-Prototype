@@ -1,7 +1,7 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import { useState, useMemo, useCallback } from "react";
+import { cn, formatTitleCase } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -65,19 +65,20 @@ function DocumentsTable({
   onViewDetails,
   onRescan,
 }) {
+  const isEmpty = docsRows.length === 0;
   return (
-    <table className="min-w-full text-sm table-fixed">
+    <table className={cn("min-w-full text-sm", isEmpty && "h-full flex-1 flex flex-col")}>
       <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-        <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-          <th className="p-4">
+        <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+          <th className="w-44 p-4">
             <button
               onClick={() => handleSort("student_no")}
               className={cn(
                 "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                sortBy === "student_no" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                sortBy === "student_no" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
-              Student No
+              Student No.
               <SortIndicator
                 column="student_no"
                 sortBy={sortBy}
@@ -85,15 +86,15 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4">
+          <th className="p-4 min-w-[200px] max-w-[260px]">
             <button
               onClick={() => handleSort("student_name")}
               className={cn(
                 "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                sortBy === "student_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                sortBy === "student_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
-              Name
+              Full Name
               <SortIndicator
                 column="student_name"
                 sortBy={sortBy}
@@ -101,12 +102,12 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4">
+          <th className="p-4 min-w-[160px]">
             <button
               onClick={() => handleSort("doc_type")}
               className={cn(
                 "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               Document Type
@@ -117,12 +118,12 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4">
+          <th className="w-28 p-4">
             <button
               onClick={() => handleSort("status")}
               className={cn(
                 "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               Status
@@ -133,12 +134,12 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4">
+          <th className="p-4 min-w-[180px] max-w-[220px]">
             <button
               onClick={() => handleSort("file")}
               className={cn(
                 "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                sortBy === "file" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                sortBy === "file" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               File
@@ -149,12 +150,12 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4">
+          <th className="w-36 p-4">
             <button
               onClick={() => handleSort("created_at")}
               className={cn(
                 "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               Created
@@ -165,14 +166,14 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</th>
+          <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-border dark:divide-border">
+      <tbody className={cn("divide-y divide-border dark:divide-border", isEmpty && "h-full flex-1 flex flex-col")}>
         {!hasActiveFilters && docsRows.length === 0 ? (
-          <tr className="border-0 hover:bg-transparent">
-            <td colSpan={7} className="p-0 border-0">
-              <Empty className="flex h-[400px] flex-col items-center justify-center border-0 bg-transparent text-center">
+          <tr className="border-0 hover:bg-transparent flex-1 flex">
+            <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
+              <Empty className="flex flex-1 h-full min-h-[500px] flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -181,18 +182,17 @@ function DocumentsTable({
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
-                    Enter a student number, name, or select a document
-                    type to find related records.
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                    Enter a student, document type, or file name to find related records.
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             </td>
           </tr>
         ) : docsRows.length === 0 ? (
-          <tr className="border-0 hover:bg-transparent">
-            <td colSpan={7} className="p-0 border-0">
-              <Empty className="flex h-[400px] flex-col items-center justify-center border-0 bg-transparent text-center">
+          <tr className="border-0 hover:bg-transparent flex-1 flex">
+            <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
+              <Empty className="flex flex-1 h-full min-h-[500px] flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -201,7 +201,7 @@ function DocumentsTable({
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
                     We couldn&apos;t find any documents matching your
                     search criteria.
                   </EmptyDescription>
@@ -214,19 +214,23 @@ function DocumentsTable({
             <tr
               key={r.id || idx}
               className={cn(
-                "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                 r.status === "uploaded"
                   ? (r.verificationStatus === "unverified" ? "bg-amber-50/30 dark:bg-amber-950/20" : "bg-green-50/30 dark:bg-emerald-950/20")
                   : "bg-red-50/30 dark:bg-red-950/20"
               )}
             >
-              <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
-                {r.student_no}
+              <td className="w-44 p-4 whitespace-nowrap">
+                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                  {r.student_no}
+                </span>
               </td>
-              <td className="py-0 px-4 align-middle text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate">
-                {r.student_name || "—"}
+              <td className="p-4 min-w-[200px] max-w-[260px]">
+                <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(r.student_name)}>
+                  {formatTitleCase(r.student_name) || "—"}
+                </div>
               </td>
-              <td className="py-0 px-4 align-middle">
+              <td className="p-4 min-w-[160px]">
                 <Badge
                   variant="outline"
                   className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
@@ -235,7 +239,7 @@ function DocumentsTable({
                   {r.doc_type}
                 </Badge>
               </td>
-              <td className="py-0 px-4 align-middle">
+              <td className="w-28 p-4">
                 {r.status === "uploaded" ? (
                   r.verificationStatus === "unverified" ? (
                     <Badge
@@ -264,26 +268,26 @@ function DocumentsTable({
                   </Badge>
                 )}
               </td>
-              <td className="py-0 px-4 align-middle text-gray-700 max-w-[180px] dark:text-zinc-200">
+              <td className="p-4 min-w-[180px] max-w-[220px]">
                 {r.doc ? (
                   <>
-                    <div className="truncate font-medium text-gray-900 dark:text-zinc-50 text-[13px]" title={r.doc.original_filename}>
+                    <div className="truncate font-medium text-gray-900 dark:text-zinc-100 text-[13px]" title={r.doc.original_filename}>
                       {r.doc.original_filename}
                     </div>
-                    <div className="text-[11px] text-gray-900 dark:text-zinc-300 font-normal mt-[1px]">
+                    <div className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal mt-0.5">
                       {(r.doc.size_bytes / 1024).toFixed(1)} KB
                     </div>
                   </>
                 ) : (
-                  <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  <span className="text-xs font-normal text-gray-400 dark:text-zinc-500">
                     Not uploaded
                   </span>
                 )}
               </td>
-              <td className="py-0 px-4 align-middle text-gray-600 font-medium dark:text-zinc-300 text-[13px]">
+              <td className="w-36 p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                 {formatPHDateTime(r.reviewDoc?.created_at)}
               </td>
-              <td className="py-0 px-4 align-middle whitespace-nowrap text-right">
+              <td className="w-28 p-4 whitespace-nowrap text-right">
                 <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                   {r.doc ? (
                     <>
@@ -388,26 +392,23 @@ export default function DocumentsTab({
   const [sortOrder, setSortOrder] = useState("ASC");
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [jumpPage, setJumpPage] = useState("1");
 
-  const searchQuery = docsForm.studentName || docsForm.studentNo || "";
+  const searchQuery = docsForm.q || docsForm.studentName || docsForm.studentNo || "";
 
   const handleSearchChange = useCallback((val) => {
-    const trimmed = val.trim();
-    const isStudentNo = /^\d{4}/.test(trimmed);
     const next = {
       ...docsForm,
-      studentNo: isStudentNo ? trimmed : "",
-      studentName: isStudentNo ? "" : val,
+      q: val,
+      studentNo: val,
+      studentName: val,
     };
     setDocsForm(next);
     refreshDocuments(next);
     setPage(1);
-    setJumpPage("1");
   }, [docsForm, setDocsForm, refreshDocuments]);
 
   const handleClearAllFilters = () => {
-    const cleared = { studentNo: "", studentName: "", docType: "", docTypes: [] };
+    const cleared = { studentNo: "", studentName: "", q: "", docType: "", docTypes: [] };
     setDocsForm(cleared);
     setStatusFilters([]);
     setDocTypeFilters([]);
@@ -542,7 +543,6 @@ export default function DocumentsTab({
       setSortOrder("ASC");
     }
     setPage(1);
-    setJumpPage("1");
   };
 
   const sortedRows = useMemo(() => {
@@ -597,7 +597,6 @@ export default function DocumentsTab({
     room: "",
     cabinet: "",
     drawer: "",
-    status: "Active",
   });
 
   // Archive Student Confirmation
@@ -637,7 +636,11 @@ export default function DocumentsTab({
   };
 
   const uniqueStudents = Array.from(new Set(docsRows.map((r) => r.student_no)));
-  const isSingleStudentView = uniqueStudents.length === 1 && !docsForm.docType.trim() && docsRows.length > 0;
+  const isSingleStudentView =
+    uniqueStudents.length === 1 &&
+    !docsForm.docType?.trim?.() &&
+    docsRows.length > 1 &&
+    docsRows.length >= Math.min(docTypes?.length || 1, 3);
 
   let compPercent = 0;
   let compUploaded = 0;
@@ -657,43 +660,27 @@ export default function DocumentsTab({
       room: currentStudent.room || "",
       cabinet: currentStudent.cabinet || "",
       drawer: currentStudent.drawer || "",
-      status: currentStudent.status || "Active",
     });
     setEditStudentOpen(true);
   };
-
-  const statusCounts = useMemo(() => {
-    let uploaded = 0;
-    let verified = 0;
-    let unverified = 0;
-    let missing = 0;
-    for (const r of docsRows) {
-      if (r.status === "uploaded") {
-        uploaded++;
-        if (r.verificationStatus === "verified") verified++;
-        else if (r.verificationStatus === "unverified") unverified++;
-      } else if (r.status === "missing") {
-        missing++;
-      }
-    }
-    return {
-      "": docsRows.length,
-      Uploaded: uploaded,
-      Verified: verified,
-      Unverified: unverified,
-      Missing: missing,
-    };
-  }, [docsRows]);
 
   return (
     <TooltipProvider delayDuration={200}>
       <div
         id="view-documents"
-        className="flex flex-col w-full h-auto min-h-0 flex-1 focus:outline-none animate-fade-up font-jakarta"
+        className={cn(
+          "flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta",
+          filteredRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[680px]"
+        )}
         tabIndex={0}
       >
         {/* ONE Single Card Container encapsulating Header, Toolbar, Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4 min-h-0 flex-1">
+        <Card
+          className={cn(
+            "flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4",
+            filteredRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[680px]"
+          )}
+        >
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-files"
@@ -759,7 +746,7 @@ export default function DocumentsTab({
                       "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
                       isActive
                         ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                        : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                     )}
                   >
                     {tab.label}
@@ -788,7 +775,7 @@ export default function DocumentsTab({
                 <Input
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Search student number or name..."
+                  placeholder="Search student, document type, or file..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
@@ -821,8 +808,8 @@ export default function DocumentsTab({
               {docsLoading ? (
                 <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
               ) : docsError ? (
-                <div className="p-8 rounded-b-2xl">
-                  <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
+                  <Empty className="h-full min-h-[480px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
                         <HugeIcon  className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />
@@ -872,7 +859,7 @@ export default function DocumentsTab({
                     </div>
                   )}
 
-                  <div className="flex-1 w-full overflow-x-auto min-h-0">
+                  <div className={cn("w-full overflow-x-auto", filteredRows.length === 0 && "flex flex-col")}>
                     <DocumentsTable
                       docsRows={filteredRows}
                       paginatedRows={paginatedRows}
@@ -901,7 +888,6 @@ export default function DocumentsTab({
                                 onClick={() => {
                                   setItemsPerPage(size);
                                   setPage(1);
-                                  setJumpPage("1");
                                 }}
                                 className={cn(
                                   "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
@@ -924,7 +910,6 @@ export default function DocumentsTab({
                           disabled={page <= 1}
                           onClick={() => {
                             setPage((p) => Math.max(1, p - 1));
-                            setJumpPage(String(Math.max(1, page - 1)));
                           }}
                           className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                         >
@@ -941,7 +926,6 @@ export default function DocumentsTab({
                           disabled={page >= totalPages}
                           onClick={() => {
                             setPage((p) => Math.min(totalPages, p + 1));
-                            setJumpPage(String(Math.min(totalPages, page + 1)));
                           }}
                           className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                         >
@@ -1008,21 +992,6 @@ export default function DocumentsTab({
                     className="h-10 bg-white border border-border dark:border-border rounded-xl text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card"
                     required
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Account Status <span className="text-pup-maroon dark:text-primary">*</span></label>
-                  <Select
-                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white px-3 text-xs font-normal text-gray-900 shadow-none transition-colors focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-card dark:text-zinc-50"
-                    value={editStudentForm.status}
-                    onChange={(e) => setEditStudentForm((p) => ({ ...p, status: e.target.value }))}
-                    required
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Graduated">Graduated</option>
-                    <option value="Withdrawn">Withdrawn</option>
-                    <option value="Transferred">Transferred</option>
-                    <option value="Archived">Archived (Generic)</option>
-                  </Select>
                 </div>
               </div>
 
@@ -1224,11 +1193,11 @@ export default function DocumentsTab({
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Name</label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedDoc?.student_name || "—"}</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{formatTitleCase(selectedDoc?.student_name) || "—"}</p>
                     </div>
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Number</label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedDoc?.student_no}</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50 font-mono">{selectedDoc?.student_no}</p>
                     </div>
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Document Category</label>
@@ -1306,6 +1275,7 @@ export default function DocumentsTab({
                       variant="outline"
                       size="icon"
                       onClick={() => setIsFullscreen(!isFullscreen)}
+                      aria-label={isFullscreen ? "Exit fullscreen preview" : "Enter fullscreen preview"}
                       disabled={!selectedDoc?.doc?.file_url && !selectedDoc?.doc?.id}
                       className={cn(
                         "h-10 w-10 rounded-xl border border-border dark:border-border bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none",

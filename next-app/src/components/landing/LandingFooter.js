@@ -1,7 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +73,7 @@ export default function LandingFooter() {
       const url = new URL(mapsUrl || "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus");
       const q = url.searchParams.get("q") || "Polytechnic University of the Philippines San Juan Campus";
       return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=B&output=embed`;
-    } catch (e) {
+    } catch {
       return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent("Polytechnic University of the Philippines San Juan Campus")}&t=&z=15&ie=UTF8&iwloc=B&output=embed`;
     }
   };

@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
@@ -80,29 +79,7 @@ export default function LandingPageCmsTab({ showToast }) {
     [showToast]
   )
 
-  // Fetch current hero settings
-  const fetchHeroData = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) {
-        setLoading(true)
-      }
-      try {
-        const res = await fetch("/api/landing/hero", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setHeroData(json.data)
-        } else {
-          notify(json.error || "Failed to load hero configuration", true)
-        }
-      } catch (err) {
-        console.error("[LandingPageCmsTab] Fetch error:", err)
-        notify("Network error fetching hero settings", true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [notify]
-  )
+
 
   useEffect(() => {
     let ignore = false

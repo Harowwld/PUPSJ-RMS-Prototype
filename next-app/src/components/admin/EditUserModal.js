@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { getOfficePrefix } from "@/lib/roleUtils"
 
 export default function EditUserModal({
   open,
@@ -19,7 +20,11 @@ export default function EditUserModal({
   onClose,
   onSubmit,
   isLoading = false,
+  officeId = "registrar",
+  officeShortName,
+  offices,
 }) {
+  const officePrefix = getOfficePrefix(editForm?.office_short_name || officeShortName || officeId || editForm?.office_id, offices)
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card">
@@ -89,7 +94,7 @@ export default function EditUserModal({
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  Registrar Staff
+                  {officePrefix} Staff
                 </button>
                 <button
                   type="button"
@@ -102,7 +107,7 @@ export default function EditUserModal({
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  Administrator
+                  {officePrefix ? `${officePrefix} Admin` : "Administrator"}
                 </button>
               </div>
             </div>

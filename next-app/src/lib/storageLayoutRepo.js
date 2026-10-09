@@ -90,8 +90,6 @@ function normalizeRotation(rotationRaw) {
 
 function normalizeStorageLayout(layoutRaw) {
   if (!layoutRaw || typeof layoutRaw !== "object") return null;
-  const versionRaw = layoutRaw.version !== undefined ? Number(layoutRaw.version) : 2;
-  const version = (versionRaw === 1 || versionRaw === 2) ? versionRaw : 2;
 
   if (!Array.isArray(layoutRaw.rooms)) return null;
 

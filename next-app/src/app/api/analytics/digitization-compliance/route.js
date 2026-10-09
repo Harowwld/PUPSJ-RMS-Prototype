@@ -89,7 +89,7 @@ export async function GET(req) {
     });
 
     return NextResponse.json({ ok: true, data });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to load digitization compliance" },
       { status: 500 }

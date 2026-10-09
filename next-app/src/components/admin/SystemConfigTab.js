@@ -3,21 +3,10 @@
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react"
 
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Toggle } from "@/components/ui/toggle"
-import { format } from "date-fns"
+import { Card, CardContent } from "@/components/ui/card"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import {
   Empty,
@@ -26,12 +15,7 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 import DocTypesTab from "./system-config/DocTypesTab"
 import CoursesTab from "./system-config/CoursesTab"
@@ -119,11 +103,9 @@ export default function SystemConfigTab({
     key: "name",
     direction: "asc",
   })
-
   // Common State
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [importing, setImporting] = useState(false)
 
   // Confirmation Modal
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -209,7 +191,7 @@ export default function SystemConfigTab({
       : dt.status !== "Archived"
     const matchesPurpose =
       docPurposeFilter === "requestable"
-        ? Boolean(dt.is_requestable)
+        ? Boolean(dt.is_requestable && !dt.is_compliance)
         : docPurposeFilter === "compliance"
         ? Boolean(dt.is_compliance)
         : true
@@ -335,18 +317,6 @@ export default function SystemConfigTab({
       return next
     })
   }, [filteredSectionsFull])
-
-  const SortIndicator = ({ currentSort, columnKey }) => {
-    if (currentSort.key !== columnKey)
-      return (
-        <HugeIcon  className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-100"></HugeIcon>
-      )
-    return (
-      <HugeIcon 
-        className={`ph-bold ml-1 text-pup-maroon dark:text-primary ${currentSort.direction === "asc" ? "ph-caret-up" : "ph-caret-down"} dark:text-primary`}
-      ></HugeIcon>
-    )
-  }
 
   // Selection Handlers
   const toggleDocTypeSelected = (id, event) => {
@@ -752,7 +722,6 @@ export default function SystemConfigTab({
         const code = row.code || ""
         const isCompliance = row.iscompliance !== undefined ? (String(row.iscompliance).toLowerCase() === "true" || row.iscompliance === "1") : false
         const isRequestable = row.isrequestable !== undefined ? (String(row.isrequestable).toLowerCase() === "true" || row.isrequestable === "1") : false
-        const complianceCategory = row.compliancecategory || ""
 
         let error = ""
         if (!category) error = "Missing Category"
@@ -790,7 +759,7 @@ export default function SystemConfigTab({
           initialSelection[rowIndex] = true
         }
 
-        return { category, name, code, isCompliance, isRequestable, complianceCategory, error, index: rowIndex }
+        return { category, name, code, isCompliance, isRequestable, error, index: rowIndex }
       })
 
       setImportRows(parsed)
@@ -861,9 +830,8 @@ export default function SystemConfigTab({
 
           const isCompliance = newData.isCompliance !== undefined ? newData.isCompliance : row.isCompliance
           const isRequestable = newData.isRequestable !== undefined ? newData.isRequestable : row.isRequestable
-          const complianceCategory = newData.complianceCategory !== undefined ? newData.complianceCategory : row.complianceCategory
 
-          return { ...row, category, name, code, isCompliance, isRequestable, complianceCategory, error }
+          return { ...row, category, name, code, isCompliance, isRequestable, error }
         }
         return row
       })
@@ -877,7 +845,6 @@ export default function SystemConfigTab({
     const code = newData.code || ""
     const isCompliance = newData.isCompliance !== undefined ? Boolean(newData.isCompliance) : false
     const isRequestable = newData.isRequestable !== undefined ? Boolean(newData.isRequestable) : false
-    const complianceCategory = newData.complianceCategory || ""
 
     let error = ""
     if (!category) error = "Missing Category"
@@ -901,7 +868,7 @@ export default function SystemConfigTab({
     }
 
     const nextIndex = importRows.length > 0 ? Math.max(...importRows.map((r) => r.index)) + 1 : 1
-    const newRow = { category, name, code, isCompliance, isRequestable, complianceCategory, error, index: nextIndex }
+    const newRow = { category, name, code, isCompliance, isRequestable, error, index: nextIndex }
 
     setImportRows((prev) => [newRow, ...prev])
     if (!error) {
@@ -970,22 +937,13 @@ export default function SystemConfigTab({
 
   function handleCopySample() {
     const sample = isOsas
-      ? "Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory\nDocumentType,Event Proposal,,true,false,Student Governance & Activities\nDocumentType,Constitution & By-Laws (CBL),,true,false,Student Governance & Activities\nDocumentType,Activity Request,,true,false,Student Governance & Activities\nDocumentType,Financial Liquidation Report,,true,false,Student Governance & Activities\nDocumentType,Clearance Form,,true,true,Certificates & Clearances\nCourse,Bachelor of Science in Information Technology,BSIT,,,\nCourse,Bachelor of Science in Accountancy,BSA,,,"
-      : "Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory\nDocumentType,Transcript of Records,,false,true,Academic Records\nDocumentType,Diploma,,false,true,Graduation & Exit Records\nDocumentType,PSA Birth Certificate,,true,false,Admission & Identity\nDocumentType,Form 137,,true,false,Academic Records\nCourse,Bachelor of Science in Information Technology,BSIT,,,\nCourse,Bachelor of Science in Accountancy,BSA,,,\nSection,Block 1,BSIT,,,\nSection,Section 1,BSA,,,";
+      ? "Category,Name,Code,IsCompliance,IsRequestable\nDocumentType,Event Proposal,,true,false\nDocumentType,Constitution & By-Laws (CBL),,true,false\nDocumentType,Activity Request,,true,false\nDocumentType,Financial Liquidation Report,,true,false\nDocumentType,Clearance Form,,true,false\nCourse,Bachelor of Science in Information Technology,BSIT,\nCourse,Bachelor of Science in Accountancy,BSA,"
+      : "Category,Name,Code,IsCompliance,IsRequestable\nDocumentType,Transcript of Records,,false,true\nDocumentType,Diploma,,false,true\nDocumentType,PSA Birth Certificate,,true,false\nDocumentType,Form 137,,true,false\nCourse,Bachelor of Science in Information Technology,BSIT,\nCourse,Bachelor of Science in Accountancy,BSA,\nSection,Block 1,BSIT,\nSection,Section 1,BSA,";
     navigator.clipboard.writeText(sample);
     showToast({
       title: "CSV sample copied to clipboard.",
     });
   }
-
-  /* if (loading && !docTypes.length) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full max-w-md rounded-xl dark:bg-muted" />
-        <Skeleton className="h-[400px] w-full rounded-2xl dark:bg-muted" />
-      </div>
-    )
-  } */
 
   const activeError = errorProp || error
 
@@ -1015,12 +973,12 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex w-full flex-1 flex-col gap-4 min-h-0">
+      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-4">
         <Tabs
           defaultValue="document-types"
           value={activeSubTab}
           onValueChange={setActiveSubTab}
-          className="flex flex-col gap-4 w-full flex-1 min-h-0"
+          className="flex flex-col gap-4 w-full"
         >
           {/* Top Section Switcher Pill */}
           <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
@@ -1099,8 +1057,8 @@ export default function SystemConfigTab({
             </button>
           </div>
 
-          <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-col min-h-0">
-            <div className="relative flex flex-1 flex-col p-0 w-full min-h-0">
+          <Card className="p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-col isolate font-jakarta mb-4">
+            <div className="relative flex flex-col p-0 w-full">
               <TabsContent
                 value="document-types"
                 className="m-0 flex flex-col border-0 focus-visible:ring-0"
@@ -1212,7 +1170,7 @@ export default function SystemConfigTab({
 
             <TabsContent
               value="bulk-import"
-              className="m-0 flex flex-1 flex-col border-0 focus-visible:ring-0 min-h-0"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
             >
               <BulkImportTab
                 importStatus={importStatus}

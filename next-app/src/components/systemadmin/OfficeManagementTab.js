@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import OfficeGridSkeleton from "@/components/systemadmin/skeletons/OfficeGridSkeleton"
 import {
@@ -20,7 +19,6 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Badge } from "@/components/ui/badge"
-import { Select } from "@/components/ui/select"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
@@ -223,7 +221,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       } else if (!cached) {
         showToast(result.error || "Failed to fetch offices", true)
       }
-    } catch (err) {
+    } catch {
       if (!getCachedData("systemadmin_offices_stats")) {
         showToast("Network error fetching offices", true)
       }
@@ -381,7 +379,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       } else {
         showToast(json.error || "Failed to save office", true)
       }
-    } catch (err) {
+    } catch {
       showToast("Network error saving office", true)
     } finally {
       setSubmitLoading(false)
@@ -408,7 +406,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       } else {
         showToast(json.error || "Failed to toggle status", true)
       }
-    } catch (err) {
+    } catch {
       showToast("Network error toggling status", true)
     }
   }
@@ -537,9 +535,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   }, [availableModules, form.selectedModules])
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col h-full min-h-0 w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
           icon="ph-bold ph-buildings"
           title={
@@ -805,7 +803,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         </div>
 
         {/* Content Section inside the single card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
+        <div className="rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
           {loading ? (
             <OfficeGridSkeleton layoutView={layoutView} count={6} />
           ) : filteredOffices.length === 0 ? (

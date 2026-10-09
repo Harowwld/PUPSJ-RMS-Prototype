@@ -53,6 +53,8 @@ export async function POST(req) {
     return 0;
   });
 
+  const allowUpsert = Boolean(body.upsert || body.overwrite);
+
   for (const row of sortedRows) {
     if (!row || typeof row !== "object" || Array.isArray(row)) {
       failCount++;
@@ -73,24 +75,24 @@ export async function POST(req) {
           isCompliance,
           isRequestable,
           complianceCategory,
-          upsert: true,
+          upsert: allowUpsert,
         });
         successCount++;
       } else if (cat === "course") {
         if (!code || !name) throw new Error("Course requires code and name");
-        await createCourse(code, name, officeId, { upsert: true });
+        await createCourse(code, name, officeId, { upsert: allowUpsert });
         successCount++;
       } else if (cat === "section") {
         if (!name) throw new Error("Missing name");
         const safeCode = code ? code : "UNKN";
-        await createSection(name, safeCode, officeId, { upsert: true });
+        await createSection(name, safeCode, officeId, { upsert: allowUpsert });
         successCount++;
       } else {
         // Unknown category - count as failure
         failCount++;
         continue;
       }
-    } catch (e) {
+    } catch {
       failCount++;
     }
   }

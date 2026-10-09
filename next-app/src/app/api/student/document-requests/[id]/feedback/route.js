@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/postgres";
+import { queryOne } from "@/lib/postgres";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";

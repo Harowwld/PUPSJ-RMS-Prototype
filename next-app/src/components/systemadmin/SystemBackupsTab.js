@@ -7,7 +7,6 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Empty,
   EmptyHeader,
@@ -15,12 +14,7 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 
@@ -35,7 +29,6 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import RestoreModal from "@/components/shared/RestoreModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 
 function parseDateLocal(str) {
@@ -309,27 +302,6 @@ export default function SystemBackupsTab({ showToast }) {
       if (isManual) setIsManualLoading(false)
     }
   }, [backupSearch, backupStartDate, backupEndDate])
-
-  const [isRefreshing, setIsRefreshing] = useState(false)
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await fetchData(true)
-      showToast?.({
-        title: "Platform Backups Refreshed",
-        description: "Loaded latest platform backup records and telemetry.",
-      })
-    } catch {
-      showToast?.({
-        title: "Refresh Failed",
-        description: "Failed to reload platform backup records.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   useEffect(() => {
     fetchData()
@@ -778,9 +750,15 @@ export default function SystemBackupsTab({ showToast }) {
                 descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
-                    
-
-                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleToggleStatusSidebar()}
+                      className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
+                    >
+                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
+                    </Button>
 
                     <Button
                       type="button"
@@ -793,7 +771,10 @@ export default function SystemBackupsTab({ showToast }) {
                       className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                     >
                       {localLoading.uploading ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                        <span className="flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <span>Restoring...</span>
+                        </span>
                       ) : (
                         "Restore"
                       )}
@@ -804,7 +785,10 @@ export default function SystemBackupsTab({ showToast }) {
                       className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
                     >
                       {localLoading.generating ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                        <span className="flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <span>Creating...</span>
+                        </span>
                       ) : (
                         "Create"
                       )}
@@ -933,7 +917,7 @@ export default function SystemBackupsTab({ showToast }) {
           </div>
 
           {/* RIGHT SIDEBAR: System Status */}
-          {true ? (
+          {statusSidebarOpen ? (
             <HealthSidebar
               systemHealth={systemHealth}
               lastBackupTime={lastBackupTime}
@@ -943,7 +927,7 @@ export default function SystemBackupsTab({ showToast }) {
               onRescanDrive={rescanExternalDrive}
               onToggleSimulation={toggleExternalDriveSimulation}
               isRescanning={isRescanning}
-              
+              onToggleCollapse={() => handleToggleStatusSidebar(false)}
               scopeInfo={{
                 title: "Platform Governance Scope",
                 items: [
@@ -959,10 +943,9 @@ export default function SystemBackupsTab({ showToast }) {
             <button
               type="button"
               onClick={() => handleToggleStatusSidebar(true)}
-              title="Expand System Status"
-              className="hidden md:flex flex-col items-center justify-center gap-2 w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
+              title="Show System Status"
+              className="hidden md:flex flex-col items-center justify-center w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
             >
-              <HugeIcon className="ph-bold ph-caret-left text-[14px] group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">
                 Status
               </span>

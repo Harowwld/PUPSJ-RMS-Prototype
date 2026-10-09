@@ -5,7 +5,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
 import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
 import { isUniqueViolation } from "../../../../lib/dbErrors";
-import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
+import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 
@@ -27,7 +27,7 @@ export async function GET(req) {
   try {
     const courses = await listCourses({ officeId });
     return NextResponse.json({ ok: true, data: courses.map(c => c.code) });
-  } catch (e) {
+  } catch {
     return NextResponse.json(
       { ok: false, error: "Failed to load courses" },
       { status: 500 }
@@ -42,7 +42,7 @@ function validateStudentPayload(body, layout) {
     .replace(/\s+/g, " ")
     .toUpperCase();
   const courseCode = String(body?.courseCode || "").trim().toUpperCase();
-  const yearLevel = Number(body?.yearLevel);
+  let yearLevel = Number(body?.yearLevel);
   const section = String(body?.section || "").trim();
   const room = Number(body?.room);
   const cabinet = canonicalizeCabinetId(body?.cabinet);
@@ -57,6 +57,15 @@ function validateStudentPayload(body, layout) {
 
   if (!studentNoPattern.test(studentNo.toUpperCase())) {
     return { ok: false, error: "Invalid studentNo format" };
+  }
+
+  if (Number.isInteger(yearLevel) && yearLevel >= 1 && yearLevel <= 5) {
+    const match = studentNo.match(/^(\d{4})/);
+    if (match && Number(match[1]) >= 2000 && Number(match[1]) <= 2100) {
+      yearLevel = Number(match[1]);
+    } else {
+      yearLevel = new Date().getFullYear();
+    }
   }
 
   if (!Number.isInteger(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
@@ -108,8 +117,8 @@ function validateStudentPayload(body, layout) {
 }
 
 export async function POST(req) {
-  const access = await requireAdmin(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Admin access required", access.error?.startsWith("Access denied") ? 403 : 401);
+  const access = await requireStaff(req);
+  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(

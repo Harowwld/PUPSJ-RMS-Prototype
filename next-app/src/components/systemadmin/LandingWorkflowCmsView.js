@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingWorkflowSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -126,28 +125,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
     [showToast]
   )
 
-  const fetchWorkflowData = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) {
-        setLoading(true)
-      }
-      try {
-        const res = await fetch("/api/landing/workflow", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setWorkflowData(json.data)
-        } else {
-          notify(json.error || "Failed to load workflow configuration", true)
-        }
-      } catch (err) {
-        console.error("[LandingWorkflowCmsView] Fetch error:", err)
-        notify("Network error fetching workflow settings", true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [notify]
-  )
+
 
   useEffect(() => {
     let ignore = false

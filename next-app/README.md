@@ -1,8 +1,58 @@
-# eManage / PUPSJ Records Management System
+<p align="center">
+  <img src="public/assets/pup-logo.webp" alt="PUP eManage Record Keeping System Logo" width="120">
+</p>
 
-Local records-management application for PUP San Juan. The current development setup uses **PostgreSQL running locally through Docker Compose**. SQLite is retained only for legacy migration utilities; it is not the active application database.
+<h1 align="center">PUP eManage</h1>
+<p align="center"><em>A Web-Based Records Keeping System (RKS) for Selected Offices in Polytechnic University of the Philippines, San Juan City Campus</em></p>
+<p align="center"><strong>Web-based architecture. Automated OCR ingestion. Multi-office record keeping workflows.</strong></p>
 
-## One-click desktop installation
+---
+
+<!-- Badges -->
+<p align="center">
+  <div align="center">
+    <img src="https://img.shields.io/badge/Framework-Next.js%2016-000000?logo=nextdotjs&logoColor=white" alt="Next.js">
+    <img src="https://img.shields.io/badge/Frontend-React%2019-61DAFB?logo=react&logoColor=black" alt="React">
+    <img src="https://img.shields.io/badge/UI-Tailwind%20CSS%20v4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
+    <img src="https://img.shields.io/badge/Database-PostgreSQL%2016-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+    <img src="https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white" alt="Docker">
+  </div>
+  <div align="center">
+    <img src="https://img.shields.io/badge/Security-JWT%20%26%202FA-800000?logo=jsonwebtokens&logoColor=white" alt="JWT & 2FA">
+    <img src="https://img.shields.io/badge/OCR-Tesseract%20OCR-4EAA25" alt="Tesseract OCR">
+    <img src="https://img.shields.io/badge/Animation-Framer%20Motion-0055FF?logo=framer&logoColor=white" alt="Framer Motion">
+    <img src="https://img.shields.io/badge/Platform-Web--Based-FF5733" alt="Web-Based">
+    <img src="https://img.shields.io/badge/Campus-PUP%20San%20Juan-800000" alt="PUP San Juan">
+  </div>
+</p>
+
+---
+
+<p align="center">
+  <img src="public/assets/landing-page.png" alt="PUP eManage Record Keeping System Mockup" width="800">
+</p>
+
+Web-based records keeping system for selected offices in PUP San Juan. The current development setup is running locally using **PostgreSQL through Docker Compose** and Next.js on `http://localhost:3000`. SQLite is retained only for legacy migration utilities; it is not the active application database.
+
+## Tech Stack
+
+### Architecture & Framework (Monolith)
+- **Next.js 16 (App Router)** with **React 19** — Single full-stack monolithic framework handling both frontend UI and backend API routes on Node.js.
+
+### Database
+- **PostgreSQL 16** — Containerized via Docker Compose, queried via native `pg` driver.
+
+### Notable Libraries & Packages
+- **UI & Styling:** Tailwind CSS v4, shadcn/ui, Hugeicons, Phosphor Icons
+- **Animation:** Framer Motion, GSAP
+- **Auth & Security:** jose (JWT), speakeasy / otpauth (TOTP 2FA), qrcode, Node.js crypto (AES-256 PII/backup encryption)
+- **Real-Time & System:** Socket.io, Chokidar (hot-folder scanner watcher)
+- **OCR & Document Processing:** Tesseract OCR, wink-nlp (NLP normalization), pdfjs-dist, pdf-lib, jspdf, adm-zip
+- **Analytics & Validation:** Recharts, Zod
+- **Email & Feedback:** Nodemailer, Sonner
+
+
+## One-Click Desktop Installation
 
 ### macOS
 
@@ -41,7 +91,7 @@ To use another Windows port, change `APP_PORT` in the installed `.env` (for exam
 
 To install an application update, extract the newer project ZIP and run its installer again. It reuses the existing `.env` and Docker volumes. Back up the system before upgrades that include database migrations.
 
-## Session renewal
+## Session Renewal
 
 New sign-ins receive a 15-minute access JWT and an HTTP-only refresh cookie with a fixed seven-day expiry. The browser renews before access expires and retries a same-origin API request once after a `401`. A `403` remains a permission error and is not retried. Refresh credentials stay in cookies; the database stores their hashes and rotates them on each renewal. Replay outside a short window for simultaneous requests revokes that browser session. This follows the rotation and reuse-detection pattern described in [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14).
 
@@ -49,7 +99,7 @@ Staff and student sign-ins, completed two-factor authentication, and password ch
 
 Apply migration `071_auth_refresh_tokens.sql` with `pnpm db:migrate` before starting this version (Docker startup applies migrations automatically). Existing eight-hour access sessions remain valid until their original expiry; sign in again to receive refresh credentials. Cookies retain the existing HTTP behavior for `localhost`, `127.0.0.1`, and `[::1]`, and use secure cookies for hosted production addresses. Refresh does not transfer a login between these different hosts. After restoring a full system backup, rotate `JWT_SECRET` and restart the app to invalidate credentials restored with the backup.
 
-## Developer prerequisites
+## Developer Prerequisites
 
 - Git
 - Node.js 20 or newer
@@ -65,7 +115,7 @@ corepack enable
 corepack prepare pnpm@latest --activate
 ```
 
-## Clone and install for development
+## Clone and Install for Development
 
 Clone the branch you want to run. The latest OCR work is on `OCR-Improvements`:
 
@@ -77,7 +127,7 @@ pnpm install
 
 To run the stable `main` branch, omit `-b OCR-Improvements` from the clone command.
 
-## Configure the environment
+## Configure the Environment
 
 Development scripts and Docker Compose use the same `next-app/.env` file. From `next-app/`, create it from the example file if it does not already exist:
 
@@ -87,21 +137,42 @@ cp -n .env.example .env
 
 If you previously used `.env.local`, merge its settings into `.env`, preserving any existing values you still need, then remove `.env.local`. Next.js gives `.env.local` priority over `.env`, so leaving the old file can override your updated settings. Restart the development server after changing `.env`; for Docker Compose, run `docker compose up -d --build --wait` to apply the changes.
 
-Set private values for the JWT secret and default staff password. Set a hot-folder token if you want the scanner watcher enabled during host-based development:
+Set private values for the JWT secret, default staff password, and backup encryption key. Here is the configuration template matching `.env.example` / `.env.sample`:
 
 ```dotenv
-DATABASE_URL=postgres://pupsj_rms:pupsj_rms_local@localhost:5433/pupsj_rms
-JWT_SECRET=replace_with_a_long_random_value
-DEFAULT_STAFF_PASSWORD=replace_with_a_private_password
-HOT_FOLDER_INGEST_TOKEN=replace_with_a_random_token_at_least_32_chars
-LOCAL_DATA_DIR=.local
-APP_URL=http://localhost:3000
-SMTP_HOST=smtp.example.com
+JWT_SECRET="replace_with_a_long_random_value"
+COOKIE_NAME="pup_auth_token"
+SESSION_COOKIE_NAME="pup_session"
+
+# Default Credentials
+DEFAULT_STAFF_PASSWORD="replace_with_a_private_password"
+
+# Storage & Database
+LOCAL_DATA_DIR=".local"
+
+# Backups & Security
+BACKUP_ENCRYPTION_KEY="replace_with_a_secure_32_char_key"
+EXTERNAL_BACKUP_PATH=""
+HOT_FOLDER_INGEST_TOKEN="replace_with_a_random_token_at_least_32_chars"
+
+DATABASE_URL="postgres://pupsj_rms:pupsj_rms_local@localhost:5433/pupsj_rms"
+NODE_ENV="development"
+NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD=""
+POSTGRES_DB="pupsj_rms"
+POSTGRES_USER="pupsj_rms"
+POSTGRES_PASSWORD="pupsj_rms_local"
+
+# Email Settings
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=your-smtp-username
-SMTP_PASSWORD=your-smtp-password
-SMTP_FROM="PUPSJ RMS <no-reply@example.com>"
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM="PUP eManage <no-reply@example.com>"
+
+# TOTP 2FA configuration
+TOTP_SECRET_KEY="replace_with_a_long_random_value"
+TOTP_WINDOW=2
 ```
 
 Do not commit `.env`. The default Docker Compose database values are intended for local development only.
@@ -114,7 +185,7 @@ Alternatively, select **Use security questions**, enter the email address or Sta
 
 Set `APP_URL` to the address recipients can reach, such as the registrar PC's LAN address or the deployed HTTPS URL. This trusted address is used for recovery links; non-local requests require it. When it is unset, localhost requests use their local origin. The recovery credential is carried in the URL fragment and removed from the address bar after the form opens. Restart the app after changing SMTP or `APP_URL` environment variables.
 
-## Run the complete application with Docker
+## Run the Complete Application with Docker
 
 From `next-app/`, use the same `.env` configured above. If it does not exist yet, create it and replace the sample secrets:
 
@@ -141,7 +212,7 @@ docker compose down
 
 `docker compose down -v` removes the PostgreSQL and app-data volumes, permanently deleting their contents. The scanner inbox is a host folder and remains in place.
 
-## Start PostgreSQL and initialize the database
+## Start PostgreSQL and Initialize the Database
 
 ### Linux Startup Sequence (AI Agents & Developers)
 On Linux environments, ensure your active shell session has Docker permissions before running services:
@@ -183,12 +254,14 @@ pnpm dev:next
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Default demo & local accounts
+## Default Demo & Local Accounts
 
 The system includes pre-seeded demo accounts for all administrative, office, and student roles. Personnel use the `DEFAULT_STAFF_PASSWORD` value configured in `.env`. Student demo credentials depend on which seed script created the account.
 
+<div align="center">
+
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
-|---|---|---|---|---|---|
+|:---:|:---:|:---:|:---:|:---:|:---:|
 | **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
 | **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
 | **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
@@ -196,9 +269,11 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 | **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Student organization operations and OSAS workflows) |
 | **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
 
+</div>
+
 > **Note**: Demo personnel accounts are pre-seeded with recovery answers so they bypass first-time password setup modals during presentations. You can also use the **Demo Accounts** quick-fill pills located on the sign-in page (`/`).
 
-## Apple Vision OCR setup (macOS)
+## Apple Vision OCR Setup (macOS)
 
 The PSA coordinate-recognition workflow uses the native OCR binary. Build it once from `next-app/`:
 
@@ -209,7 +284,7 @@ swiftc -O scripts/apple-vision-ocr/ocr.swift -o bin/apple-vision-ocr
 
 The binary must exist at `next-app/bin/apple-vision-ocr`. If it is missing, normal database and upload features still run, but OCR requests will report that the native OCR engine is unavailable.
 
-## Windows OCR setup
+## Windows OCR Setup
 
 On Windows, install the .NET 8 SDK and build the included Windows OCR helper:
 
@@ -219,10 +294,10 @@ scripts\windows-media-ocr\build.bat
 
 The build script places the executable where the application expects it.
 
-## PSA coordinate-template workflow
+## PSA Coordinate-Template Workflow
 
 1. Log in as the Registrar Admin.
-2. Open **Data → PSA Recognition**.
+2. Navigate to **System Configuration → OCR Recognition** tab.
 3. Select the PSA document type.
 4. Under **Fields to OCR**, click `First name`, `Middle name`, or `Last name`.
 5. Click **Load PSA PDF or image** and choose a representative scan.
@@ -232,18 +307,24 @@ The build script places the executable where the application expects it.
 
 Coordinates are normalized from `0` to `1`, so templates work across scan resolutions. Calibrate using multiple PSA layouts and verify that parent/informant fields are outside the selected regions. Recognition presents database candidates; staff confirmation is still required before association.
 
-## Useful commands
+## Useful Commands
 
 Run from `next-app/`:
 
 ```bash
-pnpm lint                 # ESLint
-pnpm build                # production build
-pnpm test:recognition     # coordinate/name recognition tests
-pnpm db:verify            # PostgreSQL health and row-count checks
-pnpm db:backup            # create a local encrypted backup
-pnpm populate-sample-data # seed/update sample data
+pnpm lint                       # ESLint
+pnpm build                      # production build
+pnpm test:recognition           # coordinate/name recognition tests
+pnpm db:verify                  # PostgreSQL health and row-count checks
+pnpm db:backup                  # create a local encrypted backup
+pnpm populate-sample-data       # seed mock data (students, requests, documents)
+node scripts/seed-real-data.mjs # seed actual curriculum & student records from CSV
+node scripts/clear-lockouts.mjs # clear active rate-limit hits & temporary lockouts
 ```
+
+- **`pnpm populate-sample-data`**: Populates the database with mock records across Registrar and OSAS offices (including sample students, document types, courses, sections, and document requests).
+- **`node scripts/seed-real-data.mjs`**: Seeds actual institutional taxonomy and curriculum from `_SAMPLE_DATA/system_data - final.csv` and student records from `_SAMPLE_DATA/cleaned_student_data.csv`.
+- **`node scripts/clear-lockouts.mjs`** (or `pnpm reset-rate-limit`): Immediately resets all rate-limit hits and unblocks locked-out accounts/IP addresses in `system.db`.
 
 To inspect request counts without deleting anything, run this from `next-app/`:
 
@@ -265,15 +346,16 @@ Resetting the database is destructive. The local helper connects directly to Pos
 pnpm reset-db
 ```
 
-The package command supplies the required `--confirm` flag. Direct invocation also requires confirmation: `node scripts/reset-db.mjs --confirm`. After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` to restore sample records.
+The package command supplies the required `--confirm` flag. Direct invocation also requires confirmation: `node scripts/reset-db.mjs --confirm`. After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` or `node scripts/seed-real-data.mjs` to restore sample records.
 
 To clear current rate-limit hits and lockouts without changing the configured protections, run:
 
 ```bash
 pnpm reset-rate-limit
+# or: node scripts/clear-lockouts.mjs
 ```
 
-## Project structure
+## Project Structure
 
 - `src/app/` — Next.js pages and API routes
 - `src/components/admin/` — administrator tabs, including PSA calibration
@@ -285,15 +367,15 @@ pnpm reset-rate-limit
 
 ## Troubleshooting
 
-### Docker API or socket error
+### Docker API or Socket Error
 
 `pnpm dev` and `pnpm start` open Docker Desktop on macOS and wait up to 60 seconds for its engine. If Docker still is not ready, finish Docker Desktop first-run setup or start the Docker daemon, then retry.
 
-### `DATABASE_URL is required`
+### `DATABASE_URL` Is Required
 
 Confirm that `next-app/.env` exists and contains `DATABASE_URL`, then run `docker compose up -d --wait postgres`.
 
-### PostgreSQL connection refused
+### PostgreSQL Connection Refused
 
 Check the container:
 
@@ -302,10 +384,62 @@ docker compose ps
 docker compose logs postgres
 ```
 
-### OCR binary not found
+### OCR Binary Not Found
 
 Build the platform-specific binary described above. OCR is local and does not use a cloud OCR service.
 
-### Duplicate key error while seeding
+### Duplicate Key Error While Seeding
 
 Run `pnpm db:verify` first. The sample seed is designed to update existing sample rows, but manually inserted records must use unique student numbers, document IDs, and emails.
+
+## Developers
+
+<table align="center">
+  <tr>
+    <td align="center" width="20%">
+      <a href="https://github.com/icodecedd">
+        <img src="https://github.com/icodecedd.png" width="80" alt="Cedrick Joseph Mariano"/><br />
+        <sub><b>Cedrick Joseph Mariano</b></sub>
+      </a><br />
+      <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
+    </td>
+    <td align="center" width="20%">
+      <a href="https://github.com/Harowwld">
+        <img src="https://github.com/Harowwld.png" width="80" alt="Harold Prince dela Peña"/><br />
+        <sub><b>Harold Prince dela Peña</b></sub>
+      </a><br />
+      <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
+    </td>
+    <td align="center" width="20%">
+      <img src="https://ui-avatars.com/api/?name=Joshue+Poche&background=800000&color=fff&size=160&bold=true&rounded=true" width="80" alt="Joshue Poche"/><br />
+      <sub><b>Joshue Poche</b></sub><br />
+      <img src="https://img.shields.io/badge/QA-2ea44f?style=flat" alt="Quality Assurance" />
+    </td>
+    <td align="center" width="20%">
+      <a href="https://github.com/paulomscln">
+        <img src="https://github.com/paulomscln.png" width="80" alt="Paulo Masculino"/><br />
+        <sub><b>Paulo Masculino</b></sub>
+      </a><br />
+      <img src="https://img.shields.io/badge/Frontend-0969da?style=flat" alt="Frontend" />
+    </td>
+    <td align="center" width="20%">
+      <a href="https://github.com/rjjackflorida">
+        <img src="https://github.com/rjjackflorida.png" width="80" alt="Rj Jack Florida"/><br />
+        <sub><b>Rj Jack Florida</b></sub>
+      </a><br />
+      <img src="https://img.shields.io/badge/Documentation-f68a1e?style=flat" alt="Technical Documentation" />
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+
+| Developer | Role | Focus Area |
+|:---:|:---:|:---:|
+| [**Cedrick Joseph Mariano**](https://github.com/icodecedd) | `Full Stack` | System Architecture, Authentication & Security |
+| [**Harold Prince dela Peña**](https://github.com/Harowwld) | `Full Stack` | Database Architecture, Backend Repositories & Ingest |
+| **Joshue Poche** | `Quality Assurance` | System Testing, Process Auditing & Quality Verification |
+| [**Paulo Masculino**](https://github.com/paulomscln) | `Frontend` | UI/UX Design System, Dashboard Views & Component Polish |
+| [**Rj Jack Florida**](https://github.com/rjjackflorida) | `Documentation` | Technical Writing, Operational Manuals & System Records |
+
+</div>

@@ -72,7 +72,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
           if (typeof window !== "undefined") {
             try {
               localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
-            } catch (e) {}
+            } catch {}
           }
         } else {
           notify(json.error || "Failed to load branding settings", true)
@@ -99,7 +99,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
           if (typeof window !== "undefined") {
             try {
               localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
-            } catch (e) {}
+            } catch {}
           }
         }
       } catch (err) {
@@ -271,7 +271,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
           try {
             localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
             window.dispatchEvent(new CustomEvent("institution-branding-updated", { detail: json.data }))
-          } catch (e) {}
+          } catch {}
         }
         notify("Institutional identity & branding saved successfully!")
       } else {
@@ -300,7 +300,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
           try {
             localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
             window.dispatchEvent(new CustomEvent("institution-branding-updated", { detail: json.data }))
-          } catch (e) {}
+          } catch {}
         }
         notify("Reverted to institutional defaults")
       } else {

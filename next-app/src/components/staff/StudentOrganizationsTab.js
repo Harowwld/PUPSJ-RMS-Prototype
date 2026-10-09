@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Reorder } from "framer-motion";
+import { toast } from "sonner";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { matchesSearchQuery } from "@/lib/searchUtils";
 import { Badge } from "@/components/ui/badge";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
@@ -422,9 +424,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     loadBylawsHistory(org.id);
   };
 
-  const openOfficersSheet = (org) => openManageOrgSheet(org, "officers");
-  const openEditModal = (org) => openManageOrgSheet(org, "info");
-
   const handleAddOfficer = async (e) => {
     e.preventDefault();
     if (!selectedOrgForOfficers) return;
@@ -739,12 +738,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       }
 
       if (search.trim()) {
-        const q = search.toLowerCase().trim();
-        const matchName = (org.name || "").toLowerCase().includes(q);
-        const matchAcronym = (org.acronym || "").toLowerCase().includes(q);
-        const matchAdviser = (org.adviser_name || "").toLowerCase().includes(q);
-        const matchDesc = (org.description || "").toLowerCase().includes(q);
-        if (!matchName && !matchAcronym && !matchAdviser && !matchDesc) return false;
+        const matches = matchesSearchQuery(
+          [org.name, org.acronym, org.adviser_name, org.description],
+          search
+        );
+        if (!matches) return false;
       }
 
       return true;
@@ -856,9 +854,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-1 flex-col h-auto min-h-0 gap-6 focus:outline-none animate-fade-up">
+      <div className={cn("font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up", (!organizations || organizations.length === 0) && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Active Filters, Content & Footer */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4", (!organizations || organizations.length === 0) && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-buildings"
@@ -1471,7 +1469,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               </div>
             ) : viewMode === "table" ? (
               /* Table View Mode */
-              <div className="overflow-x-auto min-h-[300px]">
+              <div className="overflow-x-auto w-full">
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] uppercase font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">

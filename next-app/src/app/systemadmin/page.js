@@ -1,13 +1,12 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef, Suspense } from "react"
+import { useEffect, useState, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
 
 import Header from "@/components/layout/Header"
 import Sidebar from "@/components/shared/Sidebar"
-import ConfirmModal from "@/components/shared/ConfirmModal"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,12 +14,11 @@ import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCard
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import ServiceStandardsSkeleton from "@/components/systemadmin/skeletons/ServiceStandardsSkeleton"
-import { cn } from "@/lib/utils"
 import { getClientSession } from "@/lib/clientAuth"
 
 function TabLoadingSkeleton() {
   return (
-    <div className="flex flex-1 flex-col h-full min-h-0 w-full gap-6 animate-fade-up font-jakarta">
+    <div className="flex flex-1 flex-col min-h-full w-full gap-6 animate-fade-up font-jakarta">
       {/* ONE Single Container Card */}
       <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
         {/* Header */}
@@ -107,7 +105,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   const initialAuth = propAuthUser || contextUser || null
   const [authUser, setAuthUser] = useState(initialAuth)
   const [loading, setLoading] = useState(!initialAuth)
-  const { zoomNode, setZoomNode, handleZoomMouseDown, zoomFactor, zoomStyle } = useLayoutZoom(authUser)
+  const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser)
   
   const initialView = VALID_VIEWS.includes(searchParams?.get("view"))
     ? searchParams.get("view")
@@ -279,9 +277,9 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           authUser={authUser}
         />
         
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
           <div 
-            className="flex-1 p-4 flex flex-col min-h-0 w-full"
+            className="p-4 flex flex-col min-h-full w-full"
             style={zoomStyle}
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}

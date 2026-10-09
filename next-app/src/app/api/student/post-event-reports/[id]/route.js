@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { getPostEventReportById } from "@/lib/osasPostEventRepo";
 import { isStudentOfficerForOrg } from "@/lib/organizationsRepo";
+import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -52,6 +53,7 @@ export async function GET(req, ctx) {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${origName || "report.pdf"}"`,
+        ...FILE_SECURITY_HEADERS,
       },
     });
   }

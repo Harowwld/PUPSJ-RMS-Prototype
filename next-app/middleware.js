@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, getRefreshCookieName } from "./src/lib/jwt";
 import { isPublicSessionPath, resolveMiddlewareSession } from "./src/lib/middlewarePolicy.js";
-import { canAccessPage } from "./src/lib/roleUtils.js";
+import { canAccessPage, normalizeRole } from "./src/lib/roleUtils.js";
+import { clearAuthCookies } from "./src/lib/cookieSecurity.js";
 
 function constantTimeEqual(a, b) {
   const sa = String(a || "");
@@ -20,7 +21,7 @@ function createRequestNonce() {
 
 function contentSecurityPolicy(nonce) {
   const developmentScriptPolicy = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
-  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentScriptPolicy}; style-src 'self' 'nonce-${nonce}'; style-src-attr 'none'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';`;
+  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentScriptPolicy}; style-src 'self' 'nonce-${nonce}'; style-src-attr 'none'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' blob: data:; object-src 'self' blob: data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self';`;
 }
 
 function continueWithNonce(req, nonce) {
@@ -33,7 +34,7 @@ function continueWithNonce(req, nonce) {
 function addSecurityHeaders(response, nonce) {
   response.headers.set("Cache-Control", "no-store");
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Content-Security-Policy', contentSecurityPolicy(nonce));
@@ -60,7 +61,10 @@ export async function middleware(req) {
 
   // 2. Allow specific auth endpoints to skip session check
   // Note: Rate limiting for these is handled within the route handlers to avoid Edge Runtime issues
-  if (isPublicSessionPath(pathname)) {
+  if (isPublicSessionPath(pathname, method)) {
+    if (pathname.startsWith("/api/")) {
+      return addSecurityHeaders(NextResponse.next(), nonce);
+    }
     return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
 
@@ -85,18 +89,37 @@ export async function middleware(req) {
       return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 }), nonce);
     }
     const url = req.nextUrl.clone();
-    url.pathname = "/";
-    return addSecurityHeaders(NextResponse.redirect(url), nonce);
+    url.pathname = "/login";
+    url.searchParams.set("redirect", pathname);
+    const redirectRes = NextResponse.redirect(url);
+    if (token || req.cookies.get(getRefreshCookieName())?.value) {
+      clearAuthCookies(redirectRes, req);
+    }
+    return addSecurityHeaders(redirectRes, nonce);
   }
 
   if (!pathname.startsWith("/api/") && !canAccessPage(pathname, payload?.role)) {
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    const role = normalizeRole(payload?.role);
+    if (role === "SystemAdmin" || role === "SuperAdmin") {
+      url.pathname = "/systemadmin";
+    } else if (role === "Admin") {
+      url.pathname = "/admin";
+    } else if (role === "Staff") {
+      url.pathname = "/staff";
+    } else if (role === "Student") {
+      url.pathname = "/student";
+    } else {
+      url.pathname = "/login";
+    }
     return addSecurityHeaders(NextResponse.redirect(url), nonce);
   }
 
   // Route handlers resolve the current principal and office from the request
   // cookie. Middleware payload claims are only used for coarse redirects.
+  if (pathname.startsWith("/api/")) {
+    return addSecurityHeaders(NextResponse.next(), nonce);
+  }
   return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
 }
 

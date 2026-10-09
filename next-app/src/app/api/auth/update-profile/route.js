@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateStaff, getStaffByUsername, getStaffById } from "@/lib/staffRepo";
 import { writeAuditLog, writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { query, queryOne, transaction } from "@/lib/postgres";
+import { queryOne, transaction } from "@/lib/postgres";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { encryptPII, decryptPII } from "@/lib/piiEncryption";
 
@@ -149,7 +149,7 @@ export async function POST(req) {
       ok: true,
       data: updated,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Failed to update profile" }, { status: 500 });
   }
 }

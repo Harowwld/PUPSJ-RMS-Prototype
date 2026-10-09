@@ -18,6 +18,10 @@ const nextConfig = {
     "adm-zip",
   ],
   experimental: {
+    proxyClientMaxBodySize: "250mb",
+    serverActions: {
+      bodySizeLimit: "250mb",
+    },
     optimizePackageImports: [
       "lucide-react",
       "date-fns",

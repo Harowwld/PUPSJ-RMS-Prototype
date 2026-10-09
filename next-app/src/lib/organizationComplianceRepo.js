@@ -9,7 +9,6 @@ export async function getOrganizationComplianceSummary({
   category,
   search,
   complianceStatus,
-  officeId = "osas",
 } = {}) {
   // 1. Fetch all student organizations
   const conditions = [];

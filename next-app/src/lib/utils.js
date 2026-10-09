@@ -35,3 +35,17 @@ export function cn(...inputs) {
   return customTwMerge(clsx(inputs));
 }
 
+export function formatTitleCase(str) {
+  if (!str) return "";
+  return String(str)
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => {
+      if (!word) return "";
+      if (/^[a-z]\.?$/i.test(word)) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+

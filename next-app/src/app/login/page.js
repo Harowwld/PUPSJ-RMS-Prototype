@@ -8,18 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/ui/motion";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { isSystemAdminRole, isAdminRole } from "@/lib/roleUtils";
+import { isSystemAdminRole, isAdminRole, canAccessPage } from "@/lib/roleUtils";
 import { invalidateClientSession } from "@/lib/clientAuth";
 
 const DEMO_ACCOUNTS = [
@@ -374,6 +369,16 @@ export default function Home() {
         // Signal other tabs to clear "Session Expired" modal
         localStorage.setItem("pup-session-recovered", Date.now().toString());
         localStorage.removeItem("pup-logout");
+
+        // Check for redirect param from middleware
+        let redirectPath = null;
+        if (typeof window !== "undefined") {
+          redirectPath = new URLSearchParams(window.location.search).get("redirect");
+        }
+        if (redirectPath && canAccessPage(redirectPath, role)) {
+          router.push(redirectPath);
+          return;
+        }
 
         if (isSystemAdminRole(role)) {
           router.push("/systemadmin");
@@ -770,7 +775,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={isLoading || isStep1Loading || (loginStep === 1 && !username.trim())}
-                      className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                      className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                     >
                       {isLoading || isStep1Loading ? (
                         <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -846,7 +851,7 @@ export default function Home() {
                         type="submit"
                         disabled={forgotLoading || !forgotIdentifier.trim()}
                         title="Request Password Reset"
-                        className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                        className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
                           <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -904,7 +909,7 @@ export default function Home() {
                       {forgotError && <p role="alert" className="text-[12px] text-[#E5484D]">{forgotError}</p>}
                     </div>
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
-                      <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white disabled:opacity-50">
+                      <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white disabled:opacity-50">
                         {forgotLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-lg" /> : "Reset"}
                       </Button>
                     </div>
@@ -921,7 +926,7 @@ export default function Home() {
                       </p>
                     </div>
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
-                      <Button type="button" onClick={() => { setView("login"); resetForgotState(); }} className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 transition-all">
+                      <Button type="button" onClick={() => { setView("login"); resetForgotState(); }} className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 transition-all">
                         Done
                       </Button>
                     </div>
@@ -1110,7 +1115,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={studentSignupLoading}
-                      className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                      className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                     >
                       {studentSignupLoading ? (
                         <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -1270,7 +1275,7 @@ export default function Home() {
                   type="submit"
                   disabled={twoFactorLoading}
                   title="Verify & Log In"
-                  className="w-full h-11 rounded-full bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group rounded-xl"
+                  className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold text-xs shadow-xs active:scale-95 transition-all disabled:opacity-50 group"
                 >
                   {twoFactorLoading ? (
                     <>

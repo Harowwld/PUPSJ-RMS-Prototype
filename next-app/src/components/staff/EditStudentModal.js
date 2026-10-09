@@ -23,7 +23,6 @@ export default function EditStudentModal({
   storageLayout = null,
   onSuccess,
   showToast,
-  authUser = null,
 }) {
   const [name, setName] = useState("");
   const [courseCode, setCourseCode] = useState("");
@@ -32,7 +31,6 @@ export default function EditStudentModal({
   const [room, setRoom] = useState("");
   const [cabinet, setCabinet] = useState("");
   const [drawer, setDrawer] = useState("1");
-  const [status, setStatus] = useState("Active");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -46,7 +44,6 @@ export default function EditStudentModal({
       setRoom(String(student.room || "1"));
       setCabinet(canonicalizeCabinetId(student.cabinet || "A"));
       setDrawer(String(student.drawer || "1"));
-      setStatus(student.status || "Active");
     }
   }, [student, open]);
 
@@ -124,7 +121,6 @@ export default function EditStudentModal({
           room: parsedRoom,
           cabinet: cleanCab,
           drawer: parsedDrawer,
-          status,
         }),
       });
 

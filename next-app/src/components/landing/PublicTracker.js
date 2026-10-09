@@ -174,7 +174,6 @@ export default function PublicTracker() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   {STEPS.map((step) => {
                     const isDone = getStepProgress(result.status) >= step.num;
-                    const isCurrent = getStepProgress(result.status) === step.num;
                     return (
                       <div 
                         key={step.num}

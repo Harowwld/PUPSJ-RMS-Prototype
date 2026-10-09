@@ -54,7 +54,7 @@ if (process.env.HOT_FOLDER_INGEST_TOKEN) {
 
 const app = spawn(
   pnpmCommand,
-  ["exec", "concurrently", "-k", "-n", names.join(","), "-c", colors.join(","), ...commands],
+  ["exec", "concurrently", "-n", names.join(","), "-c", colors.join(","), ...commands],
   { stdio: "inherit", cwd: process.cwd(), shell: isWindows }
 );
 

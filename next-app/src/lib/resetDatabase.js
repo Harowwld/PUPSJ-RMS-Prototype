@@ -151,7 +151,7 @@ export async function resetDatabase() {
     { name: "Student Disciplinary Clearance", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
     { name: "Organization Registration Certificate", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
     { name: "Good Moral Certificate", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Clearance Form", isCompliance: true, isRequestable: true, category: "Certificates & Clearances" },
+    { name: "Clearance Form", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
   ];
   for (const dt of osasDocTypes) {
     await query(

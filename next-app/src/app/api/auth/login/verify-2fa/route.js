@@ -5,7 +5,6 @@ import {
   getStaffDisplayName, 
   verifyPasswordHash,
   verifySerialKey,
-  hasAllSecurityAnswers,
 } from "@/lib/staffRepo";
 import { getSessionCookieName, verifySessionToken, signSessionToken } from "@/lib/jwt";
 import { attachRefreshSession } from "@/lib/refreshSessions";
@@ -30,151 +29,162 @@ function addSecurityHeaders(response) {
 }
 
 export async function POST(req) {
-  // 1. Check Rate Limit
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  const realIP = req.headers.get('x-real-ip');
-  const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
-                    realIP ? realIP.trim() : 
-                    req.ip || 'unknown';
-
-  const rateLimitResult = await checkAuth2FARateLimit(ipAddress);
-  if (!rateLimitResult.allowed) {
-    return addSecurityHeaders(NextResponse.json(
-      { 
-        ok: false, 
-        error: rateLimitResult.reason === 'locked_out' 
-          ? `Account temporarily locked due to too many failed attempts. Please try again later.`
-          : 'Too many login attempts. Please try again later.',
-        retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
-      },
-      { 
-        status: 429,
-        headers: rateLimitResult.resetTime ? {
-          'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-          'X-RateLimit-Limit': rateLimitResult.limit,
-          'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
-          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
-        } : {}
-      }
-    ));
-  }
-
-  const body = await req.json().catch(() => null);
-  if (!body || !body.tempToken || !body.code) {
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Missing verification data" }, { status: 400 }));
-  }
-
-  const { tempToken, code } = body;
-
-  // 1. Verify Temp Token
-  let payload;
   try {
-    payload = await verifySessionToken(tempToken);
-    if (payload.purpose !== "2fa") {
-      throw new Error("Invalid token purpose");
+    // 1. Check Rate Limit
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const realIP = req.headers.get('x-real-ip');
+    const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
+                      realIP ? realIP.trim() : 
+                      req.ip || 'unknown';
+
+    const rateLimitResult = await checkAuth2FARateLimit(ipAddress);
+    if (!rateLimitResult.allowed) {
+      return addSecurityHeaders(NextResponse.json(
+        { 
+          ok: false, 
+          error: rateLimitResult.reason === 'locked_out' 
+            ? `Account temporarily locked due to too many failed attempts. Please try again later.`
+            : 'Too many login attempts. Please try again later.',
+          retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.resetTime ? {
+            'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+            'X-RateLimit-Limit': rateLimitResult.limit,
+            'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
+          } : {}
+        }
+      ));
     }
-    if (!(await isSessionActive(payload, { purpose: "2fa" }))) {
-      throw new Error("Challenge already used or revoked");
+
+    const body = await req.json().catch(() => null);
+    if (!body || !body.tempToken || !body.code) {
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Missing verification data" }, { status: 400 }));
     }
-  } catch (err) {
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or expired session" }, { status: 401 }));
-  }
 
-  const userId = payload.sub;
-  const staff = await getStaffById(userId);
-  if (!staff || staff.status !== "Active" || !staff.totp_enabled) {
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or inactive 2FA session" }, { status: 401 }));
-  }
+    const { tempToken, code } = body;
 
-  let isValid = false;
-  let methodUsed = "";
-
-  // 2. Try TOTP (6 digits)
-  if (/^\d{6}$/.test(code.trim())) {
-    const decrypted = decryptSecret(staff.totp_secret);
-    if (decrypted) {
-      isValid = verifyTOTP(code, decrypted);
-      methodUsed = "TOTP";
+    // 1. Verify Temp Token
+    let payload;
+    try {
+      payload = await verifySessionToken(tempToken);
+      if (payload.purpose !== "2fa") {
+        throw new Error("Invalid token purpose");
+      }
+      if (!(await isSessionActive(payload, { purpose: "2fa" }))) {
+        throw new Error("Challenge already used or revoked");
+      }
+    } catch {
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or expired session" }, { status: 401 }));
     }
-  }
 
-  // 3. Try Recovery Code (8 chars) if not valid TOTP
-  if (!isValid && code.trim().length === 8) {
-    isValid = await verifyRecoveryCode(userId, code);
-    methodUsed = "Recovery Code";
-  }
+    const userId = payload.sub;
+    const staff = await getStaffById(userId);
+    if (!staff || staff.status !== "Active" || !staff.totp_enabled) {
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or inactive 2FA session" }, { status: 401 }));
+    }
 
-  // 4. Try Serial key (16 or 19 chars) if not valid yet
-  if (!isValid && (code.trim().length === 16 || code.trim().length === 19)) {
-    isValid = await verifySerialKey(userId, code);
-    methodUsed = "Serial key";
-  }
+    let isValid = false;
+    let methodUsed = "";
 
-  if (!isValid) {
-    await writeAuditLog(req, `2FA Verification Failure`, { 
-      details: `failed 2FA verification attempt for personnel '${getStaffDisplayName(staff)}'`, 
-      actor: getStaffDisplayName(staff),
+    // 2. Try TOTP (6 digits)
+    if (/^\d{6}$/.test(code.trim())) {
+      const decrypted = decryptSecret(staff.totp_secret);
+      if (decrypted) {
+        isValid = verifyTOTP(code, decrypted);
+        methodUsed = "TOTP";
+      } else if (!staff.totp_secret) {
+        console.warn(`[2FA Verify] Personnel '${staff.id}' has totp_enabled=true but totp_secret is not set`);
+      } else {
+        console.warn(`[2FA Verify] Personnel '${staff.id}' failed to decrypt TOTP secret`);
+      }
+    }
+
+    // 3. Try Recovery Code (8 chars) if not valid TOTP
+    if (!isValid && code.trim().length === 8) {
+      isValid = await verifyRecoveryCode(userId, code);
+      methodUsed = "Recovery Code";
+    }
+
+    // 4. Try Serial key (16 or 19 chars) if not valid yet
+    if (!isValid && (code.trim().length === 16 || code.trim().length === 19)) {
+      isValid = await verifySerialKey(userId, code);
+      methodUsed = "Serial key";
+    }
+
+    if (!isValid) {
+      await writeAuditLog(req, `2FA Verification Failure`, { 
+        details: `failed 2FA verification attempt for personnel '${getStaffDisplayName(staff)}'`, 
+        actor: getStaffDisplayName(staff),
+        role: staff.role || "Staff",
+        severity: "WARNING",
+        entity_type: "User",
+        entity_id: staff.id
+      });
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 }));
+    }
+
+    // 4. Verification Successful -> Create Full Session
+    await revokeSession(payload.jti, { principalId: staff.id, reason: "2fa-challenge-used" });
+    const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+    const isDefaultPassword =
+      verifyPasswordHash(defaultPassword, staff.password_hash).valid ||
+      verifyPasswordHash("pupstaff", staff.password_hash).valid;
+    const mustChangePassword = !isDemoAccount(staff.email) && Boolean(isDefaultPassword);
+
+    const sessionPayload = {
+      sub: staff.id,
       role: staff.role || "Staff",
-      severity: "WARNING",
-      entity_type: "User",
-      entity_id: staff.id
-    });
-    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 }));
-  }
-
-  // 4. Verification Successful -> Create Full Session
-  await revokeSession(payload.jti, { principalId: staff.id, reason: "2fa-challenge-used" });
-  const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-  const hasSecurity = await hasAllSecurityAnswers(staff.id);
-  const isDefaultPassword =
-    verifyPasswordHash(defaultPassword, staff.password_hash).valid ||
-    verifyPasswordHash("pupstaff", staff.password_hash).valid;
-  const mustChangePassword = !isDemoAccount(staff.email) && Boolean(isDefaultPassword);
-
-  const sessionPayload = {
-    sub: staff.id,
-    role: staff.role || "Staff",
-    office_id: staff.office_id || null,
-    username: staff.email,
-    last_active: staff.last_active,
-    mustChangePassword,
-    session_version: await getSessionVersion(staff.id),
-  };
-  const token = await signSessionToken(sessionPayload);
-  await createSession(token, staff.id, staff.role || "Staff", staff.email, { authLevel: "2fa" });
-  warmRegistrarIngestQueueOnLogin(staff);
-  
-  // Reset login rate limit on successful 2FA
-  await resetAuth2FARateLimit(ipAddress, staff.id);
-
-  await writeAuditLog(req, `User Login (2FA)`, { 
-    details: `personnel '${getStaffDisplayName(staff)}' successfully verified via ${methodUsed} and authenticated`, 
-    actor: getStaffDisplayName(staff),
-    role: staff.role || "Staff",
-    entity_type: "User",
-    entity_id: staff.id
-  });
-
-  const res = NextResponse.json({
-    ok: true,
-    data: {
-      role: staff.role || "Staff",
-      id: staff.id,
       office_id: staff.office_id || null,
       username: staff.email,
       last_active: staff.last_active,
       mustChangePassword,
-    },
-  });
+      session_version: await getSessionVersion(staff.id),
+    };
+    const token = await signSessionToken(sessionPayload);
+    await createSession(token, staff.id, staff.role || "Staff", staff.email, { authLevel: "2fa" });
+    warmRegistrarIngestQueueOnLogin(staff);
+    
+    // Reset login rate limit on successful 2FA
+    await resetAuth2FARateLimit(ipAddress, staff.id);
 
-  res.cookies.set({
-    name: getSessionCookieName(),
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: shouldUseSecureCookie(req),
-    path: "/",
-  });
+    await writeAuditLog(req, `User Login (2FA)`, { 
+      details: `personnel '${getStaffDisplayName(staff)}' successfully verified via ${methodUsed} and authenticated`, 
+      actor: getStaffDisplayName(staff),
+      role: staff.role || "Staff",
+      entity_type: "User",
+      entity_id: staff.id
+    });
 
-  return addSecurityHeaders(await attachRefreshSession(res, token, req));
+    const res = NextResponse.json({
+      ok: true,
+      data: {
+        role: staff.role || "Staff",
+        id: staff.id,
+        office_id: staff.office_id || null,
+        username: staff.email,
+        last_active: staff.last_active,
+        mustChangePassword,
+      },
+    });
+
+    res.cookies.set({
+      name: getSessionCookieName(),
+      value: token,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: shouldUseSecureCookie(req),
+      path: "/",
+    });
+
+    return addSecurityHeaders(await attachRefreshSession(res, token, req));
+  } catch (err) {
+    console.error("[POST /api/auth/login/verify-2fa Error]:", err);
+    return addSecurityHeaders(NextResponse.json(
+      { ok: false, error: err?.message || "2FA verification encountered an internal error. Please try again." },
+      { status: 500 }
+    ));
+  }
 }

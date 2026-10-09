@@ -4,10 +4,8 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useMemo, useRef, useState, useEffect } from "react"
 import {
   Card,
-  CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Empty,
   EmptyHeader,
@@ -17,9 +15,6 @@ import {
 } from "@/components/ui/empty"
 import {
   TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
 } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
@@ -39,7 +34,6 @@ import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { cn } from "@/lib/utils"
 
 export default function BackupTab({
   systemHealth,
@@ -75,7 +69,6 @@ export default function BackupTab({
   })
 
   const [isRescanning, setIsRescanning] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const [statusSidebarOpen, setStatusSidebarOpen] = useState(() => {
     if (typeof window !== "undefined") {
@@ -93,25 +86,6 @@ export default function BackupTab({
       }
       return next
     })
-  }
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await onRefresh?.(true)
-      showToast?.({
-        title: "Backup Records Refreshed",
-        description: "Loaded latest backup records and storage status.",
-      })
-    } catch {
-      showToast?.({
-        title: "Refresh Failed",
-        description: "Failed to reload backup records.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
   }
 
   const handleRescanDrive = async () => {
@@ -170,24 +144,11 @@ export default function BackupTab({
   const [sortOrder, setSortOrder] = useState("DESC")
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [jumpPage, setJumpPage] = useState("1")
 
   const [localSearch, setLocalSearch] = useState(backupSearch)
 
-  useEffect(() => {
-    setJumpPage(String(page))
-  }, [page])
-
-  // Prune stale selected backup IDs when backups update
-  useEffect(() => {
-    if (!backups) return
-    setSelectedBackupIds((prev) => {
-      if (prev.length === 0) return prev
-      const validIds = new Set(backups.map((b) => b?.id).filter(Boolean))
-      const pruned = prev.filter((id) => validIds.has(id))
-      return pruned.length !== prev.length ? pruned : prev
-    })
-  }, [backups])
+  const validBackupIds = useMemo(() => new Set((backups || []).map((b) => b?.id).filter(Boolean)), [backups])
+  const effectiveSelectedBackupIds = useMemo(() => selectedBackupIds.filter((id) => validBackupIds.has(id)), [selectedBackupIds, validBackupIds])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -313,17 +274,6 @@ export default function BackupTab({
     setPage(1)
   }
 
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setPage(val)
-      } else {
-        setJumpPage(String(page))
-      }
-    }
-  }
-
   const startItem = (page - 1) * itemsPerPage + 1
   const endItem = Math.min(page * itemsPerPage, (backups || []).length)
 
@@ -343,7 +293,7 @@ export default function BackupTab({
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col">
-            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Office Partition Backup & Archive"
@@ -353,9 +303,15 @@ export default function BackupTab({
                 descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
-                    
-
-                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleToggleStatusSidebar()}
+                      className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
+                    >
+                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
+                    </Button>
 
                     <Button
                       type="button"
@@ -368,7 +324,10 @@ export default function BackupTab({
                       className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                     >
                       {localLoading.uploading ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                        <span className="flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <span>Restoring...</span>
+                        </span>
                       ) : (
                         "Restore"
                       )}
@@ -379,7 +338,10 @@ export default function BackupTab({
                       className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
                     >
                       {localLoading.generating ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                        <span className="flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <span>Creating...</span>
+                        </span>
                       ) : (
                         "Create"
                       )}
@@ -417,7 +379,7 @@ export default function BackupTab({
               />
 
               {isLoading && !isManualLoading ? (
-                <div className="flex-1 flex flex-col min-h-0 border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
+                <div className="w-full flex flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <BackupTableSkeleton embedded={true} />
                 </div>
               ) : error ? (
@@ -473,11 +435,11 @@ export default function BackupTab({
                     />
                   )}
 
-                  <div className="flex-1 flex flex-col min-h-0 border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
+                  <div className="w-full flex flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                     <BackupTable
                       backups={backups}
                       sortedAndPaginatedBackups={sortedAndPaginatedBackups}
-                      selectedBackupIds={selectedBackupIds}
+                      selectedBackupIds={effectiveSelectedBackupIds}
                       handleToggleRow={handleToggleRow}
                       handleSelectAll={handleSelectAll}
                       handleSort={handleSort}
@@ -497,9 +459,6 @@ export default function BackupTab({
                       endItem={endItem}
                       totalCount={(backups || []).length}
                       itemsPerPage={itemsPerPage}
-                      jumpPage={jumpPage}
-                      setJumpPage={setJumpPage}
-                      handleJumpPage={handleJumpPage}
                       handleItemsPerPageChange={handleItemsPerPageChange}
                       scope="office"
                       externalDriveConnected={Boolean(externalDrive?.connected)}
@@ -510,7 +469,7 @@ export default function BackupTab({
             </Card>
           </div>
 
-          {true ? (
+          {statusSidebarOpen ? (
             <HealthSidebar
               systemHealth={systemHealth}
               lastBackupTime={lastBackupTime}
@@ -520,16 +479,15 @@ export default function BackupTab({
               onRescanDrive={handleRescanDrive}
               onToggleSimulation={handleToggleSimulationLocal}
               isRescanning={isRescanning}
-              
+              onToggleCollapse={() => handleToggleStatusSidebar(false)}
             />
           ) : (
             <button
               type="button"
               onClick={() => handleToggleStatusSidebar(true)}
-              title="Expand System Status"
-              className="hidden md:flex flex-col items-center justify-center gap-2 w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
+              title="Show System Status"
+              className="hidden md:flex flex-col items-center justify-center w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
             >
-              <HugeIcon className="ph-bold ph-caret-left text-[14px] group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">
                 Status
               </span>
@@ -538,10 +496,10 @@ export default function BackupTab({
         </div>
 
         <FloatingActionBar
-          selectedCount={selectedBackupIds.length}
+          selectedCount={effectiveSelectedBackupIds.length}
           selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
-          onAction={() => onDeleteBackup(selectedBackupIds)}
+          onAction={() => onDeleteBackup(effectiveSelectedBackupIds)}
           actionLabel="Delete"
           actionIcon="ph-trash"
         />

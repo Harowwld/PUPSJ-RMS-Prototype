@@ -1,7 +1,6 @@
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Reorder } from "framer-motion"
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 
@@ -67,15 +66,6 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       case "emerald": return "text-emerald-600 dark:text-emerald-400";
       case "amber": return "text-amber-600 dark:text-amber-400";
       default: return "text-gray-500";
-    }
-  };
-
-  const getRingColor = (color) => {
-    switch (color) {
-      case "blue": return "border-blue-500/40 dark:border-blue-500/40 ring-1 ring-blue-500/20";
-      case "emerald": return "border-emerald-500/40 dark:border-emerald-500/40 ring-1 ring-emerald-500/20";
-      case "amber": return "border-amber-500/40 dark:border-amber-500/40 ring-1 ring-amber-500/20";
-      default: return "";
     }
   };
 

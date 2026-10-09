@@ -3,21 +3,12 @@
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card"
+import { CardTitle, CardDescription } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
 import BulkImportSkeleton from "@/components/admin/skeletons/BulkImportSkeleton"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty"
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +17,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
@@ -42,7 +32,6 @@ export default function BulkImportTab({
   importFile,
   importRows,
   importSelected,
-  setImportSelected,
   toggleImportRowSelected,
   toggleImportSelectAll,
   executeBulkImport,
@@ -50,13 +39,11 @@ export default function BulkImportTab({
   setActiveSubTab,
   onUpdateRow,
   onAddRow,
-  onRefresh,
   courses = [],
   isOsas = false,
 }) {
   const [editingRowIndex, setEditingRowIndex] = useState(null)
   const [editData, setEditData] = useState({ category: "", name: "", code: "" })
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -73,19 +60,17 @@ export default function BulkImportTab({
     name: "",
     code: "",
   })
-
-  const handleRefreshClick = async () => {
-    setIsRefreshing(true)
-    if (onRefresh) {
-      await onRefresh(true)
-    }
-    setTimeout(() => setIsRefreshing(false), 1000)
-  }
+  const [quickAddDocPurpose, setQuickAddDocPurpose] = useState("compliance")
 
   const handleQuickAdd = () => {
     if (!quickAdd.name) return
     if (onAddRow) {
-      onAddRow(quickAdd)
+      const isDoc = (quickAdd.category || "").toLowerCase().replace(/\s+/g, "") === "documenttype"
+      onAddRow({
+        ...quickAdd,
+        isCompliance: isDoc ? quickAddDocPurpose === "compliance" : false,
+        isRequestable: isDoc ? quickAddDocPurpose === "requestable" : false,
+      })
       setQuickAdd({ category: "DOCUMENT TYPE", name: "", code: "" })
     }
   }
@@ -146,8 +131,8 @@ export default function BulkImportTab({
               <a
                 href={
                   isOsas
-                    ? "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory%0ADOCUMENT TYPE,Event Proposal,,true,false,Student Governance & Activities%0ADOCUMENT TYPE,Constitution & By-Laws (CBL),,true,false,Student Governance & Activities%0ADOCUMENT TYPE,Activity Request,,true,false,Student Governance & Activities%0ADOCUMENT TYPE,Financial Liquidation Report,,true,false,Student Governance & Activities%0ADOCUMENT TYPE,Clearance Form,,true,true,Certificates & Clearances%0ACourse,Bachelor of Science in Information Technology,BSIT,,,%0ACourse,Bachelor of Science in Accountancy,BSA,,,"
-                    : "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory%0ADOCUMENT TYPE,Transcript of Records,,false,true,Academic Records%0ADOCUMENT TYPE,Diploma,,false,true,Graduation & Exit Records%0ADOCUMENT TYPE,PSA Birth Certificate,,true,false,Admission & Identity%0ADOCUMENT TYPE,Form 137,,true,false,Academic Records%0ACourse,Bachelor of Science in Information Technology,BSIT,,,%0ACourse,Bachelor of Science in Accountancy,BSA,,,%0ASection,Block 1,BSIT,,,%0ASection,Section 1,BSA,,,"
+                    ? "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Event Proposal,,true,false%0ADOCUMENT TYPE,Constitution & By-Laws (CBL),,true,false%0ADOCUMENT TYPE,Activity Request,,true,false%0ADOCUMENT TYPE,Financial Liquidation Report,,true,false%0ADOCUMENT TYPE,Clearance Form,,true,false%0ACourse,Bachelor of Science in Information Technology,BSIT,%0ACourse,Bachelor of Science in Accountancy,BSA,"
+                    : "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Transcript of Records,,false,true%0ADOCUMENT TYPE,Diploma,,false,true%0ADOCUMENT TYPE,PSA Birth Certificate,,true,false%0ADOCUMENT TYPE,Form 137,,true,false%0ACourse,Bachelor of Science in Information Technology,BSIT,%0ACourse,Bachelor of Science in Accountancy,BSA,%0ASection,Block 1,BSIT,%0ASection,Section 1,BSA,"
                 }
                 download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
                 className="inline-flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
@@ -281,7 +266,6 @@ export default function BulkImportTab({
                       String(row.category || "").toLowerCase().includes(q) ||
                       String(row.name || "").toLowerCase().includes(q) ||
                       String(row.code || "").toLowerCase().includes(q) ||
-                      String(row.complianceCategory || "").toLowerCase().includes(q) ||
                       (q === "compliance" && row.isCompliance) ||
                       (q === "requestable" && row.isRequestable) ||
                       String(row.error || "").toLowerCase().includes(q) ||
@@ -293,10 +277,10 @@ export default function BulkImportTab({
                   const paginatedRows = filteredRows.slice((displayPage - 1) * itemsPerPage, displayPage * itemsPerPage)
                   return (
                     <>
-                      <div className="flex-1 overflow-hidden overflow-auto bg-white dark:bg-card rounded-[inherit]">
+                      <div className="w-full overflow-x-auto bg-white dark:bg-card rounded-[inherit]">
                         <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
@@ -308,11 +292,11 @@ export default function BulkImportTab({
                           onChange={(e) => toggleImportSelectAll(e.target.checked)}
                         />
                       </th>
-                      <th className="w-12 p-4 text-center font-medium text-[12px] tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Row</th>
-                      <th className="w-48 p-4 font-medium text-[12px] tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Category</th>
-                      <th className="p-4 min-w-[200px] font-medium text-[12px] tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Name / Label</th>
-                      <th className="w-48 p-4 font-medium text-[12px] tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Identifier</th>
-                      <th className="w-40 p-4 text-right font-medium text-[12px] tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Validation</th>
+                      <th className="w-12 p-4 text-center font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Row</th>
+                      <th className="w-48 p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Category</th>
+                      <th className="p-4 min-w-[200px] font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Name / Label</th>
+                      <th className="w-48 p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Identifier</th>
+                      <th className="w-40 p-4 text-right font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Validation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
@@ -322,7 +306,7 @@ export default function BulkImportTab({
                         <HugeIcon  className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </div>
                     </td>
-                    <td className="p-4 text-center text-[11px] text-gray-400 font-medium dark:text-zinc-500">
+                    <td className="p-4 text-center text-[11px] text-gray-500 font-medium dark:text-zinc-400">
                       NEW
                     </td>
                     <td className="p-4">
@@ -378,6 +362,15 @@ export default function BulkImportTab({
                             </option>
                           ))}
                         </Select>
+                      ) : (quickAdd.category || "").toLowerCase().replace(/\s+/g, "") === "documenttype" ? (
+                        <Select
+                          className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                          value={quickAddDocPurpose}
+                          onChange={(e) => setQuickAddDocPurpose(e.target.value)}
+                        >
+                          <option value="compliance">Compliance</option>
+                          <option value="requestable">Requestable</option>
+                        </Select>
                       ) : (
                         <Input
                           className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs focus-visible:ring-1 focus-visible:ring-pup-maroon"
@@ -412,7 +405,7 @@ export default function BulkImportTab({
                       <tr
                         key={row.index}
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                          "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                           row.error && "bg-red-50/40 dark:bg-red-500/5 hover:bg-red-50/60 dark:hover:bg-red-500/10"
                         )}
                       >
@@ -425,7 +418,7 @@ export default function BulkImportTab({
                             disabled={!!row.error || isEditing}
                           />
                         </td>
-                        <td className="p-4 text-center text-[11px] text-gray-400 dark:text-zinc-500">
+                        <td className="p-4 text-center text-xs font-mono text-gray-500 dark:text-zinc-400">
                           {row.index}
                         </td>
                         <td className="p-4">
@@ -475,12 +468,15 @@ export default function BulkImportTab({
                           ) : (
                             <div className="flex flex-col gap-1">
                               <div
-                                className={`text-sm font-semibold truncate max-w-[400px] ${row.error && !row.name ? "text-red-400 italic" : "text-gray-900 dark:text-zinc-50"}`}
+                                className={cn(
+                                  "text-xs font-semibold truncate max-w-[400px]",
+                                  row.error && !row.name ? "text-red-500 italic" : "text-gray-900 dark:text-zinc-100"
+                                )}
                                 title={row.name}
                               >
                                 {row.name || "(Required field missing)"}
                               </div>
-                              {String(row.category || "").toLowerCase() === "documenttype" && (row.isCompliance || row.isRequestable || row.complianceCategory) && (
+                              {String(row.category || "").toLowerCase() === "documenttype" && (row.isCompliance || row.isRequestable) && (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {row.isCompliance && (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
@@ -490,11 +486,6 @@ export default function BulkImportTab({
                                   {row.isRequestable && (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
                                       Requestable
-                                    </span>
-                                  )}
-                                  {row.complianceCategory && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-900 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800">
-                                      {row.complianceCategory}
                                     </span>
                                   )}
                                 </div>
@@ -536,8 +527,14 @@ export default function BulkImportTab({
                               />
                             )
                           ) : (
-                            <div className="text-xs text-gray-900 dark:text-zinc-300">
-                              {row.code || "—"}
+                            <div>
+                              {row.code ? (
+                                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                                  {row.code}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-400 dark:text-zinc-500">—</span>
+                              )}
                             </div>
                           )}
                         </td>
@@ -835,29 +832,29 @@ export default function BulkImportTab({
 
                 <div className="text-[11px] text-[#8E8E93] mb-3 normal-case font-sans">CSV Structure Example</div>
                 
-                <span className="font-semibold text-[#111] dark:text-zinc-50 border-b border-black/[0.08] dark:border-border pb-0.5">Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory</span>
+                <span className="font-semibold text-[#111] dark:text-zinc-50 border-b border-black/[0.08] dark:border-border pb-0.5">Category,Name,Code,IsCompliance,IsRequestable</span>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">DocumentType,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Transcript of Records,</span>
-                    <span className="text-gray-900 dark:text-zinc-300">,false,true,Academic Records</span>
+                    <span className="text-gray-900 dark:text-zinc-300">,false,true</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">DocumentType,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">PSA Birth Certificate,</span>
-                    <span className="text-gray-900 dark:text-zinc-300">,true,false,Admission & Identity</span>
+                    <span className="text-gray-900 dark:text-zinc-300">,true,false</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">Course,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
                     <span className="text-[#E5484D] font-semibold">BSIT</span>
-                    <span className="text-gray-400 dark:text-zinc-500">,,,</span>
+                    <span className="text-gray-400 dark:text-zinc-500">,,</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">Section,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
                     <span className="text-[#E5484D] font-semibold">BSIT</span>
-                    <span className="text-gray-400 dark:text-zinc-500">,,,</span>
+                    <span className="text-gray-400 dark:text-zinc-500">,,</span>
                   </div>
                 </div>
               </div>
@@ -873,7 +870,7 @@ export default function BulkImportTab({
                 {[
                   {
                     label: "Document type",
-                    desc: "Supports IsCompliance (true/false), IsRequestable (true/false), and ComplianceCategory.",
+                    desc: "Supports IsCompliance (true/false) and IsRequestable (true/false).",
                     icon: "ph-files",
                   },
                   {

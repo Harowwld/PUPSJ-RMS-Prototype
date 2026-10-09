@@ -35,7 +35,7 @@ export async function GET(req) {
     };
 
     return NextResponse.json({ ok: true, data: preferences });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -69,7 +69,7 @@ export async function POST(req) {
       entity_id: String(userId),
     });
     return NextResponse.json({ ok: true, data: updatedPrefs });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }

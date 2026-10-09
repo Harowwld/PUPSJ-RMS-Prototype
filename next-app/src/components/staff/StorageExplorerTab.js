@@ -462,7 +462,7 @@ export default function StorageExplorerTab({
                         setCurrentLocatorLevel("cabinets")
                       }
                     }}
-                    onDrawerClick={(drawerId) => {
+                    onDrawerClick={() => {
                       // Optional: Highlight drawer students in the future
                     }}
                     onPreviewDocument={onPreviewDocument}

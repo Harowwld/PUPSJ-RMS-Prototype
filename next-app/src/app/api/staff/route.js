@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createStaff, getStaffById, getStaffByUsername, listStaff } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../lib/totpMiddleware";
-import { getPrincipalOfficeId, requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
+import { getPrincipalOfficeId, requireAdmin, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isUniqueViolation } from "../../../lib/dbErrors";
 import { canManageStaffRole, canAccessOffice, isSystemAdminRole, normalizeRole } from "../../../lib/roleUtils";
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
@@ -87,7 +87,7 @@ export async function POST(req) {
   const lname = String(body.lname || "").trim();
   const role = String(body.role || "").trim();
   const section = String(body.section || "").trim();
-  const status = "Inactive";
+  const status = body.status === "Inactive" || body.status === "Archived" ? body.status : "Active";
   const email = String(body.email || "").trim();
   const usesConfiguredDefault = body.password === undefined || body.password === null || String(body.password) === "";
   const password = usesConfiguredDefault ? DEFAULT_PASSWORD : String(body.password);
@@ -166,7 +166,6 @@ export async function POST(req) {
       credentialEmail,
     }, { status: 201 });
   } catch (e) {
-    const msg = String(e?.message || "");
     if (isUniqueViolation(e)) {
       const [existingId, existingEmail] = await Promise.all([
         getStaffById(id).catch(() => null),

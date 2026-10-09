@@ -1,6 +1,5 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const BENTO_CONTENT = {
@@ -57,7 +56,6 @@ const BENTO_CONTENT = {
 };
 
 export default function LandingBento() {
-  const router = useRouter();
   const bento = BENTO_CONTENT;
 
   return (

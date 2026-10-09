@@ -15,7 +15,6 @@ import { toast } from "sonner"
 
 
 import Header from "@/components/layout/Header"
-import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import RestoreModal from "@/components/shared/RestoreModal"
@@ -26,7 +25,6 @@ import { AdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 
-import { generateExportFilename } from "@/lib/exportHelpers"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -39,9 +37,9 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { PageTransition } from "@/components/ui/motion"
 
 import AdminTabSkeleton from "@/components/admin/skeletons/AdminTabSkeleton"
+import { registerOffices } from "@/lib/roleUtils"
 
 const AdminTabLoading = () => <AdminTabSkeleton />
 const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: AdminTabLoading })
@@ -120,6 +118,27 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
 
   const [staffData, setStaffData] = useState([])
+  const [offices, setOffices] = useState([])
+
+  useEffect(() => {
+    let active = true
+    async function fetchOffices() {
+      try {
+        const res = await fetch("/api/offices")
+        const json = await res.json()
+        if (active && json.ok && Array.isArray(json.data)) {
+          setOffices(json.data)
+          registerOffices(json.data)
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    }
+    fetchOffices()
+    return () => {
+      active = false
+    }
+  }, [])
   const [auditLogs, setAuditLogs] = useState(null)
   const [logStats, setLogStats] = useState(null)
   const [logsLoading, setLogsLoading] = useState(false)
@@ -192,7 +211,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [backupDeleteTargets, setBackupDeleteTargets] = useState([])
   const [backupDeleteOpen, setBackupDeleteOpen] = useState(false)
   const [backupDeleteLoading, setBackupDeleteLoading] = useState(false)
-  const [backupDeleteTypedText, setBackupDeleteTypedText] = useState("")
   const [backupDeleteVerificationTarget, setBackupDeleteVerificationTarget] = useState("")
   const [backupDeleteVerificationValue, setBackupDeleteVerificationValue] = useState("")
 
@@ -368,7 +386,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   )
 
   const executeWithTOTP = useCallback(
-    async (action, actionLabel, hasToken = false) => {
+    async (action, actionLabel) => {
       setTotpActionLabel(actionLabel)
       totpPendingActionRef.current = action
       setTotpModalOpen(true)
@@ -476,7 +494,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         }))
       )
       loadedViewsRef.current.logs = true
-    } catch (err) {
+    } catch {
       // silent
     } finally {
       if (isManual) setViewLoading((prev) => ({ ...prev, logs: false }))
@@ -769,6 +787,13 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   useEffect(() => {
     if (!initialAuthUser) return undefined
     setAuthUser(initialAuthUser)
+    if (initialAuthUser.office_id && (initialAuthUser.office_short_name || initialAuthUser.office_name)) {
+      registerOffices({
+        id: initialAuthUser.office_id,
+        short_name: initialAuthUser.office_short_name,
+        name: initialAuthUser.office_name,
+      })
+    }
     setLoading(false)
     const timer = setTimeout(() => {
       refreshStaff()
@@ -855,10 +880,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         const json = await res.json()
         if (!res.ok || !json?.ok || cancelled) return
 
-        const { configured, connected, label, path: drivePath, isEmulated } = json.data
+        const { connected, label, path: drivePath, isEmulated, freeFormatted, totalFormatted } = json.data
         setExternalDrive(json.data)
-
-        if (!configured && !isEmulated) return // No drive configured and not emulated — nothing to detect
 
         const prev = extDrivePrevConnectedRef.current
 
@@ -875,6 +898,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               type: connected ? "connected" : "disconnected",
               label: label || drivePath || "External Drive",
               path: drivePath,
+              freeFormatted,
+              totalFormatted,
             })
             setExtDriveModalOpen(true)
           }
@@ -1101,7 +1126,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     if (e && e.preventDefault) e.preventDefault()
     if (createLoading) return
     setCreateLoading(true)
-    const section = createForm.role === "Admin" ? "Administrative" : "Records"
+    const office = authUser?.office_id || "registrar"
+    const defaultSection = office === "osas" ? "Student Affairs" : office === "registrar" ? "Records" : "General"
+    const section = createForm.section || (createForm.role === "Admin" ? "Administrative" : defaultSection)
     const headers = { "Content-Type": "application/json" }
     if (typeof totpToken === "string") {
       headers["x-totp-token"] = totpToken
@@ -1135,7 +1162,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setStaffData((prev) => [json.data, ...prev])
       showToast({
         title: "Account Created",
-        description: `Staff account for ${createForm.fname} ${createForm.lname} was created and awaits activation. ${json.credentialEmail?.sent ? "Credentials were emailed to the account." : "Credential email was not sent; check SMTP settings."}`,
+        description: `Staff account for ${createForm.fname} ${createForm.lname} has been created and is active. ${json.credentialEmail?.sent ? "Credentials were emailed to the account." : "Credentials can be shared securely with the user."}`,
       })
       setCreateForm({
         id: "",
@@ -1670,53 +1697,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     })
   }
 
-  const exportData = (filteredData) => {
-    try {
-      const dataToExport = filteredData || staffData
-      const headers = ["ID", "First Name", "Last Name", "Role", "Status", "Email"]
-      const csvRows = dataToExport.map((s) => [
-        s?.id ?? "",
-        s?.fname || "—",
-        s?.lname || "—",
-        s?.role || "—",
-        s?.status || "—",
-        s?.email || "—"
-      ])
-      const csvContent = [
-        headers.join(","),
-        ...csvRows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
-      ].join("\n")
-      
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      const fileName = generateExportFilename("STAFF-DIRECTORY", "DATA", "csv")
-      link.setAttribute("href", url)
-      link.setAttribute("download", fileName)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-
-      showToast({
-        title: "Export Success",
-        description: `Personnel directory exported successfully as ${fileName}.`
-      })
-
-      logAdminAction({
-        action: "Export Personnel List",
-        details: `exported ${dataToExport.length} staff records to CSV`,
-        entityType: "Report"
-      })
-    } catch (err) {
-      showToast({
-        title: "Export Failed",
-        description: "An error occurred while exporting the personnel list."
-      }, true)
-    }
-  }
-
-
   const sidebarActiveKey = view === "backup" ? "system" : view
 
   if (loading) {
@@ -1805,14 +1785,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
           <div 
-            className="flex-1 p-4 flex flex-col min-h-0 w-full"
+            className="p-4 flex flex-col min-h-full w-full"
             style={zoomStyle}
           >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
               officeId={authUser?.office_id || "registrar"}
+              officeShortName={authUser?.office_short_name}
+              offices={offices}
               isLoading={viewLoading.directory}
               currentUserId={authUser?.id}
               search={search}
@@ -1983,7 +1965,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   setBackupDeleteVerificationTarget(randomCode)
                   setBackupDeleteVerificationValue("")
                   setBackupDeleteTargets(targets)
-                  setBackupDeleteTypedText("")
                   setBackupDeleteOpen(true)
                 }
               }}
@@ -2020,6 +2001,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       <EditUserModal
         open={editOpen}
+        officeId={authUser?.office_id || "registrar"}
+        officeShortName={authUser?.office_short_name}
+        offices={offices}
         editForm={editForm}
         setEditForm={setEditForm}
         onClose={() => setEditOpen(false)}
@@ -2030,6 +2014,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
         authUser={authUser}
+        officeId={authUser?.office_id || "registrar"}
+        officeShortName={authUser?.office_short_name}
+        offices={offices}
         createForm={createForm}
         setCreateForm={setCreateForm}
         staffCount={staffData.length}
@@ -2260,6 +2247,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                 {extDriveEvent?.path && (
                   <p className="mt-0.5 text-[11px] text-gray-400 truncate dark:text-zinc-500 font-mono">
                     {extDriveEvent.path}
+                  </p>
+                )}
+                {extDriveEvent?.freeFormatted && extDriveEvent?.totalFormatted && (
+                  <p className="mt-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    Storage: Free {extDriveEvent.freeFormatted} of {extDriveEvent.totalFormatted}
                   </p>
                 )}
               </div>

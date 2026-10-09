@@ -1,6 +1,6 @@
-import { createAuditLog, createGlobalAuditLog } from "./auditLogsRepo";
-import { getSessionCookieName, verifySessionToken } from "./jwt";
-import { getStaffById, getStaffDisplayName } from "./staffRepo";
+import { createGlobalAuditLog } from "./auditLogsRepo.js";
+import { getSessionCookieName, verifySessionToken } from "./jwt.js";
+import { getStaffById, getStaffDisplayName } from "./staffRepo.js";
 
 function extractIp(req) {
   const forwarded = req?.headers?.get?.("x-forwarded-for") || "";

@@ -11,7 +11,7 @@ export default function BatchReviewSkeleton() {
           <Skeleton className="h-4 w-28 rounded-md dark:bg-muted" />
           <Skeleton className="h-3 w-16 rounded-md dark:bg-muted" />
         </div>
-        <div className="flex h-full min-h-0 flex-col p-4 space-y-2 flex-1">
+        <div className="flex min-h-0 flex-col p-4 space-y-2 flex-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}

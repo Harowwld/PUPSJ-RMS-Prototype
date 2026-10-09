@@ -2,7 +2,6 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -80,28 +79,7 @@ export default function LandingBentoCmsView({ showToast }) {
     [showToast]
   )
 
-  const fetchBentoData = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) {
-        setLoading(true)
-      }
-      try {
-        const res = await fetch("/api/landing/bento", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setBentoData(json.data)
-        } else {
-          notify(json.error || "Failed to load bento grid configuration", true)
-        }
-      } catch (err) {
-        console.error("[LandingBentoCmsView] Fetch error:", err)
-        notify("Network error fetching bento settings", true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [notify]
-  )
+
 
   useEffect(() => {
     let ignore = false

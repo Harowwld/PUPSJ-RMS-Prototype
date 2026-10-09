@@ -49,7 +49,7 @@ async function getUserIdFromRequest(req) {
   try {
     const payload = await verifySessionToken(token);
     return payload?.sub || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

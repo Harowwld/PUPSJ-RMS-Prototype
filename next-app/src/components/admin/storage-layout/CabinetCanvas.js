@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
@@ -25,8 +24,6 @@ const CabinetCanvas = memo(({
   selectedCabinet,
   collidingIds,
   activePath,
-  simulationMode,
-  snapToGrid,
   showGrid,
   handleCanvasPointerMove,
   handleCanvasPointerUp,
@@ -35,8 +32,6 @@ const CabinetCanvas = memo(({
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   dragRef,
-  updateSelectedRectFromNormalized,
-  updateSelectedSizeNormalized,
   selectionBox,
   pushHistory,
   layout,
@@ -213,7 +208,6 @@ const CabinetCanvas = memo(({
       {activeRoom?.cabinets?.map((cab) => {
         const isSelected = selectedCabinetIds.has(cab.id)
         const isConflict = collidingIds.has(cab.id)
-        const rot = Number(cab.rotation) === 90 ? 90 : 0
         const eff = getCabinetEffectiveSize(cab)
 
         return (
@@ -223,14 +217,12 @@ const CabinetCanvas = memo(({
             isSelected={isSelected}
             isConflict={isConflict}
             eff={eff}
-            rot={rot}
             selectedCabinetIds={selectedCabinetIds}
             setSelectedCabinetIds={setSelectedCabinetIds}
             onOpenRenameCabinet={onOpenRenameCabinet}
             duplicateSelectedCabinet={duplicateSelectedCabinet}
             setBulkConfirmOpen={setBulkConfirmOpen}
             activeRoom={activeRoom}
-            canvasRef={canvasRef}
             dragRef={dragRef}
             pushHistory={pushHistory}
             layout={layout}
@@ -246,14 +238,12 @@ const CabinetElement = memo(({
   isSelected,
   isConflict,
   eff,
-  rot,
   selectedCabinetIds,
   setSelectedCabinetIds,
   onOpenRenameCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   activeRoom,
-  canvasRef,
   dragRef,
   pushHistory,
   layout

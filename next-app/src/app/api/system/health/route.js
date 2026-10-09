@@ -201,17 +201,8 @@ async function readDbInfo() {
     }
 
     return { dbSize, dbEngine, dbStatus: "Healthy", latencyMs };
-  } catch (err) {
-    return { dbSize: "0 KB", dbEngine: "PostgreSQL", dbStatus: "Degraded", latencyMs: 12 };
-  }
-}
-
-async function readDbSize() {
-  try {
-    const info = await readDbInfo();
-    return info.dbSize;
   } catch {
-    return "0 KB";
+    return { dbSize: "0 KB", dbEngine: "PostgreSQL", dbStatus: "Degraded", latencyMs: 12 };
   }
 }
 

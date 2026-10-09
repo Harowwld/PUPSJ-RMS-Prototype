@@ -9,13 +9,11 @@ export function sanitizeUser(user) {
     return user.map(u => sanitizeUser(u));
   }
 
-  // Destructure sensitive fields out, keep the rest
-  const {
-    password_hash,
-    totp_secret,
-    recovery_codes,
-    ...safeData
-  } = user;
+  // Remove sensitive fields, keep the rest
+  const safeData = { ...user };
+  delete safeData.password_hash;
+  delete safeData.totp_secret;
+  delete safeData.recovery_codes;
 
   return safeData;
 }

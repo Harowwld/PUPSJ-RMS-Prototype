@@ -1,7 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 
@@ -105,7 +104,6 @@ function getStepCurveClass(idx, total, curveStyle = "gentle", autoCurve = true) 
 }
 
 export default function ProcessWorkflow() {
-  const router = useRouter();
   const [workflow, setWorkflow] = useState(DEFAULT_WORKFLOW_CONTENT);
   const [activeStep, setActiveStep] = useState(0);
 

@@ -96,7 +96,7 @@ export async function POST(req) {
   }
 
   const typeRecord = await dbGet(
-    "SELECT id, name, is_requestable FROM document_types WHERE office_id = ? AND lower(name) = lower(?) AND status = 'Active'",
+    "SELECT id, name, is_requestable, is_compliance FROM document_types WHERE office_id = ? AND lower(name) = lower(?) AND status = 'Active'",
     [officeId, docType]
   );
   if (!typeRecord) {
@@ -105,7 +105,7 @@ export async function POST(req) {
       { status: 400 }
     );
   }
-  if (!typeRecord.is_requestable) {
+  if (!typeRecord.is_requestable || typeRecord.is_compliance) {
     return NextResponse.json(
       {
         ok: false,

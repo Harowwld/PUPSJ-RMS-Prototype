@@ -208,8 +208,8 @@ export async function getBackupById(id) {
 }
 
 export async function updateBackupStatus(id, field, status) {
-  // field should be status_local or status_external
-  const allowed = ["status_local", "status_external"];
+  // field should be status_local, status_external, or backup_type
+  const allowed = ["status_local", "status_external", "backup_type"];
   if (!allowed.includes(field)) return;
 
   await dbRun(
@@ -362,7 +362,10 @@ function dumpPostgresTables(tables, targetSqlPath) {
         "pupsj_rms",
         ...tableArgs,
       ];
-      const dockerDump = execFileSync("docker", dockerArgs, { encoding: "buffer" });
+      const dockerDump = execFileSync("docker", dockerArgs, {
+        encoding: "buffer",
+        maxBuffer: 100 * 1024 * 1024,
+      });
       fs.writeFileSync(targetSqlPath, dockerDump);
     } catch (dockerError) {
       throw new Error(
@@ -374,7 +377,7 @@ function dumpPostgresTables(tables, targetSqlPath) {
   }
 }
 
-export async function executeSystemBackup({ actorId = null } = {}) {
+export async function executeSystemBackup({ actorId = null, backupType = "Governance" } = {}) {
   const backupFilename = createBackupFilename({ scope: "system" });
 
   const backupsDir = getBackupsDir();
@@ -422,12 +425,12 @@ export async function executeSystemBackup({ actorId = null } = {}) {
     encryptedBuffer,
     scope: "system",
     officeId: null,
-    backupType: "Governance",
+    backupType,
     createdBy: actorId,
   });
 }
 
-export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
+export async function executeOfficeBackup({ officeId, actorId = null, backupType = "Full" } = {}) {
   const normOffice = String(officeId || "").toLowerCase().trim();
   if (!normOffice) {
     throw new Error("Office scope is required to create an office backup.");
@@ -516,7 +519,7 @@ export async function executeOfficeBackup({ officeId, actorId = null } = {}) {
     encryptedBuffer,
     scope: "office",
     officeId: normOffice,
-    backupType: "Full",
+    backupType,
     createdBy: actorId,
   });
 }
@@ -735,10 +738,7 @@ export async function getBackupBufferById(id) {
   };
 }
 
-export async function inspectBackupBuffer(
-  fileBuffer,
-  { userRole = "Admin", userOffice = null } = {}
-) {
+export async function inspectBackupBuffer(fileBuffer) {
   if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
     throw new Error("Backup inspection requires a valid file buffer.");
   }
@@ -747,7 +747,7 @@ export async function inspectBackupBuffer(
   let zip;
   try {
     zip = new AdmZip(plainZipBuffer);
-  } catch (err) {
+  } catch {
     throw new Error("Invalid backup file: Not a valid ZIP archive or failed to decrypt.");
   }
 
@@ -836,7 +836,7 @@ export async function executeRestoreBackup(
   let zip;
   try {
     zip = new AdmZip(plainZipBuffer);
-  } catch (err) {
+  } catch {
     throw new Error("Invalid backup file: Not a valid ZIP archive or failed to decrypt.");
   }
 
@@ -899,11 +899,15 @@ export async function executeRestoreBackup(
     try {
       console.log(`[RESTORE] Taking automated Pre-Restore Safety Snapshot before '${mode}' restore...`);
       if (isSuper || isGovernanceBackup) {
-        safetySnapshotRecord = await executeSystemBackup({ actorId });
+        safetySnapshotRecord = await executeSystemBackup({
+          actorId,
+          backupType: "Pre-Restore Safety",
+        });
       } else {
         safetySnapshotRecord = await executeOfficeBackup({
           officeId: normUserOffice || "registrar",
           actorId,
+          backupType: "Pre-Restore Safety",
         });
       }
       if (safetySnapshotRecord) {

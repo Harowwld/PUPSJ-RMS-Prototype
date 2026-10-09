@@ -5,7 +5,7 @@ import {
   getActiveLockout,
   recordRateLimitViolation,
   cleanupOldRateLimitHits
-} from "./rateLimitRepo";
+} from "./rateLimitRepo.js";
 
 // In-memory cache for rate limit data
 const cache = new Map();
@@ -141,7 +141,7 @@ class RateLimiter {
    * Clear rate limit violation for a specific endpoint/identifier
    */
   async clearViolation(endpointType, identifier) {
-    const { clearRateLimitViolation } = await import("./rateLimitRepo");
+    const { clearRateLimitViolation } = await import("./rateLimitRepo.js");
     await clearRateLimitViolation(endpointType, identifier);
     
     // Clear cache
@@ -153,7 +153,7 @@ class RateLimiter {
    * Completely reset rate limit for a specific endpoint/identifier (clear violations and hits)
    */
   async resetRateLimit(endpointType, identifier) {
-    const { clearRateLimitViolation, clearRateLimitHits } = await import("./rateLimitRepo");
+    const { clearRateLimitViolation, clearRateLimitHits } = await import("./rateLimitRepo.js");
     await clearRateLimitViolation(endpointType, identifier);
     await clearRateLimitHits(endpointType, identifier);
     

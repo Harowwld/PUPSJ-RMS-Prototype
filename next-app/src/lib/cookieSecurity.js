@@ -1,3 +1,5 @@
+import { getSessionCookieName, getRefreshCookieName } from "./jwt.js";
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 export function isLocalhostRequest(req) {
@@ -31,3 +33,32 @@ export function shouldUseSecureCookie(req) {
 
   return false;
 }
+
+export function clearAuthCookies(response, req) {
+  if (!response?.cookies) return response;
+  const cookieNames = Array.from(
+    new Set([
+      getSessionCookieName(),
+      getRefreshCookieName(),
+      "pup_session",
+      "pup_refresh",
+      "pup_auth_token",
+      "pup_csrf",
+    ])
+  );
+  const secure = shouldUseSecureCookie(req);
+  for (const name of cookieNames) {
+    response.cookies.set({
+      name,
+      value: "",
+      httpOnly: name !== "pup_csrf",
+      sameSite: "lax",
+      secure,
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0),
+    });
+  }
+  return response;
+}
+
