@@ -284,7 +284,7 @@ swiftc -O scripts/apple-vision-ocr/ocr.swift -o bin/apple-vision-ocr
 
 The binary must exist at `next-app/bin/apple-vision-ocr`. If it is missing, normal database and upload features still run, but OCR requests will report that the native OCR engine is unavailable.
 
-When the Next.js Node.js server starts, it launches a persistent OCR worker without running a sample recognition. The worker handles scans over stdin/stdout and stays available until the app process exits; it is reused by both Scan & Upload and continuous batch processing. Linux continues to use the existing Tesseract command-line path.
+On macOS and Windows, each OCR request starts a native process for that file and exits when recognition finishes. The app does not initialize or retain an OCR process at server startup. Linux continues to use the existing Tesseract command-line path.
 
 ## Windows OCR Setup
 

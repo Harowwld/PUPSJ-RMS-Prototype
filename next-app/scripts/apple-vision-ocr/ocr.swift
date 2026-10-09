@@ -24,18 +24,6 @@ struct OcrPayload: Codable {
     let text: String
 }
 
-struct OcrWorkerRequest: Codable {
-    let id: String
-    let filePath: String?
-}
-
-struct OcrWorkerResponse: Codable {
-    let id: String
-    let ok: Bool
-    let result: OcrPayload?
-    let error: String?
-}
-
 struct OcrRecognition {
     let page: OcrPage
     let failed: Bool
@@ -240,46 +228,16 @@ func recognizeFile(at filePath: String) throws -> OcrPayload {
     return OcrPayload(pages: [page], text: text)
 }
 
-func encodeWorkerResponse(_ response: OcrWorkerResponse) {
-    do {
-        let data = try JSONEncoder().encode(response)
-        print(String(data: data, encoding: .utf8) ?? "{}")
-        fflush(stdout)
-    } catch {
-        fputs("Could not encode OCR worker response: \(error.localizedDescription)\n", stderr)
-    }
-}
-
-// In server mode, one native process handles many input paths and keeps Vision
-// initialized between requests. The newline JSON protocol keeps stdout machine-readable.
 let args = CommandLine.arguments
-if args.count > 1 && args[1] == "--server" {
-    while let line = readLine() {
-        guard let data = line.data(using: .utf8),
-              let request = try? JSONDecoder().decode(OcrWorkerRequest.self, from: data) else {
-            fputs("Ignoring malformed OCR worker request.\n", stderr)
-            continue
-        }
-        do {
-            guard let filePath = request.filePath, !filePath.isEmpty else {
-                throw NSError(domain: "NativeOcr", code: 1, userInfo: [NSLocalizedDescriptionKey: "Worker request must include filePath."])
-            }
-            encodeWorkerResponse(OcrWorkerResponse(id: request.id, ok: true, result: try recognizeFile(at: filePath), error: nil))
-        } catch {
-            encodeWorkerResponse(OcrWorkerResponse(id: request.id, ok: false, result: nil, error: error.localizedDescription))
-        }
-    }
-} else {
-    guard args.count > 1 else {
-        print("Error: Missing file path. Usage: apple-vision-ocr [--server|<file-path>]")
-        exit(1)
-    }
-    do {
-        let payload = try recognizeFile(at: args[1])
-        let data = try JSONEncoder().encode(payload)
-        print(String(data: data, encoding: .utf8) ?? "{}")
-    } catch {
-        fputs("\(error.localizedDescription)\n", stderr)
-        exit(1)
-    }
+guard args.count > 1 else {
+    print("Error: Missing file path. Usage: apple-vision-ocr <file-path>")
+    exit(1)
+}
+do {
+    let payload = try recognizeFile(at: args[1])
+    let data = try JSONEncoder().encode(payload)
+    print(String(data: data, encoding: .utf8) ?? "{}")
+} catch {
+    fputs("\(error.localizedDescription)\n", stderr)
+    exit(1)
 }

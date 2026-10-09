@@ -15,12 +15,6 @@ namespace WindowsNativeOcr
 {
     class Program
     {
-        sealed class WorkerRequest
-        {
-            public string? Id { get; set; }
-            public string? FilePath { get; set; }
-        }
-
         static OcrEngine CreateOcrEngine()
         {
             OcrEngine? engine = OcrEngine.TryCreateFromUserProfileLanguages();
@@ -135,51 +129,11 @@ namespace WindowsNativeOcr
             return fullText.ToString().Trim();
         }
 
-        static async Task<int> RunServerAsync()
-        {
-            OcrEngine[] engines;
-            try
-            {
-                // Keep both native engines alive so multipage scans retain bounded parallelism.
-                engines = new[] { CreateOcrEngine(), CreateOcrEngine() };
-                Console.Error.WriteLine("Windows OCR worker ready.");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"OCR engine initialization failed: {ex.Message}");
-                return 1;
-            }
-
-            string? line;
-            while ((line = await Console.In.ReadLineAsync()) != null)
-            {
-                WorkerRequest? request = null;
-                try
-                {
-                    request = JsonSerializer.Deserialize<WorkerRequest>(line, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    if (request == null || string.IsNullOrWhiteSpace(request.Id) || string.IsNullOrWhiteSpace(request.FilePath))
-                    {
-                        throw new InvalidDataException("Worker request must include id and filePath.");
-                    }
-                    string text = await RecognizeFileAsync(request.FilePath, engines);
-                    Console.WriteLine(JsonSerializer.Serialize(new { id = request.Id, ok = true, result = new { text } }));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(JsonSerializer.Serialize(new { id = request?.Id, ok = false, error = ex.Message }));
-                }
-                Console.Out.Flush();
-            }
-
-            return 0;
-        }
-
         static async Task<int> Main(string[] args)
         {
-            if (args.Length > 0 && args[0] == "--server") return await RunServerAsync();
             if (args.Length < 1)
             {
-                Console.Error.WriteLine("Error: Missing file path. Usage: windows-media-ocr [--server|<file-path>]");
+                Console.Error.WriteLine("Error: Missing file path. Usage: windows-media-ocr <file-path>");
                 return 1;
             }
 

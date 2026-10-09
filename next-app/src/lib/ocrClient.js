@@ -6,7 +6,6 @@ export { matchStudentsByConfiguredOcrName } from "./studentNameMatcher.js";
  * Exports consumed by staff/page.js and useHotFolderInbox.js:
  *   - scanFileForSuggestion({ file, docTypes, rotation })   → extracted fields and strict name candidates
  *   - scanPdfForSuggestion(…)                               → alias
- *   - warmupOcrWorker()                                     → pre-initialise worker
  *   - normalizeExtractedName(raw)                           → "LASTNAME, FIRSTNAME MI."
  *
  * Student candidates are compared only against configured name-region extraction and always require staff selection.
@@ -54,10 +53,6 @@ function labelIs(line, ...candidates) {
 }
 
 // ─── 1. TESSERACT WORKER REMOVED (NATIVE SYSTEM OCR IS USED EXCLUSIVELY) ───
-
-export async function warmupOcrWorker() {
-  // Platform-native OCR executes entirely on-demand via the server
-}
 
 // ─── 3. DOCUMENT-TYPE DETECTION ────────────────────────────────────────────
 //
