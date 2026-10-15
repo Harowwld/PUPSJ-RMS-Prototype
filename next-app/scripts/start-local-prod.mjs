@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import process from "node:process";
 import dotenv from "dotenv";
+import { assertNextPortAvailable } from "./nextPort.mjs";
 
 dotenv.config({ path: ".env" });
 
@@ -8,6 +9,13 @@ const isWindows = process.platform === "win32";
 const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
 const port = Number(process.env.PORT || 3000);
 process.env.HOT_FOLDER_API_URL ||= `http://localhost:${port}/api/ingest/hot-folder`;
+
+try {
+  await assertNextPortAvailable(port);
+} catch (error) {
+  console.error(`[start] ${error.message}`);
+  process.exit(1);
+}
 
 try {
   const dockerStartup = spawnSync(pnpmCommand, ["exec", "node", "scripts/ensure-docker.mjs"], {
@@ -40,7 +48,7 @@ if (migration.error || migration.status !== 0) {
   process.exit(1);
 }
 
-const commands = ['"next start"'];
+const commands = ['"node scripts/run-next-with-ocr.mjs start"'];
 const names = ["next", "warmup"];
 const colors = ["cyan", "yellow"];
 commands.push(`"wait-on tcp:${port} && node scripts/warm-local-routes.mjs"`);
@@ -55,7 +63,7 @@ if (process.env.HOT_FOLDER_INGEST_TOKEN) {
 
 const app = spawn(
   pnpmCommand,
-  ["exec", "concurrently", "-n", names.join(","), "-c", colors.join(","), ...commands],
+  ["exec", "concurrently", "--kill-others-on-fail", "-n", names.join(","), "-c", colors.join(","), ...commands],
   { stdio: "inherit", cwd: process.cwd(), shell: isWindows }
 );
 

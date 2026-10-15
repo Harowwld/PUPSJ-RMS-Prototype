@@ -473,7 +473,7 @@ export default function NotificationsTab({
               <NotificationsTableSkeleton embedded={true} />
             </div>
           ) : error ? (
-            <div className="flex-1 flex min-h-[360px] flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
+            <div className="flex-1 flex min-h-0 flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
               <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">

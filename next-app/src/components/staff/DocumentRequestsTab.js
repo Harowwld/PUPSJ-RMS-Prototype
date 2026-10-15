@@ -660,9 +660,9 @@ export default function DocumentRequestsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={cn("font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up", displayedRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4", displayedRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-tray"
@@ -896,7 +896,7 @@ export default function DocumentRequestsTab({
                     {displayedRows.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent flex-1 flex">
                         <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-                          <Empty className="flex flex-1 h-full min-h-[480px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <Empty className="flex flex-1 h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>

@@ -282,9 +282,9 @@ mkdir -p bin
 swiftc -O scripts/apple-vision-ocr/ocr.swift -o bin/apple-vision-ocr
 ```
 
-The binary must exist at `next-app/bin/apple-vision-ocr`. If it is missing, normal database and upload features still run, but OCR requests will report that the native OCR engine is unavailable.
+The binary must exist at `next-app/bin/apple-vision-ocr`. Rebuild it after changing the Swift helper. If it is missing, RMS remains available while the OCR supervisor logs the problem and retries worker startup.
 
-On macOS and Windows, each OCR request starts a native process for that file and exits when recognition finishes. The app does not initialize or retain an OCR process at server startup. Linux continues to use the existing Tesseract command-line path.
+On macOS, `pnpm dev`, `pnpm dev:next`, and `pnpm start` run one Apple Vision worker beside Next.js. It signals process readiness before warming Vision, so scans can proceed even when warmup fails. Warmup retries in the same worker with backoff from 5 seconds up to 60 seconds. Scans run one at a time; each attempt has a five-second limit and may be retried once. A Vision recognition error is returned after the retry; three consecutive failed scan jobs restart the worker so a degraded Vision process cannot keep failing every later scan. A worker crash or scan timeout restarts the worker and retries the affected scan once. The supervisor uses a current-user-only Unix socket and shuts down with RMS. Windows uses the same supervised worker lifecycle through a token-authenticated loopback endpoint. Linux retains its Tesseract command-line path.
 
 ## Windows OCR Setup
 
@@ -294,7 +294,7 @@ On Windows, install the .NET 8 SDK and build the included Windows OCR helper:
 scripts\windows-media-ocr\build.bat
 ```
 
-The build script places the executable where the application expects it.
+The build script places the executable where the application expects it. `pnpm dev`, `pnpm dev:next`, and `pnpm start` start one persistent Windows OCR worker beside Next.js. The worker warms the Windows OCR engine once, retries warmup with 5-to-60-second backoff, and serializes scans. Scan attempts are limited to five seconds and may be retried once. The supervisor replaces a crashed or timed-out worker and replaces it after three consecutive engine errors. It shuts down the worker with RMS. The worker endpoint binds only to loopback and uses a per-launch random token passed to the Next.js process.
 
 ## PSA Coordinate-Template Workflow
 

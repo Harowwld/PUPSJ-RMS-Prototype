@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/start-local-dev.mjs",
-    "dev:next": "next dev",
+    "dev:next": "node scripts/run-next-with-ocr.mjs dev",
+    "stop:orphans": "node scripts/stop-orphans.mjs",
     "build": "next build",
     "start": "pnpm build && node scripts/start-local-prod.mjs",
     "lint": "eslint",
@@ -28,6 +29,7 @@
     "db:seed:organizations": "node scripts/seed-osas-organizations.mjs",
     "generate:sample-docs": "node scripts/generate-sample-osas-documents.mjs",
     "test:recognition": "node --test test/recognition.test.mjs",
+    "test:apple-vision-worker": "node --test test/apple-vision-worker.test.mjs",
     "test:ingest-events": "node --test test/ingest-events.test.mjs",
     "test:hot-folder": "node --test test/hot-folder-stability.test.mjs",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",

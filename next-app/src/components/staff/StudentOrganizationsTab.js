@@ -959,9 +959,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={cn("font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up", (!organizations || organizations.length === 0) && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Active Filters, Content & Footer */}
-        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4", (!organizations || organizations.length === 0) && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-buildings"
