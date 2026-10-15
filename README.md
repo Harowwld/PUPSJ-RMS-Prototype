@@ -65,7 +65,7 @@ For development and manual Docker Compose setup, use one environment file: `next
 
 ## Core Capabilities
 
-- **Automated Hot-Folder Ingestion & OCR:** Scans physical documents via flatbed or network scanners, extracts metadata automatically using multi-engine OCR (Tesseract / Apple Vision / Windows OCR), and categorizes them into student records.
+- **Automated Hot-Folder Ingestion & OCR:** Scans physical documents via flatbed or network scanners and extracts document fields locally using native OCR (Apple Vision / Windows OCR). Staff assigns each document to a student before filing.
 - **Physical-to-Digital Mapping:** 2D interactive room, cabinet, and drawer layout tracking that links physical paper folders directly to digital records.
 - **Role & Office Scoped Workflows:** Tailored document review and approval pipelines for the Registrar, Office of Student Affairs and Services (OSAS), and Accounting Office.
 - **Security & Integrity:** Dual-token JWT session renewal, mandatory TOTP 2FA for administrative roles, cryptographic backup verification, and immutable audit logs.

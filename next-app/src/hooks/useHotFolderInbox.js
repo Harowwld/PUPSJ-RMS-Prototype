@@ -6,7 +6,7 @@ import { formatErrorMessage } from "@/lib/errorUtils";
 
 export function useHotFolderInbox({
   enabled,
-  students,
+  students = [],
   docTypes,
   showToast,
   onPromoted,

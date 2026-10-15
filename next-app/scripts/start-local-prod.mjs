@@ -41,8 +41,9 @@ if (migration.error || migration.status !== 0) {
 }
 
 const commands = ['"next start"'];
-const names = ["next"];
-const colors = ["cyan"];
+const names = ["next", "warmup"];
+const colors = ["cyan", "yellow"];
+commands.push(`"wait-on tcp:${port} && node scripts/warm-local-routes.mjs"`);
 
 if (process.env.HOT_FOLDER_INGEST_TOKEN) {
   commands.push(`"wait-on tcp:${port} && node scripts/hot-folder-watcher/watch.mjs"`);

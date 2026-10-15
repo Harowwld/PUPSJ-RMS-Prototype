@@ -9,7 +9,7 @@ const officeId = String(process.env.STUDENT_IMPORT_OFFICE_ID || "").trim().toLow
 if (!officeId) throw new Error("Set STUDENT_IMPORT_OFFICE_ID before running the student import.");
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
 
-const csvPath = path.resolve(process.cwd(), "../_SAMPLE_DATA/cleaned_student_data.csv");
+const csvPath = path.resolve(process.cwd(), "../_SAMPLE_DATA/pup_emanage_birth_certificate_students.csv");
 if (!fs.existsSync(csvPath)) throw new Error(`CSV not found at: ${csvPath}`);
 
 function parseCsvLine(line) {
@@ -34,55 +34,48 @@ function parseCsvLine(line) {
   return fields;
 }
 
-function formatName(rawName) {
-  const words = rawName.toUpperCase().split(/\s+/).filter(Boolean);
-  if (!words.length) throw new Error("Student name is empty.");
-  let lastName;
-  let restWords;
-  if (words[0] === "DEL" && words[1] === "ROSARIO") {
-    lastName = "DEL ROSARIO";
-    restWords = words.slice(2);
-  } else if (words[0] === "DE" && words[1] === "LEON") {
-    lastName = "DE LEON";
-    restWords = words.slice(2);
-  } else if (words[0] === "DELA" && ["PENA", "PEÑA"].includes(words[1])) {
-    lastName = "DELA PEÑA";
-    restWords = words.slice(2);
-  } else if (["DE", "DEL", "DELA"].includes(words[0])) {
-    lastName = words.slice(0, 2).join(" ");
-    restWords = words.slice(2);
-  } else {
-    lastName = words[0];
-    restWords = words.slice(1);
-  }
-  let middleInitial = "";
-  if (restWords.length > 1 && restWords.at(-1).length === 1) {
-    middleInitial = `${restWords.pop()}.`;
-  }
-  return `${lastName}, ${restWords.join(" ")}${middleInitial ? ` ${middleInitial}` : ""}`;
-}
-
 const { pool } = await import("../src/lib/postgres.js");
 const { getStudentByStudentNo, upsertStudent } = await import("../src/lib/studentsRepo.js");
 
 try {
   const lines = fs.readFileSync(csvPath, "utf8").split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) throw new Error("CSV contains no student rows.");
+  if (lines.length - 1 !== 85) throw new Error(`Expected 85 students in ${csvPath}; found ${lines.length - 1}.`);
 
-  const seen = new Set();
-  let imported = 0;
-  let existing = 0;
-  for (const [index, line] of lines.slice(1).entries()) {
+  const parsedRows = lines.slice(1).map((line, index) => {
     const cols = parseCsvLine(line);
     if (cols.length < 8) throw new Error(`CSV row ${index + 2} has fewer than 8 columns.`);
-    const [studentNo, rawName, courseCode, academicYear, section, room, cabinet, drawer] = cols;
+    const [studentNo, name, courseCode, academicYear, section, room, cabinet, drawer] = cols;
     if (!studentNo) throw new Error(`CSV row ${index + 2} has no student number.`);
-    if (seen.has(studentNo)) continue;
-    seen.add(studentNo);
+    if (name.includes(",")) throw new Error(`CSV row ${index + 2} must use First Middle Last name order.`);
+    return { studentNo, name, courseCode, academicYear, section, room, cabinet, drawer, rowNumber: index + 2 };
+  });
 
+  if (new Set(parsedRows.map(({ studentNo }) => studentNo)).size !== parsedRows.length) {
+    throw new Error(`Duplicate student number in ${csvPath}.`);
+  }
+
+  if (parsedRows.some(({ courseCode }) => courseCode.toUpperCase() === "BSA")) {
+    await pool.query(
+      `INSERT INTO courses (office_id, code, name, status)
+       VALUES ($1, 'BSA', 'Bachelor of Science in Accountancy', 'Active')
+       ON CONFLICT (office_id, code) DO UPDATE SET name = EXCLUDED.name, status = 'Active'`,
+      [officeId],
+    );
+    await pool.query(
+      `INSERT INTO sections (office_id, name, course_code, status)
+       VALUES ($1, 'BSA-2A', 'BSA', 'Active')
+       ON CONFLICT (office_id, name, course_code) DO UPDATE SET status = 'Active'`,
+      [officeId],
+    );
+  }
+
+  let imported = 0;
+  let existing = 0;
+  for (const { studentNo, name, courseCode, academicYear, section, room, cabinet, drawer, rowNumber } of parsedRows) {
     const studentRow = {
       studentNo,
-      name: formatName(rawName),
+      name,
       courseCode,
       yearLevel: Number.parseInt(academicYear, 10),
       section,
@@ -92,7 +85,7 @@ try {
       officeId,
     };
     if (!Number.isInteger(studentRow.yearLevel) || !Number.isInteger(studentRow.room) || !Number.isInteger(studentRow.drawer)) {
-      throw new Error(`CSV row ${index + 2} has invalid year or storage values.`);
+      throw new Error(`CSV row ${rowNumber} has invalid year or storage values.`);
     }
 
     const prior = await getStudentByStudentNo(studentNo);

@@ -4,6 +4,7 @@ import { encryptPII } from "./piiEncryption.js";
 import { decryptStudentRow } from "./studentAuth.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 import { matchesSearchQuery } from "./searchUtils.js";
+import { invalidateOcrStudentRoster } from "./ocrStudentRoster.js";
 
 async function hasPhysicalStorage() {
   return true;
@@ -123,6 +124,8 @@ export async function createStudent({
       [studentNo, normalizedOfficeId]
     );
   });
+
+  invalidateOcrStudentRoster(normalizedOfficeId);
 
   return await getStudentByStudentNo(studentNo, { officeId: normalizedOfficeId });
 }
@@ -327,6 +330,7 @@ export async function updateStudent(studentNo, patch) {
     return true;
   });
   if (!updated) return null;
+  invalidateOcrStudentRoster(officeId);
   return await getStudentByStudentNo(studentNo, { officeId });
 }
 
@@ -335,6 +339,7 @@ export async function archiveStudent(studentNo, { officeId } = {}) {
   if (!existing) return null;
   const scope = buildOfficeScope(officeId);
   await dbRun(`UPDATE students SET status = 'Archived' WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
+  invalidateOcrStudentRoster(officeId);
   return { ...existing, status: "Archived" };
 }
 
@@ -343,6 +348,7 @@ export async function restoreStudent(studentNo, { officeId } = {}) {
   if (!existing) return null;
   const scope = buildOfficeScope(officeId);
   await dbRun(`UPDATE students SET status = 'Active' WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
+  invalidateOcrStudentRoster(officeId);
   return { ...existing, status: "Active" };
 }
 
@@ -351,6 +357,7 @@ export async function deleteStudent(studentNo, { officeId } = {}) {
   if (!existing) return null;
   const scope = buildOfficeScope(officeId);
   await dbRun(`DELETE FROM students WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
+  invalidateOcrStudentRoster(officeId);
   return existing;
 }
 

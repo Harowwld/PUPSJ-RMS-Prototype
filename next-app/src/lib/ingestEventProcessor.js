@@ -36,7 +36,7 @@ export function triggerIngestProcessing(officeId, reason = "ingest event") {
   const run = previous
     .catch((error) => console.error(`[ingest-event] Previous ${normalizedOfficeId} run failed: ${error.message}`))
     .then(async () => {
-      console.log(`[ingest-event] Warming OCR for ${normalizedOfficeId} (${reason})`);
+      console.log(`[ingest-event] Processing ${normalizedOfficeId} ingest queue (${reason})`);
       await drainOffice(normalizedOfficeId);
     })
     .catch((error) => {

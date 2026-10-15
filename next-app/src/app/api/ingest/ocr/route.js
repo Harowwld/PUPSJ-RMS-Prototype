@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
-import { performNativeOcr } from "../../../../lib/appleVisionOcr";
+import { performNativeOcrWithRetry } from "../../../../lib/appleVisionOcr";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import fs from "fs";
 import path from "path";
@@ -48,8 +48,11 @@ export async function POST(req) {
     fs.writeFileSync(tempFilePath, buffer);
 
     let ocrResult = { text: "", pages: [] };
+    let ocrMs = 0;
     try {
-      ocrResult = await performNativeOcr(tempFilePath);
+      const ocrStartedAt = performance.now();
+      ocrResult = await performNativeOcrWithRetry(tempFilePath);
+      ocrMs = performance.now() - ocrStartedAt;
     } finally {
       // Ensure we always clean up filesystem resources
       if (fs.existsSync(tempFilePath)) {
@@ -62,6 +65,11 @@ export async function POST(req) {
       entity_type: "ocr_scan",
       entity_id: file.name || "document.pdf",
     });
+    console.info("[OCR timing] Native OCR", JSON.stringify({
+      engine: os.platform(),
+      pages: ocrResult.pages?.length || 0,
+      ocrMs,
+    }));
     return NextResponse.json({
       ok: true,
       text: ocrResult.text,
@@ -71,6 +79,7 @@ export async function POST(req) {
         : os.platform() === "win32"
           ? "windows-media"
           : "tesseract",
+      timings: { ocrMs },
     });
 
   } catch (err) {

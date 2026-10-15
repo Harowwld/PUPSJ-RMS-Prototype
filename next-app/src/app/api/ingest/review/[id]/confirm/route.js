@@ -49,7 +49,7 @@ export async function POST(req, ctx) {
   if (Object.values(body).some((value) => typeof value !== "string")) {
     return NextResponse.json({ ok: false, error: "Review fields must be text" }, { status: 400 });
   }
-  const studentNo = String(body.studentNo || item.proposed_student_no || "").trim().toUpperCase();
+  const studentNo = String(body.studentNo || item.staff_selected_student_no || "").trim().toUpperCase();
   const studentName = String(body.studentName || item.ocr_name || "").trim();
   const docType = String(body.docType || item.proposed_doc_type || "").trim();
   if (!studentNo || !docType) return NextResponse.json({ ok: false, error: "Student and document type are required before confirmation." }, { status: 400 });
@@ -68,7 +68,7 @@ export async function POST(req, ctx) {
   if (!fs.existsSync(sourcePath)) return NextResponse.json({ ok: false, error: "Source file is missing from disk." }, { status: 404 });
   try {
     const sourceBuffer = fs.readFileSync(sourcePath);
-    const rotation = Number(item.match_evidence?.detectedRotation || 0);
+    const rotation = Number(item.ocr_detected_rotation || 0);
     const buffer = await rotateDocumentBuffer(sourceBuffer, item.original_filename, rotation);
     const document = await createDocument({ officeId, studentNo, studentName: studentName || student.name, docType, originalFilename: item.original_filename, mimeType: item.mime_type, sizeBytes: buffer.length, buffer, uploadedBy: user.id, sourceIngestId: id });
     await markIngestPromoted(id, document.id, user.id, { officeId });

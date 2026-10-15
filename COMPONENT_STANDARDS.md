@@ -107,7 +107,7 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 | Size Variant | `DialogContent` Class | Common Use Cases |
 |---|---|---|
 | **Compact / Alert** | `sm:max-w-md` (or `max-w-md`) | Feedback forms, password reset notices, single input prompts |
-| **Standard Form** | `sm:max-w-lg` / `sm:max-w-xl` | Multi-step prompts, OCR matching, medium forms |
+| **Standard Form** | `sm:max-w-lg` / `sm:max-w-xl` | Multi-step prompts and medium forms |
 | **Complex Form** | `sm:max-w-2xl` / `max-w-4xl` | Student registration, user editing, template assignment |
 | **Full Inspection** | `w-[96vw] max-w-[96vw] h-[90vh] xl:max-w-[1400px]` | PDF previewers, digitization audits, document reviews |
 

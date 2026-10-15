@@ -115,12 +115,12 @@ export async function claimNextBatchItem(batchId, officeId) {
   );
 }
 
-export async function saveOcrResult(id, { text, name, studentNo, docType, confidence, qualityScore = null, evidence = null, method = null, matchStatus = null, candidates, regions = null, pageIndex = null, status = "Needs Review", error = null }, { officeId } = {}) {
+export async function saveOcrResult(id, { text, name, docType, studentNo = null, studentCandidates = [], detectedRotation = 0, regions = null, pageIndex = null, status = "Needs Review", error = null }, { officeId } = {}) {
   const normalizedOfficeId = requireOfficeId(officeId);
   const failed = Boolean(error && status !== "Duplicate");
   await query(
-    `UPDATE ingest_queue SET ocr_status = $1, ocr_text = $2, ocr_name = $3, proposed_student_no = $4, proposed_doc_type = $5, match_confidence = $6, ocr_quality_score = $7, match_evidence = $8::jsonb, match_method = $9, match_status = $10, match_candidates = $11::jsonb, ocr_regions = $12::jsonb, ocr_page_index = $13, review_status = $14, last_error = $15, status = 'pending' WHERE id = $16 AND office_id = $17`,
-    [failed ? "failed" : "completed", text || "", name || null, studentNo || null, docType || null, confidence == null ? null : Number(confidence), qualityScore == null ? null : Number(qualityScore), evidence ? JSON.stringify(evidence) : null, method, matchStatus, JSON.stringify(candidates || []), regions ? JSON.stringify(regions) : null, pageIndex == null ? null : Number(pageIndex), failed ? "Failed" : status, error, id, normalizedOfficeId],
+    `UPDATE ingest_queue SET ocr_status = $1, ocr_text = $2, ocr_name = $3, proposed_doc_type = $4, staff_selected_student_no = $5, ocr_student_candidates = $6::jsonb, ocr_detected_rotation = $7, ocr_regions = $8::jsonb, ocr_page_index = $9, review_status = $10, last_error = $11, status = 'pending' WHERE id = $12 AND office_id = $13`,
+    [failed ? "failed" : "completed", text || "", name || null, docType || null, studentNo || null, JSON.stringify(studentCandidates || []), Number(detectedRotation) || 0, regions ? JSON.stringify(regions) : null, pageIndex == null ? null : Number(pageIndex), failed ? "Failed" : status, error, id, normalizedOfficeId],
   );
   return getIngestById(id, { officeId: normalizedOfficeId });
 }
@@ -143,7 +143,7 @@ export async function markIngestFailed(id, errorMessage, { officeId } = {}) {
 
 export async function updateReview(id, patch, reviewedBy, { officeId } = {}) {
   const normalizedOfficeId = requireOfficeId(officeId);
-  const allowed = { ocrText: "ocr_text", ocrName: "ocr_name", studentNo: "proposed_student_no", docType: "proposed_doc_type", reviewStatus: "review_status", reviewNote: "review_note" };
+  const allowed = { studentNo: "staff_selected_student_no", docType: "proposed_doc_type", reviewStatus: "review_status", reviewNote: "review_note" };
   const entries = Object.entries(patch || {}).filter(([key, value]) => allowed[key] && value !== undefined);
   if (!entries.length) return getIngestById(id, { officeId: normalizedOfficeId });
   const values = [];
@@ -156,7 +156,7 @@ export async function updateReview(id, patch, reviewedBy, { officeId } = {}) {
 
 export async function resetForRetry(id, { officeId } = {}) {
   const normalizedOfficeId = requireOfficeId(officeId);
-  const updated = await query(`UPDATE ingest_queue SET status = 'pending', ocr_status = 'pending', review_status = 'Processing', ocr_text = NULL, ocr_name = NULL, proposed_student_no = NULL, proposed_doc_type = NULL, match_confidence = NULL, ocr_quality_score = NULL, match_evidence = NULL, match_method = NULL, match_status = NULL, match_candidates = '[]'::jsonb, ocr_regions = NULL, ocr_page_index = NULL, last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL WHERE id = $1 AND office_id = $2 AND status IN ('failed', 'rejected') RETURNING id`, [id, normalizedOfficeId]);
+  const updated = await query(`UPDATE ingest_queue SET status = 'pending', ocr_status = 'pending', review_status = 'Processing', ocr_text = NULL, ocr_name = NULL, staff_selected_student_no = NULL, proposed_doc_type = NULL, ocr_student_candidates = '[]'::jsonb, ocr_detected_rotation = 0, ocr_regions = NULL, ocr_page_index = NULL, last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL WHERE id = $1 AND office_id = $2 AND status IN ('failed', 'rejected') RETURNING id`, [id, normalizedOfficeId]);
   if (!updated.length) return null;
   return getIngestById(id, { officeId: normalizedOfficeId });
 }

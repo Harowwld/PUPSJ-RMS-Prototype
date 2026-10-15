@@ -39,50 +39,28 @@ const demoStudentAccounts = [
   ["2022-10001-MN-1", "student@pup.local"],
 ];
 
-const seedStudents = [
-  ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", 1, "2027", 1],
-  ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", 1, "2020", 1],
-  ["2022-10002-MN-2", "SANTOS, MARIA B.", "BSIT", 2024, "BSIT-4A", 1, "2021", 2],
-  ["2023-20003-MN-0", "REYES, CARLOS C.", "BSIT", 2025, "BSIT-4B", 2, "2022", 3],
-  ["2021-30004-MN-1", "GARCIA, ANA D.", "BSCS", 2024, "BSCS-3A", 3, "2023", 4],
-  ["2024-40005-MN-2", "TORRES, LUIS E.", "BSCS", 2025, "BSCS-3A", 1, "2024", 1],
-  ["2020-50006-MN-0", "FLORES, ELENA F.", "BSIT", 2024, "BSIT-4B", 4, "2025", 2],
-  // OCR matching fixtures from the PSA birth-certificate samples.
-  ["2025-60007-MN-0", "BAUTISTA, JULIANNE MARIE MERCADO", "BSIT", 2025, "BSIT-4A", 5, "2026", 1],
-  ["2025-60008-MN-1", "DE LEON, JULIAN CARLO SANTOS", "BSIT", 2025, "BSIT-4A", 5, "2026", 2],
-  ["2025-60009-MN-2", "RAMIREZ, GABRIEL MATEO SANTOS", "BSIT", 2025, "BSIT-4B", 5, "2026", 3],
-  ["2025-60010-MN-0", "MERCADO, LIAM CARTER VALENCIA", "BSIT", 2025, "BSIT-4B", 5, "2026", 4],
-  ["2025-10001-SJ-0", "DELA PEÑA, HAROLD PRINCE E.", "BSIT", 2025, "BSIT-4A", 1, "A", 1],
-  ["2025-10011-SJ-0", "DORSEY, KALEB", "BSIT", 2025, "BSIT-4A", 1, "A", 1],
-  ["2025-10012-SJ-0", "WEBB, TIAGO", "BSIT", 2025, "BSIT-4A", 1, "A", 2],
-  ["2025-10013-SJ-0", "MORROW, AIDEN", "BSIT", 2025, "BSIT-4A", 1, "A", 3],
-  ["2025-10014-SJ-0", "ELLIOTT, EDMUND", "BSIT", 2025, "BSIT-4A", 1, "B", 1],
-  ["2025-10015-SJ-0", "CARSON, RICHIE", "BSIT", 2025, "BSIT-4A", 1, "B", 2],
-  ["2016-11005-SJ-0", "SHARMA, ANIKA R.", "BSIT", 2025, "BSIT-4A", 1, "B", 3],
-  ["2014-11001-SJ-0", "CHOUDHURY, JAYDEN K.", "BSIT", 2025, "BSIT-4A", 1, "B", 4],
-  ["2021-25001-SJ-0", "REYES, MARIA L.", "BSIT", 2025, "BSIT-4A", 1, "C", 1],
-  ["2019-14003-SJ-0", "CRUZ, RAMON T.", "BSIT", 2025, "BSIT-4A", 1, "C", 2],
-  ["2018-13002-SJ-0", "KHAN, SARAH B.", "BSIT", 2025, "BSIT-4A", 1, "C", 3],
-  ["2017-12001-SJ-0", "SHARMA, ANIKA R.", "BSIT", 2025, "BSIT-4A", 1, "C", 4],
-  ["2025-10016-SJ-0", "SANTOS, CARMELA", "BSIT", 2025, "BSIT-4A", 1, "D", 1],
-];
-
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const studentRosterPath = path.join(repoRoot, "_SAMPLE_DATA", "cleaned_student_data.csv");
+const studentRosterPath = path.join(repoRoot, "_SAMPLE_DATA", "pup_emanage_birth_certificate_students.csv");
 const studentRosterRows = fs.readFileSync(studentRosterPath, "utf8").trim().split(/\r?\n/).slice(1);
 const rosterStudents = studentRosterRows.map((line, index) => {
   const [studentNo, name, courseCode, academicYear, section, room, cabinet, drawer] = line.split(",");
   if (![studentNo, name, courseCode, academicYear, section, room, cabinet, drawer].every(Boolean)) {
     throw new Error(`Invalid student roster row ${index + 2} in ${studentRosterPath}`);
   }
+  if (name.includes(",")) {
+    throw new Error(`Student name must be First Middle Last on roster row ${index + 2}`);
+  }
   return [studentNo.trim(), name.trim(), courseCode.trim().toUpperCase(), Number(academicYear), section.trim(), Number(room), cabinet.trim(), Number(drawer)];
 });
-const rosterStudentNumbers = new Set(rosterStudents.map(([studentNo]) => studentNo));
-const students = [
-  ...seedStudents.filter(([studentNo]) => !rosterStudentNumbers.has(studentNo)),
-  ...rosterStudents,
-];
+if (rosterStudents.length !== 85) {
+  throw new Error(`Expected 85 certificate-backed students; found ${rosterStudents.length}`);
+}
+if (new Set(rosterStudents.map(([studentNo]) => studentNo)).size !== rosterStudents.length) {
+  throw new Error(`Duplicate student number in ${studentRosterPath}`);
+}
+const students = rosterStudents;
 const rosterCourses = [
+  ["BSA", "Bachelor of Science in Accountancy"],
   ["BSBA-FM", "Bachelor of Science in Business Administration major in Financial Management"],
   ["BSENT", "Bachelor of Science in Entrepreneurship"],
   ["BSIT", "Bachelor of Science in Information Technology"],
@@ -498,13 +476,6 @@ export async function seed({ force: forceOverride } = {}) {
         [studentNo, studentName, docType, filename, storageFilename, minimalPdf.length, legacyId],
       );
     }
-
-    await run(
-      `INSERT INTO students (student_no, name, course_code, year_level, section, status)
-       VALUES ('2025-90001-MN-0', 'DE LA ROSA, ANGELA M.', 'BSA', 2026, 'BSA-2A', 'Active')
-       ON CONFLICT (student_no) DO UPDATE SET name=EXCLUDED.name, course_code=EXCLUDED.course_code,
-         year_level=EXCLUDED.year_level, section=EXCLUDED.section, status='Active', updated_at=NOW()`,
-    );
 
     for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
       const storageFilename = `sample-${legacyId}-${filename}`;

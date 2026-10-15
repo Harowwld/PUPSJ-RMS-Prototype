@@ -101,7 +101,7 @@ export async function POST(req, ctx) {
   }
 
   const sourceBytes = fs.readFileSync(sourceAbsPath);
-  const rotation = Number(ingest.match_evidence?.detectedRotation || 0);
+  const rotation = Number(ingest.ocr_detected_rotation || 0);
   const bytes = await rotateDocumentBuffer(sourceBytes, ingest.original_filename, rotation);
   const doc = await createDocument({
     officeId,
