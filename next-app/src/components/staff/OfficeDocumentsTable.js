@@ -15,6 +15,12 @@ function getYear(document) {
   return Number.isInteger(year) && year >= 1900 && year <= 2200 ? year : null
 }
 
+function getSelectedYear(breadcrumbs) {
+  const label = breadcrumbs?.find((item) => item.level === "students")?.label || ""
+  const match = String(label).match(/\b(\d{4})\b/)
+  return match ? Number(match[1]) : null
+}
+
 export default function OfficeDocumentsTable({
   documents = [],
   officeLabel = "Office",
@@ -25,11 +31,11 @@ export default function OfficeDocumentsTable({
   const [query, setQuery] = useState("")
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const selectedYear = Number(breadcrumbs?.find((item) => item.level === "students")?.label?.split(" ")[1])
+  const selectedYear = getSelectedYear(breadcrumbs)
 
   const rows = useMemo(() => {
     return documents
-      .filter((document) => Number.isFinite(selectedYear) ? getYear(document) === selectedYear : true)
+      .filter((document) => selectedYear == null || getYear(document) === selectedYear)
       .filter((document) =>
         matchesSearchQuery(
           [document.student_no, document.student_name, document.doc_type, document.original_filename],

@@ -61,3 +61,28 @@ export async function performNativeOcr(filePath) {
     throw new Error(`Native OCR execution failed: ${error.message}`);
   }
 }
+
+/** Retry one transient engine failure or empty recognition result immediately. */
+export async function performNativeOcrWithRetry(filePath) {
+  let firstError;
+  try {
+    const result = await performNativeOcr(filePath);
+    if (String(result?.text || "").trim() || result?.pages?.some((page) => page.observations?.length)) {
+      return result;
+    }
+  } catch (error) {
+    firstError = error;
+  }
+
+  console.warn("[OCR] Empty result or transient failure; retrying once immediately.");
+  try {
+    const retryResult = await performNativeOcr(filePath);
+    if (String(retryResult?.text || "").trim() || retryResult?.pages?.some((page) => page.observations?.length)) {
+      return retryResult;
+    }
+    if (firstError) throw firstError;
+    return retryResult;
+  } catch (retryError) {
+    throw new Error(`OCR failed after one immediate retry: ${retryError?.message || firstError?.message || "No text recognized."}`, { cause: retryError });
+  }
+}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
-import { performNativeOcr } from "../../../../lib/appleVisionOcr";
+import { performNativeOcrWithRetry } from "../../../../lib/appleVisionOcr";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import fs from "fs";
 import path from "path";
@@ -51,7 +51,7 @@ export async function POST(req) {
     let ocrMs = 0;
     try {
       const ocrStartedAt = performance.now();
-      ocrResult = await performNativeOcr(tempFilePath);
+      ocrResult = await performNativeOcrWithRetry(tempFilePath);
       ocrMs = performance.now() - ocrStartedAt;
     } finally {
       // Ensure we always clean up filesystem resources

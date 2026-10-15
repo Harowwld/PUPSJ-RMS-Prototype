@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { performNativeOcr } from "./appleVisionOcr.js";
+import { performNativeOcrWithRetry } from "./appleVisionOcr.js";
 import { createDocument } from "./documentsRepo.js";
 import { rotateDocumentBuffer } from "./documentOrientation.js";
 import { createAuditLog } from "./auditLogsRepo.js";
@@ -45,7 +45,7 @@ export async function processNextBatchItem(batchId, officeId) {
     const ocrStartedAt = performance.now();
     let ocrMs = 0;
     const [ocrResult, docTypes] = await Promise.all([
-      performNativeOcr(filePath).then((result) => {
+      performNativeOcrWithRetry(filePath).then((result) => {
         ocrMs = performance.now() - ocrStartedAt;
         return result;
       }),
