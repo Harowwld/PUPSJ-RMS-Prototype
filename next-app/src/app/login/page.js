@@ -15,7 +15,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { isSystemAdminRole, isAdminRole, canAccessPage } from "@/lib/roleUtils";
-import { invalidateClientSession } from "@/lib/clientAuth";
+import { invalidateClientSession, getClientSession } from "@/lib/clientAuth";
+import { LoginIdentifierSchema, PersonNameSchema } from "@/lib/validationSchemas";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 const DEMO_ACCOUNTS = [
   {
@@ -108,7 +110,6 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isStep1Loading, setIsStep1Loading] = useState(false);
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -140,7 +141,6 @@ export default function Home() {
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
-  const [twoFactorError, setTwoFactorError] = useState("");
   const [tempToken, setTempToken] = useState("");
   const [studentSignup, setStudentSignup] = useState({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
   const [studentSignupError, setStudentSignupError] = useState("");
@@ -212,6 +212,42 @@ export default function Home() {
       });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const session = await getClientSession();
+        if (active && session?.ok && session?.data) {
+          const role = String(session.data.role || "");
+          let redirectPath = null;
+          if (typeof window !== "undefined") {
+            redirectPath = new URLSearchParams(window.location.search).get("redirect");
+          }
+          if (redirectPath && canAccessPage(redirectPath, role)) {
+            router.replace(redirectPath);
+            return;
+          }
+          if (isSystemAdminRole(role)) {
+            router.replace("/systemadmin");
+            return;
+          }
+          if (isAdminRole(role)) {
+            router.replace("/admin");
+            return;
+          }
+          if (role.toLowerCase() === "student") {
+            router.replace("/student");
+            return;
+          }
+          router.replace("/staff");
+        }
+      } catch {
+        // Unauthenticated or network error; keep user on login page
+      }
+    })();
+    return () => { active = false; };
+  }, [router]);
 
   const resetForgotState = () => {
     setForgotStep(1);
@@ -312,12 +348,13 @@ export default function Home() {
       setEmailError("Enter your email address or student number.");
       return;
     }
+    const check = LoginIdentifierSchema.safeParse(emailValue);
+    if (!check.success) {
+      setEmailError(check.error.issues[0]?.message || "Please enter a valid institutional email, Student Number, or Staff ID.");
+      return;
+    }
     setEmailError("");
-    setIsStep1Loading(true);
-    setTimeout(() => {
-      setIsStep1Loading(false);
-      setLoginStep(2);
-    }, 600);
+    setLoginStep(2);
   };
 
   const handleFormSubmit = (e) => {
@@ -376,24 +413,24 @@ export default function Home() {
           redirectPath = new URLSearchParams(window.location.search).get("redirect");
         }
         if (redirectPath && canAccessPage(redirectPath, role)) {
-          router.push(redirectPath);
+          router.replace(redirectPath);
           return;
         }
 
         if (isSystemAdminRole(role)) {
-          router.push("/systemadmin");
+          router.replace("/systemadmin");
           return;
         }
         if (isAdminRole(role)) {
-          router.push("/admin");
+          router.replace("/admin");
           return;
         }
         if (role.toLowerCase() === "student") {
-          router.push("/student");
+          router.replace("/student");
           return;
         }
 
-        router.push("/staff");
+        router.replace("/staff");
       } catch (err) {
         setError(err?.message || "Invalid username or password.");
         setIsLoading(false);
@@ -405,6 +442,16 @@ export default function Home() {
     e.preventDefault();
     if (!studentSignup.firstName.trim() || !studentSignup.lastName.trim()) {
       setStudentSignupError("First name and last name are required.");
+      return;
+    }
+    const firstCheck = PersonNameSchema("First name").safeParse(studentSignup.firstName);
+    if (!firstCheck.success) {
+      setStudentSignupError(firstCheck.error.issues[0]?.message);
+      return;
+    }
+    const lastCheck = PersonNameSchema("Last name").safeParse(studentSignup.lastName);
+    if (!lastCheck.success) {
+      setStudentSignupError(lastCheck.error.issues[0]?.message);
       return;
     }
     if (!studentSignup.email.trim() || !validateEmail(studentSignup.email.trim())) {
@@ -452,7 +499,7 @@ export default function Home() {
           : "Your account is ready, but we could not send the credential email. You can still sign in with the password you chose.",
       });
       resetStudentSignupState();
-      router.push("/student");
+      router.replace("/student");
     } catch (err) {
       setStudentSignupError(err?.message || "Unable to create student account.");
     } finally {
@@ -465,10 +512,11 @@ export default function Home() {
   const handle2FAVerify = async (e) => {
     e.preventDefault();
     if (!twoFactorCode || twoFactorCode.length < 6) {
-      setTwoFactorError("Please enter a valid code.");
+      toast.error("Invalid Code Length", {
+        description: "Please enter the 6-digit verification code, recovery code, or serial key.",
+      });
       return;
     }
-    setTwoFactorError("");
     setTwoFactorLoading(true);
     try {
       const res = await fetch("/api/auth/login/verify-2fa", {
@@ -495,16 +543,17 @@ export default function Home() {
       const role = String(json?.data?.role || "");
 
       if (isSystemAdminRole(role)) {
-        router.push("/systemadmin");
+        router.replace("/systemadmin");
       } else if (isAdminRole(role)) {
-        router.push("/admin");
+        router.replace("/admin");
       } else if (role.toLowerCase() === "student") {
-        router.push("/student");
+        router.replace("/student");
       } else {
-        router.push("/staff");
+        router.replace("/staff");
       }
     } catch (err) {
-      setTwoFactorError(err.message);
+      const errInfo = formatErrorMessage(err, "Verification Failed");
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTwoFactorLoading(false);
     }
@@ -639,10 +688,12 @@ export default function Home() {
                     }`}>
                       {/* EMAIL FIELD (top half) */}
                       <div className={`field-wrapper email-wrapper ${emailFocused || username.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                        <label>Email Address or Student Number</label>
+                        <label htmlFor="username">Email Address or Student Number</label>
                         <Input
                           type="text"
                           id="username"
+                          aria-label="Email Address or Student Number"
+                          aria-required="true"
                           placeholder=" "
                           className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
                           autoFocus
@@ -663,17 +714,25 @@ export default function Home() {
                       </div>
 
                       {/* PASSWORD FIELD (bottom half) */}
-                      <div className={`flex flex-col transition-opacity duration-200 ${
+                      <div 
+                        id="password-step-container"
+                        role="region"
+                        aria-label="Password credentials"
+                        aria-hidden={loginStep !== 2}
+                        className={`flex flex-col transition-opacity duration-200 ${
                         loginStep === 2 
                           ? 'opacity-100 max-h-[52px] pointer-events-auto' 
                           : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
                       }`}>
                         <div className={`field-wrapper password-wrapper ${passwordFocused || password.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                          <label>Password</label>
+                          <label htmlFor="password">Password</label>
                           <Input
                             ref={passwordRef}
                             type={showPassword ? "text" : "password"}
                             id="password"
+                            aria-label="Password"
+                            aria-required={loginStep === 2}
+                            tabIndex={loginStep === 2 ? 0 : -1}
                             placeholder=" "
                             className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
                             value={password}
@@ -688,6 +747,7 @@ export default function Home() {
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                             <button
                               type="button"
+                              aria-label={showPassword ? "Hide password" : "Show password"}
                               onClick={() => setShowPassword(!showPassword)}
                               className="w-7 h-7 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
                             >
@@ -700,7 +760,7 @@ export default function Home() {
 
                     {/* Validation Errors displayed below the merged container (Step 1 only) */}
                     {loginStep === 1 && (emailError || passwordError || error) && (
-                      <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D]">
+                      <div role="alert" aria-live="polite" className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D]">
                         <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                         <p className="text-[12px] font-normal leading-none">
                           {emailError || passwordError || error}
@@ -712,7 +772,7 @@ export default function Home() {
                     {loginStep === 2 && (
                       <div className="flex items-center justify-between w-full mt-6 select-none animate-in fade-in duration-200">
                         {emailError || passwordError || error ? (
-                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
+                          <div role="alert" aria-live="polite" className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
                             <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
                             <p className="text-[12px] font-normal leading-none">
                               {emailError || passwordError || error}
@@ -774,10 +834,10 @@ export default function Home() {
                   <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                     <Button
                       type="submit"
-                      disabled={isLoading || isStep1Loading || (loginStep === 1 && !username.trim())}
+                      disabled={isLoading || (loginStep === 1 && !username.trim())}
                       className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                     >
-                      {isLoading || isStep1Loading ? (
+                      {isLoading ? (
                         <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                       ) : (
                         <span>{loginStep === 1 ? "Continue" : "Sign In"}</span>
@@ -1249,18 +1309,18 @@ export default function Home() {
             </DialogHeader>
 
             <form onSubmit={handle2FAVerify} className="space-y-4 mt-2">
-              {twoFactorError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-xl dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400">
-                  {twoFactorError}
-                </div>
-              )}
-              
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-gray-700 tracking-wide ml-1 dark:text-zinc-200">
                   Verification Code
                 </label>
                 <Input
                   type="text"
+                  id="twoFactorCode"
+                  name="twoFactorCode"
+                  autoComplete="one-time-code"
+                  inputMode="text"
+                  autoCapitalize="characters"
+                  aria-label="Two-factor verification code"
                   placeholder="000000, Recovery Code, or Serial key"
                   className="w-full bg-white border border-border rounded-[10px] text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5484D] focus-visible:border-border text-center tracking-widest font-semibold h-12 text-lg dark:bg-zinc-800 dark:border-border dark:focus-visible:ring-[#E5484D] dark:focus-visible:border-zinc-700 dark:text-zinc-100"
                   value={twoFactorCode}
@@ -1288,13 +1348,13 @@ export default function Home() {
                 </Button>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
                     setShow2FAModal(false);
                     setTwoFactorCode("");
                     setTwoFactorError("");
                   }}
-                  className="w-full text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 rounded-xl"
+                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>

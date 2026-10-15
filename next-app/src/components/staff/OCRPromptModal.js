@@ -71,7 +71,7 @@ export default function OCRPromptModal({
               <div className="font-semibold">Coordinate extraction · Page {Number(ocrSuggestion.coordinateRecognition.pageIndex) + 1}</div>
               <div className="mt-1 grid grid-cols-3 gap-2">
                 {[["firstName", "First"], ["middleName", "Middle"], ["lastName", "Last"]].map(([key, label]) => (
-                  <div key={key}><span className="font-semibold">{label}:</span> {ocrSuggestion.coordinateRecognition.regions?.[key]?.text || "—"}</div>
+                  <div key={key}><span className="font-semibold">{label}:</span> {ocrSuggestion.coordinateRecognition.regions?.[key]?.text || "N/A"}</div>
                 ))}
               </div>
             </div>

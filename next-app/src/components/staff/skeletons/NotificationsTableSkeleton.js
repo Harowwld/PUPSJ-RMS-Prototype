@@ -7,52 +7,77 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
   return (
     <div
       className={cn(
-        "flex-1 flex flex-col animate-fade-up font-jakarta select-none",
-        !embedded && "border border-border rounded-2xl overflow-hidden dark:border-border bg-white dark:bg-card shadow-sm"
+        "flex-1 flex flex-col animate-fade-up font-jakarta select-none overflow-hidden",
+        !embedded && "border border-border rounded-2xl dark:border-border bg-white dark:bg-card shadow-sm"
       )}
     >
-      <div className="h-10 w-full border-b border-border dark:border-border bg-gray-50/50 dark:bg-white/5 flex items-center px-4 gap-4">
-        <Skeleton className="h-3 w-16 rounded-md dark:bg-muted" />
-        <Skeleton className="h-3 w-20 rounded-md dark:bg-muted" />
-        <Skeleton className="h-3 w-24 rounded-md dark:bg-muted" />
-        <Skeleton className="h-3 w-24 rounded-md dark:bg-muted" />
-        <Skeleton className="h-3 w-32 rounded-md dark:bg-muted" />
-        <Skeleton className="h-3 w-20 rounded-md dark:bg-muted" />
-        <Skeleton className="h-3 w-20 rounded-md dark:bg-muted" />
-      </div>
-      <div className="divide-y divide-border dark:divide-border flex-1">
-        {Array.from({ length: rowCount }).map((_, i) => (
-          <div key={i} className="p-4 flex items-center justify-between">
-            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 items-center">
-              <div>
-                <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
-              </div>
-              <div className="hidden sm:block">
-                <Skeleton className="h-3.5 w-24 rounded-md dark:bg-muted" />
-              </div>
-              <div className="hidden sm:block">
-                <Skeleton className="h-4 w-32 rounded-md dark:bg-muted" />
-              </div>
-              <div className="hidden lg:block">
-                <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
-              </div>
-              <div className="hidden lg:block">
-                <Skeleton className="h-3.5 w-36 rounded-md dark:bg-muted" />
-              </div>
-              <div className="hidden lg:block">
-                <Skeleton className="h-3.5 w-24 rounded-md dark:bg-muted" />
-              </div>
-              <div className="hidden lg:block">
-                <Skeleton className="h-3.5 w-20 rounded-md dark:bg-muted" />
-              </div>
-            </div>
-            <div className="flex gap-1.5 ml-4">
-              <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-            </div>
-          </div>
-        ))}
+      <div className="overflow-x-auto w-full">
+        <table className="w-full table-fixed min-w-[1000px] text-sm">
+          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
+            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11 select-none">
+              <th className="w-[13%] p-4">
+                <Skeleton className="h-3.5 w-20 dark:bg-muted" />
+              </th>
+              <th className="w-[11%] p-4">
+                <Skeleton className="h-3.5 w-16 dark:bg-muted" />
+              </th>
+              <th className="w-[17%] p-4">
+                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+              </th>
+              <th className="w-[15%] p-4">
+                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+              </th>
+              <th className="w-[19%] p-4">
+                <Skeleton className="h-3.5 w-32 dark:bg-muted" />
+              </th>
+              <th className="w-[12%] p-4">
+                <Skeleton className="h-3.5 w-20 dark:bg-muted" />
+              </th>
+              <th className="w-[9%] p-4">
+                <Skeleton className="h-3.5 w-16 dark:bg-muted" />
+              </th>
+              <th className="w-24 p-4 pr-6 text-right">
+                <Skeleton className="h-3.5 w-12 ml-auto dark:bg-muted" />
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
+            {Array.from({ length: rowCount }).map((_, i) => (
+              <tr
+                key={i}
+                className="h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
+              >
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
+                </td>
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                </td>
+                <td className="p-4 align-middle">
+                  <Skeleton className={cn("h-4 rounded dark:bg-muted", i % 2 === 0 ? "w-28" : "w-36")} />
+                </td>
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
+                </td>
+                <td className="p-4 align-middle">
+                  <Skeleton className={cn("h-3.5 rounded dark:bg-muted", i % 3 === 0 ? "w-36" : "w-44")} />
+                </td>
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
+                </td>
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
+                </td>
+                <td className="p-4 pr-6 align-middle text-right">
+                  <div className="flex items-center justify-end gap-1.5 ml-auto">
+                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

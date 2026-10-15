@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
@@ -56,6 +57,47 @@ export function getUploadsDir(officeId = null) {
   return dir;
 }
 
+export async function findDuplicateActiveDocument({
+  officeId,
+  studentNo = null,
+  organizationId = null,
+  docType,
+}) {
+  if (!officeId || !docType) return null;
+  const effectiveOrgId = organizationId ? String(organizationId).trim() : null;
+  const effectiveStudentNo = studentNo ? String(studentNo).trim().toUpperCase() : null;
+
+  if (effectiveStudentNo) {
+    return await dbGet(
+      `SELECT id, approval_status, original_filename, storage_filename, doc_type, created_at
+         FROM documents
+        WHERE office_id = ?
+          AND student_no = ?
+          AND lower(doc_type) = lower(?)
+          AND (approval_status IS NULL OR approval_status != 'Declined')
+        ORDER BY id DESC
+        LIMIT 1`,
+      [officeId, effectiveStudentNo, String(docType).trim()]
+    );
+  }
+
+  if (effectiveOrgId) {
+    return await dbGet(
+      `SELECT id, approval_status, original_filename, storage_filename, doc_type, created_at
+         FROM documents
+        WHERE office_id = ?
+          AND organization_id = ?
+          AND lower(doc_type) = lower(?)
+          AND (approval_status IS NULL OR approval_status != 'Declined')
+        ORDER BY id DESC
+        LIMIT 1`,
+      [officeId, effectiveOrgId, String(docType).trim()]
+    );
+  }
+
+  return null;
+}
+
 export async function createDocument({
   officeId = null,
   studentNo,
@@ -69,6 +111,7 @@ export async function createDocument({
   storageFilename: providedStorageFilename,
   uploadedBy,
   sourceIngestId = null,
+  allowOverwrite = false,
 }) {
   await ensureReviewColumns();
   if (!officeId) throw new Error("Document office scope is required.");
@@ -147,18 +190,56 @@ export async function createDocument({
     }
   }
 
+  const existingActiveDoc = await findDuplicateActiveDocument({
+    officeId,
+    studentNo: verifiedStudentNo || effectiveStudentNo,
+    organizationId: effectiveOrgId,
+    docType,
+  });
+
+  if (existingActiveDoc) {
+    if (allowOverwrite) {
+      return await replaceDocumentFile(
+        existingActiveDoc.id,
+        {
+          originalFilename,
+          mimeType,
+          sizeBytes,
+          buffer,
+          studentNo: verifiedStudentNo || effectiveStudentNo,
+          studentName: effectiveStudentName,
+          docType,
+          organizationId: effectiveOrgId,
+        },
+        { officeId }
+      );
+    }
+
+    const entityLabel = effectiveOrgId ? "organization" : "student";
+    const statusLabel = existingActiveDoc.approval_status || "Pending";
+    const err = new Error(
+      `A document of type '${docType}' is already registered for this ${entityLabel} (${statusLabel}). Each record maintains a single digital twin of the original physical document.`
+    );
+    err.code = "DUPLICATE_DOCUMENT";
+    err.isDuplicate = true;
+    err.duplicateId = existingActiveDoc.id;
+    err.existingStatus = existingActiveDoc.approval_status;
+    throw err;
+  }
+
   const cleanEntityId = String(effectiveOrgId || effectiveStudentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const cleanDocType = String(docType || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
+  const entropy = crypto.randomBytes(4).toString("hex");
   const storageFilename =
-    providedStorageFilename || `${cleanEntityId}_${cleanDocType}_${Date.now()}${ext}`;
+    providedStorageFilename || `${cleanEntityId}_${cleanDocType}_${Date.now()}_${entropy}${ext}`;
   if (!isSafeStorageFilename(storageFilename)) {
     throw new Error("Invalid document storage filename.");
   }
   const absPath = path.join(getUploadsDir(officeId), storageFilename);
   const fileAlreadyExisted = fs.existsSync(absPath);
   if (buffer) {
-    fs.writeFileSync(absPath, buffer);
+    await fs.promises.writeFile(absPath, buffer);
   }
 
   let res;
@@ -198,7 +279,7 @@ export async function createDocument({
   } catch (error) {
     if (buffer && !fileAlreadyExisted && fs.existsSync(absPath)) {
       try {
-        fs.unlinkSync(absPath);
+        await fs.promises.unlink(absPath);
       } catch {
         // Preserve the database error; a failed cleanup can be retried separately.
       }
@@ -382,7 +463,7 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, organ
 
 export async function replaceDocumentFile(
   id,
-  { originalFilename, mimeType, sizeBytes, buffer, studentNo, studentName, docType, isPreviewed },
+  { originalFilename, mimeType, sizeBytes, buffer, studentNo, studentName, docType, organizationId, isPreviewed },
   { officeId } = {},
 ) {
   await ensureReviewColumns();
@@ -394,7 +475,7 @@ export async function replaceDocumentFile(
   const nextStudentName = studentName ?? existing.student_name;
   const nextDocType = docType ?? existing.doc_type;
   const nextIsPreviewed = isPreviewed !== undefined ? Boolean(isPreviewed) : Boolean(existing.is_previewed);
-  const nextOrgId = existing.organization_id;
+  const nextOrgId = organizationId !== undefined ? organizationId : existing.organization_id;
   if (scopedOfficeId === "osas") {
     if (nextOrgId) {
       const org = await dbGet("SELECT id FROM student_organizations WHERE lower(id) = lower(?) OR lower(coalesce(acronym, '')) = lower(?)", [nextOrgId, nextOrgId]);
@@ -412,12 +493,13 @@ export async function replaceDocumentFile(
   const documentType = await dbGet("SELECT id FROM document_types WHERE office_id = ? AND lower(name) = lower(?) AND status = 'Active'", [scopedOfficeId, nextDocType]);
   if (!documentType) throw new Error("Document type is not available in this office.");
   const verifiedStudentNo = nextStudentNo ? await dbGet("SELECT student_no FROM students WHERE student_no = ?", [nextStudentNo]) : null;
-  const cleanStudentNo = String(nextStudentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+  const cleanEntityId = String(nextStudentNo || nextOrgId || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const cleanDocType = String(nextDocType || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
-  const storageFilename = `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
+  const entropy = crypto.randomBytes(4).toString("hex");
+  const storageFilename = `${cleanEntityId}_${cleanDocType}_${Date.now()}_${entropy}${ext}`;
   const absPath = path.join(getUploadsDir(existing.office_id), storageFilename);
-  fs.writeFileSync(absPath, buffer);
+  await fs.promises.writeFile(absPath, buffer);
   try {
     await dbRun(
       `UPDATE documents
@@ -438,13 +520,13 @@ export async function replaceDocumentFile(
       [originalFilename, storageFilename, verifiedStudentNo?.student_no || null, nextStudentName || null, nextOrgId || null, nextDocType, nextIsPreviewed, mimeType, sizeBytes, id, scopedOfficeId]
     );
   } catch (error) {
-    try { fs.unlinkSync(absPath); } catch {}
+    try { await fs.promises.unlink(absPath); } catch {}
     throw error;
   }
 
   const prevAbsPath = getDocumentFilePath(existing);
   if (prevAbsPath && prevAbsPath !== absPath) {
-    try { fs.unlinkSync(prevAbsPath); } catch {}
+    try { await fs.promises.unlink(prevAbsPath); } catch {}
   }
 
   return await getDocumentById(id, { officeId: scopedOfficeId });

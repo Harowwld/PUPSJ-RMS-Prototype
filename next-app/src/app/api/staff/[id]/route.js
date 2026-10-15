@@ -9,6 +9,7 @@ import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 import { bumpSessionVersion } from "@/lib/authSessions";
 import { queryOne } from "@/lib/postgres";
+import { PersonNameSchema } from "@/lib/validationSchemas";
 
 export const runtime = "nodejs";
 
@@ -178,6 +179,24 @@ export async function PATCH(req, ctx) {
 
   if (!Object.values(patch).some((value) => value !== undefined)) {
     return NextResponse.json({ ok: false, error: "At least one supported profile field is required." }, { status: 400 });
+  }
+
+  if (patch.fname !== undefined) {
+    const fnameCheck = PersonNameSchema("First Name").safeParse(patch.fname);
+    if (!fnameCheck.success) {
+      return NextResponse.json({ ok: false, error: fnameCheck.error.issues[0]?.message }, { status: 400 });
+    }
+  }
+  if (patch.lname !== undefined) {
+    const lnameCheck = PersonNameSchema("Last Name").safeParse(patch.lname);
+    if (!lnameCheck.success) {
+      return NextResponse.json({ ok: false, error: lnameCheck.error.issues[0]?.message }, { status: 400 });
+    }
+  }
+  if (patch.email !== undefined) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patch.email)) {
+      return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
+    }
   }
 
   if (patch.role !== undefined && !canManageStaffRole(currentUser.role, patch.role)) {

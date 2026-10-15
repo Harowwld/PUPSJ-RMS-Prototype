@@ -40,6 +40,7 @@ export async function PATCH(req, ctx) {
     "name", "acronym", "category", "status", "adviserName", "adviser_name",
     "adviserEmail", "adviser_email", "description", "storageRoom", "storage_room",
     "storageCabinet", "storage_cabinet", "storageDrawer", "storage_drawer",
+    "bannerGradient", "banner_gradient",
   ]);
   const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
   if (unsupportedField) {

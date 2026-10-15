@@ -15,25 +15,25 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
       )}
     >
       <div className="w-full overflow-x-auto select-none">
-        <table className="min-w-full text-sm">
+        <table className="w-full text-sm table-fixed min-w-[850px]">
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
               <th className="w-12 py-0 px-4 text-center align-middle">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[280px]">
+              <th className="p-4 w-[36%]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="p-4 w-32 text-center">
+              <th className="p-4 w-[14%] text-center">
                 <Skeleton className="h-3.5 w-12 mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 w-56">
+              <th className="p-4 w-[18%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 w-36 text-center">
+              <th className="p-4 w-[22%] text-center">
                 <Skeleton className="h-3.5 w-16 mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 pr-6 w-32 text-right">
+              <th className="p-4 pr-6 w-28 text-right">
                 <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
               </th>
             </tr>

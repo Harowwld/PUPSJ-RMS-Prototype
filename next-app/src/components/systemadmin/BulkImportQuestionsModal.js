@@ -27,7 +27,7 @@ function normalizeForComparison(str) {
 
 /**
  * Sanitizes question line:
- * - strips bullets (•, -, *, >, →, –, —, etc.)
+ * - strips bullets and symbols (bullets, dashes, arrows, etc.)
  * - strips numbering (1., 2), [3], etc.)
  * - normalizes curly/smart quotes
  * - trims whitespace
@@ -40,8 +40,8 @@ function sanitizeQuestionLine(raw) {
   // Strip leading list numbers: "1.", "1)", "(1)", "[1]", "1 -"
   cleaned = cleaned.replace(/^(\d+[\.\)\-:]|\([0-9]+\)|\[[0-9]+\])\s*/, "");
 
-  // Strip leading bullets / symbols: •, -, *, >, →, –, —
-  cleaned = cleaned.replace(/^[\s\u2022\u25E6\u25AA\u25CF•\-\*\>→–—]+\s*/, "");
+  // Strip leading bullets / symbols
+  cleaned = cleaned.replace(/^[\s\u2022\u25E6\u25AA\u25CF•\-\*\>→\u2013\u2014]+\s*/, "");
 
   // Normalize quotes
   cleaned = cleaned
@@ -542,7 +542,7 @@ export default function BulkImportQuestionsModal({
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>

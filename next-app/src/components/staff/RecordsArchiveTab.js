@@ -435,6 +435,21 @@ export default function RecordsArchiveTab({
     return archivedStudents.length
   }, [isLeafLevel, isOsas, selectedCategory, breadcrumbs, archivedStudents])
 
+  const quickMatchCount = useMemo(() => {
+    if (!quickQuery.trim()) {
+      return showArchived ? archivedTabCount : activeTabCount
+    }
+    const q = quickQuery.toLowerCase()
+    const pool = showArchived ? archivedStudents : students
+    return pool.filter(
+      (s) =>
+        (s.studentNo || "").toLowerCase().includes(q) ||
+        (s.acronym || "").toLowerCase().includes(q) ||
+        (s.name || "").toLowerCase().includes(q) ||
+        (s.category || "").toLowerCase().includes(q)
+    ).length
+  }, [quickQuery, showArchived, archivedStudents, students, archivedTabCount, activeTabCount])
+
 
 
   return (
@@ -490,23 +505,32 @@ export default function RecordsArchiveTab({
           {/* Right: Search Toolbar */}
           <div className="flex-1 md:max-w-md relative group">
             <div className="relative">
-              <HugeIcon  className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm pointer-events-none"></HugeIcon>
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+              </div>
               <Input
                 type="text"
                 placeholder={isOsas ? "Search Organization" : "Search Student"}
-                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-10 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 value={quickQuery}
                 onChange={(e) => setQuickQuery(e.target.value)}
               />
-              {quickQuery !== "" && (
-                <button
-                  type="button"
-                  onClick={() => setQuickQuery("")}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500 cursor-pointer"
-                >
-                  <HugeIcon  className="ph-bold ph-x-circle text-[15px]"></HugeIcon>
-                </button>
-              )}
+              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                {quickQuery !== "" && (
+                  <button
+                    type="button"
+                    onClick={() => setQuickQuery("")}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                    title="Clear search"
+                    aria-label="Clear search"
+                  >
+                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                  </button>
+                )}
+                <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                  {quickMatchCount.toLocaleString()}
+                </span>
+              </div>
             </div>
 
             {/* Quick Search Results Dropdown Overlay */}
@@ -922,7 +946,7 @@ export default function RecordsArchiveTab({
                   key={`table-${currentLevel}-${showArchived}`}
                   className="w-full overflow-x-auto animate-fade-up"
                 >
-                  <table className="min-w-full text-sm">
+                  <table className="w-full text-sm table-fixed min-w-[850px]">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                         <th className="w-12 p-4 text-center font-medium">
@@ -933,11 +957,11 @@ export default function RecordsArchiveTab({
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
                         </th>
-                        <th className="w-44 p-4 font-medium">{isOsas ? "Acronym" : "Student No."}</th>
-                        <th className="p-4 min-w-[200px] max-w-[280px] font-medium">{isOsas ? "Organization Name" : "Full Name"}</th>
-                        {isOsas && <th className="w-40 p-4 font-medium">Category</th>}
-                        <th className="p-4 min-w-[200px] font-medium">Physical Location</th>
-                        <th className="w-28 p-4 text-right font-medium">{isOsas ? "Actions" : "Locate"}</th>
+                        <th className={cn("p-4 font-medium", isOsas ? "w-[18%]" : "w-[22%]")}>{isOsas ? "Acronym" : "Student No."}</th>
+                        <th className={cn("p-4 font-medium", isOsas ? "w-[32%]" : "w-[42%]")}>{isOsas ? "Organization Name" : "Full Name"}</th>
+                        {isOsas && <th className="w-[16%] p-4 font-medium">Category</th>}
+                        <th className={cn("p-4 font-medium", isOsas ? "w-[24%]" : "w-[28%]")}>Physical Location</th>
+                        <th className="w-24 p-4 pr-6 text-right font-medium">{isOsas ? "Actions" : "Locate"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border dark:divide-border bg-transparent">
@@ -963,14 +987,14 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="w-44 p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap">
                               <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 {row.student.acronym || row.student.studentNo}
                               </span>
                             </td>
-                            <td className="p-4 min-w-[200px] max-w-[280px] align-middle">
+                            <td className="p-4 align-middle overflow-hidden">
                               <div className="flex flex-col min-w-0">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                <div className="flex items-center gap-2 min-w-0 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                   <span className="truncate" title={formatTitleCase(row.student.name)}>
                                     {formatTitleCase(row.student.name)}
                                   </span>
@@ -981,7 +1005,7 @@ export default function RecordsArchiveTab({
                                   )}
                                 </div>
                                 {isOsas && row.student.adviser && (
-                                  <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                                  <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={`Adviser: ${row.student.adviser} · ${row.student.activeOfficerCount ?? 0} Officers · ${row.student.proposalCount ?? 0} Proposals`}>
                                     Adviser: {row.student.adviser} · {row.student.activeOfficerCount ?? 0} Officers · {row.student.proposalCount ?? 0} Proposals
                                   </div>
                                 )}
@@ -993,18 +1017,18 @@ export default function RecordsArchiveTab({
                               </div>
                             </td>
                             {isOsas && (
-                              <td className="w-40 p-4 align-middle">
+                              <td className="p-4 align-middle whitespace-nowrap">
                                 <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
                                   {row.student.category || "Academic"}
                                 </span>
                               </td>
                             )}
-                            <td className="p-4 min-w-[200px] align-middle">
+                            <td className="p-4 align-middle whitespace-nowrap">
                                <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
                             </td>
-                            <td className="w-28 p-4 align-middle text-right">
+                            <td className="p-4 pr-6 align-middle text-right">
                               <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                                  {isOsas && row.student.hasCbl && (
                                    <button

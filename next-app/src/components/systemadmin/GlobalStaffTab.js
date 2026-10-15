@@ -57,7 +57,7 @@ const getStaffCleanName = (staff) => {
 
 const getStaffCleanEmail = (staff) => {
   if (staff?.email && !staff.email.startsWith("enc:v1:")) return staff.email
-  return "—"
+  return "N/A"
 }
 
 export default function GlobalStaffTab({ authUser, showToast }) {
@@ -127,6 +127,73 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [tempPassword, setTempPassword] = useState(null)
   const [pwDialogOpen, setPwDialogOpen] = useState(false)
+  const [nextIdPreview, setNextIdPreview] = useState("")
+
+  const [lastAutoFilled, setLastAutoFilled] = useState({ email: false })
+  const [isEmailManual, setIsEmailManual] = useState(false)
+  const fnameRef = useRef(null)
+
+  const suggestedEmail = useMemo(() => {
+    if (isEditing) return ""
+    if (!form.lname || !form.role) return ""
+    const role = form.role.toLowerCase().replace(/[^a-z0-9]/g, "")
+    const name = form.lname.toLowerCase().replace(/[^a-z0-9]/g, "")
+    if (!name) return ""
+    return `${role}.${name}@pup.local`
+  }, [isEditing, form.lname, form.role])
+
+  // Auto-fill Email based on name and role when registering
+  useEffect(() => {
+    if (isEditing) return
+    if (!isEmailManual && suggestedEmail && form.email !== suggestedEmail) {
+      const timer = setTimeout(() => {
+        setForm((f) => ({ ...f, email: suggestedEmail }))
+        setLastAutoFilled((prev) => ({ ...prev, email: true }))
+      }, 0)
+      const resetTimer = setTimeout(() => {
+        setLastAutoFilled((prev) => ({ ...prev, email: false }))
+      }, 1000)
+      return () => {
+        clearTimeout(timer)
+        clearTimeout(resetTimer)
+      }
+    }
+    if (!isEmailManual && !suggestedEmail && form.email !== "") {
+      const timer = setTimeout(() => {
+        setForm((f) => ({ ...f, email: "" }))
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [isEditing, suggestedEmail, isEmailManual, form.email])
+
+  useEffect(() => {
+    if (formOpen && !isEditing) {
+      const timer = setTimeout(() => {
+        fnameRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [formOpen, isEditing])
+
+  // Fetch next available staff ID from the system
+  useEffect(() => {
+    let active = true
+    if (formOpen && !isEditing) {
+      const off = form.role === "SystemAdmin" ? "global" : (form.office_id || "")
+      const r = form.role || "Staff"
+      fetch(`/api/staff/next-id?officeId=${encodeURIComponent(off)}&role=${encodeURIComponent(r)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (active && json.ok && json.nextId) {
+            setNextIdPreview(json.nextId)
+          }
+        })
+        .catch(() => {})
+    }
+    return () => {
+      active = false
+    }
+  }, [formOpen, isEditing, form.office_id, form.role])
 
   // Archive & Restore Confirmation Modals
   const [archiveTarget, setArchiveTarget] = useState(null)
@@ -211,6 +278,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       email: "",
       status: "Active"
     })
+    setIsEmailManual(false)
+    setLastAutoFilled({ email: false })
     setFormOpen(true)
   }
 
@@ -233,6 +302,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       email: member.email,
       status: member.status
     })
+    setIsEmailManual(false)
+    setLastAutoFilled({ email: false })
     setFormOpen(true)
   }
 
@@ -257,7 +328,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       const method = isEditing ? "PATCH" : "POST"
       
       const payload = {
-        id: form.id.trim(),
+        id: isEditing ? form.id.trim() : (form.id?.trim() || nextIdPreview || undefined),
         fname: form.fname.trim(),
         lname: form.lname.trim(),
         role: form.role,
@@ -282,6 +353,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             : "Personnel account created, but the credential email was not sent. Check SMTP settings.",
           !isEditing && !json.credentialEmail?.sent)
         setFormOpen(false)
+        setIsEmailManual(false)
+        setLastAutoFilled({ email: false })
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")
         fetchData()
@@ -1013,10 +1086,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="w-full text-sm table-fixed min-w-[960px]">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
-                <th className="w-16 p-4 text-center align-middle">
+                <th className="w-12 p-4 text-center align-middle">
                   <input
                     type="checkbox"
                     className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1033,7 +1106,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     }
                   />
                 </th>
-                <th className="p-4 min-w-[200px] max-w-[260px]">
+                <th className="p-4 w-[22%]">
+                  <button
+                    onClick={() => handleSort("id")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                    )}
+                  >
+                    Employee ID{" "}
+                    <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                  </button>
+                </th>
+                <th className="p-4 w-[28%]">
                   <button
                     onClick={() => handleSort("name")}
                     className={cn(
@@ -1045,19 +1130,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="w-44 p-4">
-                  <button
-                    onClick={() => handleSort("id")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Staff ID{" "}
-                    <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                  </button>
-                </th>
-                <th className="w-48 p-4">
+                <th className="p-4 w-[20%]">
                   <button
                     onClick={() => handleSort("office")}
                     className={cn(
@@ -1069,7 +1142,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <SortIndicator column="office" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="w-40 p-4">
+                <th className="p-4 w-[20%]">
                   <button
                     onClick={() => handleSort("role")}
                     className={cn(
@@ -1081,7 +1154,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <SortIndicator column="role" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <th className="w-28 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   Actions
                 </th>
               </tr>
@@ -1103,7 +1176,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                   >
-                    <td className="w-16 p-4 align-middle text-center">
+                    <td className="w-12 p-4 align-middle text-center">
                       {!isSelf && (
                         <input
                           type="checkbox"
@@ -1116,22 +1189,22 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         />
                       )}
                     </td>
-                    <td className="p-4 align-middle min-w-[200px] max-w-[260px]">
-                      <div className="flex flex-col min-w-0">
-                        <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")}>
-                          {getStaffCleanName(member)} {isSelf && "(You)"}
-                        </span>
-                        <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                          {getStaffCleanEmail(member)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="w-44 p-4 align-middle whitespace-nowrap">
+                    <td className="p-4 align-middle whitespace-nowrap">
                       <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                         {member.id}
                       </span>
                     </td>
-                    <td className="w-48 p-4 align-middle">
+                    <td className="p-4 align-middle overflow-hidden">
+                      <div className="flex flex-col min-w-0">
+                        <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
+                          {getStaffCleanName(member)} {isSelf && "(You)"}
+                        </span>
+                        <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={getStaffCleanEmail(member)}>
+                          {getStaffCleanEmail(member)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle whitespace-nowrap">
                       {office ? (
                         <span 
                           className="rms-office-accent inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide border-0 select-none"
@@ -1149,7 +1222,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         </span>
                       )}
                     </td>
-                    <td className="w-40 p-4 align-middle">
+                    <td className="p-4 align-middle whitespace-nowrap">
                       <div 
                         className={cn(
                           "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
@@ -1163,7 +1236,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         {member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}
                       </div>
                     </td>
-                    <td className="w-28 p-4 align-middle text-right whitespace-nowrap">
+                    <td className="w-28 p-4 pr-6 align-middle text-right whitespace-nowrap">
                       <div
                         className="flex items-center justify-end gap-1.5"
                         onClick={(e) => e.stopPropagation()}
@@ -1291,7 +1364,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   </Card>
 
       {/* Register / Edit Form Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog
+        open={formOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) {
+            setIsEmailManual(false)
+            setLastAutoFilled({ email: false })
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden">
           <form onSubmit={handleSubmit}>
             <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none text-left">
@@ -1304,26 +1386,32 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             </DialogHeader>
 
             <div className="p-6 space-y-4">
-              {/* Staff ID */}
+              {/* Employee ID */}
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Staff ID / Username *
+                    Employee ID
                   </label>
-                  {isEditing && (
-                    <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
-                      Read-only
-                    </span>
-                  )}
+                  <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
+                    {isEditing ? "Read-only" : "System generated"}
+                  </span>
                 </div>
-                <Input
-                  value={form.id}
-                  onChange={(e) => setForm(prev => ({ ...prev, id: e.target.value }))}
-                  disabled={isEditing}
-                  placeholder="e.g. PUPREGISTRAR-004"
-                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400"
-                  required
-                />
+                {isEditing ? (
+                  <Input
+                    value={form.id}
+                    disabled
+                    className="h-10 rounded-xl bg-gray-100/80 text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-300 border border-border text-xs disabled:cursor-not-allowed"
+                  />
+                ) : (
+                  <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-gray-50/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-300 shadow-xs select-none">
+                    <span className="font-mono text-xs font-semibold tracking-wide">
+                      {nextIdPreview || "PUP-[AUTO]"}
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                      Auto-assigned
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1333,6 +1421,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     First Name *
                   </label>
                   <Input
+                    ref={fnameRef}
                     value={form.fname}
                     onChange={(e) => setForm(prev => ({ ...prev, fname: e.target.value }))}
                     placeholder="Elias"
@@ -1362,19 +1451,30 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                     Official Email Address *
                   </label>
-                  {isEditing && (
+                  {isEditing ? (
                     <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
                       Read-only
                     </span>
-                  )}
+                  ) : lastAutoFilled.email ? (
+                    <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                      Auto-detected
+                    </span>
+                  ) : null}
                 </div>
                 <Input
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
-                  disabled={isEditing}
-                  placeholder="email@pup.local"
-                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400"
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (!isEditing) setIsEmailManual(val !== "")
+                    setForm(prev => ({ ...prev, email: val }))
+                  }}
+                  disabled={isEditing || submitLoading}
+                  placeholder={!isEditing ? (suggestedEmail || "[role].[name]@pup.local") : "email@pup.local"}
+                  className={cn(
+                    "h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400 shadow-xs transition-colors",
+                    !isEditing && lastAutoFilled.email && "border-emerald-500 dark:border-emerald-500 ring-1 ring-emerald-500"
+                  )}
                   required
                 />
               </div>
@@ -1446,6 +1546,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => setFormOpen(false)}
+                disabled={submitLoading}
                 className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
@@ -1464,8 +1565,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       {/* Temporary Password Dialog */}
       <Dialog open={pwDialogOpen} onOpenChange={setPwDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-6 shadow-2xl">
-          <DialogHeader className="p-0 border-none text-left">
+        <DialogContent className="max-w-md rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="p-6 pb-0 border-none text-left">
             <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
               Staff Credentials Generated
             </DialogTitle>
@@ -1474,27 +1575,29 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="my-5 p-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50 dark:bg-zinc-950/20 text-center">
-            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
-            <div className="text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all tracking-wider">
-              {tempPassword}
+          <div className="p-6 pt-4">
+            <div className="p-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50 dark:bg-zinc-950/20 text-center">
+              <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
+              <div className="text-xl font-bold text-pup-maroon dark:text-red-400 mt-1 select-all tracking-wider">
+                {tempPassword}
+              </div>
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-end gap-2.5 pt-0 border-none bg-transparent">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               onClick={() => {
                 navigator.clipboard.writeText(tempPassword)
                 showToast("Password copied to clipboard")
               }}
               variant="outline"
-              className="text-xs border-border dark:border-border h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
+              className="text-xs border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all"
             >
               Copy
             </Button>
             <Button
               onClick={() => setPwDialogOpen(false)}
-              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
+              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all"
             >
               Acknowledge
             </Button>

@@ -627,7 +627,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     console.log("\n[populate-sample-data] Demo login credentials:");
     console.log("Staff accounts:");
     for (const [id, , fname, lname, role, , email] of officialStaff) {
-      console.log(`  ${role} — ${fname} ${lname} (${id}) | login: ${email} | password: ${staffPassword}`);
+      console.log(`  ${role}: ${fname} ${lname} (${id}) | login: ${email} | password: ${staffPassword}`);
     }
     console.log("Student accounts (login with email or student number):");
     for (const [studentNo, email] of demoStudentAccounts) {

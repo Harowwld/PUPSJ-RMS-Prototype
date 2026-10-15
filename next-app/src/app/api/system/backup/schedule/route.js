@@ -195,7 +195,7 @@ export async function POST(req) {
       : `Daily at ${updated.time}`;
 
   await writeAuditLog(req, "Updated Auto Backup Schedule", {
-    details: `${statusLabel} ${scopeLabel} auto backup — ${freqLabel}`,
+    details: `${statusLabel} ${scopeLabel} auto backup: ${freqLabel}`,
     entity_type: "Setting",
     entity_id: key,
   });

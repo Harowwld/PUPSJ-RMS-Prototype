@@ -823,7 +823,7 @@ export default function LandingPageCmsTab({ showToast }) {
                           "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
                       </p>
 
-                      {/* Action Cluster — centered */}
+                      {/* Action Cluster: centered */}
                       <div className="flex flex-wrap items-center justify-center gap-4">
                         <Button
                           type="button"

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { scanFileForSuggestion } from "@/lib/ocrClient";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 export function useHotFolderInbox({
   enabled,
@@ -36,7 +37,13 @@ export function useHotFolderInbox({
         setRows(Array.isArray(json.data?.rows) ? json.data.rows : []);
       } catch (e) {
         if (showLoading) {
-          showToast({ title: "Inbox Load Failed", description: e.message || "Unable to load ingest queue." }, true);
+          showToast(
+            formatErrorMessage(e, {
+              title: "Inbox Load Failed",
+              actionContext: "Loading scanner inbox queue",
+            }),
+            true
+          );
         }
       } finally {
         if (showLoading) setLoading(false);
@@ -74,7 +81,13 @@ export function useHotFolderInbox({
       return file;
     } catch (e) {
       setOcrLoading(false);
-      showToast({ title: "OCR Failed", description: e.message || "Unable to scan file." }, true);
+      showToast(
+        formatErrorMessage(e, {
+          title: "OCR Failed",
+          actionContext: `Scanning document ${row?.original_filename || "scan"}`,
+        }),
+        true
+      );
       return null;
     }
   };
@@ -104,7 +117,7 @@ export function useHotFolderInbox({
 
   /**
    * Remove the selected inbox item after a successful upload.
-   * This replaces the old "promote" flow — now we just clean up
+   * This replaces the old "promote" flow: now we just clean up
    * the ingest queue entry since the file has been uploaded normally.
    */
   const removeIngestItem = async (id) => {
@@ -113,7 +126,7 @@ export function useHotFolderInbox({
     try {
       await fetch(`/api/ingest/hot-folder/${itemId}`, { method: "DELETE" });
     } catch {
-      // Best-effort cleanup — suppress errors
+      // Best-effort cleanup: suppress errors
     }
     clearIngestSelection();
     await loadList({ showLoading: false });
@@ -191,7 +204,10 @@ export function useHotFolderInbox({
       });
     } catch (e) {
       showToast(
-        { title: "Clear Inbox Failed", description: e.message || "Unable to clear inbox." },
+        formatErrorMessage(e, {
+          title: "Clear Inbox Failed",
+          actionContext: "Clearing scanner hot folder inbox",
+        }),
         true
       );
     } finally {

@@ -9,6 +9,7 @@ import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 import { sendAccountCredentialsNotice } from "@/lib/accountEmail";
+import { StaffRegistrationSchema } from "@/lib/validationSchemas";
 
 export const runtime = "nodejs";
 
@@ -82,28 +83,20 @@ export async function POST(req) {
     );
   }
 
-  const id = String(body.id || "").trim();
-  const fname = String(body.fname || "").trim();
-  const lname = String(body.lname || "").trim();
-  const role = String(body.role || "").trim();
-  const section = String(body.section || "").trim();
+  const validation = StaffRegistrationSchema.safeParse(body);
+  if (!validation.success) {
+    const errorMsg = validation.error.issues?.[0]?.message || "Invalid staff profile data";
+    return NextResponse.json({ ok: false, error: errorMsg }, { status: 400 });
+  }
+
+  const { id = "", fname, lname, role, section, email } = validation.data;
   const status = body.status === "Inactive" || body.status === "Archived" ? body.status : "Active";
-  const email = String(body.email || "").trim();
   const usesConfiguredDefault = body.password === undefined || body.password === null || String(body.password) === "";
   const password = usesConfiguredDefault ? DEFAULT_PASSWORD : String(body.password);
   const passwordPolicy = validatePasswordPolicy(password, { allowDefault: usesConfiguredDefault });
   const lastActive =
     body.lastActive === undefined ? undefined : String(body.lastActive).trim();
 
-  if (!id || !fname || !lname || !role || !section || !email) {
-    return NextResponse.json(
-      { ok: false, error: "Missing required fields" },
-      { status: 400 }
-    );
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
-  }
   if (!passwordPolicy.valid) {
     return NextResponse.json({ ok: false, error: passwordPolicy.reason || "Invalid password." }, { status: 400 });
   }
@@ -148,16 +141,16 @@ export async function POST(req) {
       to: email,
       fullName: `${fname} ${lname}`,
       accountType: `${normalizeRole(role)} staff account`,
-      accountId: id,
+      accountId: row.id,
       requiresActivation: true,
       username: email,
       password,
     });
 
     await writeAuditLog(req, `Create Staff Account`, {
-      details: `provisioned new personnel account for '${fname} ${lname}' (ID: ${id}, Role: ${normalizeRole(role)}, Section: ${section}, Office: ${officeId || "Global"})`,
+      details: `provisioned new personnel account for '${fname} ${lname}' (ID: ${row.id}, Role: ${normalizeRole(role)}, Section: ${section}, Office: ${officeId || "Global"})`,
       entity_type: "User",
-      entity_id: id
+      entity_id: row.id
     });
 
     return NextResponse.json({
@@ -168,7 +161,7 @@ export async function POST(req) {
   } catch (e) {
     if (isUniqueViolation(e)) {
       const [existingId, existingEmail] = await Promise.all([
-        getStaffById(id).catch(() => null),
+        id ? getStaffById(id).catch(() => null) : null,
         getStaffByUsername(email).catch(() => null),
       ]);
       if (existingId) {

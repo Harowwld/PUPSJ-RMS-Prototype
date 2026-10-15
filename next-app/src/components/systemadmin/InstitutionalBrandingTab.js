@@ -940,11 +940,11 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     </div>
                     <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Campus / Branch</span>
-                      <span className="font-semibold text-gray-900">{branding.campusName || "—"}</span>
+                      <span className="font-semibold text-gray-900">{branding.campusName || "N/A"}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <span>Office / Subheader</span>
-                      <span className="font-semibold text-gray-900 text-right truncate max-w-[210px]">{branding.tagline || "—"}</span>
+                      <span className="font-semibold text-gray-900 text-right truncate max-w-[210px]">{branding.tagline || "N/A"}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border/60 text-gray-600">
                       <div className="flex items-center gap-1.5">

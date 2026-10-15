@@ -47,6 +47,7 @@ export async function POST(req) {
   const storageRoom = body?.storageRoom || body?.storage_room || 1;
   const storageCabinet = body?.storageCabinet || body?.storage_cabinet;
   const storageDrawer = body?.storageDrawer || body?.storage_drawer || "1";
+  const bannerGradient = String(body?.bannerGradient || body?.banner_gradient || "maroon").trim();
 
   if (!name) {
     return NextResponse.json({ ok: false, error: "Organization name is required." }, { status: 400 });
@@ -64,6 +65,7 @@ export async function POST(req) {
       adviserName,
       adviserEmail,
       description,
+      bannerGradient,
       storageRoom,
       storageCabinet,
       storageDrawer,

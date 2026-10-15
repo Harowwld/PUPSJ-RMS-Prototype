@@ -1,6 +1,6 @@
 import { dbAll, dbGet, dbRun, postgresSql } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
-import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "./constants.js";
+import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES, isTerminalRequestStatus } from "./constants.js";
 import { decryptPII } from "./piiEncryption.js";
 
 const VALID_STATUSES = new Set([
@@ -374,12 +374,21 @@ export async function updateDocumentRequest(id, fields) {
 
   let statusChanged = false;
   let nextStatus = existing.status;
+  let isReopen = false;
 
   if (fields.status !== undefined) {
     const s = String(fields.status || "");
     if (!isValidRequestStatus(s)) return false;
-    if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s)) {
+    isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(s);
+    const allowReopen = Boolean(fields.allowReopen || fields.reopenReason);
+    if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s, { allowReopen })) {
       throw new Error(`Cannot transition document request from status "${existing.status}" to "${s}". Terminal and progressed requests cannot be reverted.`);
+    }
+    if (isReopen) {
+      const justification = String(fields.reopenReason || fields.message || "").trim();
+      if (justification.length < 5) {
+        throw new Error("A written justification (at least 5 characters) explaining why this request is being reopened is required.");
+      }
     }
     if (existing.status !== s) {
       statusChanged = true;
@@ -438,7 +447,11 @@ export async function updateDocumentRequest(id, fields) {
   // Timeline update handling & deduplication:
   if (statusChanged) {
     // When status changes, ALWAYS guarantee a timeline entry is recorded
-    const finalMessage = rawMessage || DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
+    const justification = String(fields.reopenReason || fields.message || "").trim();
+    let finalMessage = rawMessage || DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
+    if (isReopen) {
+      finalMessage = `Request reopened to ${nextStatus}. Reason: ${justification}`;
+    }
 
     // Deduplication check against rapid duplicate/double-click submissions
     const latestUpdate = await dbGet(

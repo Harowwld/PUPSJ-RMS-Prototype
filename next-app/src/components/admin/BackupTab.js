@@ -98,18 +98,22 @@ export default function BackupTab({
           description: `Detected volume "${data.label || "External Storage"}" (${data.freeFormatted ? `${data.freeFormatted} free` : "Ready"}).`,
         })
       } else {
-        showToast?.({
-          title: "No External Storage Detected",
-          description: "No physical USB storage drive was found. Connect a drive or activate demo simulation.",
-          variant: "warning",
-        })
+        showToast?.(
+          {
+            title: "No External Storage Detected",
+            description: "No physical USB storage drive was found. Connect a drive or activate demo simulation.",
+          },
+          "warning"
+        )
       }
     } catch {
-      showToast?.({
-        title: "Scan Failed",
-        description: "Unable to complete storage device scan.",
-        variant: "destructive",
-      })
+      showToast?.(
+        {
+          title: "Drive Scan Failed",
+          description: "Unable to complete external storage scan. Please verify USB connection.",
+        },
+        true
+      )
     } finally {
       setIsRescanning(false)
     }
@@ -131,11 +135,13 @@ export default function BackupTab({
         })
       }
     } catch {
-      showToast?.({
-        title: "Toggle Failed",
-        description: "Could not update demo simulation state.",
-        variant: "destructive",
-      })
+      showToast?.(
+        {
+          title: "Simulation Toggle Failed",
+          description: "Could not update demo simulation state.",
+        },
+        true
+      )
     }
   }
 

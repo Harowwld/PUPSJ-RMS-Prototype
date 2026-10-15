@@ -316,13 +316,14 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       // Keyword search
       if (search.trim()) {
         const q = search.toLowerCase()
+        const matchId = String(tx.id || "").toLowerCase().includes(q)
         const matchTitle = (tx.title || "").toLowerCase().includes(q)
         const studentDisplay = formatStudentRequester(tx.studentName, tx.studentNo).toLowerCase()
         const matchStudent = (tx.studentNo || "").toLowerCase().includes(q) || studentDisplay.includes(q)
         const matchOrg = (tx.organizationName || "").toLowerCase().includes(q)
         const matchStatus = (tx.status || "").toLowerCase().includes(q)
         const matchNotes = (tx.notes || "").toLowerCase().includes(q)
-        if (!matchTitle && !matchStudent && !matchOrg && !matchStatus && !matchNotes) {
+        if (!matchId && !matchTitle && !matchStudent && !matchOrg && !matchStatus && !matchNotes) {
           return false
         }
       }
@@ -337,7 +338,10 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       let aVal = a[sortBy] ?? ""
       let bVal = b[sortBy] ?? ""
 
-      if (sortBy === "studentName") {
+      if (sortBy === "id") {
+        aVal = Number(a.id) || 0
+        bVal = Number(b.id) || 0
+      } else if (sortBy === "studentName") {
         aVal = formatStudentRequester(a.studentName, a.studentNo)
         bVal = formatStudentRequester(b.studentName, b.studentNo)
       }
@@ -642,10 +646,21 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="w-full text-sm table-fixed min-w-[1080px]">
                   <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-                      <th className="p-4 w-36">
+                      <th className="p-4 w-[8%]">
+                        <button
+                          onClick={() => handleSort("id")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
+                        >
+                          ID <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      <th className="p-4 w-[12%]">
                         <button
                           onClick={() => handleSort("officeId")}
                           className={cn(
@@ -656,7 +671,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           Department <SortIndicator column="officeId" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[200px]">
+                      <th className="p-4 w-[18%]">
                         <button
                           onClick={() => handleSort("studentName")}
                           className={cn(
@@ -667,7 +682,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           Student Requester <SortIndicator column="studentName" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[240px]">
+                      <th className="p-4 w-[25%]">
                         <button
                           onClick={() => handleSort("title")}
                           className={cn(
@@ -678,7 +693,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           Document or Proposal Title <SortIndicator column="title" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[180px]">
+                      <th className="p-4 w-[16%]">
                         <button
                           onClick={() => handleSort("organizationName")}
                           className={cn(
@@ -689,7 +704,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           Student Org / Details <SortIndicator column="organizationName" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-36">
+                      <th className="p-4 w-[10%]">
                         <button
                           onClick={() => handleSort("status")}
                           className={cn(
@@ -700,7 +715,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           Stage Status <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-36">
+                      <th className="p-4 w-[8%]">
                         <button
                           onClick={() => handleSort("createdAt")}
                           className={cn(
@@ -711,7 +726,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           Submitted <SortIndicator column="createdAt" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 pr-6 text-right w-24 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                      <th className="p-4 pr-6 text-right w-20 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                         Actions
                       </th>
                     </tr>
@@ -728,8 +743,15 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           onClick={() => handleOpenDetails(tx)}
                           className="group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none"
                         >
+                          {/* Transaction ID */}
+                          <td className="p-4 align-middle whitespace-nowrap">
+                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                              #{tx.id}
+                            </span>
+                          </td>
+
                           {/* Department Badge */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle whitespace-nowrap">
                             {isRegistrar ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                                 <HugeIcon  className="ph-bold ph-certificate text-xs"></HugeIcon>
@@ -744,46 +766,46 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                           </td>
 
                           {/* Student Requester */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle overflow-hidden">
                             <div
-                              className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate max-w-[180px] sm:max-w-[220px]"
+                              className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate"
                               title={formatStudentRequester(tx.studentName, tx.studentNo)}
                             >
                               {formatStudentRequester(tx.studentName, tx.studentNo)}
                             </div>
-                            <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5">
+                            <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate">
                               {tx.studentNo}
                             </div>
                           </td>
 
                           {/* Document or Proposal Title */}
-                          <td className="p-4 align-middle">
-                            <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate max-w-[260px]">
+                          <td className="p-4 align-middle overflow-hidden">
+                            <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate" title={tx.title}>
                               {tx.title}
                             </div>
                             {tx.originalFilename && (
                               <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5">
-                                <HugeIcon  className="ph-bold ph-file-pdf text-red-500"></HugeIcon>
-                                <span className="truncate max-w-[200px]">{tx.originalFilename}</span>
+                                <HugeIcon  className="ph-bold ph-file-pdf text-red-500 shrink-0"></HugeIcon>
+                                <span className="truncate" title={tx.originalFilename}>{tx.originalFilename}</span>
                               </div>
                             )}
                           </td>
 
                           {/* Organization / Reference */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle overflow-hidden">
                             {tx.organizationName ? (
-                              <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[200px]">
+                              <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate" title={tx.organizationName}>
                                 {tx.organizationName}
                               </div>
                             ) : (
-                              <div className="text-[12px] text-gray-900 dark:text-zinc-300 truncate max-w-[200px]">
+                              <div className="text-[12px] text-gray-900 dark:text-zinc-300 truncate" title={tx.notes || "Standard student request"}>
                                 {tx.notes || "Standard student request"}
                               </div>
                             )}
                           </td>
 
                           {/* Stage Status Badge */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle whitespace-nowrap">
                             <span className={cn(
                               "inline-flex items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium whitespace-nowrap",
                               statusBadgeClass(tx.status)
@@ -886,9 +908,9 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       <Sheet open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
+          className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-white dark:bg-card text-left">
+          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-white dark:bg-card text-left">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -908,7 +930,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   {sheetItem?.title}
                 </SheetTitle>
                 <SheetDescription className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
-                  Submitted on {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "—"}
+                  Submitted on {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
                 </SheetDescription>
               </div>
             </div>
@@ -1017,7 +1039,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               type="button"
               variant="outline"
               onClick={() => setSelectedItem(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

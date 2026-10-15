@@ -14,6 +14,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import { toast } from "sonner";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { cn } from "@/lib/utils";
 import {
   Empty,
@@ -108,8 +109,13 @@ export default function StudentComplianceTab({ authUser }) {
         }));
       }
     } catch (err) {
-      toast.error("Error Loading Compliance", {
-        description: err.message || "Could not retrieve document checklist.",
+      const normalized = formatErrorMessage(err, {
+        title: "Checklist Unavailable",
+        description: "Could not retrieve your graduation requirements checklist. Pull to refresh or try again shortly.",
+      });
+      toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
       });
     } finally {
       setLoading(false);
@@ -309,8 +315,13 @@ export default function StudentComplianceTab({ authUser }) {
       });
     } catch (err) {
       console.error("PDF download failed:", err);
-      toast.error("Download Failed", {
-        description: "Could not generate PDF download.",
+      const normalized = formatErrorMessage(err, {
+        title: "Download Interrupted",
+        description: "Unable to generate the checklist PDF preview. Please try printing the slip directly instead.",
+      });
+      toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
       });
     } finally {
       setDownloadingPdf(false);
@@ -363,8 +374,8 @@ export default function StudentComplianceTab({ authUser }) {
         return `
           <tr>
             <td style="padding: 7px 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; text-align: center; width: 34px;">${idx + 1}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 600; color: #111827;">${escapeHtml(r?.docType || r?.name || "—")}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; white-space: nowrap;">${escapeHtml(r?.category || "—")}</td>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 600; color: #111827;">${escapeHtml(r?.docType || r?.name || "N/A")}</td>
+            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; white-space: nowrap;">${escapeHtml(r?.category || "N/A")}</td>
             <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
               <span class="badge ${isSubmitted ? "badge-approved" : "badge-missing"}">
                 ${isSubmitted ? "Submitted" : "Not Submitted"}
@@ -553,11 +564,11 @@ export default function StudentComplianceTab({ authUser }) {
           <div class="meta-grid">
             <div class="meta-item">
               <span class="meta-label">Student Name</span>
-              <span class="meta-val">${escapeHtml(student.name || "—")}</span>
+              <span class="meta-val">${escapeHtml(student.name || "N/A")}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Student Number</span>
-              <span class="meta-val-maroon">${escapeHtml(student.studentNo || "—")}</span>
+              <span class="meta-val-maroon">${escapeHtml(student.studentNo || "N/A")}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Compliance Status</span>
@@ -1049,12 +1060,12 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           ) : viewMode === "table" ? (
             /* Table View */
-            <div className="w-full overflow-x-auto border border-border dark:border-border rounded-xl overflow-hidden">
-              <table className="min-w-full text-sm">
+            <div className="w-full overflow-x-auto border border-border dark:border-border rounded-xl overflow-hidden select-none">
+              <table className="w-full text-sm table-fixed min-w-[700px]">
                 <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 select-none">
                     <th
-                      className="p-4 min-w-[260px] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      className="p-4 w-[54%] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                       onClick={() => handleSort("docType")}
                     >
                       <div className="flex items-center gap-1.5">
@@ -1072,7 +1083,7 @@ export default function StudentComplianceTab({ authUser }) {
                       </div>
                     </th>
                     <th
-                      className="p-4 min-w-[160px] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      className="p-4 w-[26%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                       onClick={() => handleSort("category")}
                     >
                       <div className="flex items-center gap-1.5">
@@ -1090,7 +1101,7 @@ export default function StudentComplianceTab({ authUser }) {
                       </div>
                     </th>
                     <th
-                      className="p-4 min-w-[140px] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      className="p-4 pr-6 w-[20%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                       onClick={() => handleSort("status")}
                     >
                       <div className="flex items-center gap-1.5">
@@ -1118,18 +1129,18 @@ export default function StudentComplianceTab({ authUser }) {
                         key={item.id}
                         className="hover:bg-gray-50/60 dark:hover:bg-zinc-800/30 transition-colors"
                       >
-                        <td className="p-4">
-                          <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs">
+                        <td className="p-4 overflow-hidden">
+                          <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate" title={item.docType}>
                             {item.docType}
                           </div>
-                          <div className="text-[11px] text-gray-400 dark:text-zinc-500 max-w-sm truncate mt-0.5">
+                          <div className="text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5" title={item.description}>
                             {item.description}
                           </div>
                         </td>
                         <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap">
                           {item.category}
                         </td>
-                        <td className="p-4 whitespace-nowrap">
+                        <td className="p-4 pr-6 whitespace-nowrap">
                           {isSubmitted ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
                               <HugeIcon className="ph-bold ph-check text-xs" /> Completed
@@ -1496,8 +1507,8 @@ export default function StudentComplianceTab({ authUser }) {
                   {sortedRequirements.map((r, idx) => (
                     <tr key={r.id} className="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30 transition-colors print:border-b print:border-border">
                       <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px]">{idx + 1}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r?.docType || r?.name || "—"}</td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap">{r?.category || "—"}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r?.docType || r?.name || "N/A"}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap">{r?.category || "N/A"}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={cn(
@@ -1521,12 +1532,12 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           </div>
 
-          <DialogFooter className="p-5 px-8 border-t border-border dark:border-border flex items-center justify-end gap-3 shrink-0 bg-white dark:bg-card print:hidden">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0 print:hidden">
             <Button
               type="button"
               variant="outline"
               onClick={() => setPrintModalOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

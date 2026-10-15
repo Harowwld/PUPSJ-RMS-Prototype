@@ -11,11 +11,18 @@ import {
   listStudentLocationUsage,
 } from "../../../lib/studentsRepo";
 import { getStorageLayout, setStorageLayoutWithReassignments } from "../../../lib/storageLayoutRepo";
-import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
+import { canonicalizeCabinetId, areCabinetsEqual } from "../../../lib/storageLayoutUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
 
+function hasLocation(layout, room, cabinet, drawer) {
+  const roomDef = layout?.rooms?.find((r) => Number(r.id) === Number(room));
+  if (!roomDef) return false;
+  const cabDef = roomDef.cabinets?.find((c) => areCabinetsEqual(c.id, cabinet, roomDef.cabinets));
+  if (!cabDef) return false;
+  return cabDef.drawerIds?.some((d) => String(d) === String(drawer));
+}
 
 function normalizeCabinetId(cabId) {
   return canonicalizeCabinetId(cabId);
@@ -106,26 +113,24 @@ export async function PUT(req) {
     const proposedSet = buildLayoutLocationSet(incomingLayout);
     if (!skipUsageCheck) {
       const existingLayout = await getStorageLayout({ officeId });
-      const existingSet = buildLayoutLocationSet(existingLayout);
       const usage = await listStudentLocationUsage({ officeId });
       const orphaned = usage.filter((u) => {
         const roomId = Number(u.room);
-        const cabId = normalizeCabinetId(u.cabinet);
-        const drawerId = normalizeDrawerIdString(u.drawer);
-        if (!roomId || !cabId || !drawerId) return false;
-        const key = `${roomId}|${cabId}|${drawerId}`;
-        return existingSet.has(key) && !proposedSet.has(key);
+        const cab = u.cabinet;
+        const drawer = u.drawer;
+        if (!roomId || !cab || !drawer) return false;
+        return hasLocation(existingLayout, roomId, cab, drawer) && !hasLocation(incomingLayout, roomId, cab, drawer);
       });
       if (orphaned.length > 0) {
         const preview = orphaned
           .slice(0, 4)
-          .map((o) => `Room ${o.room} / Cabinet ${o.cabinet} / Drawer ${o.drawer}`)
+          .map((o) => `Room ${o.room} / Cabinet ${o.cabinet} / Drawer ${o.drawer} (${o.count} record${Number(o.count) === 1 ? "" : "s"})`)
           .join("; ");
         return NextResponse.json(
           {
             ok: false,
             error:
-              `Cannot remove layout locations with existing student records. ` +
+              `Cannot remove layout locations with existing physical records. ` +
               `Reassign records first. Affected: ${preview}${orphaned.length > 4 ? "..." : ""}`,
           },
           { status: 400 }
@@ -144,7 +149,7 @@ export async function PUT(req) {
             { status: 400 }
           );
         }
-        if (!proposedSet.has(`${to.room}|${normalizeCabinetId(to.cabinet)}|${to.drawer}`)) {
+        if (!hasLocation(incomingLayout, to.room, to.cabinet, to.drawer)) {
           return NextResponse.json(
             { ok: false, error: "Reassignment target is not part of the proposed layout" },
             { status: 400 }
@@ -166,7 +171,7 @@ export async function PUT(req) {
 
     await writeAuditLog(req, `Update Storage Layout`, {
       details: reassignments.length > 0
-        ? `saved physical archive layout (v${saved?.version || 1}, ${roomCount} room(s), ${cabinetCount} cabinet(s)) with drawer reassignment — ${movedCount} student record(s) migrated to new locations`
+        ? `saved physical archive layout (v${saved?.version || 1}, ${roomCount} room(s), ${cabinetCount} cabinet(s)) with drawer reassignment: ${movedCount} student record(s) migrated to new locations`
         : `saved physical archive layout (v${saved?.version || 1}, ${roomCount} room(s), ${cabinetCount} cabinet(s))`,
       entity_type: "StorageLayout",
       entity_id: saved?.version || 1,

@@ -69,7 +69,7 @@ export function isSystemAdminRole(role) {
 /**
  * Check if a role string represents an Admin role (office-scoped)
  * Recognizes: "admin", "administrator" (case-insensitive)
- * Note: SystemAdmin is NOT an Admin — they're distinct levels.
+ * Note: SystemAdmin is NOT an Admin: they are distinct levels.
  * @param {string} role - The role to check
  * @returns {boolean}
  */

@@ -1,8 +1,8 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import React, { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/errorUtils"
 import {
   PhShield,
   PhWarning,
@@ -46,10 +46,11 @@ export default function RateLimitingTab() {
         setData(result.data)
       }
     } catch (error) {
-      toast.error("Failed to load rate limiting data")
-      console.error(error)
+      const norm = formatErrorMessage(error, { defaultTitle: "Failed to Load Rate Limits" });
+      toast.error(norm.title, { description: norm.description, action: norm.action });
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -77,11 +78,14 @@ export default function RateLimitingTab() {
 
       if (!response.ok) throw new Error("Failed to clear violation")
 
-      toast.success("Rate limit violation cleared")
+      toast.success("Rate Limit Cleared", {
+        description: `Violation entry for ${identifier} has been reset.`,
+      })
       fetchData()
     } catch (error) {
-      toast.error("Failed to clear violation")
-      console.error(error)
+      const norm = formatErrorMessage(error, { defaultTitle: "Failed to Clear Violation" });
+      toast.error(norm.title, { description: norm.description, action: norm.action });
+      console.error(error);
     }
   }
 
@@ -199,25 +203,25 @@ export default function RateLimitingTab() {
               <p className="text-xs font-medium">No recent violations</p>
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full text-sm table-fixed min-w-[700px]">
               <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                  <th className="w-[20%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Type
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                  <th className="w-[24%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Identifier
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                  <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     IP Address
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                  <th className="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Violations
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                  <th className="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Lockout Until
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                  <th className="w-20 px-4 py-3 pr-6 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Actions
                   </th>
                 </tr>
@@ -225,24 +229,24 @@ export default function RateLimitingTab() {
               <tbody className="divide-y divide-border dark:divide-border">
                 {data.recentViolations.map((violation) => (
                   <tr key={violation.id} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
-                    <td className="px-4 py-3 text-xs font-medium text-gray-900 dark:text-zinc-100">{violation.endpoint_type}</td>
-                    <td className="px-4 py-3 text-xs font-mono text-gray-600 dark:text-zinc-400">
+                    <td className="px-4 py-3 text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">{violation.endpoint_type}</td>
+                    <td className="px-4 py-3 text-xs font-mono text-gray-600 dark:text-zinc-400 truncate">
                       {violation.identifier}
                     </td>
-                    <td className="px-4 py-3 text-xs font-mono text-gray-600 dark:text-zinc-400">
+                    <td className="px-4 py-3 text-xs font-mono text-gray-600 dark:text-zinc-400 whitespace-nowrap">
                       {violation.ip_address}
                     </td>
-                    <td className="px-4 py-3 text-xs">
+                    <td className="px-4 py-3 text-xs whitespace-nowrap">
                       <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300">
                         {violation.violation_count}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400">
+                    <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">
                       {violation.lockout_until
                         ? formatTime(violation.lockout_until)
                         : "None"}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 pr-6 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end">
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -280,19 +284,19 @@ export default function RateLimitingTab() {
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Rate Limit Configurations</h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full text-sm table-fixed min-w-[550px]">
           <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-[42%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Endpoint Type
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-[25%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Window (seconds)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-[25%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Max Requests
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-20 px-4 py-3 pr-6 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Actions
               </th>
             </tr>
@@ -300,12 +304,12 @@ export default function RateLimitingTab() {
           <tbody className="divide-y divide-border dark:divide-border">
             {data.configs.map((config) => (
               <tr key={config.id} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
-                <td className="px-4 py-3 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                <td className="px-4 py-3 text-xs font-semibold text-gray-900 dark:text-zinc-100 whitespace-nowrap">
                   {config.endpoint_type}
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400">{config.window_seconds}s</td>
-                <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400">{config.max_requests} req</td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{config.window_seconds}s</td>
+                <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{config.max_requests} req</td>
+                <td className="px-4 py-3 pr-6 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end">
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -341,22 +345,22 @@ export default function RateLimitingTab() {
             <p className="text-xs font-medium">No suspicious activity detected</p>
           </div>
         ) : (
-          <table className="w-full">
+          <table className="w-full text-sm table-fixed min-w-[650px]">
             <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                <th className="w-[24%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   IP Address
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Risk Level
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Failed Logins
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Unique Users
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                <th className="w-[22%] px-4 py-3 pr-6 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Last Seen
                 </th>
               </tr>
@@ -364,17 +368,17 @@ export default function RateLimitingTab() {
             <tbody className="divide-y divide-border dark:divide-border">
               {suspiciousIPs.map((ip, index) => (
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
-                  <td className="px-4 py-3 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100">{ip.ip}</td>
-                  <td className="px-4 py-3 text-xs">
+                  <td className="px-4 py-3 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">{ip.ip}</td>
+                  <td className="px-4 py-3 text-xs whitespace-nowrap">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`}
                     >
                       {ip.riskLevel}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400">{ip.failed_logins}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400">{ip.unique_users}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400">{formatTime(ip.last_seen)}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{ip.failed_logins}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{ip.unique_users}</td>
+                  <td className="px-4 py-3 pr-6 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{formatTime(ip.last_seen)}</td>
                 </tr>
               ))}
             </tbody>

@@ -5,6 +5,7 @@ import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { cn } from "@/lib/utils";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -99,6 +101,9 @@ const getBannerStatusDotClass = (status) => {
   if (status === "Archived") return "bg-amber-400";
   return "bg-white/60";
 };
+
+import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
+export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
 const getBylawsStatusBadgeClass = (status) => {
   if (status === "Approved") {
@@ -186,6 +191,81 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [statusFilters, setStatusFilters] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
 
+  // Category Navigation Slider (horizontal scroll & drag)
+  const categoryTabsRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isTabsDragging, setIsTabsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragScrollLeft, setDragScrollLeft] = useState(0);
+
+  const checkTabsScroll = useCallback(() => {
+    const el = categoryTabsRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = categoryTabsRef.current;
+    if (!el) return;
+    checkTabsScroll();
+    el.addEventListener("scroll", checkTabsScroll, { passive: true });
+    window.addEventListener("resize", checkTabsScroll);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => checkTabsScroll());
+      ro.observe(el);
+    }
+
+    return () => {
+      el.removeEventListener("scroll", checkTabsScroll);
+      window.removeEventListener("resize", checkTabsScroll);
+      ro?.disconnect();
+    };
+  }, [checkTabsScroll, organizations.length]);
+
+  const slideCategories = (direction) => {
+    const el = categoryTabsRef.current;
+    if (!el) return;
+    const offset = direction === "left" ? -220 : 220;
+    el.scrollBy({ left: offset, behavior: "smooth" });
+  };
+
+  const handleTabsMouseDown = (e) => {
+    const el = categoryTabsRef.current;
+    if (!el) return;
+    setIsTabsDragging(true);
+    setDragStartX(e.pageX - el.offsetLeft);
+    setDragScrollLeft(el.scrollLeft);
+  };
+
+  const handleTabsMouseMove = (e) => {
+    if (!isTabsDragging) return;
+    e.preventDefault();
+    const el = categoryTabsRef.current;
+    if (!el) return;
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - dragStartX) * 1.5;
+    el.scrollLeft = dragScrollLeft - walk;
+  };
+
+  const handleTabsMouseUpOrLeave = () => {
+    setIsTabsDragging(false);
+  };
+
+  const allCategories = useMemo(() => {
+    const dynamicCats = new Set(["Academic", "Non-Academic"]);
+    organizations.forEach((org) => {
+      if (org.category && typeof org.category === "string") {
+        dynamicCats.add(org.category.trim());
+      }
+    });
+    return ["All", ...Array.from(dynamicCats)];
+  }, [organizations]);
+
   // Draggable KPI Stat Cards & Interactive Popover State
   const [kpiOrder, setKpiOrder] = useState(() => {
     if (typeof window !== "undefined") {
@@ -262,6 +342,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     acronym: "",
     category: "Academic",
     status: "Active",
+    bannerGradient: "maroon",
     adviserName: "",
     adviserEmail: "",
     description: "",
@@ -301,11 +382,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           });
         }
       } catch (err) {
-        showToast({
-          title: "Failed to Load",
-          description: err.message || "Could not fetch organizations.",
-          variant: "destructive",
-        });
+        showToast(
+          formatErrorMessage(err, {
+            title: "Organizations Load Failed",
+            actionContext: "Fetching student organizations",
+          }),
+          true
+        );
       } finally {
         setLoading(false);
       }
@@ -332,11 +415,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         }
         setOfficersList(json.data || []);
       } catch (err) {
-        showToast({
-          title: "Error Loading Officers",
-          description: err.message,
-          variant: "destructive",
-        });
+        showToast(
+          formatErrorMessage(err, {
+            title: "Officers Load Failed",
+            actionContext: `Loading officers for organization ${orgId}`,
+          }),
+          true
+        );
       } finally {
         setOfficersLoading(false);
       }
@@ -388,11 +473,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           setBylawsHistory([]);
         }
       } catch (err) {
-        showToast({
-          title: "Error Loading CBL Records",
-          description: err.message,
-          variant: "destructive",
-        });
+        showToast(
+          formatErrorMessage(err, {
+            title: "CBL Records Load Failed",
+            actionContext: `Loading CBL history for organization ${orgId}`,
+          }),
+          true
+        );
         setBylawsHistory([]);
       } finally {
         setBylawsHistoryLoading(false);
@@ -410,6 +497,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       acronym: org.acronym || "",
       category: org.category || "Academic",
       status: org.status || "Active",
+      bannerGradient: org.banner_gradient || "maroon",
       adviserName: org.adviser_name || "",
       adviserEmail: org.adviser_email || "",
       description: org.description || "",
@@ -429,10 +517,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     if (!selectedOrgForOfficers) return;
     if (!officerForm.email.trim() || !officerForm.position.trim()) {
       showToast({
-        title: "Validation Error",
-        description: "Officer email and position are required.",
-        variant: "destructive",
-      });
+        title: "Missing Officer Details",
+        description: "Officer email and position are required to whitelist access.",
+      }, true);
       return;
     }
 
@@ -464,11 +551,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       await loadOfficers(selectedOrgForOfficers.id);
       fetchOrganizations();
     } catch (err) {
-      showToast({
-        title: "Whitelist Failed",
-        description: err.message,
-        variant: "destructive",
-      });
+      showToast(
+        formatErrorMessage(err, {
+          title: "Whitelist Failed",
+          actionContext: `Whitelisting officer ${officerForm.email} for organization ${selectedOrgForOfficers?.name}`,
+        }),
+        true
+      );
     } finally {
       setAddingOfficer(false);
     }
@@ -493,11 +582,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       await loadOfficers(selectedOrgForOfficers.id);
       fetchOrganizations();
     } catch (err) {
-      showToast({
-        title: "Removal Failed",
-        description: err.message,
-        variant: "destructive",
-      });
+      showToast(
+        formatErrorMessage(err, {
+          title: "Officer Removal Failed",
+          actionContext: `Removing officer ${officerToRemove?.student_name || officerToRemove?.email}`,
+        }),
+        true
+      );
     }
   };
 
@@ -509,6 +600,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       acronym: "",
       category: "Academic",
       status: "Active",
+      bannerGradient: "maroon",
       adviserName: "",
       adviserEmail: "",
       description: "",
@@ -520,10 +612,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     if (e && e.preventDefault) e.preventDefault();
     if (!orgForm.name.trim()) {
       showToast({
-        title: "Validation Error",
-        description: "Organization name is required.",
-        variant: "destructive",
-      });
+        title: "Missing Organization Name",
+        description: "Organization name is required to save record.",
+      }, true);
       return;
     }
 
@@ -554,17 +645,20 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         setSelectedOrgForOfficers((prev) => ({
           ...prev,
           ...orgForm,
+          banner_gradient: orgForm.bannerGradient,
           adviser_name: orgForm.adviserName,
           adviser_email: orgForm.adviserEmail,
         }));
       }
       fetchOrganizations();
     } catch (err) {
-      showToast({
-        title: "Save Failed",
-        description: err.message,
-        variant: "destructive",
-      });
+      showToast(
+        formatErrorMessage(err, {
+          title: "Organization Save Failed",
+          actionContext: `Saving organization ${orgForm.name}`,
+        }),
+        true
+      );
     } finally {
       setSavingOrg(false);
     }
@@ -601,11 +695,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         loadBylawsHistory(uploadedOrgId);
       }
     } catch (err) {
-      showToast({
-        title: "Upload Failed",
-        description: err.message,
-        variant: "destructive",
-      });
+      showToast(
+        formatErrorMessage(err, {
+          title: "CBL Upload Failed",
+          actionContext: `Uploading CBL for organization ${cblUploadOrg?.name}`,
+        }),
+        true
+      );
     } finally {
       setUploadingCbl(false);
     }
@@ -615,7 +711,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const handlePreviewCbl = (org) => {
     setPreviewPdf({
       url: `/api/osas/organizations/${org.id}/bylaws?file=1`,
-      title: `${org.name} — Constitution & By-Laws (CBL)`,
+      title: `${org.name}: Constitution & By-Laws (CBL)`,
       filename: org.bylaws_original_filename || `${org.acronym || org.name}-CBL.pdf`,
     });
   };
@@ -632,7 +728,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     if (!cblReviewVersion || !selectedOrgForOfficers) return;
 
     if ((cblReviewAction === "Needs Revision" || cblReviewAction === "Declined") && cblReviewNote.trim().length < 5) {
-      toast.error("Please provide at least 5 characters explaining what needs revision or the reason for declining.");
+      toast.error("Review Note Required", {
+        description: "Please provide at least 5 characters explaining what needs revision or the reason for declining.",
+      });
       return;
     }
 
@@ -666,7 +764,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       await loadBylawsHistory(selectedOrgForOfficers.id);
       await fetchOrganizations(true);
     } catch (err) {
-      toast.error(err.message || "Failed to submit review.");
+      const errInfo = formatErrorMessage(err, {
+        title: "Review Submission Failed",
+        actionContext: `Submitting ${cblReviewAction} review for CBL`,
+      });
+      toast.error(errInfo.title, {
+        description: errInfo.description,
+        action: errInfo.action,
+      });
     } finally {
       setCblReviewSubmitting(false);
     }
@@ -1331,31 +1436,96 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             )}
           </div>
 
-          {/* 3. Navigation Toolbar: Category Line Tabs & Search/Status Controls */}
+          {/* 3. Navigation Toolbar: Category Navigation Slider & Search/Status Controls */}
           <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-            {/* Left: Category Line Tabs */}
-            <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
-              {CATEGORIES.map((cat) => {
-                const isActive =
-                  cat === "All"
-                    ? categoryFilters.length === 0
-                    : categoryFilters.length === 1 && categoryFilters[0] === cat;
-                return (
+            {/* Left: Category Navigation Slider */}
+            <div className="relative min-w-0 flex-1 max-w-full overflow-hidden flex items-center">
+              {/* Left Gradient Mask & Chevron */}
+              {canScrollLeft && (
+                <div className="absolute left-0 inset-y-0 z-10 flex items-center pr-3 bg-gradient-to-r from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
                   <button
-                    key={cat}
                     type="button"
-                    onClick={() => setCategoryFilters(cat === "All" ? [] : [cat])}
-                    className={cn(
-                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
-                      isActive
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-                    )}
+                    onClick={() => slideCategories("left")}
+                    className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-border shadow-xs flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 transition-all cursor-pointer active:scale-95"
+                    title="Slide left"
+                    aria-label="Slide categories left"
                   >
-                    {cat === "All" ? "All Organizations" : cat}
+                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
                   </button>
-                );
-              })}
+                </div>
+              )}
+
+              {/* Scrollable / Draggable Tabs Track */}
+              <div
+                ref={categoryTabsRef}
+                onMouseDown={handleTabsMouseDown}
+                onMouseMove={handleTabsMouseMove}
+                onMouseUp={handleTabsMouseUpOrLeave}
+                onMouseLeave={handleTabsMouseUpOrLeave}
+                className={cn(
+                  "flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth select-none py-1 px-0.5 w-full",
+                  isTabsDragging ? "cursor-grabbing" : "cursor-grab"
+                )}
+              >
+                {allCategories.map((cat) => {
+                  const isActive =
+                    cat === "All"
+                      ? categoryFilters.length === 0
+                      : categoryFilters.length === 1 && categoryFilters[0] === cat;
+                  const count =
+                    cat === "All"
+                      ? organizations.length
+                      : organizations.filter((o) => o.category === cat).length;
+
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={(e) => {
+                        setCategoryFilters(cat === "All" ? [] : [cat]);
+                        e.currentTarget.scrollIntoView({
+                          behavior: "smooth",
+                          block: "nearest",
+                          inline: "center",
+                        });
+                      }}
+                      className={cn(
+                        "relative h-8 px-3 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all cursor-pointer border whitespace-nowrap shrink-0 select-none",
+                        isActive
+                          ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white border-border/80 dark:border-white/10 shadow-xs"
+                          : "bg-transparent text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white border-transparent hover:bg-gray-100/60 dark:hover:bg-zinc-800/40"
+                      )}
+                    >
+                      <span>{cat === "All" ? "All Organizations" : cat}</span>
+                      <span
+                        className={cn(
+                          "px-1.5 py-0.2 rounded-full text-[10px] font-mono",
+                          isActive
+                            ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300 font-bold"
+                            : "bg-gray-200/60 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 font-medium"
+                        )}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right Gradient Mask & Chevron */}
+              {canScrollRight && (
+                <div className="absolute right-0 inset-y-0 z-10 flex items-center pl-3 bg-gradient-to-l from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
+                  <button
+                    type="button"
+                    onClick={() => slideCategories("right")}
+                    className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-border shadow-xs flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 transition-all cursor-pointer active:scale-95"
+                    title="Slide right"
+                    aria-label="Slide categories right"
+                  >
+                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Right: Search Input & Multi-Criteria Filter */}
@@ -1369,20 +1539,22 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search org name, acronym, adviser..."
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
                   {search && (
                     <button
                       type="button"
                       onClick={() => setSearch("")}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer"
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                      title="Clear search"
+                      aria-label="Clear search"
                     >
                       <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
                     </button>
                   )}
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 pointer-events-none">
-                    {filteredOrganizations.length}
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                    {filteredOrganizations.length.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -1419,21 +1591,28 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               ) : (
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <Card
+                    <div
                       key={i}
-                      className="rounded-2xl p-5 border border-border dark:border-border space-y-4"
+                      className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col justify-between"
                     >
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-6 w-16 rounded-md" />
-                        <Skeleton className="h-5 w-20 rounded-full" />
+                      <div className="bg-gray-100 dark:bg-zinc-800 p-5 space-y-3 rounded-t-[15px]">
+                        <div className="flex items-center justify-between">
+                          <Skeleton className="h-5 w-16 rounded-md" />
+                          <Skeleton className="h-5 w-20 rounded-full" />
+                        </div>
+                        <Skeleton className="h-5 w-3/4 rounded-md" />
                       </div>
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-12 w-full" />
-                      <div className="pt-3 border-t border-border dark:border-border flex justify-between">
-                        <Skeleton className="h-8 w-24 rounded-xl" />
-                        <Skeleton className="h-8 w-20 rounded-xl" />
+                      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                        <div className="space-y-3">
+                          <Skeleton className="h-4 w-1/2 rounded" />
+                          <Skeleton className="h-12 w-full rounded-xl" />
+                          <Skeleton className="h-10 w-full rounded-xl" />
+                        </div>
+                        <div className="pt-3 border-t border-border dark:border-border">
+                          <Skeleton className="h-9 w-full rounded-xl" />
+                        </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               )
@@ -1470,16 +1649,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             ) : viewMode === "table" ? (
               /* Table View Mode */
               <div className="overflow-x-auto w-full">
-                <table className="min-w-full text-sm">
+                <table className="w-full text-sm table-fixed min-w-[1000px]">
                   <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] uppercase font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                      <th className="py-3.5 px-6 font-semibold">Organization</th>
-                      <th className="py-3.5 px-4 font-semibold">Category</th>
-                      <th className="py-3.5 px-4 font-semibold">Faculty Adviser</th>
-                      <th className="py-3.5 px-4 font-semibold text-center">Officers</th>
-                      <th className="py-3.5 px-4 font-semibold">Constitution & By-Laws</th>
-                      <th className="py-3.5 px-4 font-semibold">Status</th>
-                      <th className="py-3.5 px-6 font-semibold text-right">Actions</th>
+                      <th className="py-3.5 px-6 font-semibold w-[30%]">Organization</th>
+                      <th className="py-3.5 px-4 font-semibold w-[13%]">Category</th>
+                      <th className="py-3.5 px-4 font-semibold w-[18%]">Faculty Adviser</th>
+                      <th className="py-3.5 px-4 font-semibold text-center w-[10%]">Officers</th>
+                      <th className="py-3.5 px-4 font-semibold w-[14%]">Constitution & By-Laws</th>
+                      <th className="py-3.5 px-4 font-semibold w-[9%]">Status</th>
+                      <th className="py-3.5 px-6 font-semibold text-right w-20">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
@@ -1493,24 +1672,31 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           className="hover:bg-gray-50/60 dark:hover:bg-zinc-800/30 transition-colors"
                         >
                           {/* Org Name & Acronym */}
-                          <td className="py-4 px-6">
+                          <td className="py-4 px-6 overflow-hidden">
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate max-w-xs md:max-w-sm">
-                                  {org.name}
-                                </span>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs border border-black/10 dark:border-white/20"
+                                  style={{
+                                    background: BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.previewGradient || BANNER_GRADIENT_PRESETS[0].previewGradient,
+                                  }}
+                                  title={`Theme: ${BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.label || "PUP Maroon"}`}
+                                />
                                 {org.acronym && (
-                                  <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0">
                                     {org.acronym}
                                   </span>
                                 )}
+                                <span className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate" title={org.name}>
+                                  {org.name}
+                                </span>
                               </div>
                               {org.description ? (
-                                <p className="text-[11px] text-gray-900 dark:text-zinc-300 line-clamp-1 mt-0.5 max-w-xs md:max-w-sm">
+                                <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate mt-0.5 block" title={org.description}>
                                   {org.description}
                                 </p>
                               ) : (
-                                <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block">
+                                <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block truncate">
                                   No description provided
                                 </span>
                               )}
@@ -1525,14 +1711,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Faculty Adviser */}
-                          <td className="py-4 px-4">
-                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-100">
+                          <td className="py-4 px-4 overflow-hidden">
+                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
                               {org.adviser_name || (
                                 <span className="text-gray-400 italic">Not assigned</span>
                               )}
                             </div>
                             {org.adviser_email && (
-                              <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono mt-0.5">
+                              <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono mt-0.5 truncate" title={org.adviser_email}>
                                 {org.adviser_email}
                               </div>
                             )}
@@ -1690,26 +1876,31 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   const proposalCount = parseInt(org.proposal_count, 10) || 0;
 
                   return (
-                    <Card
+                    <div
                       key={org.id}
-                      className="group rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs hover:border-border dark:hover:border-white/20 hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md transition-all duration-200"
                     >
                       {/* Institutional Header Banner */}
-                      <div className="relative overflow-hidden bg-gradient-to-br from-[#800000] via-[#700000] to-[#4d0000] p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+                      <div
+                        className={cn(
+                          "relative overflow-hidden rounded-t-[15px] bg-gradient-to-br p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] border-b border-black/10 dark:border-white/10",
+                          getOrgBannerGradientClasses(org.banner_gradient)
+                        )}
+                      >
                         {/* Ambient watermark */}
-                        <div className="absolute -right-3 -bottom-5 opacity-10 pointer-events-none select-none text-white">
-                          <HugeIcon className="ph-duotone ph-buildings text-7xl" />
+                        <div className="absolute -right-2 -bottom-2 text-white/10 pointer-events-none select-none transition-transform duration-300 group-hover:scale-105">
+                          <HugeIcon className="ph-duotone ph-buildings text-5xl" />
                         </div>
 
                         {/* Top Meta Chips */}
                         <div className="relative z-10 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {org.acronym && (
-                              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-white/20 text-white backdrop-blur-xs border border-white/25">
+                              <span className="px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-md bg-white/20 text-white backdrop-blur-xs border border-white/25 shadow-2xs">
                                 {org.acronym}
                               </span>
                             )}
-                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-black/30 text-white/90 backdrop-blur-xs border border-white/15">
+                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-black/25 text-white/90 backdrop-blur-xs border border-white/15">
                               {org.category}
                             </span>
                           </div>
@@ -1730,9 +1921,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </div>
 
                         {/* Organization Title */}
-                        <div className="relative z-10 mt-3.5">
+                        <div className="relative z-10 mt-3">
                           <h3
-                            className="text-base font-bold text-white tracking-tight leading-snug line-clamp-2"
+                            className="text-[15px] font-semibold text-white! tracking-tight leading-snug line-clamp-2 min-h-[44px] flex items-center"
+                            style={{ color: "#ffffff" }}
                             title={org.name}
                           >
                             {org.name}
@@ -1740,7 +1932,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </div>
                       </div>
 
-                      {/* Card Body - Clean, Less Text, Crisp Spacing */}
+                      {/* Card Body - Clean, Crisp Spacing */}
                       <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
                         <div className="space-y-3">
                           {/* Faculty Adviser Row */}
@@ -1749,17 +1941,22 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               <span className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
                                 <HugeIcon className="ph-bold ph-chalkboard-teacher text-xs" />
                               </span>
-                              <span className="truncate font-medium text-gray-800 dark:text-zinc-200">
-                                {org.adviser_name || (
-                                  <span className="text-gray-400 dark:text-zinc-500 italic font-normal">
-                                    No adviser assigned
-                                  </span>
-                                )}
-                              </span>
+                              <div className="min-w-0">
+                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider block leading-tight">
+                                  Adviser
+                                </span>
+                                <span className="truncate font-medium text-gray-900 dark:text-zinc-100 block leading-tight">
+                                  {org.adviser_name || (
+                                    <span className="text-gray-400 dark:text-zinc-500 italic font-normal">
+                                      No adviser assigned
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
                             </div>
                             {org.adviser_email && (
                               <span
-                                className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono truncate max-w-[130px]"
+                                className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono truncate max-w-[130px] self-end mb-0.5"
                                 title={org.adviser_email}
                               >
                                 {org.adviser_email}
@@ -1767,9 +1964,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             )}
                           </div>
 
-                          {/* Key Metrics - Compact paired stat pills */}
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border dark:border-border">
+                          {/* Key Metrics - Unified Segmented Tile */}
+                          <div className="grid grid-cols-2 divide-x divide-border dark:divide-border rounded-xl bg-gray-50/80 dark:bg-zinc-800/40 border border-border/80 dark:border-border p-2">
+                            <div className="flex items-center gap-2 px-2 min-w-0">
                               <span className="w-7 h-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center shrink-0">
                                 <HugeIcon className="ph-bold ph-shield-check text-sm" />
                               </span>
@@ -1783,7 +1980,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border dark:border-border">
+                            <div className="flex items-center gap-2 px-2 min-w-0">
                               <span className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 flex items-center justify-center shrink-0">
                                 <HugeIcon className="ph-bold ph-calendar-check text-sm" />
                               </span>
@@ -1799,12 +1996,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </div>
 
                           {/* CBL Archival Row */}
-                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border/50 dark:border-border">
+                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/50 dark:bg-zinc-800/30 border border-border/60 dark:border-border gap-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className={cn(
                                   "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                                  hasCbl
+                                  Number(org.pending_cbl_count) > 0
+                                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
+                                    : hasCbl
                                     ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
                                     : "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
                                 )}
@@ -1827,9 +2026,15 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                       {org.pending_cbl_count} Pending Review
                                     </span>
                                   ) : hasCbl ? (
-                                    "Official Archival Copy"
+                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium inline-flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                      Official Archival Copy
+                                    </span>
                                   ) : (
-                                    "Pending PDF Archival"
+                                    <span className="text-gray-400 dark:text-zinc-500 inline-flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                                      Pending PDF Archival
+                                    </span>
                                   )}
                                 </span>
                               </div>
@@ -1851,7 +2056,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     type="button"
                                     onClick={() => handlePreviewCbl(org)}
                                     title="Preview Official CBL"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
                                   >
                                     <HugeIcon className="ph-bold ph-eye text-xs" />
                                   </button>
@@ -1862,7 +2067,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                       setCblFile(null);
                                     }}
                                     title="Replace Archival CBL"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer"
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
                                   >
                                     <HugeIcon className="ph-bold ph-upload-simple text-xs" />
                                   </button>
@@ -1875,7 +2080,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     setCblFile(null);
                                   }}
                                   title="Upload Constitution & By-Laws"
-                                  className="h-6 px-2 text-[10px] font-semibold rounded-lg border-border dark:border-border cursor-pointer"
+                                  className="h-6 px-2 text-[10px] font-semibold rounded-lg border-border dark:border-border cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800"
                                 >
                                   Upload
                                 </Button>
@@ -1895,7 +2100,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </Button>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   );
                 })}
               </div>
@@ -1926,12 +2131,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-xl md:max-w-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
+            className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
-            <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
+            <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
               <div className="flex items-center gap-2 mb-1">
                 {selectedOrgForOfficers?.acronym && (
-                  <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                  <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20">
                     {selectedOrgForOfficers.acronym}
                   </span>
                 )}
@@ -1939,24 +2144,24 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   Manage Organization
                 </span>
               </div>
-              <SheetTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+              <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50">
                 {selectedOrgForOfficers?.name}
               </SheetTitle>
-              <SheetDescription className="text-xs text-gray-900 dark:text-zinc-300 mt-1">
+              <SheetDescription className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
                 Manage organization profile, accredited student officers, and official Constitution & By-Laws records.
               </SheetDescription>
             </SheetHeader>
 
             {/* Sub-tab segmented switcher */}
             <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1 bg-gray-100/90 dark:bg-zinc-800/80 p-1 rounded-xl border border-border/60 dark:border-border">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
                 <button
                   type="button"
                   onClick={() => setSheetSubTab("info")}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                     sheetSubTab === "info"
-                      ? "bg-pup-maroon text-white shadow-xs"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
@@ -1970,7 +2175,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                     sheetSubTab === "officers"
-                      ? "bg-pup-maroon text-white shadow-xs"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
@@ -1980,7 +2185,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     className={cn(
                       "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
                       sheetSubTab === "officers"
-                        ? "bg-white/20 text-white"
+                        ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
                         : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                     )}
                   >
@@ -1994,7 +2199,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                     sheetSubTab === "cbl"
-                      ? "bg-pup-maroon text-white shadow-xs"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
@@ -2004,7 +2209,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     className={cn(
                       "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
                       sheetSubTab === "cbl"
-                        ? "bg-white/20 text-white"
+                        ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
                         : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                     )}
                   >
@@ -2142,6 +2347,45 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           onChange={(e) => setOrgForm({ ...orgForm, adviserEmail: e.target.value })}
                           className="h-10 rounded-xl text-xs bg-white dark:bg-zinc-800"
                         />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Banner Gradient Theme
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {BANNER_GRADIENT_PRESETS.map((preset) => {
+                          const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => setOrgForm({ ...orgForm, bannerGradient: preset.id })}
+                              className={cn(
+                                "relative group flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95",
+                                isSelected
+                                  ? "border-pup-maroon dark:border-red-500 bg-pup-maroon/5 dark:bg-red-950/20 ring-2 ring-pup-maroon/20 dark:ring-red-500/20"
+                                  : "border-border/80 dark:border-border hover:border-gray-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/50"
+                              )}
+                            >
+                              <div
+                                className="w-7 h-7 rounded-lg shrink-0 shadow-xs border border-white/20 flex items-center justify-center text-white"
+                                style={{ background: preset.previewGradient }}
+                              >
+                                {isSelected && <HugeIcon className="ph-bold ph-check text-xs" />}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <span className="block text-[11px] font-semibold text-gray-900 dark:text-zinc-100 truncate leading-tight">
+                                  {preset.label}
+                                </span>
+                                <span className="block text-[9px] text-gray-500 dark:text-zinc-400 truncate leading-tight">
+                                  {preset.description}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -2428,7 +2672,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               onClick={() =>
                                 setPreviewPdf({
                                   url: ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1`,
-                                  title: `${selectedOrgForOfficers?.name} — ${ver.version_tag || `CBL v${ver.version_number || "1.0"}`}`,
+                                  title: `${selectedOrgForOfficers?.name}: ${ver.version_tag || `CBL v${ver.version_number || "1.0"}`}`,
                                   filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
                                 })
                               }
@@ -2514,32 +2758,30 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               )}
             </div>
 
-            <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 w-full">
-              <div className="flex items-center gap-3 w-full">
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-row items-center justify-end gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSelectedOrgForOfficers(null);
+                  setEditingOrg(null);
+                }}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Close
+              </Button>
+              {sheetSubTab === "info" && (
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedOrgForOfficers(null);
-                    setEditingOrg(null);
-                  }}
-                  className="flex-1 h-10 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  type="submit"
+                  form="org-info-form"
+                  onClick={handleSaveOrg}
+                  disabled={savingOrg}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
+                  style={{ color: "#ffffff" }}
                 >
-                  Close
+                  {savingOrg ? "Saving..." : "Save"}
                 </Button>
-                {sheetSubTab === "info" && (
-                  <Button
-                    type="submit"
-                    form="org-info-form"
-                    onClick={handleSaveOrg}
-                    disabled={savingOrg}
-                    className="flex-1 h-10 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
-                    style={{ color: "#ffffff" }}
-                  >
-                    {savingOrg ? "Saving..." : "Save"}
-                  </Button>
-                )}
-              </div>
+              )}
             </SheetFooter>
           </SheetContent>
         </Sheet>
@@ -2651,6 +2893,45 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
 
                 <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    Banner Gradient Theme
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {BANNER_GRADIENT_PRESETS.map((preset) => {
+                      const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setOrgForm({ ...orgForm, bannerGradient: preset.id })}
+                          className={cn(
+                            "relative group flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95",
+                            isSelected
+                              ? "border-pup-maroon dark:border-red-500 bg-pup-maroon/5 dark:bg-red-950/20 ring-2 ring-pup-maroon/20 dark:ring-red-500/20"
+                              : "border-border/80 dark:border-border hover:border-gray-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/50"
+                          )}
+                        >
+                          <div
+                            className="w-7 h-7 rounded-lg shrink-0 shadow-xs border border-white/20 flex items-center justify-center text-white"
+                            style={{ background: preset.previewGradient }}
+                          >
+                            {isSelected && <HugeIcon className="ph-bold ph-check text-xs" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="block text-[11px] font-semibold text-gray-900 dark:text-zinc-100 truncate leading-tight">
+                              {preset.label}
+                            </span>
+                            <span className="block text-[9px] text-gray-500 dark:text-zinc-400 truncate leading-tight">
+                              {preset.description}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                     Description & Mission
                   </label>
@@ -2664,12 +2945,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-gray-50/50 dark:bg-zinc-900/50 border-t border-border dark:border-border flex items-center justify-end gap-2.5 shrink-0">
+              <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setOrgModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
@@ -2686,7 +2967,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     ? "Update"
                     : "Register"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
@@ -2726,12 +3007,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-gray-50/50 dark:bg-zinc-900/50 border-t border-border dark:border-border flex items-center justify-end gap-2.5 shrink-0">
+              <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCblUploadOrg(null)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
@@ -2744,7 +3025,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 >
                   {uploadingCbl ? "Uploading..." : "Upload"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
@@ -2769,32 +3050,34 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleReviewCblSubmit} className="p-6 space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                  {cblReviewAction === "Approved" ? "Approval Remarks / Notes (Optional)" : "Review Feedback & Instructions"}
-                  {cblReviewAction !== "Approved" && <span className="text-red-500"> *</span>}
-                </label>
-                <textarea
-                  rows={4}
-                  required={cblReviewAction !== "Approved"}
-                  placeholder={
-                    cblReviewAction === "Approved"
-                      ? "Optional remarks for organizational record..."
-                      : "Provide detailed instructions for the student officers (minimum 5 characters)..."
-                  }
-                  value={cblReviewNote}
-                  onChange={(e) => setCblReviewNote(e.target.value)}
-                  className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
-                />
+            <form onSubmit={handleReviewCblSubmit} className="flex flex-col">
+              <div className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                    {cblReviewAction === "Approved" ? "Approval Remarks / Notes (Optional)" : "Review Feedback & Instructions"}
+                    {cblReviewAction !== "Approved" && <span className="text-red-500"> *</span>}
+                  </label>
+                  <textarea
+                    rows={4}
+                    required={cblReviewAction !== "Approved"}
+                    placeholder={
+                      cblReviewAction === "Approved"
+                        ? "Optional remarks for organizational record..."
+                        : "Provide detailed instructions for the student officers (minimum 5 characters)..."
+                    }
+                    value={cblReviewNote}
+                    onChange={(e) => setCblReviewNote(e.target.value)}
+                    className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                  />
+                </div>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-border dark:border-border">
+              <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCblReviewModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
@@ -2832,7 +3115,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     </span>
                   )}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>

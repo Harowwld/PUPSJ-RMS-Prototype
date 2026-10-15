@@ -98,7 +98,7 @@ const ConflictResolutionModals = memo(({
 
             {/* Conflict Resolution Mapping Table */}
             <div className="max-h-[46vh] overflow-auto rounded-xl border border-border/80 dark:border-border shadow-xs bg-white dark:bg-card">
-              <table className="min-w-full text-sm">
+              <table className="w-full text-sm table-fixed min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border/80 bg-gray-50/90 dark:border-border dark:bg-zinc-900/60 backdrop-blur-xs">
                   <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                     <th className="py-3 px-4 w-[28%] font-semibold">Displaced Drawer</th>
@@ -219,12 +219,12 @@ const ConflictResolutionModals = memo(({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-border dark:border-border flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => setTemplateConflictOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
@@ -253,29 +253,28 @@ const ConflictResolutionModals = memo(({
 
           <div className="p-6">
             <div className="max-h-[50vh] overflow-auto rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs">
-              <table className="min-w-full text-sm">
+              <table className="w-full text-sm table-fixed min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border/80 bg-gray-50/90 dark:border-border dark:bg-zinc-900/60 backdrop-blur-xs">
                   <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
-                    <th className="py-3 px-4 font-semibold">Original Location</th>
-                    <th className="py-3 px-4 font-semibold">New Destination</th>
-                    <th className="py-3 px-4 font-semibold text-center">Records Moved</th>
+                    <th className="py-3 px-4 w-[38%] font-semibold">Original Location</th>
+                    <th className="py-3 px-4 w-[42%] font-semibold">New Destination</th>
+                    <th className="py-3 px-4 w-[20%] font-semibold text-center">Records Moved</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {applyPreviewRows.map((r) => (
                     <tr key={r.fromKey} className="hover:bg-gray-50/40 dark:hover:bg-white/2 transition-colors">
-                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300">
+                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 truncate">
                         {r.fromLabel}
                       </td>
-                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        <div className="flex items-center gap-2">
+                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                        <div className="flex items-center gap-2 truncate">
                           <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
-                          <span>{r.toLabel}</span>
+                          <span className="truncate">{r.toLabel}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
-                          
                           {r.count}
                         </span>
                       </td>
@@ -286,12 +285,12 @@ const ConflictResolutionModals = memo(({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-border dark:border-border flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => setApplyPreviewOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Back
             </Button>
@@ -320,12 +319,12 @@ const ConflictResolutionModals = memo(({
 
           <div className="p-6">
             <div className="max-h-[50vh] overflow-auto rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs">
-              <table className="min-w-full text-sm">
+              <table className="w-full text-sm table-fixed min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border/80 bg-gray-50/90 dark:border-border dark:bg-zinc-900/60 backdrop-blur-xs">
                   <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
-                    <th className="py-3 px-4 font-semibold">From Location</th>
-                    <th className="py-3 px-4 font-semibold">To Destination</th>
-                    <th className="py-3 px-4 font-semibold text-center">Records Migrated</th>
+                    <th className="py-3 px-4 w-[38%] font-semibold">From Location</th>
+                    <th className="py-3 px-4 w-[42%] font-semibold">To Destination</th>
+                    <th className="py-3 px-4 w-[20%] font-semibold text-center">Records Migrated</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -364,12 +363,12 @@ const ConflictResolutionModals = memo(({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-4 bg-white dark:bg-card border-t border-border dark:border-border flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => setApplyReportOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

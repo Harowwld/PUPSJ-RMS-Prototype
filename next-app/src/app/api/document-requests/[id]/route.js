@@ -7,7 +7,7 @@ import {
   updateDocumentRequest,
   isValidRequestStatus,
 } from "../../../../lib/documentRequestsRepo";
-import { canTransitionRequestStatus } from "../../../../lib/constants";
+import { canTransitionRequestStatus, isTerminalRequestStatus } from "../../../../lib/constants";
 import { getDocumentById } from "../../../../lib/documentsRepo";
 import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { canAccessResource } from "../../../../lib/resourceAuthorization";
@@ -78,6 +78,15 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: false, error: "spaVerified must be a boolean." }, { status: 400 });
   }
 
+  const allowReopen =
+    body.allowReopen === true ||
+    String(body.allowReopen || "").toLowerCase() === "true" ||
+    body.allowReopen === "1" ||
+    Boolean(body.reopenReason);
+
+  const reopenReason = String(body.reopenReason || body.message || "").trim();
+  let isReopen = false;
+
   const patch = { updatedBy: staff.id, officeId };
 
   if (body.status !== undefined) {
@@ -88,14 +97,31 @@ export async function PATCH(req, ctx) {
         { status: 400 }
       );
     }
-    if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s)) {
+    isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(s);
+    if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s, { allowReopen })) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Cannot change status from "${existing.status}" to "${s}". Completed and finalized requests cannot be reverted.`,
+          error: `Cannot change status from "${existing.status}" to "${s}". Completed and finalized requests cannot be reverted without reopening authorization.`,
         },
         { status: 400 }
       );
+    }
+    if (isReopen) {
+      if (reopenReason.length < 5) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "A written justification (at least 5 characters) explaining why this request is being reopened is required.",
+          },
+          { status: 400 }
+        );
+      }
+      patch.allowReopen = true;
+      patch.reopenReason = reopenReason;
+      if (!body.message) {
+        patch.message = reopenReason;
+      }
     }
     if (s === "Deficient" && !String(body.message || "").trim()) {
       return NextResponse.json({ ok: false, error: "Add a comment explaining what the student needs to provide." }, { status: 400 });
@@ -179,10 +205,28 @@ export async function PATCH(req, ctx) {
   if (patch.message !== undefined) parts.push(`update posted: "${patch.message}"`);
   if (patch.linkedDocumentId !== undefined)
     parts.push(`linked document ${patch.linkedDocumentId ?? "cleared"}`);
-  await writeAuditLog(
-    req,
-    `Updated document request #${id}${parts.length ? ` (${parts.join(", ")})` : ""}`
-  );
+
+  if (isReopen) {
+    await writeAuditLog(
+      req,
+      "Reopen Document Request",
+      {
+        entity_type: "document_request",
+        entity_id: String(id),
+        details: `Reopened request #${id} (${existing.status} → ${patch.status}). Reason: ${reopenReason}`,
+        severity: "WARN",
+      }
+    );
+  } else {
+    await writeAuditLog(
+      req,
+      `Updated document request #${id}${parts.length ? ` (${parts.join(", ")})` : ""}`,
+      {
+        entity_type: "document_request",
+        entity_id: String(id),
+      }
+    );
+  }
 
   return NextResponse.json({ ok: true, data: row });
 }

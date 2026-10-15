@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { getDocAvailabilityForType } from "@/lib/docAvailability";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import DocumentRequestDetailSheet from "@/components/staff/requests/DocumentRequestDetailSheet";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import {
   Empty,
@@ -43,10 +44,12 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
+  ALLOWED_REOPEN_TRANSITIONS,
 } from "@/lib/constants";
 import {
   getRequestCharterStatus,
@@ -146,6 +149,12 @@ export default function DocumentRequestsTab({
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editUpdateMessage, setEditUpdateMessage] = useState("");
+
+  // Reopen Request state
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [reopenTargetStatus, setReopenTargetStatus] = useState("InProgress");
+  const [reopenReason, setReopenReason] = useState("");
+  const [reopenSubmitting, setReopenSubmitting] = useState(false);
 
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
@@ -258,7 +267,13 @@ export default function DocumentRequestsTab({
         setTotal(Number(json.total) || 0);
       } catch (e) {
         if (showLoading || isManual) {
-          showToast?.({ title: "Load Failed", description: e?.message || "Unable to load requests." }, true);
+          showToast?.(
+            formatErrorMessage(e, {
+              title: "Requests Load Failed",
+              actionContext: "Loading document requests",
+            }),
+            true
+          );
           setRows([]);
           setTotal(0);
         }
@@ -321,7 +336,13 @@ export default function DocumentRequestsTab({
       setEditNotes(json.data.notes || "");
       setEditUpdateMessage("");
     } catch (e) {
-      showToast?.({ title: "Load Failed", description: e?.message || "Unable to load details." }, true);
+      showToast?.(
+        formatErrorMessage(e, {
+          title: "Details Load Failed",
+          actionContext: "Loading request audit timeline",
+        }),
+        true
+      );
       setSelectedId(null);
     } finally {
       setDetailLoading(false);
@@ -367,7 +388,7 @@ export default function DocumentRequestsTab({
   }, [retentionExpiryDate]);
 
   const patchDetail = async (body, opts = {}) => {
-    if (!detail?.id) return;
+    if (!detail?.id) return false;
     const reqId = detail.id;
     const silent = opts.silent === true;
     setSaving(true);
@@ -387,13 +408,40 @@ export default function DocumentRequestsTab({
         showToast?.({ title: "Request Updated", description: "Status and updates have been saved." });
       }
       loadList({ showLoading: false });
+      return true;
     } catch (e) {
       if (body.linkedDocumentId != null) {
         autoLinkAttempted.current.delete(reqId);
       }
-      showToast?.({ title: "Update Failed", description: e?.message || "Unable to save changes." }, true);
+      showToast?.(
+        formatErrorMessage(e, {
+          title: "Update Failed",
+          actionContext: `Updating request #${reqId}`,
+        }),
+        true
+      );
+      return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleConfirmReopen = async () => {
+    if (!detail?.id || reopenReason.trim().length < 5) return;
+    setReopenSubmitting(true);
+    try {
+      const ok = await patchDetail({
+        status: reopenTargetStatus,
+        allowReopen: true,
+        reopenReason: reopenReason.trim(),
+        message: reopenReason.trim(),
+      });
+      if (ok) {
+        setReopenModalOpen(false);
+        setReopenReason("");
+      }
+    } finally {
+      setReopenSubmitting(false);
     }
   };
 
@@ -444,21 +492,21 @@ export default function DocumentRequestsTab({
   const handleCreate = async (e) => {
     e.preventDefault();
     if (createClientType === "Student" && !createStudentNo.trim()) {
-      showToast?.({ title: "Validation Error", description: "Please select or enter a student number." }, true);
+      showToast?.({ title: "Missing Student Number", description: "Please select or enter a student number." }, true);
       return;
     }
     if (createClientType === "Alumni") {
       if (!createRequesterName.trim()) {
-        showToast?.({ title: "Validation Error", description: "Please provide the requester name." }, true);
+        showToast?.({ title: "Missing Requester Name", description: "Please provide the alumni requester name." }, true);
         return;
       }
       if (!createCourseCode) {
-        showToast?.({ title: "Validation Error", description: "Please select the academic program attended." }, true);
+        showToast?.({ title: "Missing Academic Program", description: "Please select the academic program attended." }, true);
         return;
       }
     }
     if (!createDocType) {
-      showToast?.({ title: "Validation Error", description: "Please select a document type." }, true);
+      showToast?.({ title: "Missing Document Type", description: "Please select a document type to request." }, true);
       return;
     }
 
@@ -477,13 +525,19 @@ export default function DocumentRequestsTab({
         }),
       });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create request");
       showToast?.({ title: "Request Created", description: "Request added successfully." });
       setCreateOpen(false);
       setPage(1);
       loadList({ showLoading: true });
     } catch (err) {
-      showToast?.({ title: "Creation Failed", description: err?.message || "Unable to create the request." }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Request Creation Failed",
+          actionContext: "Submitting new document request",
+        }),
+        true
+      );
     } finally {
       setSubmitting(false);
     }
@@ -696,8 +750,24 @@ export default function DocumentRequestsTab({
                     placeholder="Search student, name, program..."
                     className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
-                    {total > 0 ? `${total.toLocaleString()}` : "0"}
+                  <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                    {q && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQ("");
+                          setPage(1);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                        title="Clear search"
+                        aria-label="Clear search"
+                      >
+                        <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                      </button>
+                    )}
+                    <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                      {total > 0 ? `${total.toLocaleString()}` : "0"}
+                    </span>
                   </div>
                 </div>
 
@@ -744,10 +814,10 @@ export default function DocumentRequestsTab({
               </div>
             ) : (
               <div className="overflow-x-auto w-full">
-                <table className={cn("min-w-full text-sm table-fixed", displayedRows.length === 0 && "h-full")}>
+                <table className={cn("w-full text-sm table-fixed min-w-[1000px]", displayedRows.length === 0 && "h-full")}>
                   <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                      <th className="p-4 w-20">
+                      <th className="p-4 w-[8%]">
                         <button
                           type="button"
                           onClick={() => handleSort("id")}
@@ -760,7 +830,7 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[240px]">
+                      <th className="p-4 w-[22%]">
                         <button
                           type="button"
                           onClick={() => handleSort("student")}
@@ -773,7 +843,7 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="student" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[180px]">
+                      <th className="p-4 w-[18%]">
                         <button
                           type="button"
                           onClick={() => handleSort("doc_type")}
@@ -786,7 +856,7 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[140px]">
+                      <th className="p-4 w-[12%]">
                         <button
                           type="button"
                           onClick={() => handleSort("status")}
@@ -799,12 +869,12 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 min-w-[260px]">
+                      <th className="p-4 w-[22%]">
                         <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                           Service Standard (SLA)
                         </span>
                       </th>
-                      <th className="p-4 min-w-[170px]">
+                      <th className="p-4 w-[11%]">
                         <button
                           type="button"
                           onClick={() => handleSort("created_at")}
@@ -817,7 +887,7 @@ export default function DocumentRequestsTab({
                           <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 text-right min-w-[100px] text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                      <th className="p-4 pr-6 text-right w-[7%] text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                         Action
                       </th>
                     </tr>
@@ -848,8 +918,6 @@ export default function DocumentRequestsTab({
                       </tr>
                     ) : (
                       displayedRows.map((r) => {
-                        const student = studentMap.get(String(r.student_no || "").toUpperCase());
-                        const loc = student || (r.room ? { room: r.room, cabinet: r.cabinet, drawer: r.drawer, studentNo: r.student_no, name: r.student_name } : null);
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
                         const charter = getRequestCharterStatus(r, slaStandards);
@@ -863,16 +931,16 @@ export default function DocumentRequestsTab({
                             )}
                             onClick={() => openDetail(r.id)}
                           >
-                            <td className="p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400">
+                            <td className="p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                               #{r.id}
                             </td>
-                            <td className="p-4 align-middle">
+                            <td className="p-4 align-middle overflow-hidden">
                               <div className="flex items-center gap-2">
                                 <span
                                   className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
                                   title={formatTitleCase(r.student_name || r.requester_name)}
                                 >
-                                  {formatTitleCase(r.student_name || r.requester_name) || "—"}
+                                  {formatTitleCase(r.student_name || r.requester_name) || "N/A"}
                                 </span>
                                 <span
                                   className={cn(
@@ -896,58 +964,40 @@ export default function DocumentRequestsTab({
                                   </span>
                                 )}
                               </div>
-                              <div className="flex flex-wrap items-center gap-2 mt-1 truncate text-xs font-normal text-[#8E8E93] dark:text-zinc-500">
+                              <div className="flex items-center gap-1.5 mt-1 min-w-0 overflow-hidden text-xs font-normal text-[#8E8E93] dark:text-zinc-500">
                                 {r.student_no ? (
-                                  <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                                  <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap shrink-0">
                                     {r.student_no}
                                   </span>
                                 ) : (
-                                  <span className="italic text-xs text-amber-600 dark:text-amber-400">No Student ID</span>
+                                  <span className="italic text-xs text-amber-600 dark:text-amber-400 shrink-0">No Student ID</span>
                                 )}
                                 {r.course_code && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 shrink-0">
                                     {r.course_code}
                                   </span>
                                 )}
-                                {loc && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onLocateOnMap({
-                                        room: loc.room,
-                                        cabinet: loc.cabinet,
-                                        drawer: loc.drawer,
-                                        studentNo: r.student_no,
-                                        name: r.student_name || r.requester_name,
-                                      });
-                                    }}
-                                    title="View student location on storage map"
-                                    className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-border cursor-pointer transition-colors whitespace-nowrap"
-                                  >
-                                    <HugeIcon  className="ph-bold ph-map-pin text-[10px]"></HugeIcon>
-                                    RM{loc.room} · CAB-{loc.cabinet} · DRW-{loc.drawer}
-                                  </button>
-                                )}
                               </div>
                             </td>
-                            <td className="p-4 align-middle">
-                              <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200 whitespace-nowrap">
-                                {r.doc_type}
+                            <td className="p-4 align-middle overflow-hidden">
+                              <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
+                                <span className="truncate" title={r.doc_type}>
+                                  {r.doc_type}
+                                </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle">
+                            <td className="p-4 align-middle whitespace-nowrap">
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                               </div>
                             </td>
-                            <td className="p-4 align-middle">
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap", charter.tier.badgeClass)}>
+                            <td className="p-4 align-middle overflow-hidden">
+                              <div className="flex flex-col gap-1 min-w-0">
+                                <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass)}>
                                     {charter.tier.shortLabel}
                                   </span>
-                                  <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap", charter.badgeClass)}>
+                                  <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0", charter.badgeClass)}>
                                     <HugeIcon  className={cn("ph-bold text-[10px]", charter.icon || "ph-clock")} />
                                     {charter.label}
                                   </span>
@@ -960,7 +1010,7 @@ export default function DocumentRequestsTab({
                             <td className="p-4 align-middle text-xs font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
                               {formatPHDateTime(r.created_at)}
                             </td>
-                            <td className="p-4 align-middle text-right">
+                            <td className="p-4 pr-6 align-middle text-right">
                               <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1047,7 +1097,7 @@ export default function DocumentRequestsTab({
         </Card>
 
         {/* 6. Request Detail Sheet Slide-Over Drawer */}
-        <Sheet
+        <DocumentRequestDetailSheet
           open={Boolean(selectedId)}
           onOpenChange={(open) => {
             if (!open) {
@@ -1056,548 +1106,33 @@ export default function DocumentRequestsTab({
               setEditUpdateMessage("");
             }
           }}
-        >
-          <SheetContent
-            className="font-jakarta flex flex-col border-l bg-white p-0 shadow-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full dark:border-border dark:bg-[#121214]"
-            style={{ borderLeft: "0.5px solid rgba(0,0,0,0.08)" }}
-          >
-            {/* Sheet Header */}
-            <SheetHeader className="p-6 pb-4 border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 text-left">
-              <div className="flex items-start justify-between">
-                <div>
-                  <SheetTitle className="text-left text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                    Request Details
-                  </SheetTitle>
-                  <SheetDescription className="mt-1 text-left text-xs font-normal text-gray-900 dark:text-zinc-300 flex items-center gap-2">
-                    <span>Request #{selectedId}</span>
-                    {detail && (
-                      <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-medium", statusBadgeClass(detail.status))}>
-                        {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
-                      </span>
-                    )}
-                  </SheetDescription>
-                </div>
-              </div>
-            </SheetHeader>
-
-            {/* Sheet Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              {detailLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-28 w-full rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-20 w-full rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-24 w-full rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-28 w-full rounded-xl dark:bg-muted" />
-                </div>
-              ) : detail ? (
-                <>
-                  {/* Top 2-Column Grid: Requester Profile & Storage Location */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Requester Profile Card */}
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                        Requester Profile
-                      </span>
-                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl p-4 flex flex-col justify-between space-y-2">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-sm text-gray-900 dark:text-zinc-50 truncate" title={formatTitleCase(detail.student_name || detail.requester_name)}>
-                              {formatTitleCase(detail.student_name || detail.requester_name) || "—"}
-                            </span>
-                            <span
-                              className={cn(
-                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
-                                detail.client_type === "Parent"
-                                  ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
-                                  : detail.client_type === "Alumni"
-                                  ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
-                                  : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
-                              )}
-                            >
-                              {detail.client_type === "Parent" ? "Parent/Guardian" : detail.client_type === "Alumni" ? "Alumni" : "Student"}
-                            </span>
-                          </div>
-                          <div>
-                            {detail.student_no ? (
-                              <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 inline-block">
-                                {detail.student_no}
-                              </span>
-                            ) : (
-                              <span className="italic text-xs text-amber-600 dark:text-amber-400">No Student ID</span>
-                            )}
-                          </div>
-                          {detail.client_type === "Parent" && (
-                            <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal space-y-0.5 pt-1 border-t border-border/60 dark:border-border">
-                              <div>Parent/Guardian: <strong className="text-gray-900 dark:text-zinc-100">{detail.requester_name || "—"}</strong></div>
-                              <div>Relationship: <strong className="text-gray-900 dark:text-zinc-100">{detail.requester_relationship || "Legal Guardian"}</strong></div>
-                              {detail.requester_contact && <div>Contact: <span className="font-mono">{detail.requester_contact}</span></div>}
-                            </div>
-                          )}
-                          {(detail.course_code || studentForRequest?.courseCode) && (
-                            <div className="text-xs text-gray-600 dark:text-zinc-300 font-normal">
-                              Program: <span className="font-semibold text-gray-900 dark:text-zinc-100">{detail.course_code || studentForRequest?.courseCode}</span>
-                              {detail.course_name ? ` — ${detail.course_name}` : ""}
-                            </div>
-                          )}
-                        </div>
-                        {(detail.requester_email || detail.email) && (
-                          <div className="text-xs text-gray-900 dark:text-zinc-300 font-normal pt-1.5 border-t border-border/60 dark:border-border truncate flex items-center gap-1.5">
-                            <HugeIcon  className="ph-bold ph-envelope text-gray-400 text-xs"></HugeIcon>
-                            <span className="truncate">{detail.requester_email || detail.email}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Physical Storage Location Card */}
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                        Physical Storage Location
-                      </span>
-                      <div className="w-full h-full rounded-xl border border-border p-4 dark:border-border bg-[#F5F5F7] dark:bg-zinc-800/40 flex flex-col justify-between space-y-2">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-gray-900 dark:text-zinc-300">
-                              Physical Archive
-                            </span>
-                            {studentForRequest || detail.room ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30">
-                                Mapped
-                              </span>
-                            ) : null}
-                          </div>
-
-                          {studentForRequest || detail.room ? (
-                            <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
-                              <HugeIcon  className="ph-bold ph-archive text-pup-maroon dark:text-red-400 text-sm"></HugeIcon>
-                              <span>Room {detail.room || studentForRequest?.room} · Cabinet {detail.cabinet || studentForRequest?.cabinet} · Drawer {detail.drawer || studentForRequest?.drawer}</span>
-                            </div>
-                          ) : (
-                            <div className="text-xs text-amber-700 dark:text-amber-400 font-normal">
-                              {detail.student_no
-                                ? "Student record not loaded — check student number."
-                                : "No physical storage mapped for this record."}
-                            </div>
-                          )}
-                        </div>
-
-                        <Button
-                          type="button"
-                          title="Locate on Storage Map"
-                          className="mt-2 w-full btn-brand-red text-white! font-semibold text-xs h-9 rounded-xl transition-all border-0 flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
-                          style={{ color: "#ffffff" }}
-                          disabled={!studentForRequest && !detail.room}
-                          onClick={() => {
-                            const target = studentForRequest || (detail.room ? {
-                              room: detail.room,
-                              cabinet: detail.cabinet,
-                              drawer: detail.drawer,
-                              studentNo: detail.student_no,
-                              name: detail.student_name || detail.requester_name,
-                            } : null);
-                            if (!target) return;
-                            if (requestNeedsPhysicalVerification) {
-                              setFileWarningOpen(true);
-                              return;
-                            }
-                            onLocateOnMap(target);
-                          }}
-                        >
-                          Locate
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* SPA Verification Card for Parent / Legal Guardian */}
-                  {detail.client_type === "Parent" && (
-                    <div className="rounded-xl border border-amber-200/90 bg-amber-50/60 dark:border-amber-900/40 dark:bg-amber-950/20 p-4 space-y-2.5">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <HugeIcon className="ph-bold ph-shield-check text-amber-700 dark:text-amber-400 text-base" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-amber-950 dark:text-amber-200">
-                            Special Power of Attorney (SPA) Verification
-                          </span>
-                        </div>
-                        {detail.spa_verified ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                            <HugeIcon className="ph-fill ph-check-circle text-xs" />
-                            SPA Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                            <HugeIcon className="ph-fill ph-clock text-xs" />
-                            Verification Pending
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                        {detail.spa_verified
-                          ? `SPA and valid ID verified by ${detail.spa_verified_by || "Registrar Staff"} ${detail.spa_verified_at ? `on ${formatPHDateTime(detail.spa_verified_at)}` : ""}. Authorized to release student records under RA 10173.`
-                          : "Under RA 10173 (Data Privacy Act), third-party parent/guardian releases strictly require verifying the attached Special Power of Attorney and valid government ID before issuing official documents."}
-                      </p>
-                      <div className="pt-1 flex items-center justify-end">
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={saving}
-                          onClick={() => patchDetail({ spaVerified: !detail.spa_verified })}
-                          title={detail.spa_verified ? "Revoke Verification" : "Verify SPA & Identity"}
-                          className={cn(
-                            "h-8 px-4 text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer active:scale-95",
-                            detail.spa_verified
-                              ? "border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
-                              : "bg-emerald-600 hover:bg-emerald-700 text-white border-0"
-                          )}
-                        >
-                          {detail.spa_verified ? "Revoke" : "Verify"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Document Requested & Purpose (Grid on sm+ screens) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Document Requested Card */}
-                    <div className="flex flex-col sm:col-span-1">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                        Document Requested
-                      </span>
-                      <div className="w-full h-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl p-4 flex flex-col justify-between space-y-2">
-                        <span className="inline-flex w-fit items-center rounded-full bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-border px-3 py-1 text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          {detail.doc_type}
-                        </span>
-                        <span className="text-[11px] text-gray-900 dark:text-zinc-300 flex items-center gap-1.5">
-                          <HugeIcon  className="ph-bold ph-calendar text-gray-400 text-xs"></HugeIcon>
-                          {formatPHDateTime(detail.created_at)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Stated Purpose */}
-                    <div className="flex flex-col sm:col-span-2">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                        Requester Stated Purpose
-                      </span>
-                      <div className="w-full h-full min-h-[64px] p-4 text-xs font-normal text-gray-700 dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-border rounded-xl whitespace-pre-wrap leading-relaxed">
-                        {detail.notes || <span className="text-gray-400 italic">No purpose entered by requester.</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Attached Supporting Documents */}
-                  {Array.isArray(detail.attachments) && detail.attachments.length > 0 && (
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 flex items-center justify-between">
-                        <span>Supporting Attachments ({detail.attachments.length})</span>
-                        <span className="text-[10px] font-normal text-gray-400">Official student / parent uploads</span>
-                      </span>
-                      <div className="space-y-2">
-                        {detail.attachments.map((att) => {
-                          const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
-                          const fileUrl = att.url || `/api/document-requests/${detail.id}/attachments/${att.id}`;
-                          const typeLabel =
-                            att.attachment_type === "spa"
-                              ? "Special Power of Attorney (SPA)"
-                              : att.attachment_type === "valid_id"
-                              ? "Valid Government ID"
-                              : att.attachment_type === "receipt"
-                              ? "Proof of Payment"
-                              : att.attachment_type === "clearance"
-                              ? "Clearance Slip"
-                              : "Supporting Evidence";
-
-                          return (
-                            <div
-                              key={att.id}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border border-[#E5E5EA] dark:border-border bg-[#F5F5F7] dark:bg-zinc-800/40"
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-border/60 dark:border-border">
-                                  <HugeIcon className={isPdf ? "ph-fill ph-file-pdf text-red-500 text-base" : "ph-fill ph-file-image text-blue-500 text-base"} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate block">
-                                    {att.original_filename}
-                                  </span>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 border border-border/60 dark:border-border">
-                                      {typeLabel}
-                                    </span>
-                                    {att.size_bytes && (
-                                      <span className="text-[10px] text-gray-400 dark:text-zinc-500">
-                                        {(att.size_bytes / 1024).toFixed(1)} KB
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                                {isPdf && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setPdfPreviewData({
-                                        url: fileUrl,
-                                        title: att.original_filename,
-                                        subtitle: `${typeLabel} for Request #${detail.id}`,
-                                        studentName: detail.student_name || "Requester",
-                                        docType: typeLabel,
-                                        originalFilename: att.original_filename,
-                                      });
-                                      setPdfPreviewOpen(true);
-                                    }}
-                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
-                                  >
-                                    Preview
-                                  </Button>
-                                )}
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  download={att.original_filename}
-                                  className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
-                                >
-                                  Download
-                                </a>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Service Standard (SLA) Turnaround Card */}
-                  {(() => {
-                    const charter = getRequestCharterStatus(detail, slaStandards);
-                    const frameworkTitle = slaStandards?.frameworkName || "Service Standard (SLA)";
-                    const isWorkingDays = slaStandards?.workingDaysOnly !== false;
-                    return (
-                      <div className="flex flex-col">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5 flex items-center justify-between">
-                          <span>{frameworkTitle}</span>
-                          <span className="text-[10px] font-normal lowercase tracking-normal text-gray-400">
-                            {isWorkingDays ? "working days only" : "calendar days"}
-                          </span>
-                        </span>
-                        <div className="w-full rounded-xl border border-border dark:border-border bg-[#F5F5F7] dark:bg-zinc-800/40 p-4 space-y-2.5">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold", charter.tier.badgeClass)}>
-                                {charter.tier.name} ({charter.tier.days} Days)
-                              </span>
-                              <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold", charter.badgeClass)}>
-                                <HugeIcon  className={cn("ph-bold", charter.icon || "ph-clock")} />
-                                {charter.label}
-                              </span>
-                            </div>
-                            <div className="text-right text-xs">
-                              <span className="text-gray-900 dark:text-zinc-300">Target Deadline: </span>
-                              <span className="font-semibold text-gray-900 dark:text-zinc-100">{charter.deadlineFormatted}</span>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                            {charter.detail}. {charter.tier.description}.
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Update Status & Timeline Message Card */}
-                  <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-3.5">
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400">
-                          {isTerminalStatus ? "Request Lifecycle State" : "Update Status"}
-                        </span>
-                        <span className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
-                          {detail.status === "Completed"
-                            ? "This document has been issued/released to the requester. This transaction is fulfilled and closed."
-                            : detail.status === "Shredded"
-                            ? "This unclaimed document was shredded after exceeding the 90-day retention schedule. This record is closed."
-                            : detail.status === "Cancelled"
-                            ? "This request was cancelled and is permanently closed."
-                            : "Select the next progressive stage of this request"}
-                        </span>
-                      </div>
-                      <div className="w-full sm:w-52 shrink-0">
-                        {isTerminalStatus ? (
-                          <div className="h-9 px-3 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                            <span className="flex items-center gap-1.5 truncate">
-                              <HugeIcon  className="ph-bold ph-lock-simple text-gray-400 text-xs"></HugeIcon>
-                              <span>{detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}</span>
-                            </span>
-                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                              Closed
-                            </span>
-                          </div>
-                        ) : (
-                          <Select
-                            className="w-full h-9 py-1 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
-                            menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                            optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                            value={editStatus}
-                            disabled={saving}
-                            onChange={(e) => setEditStatus(e.target.value)}
-                          >
-                            {availableStatuses.map((s) => (
-                              <option key={s} value={s}>
-                                {s === "InProgress" ? "In Progress" : s}
-                              </option>
-                            ))}
-                          </Select>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Add Timeline Update */}
-                    <div className="flex flex-col pt-3 border-t border-border dark:border-border">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400">
-                          {isTerminalStatus ? "Add Archival Note / Log" : "Add Timeline Update"}
-                        </span>
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500">
-                          {isTerminalStatus ? "Audit record note" : (editStatus !== detail.status ? "Optional custom notice (defaults if blank)" : "Visible to requester")}
-                        </span>
-                      </div>
-                      <textarea
-                        className="w-full min-h-[72px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-border dark:border-border rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
-                        value={editUpdateMessage}
-                        onChange={(e) => setEditUpdateMessage(e.target.value)}
-                        placeholder={
-                          isTerminalStatus
-                            ? "Add an archival note or release verification detail..."
-                            : editStatus !== detail.status
-                            ? "Optional: Add custom instructions (or leave empty to post standard milestone notification)..."
-                            : "e.g. Document printed, awaiting dry seal..."
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Timeline History */}
-                  {Array.isArray(detail.updates) && detail.updates.length > 0 && (
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
-                        Activity History ({detail.updates.length})
-                      </span>
-                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                        {detail.updates.map((u, idx) => {
-                          const isConsecutiveSameStatus =
-                            idx > 0 && u.status === detail.updates[idx - 1].status;
-                          return (
-                            <div
-                              key={u.id || idx}
-                              className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800/40 border border-border/70 dark:border-border text-xs space-y-1"
-                            >
-                              <div className="flex items-center justify-between text-[11px]">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-gray-800 dark:text-zinc-200">
-                                    {isConsecutiveSameStatus
-                                      ? "Follow-Up Notice"
-                                      : u.status === "InProgress"
-                                      ? "In Progress"
-                                      : u.status}
-                                  </span>
-                                  {isConsecutiveSameStatus && (
-                                    <span className="text-[10px] text-gray-900 dark:text-zinc-300 bg-gray-200/60 dark:bg-zinc-700/60 px-1.5 py-0.5 rounded">
-                                      {u.status}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-gray-400 dark:text-zinc-500 text-[10px] font-mono">
-                                  {formatPHDateTime(u.created_at)}
-                                </span>
-                              </div>
-                              {u.message && (
-                                <div className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
-                                  {u.message}
-                                </div>
-                              )}
-                              <div className="text-[10px] text-gray-400 dark:text-zinc-500">
-                                By {u.actor_name || "Staff"}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 90-Day Retention Policy Notice */}
-                  {detail.status === "Ready" && retentionExpiryDate && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-fast">
-                      <div className="flex gap-3">
-                        <HugeIcon  className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></HugeIcon>
-                        <div className="text-xs">
-                          <span className="font-semibold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px] uppercase">
-                            PUP ODRS Retention Policy
-                          </span>
-                          <span className="text-gray-600 dark:text-zinc-400 block mt-0.5 leading-normal">
-                            Unclaimed documents are shredded after 90 days according to ODRS policy.
-                          </span>
-                          <span className="text-amber-800 dark:text-amber-400 font-semibold block mt-1.5 flex items-center gap-1.5">
-                            <HugeIcon  className="ph-bold ph-warning"></HugeIcon>
-                            Shred Schedule: {retentionExpiryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                            {daysRemaining !== null && (
-                              <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : null}
-            </div>
-
-            {/* Sheet Sticky Footer */}
-            <div className="p-4 px-6 border-t border-border dark:border-border bg-white dark:bg-[#18181b] flex items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
-                onClick={() => {
-                  setSelectedId(null);
-                  setDetail(null);
-                  setEditUpdateMessage("");
-                }}
-              >
-                Close
-              </Button>
-
-              {hasEdits && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700"
-                    onClick={handleResetEdits}
-                    disabled={saving}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-9 px-4 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
-                    style={{ color: "#ffffff" }}
-                    onClick={handleManualSave}
-                    disabled={saving}
-                    title="Save Changes"
-                  >
-                    {saving ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
+          selectedId={selectedId}
+          detail={detail}
+          detailLoading={detailLoading}
+          editStatus={editStatus}
+          setEditStatus={setEditStatus}
+          editUpdateMessage={editUpdateMessage}
+          setEditUpdateMessage={setEditUpdateMessage}
+          availableStatuses={availableStatuses}
+          isTerminalStatus={isTerminalStatus}
+          saving={saving}
+          hasEdits={hasEdits}
+          handleResetEdits={handleResetEdits}
+          handleManualSave={handleManualSave}
+          patchDetail={patchDetail}
+          studentForRequest={studentForRequest}
+          requestNeedsPhysicalVerification={requestNeedsPhysicalVerification}
+          setFileWarningOpen={setFileWarningOpen}
+          onLocateOnMap={onLocateOnMap}
+          setPdfPreviewData={setPdfPreviewData}
+          setPdfPreviewOpen={setPdfPreviewOpen}
+          slaStandards={slaStandards}
+          setReopenTargetStatus={setReopenTargetStatus}
+          setReopenReason={setReopenReason}
+          setReopenModalOpen={setReopenModalOpen}
+          retentionExpiryDate={retentionExpiryDate}
+          daysRemaining={daysRemaining}
+        />
 
         {/* 7. Dialog: Create Request */}
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -1679,9 +1214,9 @@ export default function DocumentRequestsTab({
                           <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
                           <div className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
                           <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
-                            <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
-                            <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "—"}</strong></span>
-                            <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
+                            <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "N/A"}</strong></span>
+                            <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "N/A"}</strong></span>
+                            <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "N/A"}</strong></span>
                           </div>
                           <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
                             <HugeIcon  className="ph-bold ph-archive-tray text-xs"></HugeIcon>
@@ -1726,7 +1261,7 @@ export default function DocumentRequestsTab({
                                   <div className="text-[10px] text-gray-900 dark:text-zinc-300 flex items-center gap-1.5">
                                     <span>{sn}</span>
                                     <span className="text-gray-300 dark:text-zinc-700">•</span>
-                                    <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
+                                    <span>{s?.courseCode || s?.course_code || "N/A"} - {s?.section || "N/A"}</span>
                                   </div>
                                 </button>
                               );
@@ -1780,7 +1315,7 @@ export default function DocumentRequestsTab({
                         <option value="">Select Degree Program…</option>
                         {courses.map((c) => (
                           <option key={c.code || c.id} value={c.code}>
-                            {c.code} {c.name ? `— ${c.name}` : ""}
+                            {c.code} {c.name ? `: ${c.name}` : ""}
                           </option>
                         ))}
                       </Select>
@@ -1839,11 +1374,11 @@ export default function DocumentRequestsTab({
               </div>
 
               {/* Dialog Actions */}
-              <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+              <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   onClick={() => setCreateOpen(false)}
                 >
                   Cancel
@@ -1905,11 +1440,11 @@ export default function DocumentRequestsTab({
                 )}
               </div>
             </div>
-            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 onClick={() => setFileWarningOpen(false)}
               >
                 Close
@@ -1935,6 +1470,91 @@ export default function DocumentRequestsTab({
                   Locate
                 </Button>
               ) : null}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reopen Request Dialog Modal */}
+        <Dialog open={reopenModalOpen} onOpenChange={setReopenModalOpen}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border">
+            <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0 text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-lg" />
+                </div>
+                <div>
+                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    Reopen Document Request
+                  </DialogTitle>
+                  <DialogDescription className="text-[13px] font-normal text-gray-600 dark:text-zinc-300 mt-1">
+                    Reopen closed request #{detail?.id} to reactivate workflow and notify the requester.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                  Target Reactivation Status
+                </label>
+                <Select
+                  className="w-full h-10 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border rounded-xl cursor-pointer"
+                  menuClassName="rounded-xl border border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
+                  value={reopenTargetStatus}
+                  onChange={(e) => setReopenTargetStatus(e.target.value)}
+                >
+                  {(ALLOWED_REOPEN_TRANSITIONS[detail?.status] || ["InProgress"]).map((st) => (
+                    <option key={st} value={st}>
+                      {st === "InProgress" ? "In Progress" : st}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                    Written Justification / Reason <span className="text-red-500">*</span>
+                  </label>
+                  <span className="text-[11px] text-gray-400">
+                    {reopenReason.trim().length}/5 chars min
+                  </span>
+                </div>
+                <textarea
+                  className="w-full min-h-[90px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-border rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                  placeholder="State the official reason for reopening (e.g., student appeal granted, payment verified, clerical error correction)..."
+                  value={reopenReason}
+                  onChange={(e) => setReopenReason(e.target.value)}
+                />
+              </div>
+
+              <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">
+                <HugeIcon className="ph-fill ph-info text-sm shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <span>
+                  Reopening records an immutable entry in the audit logs and posts a milestone update visible on the student portal.
+                </span>
+              </div>
+            </div>
+
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                onClick={() => setReopenModalOpen(false)}
+                disabled={reopenSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                onClick={handleConfirmReopen}
+                disabled={reopenSubmitting || reopenReason.trim().length < 5}
+              >
+                {reopenSubmitting ? "Reopening..." : "Confirm Reopen"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

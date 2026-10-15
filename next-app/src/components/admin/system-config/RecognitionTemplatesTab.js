@@ -24,6 +24,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import RecognitionTemplateSkeleton from "@/components/admin/skeletons/RecognitionTemplateSkeleton"
 import { detectDocType } from "@/lib/ocrClient"
 import { cn } from "@/lib/utils"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 const FIELDS = [
   ["firstName", "First name"],
@@ -90,7 +91,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
         showToast?.({ title: "Templates Refreshed", description: "Recognition templates have been updated." })
       }
     } catch (error) {
-      showToast?.({ title: "Load failed", description: error.message }, true)
+      showToast?.(formatErrorMessage(error, "Failed to Load Templates"), true)
     } finally {
       setLoading(false)
     }
@@ -172,7 +173,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
       await renderPage(file, 0)
       showToast?.({ title: "Sample loaded", description: detectedType ? `Document type detected: ${detectedType.name}. Choose a field, then draw its box.` : "Choose a field, then draw its box." })
     } catch (error) {
-      showToast?.({ title: "Sample OCR failed", description: error.message }, true)
+      showToast?.(formatErrorMessage(error, "Sample OCR Failed"), true)
     }
   }
 
@@ -307,7 +308,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           : `${importedCount} template configuration(s) imported. Existing versions were preserved.`,
       }, failures.length > 0)
     } catch (error) {
-      showToast?.({ title: "Import failed", description: error.message }, true)
+      showToast?.(formatErrorMessage(error, "Import Failed"), true)
     } finally {
       setImporting(false)
       if (importInputRef.current) importInputRef.current.value = ""
@@ -371,14 +372,14 @@ export default function RecognitionTemplatesTab({ showToast }) {
   async function saveTemplate() {
     if (!documentTypeId || (!selectedTemplateId && !sampleFile)) {
       return showToast?.({
-        title: "Missing information",
+        title: "Missing Information",
         description: "Select a document type and load a representative PSA sample first.",
       }, true)
     }
     const requiredFields = recognitionMode === "whole" ? [WHOLE_FIELD] : FIELDS
     if (!recognitionMode || !requiredFields.every(([key]) => regions[key]?.width > 0 && regions[key]?.height > 0)) {
       return showToast?.({
-        title: "Plot required name fields",
+        title: "Required Fields Incomplete",
         description: recognitionMode === "whole" ? "Draw a rectangle around the complete name." : "Draw rectangles for first, middle, and last name.",
       }, true)
     }
@@ -406,7 +407,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
       await load()
       setSelectedTemplateId(data.data?.id || selectedTemplateId)
     } catch (error) {
-      showToast?.({ title: "Save failed", description: error.message }, true)
+      showToast?.(formatErrorMessage(error, "Save Failed"), true)
     } finally {
       setSaving(false)
     }
@@ -423,10 +424,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
         setArchiveTemplateId(null)
         showToast?.({ title: "Template archived", description: "The template configuration has been archived." })
       } else {
-        showToast?.({ title: "Archive failed", description: data.error || "Unable to archive template." }, true)
+        showToast?.(formatErrorMessage(data?.error || "Unable to archive template.", "Archive Failed"), true)
       }
     } catch (err) {
-      showToast?.({ title: "Archive failed", description: err.message }, true)
+      showToast?.(formatErrorMessage(err, "Archive Failed"), true)
     }
   }
 
@@ -444,10 +445,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
         setRestoreTemplateId(null)
         showToast?.({ title: "Template restored", description: "The template configuration has been re-activated." })
       } else {
-        showToast?.({ title: "Restore failed", description: data.error || "Unable to restore template." }, true)
+        showToast?.(formatErrorMessage(data?.error || "Unable to restore template.", "Restore Failed"), true)
       }
     } catch (err) {
-      showToast?.({ title: "Restore failed", description: err.message }, true)
+      showToast?.(formatErrorMessage(err, "Restore Failed"), true)
     }
   }
 
@@ -462,10 +463,10 @@ export default function RecognitionTemplatesTab({ showToast }) {
         setDeleteTemplateId(null)
         showToast?.({ title: "OCR configuration deleted", description: "The saved configuration was permanently removed." })
       } else {
-        showToast?.({ title: "Delete failed", description: data.error || "Unable to delete configuration." }, true)
+        showToast?.(formatErrorMessage(data?.error || "Unable to delete configuration.", "Delete Failed"), true)
       }
     } catch (err) {
-      showToast?.({ title: "Delete failed", description: err.message }, true)
+      showToast?.(formatErrorMessage(err, "Delete Failed"), true)
     }
   }
 

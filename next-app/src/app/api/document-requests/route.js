@@ -150,7 +150,7 @@ export async function POST(req) {
       officeId,
       studentNo,
       docType,
-      excludeDeclined: true,
+      approvalStatus: "Approved",
       limit: 1,
       offset: 0,
     });

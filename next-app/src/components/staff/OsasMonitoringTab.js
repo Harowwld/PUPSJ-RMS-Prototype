@@ -17,9 +17,13 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
+import OsasKanbanPipeline from "@/components/staff/OsasKanbanPipeline";
+import OsasProposalReviewSheet from "@/components/staff/osas/OsasProposalReviewSheet";
+import OsasPostEventReviewSheet from "@/components/staff/osas/OsasPostEventReviewSheet";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import {
   Tooltip,
   TooltipTrigger,
@@ -151,7 +155,7 @@ export function getPostEventStatusDotClass(status) {
   return "bg-slate-400 dark:bg-zinc-400";
 }
 
-function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Page 1 of official submission" }) {
+export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Page 1 of official submission" }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -374,8 +378,14 @@ export default function OsasMonitoringTab({ showToast }) {
         const json = await postEventsRes.value.json().catch(() => null);
         if (postEventsRes.value.ok && json?.ok) setPostEventReports(json.data || []);
       }
-    } catch {
-      showToast?.({ title: "Load failed", description: "Unable to load OSAS submissions." }, true);
+    } catch (err) {
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Submissions Load Failed",
+          actionContext: "Loading OSAS proposals and reports",
+        }),
+        true
+      );
     } finally {
       setLoading(false);
     }
@@ -434,7 +444,13 @@ export default function OsasMonitoringTab({ showToast }) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        return showToast?.({ title: "Update failed", description: json?.error || "Unable to save." }, true);
+        return showToast?.(
+          formatErrorMessage(json?.error || "Unable to save proposal changes.", {
+            title: "Update Failed",
+            actionContext: `Updating proposal #${selected.id} status to ${targetStatus}`,
+          }),
+          true
+        );
       }
       showToast?.({ title: "Proposal updated", description: `Status changed to ${targetStatus}.` });
       setNote("");
@@ -445,8 +461,14 @@ export default function OsasMonitoringTab({ showToast }) {
         setSelected(detailJson.data);
         setStatus(detailJson.data.status);
       }
-    } catch {
-      showToast?.({ title: "Update failed", description: "Network error while updating proposal." }, true);
+    } catch (err) {
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Update Failed",
+          actionContext: `Updating proposal #${selected.id}`,
+        }),
+        true
+      );
     } finally {
       setIsSaving(false);
     }
@@ -499,13 +521,25 @@ export default function OsasMonitoringTab({ showToast }) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        return showToast?.({ title: "Update failed", description: json?.error || "Unable to save clearance." }, true);
+        return showToast?.(
+          formatErrorMessage(json?.error || "Unable to save clearance review.", {
+            title: "Clearance Update Failed",
+            actionContext: `Updating post-event report #${selectedPostEvent.id} to ${targetStatus}`,
+          }),
+          true
+        );
       }
       showToast?.({ title: "Post-Event Clearance Updated", description: `Report marked as ${targetStatus}.` });
       setPostEventSheetOpen(false);
       await load();
-    } catch {
-      showToast?.({ title: "Update failed", description: "Network error while updating post-event report." }, true);
+    } catch (err) {
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Clearance Update Failed",
+          actionContext: `Updating post-event report #${selectedPostEvent.id}`,
+        }),
+        true
+      );
     } finally {
       setIsSavingPostEvent(false);
     }
@@ -586,7 +620,10 @@ export default function OsasMonitoringTab({ showToast }) {
           prev.map((r) => (r.id === reportId ? { ...r, status: prevStatus } : r))
         );
         showToast?.(
-          { title: "Move Failed", description: json?.error || "Could not update status." },
+          formatErrorMessage(json?.error || "Could not update status.", {
+            title: "Pipeline Move Failed",
+            actionContext: `Moving post-event report #${reportId} to ${targetStatus}`,
+          }),
           true
         );
         return;
@@ -597,12 +634,18 @@ export default function OsasMonitoringTab({ showToast }) {
         setSelectedPostEvent((prev) => ({ ...prev, status: targetStatus }));
         setPostEventStatus(targetStatus);
       }
-    } catch {
+    } catch (err) {
       // Rollback
       setPostEventReports((prev) =>
         prev.map((r) => (r.id === reportId ? { ...r, status: prevStatus } : r))
       );
-      showToast?.({ title: "Move Failed", description: "Network error occurred." }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Pipeline Move Failed",
+          actionContext: `Moving post-event report #${reportId} to ${targetStatus}`,
+        }),
+        true
+      );
     }
   };
 
@@ -681,7 +724,10 @@ export default function OsasMonitoringTab({ showToast }) {
           prev.map((r) => (r.id === proposalId ? { ...r, status: prevStatus } : r))
         );
         showToast?.(
-          { title: "Move Failed", description: json?.error || "Could not update status." },
+          formatErrorMessage(json?.error || "Could not update status.", {
+            title: "Pipeline Move Failed",
+            actionContext: `Moving proposal #${proposalId} to ${targetStatus}`,
+          }),
           true
         );
         return;
@@ -692,12 +738,18 @@ export default function OsasMonitoringTab({ showToast }) {
         setSelected((prev) => ({ ...prev, status: targetStatus }));
         setStatus(targetStatus);
       }
-    } catch {
+    } catch (err) {
       // Rollback
       setRows((prev) =>
         prev.map((r) => (r.id === proposalId ? { ...r, status: prevStatus } : r))
       );
-      showToast?.({ title: "Move Failed", description: "Network error occurred." }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Pipeline Move Failed",
+          actionContext: `Moving proposal #${proposalId} to ${targetStatus}`,
+        }),
+        true
+      );
     }
   };
 
@@ -1145,7 +1197,9 @@ export default function OsasMonitoringTab({ showToast }) {
           {/* Search Input + Multi-Criteria Filter */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
             <div className="relative w-full sm:w-64 md:w-72 shrink-0 group">
-              <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-xs pointer-events-none transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 text-xs transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+              </div>
               <Input
                 type="text"
                 placeholder={
@@ -1160,21 +1214,27 @@ export default function OsasMonitoringTab({ showToast }) {
                   setSearchQuery(e.target.value);
                   setPage(1);
                 }}
-                className="h-9 pl-8 pr-8 text-xs rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setPage(1);
-                  }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-400 cursor-pointer border-0 bg-transparent p-0 leading-none"
-                  aria-label="Clear search"
-                >
-                  <HugeIcon className="ph-bold ph-x text-xs" />
-                </button>
-              )}
+              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setPage(1);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                    title="Clear search"
+                    aria-label="Clear search"
+                  >
+                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                  </button>
+                )}
+                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  {activeFilteredList.length.toLocaleString()}
+                </span>
+              </div>
             </div>
 
             {activeStream === "proposals" && (
@@ -1204,15 +1264,16 @@ export default function OsasMonitoringTab({ showToast }) {
           <>
             {viewMode === "list" ? (
               <div className={cn("w-full flex flex-col border-t border-border dark:border-border", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-x-auto w-full select-none">
+                  <table className="w-full text-left text-xs table-fixed min-w-[960px]">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        <th className="py-3.5 px-6 w-full min-w-[280px]">Event Proposal & Organization</th>
-                        <th className="py-3.5 px-6 min-w-[180px] whitespace-nowrap">Proponent</th>
-                        <th className="py-3.5 px-6 min-w-[130px] whitespace-nowrap">Status</th>
-                        <th className="py-3.5 px-6 min-w-[120px] whitespace-nowrap hidden sm:table-cell">Submitted</th>
-                        <th className="py-3.5 px-6 text-right w-28 whitespace-nowrap">Action</th>
+                        <th className="py-3.5 px-6 w-[11%] whitespace-nowrap">Proposal ID</th>
+                        <th className="py-3.5 px-6 w-[36%] whitespace-nowrap">Event Proposal & Organization</th>
+                        <th className="py-3.5 px-6 w-[21%] whitespace-nowrap">Proponent</th>
+                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap">Status</th>
+                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                        <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -1222,17 +1283,22 @@ export default function OsasMonitoringTab({ showToast }) {
                           onClick={() => select(item)}
                           className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                         >
-                          <td className="py-3.5 px-6">
-                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
+                          <td className="py-3.5 px-6 whitespace-nowrap">
+                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              #{item.id}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-6 overflow-hidden">
+                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
                               {item.title}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate flex-wrap">
+                            <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
                               {item.org_acronym && (
                                 <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
                                   {item.org_acronym}
                                 </span>
                               )}
-                              <span>{item.verified_org_name || item.organization_name}</span>
+                              <span className="truncate" title={item.verified_org_name || item.organization_name}>{item.verified_org_name || item.organization_name}</span>
                               {item.has_bylaws ? (
                                 <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30 shrink-0">
                                   CBL Active
@@ -1252,16 +1318,16 @@ export default function OsasMonitoringTab({ showToast }) {
                               )}
                             </div>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap">
-                            <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5">
-                              <span>{item.student_name}</span>
+                          <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden">
+                            <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5 min-w-0 overflow-hidden">
+                              <span className="truncate" title={item.student_name}>{item.student_name}</span>
                               {item.officer_position && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal">
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal shrink-0">
                                   {item.officer_position}
                                 </span>
                               )}
                             </div>
-                            <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
+                            <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
                               {item.submitted_by_email || item.student_no}
                             </div>
                           </td>
@@ -1283,9 +1349,9 @@ export default function OsasMonitoringTab({ showToast }) {
                                   day: "numeric",
                                   year: "numeric",
                                 })
-                              : "—"}
+                              : "N/A"}
                           </td>
-                          <td className="py-3.5 px-6 text-right whitespace-nowrap w-16">
+                          <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1306,7 +1372,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       ))}
                       {!filteredRows.length && (
                         <tr className="border-0 hover:bg-transparent">
-                          <td colSpan={5} className="py-16 px-6 text-center border-0">
+                          <td colSpan={6} className="py-16 px-6 text-center border-0">
                             <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
@@ -1379,167 +1445,23 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
             ) : (
               /* Kanban Pipeline Board */
-              <div className="w-full flex-1 min-h-0 border-t border-border dark:border-border p-6 overflow-x-auto bg-gray-50/20 dark:bg-zinc-900/10">
-                <div className="flex gap-4 min-w-max items-start">
-                  {KANBAN_COLUMNS.map((col) => {
-                    const columnItems = getProposalsForColumn(col.key);
-                    return (
-                      <div
-                        key={col.key}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (!draggingProposal) return;
-                          const currentStatus = normalizeProposalStatus(draggingProposal.status);
-                          const isAllowed = ALLOWED_TRANSITIONS[currentStatus]?.includes(col.key);
-                          if (!isAllowed) {
-                            e.dataTransfer.dropEffect = "none";
-                            if (dragOverColumn !== null) setDragOverColumn(null);
-                            return;
-                          }
-                          e.dataTransfer.dropEffect = "move";
-                          if (dragOverColumn !== col.key) setDragOverColumn(col.key);
-                        }}
-                        onDragLeave={(e) => {
-                          if (!e.currentTarget.contains(e.relatedTarget)) {
-                            setDragOverColumn(null);
-                          }
-                        }}
-                        onDrop={(e) => handleDrop(e, col.key)}
-                        className={cn(
-                          "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-border/80 dark:border-border p-3.5 shadow-2xs transition-all duration-200",
-                          dragOverColumn === col.key && draggingProposal?.status !== col.key && "ring-2 ring-pup-maroon/60 border-pup-maroon/70 bg-red-50/30 dark:bg-red-950/20 shadow-sm"
-                        )}
-                      >
-                        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-border/80 dark:border-border select-none">
-                          <div className="flex items-center gap-2">
-                            <span className={cn("w-2 h-2 rounded-full", getProposalStatusDotClass(col.key))} />
-                            <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                              {col.label}
-                            </h3>
-                          </div>
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold min-w-5 bg-gray-200/70 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                            {columnItems.length}
-                          </span>
-                        </div>
-
-                        {dragOverColumn === col.key && draggingProposal?.status !== col.key && (
-                          <div className="mb-2.5 rounded-xl border-2 border-dashed border-pup-maroon/50 dark:border-red-500/50 p-2.5 bg-red-50/40 dark:bg-red-950/20 text-center text-xs font-semibold text-pup-maroon dark:text-red-400 animate-pulse select-none">
-                            Drop to move to {col.label}
-                          </div>
-                        )}
-
-                        <div className="space-y-2.5 overflow-y-auto max-h-[calc(100vh-340px)] p-0.5 scrollbar-thin">
-                          {columnItems.map((item) => {
-                            const itemStatus = normalizeProposalStatus(item.status);
-                            const isLocked = itemStatus === "Approved" || itemStatus === "Declined";
-                            return (
-                              <div
-                                key={item.id}
-                                draggable={!isLocked}
-                                onDragStart={(e) => {
-                                  if (isLocked) {
-                                    e.preventDefault();
-                                    return;
-                                  }
-                                  isDraggingRef.current = true;
-                                  setDraggingProposal(item);
-                                  e.dataTransfer.setData("text/plain", String(item.id));
-                                  e.dataTransfer.effectAllowed = "move";
-                                }}
-                                onDragEnd={() => {
-                                  setDraggingProposal(null);
-                                  setDragOverColumn(null);
-                                  setTimeout(() => {
-                                    isDraggingRef.current = false;
-                                  }, 120);
-                                }}
-                                onClick={() => {
-                                  if (isDraggingRef.current) return;
-                                  select(item);
-                                }}
-                                className={cn(
-                                  "group relative rounded-xl border border-border bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-border dark:bg-card dark:hover:border-red-800/40 transition-all flex flex-col gap-2.5 active:scale-[0.99] select-none",
-                                  isLocked ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
-                                  draggingProposal?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
-                                )}
-                              >
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-1.5 truncate max-w-[190px]">
-                                    {item.org_acronym && (
-                                      <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                        {item.org_acronym}
-                                      </span>
-                                    )}
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 truncate">
-                                      {item.verified_org_name || item.organization_name}
-                                    </span>
-                                  </div>
-                                  {isLocked ? (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="flex items-center text-amber-600/80 dark:text-amber-400/80 p-0.5 cursor-pointer">
-                                          <HugeIcon className="ph-bold ph-lock-key text-xs" />
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {item.status} proposals are locked from direct drag-and-drop. Click to review.
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <HugeIcon
-                                      className="ph-bold ph-dots-six-vertical text-gray-900 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-zinc-400 text-lg transition-colors shrink-0"
-                                      title="Drag to change stage"
-                                    />
-                                  )}
-                                </div>
-
-                              <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
-                                {item.title}
-                              </h4>
-
-                              <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
-                                <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
-                                <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
-                                  {item.student_name}
-                                </span>
-                              </div>
-
-                              <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300">
-                                <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
-                                  <HugeIcon className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500" />
-                                  {item.created_at
-                                    ? new Date(item.created_at).toLocaleDateString(undefined, {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                      })
-                                    : "—"}
-                                </span>
-                                <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 group-hover:underline">
-                                  Review
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                          {!columnItems.length && (
-                            <div className="rounded-xl border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
-                              <HugeIcon className="ph-duotone ph-tray text-xl text-gray-400/80 dark:text-zinc-600" />
-                              <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
-                                No proposals in this stage
-                              </p>
-                              <span className="text-[10px] text-gray-400/70 dark:text-zinc-600">
-                                Drag proposals here to update status
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <OsasKanbanPipeline
+                stream="proposals"
+                columns={KANBAN_COLUMNS}
+                items={filteredRows}
+                onSelectItem={select}
+                onDropItem={handleDrop}
+                draggingItem={draggingProposal}
+                setDraggingItem={setDraggingProposal}
+                dragOverColumn={dragOverColumn}
+                setDragOverColumn={setDragOverColumn}
+                allowedTransitions={ALLOWED_TRANSITIONS}
+                normalizeStatus={normalizeProposalStatus}
+                isItemLocked={(item) => {
+                  const s = normalizeProposalStatus(item.status);
+                  return s === "Approved" || s === "Declined";
+                }}
+              />
             )}
           </>
         )}
@@ -1549,16 +1471,17 @@ export default function OsasMonitoringTab({ showToast }) {
           <>
             {viewMode === "list" ? (
               <div className={cn("w-full flex flex-col border-t border-border dark:border-border", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-x-auto w-full select-none">
+                  <table className="w-full text-left text-xs table-fixed min-w-[1040px]">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        <th className="py-3.5 px-6 w-full min-w-[280px]">Event Proposal & Organization</th>
-                        <th className="py-3.5 px-6 min-w-[170px] whitespace-nowrap">Proponent</th>
-                        <th className="py-3.5 px-6 min-w-[180px] whitespace-nowrap">Attendance & Spend</th>
-                        <th className="py-3.5 px-6 min-w-[130px] whitespace-nowrap">Clearance Status</th>
-                        <th className="py-3.5 px-6 min-w-[110px] whitespace-nowrap hidden sm:table-cell">Submitted</th>
-                        <th className="py-3.5 px-6 text-right w-24 whitespace-nowrap">Action</th>
+                        <th className="py-3.5 px-6 w-[9%] whitespace-nowrap">Report ID</th>
+                        <th className="py-3.5 px-6 w-[31%] whitespace-nowrap">Event Proposal & Organization</th>
+                        <th className="py-3.5 px-6 w-[19%] whitespace-nowrap">Proponent</th>
+                        <th className="py-3.5 px-6 w-[17%] whitespace-nowrap">Attendance & Spend</th>
+                        <th className="py-3.5 px-6 w-[13%] whitespace-nowrap">Clearance Status</th>
+                        <th className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                        <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -1571,30 +1494,35 @@ export default function OsasMonitoringTab({ showToast }) {
                             onClick={() => selectPostEvent(item)}
                             className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                           >
-                            <td className="py-3.5 px-6">
-                              <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
+                            <td className="py-3.5 px-6 whitespace-nowrap">
+                              <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                                #{item.id}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-6 overflow-hidden">
+                              <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.event_title}>
                                 {item.event_title}
                               </div>
-                              <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 truncate">
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
                                 {item.org_acronym && (
                                   <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
                                     {item.org_acronym}
                                   </span>
                                 )}
-                                <span>{item.organization_name}</span>
+                                <span className="truncate" title={item.organization_name}>{item.organization_name}</span>
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap">
-                              <div className="font-medium text-gray-800 dark:text-zinc-200">
+                            <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden">
+                              <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
                                 {item.student_name}
                               </div>
-                              <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
+                              <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
                                 {item.submitted_by_email || item.student_no}
                               </div>
                             </td>
                             <td className="py-3.5 px-6 whitespace-nowrap">
                               <div className="font-semibold text-gray-900 dark:text-zinc-100">
-                                {attendees != null ? `${Number(attendees).toLocaleString()} attendees` : "—"}
+                                {attendees != null ? `${Number(attendees).toLocaleString()} attendees` : "N/A"}
                               </div>
                               <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
                                 ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
@@ -1618,9 +1546,9 @@ export default function OsasMonitoringTab({ showToast }) {
                                     day: "numeric",
                                     year: "numeric",
                                   })
-                                : "—"}
+                                : "N/A"}
                             </td>
-                            <td className="py-3.5 px-6 text-right whitespace-nowrap w-16">
+                            <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
                               <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1642,7 +1570,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       })}
                       {!filteredPostEvents.length && (
                         <tr className="border-0 hover:bg-transparent">
-                          <td colSpan={6} className="py-16 px-6 text-center border-0">
+                          <td colSpan={7} className="py-16 px-6 text-center border-0">
                             <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
@@ -1717,224 +1645,24 @@ export default function OsasMonitoringTab({ showToast }) {
                     </Empty>
                   </div>
                 ) : (
-                  <div className="p-6 overflow-x-auto">
-                    <div className="flex gap-4 min-w-max items-start">
-                      {POST_EVENT_KANBAN_COLUMNS.map((col) => {
-                        const columnItems = getPostEventsForColumn(col.key);
-                        return (
-                          <div
-                            key={col.key}
-                            onDragOver={(e) => {
-                              e.preventDefault();
-                              if (!draggingPostEvent) return;
-                              const currentStatus = draggingPostEvent.status || "Submitted";
-                              const isAllowed = POST_EVENT_ALLOWED_TRANSITIONS[currentStatus]?.includes(col.key);
-                              if (!isAllowed) {
-                                e.dataTransfer.dropEffect = "none";
-                                if (dragOverPostEventColumn !== null) setDragOverPostEventColumn(null);
-                                return;
-                              }
-                              e.dataTransfer.dropEffect = "move";
-                              if (dragOverPostEventColumn !== col.key) setDragOverPostEventColumn(col.key);
-                            }}
-                            onDragLeave={(e) => {
-                              if (!e.currentTarget.contains(e.relatedTarget)) {
-                                setDragOverPostEventColumn(null);
-                              }
-                            }}
-                            onDrop={(e) => handlePostEventDrop(e, col.key)}
-                            className={cn(
-                              "w-72 sm:w-80 shrink-0 flex flex-col rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-border/80 dark:border-border p-3.5 shadow-2xs transition-all duration-200",
-                              dragOverPostEventColumn === col.key && draggingPostEvent?.status !== col.key && "ring-2 ring-pup-maroon/60 border-pup-maroon/70 bg-red-50/30 dark:bg-red-950/20 shadow-sm"
-                            )}
-                          >
-                            <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-border/80 dark:border-border select-none">
-                              <div className="flex items-center gap-2">
-                                <span className={cn("w-2 h-2 rounded-full", getPostEventStatusDotClass(col.key))} />
-                                <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                                  {col.label}
-                                </h3>
-                              </div>
-                              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold min-w-5 bg-gray-200/70 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                {columnItems.length}
-                              </span>
-                            </div>
-
-                            {dragOverPostEventColumn === col.key && draggingPostEvent?.status !== col.key && (
-                              <div className="mb-2.5 rounded-xl border-2 border-dashed border-pup-maroon/50 dark:border-red-500/50 p-2.5 bg-red-50/40 dark:bg-red-950/20 text-center text-xs font-semibold text-pup-maroon dark:text-red-400 animate-pulse select-none">
-                                Drop to move to {col.label}
-                              </div>
-                            )}
-
-                            <div className="space-y-2.5 overflow-y-auto max-h-[calc(100vh-340px)] p-0.5 scrollbar-thin">
-                              {columnItems.map((item) => {
-                                const itemStatus = item.status || "Submitted";
-                                const isLocked = itemStatus === "Cleared" || itemStatus === "Declined";
-                                const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
-                                const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
-                                return (
-                                  <div
-                                    key={item.id}
-                                    draggable={!isLocked}
-                                    onDragStart={(e) => {
-                                      if (isLocked) {
-                                        e.preventDefault();
-                                        return;
-                                      }
-                                      isDraggingPostEventRef.current = true;
-                                      setDraggingPostEvent(item);
-                                      e.dataTransfer.setData("text/plain", String(item.id));
-                                      e.dataTransfer.effectAllowed = "move";
-                                    }}
-                                    onDragEnd={() => {
-                                      setDraggingPostEvent(null);
-                                      setDragOverPostEventColumn(null);
-                                      setTimeout(() => {
-                                        isDraggingPostEventRef.current = false;
-                                      }, 120);
-                                    }}
-                                    onClick={() => {
-                                      if (isDraggingPostEventRef.current) return;
-                                      selectPostEvent(item);
-                                    }}
-                                    className={cn(
-                                      "group relative rounded-xl border border-border bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:border-border dark:bg-card dark:hover:border-red-800/40 transition-all flex flex-col gap-2.5 active:scale-[0.99] select-none",
-                                      isLocked ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
-                                      draggingPostEvent?.id === item.id && "opacity-35 scale-[0.97] border-dashed border-pup-maroon/60"
-                                    )}
-                                  >
-                                    <div className="flex items-center justify-between gap-2">
-                                      <div className="flex items-center gap-1.5 truncate max-w-[190px]">
-                                        {item.org_acronym && (
-                                          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                            {item.org_acronym}
-                                          </span>
-                                        )}
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 truncate">
-                                          {item.organization_name}
-                                        </span>
-                                      </div>
-                                      {isLocked ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="flex items-center text-amber-600/80 dark:text-amber-400/80 p-0.5 cursor-pointer">
-                                              <HugeIcon className="ph-bold ph-lock-key text-xs" />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            {item.status} reports are locked from direct drag-and-drop. Click to review clearance.
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      ) : (
-                                        <HugeIcon
-                                          className="ph-bold ph-dots-six-vertical text-gray-900 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-zinc-400 text-lg transition-colors shrink-0"
-                                          title="Drag to change clearance status"
-                                        />
-                                      )}
-                                    </div>
-
-                                    <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
-                                      {item.event_title}
-                                    </h4>
-
-                                    <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
-                                      <HugeIcon className="ph-bold ph-user-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
-                                      <span className="truncate font-medium text-gray-700 dark:text-zinc-300">
-                                        {item.student_name || item.submitted_by_email}
-                                      </span>
-                                    </div>
-
-                                    {/* Attendance & Liquidated Spend Pills */}
-                                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-[10px] font-semibold text-gray-700 dark:text-zinc-300 border border-border/60 dark:border-border">
-                                        <HugeIcon className="ph-bold ph-users text-[10px] text-gray-400" />
-                                        {Number(attendees).toLocaleString()} attendees
-                                      </span>
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/30 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/30">
-                                        <HugeIcon className="ph-bold ph-receipt text-[10px] text-emerald-500" />
-                                        ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                      </span>
-                                    </div>
-
-                                    {/* Compliance PDF Links */}
-                                    <div className="flex items-center gap-2 pt-1 border-t border-border dark:border-border" onClick={(e) => e.stopPropagation()}>
-                                      {item.narrative_storage_filename && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            handleOpenPdfPreview({
-                                              url: `/api/osas/post-event-reports/${item.id}?file=narrative`,
-                                              title: `${item.event_title} — Narrative Report`,
-                                              subtitle: "Official post-event narrative & accomplishment report.",
-                                              docType: "Post-Event Narrative",
-                                              originalFilename: item.narrative_original_filename || "Narrative.pdf",
-                                            });
-                                          }}
-                                          className="inline-flex items-center gap-1 text-[10px] font-medium text-pup-maroon dark:text-red-400 hover:underline cursor-pointer border-0 bg-transparent p-0"
-                                        >
-                                          <HugeIcon className="ph-bold ph-file-text text-xs" />
-                                          <span>Narrative</span>
-                                        </button>
-                                      )}
-                                      {item.liquidation_storage_filename && (
-                                        <>
-                                          <span className="text-gray-300 dark:text-zinc-600 text-[10px]">·</span>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              handleOpenPdfPreview({
-                                                url: `/api/osas/post-event-reports/${item.id}?file=liquidation`,
-                                                title: `${item.event_title} — Financial Liquidation`,
-                                                subtitle: "Official receipts, disbursement summary, and vouchers.",
-                                                docType: "Financial Liquidation",
-                                                originalFilename: item.liquidation_original_filename || "Liquidation.pdf",
-                                              });
-                                            }}
-                                            className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer border-0 bg-transparent p-0"
-                                          >
-                                            <HugeIcon className="ph-bold ph-receipt text-xs" />
-                                            <span>Liquidation</span>
-                                          </button>
-                                        </>
-                                      )}
-                                    </div>
-
-                                    <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300">
-                                      <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
-                                        <HugeIcon className="ph ph-clock text-xs text-gray-400 dark:text-zinc-500" />
-                                        {item.created_at
-                                          ? new Date(item.created_at).toLocaleDateString(undefined, {
-                                              month: "short",
-                                              day: "numeric",
-                                              year: "numeric",
-                                            })
-                                          : "—"}
-                                      </span>
-                                      <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 group-hover:underline">
-                                        Review
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-
-                              {!columnItems.length && (
-                                <div className="rounded-xl border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 py-8 px-3 text-center flex flex-col items-center justify-center gap-1.5">
-                                  <HugeIcon className="ph-duotone ph-tray text-xl text-gray-400/80 dark:text-zinc-600" />
-                                  <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
-                                    No reports in this stage
-                                  </p>
-                                  <span className="text-[10px] text-gray-400/70 dark:text-zinc-600">
-                                    Drag reports here to update clearance
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <OsasKanbanPipeline
+                    stream="post_events"
+                    columns={POST_EVENT_KANBAN_COLUMNS}
+                    items={filteredPostEvents}
+                    onSelectItem={selectPostEvent}
+                    onDropItem={handlePostEventDrop}
+                    onOpenPdfPreview={handleOpenPdfPreview}
+                    draggingItem={draggingPostEvent}
+                    setDraggingItem={setDraggingPostEvent}
+                    dragOverColumn={dragOverPostEventColumn}
+                    setDragOverColumn={setDragOverPostEventColumn}
+                    allowedTransitions={POST_EVENT_ALLOWED_TRANSITIONS}
+                    normalizeStatus={(s) => s || "Submitted"}
+                    isItemLocked={(item) => {
+                      const s = item.status || "Submitted";
+                      return s === "Cleared" || s === "Declined";
+                    }}
+                  />
                 )}
               </div>
             )}
@@ -2000,704 +1728,47 @@ export default function OsasMonitoringTab({ showToast }) {
         )}
       </Card>
 
-      {/* Slide-Over Review Sheet */}
-      <Sheet
-        open={sheetOpen}
-        onOpenChange={(open) => {
-          setSheetOpen(open);
-          if (!open) setSelected(null);
-        }}
-      >
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-3xl data-[side=right]:lg:max-w-4xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
-        >
-          {selected && (
-            <>
-              {/* Sheet Header */}
-              <SheetHeader className="shrink-0 p-6 pb-4 pr-14 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    <HugeIcon  className="ph-bold ph-file-text"></HugeIcon>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2.5 py-0.5 rounded-md border border-pup-maroon/20 flex items-center gap-1.5">
-                        {selected.org_acronym && <span>[{selected.org_acronym}]</span>}
-                        <span>{selected.verified_org_name || selected.organization_name}</span>
-                      </span>
-                      {selected.is_verified_officer && (
-                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
-                          <HugeIcon className="ph-bold ph-shield-check text-xs" />
-                          Verified Submitter
-                        </span>
-                      )}
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0",
-                          getProposalStatusBadgeClass(selected.status)
-                        )}
-                      >
-                        <span className={cn("w-1.5 h-1.5 rounded-full", getProposalStatusDotClass(selected.status))} />
-                        {selected.status}
-                      </span>
-                    </div>
-                    <SheetTitle className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
-                      {selected.title}
-                    </SheetTitle>
-                    <SheetDescription className="mt-1 text-xs text-gray-900 dark:text-zinc-300 flex items-center gap-2 flex-wrap">
-                      <span>Proponent: <strong className="text-gray-700 dark:text-zinc-300">{selected.student_name}</strong></span>
-                      {selected.officer_position && (
-                        <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 text-[10px] font-semibold">
-                          {selected.officer_position}
-                        </span>
-                      )}
-                      <span>·</span>
-                      <span className="font-mono">{selected.submitted_by_email || selected.student_no}</span>
-                    </SheetDescription>
-                  </div>
-                </div>
-              </SheetHeader>
-
-              {/* Sheet Body (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Proponent Org Constitution & By-Laws Status */}
-                {selected.bylaws_filename ? (
-                  <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                        <HugeIcon className="ph-bold ph-scales text-base" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                            Organization Charter (CBL)
-                          </span>
-                          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.2 text-[10px] font-semibold text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            Active Charter
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate max-w-[240px]">
-                          {selected.bylaws_original_filename || selected.bylaws_filename}
-                        </p>
-                      </div>
-                    </div>
-                    {selected.organization_id && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        title="Preview Constitution & By-Laws"
-                        className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
-                        onClick={() => {
-                          setPdfPreviewData({
-                            url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
-                            title: `${selected.organization_name || "Organization"} — Constitution & By-Laws`,
-                            subtitle: "Active ratified charter for this student organization.",
-                            docType: "Constitution & By-Laws",
-                            originalFilename: selected.bylaws_original_filename || "CBL.pdf",
-                          });
-                          setPdfPreviewOpen(true);
-                        }}
-                      >
-                        Preview
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between rounded-xl border border-amber-200/80 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 p-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                        <HugeIcon className="ph-bold ph-warning text-base" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                          No Active Charter On File
-                        </span>
-                        <p className="text-[11px] text-amber-700 dark:text-amber-400">
-                          This organization has not ratified a Constitution & By-Laws yet.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Post-Event Clearance Tracker (Visible for Approved Proposals) */}
-                {selected.status === "Approved" && (
-                  <div className="rounded-xl border border-purple-200 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 p-3.5 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <HugeIcon className="ph-bold ph-clock-countdown text-purple-700 dark:text-purple-400" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200">
-                          Post-Event Clearance Tracker
-                        </span>
-                      </div>
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-                          getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission")
-                        )}
-                      >
-                        {selected.post_event_status || "Pending Submission"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-purple-800 dark:text-purple-300">
-                      <span>
-                        Due Date:{" "}
-                        <strong className="font-mono">
-                          {selected.post_event_due_date
-                            ? new Date(selected.post_event_due_date).toLocaleDateString(undefined, {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
-                            : "N/A"}
-                        </strong>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSheetOpen(false);
-                          setActiveStream("post_events");
-                          setSearchQuery(selected.tracking_number || selected.title);
-                        }}
-                        title="Open in Post-Event Queue"
-                        className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 hover:underline cursor-pointer flex items-center gap-1"
-                      >
-                        <span>View</span>
-                        <HugeIcon className="ph-bold ph-arrow-right text-[10px]" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Document Preview Section */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Official Proposal Document
-                  </h4>
-                  <FirstPagePreview
-                    proposalId={selected.id}
-                    title={selected.title}
-                    onOpenPreview={() => handleOpenPdfPreview(selected)}
-                  />
-                </div>
-
-                {/* Action Form: Update Status & Publish Note */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Evaluation & Status Update
-                    </label>
-                    <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                      Current: <strong className="text-gray-700 dark:text-zinc-300">{selected.status}</strong>
-                    </span>
-                  </div>
-
-                  {/* Status Picker with usePortal={false} for sheet compatibility */}
-                  <Select
-                    value={status}
-                    onValueChange={(val) => {
-                      setStatus(val);
-                      if (!note.trim()) {
-                        setNote(`Status updated to ${val} by OSAS.`);
-                      }
-                    }}
-                    onChange={(e) => {
-                      const val = e?.target?.value || e;
-                      setStatus(val);
-                      if (val === "Needs Revision") {
-                        if (!note.trim() || note.startsWith("Status updated")) {
-                          setNote("");
-                        }
-                      } else if (!note.trim() && val !== "Needs Revision") {
-                        setNote(`Status updated to ${val} by OSAS.`);
-                      }
-                    }}
-                    usePortal={false}
-                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
-                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100"
-                  >
-                    {availableStatusOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </Select>
-
-                  {/* Contextual Guidance / Warning Alerts for Sensitive State Transitions */}
-                  {isRevokingApproval && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300 flex items-start gap-2.5">
-                      <HugeIcon className="ph-bold ph-warning text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="font-semibold text-amber-950 dark:text-amber-200">
-                          Revoking Official Approval
-                        </p>
-                        <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300/90">
-                          This will cancel post-event compliance tracking for this organization and return the proposal to evaluation. A written justification note (at least 5 characters) is required.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {isReopeningDeclined && (
-                    <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 text-xs text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/30 dark:text-purple-300 flex items-start gap-2.5">
-                      <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-base text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="font-semibold text-purple-950 dark:text-purple-200">
-                          Reopening Declined Proposal
-                        </p>
-                        <p className="text-[11px] leading-relaxed text-purple-800 dark:text-purple-300/90">
-                          A written justification note citing the grounds for appeal or reconsideration is required.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {isRequestingRevision && (
-                    <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900 dark:border-blue-800/40 dark:bg-blue-950/30 dark:text-blue-300 flex items-start gap-2.5">
-                      <HugeIcon className="ph-bold ph-info text-base text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="font-semibold text-blue-950 dark:text-blue-200">
-                          Revision Feedback Required
-                        </p>
-                        <p className="text-[11px] leading-relaxed text-blue-800 dark:text-blue-300/90">
-                          Please provide detailed feedback below explaining what documents or aspects of the proposal must be updated by the student organization.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <textarea
-                      className={cn(
-                        "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none transition-colors dark:bg-zinc-900 dark:text-zinc-100",
-                        isNoteRequired && note.trim().length < 5
-                          ? "border-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600"
-                          : "border-border focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-border"
-                      )}
-                      placeholder={
-                        isNoteRequired
-                          ? "Enter required justification / revision instructions (minimum 5 characters)..."
-                          : "Enter student-visible evaluation note (optional, default note applied if left empty)..."
-                      }
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                    />
-                    {isNoteRequired && note.trim().length < 5 && (
-                      <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
-                        * Note must be at least 5 characters long.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Primary Action: Publish Update with Brand Maroon */}
-                  <Button
-                    className="h-10 w-full text-xs font-semibold rounded-xl btn-brand-red text-white! bg-pup-maroon hover:bg-pup-darkMaroon shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ color: "#ffffff" }}
-                    onClick={() => save()}
-                    disabled={isSaving || !isNoteValid}
-                    title={
-                      isRevokingApproval
-                        ? `Revoke Approval & Set to ${status}`
-                        : isReopeningDeclined
-                        ? `Reopen Proposal to ${status}`
-                        : `Publish Update to ${status}`
-                    }
-                  >
-                    {isSaving ? (
-                      <>
-                        <HugeIcon className="ph-bold ph-spinner animate-spin mr-2" />
-                        Saving...
-                      </>
-                    ) : isRevokingApproval ? (
-                      "Revoke"
-                    ) : isReopeningDeclined ? (
-                      "Reopen"
-                    ) : status === "Approved" ? (
-                      "Approve"
-                    ) : status === "Needs Revision" ? (
-                      "Revise"
-                    ) : status === "Declined" ? (
-                      "Decline"
-                    ) : (
-                      "Update"
-                    )}
-                  </Button>
-                </div>
-
-                {/* Transaction History Timeline */}
-                {selected.updates?.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                      Transaction History ({selected.updates.length})
-                    </h4>
-                    <ol className="relative border-l border-border ml-2.5 pl-4 text-xs space-y-4 dark:border-border">
-                      {selected.updates.map((update) => (
-                        <li key={update.id} className="relative">
-                          <div
-                            className={cn(
-                              "absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-border",
-                              getProposalStatusDotClass(update.status)
-                            )}
-                          />
-                          <div className="flex items-center gap-2 mb-1">
-                            <span
-                              className={cn(
-                                "inline-flex items-center rounded-full border px-2 py-0.2 text-[10px] font-semibold",
-                                getProposalStatusBadgeClass(update.status)
-                              )}
-                            >
-                              {update.status}
-                            </span>
-                            {update.created_at && (
-                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
-                                {new Date(update.created_at).toLocaleDateString(undefined, {
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-white dark:bg-zinc-900/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            {update.message}
-                          </p>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </div>
-
-              {/* Sheet Footer */}
-              <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setSheetOpen(false)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Close
-                </Button>
-              </SheetFooter>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      {/* Slide-Over Review Sheet for Event Proposals */}
+      <OsasProposalReviewSheet
+        sheetOpen={sheetOpen}
+        setSheetOpen={setSheetOpen}
+        selected={selected}
+        setSelected={setSelected}
+        status={status}
+        setStatus={setStatus}
+        note={note}
+        setNote={setNote}
+        save={save}
+        isSaving={isSaving}
+        availableStatusOptions={availableStatusOptions}
+        isRevokingApproval={isRevokingApproval}
+        isReopeningDeclined={isReopeningDeclined}
+        isRequestingRevision={isRequestingRevision}
+        isNoteRequired={isNoteRequired}
+        isNoteValid={isNoteValid}
+        handleOpenPdfPreview={handleOpenPdfPreview}
+        setPdfPreviewData={setPdfPreviewData}
+        setPdfPreviewOpen={setPdfPreviewOpen}
+        setActiveStream={setActiveStream}
+        setSearchQuery={setSearchQuery}
+      />
 
       {/* Slide-Over Review Sheet for Post-Event Reports */}
-      <Sheet open={postEventSheetOpen} onOpenChange={setPostEventSheetOpen}>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl p-0 flex flex-col bg-white dark:bg-zinc-950 border-l border-border dark:border-border z-50 overflow-hidden"
-        >
-          {selectedPostEvent && (
-            <>
-              {/* Sheet Header */}
-              <SheetHeader className="shrink-0 p-6 border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
-                        {selectedPostEvent.event_tracking_number || `EVT-${selectedPostEvent.event_proposal_id}`}
-                      </span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-                          getPostEventStatusBadgeClass(selectedPostEvent.status)
-                        )}
-                      >
-                        {selectedPostEvent.status}
-                      </span>
-                    </div>
-                    <SheetTitle className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
-                      {selectedPostEvent.event_title}
-                    </SheetTitle>
-                    <SheetDescription className="mt-1 text-xs text-gray-900 dark:text-zinc-300 flex items-center gap-2 flex-wrap">
-                      <span>Org: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.organization_name}</strong></span>
-                      {selectedPostEvent.organization_acronym && (
-                        <span className="px-1.5 py-0.2 rounded bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 text-[10px] font-semibold">
-                          {selectedPostEvent.organization_acronym}
-                        </span>
-                      )}
-                      <span>·</span>
-                      <span>Proponent: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.student_name || selectedPostEvent.submitted_by_name || "Authorized Officer"}</strong></span>
-                    </SheetDescription>
-                  </div>
-                </div>
-              </SheetHeader>
-
-              {/* Sheet Body (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Metrics summary banner */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Actual Attendees</span>
-                    <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
-                      {Number(selectedPostEvent.actual_attendance ?? selectedPostEvent.actual_attendees ?? selectedPostEvent.total_attendance ?? 0).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Total Liquidated</span>
-                    <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
-                      ₱{Number(selectedPostEvent.total_expenses ?? selectedPostEvent.actual_expenses ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  <div className="col-span-2 sm:col-span-1 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Submission Date</span>
-                    <p className="mt-1 text-xs font-semibold text-gray-700 dark:text-zinc-300 font-mono">
-                      {selectedPostEvent.created_at ? new Date(selectedPostEvent.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Narrative Summary card */}
-                {selectedPostEvent.narrative_summary && (
-                  <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 p-4 space-y-1.5">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                      Executive Accomplishment Summary
-                    </h4>
-                    <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                      {selectedPostEvent.narrative_summary}
-                    </p>
-                  </div>
-                )}
-
-                {/* Dual Document Cards (Narrative + Liquidation) */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Submitted Compliance Documents
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Narrative PDF Card */}
-                    <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          <HugeIcon className="ph-bold ph-file-text text-base text-pup-maroon dark:text-red-400" />
-                          <span>Narrative Report</span>
-                        </div>
-                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate">
-                          {selectedPostEvent.narrative_original_filename || "Narrative-Report.pdf"}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        title="Preview Narrative Report"
-                        className="w-full h-8 text-xs font-semibold rounded-lg border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => {
-                          handleOpenPdfPreview({
-                            url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
-                            title: `${selectedPostEvent.event_title} — Narrative Report`,
-                            subtitle: "Official post-event narrative & accomplishment report.",
-                            docType: "Post-Event Narrative",
-                            originalFilename: selectedPostEvent.narrative_original_filename || "Narrative.pdf",
-                          });
-                        }}
-                      >
-                        Preview
-                      </Button>
-                    </div>
-
-                    {/* Liquidation PDF Card */}
-                    <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 flex flex-col justify-between space-y-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          <HugeIcon className="ph-bold ph-receipt text-base text-emerald-600 dark:text-emerald-400" />
-                          <span>Financial Liquidation</span>
-                        </div>
-                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate">
-                          {selectedPostEvent.liquidation_original_filename || "Liquidation-Report.pdf"}
-                        </p>
-                      </div>
-                      {selectedPostEvent.liquidation_storage_filename ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          title="Preview Financial Liquidation"
-                          className="w-full h-8 text-xs font-semibold rounded-lg border-border dark:border-border bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => {
-                            handleOpenPdfPreview({
-                              url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
-                              title: `${selectedPostEvent.event_title} — Financial Liquidation`,
-                              subtitle: "Official receipts, disbursement summary, and vouchers.",
-                              docType: "Financial Liquidation",
-                              originalFilename: selectedPostEvent.liquidation_original_filename || "Liquidation.pdf",
-                            });
-                          }}
-                        >
-                          Preview
-                        </Button>
-                      ) : (
-                        <span className="text-[11px] text-gray-400 italic text-center py-1">No liquidation file</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Form: Update Status & Clearance Note */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Clearance Evaluation & Action
-                    </label>
-                    <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                      Current: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.status}</strong>
-                    </span>
-                  </div>
-
-                  {/* Warning when revoking Cleared */}
-                  {selectedPostEvent.status === "Cleared" && (
-                    <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/20 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
-                      <HugeIcon className="ph-bold ph-warning-circle text-base shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <p className="font-semibold">Reopening Cleared Report</p>
-                        <p className="text-[11px] text-amber-700/90 dark:text-amber-400/90">
-                          This report was previously cleared. A written justification note (at least 5 characters) is required to revoke clearance.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Warning when reopening Declined */}
-                  {selectedPostEvent.status === "Declined" && (
-                    <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/20 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
-                      <HugeIcon className="ph-bold ph-warning-circle text-base shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <p className="font-semibold">Reopening Declined Report</p>
-                        <p className="text-[11px] text-amber-700/90 dark:text-amber-400/90">
-                          A written justification note citing grounds for appeal or reconsideration is required to reopen this report.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Warning when setting Needs Revision */}
-                  {postEventStatus === "Needs Revision" && (
-                    <div className="rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/70 dark:bg-purple-950/20 p-3 text-xs text-purple-800 dark:text-purple-300 flex items-start gap-2.5">
-                      <HugeIcon className="ph-bold ph-info text-base shrink-0 text-purple-600 dark:text-purple-400 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <p className="font-semibold">Revision Instructions Required</p>
-                        <p className="text-[11px] text-purple-700/90 dark:text-purple-400/90">
-                          Please describe what corrections, narrative additions, or expense vouchers the student organization must provide.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <Select
-                    value={postEventStatus}
-                    onValueChange={(val) => {
-                      setPostEventStatus(val);
-                      if (!postEventNote.trim()) {
-                        setPostEventNote(`Status updated to ${val} by OSAS clearance review.`);
-                      }
-                    }}
-                    onChange={(e) => {
-                      const val = e?.target?.value || e;
-                      setPostEventStatus(val);
-                      if (!postEventNote.trim()) {
-                        setPostEventNote(`Status updated to ${val} by OSAS clearance review.`);
-                      }
-                    }}
-                    usePortal={false}
-                    className="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
-                    buttonClassName="h-10 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border text-gray-900 dark:text-zinc-100"
-                  >
-                    {availablePostEventStatusOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </Select>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className={cn("font-medium", isPostEventNoteRequired ? "text-pup-maroon dark:text-red-400" : "text-gray-900 dark:text-zinc-300")}>
-                        Clearance Evaluation Remarks {isPostEventNoteRequired && "(Required, min 5 chars)"}
-                      </span>
-                      {isPostEventNoteRequired && (
-                        <span className={cn("font-mono text-[10px]", isPostEventNoteValid ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
-                          {postEventNote.trim().length} / 5 min
-                        </span>
-                      )}
-                    </div>
-                    <textarea
-                      className={cn(
-                        "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none focus:ring-1 dark:bg-zinc-900 dark:text-zinc-100",
-                        isPostEventNoteRequired && !isPostEventNoteValid
-                          ? "border-amber-300 focus:border-amber-500 focus:ring-amber-500 dark:border-amber-700"
-                          : "border-border focus:border-pup-maroon focus:ring-pup-maroon dark:border-border"
-                      )}
-                      placeholder={
-                        isPostEventNoteRequired
-                          ? "Enter required justification or revision instructions for student officers..."
-                          : "Enter feedback or clearance remarks for student officers..."
-                      }
-                      value={postEventNote}
-                      onChange={(e) => setPostEventNote(e.target.value)}
-                    />
-                  </div>
-
-                  <Button
-                    className="h-10 w-full text-xs font-semibold rounded-xl btn-brand-red text-white! bg-pup-maroon hover:bg-pup-darkMaroon shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ color: "#ffffff" }}
-                    onClick={() => savePostEvent()}
-                    disabled={isSavingPostEvent || !isPostEventNoteValid}
-                    title={`Publish Clearance Decision as ${postEventStatus}`}
-                  >
-                    {isSavingPostEvent ? (
-                      <>
-                        <HugeIcon className="ph-bold ph-spinner animate-spin mr-2" />
-                        Saving...
-                      </>
-                    ) : postEventStatus === "Cleared" ? (
-                      "Clear"
-                    ) : postEventStatus === "Needs Revision" ? (
-                      "Revise"
-                    ) : postEventStatus === "Declined" ? (
-                      "Decline"
-                    ) : postEventStatus === "Under Review" ? (
-                      "Review"
-                    ) : (
-                      "Update"
-                    )}
-                  </Button>
-                </div>
-
-                {/* Past Review Remarks if present */}
-                {selectedPostEvent.review_notes && (
-                  <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/60 p-3.5 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
-                      <span>Last Evaluation by: <strong className="text-gray-700 dark:text-zinc-300">{selectedPostEvent.reviewer_name || "OSAS Officer"}</strong></span>
-                      {selectedPostEvent.reviewed_at && (
-                        <span className="font-mono">{new Date(selectedPostEvent.reviewed_at).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed pt-1">
-                      {selectedPostEvent.review_notes}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Sheet Footer */}
-              <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setPostEventSheetOpen(false)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Close
-                </Button>
-              </SheetFooter>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <OsasPostEventReviewSheet
+        open={postEventSheetOpen}
+        onOpenChange={setPostEventSheetOpen}
+        selectedPostEvent={selectedPostEvent}
+        postEventStatus={postEventStatus}
+        setPostEventStatus={setPostEventStatus}
+        postEventNote={postEventNote}
+        setPostEventNote={setPostEventNote}
+        savePostEvent={savePostEvent}
+        isSavingPostEvent={isSavingPostEvent}
+        availablePostEventStatusOptions={availablePostEventStatusOptions}
+        isPostEventNoteRequired={isPostEventNoteRequired}
+        isPostEventNoteValid={isPostEventNoteValid}
+        handleOpenPdfPreview={handleOpenPdfPreview}
+      />
 
       {/* PDF Document Preview Modal */}
       <PDFPreviewModal

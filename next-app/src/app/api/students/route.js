@@ -8,6 +8,7 @@ import { requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers"
 import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
+import { StudentRegistrationSchema } from "@/lib/validationSchemas";
 
 export const runtime = "nodejs";
 
@@ -59,58 +60,16 @@ export async function POST(req) {
     );
   }
 
-  const studentNo = String(body.studentNo || "").trim();
-  const name = String(body.name || "").trim().replace(/\s+/g, " ").toUpperCase();
-  const courseCode = String(body.courseCode || "").trim().toUpperCase();
-  const yearLevel = Number(body.yearLevel);
-  const section = String(body.section || "").trim();
-  const room = Number(body.room);
-  const cabinet = canonicalizeCabinetId(body.cabinet);
-  const drawer = Number(body.drawer);
-  const status = String(body.status || "Active").trim() || "Active";
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
-  const studentNoPattern = /^[A-Z0-9][A-Z0-9\-_/.]{1,30}$/i;
-
-  if (!studentNo || !name || !courseCode || !section) {
-    return NextResponse.json(
-      { ok: false, error: "Missing required fields" },
-      { status: 400 }
-    );
+  const validation = StudentRegistrationSchema.safeParse(body);
+  if (!validation.success) {
+    const errorMsg = validation.error.issues?.[0]?.message || "Invalid student data";
+    return NextResponse.json({ ok: false, error: errorMsg }, { status: 400 });
   }
 
-  if (!studentNoPattern.test(studentNo.toUpperCase())) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid studentNo format" },
-      { status: 400 }
-    );
-  }
-
-  if (!Number.isInteger(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid yearLevel" },
-      { status: 400 }
-    );
-  }
-
-  if (!Number.isInteger(room) || room < 1) {
-    return NextResponse.json({ ok: false, error: "Invalid room" }, { status: 400 });
-  }
-
-  if (!cabinet) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid cabinet" },
-      { status: 400 }
-    );
-  }
-
-  if (!Number.isInteger(drawer) || drawer < 1) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid drawer" },
-      { status: 400 }
-    );
-  }
+  const { studentNo, name, courseCode, yearLevel, section, room, cabinet, drawer, status } = validation.data;
   const layout = await getStorageLayout({ officeId });
   const roomDef = layout?.rooms?.find((entry) => Number(entry.id) === room);
   if (!roomDef) {

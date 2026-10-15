@@ -104,13 +104,13 @@ export default function LandingHero() {
               />
             </div>
           ))}
-          {/* Gradient scrims — heavier left for text, lighter right to let image breathe */}
+          {/* Gradient scrims: heavier left for text, lighter right to let image breathe */}
           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
           <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
           <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
         </div>
 
-        {/* MAIN HERO CONTENT — CENTERED */}
+        {/* MAIN HERO CONTENT: CENTERED */}
         <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
           <div className="w-full max-w-4xl flex flex-col items-center">
             <h1 
@@ -135,7 +135,7 @@ export default function LandingHero() {
                 "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
             </p>
 
-            {/* Action Cluster — centered */}
+            {/* Action Cluster: centered */}
             <div 
               ref={ctaClusterRef}
               className="flex flex-wrap items-center justify-center gap-4"

@@ -12,6 +12,7 @@ import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults"
 
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import { formatErrorMessage } from "@/lib/errorUtils"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import PromptModal from "@/components/shared/PromptModal"
@@ -867,10 +868,9 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       }
     } catch (err) {
       showToast?.(
-        {
-          title: "Load Failed",
-          description: err?.message || "Unable to load storage layout.",
-        },
+        formatErrorMessage(err, {
+          defaultTitle: "Failed to Load Layout",
+        }),
         true
       )
     } finally {
@@ -969,7 +969,12 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           : "Archive room mapping updated.",
       })
     } catch (err) {
-      showToast?.({ title: "Save Failed", description: err.message }, true)
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "Failed to Save Layout",
+        }),
+        true
+      )
     } finally {
       setSaving(false)
     }
@@ -1084,7 +1089,12 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       setNewTemplateName("")
       showToast?.({ title: "Template Saved", description: `Saved "${name}".` })
     } catch (err) {
-      showToast?.({ title: "Save Failed", description: err.message }, true)
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "Failed to Save Template",
+        }),
+        true
+      )
     } finally {
       setSaving(false)
     }
@@ -1107,7 +1117,12 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       setDeleteTemplateConfirmOpen(false)
       showToast?.({ title: "Template Deleted", description: "The template was removed." })
     } catch (err) {
-      showToast?.({ title: "Delete Failed", description: err.message }, true)
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "Failed to Delete Template",
+        }),
+        true
+      )
     } finally {
       setSaving(false)
     }
@@ -1126,7 +1141,12 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       setRestoreTemplatesConfirmOpen(false)
       showToast?.({ title: "Defaults Restored", description: "Templates reverted to factory settings." })
     } catch (err) {
-      showToast?.({ title: "Restore Failed", description: err.message }, true)
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "Failed to Restore Default Templates",
+        }),
+        true
+      )
     } finally {
       setSaving(false)
     }
@@ -1156,11 +1176,17 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   function removeActiveRoom() {
     if (!layout || !activeRoom) return
     if (activeRoomStudentCount > 0) {
-      showToast?.({ title: "Cannot Remove", description: `Room ${activeRoom.id} is occupied.` }, true)
+      showToast?.({
+        title: "Cannot Remove Room",
+        description: `Room ${activeRoom.id} cannot be removed because student records are currently assigned to it.`,
+      }, true)
       return
     }
     if (activeRoom.cabinets?.length) {
-      showToast?.({ title: "Cannot Remove", description: "Clear room first." }, true)
+      showToast?.({
+        title: "Room Contains Cabinets",
+        description: "Please remove or relocate all cabinets before deleting this room.",
+      }, true)
       return
     }
     setLayout((prev) => {
@@ -1177,7 +1203,10 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   function resetActiveRoomCabinets() {
     if (!layout || !activeRoom) return
     if (activeRoomStudentCount > 0) {
-      showToast?.({ title: "Cannot Reset", description: `Room ${activeRoom.id} is occupied.` }, true)
+      showToast?.({
+        title: "Cannot Reset Room",
+        description: `Room ${activeRoom.id} cannot be reset because active student records are stored inside its cabinets.`,
+      }, true)
       return
     }
     updateRoom(activeRoom.id, (r) => ({ ...r, cabinets: [] }))
@@ -1242,7 +1271,10 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   function openApplyPreview() {
     const hasMissing = templateConflictRows.some(r => !templateMappingDraft[r.sourceKey])
     if (hasMissing) {
-      showToast?.({ title: "Incomplete Mapping", description: "Assign all conflicts." }, true)
+      showToast?.({
+        title: "Incomplete Drawer Mapping",
+        description: "Please assign new target drawers for all existing student records before proceeding.",
+      }, true)
       return
     }
     const rows = templateConflictRows.map(r => {
@@ -1281,7 +1313,12 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       setApplyReportRows(json.movedBreakdown || [])
       setApplyReportOpen(true)
     } catch (err) {
-      showToast?.({ title: "Apply Failed", description: err.message }, true)
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "Failed to Apply Template",
+        }),
+        true
+      )
     } finally {
       setSaving(false)
     }

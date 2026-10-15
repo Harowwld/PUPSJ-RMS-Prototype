@@ -78,7 +78,7 @@ async function synthesizeFallbackPdf(proposal) {
       page.drawText(String(proposal.description).slice(0, 260), { x: 50, y: 524, size: 8.5, font: fontRegular, color: darkGray });
     }
 
-    page.drawText("Verified Archival Record — PUPSJ Records Keeping System", { x: 50, y: 100, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
+    page.drawText("Verified Archival Record: PUPSJ Records Keeping System", { x: 50, y: 100, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
     return Buffer.from(await doc.save());
   } catch {
     return Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000010 00000 n \n0000000053 00000 n \n0000000102 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n171\n%%EOF");

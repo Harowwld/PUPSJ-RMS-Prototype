@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { getOfficePrefix } from "@/lib/roleUtils"
-import { toast } from "sonner"
 
 export default function RegisterAccountTab({
   open,
@@ -30,19 +29,34 @@ export default function RegisterAccountTab({
   onResetForm,
   onCreateAccount,
 }) {
-  const [lastAutoFilled, setLastAutoFilled] = useState({ id: false, email: false })
+  const [lastAutoFilled, setLastAutoFilled] = useState({ email: false })
   const fnameRef = useRef(null)
 
-  const [isIdManual, setIsIdManual] = useState(false)
   const [isEmailManual, setIsEmailManual] = useState(false)
+  const [nextIdPreview, setNextIdPreview] = useState("")
 
   const officePrefix = getOfficePrefix(officeShortName || officeId || authUser?.office_short_name || authUser?.office_id || "registrar", offices)
 
-  const suggestedId = useMemo(() => {
-    if (!createForm.fname && !createForm.lname) return ""
-    const nextId = (staffCount + 1).toString().padStart(3, "0")
-    return `PUP${officePrefix.toUpperCase()}-${nextId}`
-  }, [createForm.fname, createForm.lname, staffCount, officePrefix])
+  // Fetch next available staff ID from the system
+  useEffect(() => {
+    let active = true
+    if (open) {
+      const off = officeId || authUser?.office_id || "registrar"
+      const r = createForm.role || "Staff"
+      fetch(`/api/staff/next-id?officeId=${encodeURIComponent(off)}&role=${encodeURIComponent(r)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (active && json.ok && json.nextId) {
+            setNextIdPreview(json.nextId)
+            setCreateForm((f) => ({ ...f, id: json.nextId }))
+          }
+        })
+        .catch(() => {})
+    }
+    return () => {
+      active = false
+    }
+  }, [open, officeId, authUser?.office_id, createForm.role, setCreateForm])
 
   const suggestedEmail = useMemo(() => {
     if (!createForm.lname || !createForm.role) return ""
@@ -50,29 +64,6 @@ export default function RegisterAccountTab({
     const name = createForm.lname.toLowerCase().replace(/[^a-z0-9]/g, "")
     return `${role}.${name}@pup.local`
   }, [createForm.lname, createForm.role])
-
-  // Auto-fill ID
-  useEffect(() => {
-    if (!isIdManual && suggestedId && createForm.id !== suggestedId) {
-      const timer = setTimeout(() => {
-        setCreateForm(f => ({ ...f, id: suggestedId }))
-        setLastAutoFilled(prev => ({ ...prev, id: true }))
-      }, 0)
-      const resetTimer = setTimeout(() => {
-        setLastAutoFilled(prev => ({ ...prev, id: false }))
-      }, 1000)
-      return () => {
-        clearTimeout(timer)
-        clearTimeout(resetTimer)
-      }
-    }
-    if (!isIdManual && !suggestedId && createForm.id !== "") {
-      const timer = setTimeout(() => {
-        setCreateForm(f => ({ ...f, id: "" }))
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-  }, [suggestedId, isIdManual, createForm.id, setCreateForm])
 
   // Auto-fill Email
   useEffect(() => {
@@ -105,19 +96,6 @@ export default function RegisterAccountTab({
       return () => clearTimeout(timer)
     }
   }, [open])
-
-  const handleClearForm = () => {
-    onResetForm()
-    setLastAutoFilled({ id: false, email: false })
-    toast.success("Form cleared successfully", {
-      description: "All registration fields have been reset.",
-    })
-    setTimeout(() => {
-        setIsIdManual(false)
-        setIsEmailManual(false)
-        fnameRef.current?.focus()
-    }, 50)
-  }
 
   return (
     <TooltipProvider delay={200}>
@@ -219,28 +197,22 @@ export default function RegisterAccountTab({
               {/* Part 3: System Identifiers */}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Employee ID <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
-                  </label>
-                  <Input
-                    type="text"
-                    required
-                    disabled={isLoading}
-                    className={cn(
-                      "h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs",
-                      lastAutoFilled.id && "border-emerald-500 dark:border-emerald-500"
-                    )}
-                    placeholder={suggestedId || `PUP${officePrefix.toUpperCase()}-[XXX]`}
-                    value={createForm.id}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setIsIdManual(val !== "")
-                      setCreateForm((f) => ({
-                        ...f,
-                        id: val,
-                      }))
-                    }}
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                      Employee ID
+                    </label>
+                    <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
+                      System generated
+                    </span>
+                  </div>
+                  <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-gray-50/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-300 shadow-xs select-none">
+                    <span className="font-mono text-xs font-semibold tracking-wide">
+                      {nextIdPreview || `PUP${officePrefix.toUpperCase()}-[AUTO]`}
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                      Auto-assigned
+                    </span>
+                  </div>
                 </div>
 
                 <div>
@@ -270,34 +242,23 @@ export default function RegisterAccountTab({
               </div>
             </div>
 
-            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex flex-row items-center justify-between sm:justify-between w-full">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleClearForm}
+                onClick={onClose}
                 disabled={isLoading}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Reset
+                Cancel
               </Button>
-              <div className="flex items-center gap-2.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  disabled={isLoading}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
-                >
-                  {isLoading ? "Registering..." : "Register"}
-                </Button>
-              </div>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+              >
+                {isLoading ? "Registering..." : "Register"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

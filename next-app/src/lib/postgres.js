@@ -2,11 +2,15 @@ import { Pool } from "pg";
 
 const connectionString = process.env.DATABASE_URL;
 
+const rawMax = Number(process.env.DATABASE_POOL_MAX);
+const rawConnectionTimeout = Number(process.env.DATABASE_CONNECTION_TIMEOUT_MS);
+const rawIdleTimeout = Number(process.env.DATABASE_IDLE_TIMEOUT_MS);
+
 const pool = global.__pupsjPostgresPool || new Pool({
   connectionString,
-  max: 10,
-  connectionTimeoutMillis: 5000,
-  idleTimeoutMillis: 30000,
+  max: Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 20,
+  connectionTimeoutMillis: Number.isFinite(rawConnectionTimeout) && rawConnectionTimeout > 0 ? rawConnectionTimeout : 10000,
+  idleTimeoutMillis: Number.isFinite(rawIdleTimeout) && rawIdleTimeout > 0 ? rawIdleTimeout : 30000,
 });
 
 global.__pupsjPostgresPool = pool;

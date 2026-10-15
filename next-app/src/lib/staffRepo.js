@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
-import { query } from "./postgres.js";
+import { query, transaction } from "./postgres.js";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { encryptPII, decryptPII } from "./piiEncryption.js";
 import { hashPassword, verifyPasswordHash as verifyPasswordHashValue } from "./passwordHash.js";
+import { isSystemAdminRole, getOfficePrefix } from "./roleUtils.js";
+import { getOfficeById } from "./officesRepo.js";
 
 function buildStaffScope(officeId) {
   if (officeId === undefined) return { clause: "", params: [] };
@@ -50,6 +52,57 @@ export async function verifyStaffPasswordById(id, password) {
   return result.valid;
 }
 
+/**
+ * Resolve the normalized Staff ID prefix for an office/role (e.g., PUPREGISTRAR, PUPOSAS, PUPSUPERADMIN)
+ */
+export async function getStaffPrefix({ officeId, role } = {}) {
+  let prefix;
+  if (isSystemAdminRole(role) || (!officeId && role && isSystemAdminRole(role))) {
+    prefix = "PUPSUPERADMIN";
+  } else {
+    let officeStr = officeId;
+    if (officeStr && typeof officeStr === "object") {
+      officeStr = officeStr.id || officeStr.short_name;
+    }
+    const cleanOffice = String(officeStr || "registrar").toLowerCase().trim();
+    if (cleanOffice === "superadmin" || cleanOffice === "systemadmin") {
+      prefix = "PUPSUPERADMIN";
+    } else {
+      let officeShort = null;
+      try {
+        const off = await getOfficeById(cleanOffice);
+        if (off?.short_name) officeShort = off.short_name;
+      } catch {}
+      if (!officeShort) {
+        officeShort = getOfficePrefix(cleanOffice);
+      }
+      const sanitized = String(officeShort || cleanOffice)
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase();
+      prefix = `PUP${sanitized}`;
+    }
+  }
+  return prefix;
+}
+
+/**
+ * Generate the next sequential Staff ID formatted as PUP<OFFICE_PREFIX>-<NNN>
+ * based on the highest existing sequence number for that office in the database.
+ */
+export async function getNextStaffId({ officeId, role } = {}) {
+  const prefix = await getStaffPrefix({ officeId, role });
+
+  const rows = await query(
+    `SELECT COALESCE(MAX(SUBSTRING(id FROM '-([0-9]+)$')::integer), 0) + 1 AS next_num
+     FROM staff
+     WHERE id LIKE $1`,
+    [`${prefix}-%`]
+  );
+
+  const nextNum = rows[0]?.next_num || 1;
+  return `${prefix}-${String(nextNum).padStart(3, "0")}`;
+}
+
 export async function createStaff({
   id,
   officeId,
@@ -62,38 +115,63 @@ export async function createStaff({
   lastActive,
   password,
 }) {
-  await dbRun(
-    `
-    INSERT INTO staff (
-      id,
-      office_id,
-      fname,
-      lname,
-      role,
-      section,
-      status,
-      email,
-      last_active,
-      password_hash,
-      password_last_changed,
-      updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-  `,
-    [
-      id,
-      officeId || null,
-      encryptPII(fname),
-      encryptPII(lname),
-      role,
-      section,
-      status || "Active",
-      encryptPII(email ? String(email).toLowerCase() : ""),
-      lastActive || null,
-      password ? hashPassword(password) : null,
-    ]
-  );
+  const hashedPassword = password ? hashPassword(password) : null;
+  const isAutoId = !id || String(id).trim().toLowerCase() === "auto";
 
-  return await getStaffById(id);
+  let createdId = null;
+  const maxAttempts = isAutoId ? 3 : 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      createdId = await transaction(async ({ query: txQuery, queryOne: txQueryOne }) => {
+        let staffId = id ? String(id).trim() : "";
+        if (isAutoId) {
+          const prefix = await getStaffPrefix({ officeId, role });
+          // Serialize staff ID generation per office prefix using a PostgreSQL transaction advisory lock
+          await txQuery("SELECT pg_advisory_xact_lock(hashtext($1))", [prefix]);
+
+          const row = await txQueryOne(
+            `SELECT COALESCE(MAX(SUBSTRING(id FROM '-([0-9]+)$')::integer), 0) + 1 AS next_num
+             FROM staff
+             WHERE id LIKE $1`,
+            [`${prefix}-%`]
+          );
+          const nextNum = row?.next_num || 1;
+          staffId = `${prefix}-${String(nextNum).padStart(3, "0")}`;
+        }
+
+        await txQuery(
+          `INSERT INTO staff (
+            id, office_id, fname, lname, role, section, status, email,
+            last_active, password_hash, password_last_changed, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+          [
+            staffId,
+            officeId || null,
+            encryptPII(fname),
+            encryptPII(lname),
+            role,
+            section,
+            status || "Active",
+            encryptPII(email ? String(email).toLowerCase() : ""),
+            lastActive || null,
+            hashedPassword,
+          ]
+        );
+
+        return staffId;
+      });
+      break;
+    } catch (err) {
+      const isUniqueViolation = err?.code === "23505" || String(err?.message || "").includes("duplicate key");
+      if (isAutoId && isUniqueViolation && attempt < maxAttempts) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  return await getStaffById(createdId);
 }
 
 export async function listStaff({

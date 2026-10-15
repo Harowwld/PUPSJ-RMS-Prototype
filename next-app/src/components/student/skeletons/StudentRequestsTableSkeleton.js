@@ -18,7 +18,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Document Type */}
-          <td className="py-0 px-4 align-middle">
+          <td className="py-0 px-4 align-middle overflow-hidden">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -28,7 +28,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Purpose / Description */}
-          <td className="py-0 px-4 align-middle max-w-[280px]">
+          <td className="py-0 px-4 align-middle overflow-hidden">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -38,7 +38,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Status */}
-          <td className="py-0 px-4 align-middle">
+          <td className="py-0 px-4 align-middle whitespace-nowrap">
             <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
           </td>
 
@@ -48,7 +48,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Action */}
-          <td className="py-0 px-4 align-middle text-right">
+          <td className="py-0 px-4 pr-6 align-middle text-right">
             <Skeleton className="h-7 w-7 rounded-[6px] dark:bg-muted ml-auto" />
           </td>
         </tr>
@@ -162,26 +162,26 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         </div>
 
         {/* 4. Main Table Skeleton */}
-        <div className="w-full overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="w-full overflow-x-auto select-none">
+          <table className="w-full text-sm table-fixed min-w-[900px]">
             <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11">
-                <th className="p-4 w-36 min-w-[130px]">
+                <th className="p-4 w-[12%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 min-w-[220px]">
+                <th className="p-4 w-[24%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 min-w-[240px]">
+                <th className="p-4 w-[32%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 min-w-[140px]">
+                <th className="p-4 w-[14%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 min-w-[170px]">
+                <th className="p-4 w-[18%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 text-right min-w-[100px]">
+                <th className="p-4 pr-6 text-right w-20 whitespace-nowrap">
                   <Skeleton className="h-3.5 w-12 rounded dark:bg-muted ml-auto" />
                 </th>
               </tr>

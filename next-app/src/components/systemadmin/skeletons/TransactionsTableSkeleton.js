@@ -7,29 +7,32 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
   return (
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="w-full text-sm table-fixed min-w-[1080px]">
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11 select-none">
-              <th className="p-4 w-36">
-                <Skeleton className="h-3.5 w-20 dark:bg-muted" />
+              <th className="p-4 w-[8%]">
+                <Skeleton className="h-3.5 w-8 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[220px]">
-                <Skeleton className="h-3.5 w-32 dark:bg-muted" />
-              </th>
-              <th className="p-4 min-w-[240px]">
-                <Skeleton className="h-3.5 w-36 dark:bg-muted" />
-              </th>
-              <th className="p-4 min-w-[180px]">
-                <Skeleton className="h-3.5 w-28 dark:bg-muted" />
-              </th>
-              <th className="p-4 w-36">
+              <th className="p-4 w-[12%]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="p-4 w-36">
+              <th className="p-4 w-[18%]">
+                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+              </th>
+              <th className="p-4 w-[25%]">
+                <Skeleton className="h-3.5 w-32 dark:bg-muted" />
+              </th>
+              <th className="p-4 w-[16%]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="p-4 pr-6 text-right w-24">
-                <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
+              <th className="p-4 w-[10%]">
+                <Skeleton className="h-3.5 w-14 dark:bg-muted" />
+              </th>
+              <th className="p-4 w-[8%]">
+                <Skeleton className="h-3.5 w-12 dark:bg-muted" />
+              </th>
+              <th className="p-4 pr-6 text-right w-20">
+                <Skeleton className="h-3.5 w-10 ml-auto dark:bg-muted" />
               </th>
             </tr>
           </thead>
@@ -39,39 +42,39 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                 key={i}
                 className="h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
               >
-                <td className="py-0 px-4 align-middle">
-                  <Skeleton className="h-6 w-24 rounded-lg dark:bg-muted" />
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-5 w-10 rounded-md dark:bg-muted" />
                 </td>
-                <td className="py-2 px-4 align-middle">
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                </td>
+                <td className="p-4 align-middle">
                   <div className="flex flex-col gap-1">
                     <Skeleton
                       className={cn(
                         "h-3.5 rounded dark:bg-muted",
-                        i % 2 === 0 ? "w-36" : "w-44"
+                        i % 2 === 0 ? "w-28" : "w-36"
                       )}
                     />
-                    <Skeleton className="h-2.5 w-28 font-mono rounded dark:bg-muted" />
+                    <Skeleton className="h-2.5 w-20 font-mono rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-0 px-4 align-middle">
+                <td className="p-4 align-middle">
                   <Skeleton
                     className={cn(
                       "h-3.5 rounded dark:bg-muted",
-                      i % 3 === 0 ? "w-48" : "w-56"
+                      i % 3 === 0 ? "w-40" : "w-48"
                     )}
                   />
                 </td>
-                <td className="py-0 px-4 align-middle">
-                  <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                 </td>
-                <td className="py-0 px-4 align-middle">
-                  <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-0 px-4 align-middle">
-                  <div className="flex flex-col gap-1">
-                    <Skeleton className="h-3 w-20 font-mono rounded dark:bg-muted" />
-                    <Skeleton className="h-2.5 w-14 font-mono rounded dark:bg-muted" />
-                  </div>
+                <td className="p-4 align-middle">
+                  <Skeleton className="h-3 w-16 font-mono rounded dark:bg-muted" />
                 </td>
                 <td className="py-0 pr-6 align-middle text-right">
                   <Skeleton className="h-7 w-7 ml-auto rounded-lg dark:bg-muted" />

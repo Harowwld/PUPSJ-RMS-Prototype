@@ -23,6 +23,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Select } from "@/components/ui/select"
+import { formatErrorMessage } from "@/lib/errorUtils"
 import {
   Dialog,
   DialogContent,
@@ -114,7 +115,7 @@ export default function SectionsTab({
       showToast({ title: "Course Block Created", description: "The new course block has been successfully registered in the system." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Registration Failed", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Registration Failed"), true)
     } finally {
       if (overrideData) setIsQuickAddLoading(false)
     }
@@ -138,7 +139,7 @@ export default function SectionsTab({
       showToast({ title: "Course Block Updated", description: "The changes to the course block have been successfully saved." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Update Failed", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Update Failed"), true)
     }
   }
 
@@ -159,7 +160,7 @@ export default function SectionsTab({
       showToast({ title: "Course Block Archived", description: "The selected course block has been successfully moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Archival Failed", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Archival Failed"), true)
     }
   }
 
@@ -182,7 +183,7 @@ export default function SectionsTab({
       showToast({ title: "Course Block Restored", description: "The course block has been successfully restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Restoration Failed", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Restoration Failed"), true)
     }
   }
 
@@ -430,7 +431,7 @@ export default function SectionsTab({
             {loading && sections.length === 0 ? (
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
             ) : (
-              <table className="min-w-full text-sm">
+              <table className="w-full text-sm table-fixed min-w-[720px]">
                 <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center">
@@ -445,7 +446,7 @@ export default function SectionsTab({
                           disabled={filteredSections.length === 0}
                         />
                       </th>
-                      <th className="w-56 p-4">
+                      <th className="w-[24%] p-4">
                         <button
                           onClick={() => onSort("course_code")}
                           className={cn(
@@ -456,7 +457,7 @@ export default function SectionsTab({
                           Degree Program <SortIndicator sortState={sortSection} column="course_code" />
                         </button>
                       </th>
-                      <th className="p-4">
+                      <th className="w-[48%] p-4">
                         <button
                           onClick={() => onSort("name")}
                           className={cn(
@@ -467,8 +468,8 @@ export default function SectionsTab({
                           Block Name <SortIndicator sortState={sortSection} column="name" />
                         </button>
                       </th>
-                      <th className="w-36 p-4 text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Status</th>
-                      <th className="w-32 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
+                      <th className="w-[14%] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Status</th>
+                      <th className="w-28 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
@@ -478,7 +479,7 @@ export default function SectionsTab({
                         (secCourseCode || newSectionName.trim()) && "bg-amber-50/50 dark:bg-amber-950/10"
                       )}>
                         <td className="p-4 align-middle text-center"></td>
-                        <td className="p-4 align-middle">
+                        <td className="p-4 align-middle whitespace-nowrap">
                           <Select
                             className={cn(
                               "h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 transition-all shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80",
@@ -495,7 +496,7 @@ export default function SectionsTab({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-4 align-middle">
+                        <td className="p-4 align-middle overflow-hidden">
                           <div className="flex items-center gap-2">
                             <Input
                               placeholder="Quick add block name (e.g. Block 1)..."
@@ -527,7 +528,7 @@ export default function SectionsTab({
                             </Button>
                           </div>
                         </td>
-                        <td className="p-4 align-middle">
+                        <td className="p-4 align-middle whitespace-nowrap">
                           {(secCourseCode || newSectionName.trim()) ? (
                             <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                               Draft
@@ -538,7 +539,7 @@ export default function SectionsTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 text-right align-middle"></td>
+                        <td className="p-4 pr-6 text-right align-middle whitespace-nowrap"></td>
                       </tr>
                     )}
                     {filteredSections.map((sec) => {
@@ -580,17 +581,17 @@ export default function SectionsTab({
                               disabled={isDisabled}
                             />
                           </td>
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle whitespace-nowrap">
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
-                              {sec.course_code || "—"}
+                              {sec.course_code || "N/A"}
                             </span>
                           </td>
-                          <td className="p-4 align-middle max-w-[300px]">
+                          <td className="p-4 align-middle overflow-hidden">
                             <div className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100" title={sec.name}>
                               {sec.name}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left">
+                          <td className="p-4 align-middle text-left whitespace-nowrap">
                             {sec.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived
@@ -601,7 +602,7 @@ export default function SectionsTab({
                               </div>
                             )}
                           </td>
-                          <td className="p-4 text-right align-middle">
+                          <td className="p-4 pr-6 text-right align-middle whitespace-nowrap">
                             <div 
                               className="inline-flex items-center justify-end gap-1.5"
                               onClick={(e) => e.stopPropagation()}

@@ -1,5 +1,5 @@
 /**
- * ocrClient.js — Offline OCR pipeline for PUPSJ Records Management System
+ * ocrClient.js: Offline OCR pipeline for PUPSJ Records Management System
  *
  * Exports consumed by staff/page.js and useHotFolderInbox.js:
  *   - scanFileForSuggestion({ file, students, docTypes })  → suggestion object
@@ -65,7 +65,7 @@ export async function warmupOcrWorker() {
 // for each common PH document category.  We score the raw text against every
 // cluster, pick the winner, then map it to the closest DB doc-type label.
 //
-// Even if nothing matches at all we still return docTypes[0] — never "".
+// Even if nothing matches at all we still return docTypes[0], never "".
 
 const DOC_CLUSTERS = [
   {
@@ -194,14 +194,14 @@ export function detectDocType(rawText, docTypes) {
     const dtLo = lo(dt);
     const dtNoSpace = dtLo.replace(/[^a-z0-9]/g, "");
 
-    // B1 — exact substring of the rawText (strongest signal)
+    // B1: exact substring of the rawText (strongest signal)
     if (hay.includes(dtLo)) score += 1000 + dtLo.length;
 
-    // B2 — compressed match (catches OCR spacing issues)
+    // B2: compressed match (catches OCR spacing issues)
     const hayNoSpace = hay.replace(/[^a-z0-9]/g, "");
     if (dtNoSpace.length > 4 && hayNoSpace.includes(dtNoSpace)) score += 500;
 
-    // B3 — cluster-winner boost: if this label relates to the winning cluster
+    // B3: cluster-winner boost: if this label relates to the winning cluster
     if (bestCluster && bestClusterScore > 0) {
       for (const hint of bestCluster.labelHints) {
         if (dtLo.includes(hint)) {
@@ -211,7 +211,7 @@ export function detectDocType(rawText, docTypes) {
       }
     }
 
-    // B4 — individual keyword hits (words ≥ 3 chars only)
+    // B4: individual keyword hits (words ≥ 3 chars only)
     const words = dtLo.split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
     let hits = 0;
     for (const w of words) {
@@ -235,7 +235,7 @@ export function detectDocType(rawText, docTypes) {
 
 // ─── 4. NAME EXTRACTION ────────────────────────────────────────────────────
 //
-// Multi-strategy pipeline — tries the most precise patterns first, loosening
+// Multi-strategy pipeline: tries the most precise patterns first, loosening
 // progressively.  Returns raw extracted text (caller normalizes).
 
 const TITLE_PREFIX_RE = /\b(?:Ms|Mr|Mrs|Miss|Dr|Engr|Atty|Prof|Hon|Rev)\.?\s+/gi;
@@ -287,7 +287,7 @@ function stripTrailing(s) {
 }
 
 /**
- * detectName — score-based multi-strategy name extractor.
+ * detectName: score-based multi-strategy name extractor.
  *
  * Every strategy pushes candidates into a shared pool with a numeric confidence
  * score. After all strategies run, the highest-scoring plausible name wins.
@@ -461,7 +461,7 @@ export function detectName(lines, { nlp = null } = {}) {
     }
   }
 
-  // ── Strategy A (90): Scattered component labels — PSA/DepEd vertical layout ──
+  // ── Strategy A (90): Scattered component labels: PSA/DepEd vertical layout ──
   // Looks for standalone "LAST NAME" / "FIRST NAME" / "MIDDLE NAME" header lines
   // and reads the value from the line(s) immediately below. labelIs() tolerates
   // OCR spacing artefacts like "LASTNAME" or "LAST  NAME".
@@ -497,7 +497,7 @@ export function detectName(lines, { nlp = null } = {}) {
     }
   }
 
-  // ── Strategy A-PSA (88): Parenthesized vertical sub-labels — PSA birth cert ──
+  // ── Strategy A-PSA (88): Parenthesized vertical sub-labels: PSA birth cert ──
   // Apple Vision OCR reads PSA birth certs with each column label on its own line,
   // FOLLOWED by each column value on its own line:
   //
@@ -564,7 +564,7 @@ export function detectName(lines, { nlp = null } = {}) {
         }
       }
 
-      break; // Only use the first qualifying (Last) group — the child's section
+      break; // Only use the first qualifying (Last) group: the child's section
     }
   }
 
@@ -607,7 +607,7 @@ export function detectName(lines, { nlp = null } = {}) {
   }
 
 
-  // ── Strategy A2 (85): Parenthesized same-line components — all engines ──
+  // ── Strategy A2 (85): Parenthesized same-line components: all engines ──
   // PSA birth certificates have horizontal column headers on the same line:
   //   "1. NAME  (First)  (Middle)  (Last)"
   // Apple Vision OCR (macOS) may emit this with the name values following each
@@ -659,7 +659,7 @@ export function detectName(lines, { nlp = null } = {}) {
     if (m?.[1]) addCandidate(m[1].replace(/\s*[(\[].*/, ""), 75, "2-conferred-upon");
   }
 
-  // ── Strategy 3 (72–55): Line-by-line label scan ──
+  // ── Strategy 3 (72-55): Line-by-line label scan ──
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     const upper = up(line);
@@ -667,7 +667,7 @@ export function detectName(lines, { nlp = null } = {}) {
     if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upper)) continue;
     if (/[\[(].*NAME.*[\])]/i.test(upper)) continue;
 
-    // 3a — "STUDENT NAME:" (72/71)
+    // 3a: "STUDENT NAME:" (72/71)
     if (/\bSTUDENT\s+NAME\b/i.test(upper)) {
       const colonM = line.match(/\bSTUDENT\s+NAME\b[^:–-]*[:–-]\s*(.*)/i);
       if (colonM?.[1]) addCandidate(colonM[1], 72, "3a-student-name-colon");
@@ -677,7 +677,7 @@ export function detectName(lines, { nlp = null } = {}) {
       }
     }
 
-    // 3b — generic "NAME:" (65/62)
+    // 3b: generic "NAME:" (65/62)
     // Guard: skip a bare "NAME" line that appears after MAIDEN in the preceding lines.
     // PSA birth certs split "6. MAIDEN NAME" across two lines; the orphaned "NAME"
     // would otherwise incorrectly match the mother's name instead of the child's.
@@ -702,7 +702,7 @@ export function detectName(lines, { nlp = null } = {}) {
       }
     }
 
-    // 3c — DepEd SURNAME inline (55)
+    // 3c: DepEd SURNAME inline (55)
     {
       const m = upper.match(
         /\b(?:SURNAME|SUMAME|SURNAMF|SURNANE)\b[\s:_-]*([A-Z][A-Z '.–-]{4,}?)(?=\bDATE\s+OF\s+BIRTH\b|\bSEX\b|$)/
@@ -829,7 +829,7 @@ export function splitNameComponents(fullName) {
       return { firstName: "", middleName: "", lastName };
     }
     if (words.length === 1) {
-      // Only one given name word — it's the first name, no middle name
+      // Only one given name word: it's the first name, no middle name
       return { firstName: words[0], middleName: "", lastName };
     }
     // Philippine convention: middle name = last word (mother's maiden surname)
@@ -839,7 +839,7 @@ export function splitNameComponents(fullName) {
     return { firstName, middleName, lastName };
   }
   
-  // No comma — space-separated, last word = last name
+  // No comma: space-separated, last word = last name
   const words = s.split(/\s+/).filter(Boolean);
   if (words.length === 0) {
     return { firstName: "", middleName: "", lastName: "" };

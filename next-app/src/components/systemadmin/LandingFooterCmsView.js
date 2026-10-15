@@ -18,7 +18,7 @@ export const MAX_CONTACT_ITEMS = 3
 const DEFAULT_FOOTER_CONTENT = {
   brandName: "eManage",
   brandSubtitle:
-    "Polytechnic University of the Philippines — San Juan Campus Records Keeping & Online Document Request Platform.",
+    "Polytechnic University of the Philippines, San Juan Campus Records Keeping & Online Document Request Platform.",
   locationHall: "Ground Floor, Admin & Records Hall",
   locationAddress:
     "223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500",
@@ -418,7 +418,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }
                         rows={3}
                         maxLength={250}
-                        placeholder="Polytechnic University of the Philippines — San Juan Campus Records Keeping & Online Document Request Platform."
+                        placeholder="Polytechnic University of the Philippines, San Juan Campus Records Keeping & Online Document Request Platform."
                         className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
                       />
                     </div>

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
@@ -123,34 +124,32 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const switchView = useCallback((nextView) => {
     setView(nextView);
-    // Update URL without a full refresh
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
     params.set("view", nextView);
-    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
   }, [router]);
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
     const allowedTabs = new Set(["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"])
-    if (allowedTabs.has(tab)) {
-      if (authUser?.enabled_modules) {
-        const enabledSet = new Set(authUser.enabled_modules);
-        const mod = {
-          requests: "document_requests",
-          osas_monitoring: "osas_monitoring",
-          organizations: "student_organizations",
-          students: "student_directory",
-          upload: "scan_upload",
-          batch_review: "scan_upload",
-          documents: "documents",
-          notifications: "notifications",
-          search: "records_archive",
-          storage: "storage_explorer",
-        }[tab];
-        if (mod && !enabledSet.has(mod)) return;
-      }
-      setView(tab)
+    const targetTab = allowedTabs.has(tab) ? tab : "requests"
+    if (authUser?.enabled_modules) {
+      const enabledSet = new Set(authUser.enabled_modules);
+      const mod = {
+        requests: "document_requests",
+        osas_monitoring: "osas_monitoring",
+        organizations: "student_organizations",
+        students: "student_directory",
+        upload: "scan_upload",
+        batch_review: "scan_upload",
+        documents: "documents",
+        notifications: "notifications",
+        search: "records_archive",
+        storage: "storage_explorer",
+      }[targetTab];
+      if (mod && !enabledSet.has(mod)) return;
     }
+    setView(targetTab)
   }, [searchParams, authUser])
   const [loading, setLoading] = useState(!initialAuthUser);
   const [notificationsUnread, setNotificationsUnread] = useState(0);
@@ -326,8 +325,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [csvSelected, setCsvSelected] = useState({});
   const [csvLoading, setCsvLoading] = useState(false);
   const [csvResults, setCsvResults] = useState([]);
-  const [csvError, setCsvError] = useState("");
-  const [uploadError, setUploadError] = useState("");
   /** Keys: pdfFile, studentNo, name, course, year, sectionPart, room, cabinet, drawer, docType */
   const [uploadFieldErrors, setUploadFieldErrors] = useState({});
   const [csvBulkRoom, setCsvBulkRoom] = useState("");
@@ -355,19 +352,50 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   });
 
   const showToast = useCallback((msg, typeOrIsError = false) => {
-    const isRich = msg && typeof msg === "object" && msg.title;
-    const title = isRich ? msg.title : String(msg || "");
-    const opts = isRich && msg.description ? { description: msg.description } : {};
+    if (msg instanceof Error) {
+      const normalized = formatErrorMessage(msg);
+      return toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
+      });
+    }
 
-    if (typeOrIsError === true || typeOrIsError === "error") {
-      toast.error(title, opts);
-      return;
+    const isError = typeOrIsError === true || typeOrIsError === "error";
+    const isWarning = typeOrIsError === "warning";
+
+    if (msg && typeof msg === "object") {
+      const opts = {};
+      if (msg.description) opts.description = msg.description;
+      if (msg.action) opts.action = msg.action;
+
+      if (isError) {
+        const normalized = formatErrorMessage(msg.description || msg.title || "", {
+          title: msg.title || "Operation Failed",
+          description: msg.description,
+        });
+        return toast.error(normalized.title, {
+          description: normalized.description,
+          action: msg.action || normalized.action,
+        });
+      }
+      if (isWarning) {
+        return toast.warning(msg.title || "", opts);
+      }
+      return toast.success(msg.title || "", opts);
     }
-    if (typeOrIsError === "warning") {
-      toast.warning(title, opts);
-      return;
+
+    const str = String(msg || "");
+    if (isError) {
+      const normalized = formatErrorMessage(str);
+      return toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
+      });
     }
-    toast.success(title, opts);
+    if (isWarning) {
+      return toast.warning(str);
+    }
+    return toast.success(str);
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -415,8 +443,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setSections(secData.data || []);
       setStorageLayout(layoutData?.data || { version: 2, rooms: [] });
       coreDataLoadedRef.current = true;
-    } catch {
-      showToast({ title: "Sync Failed", description: "Unable to refresh data from the server." }, true);
+    } catch (err) {
+      showToast(
+        formatErrorMessage(err, {
+          title: "Sync Failed",
+          description: "Unable to refresh records from the server. Check your connection and retry.",
+        }),
+        true
+      );
     }
   }, [showToast, isOsas]);
 
@@ -1356,8 +1390,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         setOcrLoading(false);
         const message =
           err?.message || "Automatic detection failed. Please fill manually.";
-        setOcrError(message);
-        showToast({ title: "OCR Failed", description: message }, true);
+        showToast(
+          formatErrorMessage(err, {
+            title: "OCR Detection Incomplete",
+            description: "Could not automatically extract document metadata. Please enter details manually.",
+          }),
+          true
+        );
       } finally {
         setOcrLoading(false);
       }
@@ -1535,16 +1574,34 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         try {
           fileToUpload = await mergeImagesToPdf(uploadedFiles);
         } catch (convErr) {
-          showToast({ title: "Merging Failed", description: "Could not merge images into a PDF: " + convErr.message }, true);
+          showToast(
+            formatErrorMessage(convErr, {
+              title: "Image Merge Failed",
+              description: "Could not combine images into a single PDF document. Please check file formats.",
+            }),
+            true
+          );
           return;
         }
       } else {
-        showToast({ title: "Multi-page Merge Warning", description: "Merging requires all selected files to be images. Uploading primary document." }, true);
+        showToast(
+          {
+            title: "Multi-page Merge Warning",
+            description: "Merging requires all selected files to be images. Proceeding with primary document.",
+          },
+          "warning"
+        );
         if (needsConversion(uploadedFile)) {
           try {
             fileToUpload = await imageToPdf(uploadedFile);
-          } catch {
-            showToast({ title: "Conversion Failed", description: "Could not convert image to PDF." }, true);
+          } catch (convErr) {
+            showToast(
+              formatErrorMessage(convErr, {
+                title: "Conversion Failed",
+                description: "Could not convert image to PDF. Please try uploading a PDF directly.",
+              }),
+              true
+            );
             return;
           }
         }
@@ -1552,8 +1609,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     } else if (needsConversion(uploadedFile)) {
       try {
         fileToUpload = await imageToPdf(uploadedFile);
-      } catch {
-        showToast({ title: "Conversion Failed", description: "Could not convert image to PDF. Try uploading a PDF directly." }, true);
+      } catch (convErr) {
+        showToast(
+          formatErrorMessage(convErr, {
+            title: "Conversion Failed",
+            description: "Could not convert image to PDF. Please try uploading a PDF directly.",
+          }),
+          true
+        );
         return;
       }
     }
@@ -1628,7 +1691,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         body: payload,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!res.ok) {
+        const uploadError = new Error(data.error || "Upload failed");
+        uploadError.status = res.status;
+        if (res.status === 409 || data.isDuplicate) {
+          uploadError.title = "Document Already on File";
+        }
+        throw uploadError;
+      }
 
       let locationUpdateFailed = false;
       if (!isOsas && uploadStudentIsExisting) {
@@ -1693,7 +1763,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         onSuccess(ingestedIds);
       }
     } catch (err) {
-      showToast({ title: "Upload Failed", description: err.message }, true);
+      showToast(
+        formatErrorMessage(err, {
+          title: err?.title || "Upload Failed",
+          description: "Unable to process document submission. Please retry.",
+        }),
+        true
+      );
     }
   };
 
@@ -1963,7 +2039,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setSelectedStudentIds(new Set());
       fetchData();
     } catch (err) {
-      showToast({ title: "Bulk Archival Failed", description: err.message }, true);
+      showToast(
+        formatErrorMessage(err, {
+          title: "Bulk Archival Failed",
+          description: "Failed to process bulk archival. Please verify records and retry.",
+        }),
+        true
+      );
     } finally {
       setBulkArchiveLoading(false);
     }
@@ -2005,7 +2087,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setSelectedStudentIds(new Set());
       fetchData();
     } catch (err) {
-      showToast({ title: "Bulk Restoration Failed", description: err.message }, true);
+      showToast(
+        formatErrorMessage(err, {
+          title: "Bulk Restoration Failed",
+          description: "Failed to process bulk restoration. Please verify records and retry.",
+        }),
+        true
+      );
     } finally {
       setBulkRestoreLoading(false);
     }
@@ -2210,7 +2298,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   });
                   fetchData();
                 } catch (err) {
-                  showToast({ title: "Restore Failed", description: err.message }, true);
+                  showToast(
+                    formatErrorMessage(err, {
+                      title: "Restore Failed",
+                      actionContext: `Restoring ${isOsas ? "organization" : "student"} record ${targetId}`,
+                    }),
+                    true
+                  );
                 }
               }}
               selectedIds={selectedStudentIds}
@@ -2249,8 +2343,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               setUploadStudentIsExisting={setUploadStudentIsExisting}
               setUploadMode={(m) => {
                 setUploadMode(m);
-                setUploadError("");
-                setCsvError("");
               }}
               dropActive={dropActive}
               setDropActive={setDropActive}
@@ -2302,7 +2394,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               uploadFieldErrors={uploadFieldErrors}
               clearUploadFieldError={clearUploadFieldError}
               clearAllUploadFieldErrors={clearAllUploadFieldErrors}
-              uploadError={uploadError}
               newRec={newRec}
               setNewRec={setNewRec}
               newRecStudentNoHint={newRecStudentNoHint}
@@ -2317,19 +2408,16 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   setCsvFile(null);
                   setCsvRows([]);
                   setCsvResults([]);
-                  setCsvError("");
                   setCsvSelected({});
                   if (csvInputRef.current) csvInputRef.current.value = "";
                   return;
                 }
                 setCsvFile(f);
                 setCsvResults([]);
-                setCsvError("");
                 setCsvLoading(true);
                 const r = new FileReader();
                 r.onerror = () => {
                   setCsvLoading(false);
-                  setCsvError("Unable to read the CSV file.");
                   showToast({ title: "File Read Error", description: "Failed to read the selected CSV file." }, true);
                 };
                 r.onload = (e) => {
@@ -2467,8 +2555,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                     });
                     setCsvSelected(defaultSelection);
                   } catch (err) {
-                    setCsvError(err.message || "Failed to parse CSV file.");
-                    showToast({ title: "CSV Parsing Failed", description: err.message || "The CSV file format is invalid." }, true);
+                    showToast(
+                      formatErrorMessage(err, {
+                        title: "CSV Parsing Failed",
+                        actionContext: "Parsing student CSV upload",
+                      }),
+                      true
+                    );
                   } finally {
                     setCsvLoading(false);
                   }
@@ -2477,7 +2570,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               }}
               csvDropActive={csvDropActive}
               setCsvDropActive={setCsvDropActive}
-              csvError={csvError}
               csvBulkRoom={csvBulkRoom}
               setCsvBulkRoom={setCsvBulkRoom}
               csvBulkCabinet={csvBulkCabinet}
@@ -2508,7 +2600,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               importCsvStudents={async () => {
                 const targets = csvRows.filter((r) => csvSelected[r.index]);
                 if (targets.length === 0) {
-                  setCsvError("No selected rows to import. Select at least one row.");
                   showToast({ title: "No Rows Selected", description: "Select at least one row from the CSV to import." }, true);
                   return;
                 }
@@ -2655,13 +2746,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                     );
                   }
 
-                  setCsvError("");
                   setCsvSelected({});
                   // Keep data in sync in background even after optimistic in-memory update.
                   fetchData();
                 } catch (err) {
-                  setCsvError(err?.message || "Batch import failed");
-                  showToast({ title: "Import Failed", description: err?.message || "Batch import encountered an error." }, true);
+                  showToast(
+                    formatErrorMessage(err, {
+                      title: "Import Failed",
+                      actionContext: "Batch importing student records",
+                    }),
+                    true
+                  );
                 } finally {
                   setCsvLoading(false);
                 }
@@ -2737,7 +2832,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   // Re-run the current search to update names/codes in the table
                   refreshDocuments(docsForm);
                 } catch (err) {
-                  showToast({ title: "Update Failed", description: err.message }, true);
+                  showToast(
+                    formatErrorMessage(err, {
+                      title: "Update Failed",
+                      actionContext: `Updating student profile ${studentNo}`,
+                    }),
+                    true
+                  );
                 }
               }}
               onArchiveStudent={async (studentNo) => {
@@ -2762,7 +2863,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   refreshDocuments(cleared);
                   fetchData();
                 } catch (err) {
-                  showToast({ title: "Archive Failed", description: err.message }, true);
+                  showToast(
+                    formatErrorMessage(err, {
+                      title: "Archive Failed",
+                      actionContext: `Archiving student record ${studentNo}`,
+                    }),
+                    true
+                  );
                 }
               }}
               currentStudent={(() => {

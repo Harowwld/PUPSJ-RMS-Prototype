@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { toast } from "sonner";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { cn } from "@/lib/utils";
 
 const RATING_LABELS = {
@@ -77,7 +78,9 @@ export default function StudentFeedbackModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!rating) {
-      toast.error("Please select a rating from 1 to 5 stars.");
+      toast.error("Rating Required", {
+        description: "Please select a star rating from 1 to 5 before submitting your feedback.",
+      });
       return;
     }
     if (!request?.id) return;
@@ -94,9 +97,9 @@ export default function StudentFeedbackModal({
         }),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Unable to submit feedback.");
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Unable to submit feedback.");
       }
 
       toast.success("Thank you for your feedback!", {
@@ -108,7 +111,14 @@ export default function StudentFeedbackModal({
       }
       handleClose();
     } catch (err) {
-      toast.error(err.message || "Failed to submit feedback. Please try again.");
+      const normalized = formatErrorMessage(err, {
+        title: "Feedback Submission Failed",
+        description: "Could not record your feedback. Please check your network connection and retry.",
+      });
+      toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
+      });
     } finally {
       setSubmitting(false);
     }

@@ -48,7 +48,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 }
 
 const formatUploadedDate = (dateString) => {
-  if (!dateString) return { dateStr: "—", timeStr: "" }
+  if (!dateString) return { dateStr: "N/A", timeStr: "" }
   try {
     let normalized = String(dateString);
     if (!normalized.includes("T") && !normalized.includes("Z")) {
@@ -354,14 +354,14 @@ export default function DigitalRecordsReviewTab({
       const headers = ["Record ID", "Student no.", "Student Name", "Document Type", "Filename", "Status", "Reviewed By", "Reviewed At", "Uploaded At"]
       const csvRows = rows.map((r) => [
         r?.id ?? "",
-        r?.student_no || "—",
-        r?.student_name || "—",
-        r?.doc_type || "—",
-        r?.original_filename || "—",
+        r?.student_no || "N/A",
+        r?.student_name || "N/A",
+        r?.doc_type || "N/A",
+        r?.original_filename || "N/A",
         r?.approval_status || "Pending",
-        r?.reviewed_by || "—",
-        r?.reviewed_at ? formatPHDateTime(r.reviewed_at) : "—",
-        r?.created_at ? formatPHDateTime(r.created_at) : "—",
+        r?.reviewed_by || "N/A",
+        r?.reviewed_at ? formatPHDateTime(r.reviewed_at) : "N/A",
+        r?.created_at ? formatPHDateTime(r.created_at) : "N/A",
       ])
       const csvContent = [
         headers.join(","),
@@ -1048,8 +1048,21 @@ export default function DigitalRecordsReviewTab({
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-              {sortedRecords.length}
+            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+              {localSearch && (
+                <button
+                  type="button"
+                  onClick={() => setLocalSearch("")}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                </button>
+              )}
+              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                {sortedRecords.length.toLocaleString()}
+              </span>
             </div>
           </div>
 
@@ -1211,7 +1224,7 @@ export default function DigitalRecordsReviewTab({
         ) : (
           <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="w-full text-sm table-fixed min-w-[1000px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                     <th className="w-12 p-4 text-center">
@@ -1232,7 +1245,7 @@ export default function DigitalRecordsReviewTab({
                         }
                       />
                     </th>
-                    <th className="w-44 p-4">
+                    <th className="p-4 w-[14%]">
                       <button
                         type="button"
                         onClick={() => handleSort("student_no")}
@@ -1246,7 +1259,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 min-w-[200px] max-w-[260px]">
+                    <th className="p-4 w-[20%]">
                       <button
                         type="button"
                         onClick={() => handleSort("student_name")}
@@ -1260,7 +1273,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 min-w-[160px]">
+                    <th className="p-4 w-[16%]">
                       <button
                         type="button"
                         onClick={() => handleSort("doc_type")}
@@ -1274,10 +1287,10 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 min-w-[180px] max-w-[240px] text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                    <th className="p-4 w-[20%] text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                       Filename
                     </th>
-                    <th className="w-32 p-4 text-center">
+                    <th className="p-4 w-[10%] text-center">
                       <button
                         type="button"
                         onClick={() => handleSort("approval_status")}
@@ -1291,7 +1304,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="w-36 p-4">
+                    <th className="p-4 w-[12%]">
                       <button
                         type="button"
                         onClick={() => handleSort("created_at")}
@@ -1305,7 +1318,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                    <th className="w-24 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                       Actions
                     </th>
                   </tr>
@@ -1375,7 +1388,7 @@ export default function DigitalRecordsReviewTab({
                               {r.student_no}
                             </span>
                           </td>
-                          <td className="p-4 min-w-[200px] max-w-[260px]">
+                          <td className="p-4 min-w-[200px] max-w-[260px] overflow-hidden align-middle">
                             <div
                               className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
                               title={formatTitleCase(r.student_name)}
@@ -1383,12 +1396,15 @@ export default function DigitalRecordsReviewTab({
                               {formatTitleCase(r.student_name)}
                             </div>
                           </td>
-                          <td className="p-4 min-w-[160px]">
-                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
+                          <td className="p-4 min-w-[160px] overflow-hidden align-middle">
+                            <span
+                              className="inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200"
+                              title={r.doc_type}
+                            >
                               {r.doc_type}
                             </span>
                           </td>
-                          <td className="p-4 min-w-[180px] max-w-[240px]">
+                          <td className="p-4 min-w-[180px] max-w-[240px] overflow-hidden align-middle">
                             <span
                               className="block truncate text-xs text-gray-600 dark:text-zinc-400 font-normal"
                               title={r.original_filename}
@@ -1396,7 +1412,7 @@ export default function DigitalRecordsReviewTab({
                               {r.original_filename}
                             </span>
                           </td>
-                          <td className="w-32 p-4 text-center">
+                          <td className="w-32 p-4 text-center align-middle whitespace-nowrap">
                             <div className="flex items-center justify-center">
                               <span
                                 className={cn(
@@ -1408,7 +1424,7 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </div>
                           </td>
-                          <td className="w-36 p-4">
+                          <td className="w-36 p-4 whitespace-nowrap align-middle">
                             <div className="flex flex-col">
                               <span className="text-xs font-medium text-gray-900 dark:text-zinc-100">
                                 {formatUploadedDate(r.created_at).dateStr}

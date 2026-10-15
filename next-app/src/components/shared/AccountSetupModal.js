@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { DEFAULT_AVATARS } from "@/lib/defaultAvatars"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 function getCsrfToken() {
   if (typeof document === "undefined") return null
@@ -33,7 +34,6 @@ export default function AccountSetupModal({ authUser }) {
   const [pwNext, setPwNext] = useState("")
   const [pwConfirm, setPwConfirm] = useState("")
   const [pwLoading, setPwLoading] = useState(false)
-  const [pwError, setPwError] = useState("")
   const [showPw, setShowPw] = useState({ next: false, confirm: false })
 
   // Security state
@@ -41,7 +41,6 @@ export default function AccountSetupModal({ authUser }) {
   const [answers, setAnswers] = useState({})
   const [secLoading, setSecLoading] = useState(false)
   const [secSubmitting, setSecSubmitting] = useState(false)
-  const [secError, setSecError] = useState("")
 
   // Avatar state (Step 3)
   const [selectedAvatarId, setSelectedAvatarId] = useState(() => {
@@ -49,7 +48,6 @@ export default function AccountSetupModal({ authUser }) {
     return match ? Number(match[1]) : 1
   })
   const [avatarLoading, setAvatarLoading] = useState(false)
-  const [avatarError, setAvatarError] = useState("")
 
   useEffect(() => {
     if (needsPassword || needsSecurity) {
@@ -88,19 +86,24 @@ export default function AccountSetupModal({ authUser }) {
     e.preventDefault()
     if (pwLoading) return
     if (!pwNext || !pwConfirm) {
-      setPwError("Please fill all fields")
+      toast.error("Required Fields Missing", {
+        description: "Please fill in all password fields.",
+      })
       return
     }
     if (pwNext !== pwConfirm) {
-      setPwError("New passwords do not match")
+      toast.error("Password Mismatch", {
+        description: "The new passwords you entered do not match.",
+      })
       return
     }
     if (pwNext.length < 8) {
-      setPwError("Password must be at least 8 characters long.")
+      toast.error("Password Too Short", {
+        description: "Password must be at least 8 characters long.",
+      })
       return
     }
 
-    setPwError("")
     setPwLoading(true)
 
     try {
@@ -131,7 +134,14 @@ export default function AccountSetupModal({ authUser }) {
         setStep(3)
       }
     } catch (err) {
-      setPwError(err?.message || "Failed to change password")
+      const errInfo = formatErrorMessage(err, {
+        title: "Password Update Failed",
+        description: "Failed to change default password.",
+      })
+      toast.error(errInfo.title, {
+        description: errInfo.description,
+        action: errInfo.action,
+      })
     } finally {
       setPwLoading(false)
     }
@@ -146,12 +156,13 @@ export default function AccountSetupModal({ authUser }) {
     for (const q of requiredQuestions) {
       const hasCurrentInput = !!(answers[q.id] && answers[q.id].trim());
       if (!q.hasAnswer && !hasCurrentInput) {
-        setSecError(`Please provide an answer for: ${q.question}`)
+        toast.error("Security Answer Required", {
+          description: `Please provide an answer for: ${q.question}`,
+        })
         return
       }
     }
 
-    setSecError("")
     setSecSubmitting(true)
     try {
       // Send all questions that have either a new answer or were previously answered
@@ -182,7 +193,14 @@ export default function AccountSetupModal({ authUser }) {
       })
       setStep(3)
     } catch (err) {
-      setSecError(err?.message || "Failed to save answers")
+      const errInfo = formatErrorMessage(err, {
+        title: "Security Setup Failed",
+        description: "Failed to save recovery question answers.",
+      })
+      toast.error(errInfo.title, {
+        description: errInfo.description,
+        action: errInfo.action,
+      })
     } finally {
       setSecSubmitting(false)
     }
@@ -198,7 +216,6 @@ export default function AccountSetupModal({ authUser }) {
   const submitAvatar = async () => {
     if (avatarLoading) return
     setAvatarLoading(true)
-    setAvatarError("")
 
     try {
       const csrf = getCsrfToken()
@@ -228,7 +245,14 @@ export default function AccountSetupModal({ authUser }) {
       })
       finishSetup()
     } catch (err) {
-      setAvatarError(err?.message || "Failed to set profile avatar")
+      const errInfo = formatErrorMessage(err, {
+        title: "Avatar Update Failed",
+        description: "Failed to set default profile avatar.",
+      })
+      toast.error(errInfo.title, {
+        description: errInfo.description,
+        action: errInfo.action,
+      })
     } finally {
       setAvatarLoading(false)
     }
@@ -383,13 +407,6 @@ export default function AccountSetupModal({ authUser }) {
                   </p>
                 </div>
 
-                {pwError && (
-                  <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
-                    <HugeIcon  className="ph-fill ph-warning-circle text-base"></HugeIcon>
-                    {pwError}
-                  </div>
-                )}
-
                 <div className="space-y-4">
                   <div>
                     <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
@@ -469,13 +486,6 @@ export default function AccountSetupModal({ authUser }) {
                   </p>
                 </div>
 
-                {secError && (
-                  <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
-                    <HugeIcon  className="ph-fill ph-warning-circle text-base"></HugeIcon>
-                    {secError}
-                  </div>
-                )}
-
                 <div className="space-y-4">
                   {secLoading ? (
                     [1, 2, 3].map((i) => (
@@ -541,13 +551,6 @@ export default function AccountSetupModal({ authUser }) {
                   </p>
                 </div>
 
-                {avatarError && (
-                  <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
-                    <HugeIcon className="ph-fill ph-warning-circle text-base" />
-                    {avatarError}
-                  </div>
-                )}
-
                 {/* Live Stage Preview */}
                 <div className="flex flex-col items-center justify-center gap-2 py-1">
                   <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-inner ring-4 ring-gray-100 dark:ring-zinc-800 flex items-center justify-center bg-gray-50 dark:bg-zinc-800">
@@ -605,7 +608,7 @@ export default function AccountSetupModal({ authUser }) {
                   onClick={finishSetup}
                   className="h-[36px] px-4 rounded-[8px] text-[13px] font-medium border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-none cursor-pointer"
                 >
-                  Skip for Now
+                  Skip
                 </Button>
                 <Button
                   type="button"
@@ -613,7 +616,7 @@ export default function AccountSetupModal({ authUser }) {
                   onClick={submitAvatar}
                   className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
                 >
-                  {avatarLoading ? "Saving..." : "Complete Setup"}
+                  {avatarLoading ? "Saving..." : "Complete"}
                 </Button>
               </div>
             </div>

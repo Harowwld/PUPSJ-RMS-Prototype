@@ -22,19 +22,19 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="w-full text-sm table-fixed min-w-[760px]">
           <thead className="sticky top-0 z-10 bg-white dark:bg-card border-b border-border dark:border-border">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
-              <th className="p-4 px-6 min-w-[240px]">
+              <th className="p-4 px-6 w-[32%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 px-6 text-center min-w-[140px]">
+              <th className="p-4 px-6 w-[22%] text-center">
                 <Skeleton className="h-3.5 w-24 mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 px-6 text-center min-w-[140px]">
+              <th className="p-4 px-6 w-[22%] text-center">
                 <Skeleton className="h-3.5 w-24 mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 px-6 text-right min-w-[180px]">
+              <th className="p-4 px-6 w-[24%] text-right">
                 <Skeleton className="h-3.5 w-24 ml-auto dark:bg-muted" />
               </th>
             </tr>

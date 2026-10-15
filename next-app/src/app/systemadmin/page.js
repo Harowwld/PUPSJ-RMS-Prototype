@@ -15,6 +15,7 @@ import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/In
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import ServiceStandardsSkeleton from "@/components/systemadmin/skeletons/ServiceStandardsSkeleton"
 import { getClientSession } from "@/lib/clientAuth"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 function TabLoadingSkeleton() {
   return (
@@ -138,34 +139,89 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       const { view: targetView, officeId, section } = e.detail || {}
       if (targetView) {
         setView(targetView)
-        const params = new URLSearchParams(window.location.search)
+        const params = new URLSearchParams()
         params.set("view", targetView)
         if (officeId) {
           params.set("office", officeId)
-        } else {
-          params.delete("office")
         }
         if (section) {
           params.set("section", section)
-        } else {
-          params.delete("section")
         }
-        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
       }
     }
     window.addEventListener("switch-view", handleSwitch)
     return () => window.removeEventListener("switch-view", handleSwitch)
   }, [router])
 
-  const showToast = useCallback((msg, typeOrIsError = false) => {
-    const isRich = msg && typeof msg === "object" && msg.title
-    const title = isRich ? msg.title : String(msg || "")
-    const opts = isRich && msg.description ? { description: msg.description } : {}
-
-    if (typeOrIsError === true || typeOrIsError === "error") {
-      return toast.error(title, opts)
+  const showToast = useCallback((msg, typeOrIsError = false, autoHide = true) => {
+    if (msg instanceof Error) {
+      const normalized = formatErrorMessage(msg);
+      return toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
+        duration: 6000,
+      });
     }
-    return toast.success(title, opts)
+
+    const isError =
+      typeOrIsError === true ||
+      typeOrIsError === "error" ||
+      (msg && typeof msg === "object" && (msg.variant === "destructive" || msg.variant === "error"));
+    const isWarning =
+      typeOrIsError === "warning" ||
+      (msg && typeof msg === "object" && msg.variant === "warning");
+    const isLoading =
+      typeOrIsError === "loading" ||
+      (msg && typeof msg === "object" && msg.variant === "loading");
+
+    if (msg && typeof msg === "object") {
+      const opts = {};
+      if (msg.description) opts.description = msg.description;
+      if (msg.action) opts.action = msg.action;
+
+      if (isError) {
+        const normalized = formatErrorMessage(msg.description || msg.title || "", {
+          title: msg.title || "Operation Failed",
+          description: msg.description,
+        });
+        return toast.error(normalized.title, {
+          description: normalized.description,
+          action: msg.action || normalized.action,
+          duration: 6000,
+        });
+      }
+      if (isWarning) {
+        return toast.warning(msg.title || "", { ...opts, duration: 6000 });
+      }
+      if (isLoading) {
+        return toast.loading(msg.title || "", opts);
+      }
+      if (!autoHide) {
+        return toast.message(msg.title || "", { ...opts, duration: 5000 });
+      }
+      return toast.success(msg.title || "", { ...opts, duration: 3000 });
+    }
+
+    const str = String(msg || "");
+    if (isError) {
+      const normalized = formatErrorMessage(str);
+      return toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action,
+        duration: 6000,
+      });
+    }
+    if (isWarning) {
+      return toast.warning(str, { duration: 6000 });
+    }
+    if (isLoading) {
+      return toast.loading(str);
+    }
+    if (!autoHide) {
+      return toast.message(str, { duration: 5000 });
+    }
+    return toast.success(str, { duration: 3000 });
   }, [])
 
   const handleLogout = useCallback(async () => {
@@ -179,11 +235,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   }, [])
 
   useEffect(() => {
-    const tab = String(searchParams?.get("view") || "").trim()
-    if (VALID_VIEWS.includes(tab)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setView(tab)
-    }
+    const rawTab = searchParams?.get("view")
+    const tab = VALID_VIEWS.includes(rawTab) ? rawTab : "offices"
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setView(tab)
   }, [searchParams])
 
   useEffect(() => {
@@ -198,7 +253,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         const session = await getClientSession()
         if (!session.ok || !session.data) {
           if (session.status === 401) {
-            router.push("/login")
+            router.replace("/login")
           }
           return
         }
@@ -212,11 +267,9 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
   const switchView = useCallback((nextView) => {
     setView(nextView)
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams()
     params.set("view", nextView)
-    params.delete("office")
-    params.delete("section")
-    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
   }, [router])
 
   const sidebarItems = [

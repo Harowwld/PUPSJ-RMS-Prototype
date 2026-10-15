@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 const PAGE_SIZE = 200;
 
@@ -97,7 +98,13 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
       showToast({ title: "OCR Retry Started", description: "The document will return to the queue while processing." });
       await refresh();
     } catch (error) {
-      showToast({ title: "Retry Failed", description: error.message }, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Retry Failed",
+          actionContext: `Retrying failed document ${id}`,
+        }),
+        true
+      );
     } finally {
       setRetryingId(null);
     }
@@ -130,7 +137,13 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
       });
       await refresh();
     } catch (error) {
-      showToast({ title: "Dismiss Failed", description: error.message }, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Dismiss Failed",
+          actionContext: `Dismissing failed document ${id}`,
+        }),
+        true
+      );
     } finally {
       setDismissingId(null);
     }
@@ -159,7 +172,13 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
       setOpen(false);
       await refresh();
     } catch (error) {
-      showToast({ title: "Clear Failed", description: error.message }, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Clear Queue Failed",
+          actionContext: "Clearing all failed documents from queue",
+        }),
+        true
+      );
     } finally {
       setClearingAll(false);
     }
@@ -233,14 +252,14 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
               onClick={clearAllFailed}
               className="h-10 rounded-xl px-4 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              {clearingAll ? "Clearing All..." : "Clear All Failed"}
+              {clearingAll ? "Clearing..." : "Clear"}
             </Button>
           ) : <div />}
           <Button
             type="button"
             variant="outline"
             onClick={() => handleOpenChange(false)}
-            className="h-10 rounded-xl px-5 text-xs font-semibold border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 rounded-xl px-4 text-xs font-semibold border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

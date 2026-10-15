@@ -1,5 +1,5 @@
 /**
- * imageToPdf.js — Convert an image File (JPG/PNG/etc.) to a single-page PDF File.
+ * imageToPdf.js: Convert an image File (JPG/PNG/etc.) to a single-page PDF File.
  *
  * Uses jsPDF on the client side.  The image is embedded at its native aspect
  * ratio on an A4-ish page (or auto-sized to fit).
@@ -25,8 +25,8 @@ export function needsConversion(file) {
 /**
  * Convert an image File to a PDF File.
  *
- * @param {File} imageFile — source image
- * @returns {Promise<File>} — a new File with type "application/pdf"
+ * @param {File} imageFile - source image
+ * @returns {Promise<File>} a new File with type "application/pdf"
  */
 export async function imageToPdf(imageFile) {
   if (!imageFile) throw new Error("No file provided");
@@ -101,8 +101,8 @@ export async function imageToPdf(imageFile) {
 /**
  * Convert multiple image Files to a single multi-page PDF File.
  *
- * @param {File[]} imageFiles — array of source images
- * @returns {Promise<File>} — a new File with type "application/pdf"
+ * @param {File[]} imageFiles - array of source images
+ * @returns {Promise<File>} a new File with type "application/pdf"
  */
 export async function mergeImagesToPdf(imageFiles) {
   if (!imageFiles || imageFiles.length === 0) throw new Error("No files provided");

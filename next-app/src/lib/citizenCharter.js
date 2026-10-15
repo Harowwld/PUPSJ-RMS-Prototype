@@ -177,9 +177,9 @@ export function countWorkingDaysBetween(startDate, endDate) {
  * Format a Date object into a readable PH time string.
  */
 export function formatCharterDeadline(dateInput) {
-  if (!dateInput) return "—";
+  if (!dateInput) return "N/A";
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  if (isNaN(date.getTime())) return "—";
+  if (isNaN(date.getTime())) return "N/A";
   return new Intl.DateTimeFormat("en-PH", {
     month: "short",
     day: "numeric",
@@ -203,7 +203,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
     return {
       tier: tiers.SIMPLE,
       deadline: null,
-      deadlineFormatted: "—",
+      deadlineFormatted: "N/A",
       status: "Unknown",
       label: "Unknown",
       isOverdue: false,

@@ -169,7 +169,7 @@ export default function StudentSidebarFeedbackCard({
               : "text-transparent select-none"
           )}
         >
-          {hoverRating > 0 ? RATING_LABELS[hoverRating] : "—"}
+          {hoverRating > 0 ? RATING_LABELS[hoverRating] : ""}
         </span>
       </div>
 

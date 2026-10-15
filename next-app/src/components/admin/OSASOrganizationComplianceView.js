@@ -7,6 +7,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -192,10 +193,9 @@ export default function OSASOrganizationComplianceView({
         setData(null);
         setError(err.message || "Load failed");
         showToast?.(
-          {
-            title: "Compliance Load Failed",
-            description: err.message || "Unable to retrieve student organization compliance statistics.",
-          },
+          formatErrorMessage(err, {
+            defaultTitle: "Compliance Load Failed",
+          }),
           true
         );
       } finally {
@@ -657,10 +657,12 @@ export default function OSASOrganizationComplianceView({
         entityType: "Report",
       });
     } catch (err) {
-      showToast?.({
-        title: "Report Generation Failed",
-        description: err.message || "Failed to generate compliance PDF report.",
-      }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "Report Generation Failed",
+        }),
+        true
+      );
       setReportOpen(false);
     } finally {
       setIsGeneratingPdf(false);
@@ -698,10 +700,12 @@ export default function OSASOrganizationComplianceView({
           : "Student organization compliance dataset downloaded successfully.",
       });
     } catch (err) {
-      showToast?.({
-        title: "CSV Export Failed",
-        description: err.message,
-      }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          defaultTitle: "CSV Export Failed",
+        }),
+        true
+      );
     } finally {
       setIsExportingCsv(false);
     }
@@ -1188,11 +1192,11 @@ export default function OSASOrganizationComplianceView({
           <div className="flex flex-col border-t border-border dark:border-border bg-white dark:bg-card">
             <div className="w-full overflow-x-auto">
               {sortedOrganizations.length > 0 ? (
-                <table className="min-w-full text-sm">
+                <table className="w-full text-sm table-fixed min-w-[850px]">
                   <thead className="sticky top-0 z-10 bg-gray-50/80 backdrop-blur-sm dark:bg-zinc-900/70 border-b border-border dark:border-border">
                     <tr className="hover:bg-transparent text-left">
                       {/* Column 1: Organization */}
-                      <th className="py-3 px-6">
+                      <th className="py-3 px-6 w-[32%]">
                         <button
                           type="button"
                           onClick={() => handleSort("name")}
@@ -1203,14 +1207,14 @@ export default function OSASOrganizationComplianceView({
                       </th>
 
                       {/* Column 2: Faculty Adviser */}
-                      <th className="py-3 px-6">
+                      <th className="py-3 px-6 w-[22%]">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                           Faculty Adviser
                         </span>
                       </th>
 
                       {/* Column 3: Archival CBL */}
-                      <th className="py-3 px-6 text-center">
+                      <th className="py-3 px-6 w-[14%] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("hasCbl")}
@@ -1221,7 +1225,7 @@ export default function OSASOrganizationComplianceView({
                       </th>
 
                       {/* Column 4: Officer Whitelist */}
-                      <th className="py-3 px-6 text-center">
+                      <th className="py-3 px-6 w-[14%] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("activeOfficerCount")}
@@ -1232,7 +1236,7 @@ export default function OSASOrganizationComplianceView({
                       </th>
 
                       {/* Column 5: Compliance */}
-                      <th className="py-3 px-6 text-right">
+                      <th className="py-3 px-6 w-[18%] text-right">
                         <button
                           type="button"
                           onClick={() => handleSort("complianceScore")}
@@ -1326,7 +1330,7 @@ export default function OSASOrganizationComplianceView({
                                 onClick={() =>
                                   setPreviewCbl({
                                     url: `/api/osas/organizations/${org.id}/bylaws?file=1`,
-                                    title: `${org.name} — Constitution & By-Laws (CBL)`,
+                                    title: `${org.name}: Constitution & By-Laws (CBL)`,
                                     filename: org.cblFilename,
                                   })
                                 }
@@ -1529,10 +1533,10 @@ export default function OSASOrganizationComplianceView({
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-xl md:max-w-2xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl font-jakarta overflow-hidden"
+            className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
             {/* Sheet Header */}
-            <SheetHeader className="shrink-0 p-6 pb-4 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
+            <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {selectedOrgForOfficers?.acronym && (
                   <span className="px-2.5 py-0.5 text-[11px] font-bold font-mono tracking-wider rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border">
@@ -1748,7 +1752,7 @@ export default function OSASOrganizationComplianceView({
             </div>
 
             {/* Sheet Footer */}
-            <SheetFooter className="shrink-0 p-4 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex items-center">
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-row items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1756,9 +1760,9 @@ export default function OSASOrganizationComplianceView({
                   setSelectedOrgForOfficers(null);
                   setOfficerSearch("");
                 }}
-                className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Cancel
+                Close
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -1805,7 +1809,7 @@ export default function OSASOrganizationComplianceView({
                   Official OSAS Student Organization Compliance Report
                 </DialogTitle>
                 <DialogDescription className="text-left font-normal text-gray-900 dark:text-zinc-300 text-xs mt-0.5">
-                  Accreditation and institutional audit report — PUP San Juan OSAS
+                  Accreditation and institutional audit report: PUP San Juan OSAS
                 </DialogDescription>
               </div>
 
@@ -1887,7 +1891,7 @@ export default function OSASOrganizationComplianceView({
                 <Button
                   variant="outline"
                   onClick={() => setReportOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>

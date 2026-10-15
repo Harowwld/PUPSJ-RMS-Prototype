@@ -63,7 +63,7 @@ export default function BackupTable({
           "w-full overflow-x-auto select-none isolate"
         )}
       >
-        <table className={cn("min-w-full text-sm", sortedAndPaginatedBackups.length === 0 && "h-full")}>
+        <table className={cn("w-full text-sm table-fixed min-w-[850px]", sortedAndPaginatedBackups.length === 0 && "h-full")}>
           <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 p-4 text-center align-middle">
@@ -81,7 +81,7 @@ export default function BackupTable({
                   disabled={backups.length === 0}
                 />
               </th>
-              <th className="p-4 min-w-[280px]">
+              <th className="p-4 w-[36%]">
                 <button
                   onClick={() => handleSort("filename")}
                   className={cn(
@@ -97,7 +97,7 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="p-4 w-32 text-center">
+              <th className="p-4 w-[14%] text-center">
                 <button
                   onClick={() => handleSort("size_bytes")}
                   className={cn(
@@ -113,7 +113,7 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="p-4 w-56">
+              <th className="p-4 w-[18%]">
                 <button
                   onClick={() => handleSort("created_at")}
                   className={cn(
@@ -130,7 +130,7 @@ export default function BackupTable({
                 </button>
               </th>
               {scope === "office" ? (
-                <th className="p-4 w-64 text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   <div className="inline-flex items-center justify-center gap-1.5">
                     <span>Backup Copies</span>
                     <Tooltip>
@@ -144,11 +144,11 @@ export default function BackupTable({
                   </div>
                 </th>
               ) : (
-                <th className="p-4 w-36 text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   Status
                 </th>
               )}
-              <th className="p-4 pr-6 w-32 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+              <th className="p-4 pr-6 w-28 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                 Actions
               </th>
             </tr>
@@ -221,9 +221,9 @@ export default function BackupTable({
                         onChange={() => handleToggleRow(b.id)}
                       />
                     </td>
-                    <td className="p-4 align-middle min-w-[280px]">
+                    <td className="p-4 align-middle overflow-hidden">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[280px]" title={b.filename}>
+                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full" title={b.filename}>
                           {b.filename}
                         </span>
                       </div>

@@ -2,6 +2,7 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -126,13 +127,34 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [sortBy, setSortBy] = useState("short_name")
   const [sortOrder, setSortOrder] = useState("ASC")
 
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   // Table Pagination state
-  const [page, setPage] = useState(1)
+  const initialPageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
+  const [page, setPage] = useState(!isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1)
   const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
+    const pageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
+    const validPage = !isNaN(pageFromUrl) && pageFromUrl >= 1 ? pageFromUrl : 1
+    if (validPage !== page) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(validPage)
+    }
+  }, [searchParams, page])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1)
-  }, [searchQuery, statusFilter, selectedKpi])
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      if (params.has("page")) {
+        params.delete("page")
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+      }
+    }
+  }, [searchQuery, statusFilter, selectedKpi, router])
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -503,6 +525,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const paginatedOffices = useMemo(() => {
     return filteredOffices.slice(startIndex, startIndex + pageSize)
   }, [filteredOffices, startIndex, pageSize])
+
+  const updatePage = useCallback((newPage) => {
+    const validPage = Math.max(1, Math.min(totalPages, newPage))
+    setPage(validPage)
+    const params = new URLSearchParams(window.location.search)
+    params.set("page", String(validPage))
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+  }, [totalPages, router])
 
   const statCardsData = [
     {
@@ -1011,11 +1041,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       ) : (
         /* Compact Table View */
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
+          <div className="overflow-x-auto select-none">
+            <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 table-fixed min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-                  <th className="px-5 py-3">
+                  <th className="px-5 py-3 w-[24%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("short_name")}
                       className={cn(
@@ -1027,7 +1057,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3">
+                  <th className="px-5 py-3 w-[30%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("name")}
                       className={cn(
@@ -1039,7 +1069,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3">
+                  <th className="px-5 py-3 w-[22%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("station_name")}
                       className={cn(
@@ -1051,7 +1081,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 text-center">
+                  <th className="px-5 py-3 w-[8%] text-center whitespace-nowrap">
                     <button
                       onClick={() => handleSort("staff_count")}
                       className={cn(
@@ -1063,7 +1093,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 text-center">
+                  <th className="px-5 py-3 w-[8%] text-center whitespace-nowrap">
                     <button
                       onClick={() => handleSort("module_count")}
                       className={cn(
@@ -1075,7 +1105,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3">
+                  <th className="px-5 py-3 w-[8%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("status")}
                       className={cn(
@@ -1087,7 +1117,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="px-5 pr-6 py-3 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Actions
                   </th>
                 </tr>
@@ -1133,24 +1163,24 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3.5">
-                        <div className="max-w-xs">
-                          <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate">
+                      <td className="px-5 py-3.5 overflow-hidden">
+                        <div className="truncate">
+                          <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
                             {office.name}
                           </span>
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 line-clamp-1">
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate block" title={office.description || "No description provided."}>
                             {office.description || "No description provided."}
                           </span>
                         </div>
                       </td>
 
-                      <td className="px-5 py-3.5 whitespace-nowrap">
-                        <div className="text-[11px] space-y-0.5">
-                          <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium">
-                            <HugeIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs"></HugeIcon>
-                            <span>{office.station_name || "Unassigned"}</span>
+                      <td className="px-5 py-3.5 whitespace-nowrap overflow-hidden">
+                        <div className="text-[11px] space-y-0.5 truncate">
+                          <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
+                            <HugeIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs shrink-0"></HugeIcon>
+                            <span className="truncate">{office.station_name || "Unassigned"}</span>
                           </div>
-                          <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate max-w-[150px]" title={office.storage_path}>
+                          <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate" title={office.storage_path}>
                             {office.storage_path || `.local/storage/${office.id}`}
                           </div>
                         </div>
@@ -1193,7 +1223,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                      <td className="px-5 pr-6 py-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           {isActive ? (
                             <>
@@ -1289,7 +1319,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   variant="ghost"
                   size="sm"
                   disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => updatePage(page - 1)}
                   className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
@@ -1301,7 +1331,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   variant="ghost"
                   size="sm"
                   disabled={page >= totalPages || endIndex >= filteredOffices.length}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => updatePage(page + 1)}
                   className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next
@@ -1853,7 +1883,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isAppleStyled={true}
         isPersonnelModal={true}
         isArchiveModal={true}
-        selectedItems={archiveOfficeTarget ? [`${archiveOfficeTarget.short_name} (${archiveOfficeTarget.id}) — ${archiveOfficeTarget.staff_count || 0} Staff assigned`] : []}
+        selectedItems={archiveOfficeTarget ? [`${archiveOfficeTarget.short_name} (${archiveOfficeTarget.id}): ${archiveOfficeTarget.staff_count || 0} Staff assigned`] : []}
       />
 
       {/* Restore Confirmation Modal */}
@@ -1869,7 +1899,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isAppleStyled={true}
         isPersonnelModal={true}
         isRestoreModal={true}
-        selectedItems={restoreOfficeTarget ? [`${restoreOfficeTarget.short_name} (${restoreOfficeTarget.id}) — ${restoreOfficeTarget.staff_count || 0} Staff assigned`] : []}
+        selectedItems={restoreOfficeTarget ? [`${restoreOfficeTarget.short_name} (${restoreOfficeTarget.id}): ${restoreOfficeTarget.staff_count || 0} Staff assigned`] : []}
       />
     </div>
   )

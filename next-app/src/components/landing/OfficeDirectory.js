@@ -209,7 +209,7 @@ export default function OfficeDirectory() {
               Administration &amp; Records Hall
             </h3>
             <p className="text-xs sm:text-sm font-semibold text-gray-600  mt-1">
-              Polytechnic University of the Philippines — San Juan Campus
+              Polytechnic University of the Philippines, San Juan Campus
             </p>
 
             {/* Complete Physical Address with Copy Action */}

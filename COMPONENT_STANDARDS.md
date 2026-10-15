@@ -111,12 +111,13 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 | **Complex Form** | `sm:max-w-2xl` / `max-w-4xl` | Student registration, user editing, template assignment |
 | **Full Inspection** | `w-[96vw] max-w-[96vw] h-[90vh] xl:max-w-[1400px]` | PDF previewers, digitization audits, document reviews |
 
-### 3.3 Modal Golden Rules
-- **NEVER** insert `<div className="w-12 h-12 rounded-xl border flex items-center justify-center ..."><HugeIcon ... /></div>` into `DialogHeader`.
-- **NEVER** prepend icons to `DialogTitle` (e.g. `<HugeIcon className="ph-fill ph-warning" /> Alert Title`).
-- Keep header titles between `15px` and `17px` (`text-[16px] font-semibold tracking-[-0.01em]`).
+### 3.3 Modal & Sheet Golden Rules
+- **NEVER** insert `<div className="w-12 h-12 rounded-xl border flex items-center justify-center ..."><HugeIcon ... /></div>` or any icon box wrapper into `DialogHeader` or `SheetHeader`.
+- **NEVER** prepend icons to `DialogTitle` or `SheetTitle` (e.g. `<HugeIcon className="ph-fill ph-warning" /> Alert Title`).
+- Keep header titles between `15px` and `18px` (`text-[16px] font-semibold tracking-[-0.01em]` for Dialogs; `text-[17px]` to `text-[19px]` for Sheets).
 - Keep descriptions at `text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1`.
 - For global confirmation dialogs, always use `<ConfirmModal />`, which natively enforces Apple styling and icon-free headers.
+- Footers must always feature action-only buttons (e.g. `Cancel` / `Close` + single action verb: `Save`, `Register`, `Submit`, `Delete`, `Done`).
 
 ---
 
@@ -127,18 +128,33 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 - **Colors**: Brand Maroon (`btn-brand-red`), Emerald (`btn-brand-green`), or Destructive Red (`bg-red-600 hover:bg-red-700`).
 - **Icons**: Permitted **only** during loading or processing states (e.g. `<HugeIcon className="ph-bold ph-spinner animate-spin" />`).
 ```jsx
-// Correct
+// Correct (Text-only, single action verb)
 <Button className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all border-0">
-  {isLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" /> : "Register Student"}
+  {isLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" /> : "Register"}
 </Button>
 
-// Incorrect (DO NOT ADD STATIC LEADING ICONS)
+// Incorrect (DO NOT ADD STATIC LEADING ICONS OR MULTI-WORD VERBOSE PHRASES)
 <Button ...>
   <HugeIcon className="ph-bold ph-plus" /> Register Student
 </Button>
 ```
 
-### 4.2 Secondary / Dismissal Buttons
+### 4.2 Action-Only Button Verb Convention (Golden Rule)
+All button labels in dialogs, sheets, toolbars, and cards must strictly use a **single action word (verb)**:
+- **Approved Primary Actions**: `Save`, `Register`, `Submit`, `Delete`, `Create`, `Update`, `Clear`, `Reset`, `Apply`, `Upload`, `Restore`, `Archive`, `Download`, `Copy`, `Retry`, `Dismiss`, `Review`, `Approve`, `Revise`, `Decline`, `Reopen`, `Revoke`, `Skip`, `Complete`, `Finish`, `Done`, `Import`, `Export`.
+- **Approved Secondary / Dismissal Actions**: `Cancel`, `Close`, `Back`.
+- **Strictly Forbidden Multi-Word Labels**:
+  - ❌ `Save Changes` ➔ Use **`Save`**
+  - ❌ `Submit Feedback` ➔ Use **`Submit`**
+  - ❌ `Register Student` ➔ Use **`Register`**
+  - ❌ `Create User` / `Register Staff` ➔ Use **`Register`** or **`Create`**
+  - ❌ `Skip for Now` ➔ Use **`Skip`**
+  - ❌ `Complete Setup` ➔ Use **`Complete`** or **`Finish`**
+  - ❌ `Clear All Failed` / `Clear All` ➔ Use **`Clear`**
+  - ❌ `Copy Codes` ➔ Use **`Copy`**
+  - ❌ `Download (.txt)` ➔ Use **`Download`**
+
+### 4.3 Secondary / Dismissal Buttons
 - **Style**: Outlined (`variant="outline"`), `rounded-xl`, clear border.
 - **Copy**: Single action-only word (`Cancel` or `Close`).
 ```jsx
@@ -151,7 +167,7 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 </Button>
 ```
 
-### 4.3 Universal Header Refresh Action
+### 4.4 Universal Header Refresh Action
 Never use a text button that says "Refresh". Use the project's squircle `<RefreshButton />`:
 ```jsx
 import RefreshButton from "@/components/shared/RefreshButton";
@@ -160,7 +176,7 @@ import RefreshButton from "@/components/shared/RefreshButton";
 ```
 Renders an accessible 40×40px `rounded-xl` icon-only squircle with hover feedback and spinning indicator.
 
-### 4.4 Table / Row Inline Actions
+### 4.5 Table / Row Inline Actions
 For row-level table actions, use compact `rounded-lg` buttons:
 ```jsx
 <button
@@ -373,6 +389,67 @@ For multi-item checklists, records, and catalogs (such as the Student Document C
 - **Callout Micro-Banner**: Clean inset box (`rounded-xl p-2.5 border text-[11px]`) for submission channel or digital archive confirmation.
 - **Footer**: Location indicator on left, interactive detail popover trigger on right (`Popover` with instructions and audit timestamps).
 
+### 5.8 Standard Search Input with Live Result Count Badge & Quick Clear Action
+All search bars across table toolbars, master lists, directories, and archive scopes must follow the standardized search input pattern:
+
+- **Apple HIG & Visual Ergonomics**: Provides immediate visual confirmation of the search query scope, total matching count, and an effortless single-click clear action without leaving the keyboard or toolbar.
+- **Container**: `relative flex-1 sm:w-64 min-w-[200px] max-w-sm group` (or responsive fixed width `w-full sm:w-[260px] lg:w-[300px] relative group shrink-0`). Must include `group` so the leading search icon transitions color when the input is focused.
+- **Leading Search Icon**: Embedded at `absolute inset-y-0 left-3 flex items-center pointer-events-none` with `<HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />`.
+- **Input Geometry & Spacing**: Must use `h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all`.
+  - **Crucial Padding Requirement**: Always specify `pl-8 pr-16` (or `pr-20` if large numbers/controls) so typed text never overlaps or clips under the trailing count badge or clear button.
+- **Trailing Control Cluster (Clear Button + Live Count Badge)**: Positioned at `absolute inset-y-0 right-3 flex items-center gap-1.5`:
+  - **Quick Clear Button**: Displayed conditionally whenever the search query is non-empty (`query !== ""`). Must use a borderless, transparent button with `<HugeIcon className="ph-bold ph-x-circle text-[13px]" />` and accessible tooltip/aria-label.
+  - **Live Count Badge**: Shows pure numeric matching count using `text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none` formatted with `.toLocaleString()`.
+
+#### Code Blueprint: Standard Search Input
+```jsx
+<div className="relative w-full sm:w-64 group">
+  {/* 1. Leading Search Icon with Brand Focus Transition */}
+  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+    <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+  </div>
+
+  {/* 2. Text Input with Standard Hairline Border & pl-8 pr-16 Padding */}
+  <Input
+    type="text"
+    placeholder="Search student no. or name"
+    value={searchQuery}
+    onChange={(e) => {
+      setSearchQuery(e.target.value);
+      setPage(1);
+    }}
+    className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+  />
+
+  {/* 3. Trailing Cluster: Quick Clear Button + Live Monospace Count Badge */}
+  <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+    {searchQuery && (
+      <button
+        type="button"
+        onClick={() => {
+          setSearchQuery("");
+          setPage(1);
+        }}
+        className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+        title="Clear search"
+        aria-label="Clear search"
+      >
+        <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+      </button>
+    )}
+    <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+      {filteredStudents.length.toLocaleString()}
+    </span>
+  </div>
+</div>
+```
+
+#### Search Input Golden Rules:
+1. **Never omit the count badge**: Every search input in toolbars and table headers must report its current scope or filtered result count.
+2. **Always format with monospace**: Use `font-mono text-[11px]` to prevent layout jitter when numeric values change.
+3. **Always ensure `pr-16` right padding**: Standard `pr-4` or `pr-8` causes text to type underneath the count badge.
+4. **Never use raw "×" characters**: Always render `<HugeIcon className="ph-bold ph-x-circle text-[13px]" />` for the clear button.
+
 ---
 
 ## 6. Color Tokens & Brand Styles
@@ -399,4 +476,5 @@ Before finalizing any new page, tab, or modal, verify the following:
 - [ ] **Border Radius Standards**: Outer cards are `rounded-2xl`, inputs & buttons are `rounded-xl`, small items are `rounded-lg`.
 - [ ] **Secondary Button Outlines**: Dismissal buttons use `variant="outline"` with a crisp border, not borderless ghost.
 - [ ] **Universal Refresh Squircle**: Is data refresh handled via `<RefreshButton />` instead of a text "Refresh" button?
+- [ ] **Standard Search Input with Live Count**: Does the search bar include a leading magnifying glass with focus color transition, generous padding (`pl-8 pr-16`), a trailing live mono count badge (`text-[11px] font-mono pointer-events-none`), and an inline clear button (`ph-x-circle`)?
 - [ ] **Dark Mode Parity**: Are dark variants (`dark:border-white/10`, `dark:bg-card`, `dark:text-zinc-50`) present on all containers?

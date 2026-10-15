@@ -431,7 +431,7 @@ export const generateAuditLogsPdf = async (logs = [], options = {}) => {
       base.push(log?.officeName || log?.office_name || log?.scope || (log?.office_id ? "Office" : "Global"))
     }
     base.push(log?.action || "Activity")
-    base.push(log?.details || "—")
+    base.push(log?.details || "N/A")
     return base
   })
 
@@ -526,7 +526,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
     data.byYear.forEach(yearData => {
       doc.setFont("helvetica", "bold")
       doc.setTextColor(brandR, brandG, brandB)
-      doc.text(`Batch ${yearData?.year || "—"}`, 60, y)
+      doc.text(`Batch ${yearData?.year || "N/A"}`, 60, y)
       doc.setFont("helvetica", "normal")
       doc.setTextColor(60, 60, 60)
       doc.text(`${(yearData?.count ?? 0).toLocaleString()} Students`, doc.internal.pageSize.getWidth() - 60, y, { align: "right" })
@@ -571,7 +571,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   
   const courseList = Array.isArray(byCourse) ? byCourse : []
   const tableData = courseList.map((c) => [
-    c?.courseCode || "—",
+    c?.courseCode || "N/A",
     c?.total ?? 0,
     c?.digitized ?? 0,
     `${c?.percent ?? 0}%`
@@ -738,7 +738,7 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
     const withOfficersRate = c?.withOfficersRate ?? (orgCount > 0 ? Math.round(((c?.withOfficersCount ?? 0) / orgCount) * 100) : 0)
     const complianceRate = c?.complianceRate ?? (orgCount > 0 ? Math.round((compliant / orgCount) * 100) : 0)
     return [
-      c?.category || "—",
+      c?.category || "N/A",
       String(orgCount),
       String(compliant),
       `${cblArchivedRate}%`,
@@ -786,7 +786,7 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
     const status = o?.complianceStatus || "Pending"
     return [
       `${orgName}${orgAcronym}`,
-      o?.category || "—",
+      o?.category || "N/A",
       adviser,
       cblStatus,
       `${officerCount} Officers`,
@@ -1101,10 +1101,10 @@ export const generateSampleBrandingPdf = async (branding) => {
     startY: y,
     head: [["Configuration Key", "Configured Value", "Status"]],
     body: [
-      ["Super-Header / Jurisdiction", jurisdictionHeader || "—", "Active"],
+      ["Super-Header / Jurisdiction", jurisdictionHeader || "N/A", "Active"],
       ["School / University Name", instName, "Active"],
-      ["Campus / Branch", campusName || "—", "Active"],
-      ["Administrative Office Line", tagline || "—", "Active"],
+      ["Campus / Branch", campusName || "N/A", "Active"],
+      ["Administrative Office Line", tagline || "N/A", "Active"],
       ["Automated Document Prefix", prefix, "Auto-Derived"],
       ["Primary Brand Color", accentColor, "Applied"],
       ["Primary Seal", activeBranding?.logoBase64 ? "Custom High-Res Image Uploaded" : "Default PUP Seal (eManage Fallback)", "Verified"],
@@ -1175,7 +1175,7 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   doc.text("STUDENT NAME", 52, y + 18)
   doc.setFontSize(9.5)
   doc.setTextColor(17, 24, 39)
-  doc.text(String(student?.name || "—"), 52, y + 34)
+  doc.text(String(student?.name || "N/A"), 52, y + 34)
 
   // Col 2: Student Number
   doc.setFont("helvetica", "bold")
@@ -1184,7 +1184,7 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   doc.text("STUDENT NUMBER", 52 + colWidth, y + 18)
   doc.setFontSize(9.5)
   doc.setTextColor(brandR, brandG, brandB)
-  doc.text(String(student?.studentNo || student?.student_no || "—"), 52 + colWidth, y + 34)
+  doc.text(String(student?.studentNo || student?.student_no || "N/A"), 52 + colWidth, y + 34)
 
   // Col 3: Compliance Status
   doc.setFont("helvetica", "bold")
@@ -1205,11 +1205,11 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
   const tableData = reqList.length > 0
     ? reqList.map((r, idx) => [
         idx + 1,
-        r?.docType || r?.name || "—",
-        r?.category || "—",
+        r?.docType || r?.name || "N/A",
+        r?.category || "N/A",
         r?.status === "Submitted" || r?.submitted ? "Submitted" : "Not Submitted",
       ])
-    : [["—", "No requirements listed", "—", "—"]]
+    : [["N/A", "No requirements listed", "N/A", "N/A"]]
 
   autoTable(doc, {
     startY: y + 60,

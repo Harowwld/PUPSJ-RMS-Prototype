@@ -146,7 +146,7 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName, o
         org.id ?? "",
         org.name ?? "Unnamed Organization",
         org.acronym || "",
-        org.category || "—",
+        org.category || "N/A",
         org.status || "Active",
         org.adviserName || org.adviser_name || "",
         org.adviserEmail || org.adviser_email || "",

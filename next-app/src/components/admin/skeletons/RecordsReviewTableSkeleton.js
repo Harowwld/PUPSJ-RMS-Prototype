@@ -14,31 +14,31 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
       )}
     >
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="w-full text-sm table-fixed min-w-[1000px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
               <th className="w-12 p-4 text-center">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="w-44 p-4">
+              <th className="p-4 w-[14%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[200px] max-w-[260px]">
+              <th className="p-4 w-[20%]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[160px]">
+              <th className="p-4 w-[16%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[180px] max-w-[240px]">
+              <th className="p-4 w-[20%]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="w-32 p-4 text-center">
+              <th className="p-4 w-[10%] text-center">
                 <Skeleton className="h-3.5 w-16 mx-auto dark:bg-muted" />
               </th>
-              <th className="w-36 p-4">
+              <th className="p-4 w-[12%]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="w-28 p-4 text-right">
+              <th className="w-24 p-4 pr-6 text-right">
                 <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
               </th>
             </tr>
@@ -55,12 +55,12 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 </td>
 
                 {/* Student No */}
-                <td className="w-44 p-4 whitespace-nowrap">
+                <td className="p-4 whitespace-nowrap">
                   <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Student Name */}
-                <td className="p-4 min-w-[200px] max-w-[260px]">
+                <td className="p-4">
                   <Skeleton
                     className={cn(
                       "h-4 rounded dark:bg-muted",
@@ -70,22 +70,22 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 </td>
 
                 {/* Document Type */}
-                <td className="p-4 min-w-[160px]">
+                <td className="p-4">
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Filename */}
-                <td className="p-4 min-w-[180px] max-w-[240px]">
+                <td className="p-4">
                   <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
                 </td>
 
                 {/* Status */}
-                <td className="w-32 p-4 text-center">
+                <td className="p-4 text-center">
                   <Skeleton className="h-6 w-20 rounded-full mx-auto dark:bg-muted" />
                 </td>
 
                 {/* Upload Date */}
-                <td className="w-36 p-4">
+                <td className="p-4">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-14 rounded dark:bg-muted" />
@@ -93,7 +93,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 </td>
 
                 {/* Actions */}
-                <td className="w-28 p-4 text-right">
+                <td className="w-24 p-4 pr-6 text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />

@@ -7,31 +7,31 @@ import { cn } from "@/lib/utils"
 export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
   if (layoutView === "table") {
     return (
-      <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
+      <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate select-none">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400">
+          <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 table-fixed min-w-[960px]">
             <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11 select-none">
-                <th className="p-4 pl-6 min-w-[240px]">
+                <th className="px-5 py-3 w-[24%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                 </th>
-                <th className="p-4 w-24">
-                  <Skeleton className="h-3.5 w-16 dark:bg-muted" />
+                <th className="px-5 py-3 w-[30%] whitespace-nowrap">
+                  <Skeleton className="h-3.5 w-40 dark:bg-muted" />
                 </th>
-                <th className="p-4 min-w-[180px]">
-                  <Skeleton className="h-3.5 w-28 dark:bg-muted" />
+                <th className="px-5 py-3 w-[22%] whitespace-nowrap">
+                  <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                 </th>
-                <th className="p-4 w-36">
-                  <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+                <th className="px-5 py-3 w-[8%] text-center whitespace-nowrap">
+                  <Skeleton className="h-3.5 w-10 mx-auto dark:bg-muted" />
                 </th>
-                <th className="p-4 w-36">
-                  <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+                <th className="px-5 py-3 w-[8%] text-center whitespace-nowrap">
+                  <Skeleton className="h-3.5 w-10 mx-auto dark:bg-muted" />
                 </th>
-                <th className="p-4 w-28">
-                  <Skeleton className="h-3.5 w-16 dark:bg-muted" />
+                <th className="px-5 py-3 w-[8%] whitespace-nowrap">
+                  <Skeleton className="h-3.5 w-12 dark:bg-muted" />
                 </th>
-                <th className="p-4 pr-6 text-right w-28">
-                  <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
+                <th className="px-5 pr-6 text-right w-20 whitespace-nowrap">
+                  <Skeleton className="h-3.5 w-12 ml-auto dark:bg-muted" />
                 </th>
               </tr>
             </thead>
@@ -41,39 +41,47 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                   key={i}
                   className="h-[56px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
                 >
-                  <td className="py-2 px-4 pl-6 align-middle">
+                  <td className="py-2 px-5 align-middle whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <Skeleton className="h-10 w-10 rounded-xl shrink-0 dark:bg-muted" />
+                      <Skeleton className="h-8 w-8 rounded-lg shrink-0 dark:bg-muted" />
                       <div className="flex flex-col gap-1">
                         <Skeleton
                           className={cn(
-                            "h-4 rounded dark:bg-muted",
-                            i % 2 === 0 ? "w-36" : "w-44"
+                            "h-3.5 rounded dark:bg-muted",
+                            i % 2 === 0 ? "w-24" : "w-28"
                           )}
                         />
-                        <Skeleton className="h-2.5 w-20 font-mono rounded dark:bg-muted" />
+                        <Skeleton className="h-2.5 w-16 font-mono rounded dark:bg-muted" />
                       </div>
                     </div>
                   </td>
-                  <td className="py-0 px-4 align-middle">
-                    <div className="flex items-center gap-1.5">
-                      <Skeleton className="h-4 w-4 rounded-full dark:bg-muted" />
-                      <Skeleton className="h-3 w-12 rounded dark:bg-muted" />
+                  <td className="py-2 px-5 align-middle overflow-hidden">
+                    <div className="flex flex-col gap-1">
+                      <Skeleton
+                        className={cn(
+                          "h-3.5 rounded dark:bg-muted",
+                          i % 2 === 0 ? "w-36" : "w-44"
+                        )}
+                      />
+                      <Skeleton className="h-2.5 w-52 rounded dark:bg-muted" />
                     </div>
                   </td>
-                  <td className="py-0 px-4 align-middle">
-                    <Skeleton className="h-7 w-36 rounded-lg dark:bg-muted" />
+                  <td className="py-2 px-5 align-middle whitespace-nowrap overflow-hidden">
+                    <div className="flex flex-col gap-1">
+                      <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
+                      <Skeleton className="h-2.5 w-36 rounded dark:bg-muted" />
+                    </div>
                   </td>
-                  <td className="py-0 px-4 align-middle">
-                    <Skeleton className="h-4 w-16 rounded dark:bg-muted" />
+                  <td className="py-2 px-5 align-middle text-center whitespace-nowrap">
+                    <Skeleton className="h-6 w-12 rounded-lg mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-0 px-4 align-middle">
-                    <Skeleton className="h-4 w-16 rounded dark:bg-muted" />
+                  <td className="py-2 px-5 align-middle text-center whitespace-nowrap">
+                    <Skeleton className="h-6 w-12 rounded-lg mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-0 px-4 align-middle">
-                    <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                  <td className="py-2 px-5 align-middle whitespace-nowrap">
+                    <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                   </td>
-                  <td className="py-0 pr-6 align-middle text-right">
+                  <td className="py-2 px-5 pr-6 align-middle text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
                       <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />

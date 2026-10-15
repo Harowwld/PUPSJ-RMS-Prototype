@@ -13,10 +13,10 @@ function requestAttachmentsDir() {
   return path.join(localDir, "storage", "registrar", "request_attachments");
 }
 
-export async function GET(req, ctx) {
+async function resolveAttachmentTarget(req, ctx) {
   const user = await getAuthenticatedPrincipal(req);
   if (!user) {
-    return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
+    return { response: NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 }) };
   }
 
   const params = await ctx.params;
@@ -24,7 +24,7 @@ export async function GET(req, ctx) {
   const attachmentId = Number(params?.attachmentId);
 
   if (!Number.isInteger(requestId) || requestId < 1 || !Number.isInteger(attachmentId) || attachmentId < 1) {
-    return NextResponse.json({ ok: false, error: "Invalid request or attachment ID" }, { status: 400 });
+    return { response: NextResponse.json({ ok: false, error: "Invalid request or attachment ID" }, { status: 400 }) };
   }
 
   // 1. Fetch document request
@@ -33,7 +33,7 @@ export async function GET(req, ctx) {
     [requestId]
   );
   if (!request || String(request.office_id || "").trim().toLowerCase() !== "registrar") {
-    return NextResponse.json({ ok: false, error: "Document request not found" }, { status: 404 });
+    return { response: NextResponse.json({ ok: false, error: "Document request not found" }, { status: 404 }) };
   }
 
   // 2. Authorization check
@@ -52,7 +52,7 @@ export async function GET(req, ctx) {
   }
 
   if (!authorized) {
-    return NextResponse.json({ ok: false, error: "Forbidden: Access denied to this attachment" }, { status: 403 });
+    return { response: NextResponse.json({ ok: false, error: "Forbidden: Access denied to this attachment" }, { status: 403 }) };
   }
 
   // 3. Fetch attachment record
@@ -61,17 +61,71 @@ export async function GET(req, ctx) {
     [attachmentId, requestId]
   );
   if (!attachment) {
-    return NextResponse.json({ ok: false, error: "Attachment record not found" }, { status: 404 });
+    return { response: NextResponse.json({ ok: false, error: "Attachment record not found" }, { status: 404 }) };
   }
 
   // 4. File on disk
   const storageFilename = String(attachment.storage_filename || "");
   if (!storageFilename || path.basename(storageFilename) !== storageFilename) {
-    return NextResponse.json({ ok: false, error: "Attachment storage reference is invalid" }, { status: 500 });
+    return { response: NextResponse.json({ ok: false, error: "Attachment storage reference is invalid" }, { status: 500 }) };
   }
   const filePath = path.join(requestAttachmentsDir(), storageFilename);
+
+  return { attachment, filePath };
+}
+
+export async function HEAD(req, ctx) {
+  const resolved = await resolveAttachmentTarget(req, ctx);
+  if (resolved.response) return resolved.response;
+  const { attachment, filePath } = resolved;
+
   if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ ok: false, error: "Attachment file missing from storage" }, { status: 404 });
+    return new NextResponse(null, {
+      status: 404,
+      headers: {
+        "X-File-Missing": "true",
+      },
+    });
+  }
+
+  try {
+    const stat = fs.statSync(filePath);
+    const safeFilename = encodeURIComponent(attachment.original_filename);
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "Content-Type": attachment.mime_type || "application/octet-stream",
+        "Content-Length": String(stat.size),
+        "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
+        "Cache-Control": "private, max-age=3600",
+        ...FILE_SECURITY_HEADERS,
+      },
+    });
+  } catch {
+    return new NextResponse(null, {
+      status: 404,
+      headers: {
+        "X-File-Missing": "true",
+      },
+    });
+  }
+}
+
+export async function GET(req, ctx) {
+  const resolved = await resolveAttachmentTarget(req, ctx);
+  if (resolved.response) return resolved.response;
+  const { attachment, filePath } = resolved;
+
+  if (!fs.existsSync(filePath)) {
+    return NextResponse.json(
+      { ok: false, error: "Attachment file missing from storage" },
+      {
+        status: 404,
+        headers: {
+          "X-File-Missing": "true",
+        },
+      }
+    );
   }
 
   const fileBytes = fs.readFileSync(filePath);

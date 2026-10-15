@@ -4,6 +4,8 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/errorUtils"
 import {
   Dialog,
   DialogContent,
@@ -23,25 +25,28 @@ export function TOTPChallengeModal({
   isLoading = false,
 }) {
   const [token, setToken] = useState("")
-  const [error, setError] = useState("")
 
-  if (!open && (token !== "" || error !== "")) {
+  if (!open && token !== "") {
     setToken("")
-    setError("")
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     const trimmed = token.trim()
     if (!trimmed || (trimmed.length !== 6 && trimmed.length !== 8)) {
-      setError("Please enter a 6-digit code or 8-character recovery code")
+      toast.error("Invalid Code", {
+        description: "Please enter a 6-digit verification code or 8-character recovery code.",
+      })
       return
     }
     try {
       await onConfirm(trimmed)
     } catch (err) {
-      const msg = err?.message || "Invalid verification code"
-      setError(msg)
+      const errInfo = formatErrorMessage(err, "Verification Failed")
+      toast.error(errInfo.title, {
+        description: errInfo.description,
+        action: errInfo.action,
+      })
     }
   }
 
@@ -68,12 +73,6 @@ export function TOTPChallengeModal({
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 p-6">
-            {error && (
-              <div className="animate-in fade-in slide-in-from-top-1 flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:bg-red-950/30">
-                <HugeIcon  className="ph-bold ph-warning-circle text-lg"></HugeIcon>
-                {error}
-              </div>
-            )}
 
             <div className="space-y-3">
               <label className="ml-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">

@@ -21,6 +21,7 @@ import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleto
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { cn } from "@/lib/utils";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 const STATUS_TABS = [
   { id: "Conflict", label: "Needs Review" },
@@ -85,7 +86,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       setTotal(Number(json.data?.total || 0));
       setSelectedId((current) => (json.data?.rows || []).some((row) => Number(row.id) === Number(current)) ? current : json.data?.rows?.[0]?.id || null);
     } catch (error) {
-      showToast({ title: "Review Queue Failed", description: error.message }, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Review Queue Failed",
+          actionContext: "Loading review queue items",
+        }),
+        true
+      );
     } finally {
       setLoading(false);
     }
@@ -142,10 +149,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       setSelectedId(null);
       await load();
     } catch (err) {
-      showToast({
-        title: "Clear Failed Documents Failed",
-        description: err.message,
-      }, true);
+      showToast(
+        formatErrorMessage(err, {
+          title: "Clear Queue Failed",
+          actionContext: "Clearing failed documents from review queue",
+        }),
+        true
+      );
     } finally {
       setClearingAll(false);
     }
@@ -250,7 +260,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       });
       if (kind !== "retry") await load();
     } catch (error) {
-      showToast({ title: "Review Action Failed", description: error.message }, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Review Action Failed",
+          actionContext: `${kind === "confirm" ? "Confirming" : kind === "reject" ? "Rejecting" : "Retrying"} document ${actionId}`,
+        }),
+        true
+      );
     } finally {
       setSaving(false);
     }
@@ -377,8 +393,24 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   placeholder="Search filename or OCR text..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
-                  {total > 0 ? `${total.toLocaleString()}` : "0"}
+                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery("");
+                        setPage(0);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                      title="Clear search"
+                      aria-label="Clear search"
+                    >
+                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                    </button>
+                  )}
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                    {total > 0 ? `${total.toLocaleString()}` : "0"}
+                  </span>
                 </div>
               </div>
 
@@ -674,7 +706,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                     checked={isSelected}
                                     onChange={() =>
                                       update({ studentNo }).catch((error) =>
-                                        showToast({ title: "Save failed", description: error.message }, true)
+                                        showToast(
+                                          formatErrorMessage(error, {
+                                            title: "Assignment Failed",
+                                            actionContext: `Assigning student ${studentNo} to document`,
+                                          }),
+                                          true
+                                        )
                                       )
                                     }
                                     className="mt-0.5 h-4 w-4 accent-pup-maroon cursor-pointer"
@@ -720,7 +758,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                         onClick={() => {
                                           setStudentAssignmentQuery(student.name);
                                           update({ studentNo }).catch((error) =>
-                                            showToast({ title: "Save failed", description: error.message }, true)
+                                            showToast(
+                                              formatErrorMessage(error, {
+                                                title: "Assignment Failed",
+                                                actionContext: `Assigning student ${studentNo} to document`,
+                                              }),
+                                              true
+                                            )
                                           );
                                         }}
                                         className="w-full rounded-lg px-3 py-2 text-left hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
@@ -758,7 +802,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           value={selected.proposed_doc_type || ""}
                           onChange={(event) =>
                             update({ docType: event.target.value }).catch((error) =>
-                              showToast({ title: "Save failed", description: error.message }, true)
+                              showToast(
+                                formatErrorMessage(error, {
+                                  title: "Document Type Update Failed",
+                                  actionContext: `Updating document type to ${event.target.value}`,
+                                }),
+                                true
+                              )
                             )
                           }
                         >

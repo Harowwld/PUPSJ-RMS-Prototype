@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import { formatPHDateTime } from "@/lib/timeFormat"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 import StatCards from "./audit-logs/StatCards"
 import LogFilters from "./audit-logs/LogFilters"
@@ -118,16 +119,16 @@ export default function AuditLogsTab({
       const allLogs = await fetchAllForExport()
       const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"]
       const rows = allLogs.map((log) => [
-        log?.created_at ? formatPHDateTime(log.created_at) : "—",
+        log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
         log?.severity || "INFO",
         log?.actor || "System",
-        log?.role || "—",
-        log?.action || "—",
+        log?.role || "N/A",
+        log?.action || "N/A",
         log?.details || "No known description",
-        log?.ip || "—",
-        log?.user_agent || "—",
-        log?.entity_type || "—",
-        log?.entity_id || "—",
+        log?.ip || "N/A",
+        log?.user_agent || "N/A",
+        log?.entity_type || "N/A",
+        log?.entity_id || "N/A",
       ])
       const csvContent = [
         headers.join(","),
@@ -152,7 +153,7 @@ export default function AuditLogsTab({
       }
     } catch (err) {
       console.error("[Export Error]", err)
-      showToast({ title: "Export Failed", description: err.message || "Unable to export audit logs to CSV." }, true)
+      showToast(formatErrorMessage(err, "Export Failed"), true)
     } finally {
       setIsExporting(false)
     }
@@ -182,7 +183,7 @@ export default function AuditLogsTab({
       }
     } catch (err) {
       console.error("[PDF Preview Error]", err)
-      showToast({ title: "Preview Failed", description: err.message || "Unable to generate PDF preview." }, true)
+      showToast(formatErrorMessage(err, "Preview Failed"), true)
     } finally {
       setIsGeneratingPdf(false)
     }

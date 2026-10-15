@@ -361,9 +361,12 @@ export async function listStudentLocationUsage({ officeId } = {}) {
   const scope = buildOfficeScope(officeId);
   return await dbAll(
     `
-      SELECT storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer, COUNT(*) as count
+      SELECT storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer,
+             COUNT(*) as count,
+             SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active_count,
+             SUM(CASE WHEN status = 'Archived' THEN 1 ELSE 0 END) as archived_count
       FROM students
-      WHERE status = 'Active'${scope.sql ? ` AND ${scope.sql}` : ""}
+      WHERE status IN ('Active', 'Archived')${scope.sql ? ` AND ${scope.sql}` : ""}
       GROUP BY storage_room, storage_cabinet, storage_drawer
       ORDER BY storage_room ASC, storage_cabinet ASC, storage_drawer ASC
     `,

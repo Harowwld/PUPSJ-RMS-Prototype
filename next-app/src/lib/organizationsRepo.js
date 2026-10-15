@@ -198,6 +198,7 @@ export async function createOrganization({
   adviserName,
   adviserEmail,
   description,
+  bannerGradient = "maroon",
   storageRoom = 1,
   storageCabinet,
   storageDrawer = "1",
@@ -214,8 +215,8 @@ export async function createOrganization({
   const row = await queryOne(
     `INSERT INTO student_organizations (
       id, name, acronym, category, status, adviser_name, adviser_email, description,
-      storage_room, storage_cabinet, storage_drawer, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      banner_gradient, storage_room, storage_cabinet, storage_drawer, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
     RETURNING *`,
     [
       cleanId,
@@ -226,6 +227,7 @@ export async function createOrganization({
       adviserName ? String(adviserName).trim() : null,
       adviserEmail ? String(adviserEmail).trim().toLowerCase() : null,
       description ? String(description).trim() : null,
+      bannerGradient ? String(bannerGradient).trim().toLowerCase() : "maroon",
       storageRoom ? Number(storageRoom) : 1,
       storageCabinet ? String(storageCabinet).trim() : defaultCabinet,
       storageDrawer ? String(storageDrawer).trim() : "1",
@@ -256,6 +258,7 @@ export async function updateOrganization(id, data) {
     ["adviser_name", (v) => (v ? String(v).trim() : null)],
     ["adviser_email", (v) => (v ? String(v).trim().toLowerCase() : null)],
     ["description", (v) => (v ? String(v).trim() : null)],
+    ["banner_gradient", (v) => (v ? String(v).trim().toLowerCase() : "maroon")],
     ["storage_room", (v) => (v != null ? Number(v) : null)],
     ["storage_cabinet", (v) => (v != null ? String(v).trim() : null)],
     ["storage_drawer", (v) => (v != null ? String(v).trim() : null)],

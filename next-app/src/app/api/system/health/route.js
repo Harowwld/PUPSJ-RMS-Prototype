@@ -471,6 +471,31 @@ async function readArchiveStats() {
       `),
     ]);
 
+    // Check storage integrity for active/pending documents
+    let missingPhysicalFiles = 0;
+    let checkedSampleCount = 0;
+    try {
+      const docSample = await query(`
+        SELECT id, office_id, storage_filename
+        FROM documents
+        WHERE approval_status = 'Approved' OR approval_status = 'Pending'
+        ORDER BY id DESC
+        LIMIT 100
+      `);
+      if (Array.isArray(docSample) && docSample.length > 0) {
+        const { getDocumentFilePath } = await import("@/lib/documentsRepo");
+        checkedSampleCount = docSample.length;
+        for (const doc of docSample) {
+          const p = getDocumentFilePath(doc);
+          if (!p || !fs.existsSync(p)) {
+            missingPhysicalFiles++;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[StorageIntegrity Check Error]:", e);
+    }
+
     return {
       totalDocuments: Number(docRow?.total_documents || 0),
       approvedDocuments: Number(docRow?.approved_documents || 0),
@@ -482,6 +507,11 @@ async function readArchiveStats() {
       lastBackupAt: backupRow?.last_backup_at || null,
       latestBackupFilename: backupRow?.latest_filename || null,
       latestBackupStatus: backupRow?.latest_status || "Secure",
+      storageIntegrity: {
+        status: missingPhysicalFiles > 0 ? "warning" : "healthy",
+        checkedSample: checkedSampleCount,
+        missingCount: missingPhysicalFiles,
+      },
     };
   } catch (err) {
     console.error("[readArchiveStats Error]:", err);
@@ -496,6 +526,11 @@ async function readArchiveStats() {
       lastBackupAt: null,
       latestBackupFilename: null,
       latestBackupStatus: "Secure",
+      storageIntegrity: {
+        status: "healthy",
+        checkedSample: 0,
+        missingCount: 0,
+      },
     };
   }
 }
@@ -752,6 +787,7 @@ async function buildHealthData() {
       lastBackupAt: archiveStats.lastBackupAt,
       latestBackupFilename: archiveStats.latestBackupFilename,
       latestBackupStatus: archiveStats.latestBackupStatus,
+      storageIntegrity: archiveStats.storageIntegrity,
     },
     lastVerifiedAt: new Date().toISOString(),
   };
@@ -776,6 +812,7 @@ async function buildHealthData() {
     totalFiles,
     totalBytes,
     totalFormatted,
+    integrity: archiveStats.storageIntegrity,
   };
 
   return {

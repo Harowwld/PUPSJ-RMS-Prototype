@@ -21,7 +21,7 @@ function normalize(sql, params = []) {
 }
 
 /**
- * Default module registry — all possible modules in the system.
+ * Default module registry: all possible modules in the system.
  * Each module maps to a React component/tab in the admin or staff pages.
  */
 export const MODULE_REGISTRY = [
@@ -251,7 +251,7 @@ export const DEFAULT_OFFICE_MODULES = {
     "records_archive", "storage_explorer",
   ],
   osas: [
-    // OSAS modules — operations, digitization, and physical/digital storage suite
+    // OSAS modules: operations, digitization, and physical/digital storage suite
     "records_review", "compliance_analytics",
     "staff_directory", "storage_layout", "system_config", "backup", "audit_logs",
     "osas_monitoring", "student_organizations", "scan_upload", "documents", "notifications",

@@ -12,6 +12,7 @@ import {
 import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 
 import Header from "@/components/layout/Header"
@@ -22,6 +23,7 @@ import PromptModal from "@/components/shared/PromptModal"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import { AdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
+import { StaffRegistrationSchema, PersonNameSchema } from "@/lib/validationSchemas"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 
@@ -98,9 +100,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const { view: targetView } = e.detail
       if (targetView) {
         setView(targetView)
-        const params = new URLSearchParams(window.location.search)
+        const params = new URLSearchParams()
         params.set("view", targetView)
-        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
       }
     }
     window.addEventListener("switch-view", handleSwitch)
@@ -363,24 +365,70 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   const showToast = useCallback(
     (msg, typeOrIsError = false, autoHide = true) => {
-      const isRich = msg && typeof msg === "object" && msg.title
-      const title = isRich ? msg.title : String(msg || "")
-      const opts =
-        isRich && msg.description ? { description: msg.description } : {}
+      if (msg instanceof Error) {
+        const normalized = formatErrorMessage(msg);
+        return toast.error(normalized.title, {
+          description: normalized.description,
+          action: normalized.action,
+        });
+      }
 
-      if (typeOrIsError === true || typeOrIsError === "error") {
-        return toast.error(title, opts)
+      const isError =
+        typeOrIsError === true ||
+        typeOrIsError === "error" ||
+        (msg && typeof msg === "object" && (msg.variant === "destructive" || msg.variant === "error"));
+      const isWarning =
+        typeOrIsError === "warning" ||
+        (msg && typeof msg === "object" && msg.variant === "warning");
+      const isLoading =
+        typeOrIsError === "loading" ||
+        (msg && typeof msg === "object" && msg.variant === "loading");
+
+      if (msg && typeof msg === "object") {
+        const opts = {};
+        if (msg.description) opts.description = msg.description;
+        if (msg.action) opts.action = msg.action;
+
+        if (isError) {
+          const normalized = formatErrorMessage(msg.description || msg.title || "", {
+            title: msg.title || "Operation Failed",
+            description: msg.description,
+          });
+          return toast.error(normalized.title, {
+            description: normalized.description,
+            action: msg.action || normalized.action,
+          });
+        }
+        if (isWarning) {
+          return toast.warning(msg.title || "", opts);
+        }
+        if (isLoading) {
+          return toast.loading(msg.title || "", opts);
+        }
+        if (!autoHide) {
+          return toast.message(msg.title || "", { ...opts, duration: 5000 });
+        }
+        return toast.success(msg.title || "", opts);
       }
-      if (typeOrIsError === "warning") {
-        return toast.warning(title, opts)
+
+      const str = String(msg || "");
+      if (isError) {
+        const normalized = formatErrorMessage(str);
+        return toast.error(normalized.title, {
+          description: normalized.description,
+          action: normalized.action,
+        });
       }
-      if (typeOrIsError === "loading") {
-        return toast.loading(title, opts)
+      if (isWarning) {
+        return toast.warning(str);
+      }
+      if (isLoading) {
+        return toast.loading(str);
       }
       if (!autoHide) {
-        return toast.message(title, { ...opts, duration: 5000 })
+        return toast.message(str, { duration: 5000 });
       }
-      return toast.success(title, opts)
+      return toast.success(str);
     },
     []
   )
@@ -438,7 +486,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setStaffData(Array.isArray(json.data) ? json.data : [])
       loadedViewsRef.current.directory = true
     } catch (err) {
-      showToast({ title: "Personnel Directory Load Failed", description: err.message || "The system was unable to retrieve the staff directory." }, true)
+      showToast(formatErrorMessage(err, "Personnel Directory Load Failed"), true)
     } finally {
       setViewLoading((prev) => ({ ...prev, directory: false }))
     }
@@ -485,12 +533,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           user: r.actor,
           role: r.role,
           action: r.action,
-          details: r.details || "—",
+          details: r.details || "N/A",
           severity: r.severity || "INFO",
-          userAgent: r.user_agent || "—",
+          userAgent: r.user_agent || "N/A",
           entityType: r.entity_type || "",
           entityId: r.entity_id || "",
-          ip: r.ip || "—",
+          ip: r.ip || "N/A",
         }))
       )
       loadedViewsRef.current.logs = true
@@ -646,13 +694,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       fetchPendingReviewCount()
     } catch (err) {
       if (isManual) {
-        showToast(
-          {
-            title: "Digital Records Review Load Failed",
-            description: err?.message || "The system was unable to fetch digital records for review.",
-          },
-          true
-        )
+        showToast(formatErrorMessage(err, "Digital Records Review Load Failed"), true)
       }
     } finally {
       if (isManual) setViewLoading((prev) => ({ ...prev, review: false }))
@@ -667,9 +709,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
       setView(nextView)
       // Update URL without a full refresh
-      const params = new URLSearchParams(window.location.search)
+      const params = new URLSearchParams()
       params.set("view", nextView)
-      router.replace(`${window.location.pathname}?${params.toString()}`, {
+      router.push(`${window.location.pathname}?${params.toString()}`, {
         scroll: false,
       })
 
@@ -779,10 +821,25 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       "backup",
       "storage_layout",
     ])
-    if (allowedTabs.has(tab)) setView(tab)
+    if (allowedTabs.has(tab)) {
+      setView(tab)
+    } else {
+      setView("review")
+    }
     setLogsMineOnly(mine)
     if (mine) setLogPage(1)
   }, [searchParams])
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isStorageDirty && view === "storage_layout") {
+        e.preventDefault()
+        e.returnValue = ""
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [isStorageDirty, view])
 
   useEffect(() => {
     if (!initialAuthUser) return undefined
@@ -886,7 +943,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         const prev = extDrivePrevConnectedRef.current
 
         if (prev === null) {
-          // First poll — just record state without firing a modal
+          // First poll: just record state without firing a modal
           extDrivePrevConnectedRef.current = connected
           return
         }
@@ -915,7 +972,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       cancelled = true
       clearInterval(timer)
     }
-  }, []) // intentionally empty — runs once on mount
+  }, []) // intentionally empty: runs once on mount
 
   useEffect(() => {
     if (view === "backup" || view === "system") {
@@ -967,13 +1024,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         }
         refreshReviewRecords()
       } catch (err) {
-        showToast(
-          {
-            title: "Review Update Failed",
-            description: err?.message || "An error occurred while attempting to update the document's approval status.",
-          },
-          true
-        )
+        showToast(formatErrorMessage(err, "Review Update Failed"), true)
         throw err
       }
     },
@@ -1129,6 +1180,21 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     const office = authUser?.office_id || "registrar"
     const defaultSection = office === "osas" ? "Student Affairs" : office === "registrar" ? "Records" : "General"
     const section = createForm.section || (createForm.role === "Admin" ? "Administrative" : defaultSection)
+
+    const staffCheck = StaffRegistrationSchema.safeParse({
+      fname: createForm.fname,
+      lname: createForm.lname,
+      email: createForm.email,
+      role: createForm.role || "Staff",
+      section,
+      officeId: office,
+    })
+    if (!staffCheck.success) {
+      showToast(formatErrorMessage(staffCheck.error.issues[0]?.message || "Please check all fields.", "Validation Error"), true)
+      setCreateLoading(false)
+      return
+    }
+
     const headers = { "Content-Type": "application/json" }
     if (typeof totpToken === "string") {
       headers["x-totp-token"] = totpToken
@@ -1175,7 +1241,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setRegisterOpen(false)
     } catch (err) {
       if (typeof totpToken === "string") throw err
-      showToast({ title: "Creation Failed", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Creation Failed"), true)
     } finally {
       setCreateLoading(false)
     }
@@ -1183,6 +1249,22 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   const handleEditSubmit = async (e, totpToken = null) => {
     if (e && e.preventDefault) e.preventDefault()
+
+    if (editForm.fname) {
+      const fCheck = PersonNameSchema("First name").safeParse(editForm.fname)
+      if (!fCheck.success) {
+        showToast(formatErrorMessage(fCheck.error.issues[0]?.message, "Validation Error"), true)
+        return
+      }
+    }
+    if (editForm.lname) {
+      const lCheck = PersonNameSchema("Last name").safeParse(editForm.lname)
+      if (!lCheck.success) {
+        showToast(formatErrorMessage(lCheck.error.issues[0]?.message, "Validation Error"), true)
+        return
+      }
+    }
+
     const section = editForm.role === "Admin" ? "Administrative" : "Records"
     const headers = { "Content-Type": "application/json" }
     if (typeof totpToken === "string") {
@@ -1230,7 +1312,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setEditOpen(false)
     } catch (err) {
       if (typeof totpToken === "string") throw err
-      showToast({ title: "Account Update Failed", description: err.message || "An error occurred while synchronizing profile changes." }, true)
+      showToast(formatErrorMessage(err, "Account Update Failed"), true)
     }
   }
 
@@ -1271,7 +1353,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setRestoreOpen(false)
     } catch (err) {
       if (typeof token === "string") throw err
-      showToast({ title: "Account Restoration Failed", description: err.message || "The system was unable to reactivate the personnel account." }, true)
+      showToast(formatErrorMessage(err, "Account Restoration Failed"), true)
     }
   }
 
@@ -1326,7 +1408,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setDeleteOpen(false)
     } catch (err) {
       if (totpToken) throw err
-      showToast({ title: "Account Archival Failed", description: err.message || "An error occurred while attempting to archive the personnel record." }, true)
+      showToast(formatErrorMessage(err, "Account Archival Failed"), true)
     } finally {
       setDeleteLoading(false)
     }
@@ -1382,15 +1464,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setSelectedStaffIds(new Set())
     } catch (err) {
       if (typeof token === "string") throw err
-      showToast(
-        {
-          title: "Bulk Restoration Failed",
-          description:
-            err.message ||
-            "An unexpected error occurred during batch processing.",
-        },
-        true
-      )
+      showToast(formatErrorMessage(err, "Bulk Restoration Failed"), true)
     } finally {
       setBulkRestoreLoading(false)
     }
@@ -1447,15 +1521,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setSelectedStaffIds(new Set())
     } catch (err) {
       if (totpToken) throw err
-      showToast(
-        {
-          title: "Bulk Archival Failed",
-          description:
-            err.message ||
-            "An unexpected error occurred during batch processing.",
-        },
-        true
-      )
+      showToast(formatErrorMessage(err, "Bulk Archival Failed"), true)
     } finally {
       setBulkArchiveLoading(false)
     }
@@ -1623,7 +1689,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setBackupDeleteOpen(false)
       refreshBackups()
     } catch (err) {
-      showToast({ title: "Deletion Failed", description: err.message }, true)
+      showToast(formatErrorMessage(err, { defaultTitle: "Deletion Failed" }), true)
     } finally {
       setBackupDeleteLoading(false)
     }
@@ -1651,7 +1717,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         headers,
         body: formData,
       })
-      const json = await res.json()
+      const json = await res.json().catch(() => null)
 
       if (res.status === 403) {
         if (json?.requiresTOTP) {
@@ -1689,9 +1755,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       error: (err) => {
         setRestoreLoading(false)
         if (err.message === "TOTP_REQUIRED") return null
+        const norm = formatErrorMessage(err, { defaultTitle: "Restore Failed" })
         return {
-          title: "Restore Failed",
-          description: err.message || "Critical error during restoration.",
+          title: norm.title,
+          description: norm.description,
         }
       },
     })
@@ -2280,7 +2347,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               type="button"
               variant="outline"
               onClick={() => setExtDriveModalOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Dismiss
             </Button>

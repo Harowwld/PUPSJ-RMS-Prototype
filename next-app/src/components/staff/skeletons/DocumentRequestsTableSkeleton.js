@@ -12,29 +12,29 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
         : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
     )}>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm table-fixed">
+        <table className="w-full text-sm table-fixed min-w-[1000px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
-              <th className="p-4 w-20">
+              <th className="p-4 w-[8%]">
                 <Skeleton className="h-3.5 w-8 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[180px]">
+              <th className="p-4 w-[22%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[180px]">
+              <th className="p-4 w-[18%]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[140px]">
+              <th className="p-4 w-[12%]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[260px]">
+              <th className="p-4 w-[22%]">
                 <Skeleton className="h-3.5 w-32 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[170px]">
+              <th className="p-4 w-[11%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 text-right min-w-[100px]">
-                <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
+              <th className="p-4 pr-6 text-right w-[7%]">
+                <Skeleton className="h-3.5 w-10 ml-auto dark:bg-muted" />
               </th>
             </tr>
           </thead>
@@ -95,8 +95,8 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                 </td>
 
                 {/* Actions */}
-                <td className="p-4 align-middle text-right">
-                  <Skeleton className="h-8 w-20 rounded-lg dark:bg-muted ml-auto" />
+                <td className="p-4 pr-6 align-middle text-right">
+                  <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted ml-auto" />
                 </td>
               </tr>
             ))}

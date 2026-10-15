@@ -58,7 +58,7 @@ function getSeverityInfo(sev) {
   };
 }
 function formatActionLabel(actionStr) {
-  if (!actionStr) return "—";
+  if (!actionStr) return "N/A";
   if (actionStr === "Rotate Password") return "Password Rotated";
   if (actionStr.startsWith("[SECURITY]")) {
     if (actionStr.includes("UNAUTHORIZED_ACCESS")) return "Unauthorized Access Attempt";
@@ -123,7 +123,7 @@ const LogRow = React.memo(function LogRow({
         <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400">
           {formattedTimestamp}
         </td>
-        <td className="p-4 align-middle">
+        <td className="p-4 align-middle whitespace-nowrap">
           <span
             className={cn(
               "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
@@ -133,12 +133,12 @@ const LogRow = React.memo(function LogRow({
             {severityInfo.label}
           </span>
         </td>
-        <td className="p-4 align-middle">
+        <td className="p-4 align-middle overflow-hidden">
           <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
+            <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.user || log.actor)}>
               {formatTitleCase(log.user || log.actor)}
             </span>
-            <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+            <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
               {log.role}
             </span>
           </div>
@@ -146,10 +146,10 @@ const LogRow = React.memo(function LogRow({
         <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
           {formatActionLabel(log.action)}
         </td>
-        <td className="p-4 align-middle">
+        <td className="p-4 align-middle overflow-hidden">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[320px] truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
+              <span className="block truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
                 {log.details || "No known description"}
               </span>
             </TooltipTrigger>
@@ -161,7 +161,7 @@ const LogRow = React.memo(function LogRow({
             </TooltipContent>
           </Tooltip>
         </td>
-        <td className="p-4 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+        <td className="p-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-end gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -266,11 +266,11 @@ export default function LogTable({
           : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}>
         <div className="w-full overflow-x-auto select-none">
-          <table className={cn("min-w-full table-fixed text-sm", displayLogs.length === 0 && "h-full")}>
+          <table className={cn("w-full text-sm table-fixed min-w-[1000px]", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                 <th className="w-12 p-4 text-center"></th>
-                <th className="p-4 w-[16%]">
+                <th className="p-4 w-[15%]">
                   <button
                     onClick={() => handleSort("created_at")}
                     className={cn(
@@ -306,7 +306,7 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4 w-[18%]">
+                <th className="p-4 w-[17%]">
                   <button
                     onClick={() => handleSort("actor")}
                     className={cn(
@@ -342,8 +342,8 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Description</th>
-                <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
+                <th className="p-4 w-[36%] text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Description</th>
+                <th className="p-4 pr-6 w-20 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("bg-transparent", displayLogs.length === 0 && "h-full")}>

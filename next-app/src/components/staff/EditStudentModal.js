@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import { PersonNameSchema } from "@/lib/validationSchemas";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 export default function EditStudentModal({
   open,
@@ -32,11 +34,9 @@ export default function EditStudentModal({
   const [cabinet, setCabinet] = useState("");
   const [drawer, setDrawer] = useState("1");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (student && open) {
-      setFormError("");
       setName(student.name && !student.name.startsWith("enc:v1:") ? student.name : "");
       setCourseCode(student.courseCode || student.course_code || "");
       setYearLevel(String(student.yearLevel || student.year_level || ""));
@@ -88,7 +88,6 @@ export default function EditStudentModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!student) return;
-    setFormError("");
 
     const cleanName = name.trim().replace(/\s+/g, " ").toUpperCase();
     const cleanCourse = courseCode.trim().toUpperCase();
@@ -99,12 +98,27 @@ export default function EditStudentModal({
     const parsedDrawer = parseInt(drawer, 10);
 
     if (!cleanName || !cleanCourse || !cleanSec) {
-      setFormError("Please fill out all required fields.");
+      showToast?.({
+        title: "Incomplete Profile",
+        description: "Please fill out all required student profile fields.",
+      }, "warning");
+      return;
+    }
+
+    const nameCheck = PersonNameSchema("Student Name").safeParse(cleanName);
+    if (!nameCheck.success) {
+      showToast?.({
+        title: "Validation Error",
+        description: nameCheck.error.issues[0]?.message || "Invalid student name.",
+      }, "warning");
       return;
     }
 
     if (!Number.isFinite(parsedYear) || parsedYear < 2000 || parsedYear > 2100) {
-      setFormError("Please provide a valid entry year (e.g. 2024).");
+      showToast?.({
+        title: "Validation Error",
+        description: "Please provide a valid entry year (e.g. 2024).",
+      }, "warning");
       return;
     }
 
@@ -138,7 +152,13 @@ export default function EditStudentModal({
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      setFormError(err.message || "An error occurred while updating student record.");
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Student Update Failed",
+          description: "Could not update student profile.",
+        }),
+        true
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -162,12 +182,6 @@ export default function EditStudentModal({
           </DialogHeader>
 
           <div className="p-6 pt-2 space-y-5">
-            {formError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
-              <HugeIcon  className="ph-bold ph-warning-circle mr-1.5 text-sm inline-block align-sub"></HugeIcon>
-              {formError}
-            </div>
-          )}
 
           {/* Identification Section */}
           <div className="space-y-4">
@@ -221,7 +235,7 @@ export default function EditStudentModal({
                   }}
                   options={courses.length > 0 ? courses.map((c) => ({
                     value: c.code,
-                    label: `${c.code} — ${c.name}`,
+                    label: `${c.code}: ${c.name}`,
                   })) : []}
                   placeholder="Select Program"
                   buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"

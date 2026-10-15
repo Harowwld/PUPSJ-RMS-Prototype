@@ -161,7 +161,7 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
     : type === "loading"
       ? Infinity
       : isDismissable
-        ? 4500
+        ? 6000
         : 3000;
 
   return hotToast.custom(
@@ -215,22 +215,8 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
             )}
           </div>
           
-          {/* Stage 3 Dismiss Button */}
-          {stage === 3 && (
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                hotToast.dismiss(t.id);
-              }}
-              className="relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none transition-colors"
-            >
-              <HugeIcon  className="ph-bold ph-x text-gray-500 dark:text-zinc-400 text-xs" />
-            </button>
-          )}
-          
-          {/* Stage 4 or 5 Action Button */}
-          {(stage === 4 || stage === 5) && safeOptions.action && (
+          {/* Action Button (Stage 4, 5, or any toast with safeOptions.action) */}
+          {safeOptions.action && (
             <button
               type="button"
               onClick={(e) => {
@@ -238,7 +224,9 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
                 safeOptions.action.onClick?.(e);
                 hotToast.dismiss(t.id);
               }}
-              className="relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 ml-auto border-none outline-none transition-colors"
+              className={`relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-colors ${
+                (stage === 3 || isDismissable) ? "ml-auto" : "ml-auto"
+              }`}
             >
               <span className={
                 String(safeOptions.action.label || "").toLowerCase() === "undo"
@@ -249,6 +237,23 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
               }>
                 {safeOptions.action.label}
               </span>
+            </button>
+          )}
+
+          {/* Dismiss Button (Stage 3 or any dismissable toast) */}
+          {(stage === 3 || isDismissable) && (
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                hotToast.dismiss(t.id);
+              }}
+              className={`relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0 ${
+                safeOptions.action ? "ml-1" : "ml-auto"
+              } border-none outline-none transition-colors`}
+              aria-label="Dismiss notification"
+            >
+              <HugeIcon  className="ph-bold ph-x text-gray-500 dark:text-zinc-400 text-xs" />
             </button>
           )}
         </div>
@@ -318,9 +323,10 @@ const Toaster = () => {
 
   useEffect(() => {
     // Limit to 3 active visible toasts
-    if (visibleToasts.length > 3) {
+    const active = toasts.filter((t) => t.visible);
+    if (active.length > 3) {
       // Dismiss the oldest one (at the end of the array)
-      hotToast.dismiss(visibleToasts[visibleToasts.length - 1].id);
+      hotToast.dismiss(active[active.length - 1].id);
     }
   }, [toasts]);
 

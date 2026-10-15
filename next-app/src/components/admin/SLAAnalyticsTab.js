@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 import { generateSLAAnalyticsPdf } from "@/lib/pdfGenerator"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import { formatErrorMessage } from "@/lib/errorUtils"
 import { downloadSlaCsv } from "@/lib/exportHelpers"
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
@@ -71,6 +72,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       setData(json.data)
     } catch (e) {
       setError(e.message)
+      showToast?.(formatErrorMessage(e, "Failed to Load Request Analytics"), true);
     } finally {
       setLoading(false)
       setManualLoading(false)
@@ -106,7 +108,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       setReportOpen(true);
     } catch (e) {
       console.error("PDF Preview generation failed:", e);
-      showToast?.({ title: "Preview Failed", description: "Failed to generate PDF report preview." }, true);
+      showToast?.(formatErrorMessage(e, "Preview Failed"), true);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -128,7 +130,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         URL.revokeObjectURL(url);
       } catch (e) {
         console.error("PDF Generation failed:", e);
-        showToast?.({ title: "Report Generation Failed", description: "An error occurred while generating the PDF report." }, true);
+        showToast?.(formatErrorMessage(e, "Report Generation Failed"), true);
         return;
       } finally {
         setIsGeneratingPdf(false);
@@ -157,8 +159,8 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       const fileName = generateExportFilename("SLA-ANALYTICS", "DATA", "csv");
       downloadSlaCsv(data, total, completionRate, onLogAction, fileName);
       showToast?.({ title: "Export Successful", description: `The SLA data has been successfully exported to ${fileName}.` });
-    } catch {
-      showToast?.({ title: "Export Failed", description: "Failed to export SLA analytics to CSV format." }, true);
+    } catch (e) {
+      showToast?.(formatErrorMessage(e, "Export Failed"), true);
     } finally {
       setIsExportingCsv(false);
     }
@@ -225,12 +227,20 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             <SlaKpiSkeleton />
           </div>
         ) : !error && data ? (
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 relative z-30">
             <div className={cn(
               "w-full transition-all duration-500", 
               (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}>
-              <SlaKpiCards total={total} completionRate={completionRate} completed={completed} sla={data?.sla} feedback={data?.feedback} />
+              <SlaKpiCards
+                total={total}
+                completionRate={completionRate}
+                completed={completed}
+                sla={data?.sla}
+                feedback={data?.feedback}
+                statusCounts={data?.statusCounts}
+                topDocTypes={data?.topDocTypes}
+              />
             </div>
           </div>
         ) : null}
@@ -426,7 +436,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               <Button
                 variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Close
               </Button>

@@ -2,6 +2,7 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -76,7 +77,7 @@ function parseDateLocal(str) {
 }
 
 function formatActionLabel(actionStr) {
-  if (!actionStr) return "—";
+  if (!actionStr) return "N/A";
   if (actionStr === "Rotate Password") return "Password Rotated";
   if (actionStr.startsWith("[SECURITY]")) {
     if (actionStr.includes("UNAUTHORIZED_ACCESS")) return "Unauthorized Access Attempt";
@@ -106,17 +107,36 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [expandedRows, setExpandedRows] = useState({})
   const [logStats, setLogStats] = useState(null)
 
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   // Pagination & Filtering
-  const [page, setPage] = useState(1)
+  const initialPageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
+  const initialSearchFromUrl = searchParams?.get("search") || ""
+  const [page, setPage] = useState(!isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1)
   const [limit, setLimit] = useState(10)
-  const [search, setSearch] = useState("")
-  const [localSearch, setLocalSearch] = useState("")
+  const [search, setSearch] = useState(initialSearchFromUrl)
+  const [localSearch, setLocalSearch] = useState(initialSearchFromUrl)
   const [logFilters, setLogFilters] = useState({
     severity: [],
     office: [],
   })
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+
+  useEffect(() => {
+    const pageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
+    const validPage = !isNaN(pageFromUrl) && pageFromUrl >= 1 ? pageFromUrl : 1
+    if (validPage !== page) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(validPage)
+    }
+    const searchFromUrl = searchParams?.get("search") || ""
+    if (searchFromUrl !== search) {
+      setSearch(searchFromUrl)
+      setLocalSearch(searchFromUrl)
+    }
+  }, [searchParams, page, search])
 
   // Sorting
   const [sortBy, setSortBy] = useState("created_at")
@@ -136,10 +156,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
       if (localSearch !== search) {
         setSearch(localSearch)
         setPage(1)
+        const params = new URLSearchParams(window.location.search)
+        if (localSearch) {
+          params.set("search", localSearch)
+        } else {
+          params.delete("search")
+        }
+        params.delete("page")
+        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
       }
     }, 500)
     return () => clearTimeout(timer)
-  }, [localSearch, search])
+  }, [localSearch, search, router])
 
   const fetchOffices = useCallback(async () => {
     const cached = getCachedData("systemadmin_offices")
@@ -272,15 +300,15 @@ export default function GlobalAuditLogsTab({ showToast }) {
               officeName,
               scope: scopeLabel,
               action: r.action,
-              details: r.details || "—",
+              details: r.details || "N/A",
               severity: r.severity || "INFO",
-              userAgent: r.user_agent || "—",
-              user_agent: r.user_agent || "—",
+              userAgent: r.user_agent || "N/A",
+              user_agent: r.user_agent || "N/A",
               entityType: r.entity_type || "",
               entity_type: r.entity_type || "",
               entityId: r.entity_id || "",
               entity_id: r.entity_id || "",
-              ip: r.ip || "—",
+              ip: r.ip || "N/A",
               created_at: r.created_at,
             }
           })
@@ -438,17 +466,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
         "Entity ID",
       ]
       const rows = allLogs.map((log) => [
-        log?.created_at ? formatPHDateTime(log.created_at) : "—",
+        log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
         log?.severity || "INFO",
         log?.actor || "System",
-        log?.role || "—",
+        log?.role || "N/A",
         log?.scope || "Global",
-        log?.action || "—",
+        log?.action || "N/A",
         log?.details || "No known description",
-        log?.ip || "—",
-        log?.user_agent || "—",
-        log?.entity_type || "—",
-        log?.entity_id || "—",
+        log?.ip || "N/A",
+        log?.user_agent || "N/A",
+        log?.entity_type || "N/A",
+        log?.entity_id || "N/A",
       ])
       const csvContent = [
         headers.join(","),
@@ -572,6 +600,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const totalPages = Math.ceil(total / limit) || 1
   const displayPage = Math.min(page, totalPages)
+
+  const updatePage = useCallback((newPage) => {
+    const validPage = Math.max(1, Math.min(totalPages, newPage))
+    setPage(validPage)
+    const params = new URLSearchParams(window.location.search)
+    params.set("page", String(validPage))
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+  }, [totalPages, router])
   const hasActiveFilters =
     localSearch !== "" ||
     (logFilters.severity?.length > 0) ||
@@ -821,7 +857,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
           {/* Content Area inside Single Card */}
           {loading && (!logs || logs.length === 0) ? (
-            <AuditLogsTableSkeleton rowCount={8} embedded={true} />
+            <AuditLogsTableSkeleton rowCount={8} embedded={true} showScope={true} />
           ) : error ? (
             <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
@@ -873,7 +909,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           ) : (
             <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-sm table-fixed min-w-[1040px]">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
                   <th className="w-12 p-4 text-center"></th>
@@ -889,7 +925,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[10%]">
+                  <th className="p-4 w-[9%]">
                     <button
                       onClick={() => handleSort("severity")}
                       className={cn(
@@ -937,10 +973,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-auto text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <th className="p-4 w-[31%] text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                     Description
                   </th>
-                  <th className="p-4 w-16 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <th className="p-4 pr-6 w-20 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                     Actions
                   </th>
                 </tr>
@@ -1007,21 +1043,21 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Actor */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle overflow-hidden">
                             <div className="flex flex-col overflow-hidden">
-                              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
+                              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
                                 {formatTitleCase(log.actor)}
                               </span>
-                              <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                              <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
                                 {log.role}
                               </span>
                             </div>
                           </td>
 
                           {/* Scope */}
-                          <td className="p-4 align-middle text-xs font-medium text-gray-900 dark:text-zinc-100">
+                          <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100">
                             {log.office_id ? (
-                              <span className="font-medium text-gray-800 dark:text-zinc-300">
+                              <span className="font-medium text-gray-800 dark:text-zinc-300 truncate inline-block max-w-full" title={log.scope}>
                                 {log.scope}
                               </span>
                             ) : (
@@ -1037,24 +1073,24 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Description Tooltip */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle overflow-hidden">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="block max-w-[280px] truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
-                                  {log.details || "—"}
+                                <span className="block truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
+                                  {log.details || "N/A"}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent
                                 side="top"
                                 className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
                               >
-                                {log.details || "—"}
+                                {log.details || "N/A"}
                               </TooltipContent>
                             </Tooltip>
                           </td>
 
                           {/* Actions: View Details in Sheet */}
-                          <td className="p-4 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <td className="p-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1.5">
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1120,7 +1156,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   variant="ghost"
                   size="sm"
                   disabled={displayPage <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => updatePage(displayPage - 1)}
                   className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
@@ -1134,7 +1170,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   variant="ghost"
                   size="sm"
                   disabled={displayPage >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => updatePage(displayPage + 1)}
                   className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next

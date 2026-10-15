@@ -31,6 +31,7 @@ import StudentProfileSheet from "./StudentProfileSheet";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { matchesSearchQuery } from "@/lib/searchUtils";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -459,7 +460,7 @@ export default function StudentDirectoryTab({
     const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
     const rows = filteredStudents.map((s) => [
       q(s?.studentNo || s?.student_no),
-      q(s?.name || "—"),
+      q(s?.name || ""),
       q(s?.courseCode || s?.course_code || ""),
       q(s?.section || ""),
       q(s?.yearLevel || s?.year_level || ""),
@@ -508,7 +509,13 @@ export default function StudentDirectoryTab({
       setArchiveTarget(null);
       fetchData?.();
     } catch (err) {
-      showToast?.({ title: "Archive Error", description: err.message }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Archive Failed",
+          actionContext: `Archiving student ${archiveTarget.studentNo}`,
+        }),
+        true
+      );
     }
   };
 
@@ -538,7 +545,13 @@ export default function StudentDirectoryTab({
       setRestoreTarget(null);
       fetchData?.();
     } catch (err) {
-      showToast?.({ title: "Restore Error", description: err.message }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Restore Failed",
+          actionContext: `Restoring student ${restoreTarget.studentNo}`,
+        }),
+        true
+      );
     }
   };
 
@@ -572,7 +585,13 @@ export default function StudentDirectoryTab({
       setBulkActionOpen(false);
       fetchData?.();
     } catch (err) {
-      showToast?.({ title: "Bulk Action Failed", description: err.message }, true);
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Bulk Action Failed",
+          actionContext: `Bulk ${bulkActionType} of students`,
+        }),
+        true
+      );
     } finally {
       setIsBulkProcessing(false);
     }
@@ -984,8 +1003,10 @@ export default function StudentDirectoryTab({
             {/* Filter Selects & Search Bar */}
             <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
               {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
-                <HugeIcon className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 dark:text-zinc-500 text-sm pointer-events-none" />
+              <div className="relative w-full sm:w-64 group">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                </div>
                 <Input
                   type="text"
                   placeholder="Search student no. or name"
@@ -994,17 +1015,27 @@ export default function StudentDirectoryTab({
                     setSearchQuery(e.target.value);
                     setPage(1);
                   }}
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-8 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => { setSearchQuery(""); setPage(1); }}
-                    className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
-                  >
-                    <HugeIcon className="ph-bold ph-x-circle text-[14px]" />
-                  </button>
-                )}
+                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setPage(1);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                      title="Clear search"
+                      aria-label="Clear search"
+                    >
+                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                    </button>
+                  )}
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                    {filteredStudents.length.toLocaleString()}
+                  </span>
+                </div>
               </div>
 
               {/* MultiCriteriaFilter Popover */}
@@ -1058,7 +1089,7 @@ export default function StudentDirectoryTab({
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="w-full text-sm table-fixed min-w-[1080px]">
                   <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center">
@@ -1070,7 +1101,7 @@ export default function StudentDirectoryTab({
                         />
                       </th>
 
-                      <th className="w-44 p-4">
+                      <th className="p-4 w-[14%]">
                         <button
                           type="button"
                           onClick={() => handleSort("studentNo")}
@@ -1081,7 +1112,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 min-w-[200px] max-w-[260px]">
+                      <th className="p-4 w-[22%]">
                         <button
                           type="button"
                           onClick={() => handleSort("name")}
@@ -1092,7 +1123,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 min-w-[170px]">
+                      <th className="p-4 w-[16%]">
                         <button
                           type="button"
                           onClick={() => handleSort("courseCode")}
@@ -1103,7 +1134,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="w-28 p-4">
+                      <th className="p-4 w-[10%]">
                         <button
                           type="button"
                           onClick={() => handleSort("yearLevel")}
@@ -1114,9 +1145,9 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 min-w-[190px]">Physical Archive</th>
+                      <th className="p-4 w-[16%]">Physical Archive</th>
 
-                      <th className="w-24 p-4 text-center">
+                      <th className="p-4 w-[7%] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("documents")}
@@ -1127,9 +1158,9 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="w-28 p-4 text-center">Status</th>
+                      <th className="p-4 w-[8%] text-center">Status</th>
 
-                      <th className="w-32 p-4 text-right">Actions</th>
+                      <th className="w-28 p-4 pr-6 text-right">Actions</th>
                     </tr>
                   </thead>
 
@@ -1152,7 +1183,7 @@ export default function StudentDirectoryTab({
                           )}
                         >
                           <td
-                            className="p-4 text-center"
+                            className="w-12 p-4 text-center align-middle"
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleSelect(s.studentNo);
@@ -1166,39 +1197,39 @@ export default function StudentDirectoryTab({
                             />
                           </td>
 
-                          <td className="w-44 p-4 whitespace-nowrap">
+                          <td className="p-4 whitespace-nowrap align-middle">
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {s.studentNo}
                             </span>
                           </td>
 
-                          <td className="p-4 min-w-[200px] max-w-[260px]">
+                          <td className="p-4 align-middle overflow-hidden">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
                               {formatTitleCase(s.name)}
                             </div>
                           </td>
 
-                          <td className="p-4">
-                            <div className="flex items-center gap-1.5">
+                          <td className="p-4 align-middle overflow-hidden whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               <Badge
                                 variant="outline"
-                                className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border-border dark:border-border"
+                                className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border-border dark:border-border shrink-0"
                               >
                                 {s.courseCode || "N/A"}
                               </Badge>
-                              <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium">
-                                Sec {s.section || "—"}
+                              <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium truncate" title={`Sec ${s.section || "N/A"}`}>
+                                Sec {s.section || "N/A"}
                               </span>
                             </div>
                           </td>
 
-                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400">
-                            {s.yearLevel || "—"}
+                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle">
+                            {s.yearLevel || "N/A"}
                           </td>
 
-                          <td className="p-4">
-                            <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400">
-                              <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs"></HugeIcon>
+                          <td className="p-4 align-middle whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                              <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs shrink-0"></HugeIcon>
                               <span>
                                 Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
                               </span>
@@ -1233,7 +1264,7 @@ export default function StudentDirectoryTab({
                             </Badge>
                           </td>
 
-                          <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <td className="w-28 p-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
                               {/* View Profile */}
                               <Tooltip>

@@ -287,7 +287,7 @@ export async function GET(req) {
       .map(([key, count]) => {
         const parts = key.split("-");
         const mIdx = parseInt(parts[1], 10) - 1;
-        const monthName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : (parts[1] || "—");
+        const monthName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : (parts[1] || "N/A");
         const name = showYear && parts[0] ? `${monthName} ${parts[0]}` : monthName;
         return { name, count };
       });
@@ -297,7 +297,7 @@ export async function GET(req) {
       .map(([key, count]) => {
         const parts = key.split("-");
         const mIdx = parseInt(parts[1], 10) - 1;
-        const monthName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : (parts[1] || "—");
+        const monthName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : (parts[1] || "N/A");
         const dayNum = parseInt(parts[2], 10);
         const name = `${monthName} ${isNaN(dayNum) ? "" : dayNum}`.trim();
         return { name: name || key, count };
@@ -308,7 +308,7 @@ export async function GET(req) {
       .map(([key, count]) => {
         const parts = key.split("-");
         const mIdx = parseInt(parts[1], 10) - 1;
-        const monthName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : (parts[1] || "—");
+        const monthName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : (parts[1] || "N/A");
         const dayNum = parseInt(parts[2], 10);
         const name = `${monthName} ${isNaN(dayNum) ? "" : dayNum}`.trim();
         return { name: name || key, count };

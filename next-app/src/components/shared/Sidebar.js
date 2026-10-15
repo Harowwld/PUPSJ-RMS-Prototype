@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { getRoleBranding } from "@/lib/roleBranding"
-import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom"
 
 // Icon and color map matching Apple Photos Light Sidebar spec
 const ICON_MAP = {
@@ -57,6 +56,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, zoomN
   const activeForeground = (accentColor && accentColor !== roleBranding.color ? "#FFFFFF" : roleBranding.foreground) || "#FFFFFF"
   const staffIconColor = activeColor
   const sidebarRef = useRef(null)
+  const [isMac] = useState(() => (typeof window !== "undefined" ? /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform) : false))
 
   const [expandedKeys, setExpandedKeys] = useState(() => {
     const initial = {}
@@ -107,7 +107,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, zoomN
       <div className="flex flex-col gap-[2px] flex-1 h-full overflow-y-auto w-full items-stretch [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div 
           className={cn(
-            "flex items-center mb-1.5 w-full h-[36px] overflow-hidden shrink-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            "flex items-center mb-1.5 w-full h-[38px] shrink-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
             open ? "px-1 justify-start" : "px-0 justify-center"
           )}
         >
@@ -120,71 +120,53 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, zoomN
             }}
             title={open ? "Collapse Sidebar" : "Expand Sidebar"}
             data-tooltip-placement="right"
-            className="flex w-[40px] h-[40px] items-center justify-center rounded-[8px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0"
+            className="flex w-[38px] h-[38px] items-center justify-center rounded-[8px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0"
           >
             <HugeIcon className={cn("text-gray-700 dark:text-zinc-300 text-[24px] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")}></HugeIcon>
           </button>
 
-          {/* Zoom Control when Sidebar is Visible */}
+          {/* Command Palette Search Trigger beside Collapse Button */}
           <div className={cn(
-            "flex items-center gap-1 select-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden origin-left",
-            open ? "opacity-40 hover:opacity-100 max-w-[220px] ml-1.5 translate-x-0" : "opacity-0 max-w-0 ml-0 -translate-x-3 pointer-events-none"
+            "flex-1 min-w-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden origin-left",
+            open ? "opacity-100 max-w-[220px] ml-1.5 translate-x-0" : "opacity-0 max-w-0 ml-0 -translate-x-3 pointer-events-none"
           )}>
-            {zoomNode !== undefined && setZoomNode && handleZoomMouseDown && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
-                  title={`Zoom Out (${zoomNode > 0 ? (ZOOM_PERCENTAGES[zoomNode - 1] ?? 75) + "%" : "Min 75%"})`}
-                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75 shrink-0"
-                >
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
-                <div 
-                  onMouseDown={handleZoomMouseDown}
-                  onTouchStart={handleZoomMouseDown}
-                  title={`Layout Scale: ${ZOOM_PERCENTAGES[zoomNode] ?? 100}% (Drag slider or click Reset)`}
-                  className="relative w-[50px] h-[14px] flex items-center group cursor-pointer shrink-0"
-                >
-                  <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
-                  <div
-                    className="rms-style-width bg-gray-800 dark:bg-zinc-200 absolute left-0 h-[2.5px] rounded-full"
-                    data-width={`${(zoomNode / 6) * 100}%`}
-                  ></div>
-                  <div
-                    className="rms-style-left border-gray-800 dark:border-border absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 shadow-xs border-2"
-                    data-left={`${(zoomNode / 6) * 100}%`}
-                  ></div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
-                  title={`Zoom In (${zoomNode < 6 ? (ZOOM_PERCENTAGES[zoomNode + 1] ?? 125) + "%" : "Max 125%"})`}
-                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75 shrink-0"
-                >
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
-                
-                {/* Reset button to restore default scale (100% / node 3) */}
-                {zoomNode !== 3 && (
-                  <button
-                    type="button"
-                    onClick={() => setZoomNode(3)}
-                    title="Reset scale to 100% (Default)"
-                    className="flex items-center gap-1 px-1.5 h-6 text-[10px] font-semibold text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white bg-gray-200/80 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md transition-colors cursor-pointer border-0 shadow-2xs shrink-0 select-none"
-                  >
-                    <HugeIcon  className="ti ti-rotate-2 text-[12px]"></HugeIcon>
-                    <span>Reset</span>
-                  </button>
-                )}
-              </>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("open-command-palette"));
+                }
+              }}
+              title={`Search views & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
+              className="group w-full h-[36px] pl-2.5 pr-2 flex items-center justify-between rounded-xl bg-gray-100/75 hover:bg-gray-200/80 dark:bg-zinc-900/60 dark:hover:bg-zinc-800/80 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20 transition-all cursor-pointer shadow-2xs select-none active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-2 min-w-0 text-gray-500 dark:text-zinc-400">
+                <HugeIcon className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400 shrink-0" />
+                <span className="text-xs font-normal truncate">Search views...</span>
+              </div>
+              <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 h-4.5 min-w-[32px] text-[9px] font-semibold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded shadow-2xs leading-none shrink-0">
+                {isMac ? "⌘K" : "CTRL K"}
+              </kbd>
+            </button>
           </div>
         </div>
+
+        {/* Quick Search icon button when Sidebar is Collapsed */}
+        {!open && (
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("open-command-palette"));
+              }
+            }}
+            title={`Search views & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
+            data-tooltip-placement="right"
+            className="flex w-[40px] h-[40px] items-center justify-center rounded-[8px] text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 active:scale-95 cursor-pointer transition-all duration-200 ease-out shrink-0 mx-auto mb-1 group"
+          >
+            <HugeIcon className="ph-bold ph-magnifying-glass text-[20px] transition-transform group-hover:scale-105" />
+          </button>
+        )}
 
         {items.map((item, idx) => {
           if (item.type === "header") {

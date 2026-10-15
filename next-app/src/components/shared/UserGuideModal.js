@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,21 +59,16 @@ export default function UserGuideModal({ open, onClose }) {
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <DialogHeader className="p-6 border-b border-border shrink-0 bg-white dark:border-border dark:bg-card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <DialogTitle className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
-                    {TABS.find(t => t.id === activeTab)?.label}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm font-medium text-gray-500 mt-1 dark:text-zinc-400">
-                    {activeTab === 'general' && "Welcome to the E-MANAGE Records Keeping System."}
-                    {activeTab === 'staff' && "Learn how to manage students, scan documents, and process requests."}
-                    {activeTab === 'admin' && "Technical procedures for system administrators and records heads."}
-                  </DialogDescription>
-                </div>
-                <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary flex items-center justify-center shrink-0 dark:bg-red-950/30">
-                  <HugeIcon  className={`${TABS.find(t => t.id === activeTab)?.icon.replace('ph-bold', 'ph-duotone')} text-xl`}></HugeIcon>
-                </div>
+            <DialogHeader className="p-6 border-b border-border shrink-0 bg-white dark:border-border dark:bg-card text-left">
+              <div>
+                <DialogTitle className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
+                  {TABS.find(t => t.id === activeTab)?.label}
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium text-gray-500 mt-1 dark:text-zinc-400">
+                  {activeTab === 'general' && "Welcome to the E-MANAGE Records Keeping System."}
+                  {activeTab === 'staff' && "Learn how to manage students, scan documents, and process requests."}
+                  {activeTab === 'admin' && "Technical procedures for system administrators and records heads."}
+                </DialogDescription>
               </div>
             </DialogHeader>
  
@@ -219,21 +215,23 @@ export default function UserGuideModal({ open, onClose }) {
               </TabsContent>
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-border flex justify-end shrink-0 gap-3 dark:bg-card dark:border-border">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0">
               <Button
+                type="button"
                 variant="outline"
                 onClick={onClose}
-                className="px-6 h-11 border-border font-semibold rounded-brand dark:border-border"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>
               <Button
+                type="button"
                 onClick={onClose}
-                className="btn-brand-red px-6 text-white shadow-lg shadow-red-900/20 rounded-brand"
+                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Acknowledge
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         </Tabs>
       </DialogContent>

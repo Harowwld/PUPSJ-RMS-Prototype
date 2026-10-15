@@ -61,6 +61,45 @@ async function requireDocumentAccess(req, rawId, { allowStudent = false } = {}) 
   return { user, row, id };
 }
 
+export async function HEAD(req, ctx) {
+  const params = await ctx.params;
+  const raw = params.id;
+  const access = await requireDocumentAccess(req, raw, { allowStudent: true });
+  if (access.response) return access.response;
+  const { row } = access;
+
+  const filePath = getDocumentFilePath(row);
+
+  if (!filePath || !fs.existsSync(filePath)) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: {
+        "X-File-Missing": "true",
+      },
+    });
+  }
+
+  try {
+    const stat = fs.statSync(filePath);
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "Content-Type": row.mime_type || "application/pdf",
+        "Content-Length": String(stat.size),
+        "Content-Disposition": `inline; filename=\"${row.original_filename}\"`,
+        ...FILE_SECURITY_HEADERS,
+      },
+    });
+  } catch {
+    return new NextResponse(null, {
+      status: 404,
+      headers: {
+        "X-File-Missing": "true",
+      },
+    });
+  }
+}
+
 export async function GET(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
@@ -74,7 +113,12 @@ export async function GET(req, ctx) {
   if (!filePath || !fs.existsSync(filePath)) {
     return NextResponse.json(
       { ok: false, error: "File missing on disk" },
-      { status: 404 }
+      {
+        status: 404,
+        headers: {
+          "X-File-Missing": "true",
+        },
+      }
     );
   }
 

@@ -4,6 +4,7 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { Select } from "@/components/ui/select"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 const DAY_LABELS = [
   "Sunday",
@@ -140,10 +141,9 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         })
       } catch (err) {
         showToast?.(
-          {
-            title: "Schedule Error",
-            description: err.message,
-          },
+          formatErrorMessage(err, {
+            defaultTitle: "Failed to Update Schedule",
+          }),
           "error"
         )
       } finally {
@@ -282,7 +282,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         </button>
       </div>
 
-      {/* macOS Settings Grouped Rows — Expands when enabled */}
+      {/* macOS Settings Grouped Rows: Expands when enabled */}
       {schedule.enabled && (
         <div className="border-t border-border dark:border-border divide-y divide-border dark:divide-border bg-white/70 dark:bg-card/70 animate-in fade-in slide-in-from-top-1 duration-200">
           {/* Row 1: Frequency with Apple Segmented Control / Tabs */}

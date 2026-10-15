@@ -14,29 +14,29 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
       )}
     >
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm table-fixed">
+        <table className="w-full text-sm table-fixed min-w-[960px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500 h-11">
-              <th className="p-4 min-w-[140px]">
+              <th className="p-4 w-[15%]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[180px]">
-                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
-              </th>
-              <th className="p-4 min-w-[160px]">
+              <th className="p-4 w-[22%]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[110px]">
+              <th className="p-4 w-[18%]">
+                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+              </th>
+              <th className="p-4 w-[12%]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[140px]">
-                <Skeleton className="h-3.5 w-20 dark:bg-muted" />
+              <th className="p-4 w-[18%]">
+                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[120px]">
-                <Skeleton className="h-3.5 w-18 dark:bg-muted" />
+              <th className="p-4 w-[10%]">
+                <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="p-4 text-right min-w-[100px]">
-                <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
+              <th className="p-4 pr-6 text-right w-20">
+                <Skeleton className="h-3.5 w-12 ml-auto dark:bg-muted" />
               </th>
             </tr>
           </thead>
@@ -48,7 +48,7 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
               >
                 {/* Student No */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
+                  <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </td>
 
                 {/* Name */}
@@ -66,7 +66,7 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
 
                 {/* Document Type */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
+                  <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}
@@ -84,14 +84,13 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
 
                 {/* Created */}
                 <td className="p-4 align-middle">
-                  <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
+                  <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                 </td>
 
                 {/* Actions */}
-                <td className="p-4 align-middle text-right">
+                <td className="p-4 pr-6 align-middle text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <Skeleton className="h-8 w-14 rounded-xl dark:bg-muted" />
-                    <Skeleton className="h-8 w-14 rounded-xl dark:bg-muted" />
+                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted ml-auto" />
                   </div>
                 </td>
               </tr>

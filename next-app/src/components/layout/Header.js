@@ -103,6 +103,17 @@ export default function Header({ authUser, onLogout, children }) {
     return () => window.removeEventListener("toggle-mobile-drawer", handleToggleMobile);
   }, []);
 
+  // Listen for external open-command-palette events (e.g. from Sidebar or Topbar)
+  useEffect(() => {
+    const handleOpenCommand = () => {
+      setSearchQuery("");
+      setFocusedIndex(0);
+      setCommandOpen(true);
+    };
+    window.addEventListener("open-command-palette", handleOpenCommand);
+    return () => window.removeEventListener("open-command-palette", handleOpenCommand);
+  }, []);
+
   // Autofocus input when command modal opens
   useEffect(() => {
     if (commandOpen) {
@@ -1012,29 +1023,12 @@ export default function Header({ authUser, onLogout, children }) {
           </div>
         </div>
 
-        {/* CENTER: Command Palette Modal Trigger Button */}
-        <div className="flex-1 flex items-center justify-center max-w-lg px-2">
-          {children}
-          {authUser && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setFocusedIndex(0);
-                setCommandOpen(true);
-              }}
-              className={cn("group w-full max-w-sm h-9 pl-3 pr-2 flex items-center justify-between rounded-xl transition-all cursor-pointer shadow-2xs select-none", isStudent ? "bg-red-50/70 hover:bg-red-50 border border-red-100 hover:border-red-200" : "bg-gray-100/70 hover:bg-gray-100/90 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20")}
-            >
-              <div className="flex items-center gap-2 text-gray-400 dark:text-zinc-500">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400"></HugeIcon>
-                <span className="text-xs font-normal">Search views, actions...</span>
-              </div>
-              <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 h-5 min-w-[46px] text-[9px] font-bold tracking-wider text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200/90 dark:border-zinc-700/90 rounded-md shadow-2xs leading-none">
-                {isMac ? "⌘K" : "CTRL K"}
-              </kbd>
-            </button>
-          )}
-        </div>
+        {/* CENTER: Optional Children */}
+        {children && (
+          <div className="flex-1 flex items-center justify-center max-w-lg px-2">
+            {children}
+          </div>
+        )}
 
         {/* RIGHT: User Profile Pill Trigger + Original Popover Design */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -1365,6 +1359,27 @@ export default function Header({ authUser, onLogout, children }) {
             </div>
           </SheetHeader>
 
+          <div className="p-3 pb-1 border-b border-gray-100 dark:border-white/5">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileDrawerOpen(false);
+                setSearchQuery("");
+                setFocusedIndex(0);
+                setCommandOpen(true);
+              }}
+              className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl bg-gray-100/80 hover:bg-gray-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 dark:text-zinc-400 text-xs border border-gray-200/80 dark:border-white/10 transition-colors cursor-pointer select-none"
+            >
+              <div className="flex items-center gap-2.5">
+                <HugeIcon className="ph-bold ph-magnifying-glass text-sm text-pup-maroon dark:text-red-400" />
+                <span className="font-medium text-gray-700 dark:text-zinc-200">Search views, actions...</span>
+              </div>
+              <kbd className="inline-flex items-center justify-center px-1.5 h-5 text-[9px] font-bold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none">
+                {isMac ? "⌘K" : "CTRL K"}
+              </kbd>
+            </button>
+          </div>
+
           <div className="flex-1 overflow-y-auto p-3 space-y-4 [scrollbar-width:thin]">
             {filteredGroups.map((group) => (
               <div key={group.id} className="space-y-1">
@@ -1439,15 +1454,15 @@ export default function Header({ authUser, onLogout, children }) {
               Session Expired
             </DialogTitle>
             <DialogDescription className="font-medium text-gray-500 pt-2 dark:text-zinc-400">
-              You have been logged out from another tab. Please log in again to continue using the system.
+              Your active session has ended or you signed out from another window. Please sign in again to continue using the system.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
             <Button
               onClick={handleSessionExpiredRedirect}
-              className="w-full bg-pup-maroon hover:bg-pup-darkMaroon text-white font-bold text-xs h-10 shadow-sm cursor-pointer"
+              className="w-full h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              Back
+              Sign In Again
             </Button>
           </DialogFooter>
         </DialogContent>

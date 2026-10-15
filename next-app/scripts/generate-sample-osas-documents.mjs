@@ -106,7 +106,7 @@ function drawHeader(page, fonts, { formCode, title, subtitle, refNo, dateStr }) 
     color: DarkSlate,
   });
 
-  page.drawText(subtitle || `Official Student Document — Form ${formCode || "OSAS"}`, {
+  page.drawText(subtitle || `Official Student Document: Form ${formCode || "OSAS"}`, {
     x: 52,
     y: 686,
     size: 7.5,
@@ -144,7 +144,7 @@ function drawFieldGrid(page, fonts, startY, fields) {
       font: fontBold,
       color: MediumGray,
     });
-    page.drawText(String(item.value || "—"), {
+    page.drawText(String(item.value || "N/A"), {
       x: 180,
       y: curY,
       size: 8.5,
@@ -226,7 +226,7 @@ async function generateProposalJfinex() {
   drawHeader(page, fonts, {
     formCode: "OSAS-EP-2026",
     title: "Student Activity & Event Proposal",
-    subtitle: "Junior Financial Executives (JFINEX) — Academic Year 2026-2027",
+    subtitle: "Junior Financial Executives (JFINEX): Academic Year 2026-2027",
     refNo: "OSAS-EP-2026-0042",
     dateStr: "October 14, 2026",
   });
@@ -306,7 +306,7 @@ async function generateProposalGlitch() {
   drawHeader(page, fonts, {
     formCode: "OSAS-EP-2026",
     title: "Student Activity & Event Proposal",
-    subtitle: "Governing League of I.T. Challengers (GLITCH) — Academic Year 2026-2027",
+    subtitle: "Governing League of I.T. Challengers (GLITCH): Academic Year 2026-2027",
     refNo: "OSAS-EP-2026-0038",
     dateStr: "October 08, 2026",
   });
@@ -321,7 +321,7 @@ async function generateProposalGlitch() {
     { label: "Target Event Date:", value: "October 28, 2026 (Wednesday, 8:00 AM – 8:00 PM)", bold: false },
     { label: "Venue & Reservation:", value: "Computer Laboratories 1 & 2  •  Campus Gymnasium Exhibition Area", bold: false },
     { label: "Estimated Participants:", value: "140 Student Developers & Designers across BSIT and BSCS", bold: false },
-    { label: "Operational Budget:", value: "PHP 24,000.00 (Zero Student Assessment — Org Funds & Sponsor Backing)", bold: true },
+    { label: "Operational Budget:", value: "PHP 24,000.00 (Zero Student Assessment - Org Funds & Sponsor Backing)", bold: true },
     { label: "Faculty Adviser:", value: "Prof. Alan Turing (aturing@pup.edu.ph)", bold: false },
   ]);
 
@@ -385,7 +385,7 @@ async function generateProposalPylon() {
   drawHeader(page, fonts, {
     formCode: "OSAS-EP-2026",
     title: "Student Activity & Event Proposal",
-    subtitle: "PYLON E-Sports — Special Interest / Non-Academic Organization",
+    subtitle: "PYLON E-Sports: Special Interest / Non-Academic Organization",
     refNo: "OSAS-EP-2026-0049",
     dateStr: "October 16, 2026",
   });
@@ -457,7 +457,7 @@ async function generateProposalLente() {
   drawHeader(page, fonts, {
     formCode: "OSAS-EP-2026",
     title: "Student Activity & Event Proposal",
-    subtitle: "PUP Lente Filikulas — Film, Arts & Photography Guild",
+    subtitle: "PUP Lente Filikulas: Film, Arts & Photography Guild",
     refNo: "OSAS-EP-2026-0055",
     dateStr: "October 18, 2026",
   });
@@ -512,7 +512,7 @@ async function generateSafetyClearanceHhc() {
   drawHeader(page, fonts, {
     formCode: "OSAS-AR-2026",
     title: "Campus Activity & Safety Clearance Endorsement",
-    subtitle: "Helping Hands Community (HHC) — Outreach & Civic Extension Mission",
+    subtitle: "Helping Hands Community (HHC): Outreach & Civic Extension Mission",
     refNo: "OSAS-AR-2026-0021",
     dateStr: "October 19, 2026",
   });
@@ -593,9 +593,9 @@ async function generatePostEventNarrativeGlitch() {
     "smart campus governance, emergency medical routing, and student record request workflows.",
     "",
     "Winning Prototypes Recognized by Jury Panel:",
-    "• 1st Place (Champion): Team 'Sentinel' — Automated Student Disciplinary Log & Audit Trail",
-    "• 2nd Place: Team 'AgriByte' — Smart Hydroponics Telemetry Dashboard for Campus Science Lab",
-    "• 3rd Place: Team 'PUP-Connect' — Offline-First P2P Campus Notes Exchange App",
+    "• 1st Place (Champion): Team 'Sentinel': Automated Student Disciplinary Log & Audit Trail",
+    "• 2nd Place: Team 'AgriByte': Smart Hydroponics Telemetry Dashboard for Campus Science Lab",
+    "• 3rd Place: Team 'PUP-Connect': Offline-First P2P Campus Notes Exchange App",
   ];
   for (const h of highlights) {
     page.drawText(h, { x: 50, y, size: 7.5, font: fontRegular, color: DarkSlate });
@@ -673,11 +673,11 @@ async function generateLiquidationGlitch() {
   y -= 22;
 
   const rows = [
-    ["OR-2026-8812", "Jollibee San Juan — 140 Packed Meals & Drinks", "Meals & Catering", "13,650.00"],
-    ["OR-2026-0194", "Merit Awards Manila — 3 Acrylic Plaques & Medals", "Awards & Trophies", "4,200.00"],
-    ["INV-44021-B", "Octagon Computer Superstore — 6 Surge Protectors", "Technical Logistics", "2,150.00"],
-    ["OR-2026-9041", "National Book Store — Lanyards, Badges & Sharpies", "Materials & Supplies", "1,850.00"],
-    ["OR-2026-3112", "Mercury Drug — Bandages, Alcohol, Paracetamol", "First Aid Kit", "1,000.00"],
+    ["OR-2026-8812", "Jollibee San Juan - 140 Packed Meals & Drinks", "Meals & Catering", "13,650.00"],
+    ["OR-2026-0194", "Merit Awards Manila - 3 Acrylic Plaques & Medals", "Awards & Trophies", "4,200.00"],
+    ["INV-44021-B", "Octagon Computer Superstore - 6 Surge Protectors", "Technical Logistics", "2,150.00"],
+    ["OR-2026-9041", "National Book Store - Lanyards, Badges & Sharpies", "Materials & Supplies", "1,850.00"],
+    ["OR-2026-3112", "Mercury Drug - Bandages, Alcohol, Paracetamol", "First Aid Kit", "1,000.00"],
   ];
 
   for (let i = 0; i < rows.length; i++) {
@@ -748,7 +748,7 @@ async function generatePostEventNarrativeJfinex() {
   drawHeader(page, fonts, {
     formCode: "OSAS-PNR-2026",
     title: "Post-Event Narrative & Accomplishment Report",
-    subtitle: "Junior Financial Executives (JFINEX) — Official Accomplishment Report",
+    subtitle: "Junior Financial Executives (JFINEX): Official Accomplishment Report",
     refNo: "OSAS-PNR-2026-0042",
     dateStr: "November 18, 2026",
   });
@@ -815,7 +815,7 @@ async function generateLiquidationJfinex() {
   drawHeader(page, fonts, {
     formCode: "OSAS-FLR-2026",
     title: "Official Financial Liquidation Report",
-    subtitle: "Junior Financial Executives (JFINEX) — Financial Compliance Statement",
+    subtitle: "Junior Financial Executives (JFINEX): Financial Compliance Statement",
     refNo: "OSAS-FLR-2026-0042",
     dateStr: "November 18, 2026",
   });
@@ -850,10 +850,10 @@ async function generateLiquidationJfinex() {
   y -= 22;
 
   const rows = [
-    ["OR-2026-4421", "Goldilocks Bakeshop — 185 Snack Packs & Bottled Water", "Catering & Snacks", "9,250.00"],
-    ["OR-2026-1102", "Plaque Palace — 3 Glass Trophies for Keynote Speakers", "Honorarium & Tokens", "4,500.00"],
-    ["INV-88912-C", "QuickPrint San Juan — Stage Backdrop Banner & Programs", "Collateral & Print", "2,470.00"],
-    ["OR-2026-5501", "Office Warehouse — Specialty Paper, Certificate Folders", "Materials & Office", "1,900.00"],
+    ["OR-2026-4421", "Goldilocks Bakeshop - 185 Snack Packs & Bottled Water", "Catering & Snacks", "9,250.00"],
+    ["OR-2026-1102", "Plaque Palace - 3 Glass Trophies for Keynote Speakers", "Honorarium & Tokens", "4,500.00"],
+    ["INV-88912-C", "QuickPrint San Juan - Stage Backdrop Banner & Programs", "Collateral & Print", "2,470.00"],
+    ["OR-2026-5501", "Office Warehouse - Specialty Paper, Certificate Folders", "Materials & Office", "1,900.00"],
   ];
 
   for (let i = 0; i < rows.length; i++) {
@@ -1060,7 +1060,7 @@ async function main() {
     const pdfBytes = await d.generate();
     fs.writeFileSync(filePath, pdfBytes);
     const kb = (pdfBytes.length / 1024).toFixed(1);
-    console.log(`[${i + 1}/${docs.length}] Generated ${d.filename.padEnd(52, " ")} (${kb} KB) — ${d.desc}`);
+    console.log(`[${i + 1}/${docs.length}] Generated ${d.filename.padEnd(52, " ")} (${kb} KB): ${d.desc}`);
   }
 
   console.log(`\n✓ All ${docs.length} sample documents successfully created in:`);

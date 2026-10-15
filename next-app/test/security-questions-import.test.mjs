@@ -15,7 +15,7 @@ function sanitizeQuestionLine(raw) {
   if (!raw) return "";
   let cleaned = String(raw).trim();
   cleaned = cleaned.replace(/^(\d+[\.\)\-:]|\([0-9]+\)|\[[0-9]+\])\s*/, "");
-  cleaned = cleaned.replace(/^[\s\u2022\u25E6\u25AA\u25CF•\-\*\>→–—]+\s*/, "");
+  cleaned = cleaned.replace(/^[\s\u2022\u25E6\u25AA\u25CF•\-\*\>→\u2013\u2014]+\s*/, "");
   cleaned = cleaned.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
   return cleaned.trim();
 }

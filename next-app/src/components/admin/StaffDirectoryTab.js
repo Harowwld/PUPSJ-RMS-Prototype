@@ -35,7 +35,7 @@ import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils"
 import React from "react"
 
 const formatLastLoginDate = (dateStr) => {
-  if (!dateStr || dateStr === "—") return "—"
+  if (!dateStr || dateStr === "N/A") return "N/A"
   try {
     const parts = dateStr.split("/")
     if (parts.length === 3) {
@@ -73,7 +73,7 @@ const getStaffCleanName = (staff) => {
 
 const getStaffCleanEmail = (staff) => {
   if (staff?.email && !staff.email.startsWith("enc:v1:")) return staff.email
-  return "—"
+  return "N/A"
 }
 
 const StaffTableRow = React.memo(({ 
@@ -98,7 +98,7 @@ const StaffTableRow = React.memo(({
         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
       )}
     >
-      <td className="w-16 p-4 align-middle text-center">
+      <td className="w-12 p-4 align-middle text-center">
         {!isCurrentUser && (
           <input
             type="checkbox"
@@ -111,24 +111,24 @@ const StaffTableRow = React.memo(({
           />
         )}
       </td>
-      <td className="p-4 align-middle min-w-[200px] max-w-[260px]">
-        <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
-            <span className="truncate">
-              {getStaffCleanName(s)}
-            </span>
-          </div>
-          <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-            {getStaffCleanEmail(s)}
-          </div>
-        </div>
-      </td>
-      <td className="w-48 p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap">
         <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
           {s.id}
         </span>
       </td>
-      <td className="w-40 p-4 align-middle">
+      <td className="p-4 align-middle overflow-hidden">
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 min-w-0 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
+            <span className="truncate" title={getStaffCleanName(s)}>
+              {getStaffCleanName(s)}
+            </span>
+          </div>
+          <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={getStaffCleanEmail(s)}>
+            {getStaffCleanEmail(s)}
+          </div>
+        </div>
+      </td>
+      <td className="p-4 align-middle whitespace-nowrap">
         <div className={cn(
           "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
@@ -140,7 +140,7 @@ const StaffTableRow = React.memo(({
           {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
         </div>
       </td>
-      <td className="w-36 p-4 align-middle">
+      <td className="p-4 align-middle whitespace-nowrap">
         {s.totp_enabled ? (
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             2FA Enabled
@@ -151,8 +151,8 @@ const StaffTableRow = React.memo(({
           </span>
         )}
       </td>
-      <td className="w-56 p-4 align-middle">
-        {(!active.relative && active.date === "—") ? (
+      <td className="p-4 align-middle whitespace-nowrap">
+        {(!active.relative && (!active.date || active.date === "N/A")) ? (
           <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
             Never active
           </div>
@@ -169,7 +169,7 @@ const StaffTableRow = React.memo(({
           </div>
         )}
       </td>
-      <td className="w-28 p-4 align-middle text-right whitespace-nowrap">
+      <td className="w-24 p-4 align-middle text-right whitespace-nowrap">
         <div
           className="flex items-center justify-end gap-1.5"
           onClick={(e) => e.stopPropagation()}
@@ -665,8 +665,21 @@ export default function StaffDirectoryTab({
                 onChange={(e) => setLocalSearch(e.target.value)}
                 disabled={isLoading}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                {filteredStaff.length}
+              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                {localSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setLocalSearch("")}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                    title="Clear search"
+                    aria-label="Clear search"
+                  >
+                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                  </button>
+                )}
+                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  {filteredStaff.length.toLocaleString()}
+                </span>
               </div>
             </div>
 
@@ -750,10 +763,10 @@ export default function StaffDirectoryTab({
         ) : (
           <div className={cn("w-full border-t border-border dark:border-border", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
             <div className="w-full overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="w-full text-sm table-fixed min-w-[960px]">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                    <th className="w-16 p-4 text-center">
+                    <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
                         className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -774,23 +787,7 @@ export default function StaffDirectoryTab({
                         }
                       />
                     </th>
-                    <th className="p-4 min-w-[200px] max-w-[260px]">
-                      <button
-                        onClick={() => handleSort("fname")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                        )}
-                      >
-                        Staff Name{" "}
-                        <SortIndicator
-                          column="fname"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
-                    </th>
-                    <th className="w-48 p-4">
+                    <th className="p-4 w-[18%]">
                       <button
                         onClick={() => handleSort("id")}
                         className={cn(
@@ -806,7 +803,23 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-40 p-4">
+                    <th className="p-4 w-[26%]">
+                      <button
+                        onClick={() => handleSort("fname")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                          sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Staff Name{" "}
+                        <SortIndicator
+                          column="fname"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 w-[16%]">
                       <button
                         onClick={() => handleSort("role")}
                         className={cn(
@@ -822,7 +835,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-36 p-4">
+                    <th className="p-4 w-[14%]">
                       <button
                         onClick={() => handleSort("totp_enabled")}
                         className={cn(
@@ -838,7 +851,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-56 p-4">
+                    <th className="p-4 w-[18%]">
                       <button
                         onClick={() => handleSort("last_active")}
                         className={cn(
@@ -854,7 +867,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    <th className="w-24 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>

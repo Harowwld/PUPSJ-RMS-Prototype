@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import { StudentRegistrationSchema } from "@/lib/validationSchemas";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 export default function RegisterStudentModal({
   open,
@@ -34,12 +36,10 @@ export default function RegisterStudentModal({
   const [cabinet, setCabinet] = useState("");
   const [drawer, setDrawer] = useState("1");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
 
   // Default room and cabinet when layout is loaded
   useEffect(() => {
     if (open) {
-      setFormError("");
       const firstRoom = storageLayout?.rooms?.[0];
       if (firstRoom) {
         setRoom(String(firstRoom.id));
@@ -110,7 +110,6 @@ export default function RegisterStudentModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormError("");
 
     const cleanNo = studentNo.trim().toUpperCase();
     const cleanName = name.trim().replace(/\s+/g, " ").toUpperCase();
@@ -121,18 +120,24 @@ export default function RegisterStudentModal({
     const cleanCab = canonicalizeCabinetId(cabinet);
     const parsedDrawer = parseInt(drawer, 10);
 
-    if (!cleanNo || !cleanName || !cleanCourse || !cleanSec) {
-      setFormError("Please fill out all required student profile fields.");
-      return;
-    }
+    const payload = {
+      studentNo: cleanNo,
+      name: cleanName,
+      courseCode: cleanCourse,
+      yearLevel: parsedYear,
+      section: cleanSec,
+      room: parsedRoom,
+      cabinet: cleanCab,
+      drawer: parsedDrawer,
+      status: "Active",
+    };
 
-    if (!Number.isFinite(parsedYear) || parsedYear < 2000 || parsedYear > 2100) {
-      setFormError("Please provide a valid 4-digit academic entry year (e.g. 2024).");
-      return;
-    }
-
-    if (!Number.isFinite(parsedRoom) || !cleanCab || !Number.isFinite(parsedDrawer)) {
-      setFormError("Please designate a physical archive Room, Cabinet, and Drawer.");
+    const validation = StudentRegistrationSchema.safeParse(payload);
+    if (!validation.success) {
+      showToast?.({
+        title: "Validation Error",
+        description: validation.error.issues?.[0]?.message || "Please check all fields.",
+      }, "warning");
       return;
     }
 
@@ -172,7 +177,13 @@ export default function RegisterStudentModal({
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      setFormError(err.message || "An error occurred while creating student record.");
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Registration Failed",
+          description: "Could not create student record.",
+        }),
+        true
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -192,12 +203,6 @@ export default function RegisterStudentModal({
           </DialogHeader>
 
           <div className="p-6 pt-2 space-y-5">
-            {formError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
-              <HugeIcon  className="ph-bold ph-warning-circle mr-1.5 text-sm inline-block align-sub"></HugeIcon>
-              {formError}
-            </div>
-          )}
 
           {/* Identification Section */}
           <div className="space-y-4">
@@ -253,7 +258,7 @@ export default function RegisterStudentModal({
                   }}
                   options={courses.map((c) => ({
                     value: c.code,
-                    label: `${c.code} — ${c.name}`,
+                    label: `${c.code}: ${c.name}`,
                   }))}
                   placeholder="Select Program"
                   buttonClassName="h-10 text-xs rounded-xl border border-border dark:border-border"

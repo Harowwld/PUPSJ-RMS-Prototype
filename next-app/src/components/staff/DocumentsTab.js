@@ -28,6 +28,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import {
@@ -67,10 +68,10 @@ function DocumentsTable({
 }) {
   const isEmpty = docsRows.length === 0;
   return (
-    <table className={cn("min-w-full text-sm", isEmpty && "h-full flex-1 flex flex-col")}>
+    <table className={cn("w-full text-sm table-fixed min-w-[960px]", isEmpty && "h-full flex-1 flex flex-col")}>
       <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
         <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-          <th className="w-44 p-4">
+          <th className="w-[15%] p-4">
             <button
               onClick={() => handleSort("student_no")}
               className={cn(
@@ -86,7 +87,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 min-w-[200px] max-w-[260px]">
+          <th className="w-[22%] p-4">
             <button
               onClick={() => handleSort("student_name")}
               className={cn(
@@ -102,7 +103,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 min-w-[160px]">
+          <th className="w-[18%] p-4">
             <button
               onClick={() => handleSort("doc_type")}
               className={cn(
@@ -118,7 +119,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="w-28 p-4">
+          <th className="w-[12%] p-4">
             <button
               onClick={() => handleSort("status")}
               className={cn(
@@ -134,7 +135,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 min-w-[180px] max-w-[220px]">
+          <th className="w-[18%] p-4">
             <button
               onClick={() => handleSort("file")}
               className={cn(
@@ -150,7 +151,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="w-36 p-4">
+          <th className="w-[10%] p-4">
             <button
               onClick={() => handleSort("created_at")}
               className={cn(
@@ -166,7 +167,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="w-28 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
+          <th className="w-20 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
         </tr>
       </thead>
       <tbody className={cn("divide-y divide-border dark:divide-border", isEmpty && "h-full flex-1 flex flex-col")}>
@@ -220,26 +221,26 @@ function DocumentsTable({
                   : "bg-red-50/30 dark:bg-red-950/20"
               )}
             >
-              <td className="w-44 p-4 whitespace-nowrap">
+              <td className="p-4 whitespace-nowrap align-middle">
                 <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                   {r.student_no}
                 </span>
               </td>
-              <td className="p-4 min-w-[200px] max-w-[260px]">
+              <td className="p-4 align-middle overflow-hidden">
                 <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(r.student_name)}>
-                  {formatTitleCase(r.student_name) || "—"}
+                  {formatTitleCase(r.student_name) || "N/A"}
                 </div>
               </td>
-              <td className="p-4 min-w-[160px]">
+              <td className="p-4 align-middle overflow-hidden">
                 <Badge
                   variant="outline"
-                  className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                  className="inline-flex max-w-full items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                 >
-                  <HugeIcon  className="ph-bold ph-file-text text-[10px]"></HugeIcon>
-                  {r.doc_type}
+                  <HugeIcon  className="ph-bold ph-file-text text-[10px] shrink-0"></HugeIcon>
+                  <span className="truncate">{r.doc_type}</span>
                 </Badge>
               </td>
-              <td className="w-28 p-4">
+              <td className="p-4 align-middle whitespace-nowrap">
                 {r.status === "uploaded" ? (
                   r.verificationStatus === "unverified" ? (
                     <Badge
@@ -268,7 +269,7 @@ function DocumentsTable({
                   </Badge>
                 )}
               </td>
-              <td className="p-4 min-w-[180px] max-w-[220px]">
+              <td className="p-4 align-middle overflow-hidden">
                 {r.doc ? (
                   <>
                     <div className="truncate font-medium text-gray-900 dark:text-zinc-100 text-[13px]" title={r.doc.original_filename}>
@@ -284,10 +285,10 @@ function DocumentsTable({
                   </span>
                 )}
               </td>
-              <td className="w-36 p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+              <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                 {formatPHDateTime(r.reviewDoc?.created_at)}
               </td>
-              <td className="w-28 p-4 whitespace-nowrap text-right">
+              <td className="p-4 pr-6 align-middle whitespace-nowrap text-right">
                 <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                   {r.doc ? (
                     <>
@@ -374,6 +375,7 @@ export default function DocumentsTab({
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [docFrameStatus, setDocFrameStatus] = useState("loading");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [statusFilters, setStatusFilters] = useState([]);
   const [docTypeFilters, setDocTypeFilters] = useState(
@@ -384,6 +386,7 @@ export default function DocumentsTab({
 
   const handleViewDetails = (doc) => {
     setSelectedDoc(doc);
+    setDocFrameStatus("loading");
     setDetailModalOpen(true);
   };
 
@@ -778,8 +781,21 @@ export default function DocumentsTab({
                   placeholder="Search student, document type, or file..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
-                  {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
+                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => handleSearchChange("")}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                      title="Clear search"
+                      aria-label="Clear search"
+                    >
+                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                    </button>
+                  )}
+                  <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                    {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
+                  </span>
                 </div>
               </div>
 
@@ -1069,12 +1085,12 @@ export default function DocumentsTab({
               </div>
             </div>
 
-            <DialogFooter className="m-0 p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setEditStudentOpen(false)}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
@@ -1160,10 +1176,17 @@ export default function DocumentsTab({
                       <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
                     </Button>
                   </div>
-                  <iframe
-                    src={`${selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}#toolbar=0&navpanes=0`}
+                  <ResilientPDFViewer
+                    src={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
+                    docId={selectedDoc.doc.id}
+                    preview={{
+                      room: selectedDoc.student?.room,
+                      cabinet: selectedDoc.student?.cabinet,
+                      drawer: selectedDoc.student?.drawer,
+                    }}
                     className="w-full h-full border-0"
                     title="PDF Fullscreen Preview"
+                    onStatusChange={setDocFrameStatus}
                   />
                 </div>
               )}
@@ -1171,10 +1194,17 @@ export default function DocumentsTab({
               {/* Left: Document Preview */}
               <div className="flex-1 bg-white border-r border-border dark:bg-zinc-900 dark:border-border relative">
                 {selectedDoc?.doc?.file_url || selectedDoc?.doc?.id ? (
-                  <iframe
-                    src={`${selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}#toolbar=0&navpanes=0`}
+                  <ResilientPDFViewer
+                    src={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
+                    docId={selectedDoc.doc.id}
+                    preview={{
+                      room: selectedDoc.student?.room,
+                      cabinet: selectedDoc.student?.cabinet,
+                      drawer: selectedDoc.student?.drawer,
+                    }}
                     className="w-full h-full border-0"
                     title="PDF Preview"
+                    onStatusChange={setDocFrameStatus}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-white dark:bg-card">
@@ -1193,7 +1223,7 @@ export default function DocumentsTab({
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Name</label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{formatTitleCase(selectedDoc?.student_name) || "—"}</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{formatTitleCase(selectedDoc?.student_name) || "N/A"}</p>
                     </div>
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Number</label>
@@ -1257,7 +1287,7 @@ export default function DocumentsTab({
                         <div>
                           <label className="text-[10px] font-semibold tracking-widest text-gray-400">Upload Date</label>
                           <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300 mt-0.5">
-                            {selectedDoc.reviewDoc?.created_at ? formatPHDateTime(selectedDoc.reviewDoc.created_at) : "—"}
+                            {selectedDoc.reviewDoc?.created_at ? formatPHDateTime(selectedDoc.reviewDoc.created_at) : "N/A"}
                           </p>
                         </div>
                       </>
@@ -1291,7 +1321,7 @@ export default function DocumentsTab({
                   </TooltipContent>
                 </Tooltip>
 
-                {(selectedDoc?.doc?.file_url || selectedDoc?.doc?.id) && (
+                {(selectedDoc?.doc?.file_url || selectedDoc?.doc?.id) && docFrameStatus === "ready" && (
                   <a
                     href={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
                     target="_blank"
@@ -1303,11 +1333,11 @@ export default function DocumentsTab({
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>

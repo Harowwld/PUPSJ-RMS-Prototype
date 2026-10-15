@@ -7,6 +7,7 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { decryptPII, encryptPII } from "@/lib/piiEncryption";
+import { StudentNoSchema, PhoneSchema, PersonNameSchema } from "@/lib/validationSchemas";
 
 export const runtime = "nodejs";
 
@@ -238,13 +239,27 @@ export async function POST(req) {
     );
   }
 
+  if (effectiveStudentNo) {
+    const snCheck = StudentNoSchema.safeParse(effectiveStudentNo);
+    if (!snCheck.success) {
+      return NextResponse.json({ ok: false, error: "Invalid Student Number format (e.g. 2024-00123-SJ-0)" }, { status: 400 });
+    }
+  }
+
+  if (requesterContact) {
+    const phoneCheck = PhoneSchema.safeParse(requesterContact);
+    if (!phoneCheck.success) {
+      return NextResponse.json({ ok: false, error: "Please enter a valid 11-digit mobile number (e.g. 09171234567 or +639171234567)" }, { status: 400 });
+    }
+  }
+
   if (!docType) {
     return NextResponse.json({ ok: false, error: "Document type is required." }, { status: 400 });
   }
 
-  if (!notes) {
+  if (!notes || notes.length < 5) {
     return NextResponse.json(
-      { ok: false, error: "Description / purpose of request is required." },
+      { ok: false, error: "Please provide a meaningful purpose description (at least 5 characters)." },
       { status: 400 }
     );
   }
@@ -273,6 +288,12 @@ export async function POST(req) {
   const accFullName = [accFirst, accMiddle, accLast].filter(Boolean).join(" ");
   const defaultRequesterName = accFullName || accEmail || null;
   const rawBodyName = body?.requesterName ? decryptField(String(body.requesterName).trim()) : null;
+  if (rawBodyName) {
+    const nameCheck = PersonNameSchema("Requester name").safeParse(rawBodyName);
+    if (!nameCheck.success) {
+      return NextResponse.json({ ok: false, error: nameCheck.error.issues[0]?.message || "Invalid requester name" }, { status: 400 });
+    }
+  }
   const finalRequesterName = rawBodyName || defaultRequesterName;
 
   const createdPaths = [];

@@ -159,7 +159,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData }) {
                     {displayPoint.count ?? 0}
                   </span>
                   <span className="text-[12px] font-semibold text-gray-400 dark:text-zinc-500 lowercase">
-                    requests ({displayPoint.name || "—"})
+                    requests ({displayPoint.name || "N/A"})
                   </span>
                 </div>
               ) : (

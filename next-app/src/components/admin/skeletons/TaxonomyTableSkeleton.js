@@ -19,19 +19,22 @@ export default function TaxonomyTableSkeleton({
       )}
     >
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="w-full text-sm table-fixed min-w-[720px]">
           <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 h-11">
               <th className="w-12 p-4 text-center">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="p-4 min-w-[280px]">
+              <th className="w-[24%] p-4">
+                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+              </th>
+              <th className="w-[48%] p-4">
                 <Skeleton className="h-3.5 w-32 dark:bg-muted" />
               </th>
-              <th className="w-48 p-4 min-w-[140px]">
-                <Skeleton className="h-3.5 w-20 dark:bg-muted" />
+              <th className="w-[14%] p-4">
+                <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="w-32 p-4 text-right min-w-[100px]">
+              <th className="w-28 p-4 pr-6 text-right">
                 <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
               </th>
             </tr>
@@ -47,8 +50,13 @@ export default function TaxonomyTableSkeleton({
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
 
-                {/* Primary Name / Code */}
-                <td className="p-4 align-middle">
+                {/* Primary Code / Identifier */}
+                <td className="p-4 align-middle whitespace-nowrap">
+                  <Skeleton className="h-4 w-20 rounded dark:bg-muted" />
+                </td>
+
+                {/* Designation / Block / Scope */}
+                <td className="p-4 align-middle overflow-hidden">
                   <div className="flex flex-col gap-1">
                     <Skeleton
                       className={cn(
@@ -63,13 +71,13 @@ export default function TaxonomyTableSkeleton({
                 </td>
 
                 {/* Status Badge */}
-                <td className="p-4 align-middle">
-                  <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                <td className="p-4 align-middle whitespace-nowrap">
+                  <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Actions */}
-                <td className="p-4 align-middle text-right">
-                  <div className="flex items-center justify-end gap-2">
+                <td className="p-4 pr-6 align-middle text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-1.5">
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
                   </div>

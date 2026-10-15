@@ -37,7 +37,7 @@ const DEFAULT_WORKFLOW_CONTENT = {
       num: "02",
       title: "Select Your Document",
       summary: "Choose from official academic credentials",
-      desc: "Browse the available documents and select what you need—such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
+      desc: "Browse the available documents and select what you need, such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
       tags: ["8 Document Types", "Official Records", "Clear Requirements"],
       actionLabel: "View Catalog",
       actionType: "scroll",
@@ -157,7 +157,7 @@ export default function ProcessWorkflow() {
       id="workflow" 
       className="relative w-full bg-white transition-colors overflow-hidden"
     >
-      {/* Dark canvas card — full-bleed */}
+      {/* Dark canvas card: full-bleed */}
       <div 
         ref={cardRef}
         className="relative w-full bg-zinc-950 text-white font-jakarta select-none py-20 sm:py-28 lg:py-32 overflow-hidden"

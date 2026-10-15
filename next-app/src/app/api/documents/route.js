@@ -10,6 +10,8 @@ import { isUniqueViolation } from "../../../lib/dbErrors";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { canAccessResource } from "../../../lib/resourceAuthorization";
 import { dbGet } from "../../../lib/postgresCompat";
+import { getStorageLayout } from "../../../lib/storageLayoutRepo";
+import { canonicalizeCabinetId, areCabinetsEqual } from "../../../lib/storageLayoutUtils";
 
 export const runtime = "nodejs";
 
@@ -89,6 +91,10 @@ export async function POST(req) {
   const docType = String(form.get("docType") || "").trim();
   const isNewStudent =
     String(form.get("isNewStudent") || "").toLowerCase() === "true";
+  const allowOverwrite =
+    String(form.get("allowOverwrite") || form.get("replaceExisting") || "").toLowerCase() === "true" ||
+    form.get("allowOverwrite") === "1" ||
+    form.get("replaceExisting") === "1";
 
   // === OSAS Polymorphic Ingestion (Student Organizations) ===
   if (officeId === "osas") {
@@ -156,18 +162,39 @@ export async function POST(req) {
     }
 
     const buf = Buffer.from(await file.arrayBuffer());
-    const row = await createDocument({
-      officeId,
-      studentNo: null,
-      studentName: existingOrg.name,
-      organizationId: existingOrg.id,
-      docType,
-      originalFilename: file.name || "document.pdf",
-      mimeType: file.type || "application/pdf",
-      sizeBytes: file.size || buf.length,
-      buffer: buf,
-      uploadedBy: user.id,
-    });
+    let row;
+    try {
+      row = await createDocument({
+        officeId,
+        studentNo: null,
+        studentName: existingOrg.name,
+        organizationId: existingOrg.id,
+        docType,
+        originalFilename: file.name || "document.pdf",
+        mimeType: file.type || "application/pdf",
+        sizeBytes: file.size || buf.length,
+        buffer: buf,
+        uploadedBy: user.id,
+        allowOverwrite,
+      });
+    } catch (e) {
+      if (e?.isDuplicate || e?.code === "DUPLICATE_DOCUMENT") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: e.message,
+            isDuplicate: true,
+            duplicateId: e.duplicateId || null,
+            existingStatus: e.existingStatus || null,
+          },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { ok: false, error: e?.message || "Failed to create document" },
+        { status: 400 }
+      );
+    }
 
     if (!row || !canAccessResource(user, "document", row)) {
       return NextResponse.json({ ok: false, error: "Document could not be created" }, { status: 500 });
@@ -265,6 +292,19 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Invalid drawer" }, { status: 400 });
     }
 
+    const layout = await getStorageLayout({ officeId });
+    const roomDef = layout?.rooms?.find((entry) => Number(entry.id) === room);
+    if (!roomDef) {
+      return NextResponse.json({ ok: false, error: `Storage Room ${room} does not exist in the system` }, { status: 400 });
+    }
+    const cabinetDef = roomDef.cabinets?.find((entry) => areCabinetsEqual(entry.id, cabinet, roomDef.cabinets));
+    if (!cabinetDef) {
+      return NextResponse.json({ ok: false, error: `Cabinet ${cabinet} does not exist in Room ${room}` }, { status: 400 });
+    }
+    if (!cabinetDef.drawerIds?.some((id) => String(id) === String(drawer))) {
+      return NextResponse.json({ ok: false, error: `Drawer ${drawer} does not exist in Cabinet ${cabinet} (Room ${room})` }, { status: 400 });
+    }
+
     try {
       await createStudent({
         studentNo,
@@ -315,6 +355,7 @@ export async function POST(req) {
       sizeBytes: file.size || buf.length,
       buffer: buf,
       uploadedBy: user.id,
+      allowOverwrite,
     });
   } catch (e) {
     if (createdStudentForUpload) {
@@ -324,7 +365,22 @@ export async function POST(req) {
         console.error("[Document upload] Failed to roll back newly created student:", cleanupError);
       }
     }
-    throw e;
+    if (e?.isDuplicate || e?.code === "DUPLICATE_DOCUMENT") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: e.message,
+          isDuplicate: true,
+          duplicateId: e.duplicateId || null,
+          existingStatus: e.existingStatus || null,
+        },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json(
+      { ok: false, error: e?.message || "Failed to create document" },
+      { status: 400 }
+    );
   }
   if (!row || !canAccessResource(user, "document", row)) {
     return NextResponse.json({ ok: false, error: "Document could not be created" }, { status: 500 });

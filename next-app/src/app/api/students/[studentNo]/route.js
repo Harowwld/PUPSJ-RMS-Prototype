@@ -6,12 +6,13 @@ import {
   updateStudent,
 } from "../../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
+import { canonicalizeCabinetId, areCabinetsEqual } from "../../../../lib/storageLayoutUtils";
 import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
 import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
+import { PersonNameSchema } from "@/lib/validationSchemas";
 
 export const runtime = "nodejs";
 
@@ -98,8 +99,11 @@ export async function PATCH(req, ctx) {
   if (body.status !== undefined && !validStatuses.has(String(body.status).trim())) {
     return NextResponse.json({ ok: false, error: "Invalid status" }, { status: 400 });
   }
-  if (body.name !== undefined && !String(body.name).trim()) {
-    return NextResponse.json({ ok: false, error: "Name is required" }, { status: 400 });
+  if (body.name !== undefined) {
+    const nameCheck = PersonNameSchema("Student Name").safeParse(body.name);
+    if (!nameCheck.success) {
+      return NextResponse.json({ ok: false, error: nameCheck.error.issues[0]?.message || "Invalid student name" }, { status: 400 });
+    }
   }
   if (body.courseCode !== undefined && !String(body.courseCode).trim()) {
     return NextResponse.json({ ok: false, error: "Course code is required" }, { status: 400 });
@@ -149,7 +153,7 @@ export async function PATCH(req, ctx) {
     if (!roomDef) {
       return NextResponse.json({ ok: false, error: `Storage Room ${room} does not exist in the system` }, { status: 400 });
     }
-    const cabinetDef = roomDef.cabinets?.find((entry) => canonicalizeCabinetId(entry.id) === cabinet);
+    const cabinetDef = roomDef.cabinets?.find((entry) => areCabinetsEqual(entry.id, cabinet, roomDef.cabinets));
     if (!cabinetDef) {
       return NextResponse.json({ ok: false, error: `Cabinet ${cabinet} does not exist in Room ${room}` }, { status: 400 });
     }
@@ -161,6 +165,18 @@ export async function PATCH(req, ctx) {
   // Handle explicit status toggle (archiving/restoring) when submitted as a standalone lifecycle action
   if (!hasProfileFields) {
     if (body.status === "Active") {
+      const layout = await getStorageLayout({ officeId });
+      const roomDef = layout?.rooms?.find((entry) => Number(entry.id) === Number(existingStudent.room));
+      const cabinetDef = roomDef?.cabinets?.find((entry) => areCabinetsEqual(entry.id, existingStudent.cabinet, roomDef.cabinets));
+      const drawerValid = cabinetDef?.drawerIds?.some((id) => String(id) === String(existingStudent.drawer));
+
+      if (!roomDef || !cabinetDef || !drawerValid) {
+        return NextResponse.json({
+          ok: false,
+          error: `Cannot restore student: their assigned physical location (Room ${existingStudent.room || "N/A"}, Cabinet ${existingStudent.cabinet || "N/A"}, Drawer ${existingStudent.drawer || "N/A"}) no longer exists in the storage layout. Please update their room, cabinet, and drawer before restoring.`,
+        }, { status: 400 });
+      }
+
       const row = await restoreStudent(studentNo, {
         officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
       });

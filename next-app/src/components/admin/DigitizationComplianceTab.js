@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Reorder } from "framer-motion";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import {
   Empty,
   EmptyHeader,
@@ -185,7 +186,9 @@ export default function DigitizationComplianceTab({
       setData(null);
       setError(e?.message || "Load failed");
       showToast?.(
-        { title: "Compliance Data Load Failed", description: e?.message || "The system was unable to retrieve digitization compliance statistics." },
+        formatErrorMessage(e, {
+          defaultTitle: "Compliance Data Load Failed",
+        }),
         true
       );
     } finally {
@@ -284,7 +287,12 @@ export default function DigitizationComplianceTab({
       setReportOpen(true);
     } catch (e) {
       console.error("PDF Preview generation failed:", e);
-      showToast?.({ title: "Preview Failed", description: "Failed to generate compliance report preview." }, true);
+      showToast?.(
+        formatErrorMessage(e, {
+          defaultTitle: "Preview Failed",
+        }),
+        true
+      );
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -306,7 +314,12 @@ export default function DigitizationComplianceTab({
         URL.revokeObjectURL(url);
       } catch (e) {
         console.error("PDF Generation failed:", e);
-        showToast?.({ title: "Report Generation Failed", description: "An error occurred while generating the PDF report." }, true);
+        showToast?.(
+          formatErrorMessage(e, {
+            defaultTitle: "Report Generation Failed",
+          }),
+          true
+        );
         return;
       } finally {
         setIsGeneratingPdf(false);
@@ -367,7 +380,7 @@ export default function DigitizationComplianceTab({
         for (const r of byCourse) {
           lines.push(
             row([
-              r.courseCode || "—",
+              r.courseCode || "N/A",
               r.total ?? 0,
               r.digitized ?? 0,
               r.percent != null ? `${r.percent}%` : "0%",
@@ -397,7 +410,7 @@ export default function DigitizationComplianceTab({
 
       showToast?.({ title: "Export Success", description: `The compliance dataset has been successfully exported as ${fileName}.` });
     } catch {
-       showToast?.({ title: "Export Failed", description: "An error occurred during the data export process." }, true);
+       showToast?.({ title: "Export Failed", description: "An error occurred while exporting the compliance dataset to CSV." }, true);
     } finally {
       setIsExportingCsv(false);
     }
@@ -433,7 +446,7 @@ export default function DigitizationComplianceTab({
         label: "Academic Program",
         options: courses.map((c) => ({
           id: String(c.code || ""),
-          label: c.code ? `${c.code}${c.name ? ` — ${c.name}` : ""}` : c.name || "Program",
+          label: c.code ? `${c.code}${c.name ? ` : ${c.name}` : ""}` : c.name || "Program",
         })),
         selected: Array.isArray(courseFilter) ? courseFilter : [],
         onChange: (vals) => {
@@ -989,10 +1002,10 @@ export default function DigitizationComplianceTab({
 
             <div className="w-full overflow-x-auto rounded-b-2xl">
               {sortedByCourse.length > 0 ? (
-                <table className="min-w-full text-sm">
+                <table className="w-full text-sm table-fixed min-w-[760px]">
                   <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
                     <tr className="hover:bg-transparent text-left border-b border-border dark:border-border">
-                      <th className="p-4 px-6">
+                      <th className="p-4 px-6 w-[32%]">
                         <button
                           onClick={() => handleSort("courseCode")}
                           className="group flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
@@ -1000,7 +1013,7 @@ export default function DigitizationComplianceTab({
                           Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 px-6 text-center">
+                      <th className="p-4 px-6 w-[22%] text-center">
                         <button
                           onClick={() => handleSort("total")}
                           className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
@@ -1008,7 +1021,7 @@ export default function DigitizationComplianceTab({
                           Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 px-6 text-center">
+                      <th className="p-4 px-6 w-[22%] text-center">
                         <button
                           onClick={() => handleSort("digitized")}
                           className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
@@ -1016,7 +1029,7 @@ export default function DigitizationComplianceTab({
                           Fully Digitized <SortIndicator column="digitized" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 px-6 text-right">
+                      <th className="p-4 px-6 w-[24%] text-right">
                         <button
                           onClick={() => handleSort("percent")}
                           className="group ml-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
@@ -1030,7 +1043,7 @@ export default function DigitizationComplianceTab({
                     {paginatedByCourse.map((row) => (
                       <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
                         <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
-                          {row.courseCode || "—"}
+                          {row.courseCode || "N/A"}
                         </td>
                         <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
                           {row.total?.toLocaleString?.() ?? row.total}
@@ -1270,7 +1283,7 @@ export default function DigitizationComplianceTab({
               <Button
                 variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Close
               </Button>

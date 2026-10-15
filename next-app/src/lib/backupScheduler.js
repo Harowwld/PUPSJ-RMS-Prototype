@@ -3,7 +3,7 @@ import { executeSystemBackup, executeOfficeBackup, syncBackupExternally } from "
 import { createAuditLog } from "./auditLogsRepo.js";
 
 /**
- * Next.js Instrumentation Hook — Auto Backup Scheduler
+ * Next.js Instrumentation Hook: Auto Backup Scheduler
  *
  * Runs a background scheduler that checks and executes user-defined
  * automatic backup schedules configured by administrators.

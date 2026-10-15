@@ -4,6 +4,7 @@ import { writeAuditLog, writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { queryOne, transaction } from "@/lib/postgres";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { encryptPII, decryptPII } from "@/lib/piiEncryption";
+import { PersonNameSchema } from "@/lib/validationSchemas";
 
 export const runtime = "nodejs";
 
@@ -59,6 +60,14 @@ export async function POST(req) {
 
       if (!cleanFirst || !cleanLast) {
         return NextResponse.json({ ok: false, error: "First and last name are required." }, { status: 400 });
+      }
+      const firstCheck = PersonNameSchema("First name").safeParse(cleanFirst);
+      if (!firstCheck.success) {
+        return NextResponse.json({ ok: false, error: firstCheck.error.issues[0]?.message || "Invalid first name" }, { status: 400 });
+      }
+      const lastCheck = PersonNameSchema("Last name").safeParse(cleanLast);
+      if (!lastCheck.success) {
+        return NextResponse.json({ ok: false, error: lastCheck.error.issues[0]?.message || "Invalid last name" }, { status: 400 });
       }
       if (!["Student", "Alumni"].includes(cleanClientType)) {
         return NextResponse.json({ ok: false, error: "Invalid client type. Must be Student or Alumni." }, { status: 400 });
@@ -118,6 +127,22 @@ export async function POST(req) {
     // Staff / Admin Profile Update
     // ----------------------------------------------------
     const { fname, lname, email } = body;
+
+    if (fname) {
+      const firstCheck = PersonNameSchema("First name").safeParse(fname);
+      if (!firstCheck.success) {
+        return NextResponse.json({ ok: false, error: firstCheck.error.issues[0]?.message || "Invalid first name" }, { status: 400 });
+      }
+    }
+    if (lname) {
+      const lastCheck = PersonNameSchema("Last name").safeParse(lname);
+      if (!lastCheck.success) {
+        return NextResponse.json({ ok: false, error: lastCheck.error.issues[0]?.message || "Invalid last name" }, { status: 400 });
+      }
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
+    }
 
     const currentStaff = await getStaffById(userId);
     if (!currentStaff) {

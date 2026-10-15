@@ -22,6 +22,7 @@ import CoursesTab from "./system-config/CoursesTab"
 import SectionsTab from "./system-config/SectionsTab"
 import BulkImportTab from "./system-config/BulkImportTab"
 import RecognitionTemplatesTab from "./system-config/RecognitionTemplatesTab"
+import { formatErrorMessage } from "@/lib/errorUtils"
 
 export default function SystemConfigTab({
   showToast,
@@ -557,7 +558,7 @@ export default function SystemConfigTab({
       })
       loadAll()
     } catch (err) {
-      showToast({ title: "Batch Action Error", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Batch Action Failed"), true)
     } finally {
       setConfirmOpen(false)
       setLoading(false)
@@ -592,6 +593,7 @@ export default function SystemConfigTab({
       setSections(jSec.data)
     } catch (err) {
       setError(err.message)
+      showToast?.(formatErrorMessage(err, "Failed to Load System Configuration"), true)
     } finally {
       setLoading(false)
     }
@@ -765,7 +767,7 @@ export default function SystemConfigTab({
       setImportRows(parsed)
       setImportSelected(initialSelection)
     } catch (err) {
-      showToast({ title: "Parsing Error", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Parsing Error"), true)
       setImportFile(null)
       setImportStatus("idle")
     } finally {
@@ -922,7 +924,7 @@ export default function SystemConfigTab({
 
       loadAll()
     } catch (err) {
-      showToast({ title: "Import Error", description: err.message }, true)
+      showToast(formatErrorMessage(err, "Import Failed"), true)
       setImportStatus("preview")
     }
   }

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer"
 import {
   Dialog,
   DialogContent,
@@ -102,6 +103,7 @@ export default function NotificationsTab({
 
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [selectedNotif, setSelectedNotif] = useState(null)
+  const [notifFrameStatus, setNotifFrameStatus] = useState("loading")
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const isLoading = propLoading || initialLoading
@@ -109,6 +111,7 @@ export default function NotificationsTab({
   useEffect(() => {
     if (!detailModalOpen) {
       setIsFullscreen(false)
+      setNotifFrameStatus("loading")
     }
   }, [detailModalOpen])
 
@@ -487,27 +490,10 @@ export default function NotificationsTab({
             </div>
           ) : (
             <div className="overflow-x-auto border-t border-border dark:border-border w-full">
-              <table className="min-w-full table-fixed text-sm">
+              <table className="w-full table-fixed min-w-[1000px] text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                    <th className="w-32 p-4">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("decision")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "decision" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                        )}
-                      >
-                        Decision{" "}
-                        <SortIndicator
-                          column="decision"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
-                    </th>
-                    <th className="w-36 p-4">
+                    <th className="w-[13%] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("student_no")}
@@ -524,7 +510,24 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-44 p-4">
+                    <th className="w-[11%] p-4">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("decision")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                          sortBy === "decision" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Decision{" "}
+                        <SortIndicator
+                          column="decision"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="w-[17%] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("student_name")}
@@ -541,7 +544,7 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-44 p-4">
+                    <th className="w-[15%] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("doc_type")}
@@ -558,7 +561,7 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="min-w-[200px] p-4">
+                    <th className="w-[19%] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("file")}
@@ -575,7 +578,7 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-36 p-4">
+                    <th className="w-[12%] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("reviewed_by")}
@@ -592,7 +595,7 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-36 p-4">
+                    <th className="w-[9%] p-4">
                       <button
                         type="button"
                         onClick={() => handleSort("reviewed_at")}
@@ -609,7 +612,7 @@ export default function NotificationsTab({
                         />
                       </button>
                     </th>
-                    <th className="w-36 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
+                    <th className="w-24 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border">
@@ -673,7 +676,12 @@ export default function NotificationsTab({
                             isUnread && "bg-amber-50/60 dark:bg-amber-950/20"
                           )}
                         >
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle whitespace-nowrap">
+                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              {n.student_no}
+                            </span>
+                          </td>
+                          <td className="p-4 align-middle whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <div
                                 className={cn(
@@ -691,26 +699,21 @@ export default function NotificationsTab({
                               ) : null}
                             </div>
                           </td>
-                          <td className="p-4 align-middle">
-                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
-                              {n.student_no}
-                            </span>
-                          </td>
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle overflow-hidden">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(n.student_name)}>
-                              {formatTitleCase(n.student_name) || "—"}
+                              {formatTitleCase(n.student_name) || "N/A"}
                             </div>
                           </td>
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle overflow-hidden">
                             <div
-                              className="inline-flex w-fit items-center justify-center gap-1 rounded-full px-2.5 py-1 border border-pup-maroon/20 bg-pup-maroon/10 text-[11px] font-medium tracking-[0.02em] text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
+                              className="inline-flex max-w-full items-center justify-center gap-1 rounded-full px-2.5 py-1 border border-pup-maroon/20 bg-pup-maroon/10 text-[11px] font-medium tracking-[0.02em] text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
                             >
-                              <HugeIcon  className="ph-bold ph-file text-[11px]"></HugeIcon>
-                              {n.doc_type}
+                              <HugeIcon  className="ph-bold ph-file text-[11px] shrink-0"></HugeIcon>
+                              <span className="truncate" title={n.doc_type}>{n.doc_type}</span>
                             </div>
                           </td>
-                          <td className="p-4 align-middle">
-                            <div className="max-w-[220px] truncate text-xs font-medium text-gray-900 dark:text-zinc-100" title={n.original_filename}>
+                          <td className="p-4 align-middle overflow-hidden">
+                            <div className="truncate text-xs font-medium text-gray-900 dark:text-zinc-100" title={n.original_filename}>
                               {n.original_filename}
                             </div>
                             {n.review_note && (
@@ -722,7 +725,7 @@ export default function NotificationsTab({
                           <td className="p-4 align-middle">
                             <div className="flex flex-col gap-0.5">
                               <span className="truncate text-xs font-medium text-gray-900 dark:text-zinc-100" title={formatTitleCase(n.reviewed_by)}>
-                                {formatTitleCase(n.reviewed_by) || "—"}
+                                {formatTitleCase(n.reviewed_by) || "N/A"}
                               </span>
                               {n.reviewed_by && (
                                 n.is_previewed === 1 ? (
@@ -944,10 +947,16 @@ export default function NotificationsTab({
                       <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
                     </Button>
                   </div>
-                  <iframe
-                    src={`/api/documents/${selectedNotif.id}#toolbar=0&navpanes=0`}
+                  <ResilientPDFViewer
+                    src={`/api/documents/${selectedNotif.id}`}
+                    docId={selectedNotif.id}
+                    preview={{
+                      studentName: selectedNotif.student_name,
+                      docType: selectedNotif.doc_type,
+                    }}
                     className="w-full h-full border-0"
                     title="PDF Fullscreen Preview"
+                    onStatusChange={setNotifFrameStatus}
                   />
                 </div>
               )}
@@ -955,10 +964,16 @@ export default function NotificationsTab({
               {/* Left: Document Preview */}
               <div className="flex-1 bg-white border-r border-border dark:bg-zinc-900 dark:border-border relative">
                 {selectedNotif ? (
-                  <iframe
-                    src={`/api/documents/${selectedNotif.id}#toolbar=0&navpanes=0`}
+                  <ResilientPDFViewer
+                    src={`/api/documents/${selectedNotif.id}`}
+                    docId={selectedNotif.id}
+                    preview={{
+                      studentName: selectedNotif.student_name,
+                      docType: selectedNotif.doc_type,
+                    }}
                     className="w-full h-full border-0"
                     title="PDF Preview"
+                    onStatusChange={setNotifFrameStatus}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-white dark:bg-card">
@@ -974,7 +989,7 @@ export default function NotificationsTab({
                   <div className="mt-5 space-y-5">
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Name</label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{formatTitleCase(selectedNotif?.student_name) || "—"}</p>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{formatTitleCase(selectedNotif?.student_name) || "N/A"}</p>
                     </div>
                     <div>
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Number</label>
@@ -1027,7 +1042,7 @@ export default function NotificationsTab({
                       <div>
                         <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Reviewed By</label>
                         <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{formatTitleCase(selectedNotif?.reviewed_by) || "—"}</p>
+                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{formatTitleCase(selectedNotif?.reviewed_by) || "N/A"}</p>
                           {selectedNotif?.reviewed_by && (
                             selectedNotif.is_previewed === 1 ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-semibold text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
@@ -1105,11 +1120,11 @@ export default function NotificationsTab({
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>
@@ -1125,7 +1140,7 @@ export default function NotificationsTab({
                   >
                     Rescan
                   </Button>
-                ) : (
+                ) : notifFrameStatus === "ready" ? (
                   <a
                     href={`/api/documents/${selectedNotif?.id}`}
                     target="_blank"
@@ -1136,7 +1151,7 @@ export default function NotificationsTab({
                     <HugeIcon  className="ph-bold ph-arrow-square-out mr-2 text-base"></HugeIcon>
                     Open
                   </a>
-                )}
+                ) : null}
               </div>
             </div>
           </DialogContent>

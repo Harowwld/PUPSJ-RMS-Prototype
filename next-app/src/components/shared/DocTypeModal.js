@@ -61,12 +61,6 @@ export default function DocTypeModal({
               }}
               autoFocus
             />
-
-            {error ? (
-              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
-                {error}
-              </div>
-            ) : null}
           </div>
         </div>
 

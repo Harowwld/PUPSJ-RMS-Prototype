@@ -1,10 +1,11 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useCallback, useEffect, useState, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState, useMemo, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/shared/Sidebar";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
@@ -22,6 +23,7 @@ import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getClientSession } from "@/lib/clientAuth";
 import { canAccessPage } from "@/lib/roleUtils";
+import { PhoneSchema, StudentNoSchema } from "@/lib/validationSchemas";
 import {
   Empty,
   EmptyHeader,
@@ -136,8 +138,9 @@ function StatusBadge({ status }) {
 }
 
 
-export default function StudentDashboard() {
+function StudentDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ requests: [], documents: [], proposals: [] });
@@ -156,7 +159,6 @@ export default function StudentDashboard() {
   });
   const [proposalForm, setProposalForm] = useState({ title: "", organizationId: "", organizationName: "", eventDate: "", file: null });
   const [myOrganizations, setMyOrganizations] = useState([]);
-  const [message, setMessage] = useState("");
   const [view, setView] = useState("odrs");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
@@ -476,9 +478,42 @@ export default function StudentDashboard() {
     [totalPages]
   );
 
-  const showToast = useCallback((title, description, isError = false) => {
-    const fn = isError ? toast.error : toast.success;
-    fn(title, description ? { description } : undefined);
+  const showToast = useCallback((msgOrTitle, maybeDescOrError = false, maybeIsError = false, options = {}) => {
+    if (msgOrTitle && typeof msgOrTitle === "object") {
+      if (msgOrTitle instanceof Error) {
+        const normalized = formatErrorMessage(msgOrTitle);
+        return toast.error(normalized.title, {
+          description: normalized.description,
+          action: normalized.action,
+          ...options,
+        });
+      }
+      const isErr = Boolean(maybeDescOrError || maybeIsError);
+      const fn = isErr ? toast.error : toast.success;
+      return fn(msgOrTitle.title || "", {
+        description: msgOrTitle.description,
+        action: msgOrTitle.action,
+        ...options,
+      });
+    }
+
+    const title = String(msgOrTitle || "");
+    const isError = Boolean(maybeIsError);
+    const description = typeof maybeDescOrError === "string" ? maybeDescOrError : "";
+
+    if (isError) {
+      const normalized = formatErrorMessage(description || title, { title, description });
+      return toast.error(normalized.title, {
+        description: normalized.description,
+        action: normalized.action || options?.action,
+        ...options,
+      });
+    }
+
+    return toast.success(title, {
+      description: description || undefined,
+      ...options,
+    });
   }, []);
 
   useEffect(() => {
@@ -496,38 +531,41 @@ export default function StudentDashboard() {
     return () => window.removeEventListener("toggle-sidebar", handleToggle);
   }, []);
 
+  const switchView = useCallback((nextView) => {
+    if (nextView === "activity") {
+      router.push("/account/activity");
+      return;
+    }
+    const allowed = new Set(["odrs", "osas", "compliance"]);
+    const target = allowed.has(nextView) ? nextView : "odrs";
+    setView(target);
+    const params = new URLSearchParams();
+    params.set("view", target);
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+  }, [router]);
+
   // Synchronize view from switch-view events (Command Palette & deep linking)
   useEffect(() => {
     const handleSwitch = (e) => {
       const { view: targetView } = e.detail || {};
-      if (targetView === "activity") {
-        router.push("/account/activity");
-        return;
-      }
-      if (targetView === "odrs" || targetView === "osas" || targetView === "compliance") {
-        setView(targetView);
-        const params = new URLSearchParams(window.location.search);
-        params.set("view", targetView);
-        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+      if (targetView) {
+        switchView(targetView);
       }
     };
     window.addEventListener("switch-view", handleSwitch);
     return () => window.removeEventListener("switch-view", handleSwitch);
-  }, [router]);
+  }, [switchView]);
 
-  // Synchronize view from URL parameter on initial mount
+  // Synchronize view from URL parameter
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const tab = new URLSearchParams(window.location.search).get("view");
-      if (tab === "activity") {
-        router.replace("/account/activity");
-        return;
-      }
-      if (tab === "odrs" || tab === "osas" || tab === "compliance") {
-        setView(tab);
-      }
+    const tab = searchParams?.get("view");
+    if (tab === "activity") {
+      router.replace("/account/activity");
+      return;
     }
-  }, [router]);
+    const allowed = new Set(["odrs", "osas", "compliance"]);
+    setView(allowed.has(tab) ? tab : "odrs");
+  }, [searchParams, router]);
 
   const load = useCallback(async () => {
     try {
@@ -588,11 +626,15 @@ export default function StudentDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [router, showToast]);
+  }, [router]);
 
   const handlePaymentProofUpload = useCallback(async (requestId, file) => {
     if (file.size > 10 * 1024 * 1024) {
-      showToast("File too large", "Payment proof must be 10 MB or smaller.", true);
+      showToast(
+        "File Limit Exceeded",
+        "Payment proof exceeds the 10 MB limit. Please compress the file or upload a JPEG or PNG receipt.",
+        true
+      );
       return;
     }
     setPaymentUploadRequestId(requestId);
@@ -600,18 +642,37 @@ export default function StudentDashboard() {
       const formData = new FormData();
       formData.append("file", file);
       const response = await fetch(`/api/document-requests/${requestId}/attachments`, { method: "POST", body: formData });
-      const json = await response.json();
+      const json = await response.json().catch(() => null);
       if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to upload payment proof.");
-      showToast("Payment proof uploaded", "The Registrar can review your receipt.");
+      showToast("Payment Proof Uploaded", "Your official receipt has been attached and submitted for Registrar verification.");
       await load();
     } catch (error) {
-      showToast("Upload failed", error?.message || "Unable to upload payment proof.", true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Receipt Upload Failed",
+          description: "Could not upload your payment receipt. Please verify your connection and try again.",
+        }),
+        true
+      );
     } finally {
       setPaymentUploadRequestId(null);
     }
   }, [load, showToast]);
 
-  useEffect(() => { const timer = setTimeout(() => { load().catch((error) => { const message = error.message || "Unable to load student records."; setMessage(message); showToast("Records failed to load", message, true); }); }, 0); return () => clearTimeout(timer); }, [load, showToast]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      load().catch((error) => {
+        showToast(
+          formatErrorMessage(error, {
+            title: "Unable to Load Records",
+            description: "Could not retrieve your document requests. Please check your network connection and refresh.",
+          }),
+          true
+        );
+      });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [load, showToast]);
 
   useEffect(() => {
     if (me === null) {
@@ -628,7 +689,7 @@ export default function StudentDashboard() {
   }, [me, router]);
 
   async function createRequest(event) {
-    event.preventDefault(); setMessage(""); setRequestSubmitting(true);
+    event.preventDefault(); setRequestSubmitting(true);
     try {
       const studentNo = String(requestForm.studentNo || "").trim().toUpperCase() || null;
       const docType = String(requestForm.docType || "").trim();
@@ -641,24 +702,20 @@ export default function StudentDashboard() {
       const attachments = Array.isArray(requestForm.attachments) ? requestForm.attachments : [];
 
       if (!clientType) {
-        setMessage("Client type is required.");
-        showToast("Client type required", "Please select whether you are a Student, Alumni, or Parent/Guardian.", true);
+        showToast("Client Type Required", "Please select whether you are requesting as a Student, Alumni, or Parent/Guardian.", true);
         return;
       }
       if (clientType === "Parent") {
         if (!studentNo) {
-          setMessage("Student number is required for Parent / Legal Guardian requests.");
-          showToast("Student number required", "Please enter the student number of your child / ward.", true);
+          showToast("Student Number Required", "Please enter the student number of your child or ward.", true);
           return;
         }
         if (!requesterName) {
-          setMessage("Parent / Legal Guardian name is required.");
-          showToast("Name required", "Please enter your full legal name.", true);
+          showToast("Requester Name Required", "Please enter your full legal name as the requesting parent or legal guardian.", true);
           return;
         }
         if (!requesterRelationship) {
-          setMessage("Relationship to student is required.");
-          showToast("Relationship required", "Please select your relationship to the student.", true);
+          showToast("Relationship Required", "Please select your relationship to the student.", true);
           return;
         }
         const hasSpa = attachments.some(
@@ -670,25 +727,35 @@ export default function StudentDashboard() {
             a.file?.name?.toLowerCase().includes("auth")
         );
         if (attachments.length === 0 || !hasSpa) {
-          setMessage("Special Power of Attorney (SPA) or Authorization Letter is required for parent/guardian requests.");
-          showToast("SPA document required", "Under RA 10173, please attach a signed SPA or Authorization Letter and a valid government ID.", true);
+          showToast("Authorization Document Required", "Under RA 10173 (Data Privacy Act), please attach a signed SPA or Authorization Letter and a valid government ID.", true);
           return;
         }
       }
       if (clientType === "Alumni" && !studentNo && !courseCode) {
-        setMessage("Academic program is required for alumni without a student number.");
-        showToast("Program required", "Please select your degree program / course.", true);
+        showToast("Academic Program Required", "Please select your degree program or course to assist records retrieval.", true);
         return;
       }
       if (!docType) {
-        setMessage("Document type is required.");
-        showToast("Document type required", "Please select a document type.", true);
+        showToast("Document Type Required", "Please select the specific document type you are requesting.", true);
         return;
       }
-      if (!notes) {
-        setMessage("Description is required to submit a document request.");
-        showToast("Description required", "Please provide the purpose or description of your request.", true);
+      if (!notes || notes.trim().length < 5) {
+        showToast("Purpose Description Required", "Please provide a detailed purpose or intended use of the requested document (at least 5 characters).", true);
         return;
+      }
+      if (requesterContact) {
+        const phoneCheck = PhoneSchema.safeParse(requesterContact);
+        if (!phoneCheck.success) {
+          showToast("Invalid Contact Number", "Please enter a valid Philippine mobile number (e.g. 09171234567 or +639171234567).", true);
+          return;
+        }
+      }
+      if (studentNo) {
+        const snCheck = StudentNoSchema.safeParse(studentNo);
+        if (!snCheck.success) {
+          showToast("Invalid Student Number", "Please provide a valid Student Number (e.g. 2024-00123-SJ-0).", true);
+          return;
+        }
       }
 
       const formData = new FormData();
@@ -712,11 +779,15 @@ export default function StudentDashboard() {
         method: "POST",
         body: formData,
       });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        const error = json.error || "Unable to submit request.";
-        setMessage(error);
-        showToast("Request failed", error, true);
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        showToast(
+          formatErrorMessage(json || json?.error || "Unable to submit request.", {
+            title: "Request Submission Failed",
+            description: "The Registrar portal was unable to save your request. Please check your entries and try again.",
+          }),
+          true
+        );
         return;
       }
       setRequestForm((prev) => ({
@@ -730,7 +801,7 @@ export default function StudentDashboard() {
         requesterContact: "",
         attachments: [],
       }));
-      showToast("Request submitted", "The Registrar can now review your document request.");
+      showToast("Document Request Submitted", "Your request has been forwarded to the Registrar for evaluation.");
       await load();
       if (json.data) {
         setFeedbackRequest(json.data);
@@ -738,9 +809,13 @@ export default function StudentDashboard() {
         setFeedbackModalOpen(true);
       }
     } catch (error) {
-      const message = error.message || "Unable to submit request.";
-      setMessage(message);
-      showToast("Request failed", message, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Request Submission Failed",
+          description: "Could not submit your document request. Please check your network connection and retry.",
+        }),
+        true
+      );
     } finally {
       setRequestSubmitting(false);
     }
@@ -810,7 +885,7 @@ export default function StudentDashboard() {
   };
 
   async function submitProposal(event) {
-    event.preventDefault(); setMessage(""); setProposalSubmitting(true);
+    event.preventDefault(); setProposalSubmitting(true);
     try {
       const selectedOrg = myOrganizations.find((o) => o.organization_id === proposalForm.organizationId) || myOrganizations[0];
       if (!selectedOrg) {
@@ -824,19 +899,33 @@ export default function StudentDashboard() {
       if (proposalForm.file) form.set("file", proposalForm.file);
 
       const res = await fetch("/api/student/event-proposals", { method: "POST", body: form });
-      const json = await res.json();
-      if (!res.ok || !json.ok) { const error = json.error || "Unable to submit proposal."; setMessage(error); showToast("Proposal failed", error, true); return; }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        showToast(
+          formatErrorMessage(json || json?.error || "Unable to submit proposal.", {
+            title: "Proposal Submission Failed",
+            description: "OSAS could not accept the event proposal. Please check requirements and retry.",
+          }),
+          true
+        );
+        return;
+      }
       setProposalForm({ title: "", organizationId: myOrganizations[0]?.organization_id || "", organizationName: "", eventDate: "", file: null });
-      showToast("Proposal submitted", "OSAS can now review your Event Proposal.");
+      showToast("Event Proposal Submitted", "Your proposal has been routed to OSAS for evaluation.");
       await load();
     } catch (error) {
-      const message = error.message || "Unable to submit proposal."; setMessage(message); showToast("Proposal failed", message, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Proposal Submission Failed",
+          description: "Could not submit event proposal. Please check your network connection and retry.",
+        }),
+        true
+      );
     } finally { setProposalSubmitting(false); }
   }
 
   async function submitPostEventReport(event) {
     event.preventDefault();
-    setMessage("");
     setPostEventSubmitting(true);
     try {
       const selectedOrg = myOrganizations.find((o) => o.organization_id === postEventForm.organizationId) || myOrganizations[0];
@@ -851,10 +940,10 @@ export default function StudentDashboard() {
       }
       const maxPostEventPdfBytes = 25 * 1024 * 1024;
       if (!postEventForm.narrativeFile.size || postEventForm.narrativeFile.size > maxPostEventPdfBytes) {
-        throw new Error("Narrative report must be between 1 byte and 25 MB.");
+        throw new Error("Narrative report PDF exceeds the 25 MB limit. Please compress the file.");
       }
       if (postEventForm.liquidationFile && (!postEventForm.liquidationFile.size || postEventForm.liquidationFile.size > maxPostEventPdfBytes)) {
-        throw new Error("Liquidation report must be between 1 byte and 25 MB.");
+        throw new Error("Liquidation report PDF exceeds the 25 MB limit. Please compress the file.");
       }
       const form = new FormData();
       form.set("eventProposalId", postEventForm.eventProposalId);
@@ -867,11 +956,15 @@ export default function StudentDashboard() {
       }
 
       const res = await fetch("/api/student/post-event-reports", { method: "POST", body: form });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        const error = json.error || "Unable to submit post-event report.";
-        setMessage(error);
-        showToast("Submission failed", error, true);
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        showToast(
+          formatErrorMessage(json || json?.error || "Unable to submit post-event report.", {
+            title: "Report Submission Failed",
+            description: "OSAS was unable to save the report. Please check the uploaded files and try again.",
+          }),
+          true
+        );
         return;
       }
       setPostEventForm({
@@ -882,12 +975,16 @@ export default function StudentDashboard() {
         narrativeFile: null,
         liquidationFile: null,
       });
-      showToast("Report Submitted", "Your Post-Event Narrative & Liquidation report has been submitted to OSAS.");
+      showToast("Post-Event Report Submitted", "Your Post-Event Narrative and Liquidation report has been received by OSAS.");
       await load();
     } catch (error) {
-      const message = error.message || "Unable to submit post-event report.";
-      setMessage(message);
-      showToast("Submission failed", message, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "Report Submission Failed",
+          description: "Could not upload post-event report. Please check file sizes and connection.",
+        }),
+        true
+      );
     } finally {
       setPostEventSubmitting(false);
     }
@@ -918,7 +1015,6 @@ export default function StudentDashboard() {
 
   async function submitCbl(event) {
     event.preventDefault();
-    setMessage("");
     setCblSubmitting(true);
     try {
       const selectedOrg = myOrganizations.find((o) => o.organization_id === selectedCblOrgId) || myOrganizations[0];
@@ -937,11 +1033,15 @@ export default function StudentDashboard() {
         method: "POST",
         body: form,
       });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        const error = json.error || "Unable to submit Constitution & By-Laws.";
-        setMessage(error);
-        showToast("Submission failed", error, true);
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        showToast(
+          formatErrorMessage(json || json?.error || "Unable to submit Constitution & By-Laws.", {
+            title: "By-Laws Submission Failed",
+            description: "OSAS could not record the new Constitution & By-Laws version. Please try again.",
+          }),
+          true
+        );
         return;
       }
       setCblForm({
@@ -950,12 +1050,16 @@ export default function StudentDashboard() {
         file: null,
       });
       setIsFormOpen(false);
-      showToast("CBL Submitted", "Your Constitution & By-Laws document has been submitted to OSAS for review.");
+      showToast("By-Laws Submitted", "Your Constitution & By-Laws document has been submitted to OSAS for review.");
       await loadCblData(selectedOrg.organization_id);
     } catch (error) {
-      const message = error.message || "Unable to submit Constitution & By-Laws.";
-      setMessage(message);
-      showToast("Submission failed", message, true);
+      showToast(
+        formatErrorMessage(error, {
+          title: "By-Laws Submission Failed",
+          description: "Could not submit Constitution & By-Laws document. Please verify your file and connection.",
+        }),
+        true
+      );
     } finally {
       setCblSubmitting(false);
     }
@@ -994,7 +1098,7 @@ export default function StudentDashboard() {
           open={sidebarOpen}
           items={sidebarItems}
           activeKey={view}
-          onSelect={(key) => setView(key)}
+          onSelect={(key) => switchView(key)}
           onLogout={handleLogout}
           zoomNode={zoomNode}
           setZoomNode={setZoomNode}
@@ -1020,7 +1124,6 @@ export default function StudentDashboard() {
             >
               <div className="w-full flex flex-col">
 
-              {message && <p role="alert" className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">{message}</p>}
               {view === "compliance" ? (
                 <StudentComplianceTab authUser={me} onLogout={handleLogout} />
               ) : view === "odrs" ? (
@@ -1511,11 +1614,11 @@ export default function StudentDashboard() {
                     />
 
                     {/* 5. Request History Table */}
-                    <div className="w-full overflow-x-auto border-t border-border dark:border-border">
-                      <table className="min-w-full text-sm">
+                    <div className="w-full overflow-x-auto border-t border-border dark:border-border select-none">
+                      <table className="w-full text-sm table-fixed min-w-[900px]">
                         <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                           <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                            <th className="p-4 w-36 min-w-[130px]">
+                            <th className="p-4 w-[12%] whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleSort("id")}
@@ -1528,7 +1631,7 @@ export default function StudentDashboard() {
                                 <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                               </button>
                             </th>
-                            <th className="p-4 min-w-[220px]">
+                            <th className="p-4 w-[24%] whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleSort("doc_type")}
@@ -1541,12 +1644,12 @@ export default function StudentDashboard() {
                                 <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
                               </button>
                             </th>
-                            <th className="p-4 min-w-[240px]">
+                            <th className="p-4 w-[32%] whitespace-nowrap">
                               <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                                 Purpose / Description
                               </span>
                             </th>
-                            <th className="p-4 min-w-[140px]">
+                            <th className="p-4 w-[14%] whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleSort("status")}
@@ -1559,7 +1662,7 @@ export default function StudentDashboard() {
                                 <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                               </button>
                             </th>
-                            <th className="p-4 min-w-[170px]">
+                            <th className="p-4 w-[18%] whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleSort("created_at")}
@@ -1572,7 +1675,7 @@ export default function StudentDashboard() {
                                 <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                               </button>
                             </th>
-                            <th className="p-4 text-right min-w-[100px] text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Action</th>
+                            <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Action</th>
                           </tr>
                         </thead>
                         <tbody className="bg-transparent">
@@ -1637,22 +1740,22 @@ export default function StudentDashboard() {
                                     : "hover:bg-gray-50/50 dark:bg-card dark:hover:bg-white/2"
                                 )}
                               >
-                                <td className="py-0 px-4 align-middle text-[13px] font-medium text-gray-700 dark:text-zinc-300">
+                                <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-700 dark:text-zinc-300">
                                   #{item.id}
                                 </td>
-                                <td className="py-2 px-4 align-middle">
+                                <td className="py-2 px-4 align-middle overflow-hidden">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-100">
+                                    <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 truncate">
                                       {item.doc_type}
                                     </span>
                                     {item.client_type === "Parent" && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 shrink-0">
                                         Parent/Guardian
                                       </span>
                                     )}
                                     {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
                                       <span
-                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
                                         title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
                                       >
                                         <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
@@ -1662,18 +1765,18 @@ export default function StudentDashboard() {
                                   </div>
                                 </td>
 
-                                <td className="py-0 px-4 align-middle max-w-[280px]">
+                                <td className="py-0 px-4 align-middle overflow-hidden">
                                   <div className="truncate text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400" title={item.notes}>
-                                    {item.notes || "—"}
+                                    {item.notes || "N/A"}
                                   </div>
                                 </td>
-                                <td className="py-0 px-4 align-middle">
+                                <td className="py-0 px-4 align-middle whitespace-nowrap">
                                   <StatusBadge status={item.status} />
                                 </td>
                                 <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300 whitespace-nowrap">
                                   {formatPHDateTime(item.created_at)}
                                 </td>
-                                <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                                <td className="py-0 px-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center justify-end gap-1.5">
                                     {item.feedback ? (
                                       <Tooltip>
@@ -2010,7 +2113,7 @@ export default function StudentDashboard() {
                                 >
                                   {myOrganizations.map((o) => (
                                     <option key={o.organization_id} value={o.organization_id}>
-                                      {o.organization_name} {o.acronym ? `(${o.acronym})` : ""} — {o.officer_position}
+                                      {o.organization_name} {o.acronym ? `(${o.acronym})` : ""} : {o.officer_position}
                                     </option>
                                   ))}
                                 </Select>
@@ -2108,6 +2211,22 @@ export default function StudentDashboard() {
                               value={proposalSearch}
                               onChange={(e) => setProposalSearch(e.target.value)}
                             />
+                            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                              {proposalSearch && (
+                                <button
+                                  type="button"
+                                  onClick={() => setProposalSearch("")}
+                                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                                  title="Clear search"
+                                  aria-label="Clear search"
+                                >
+                                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                                </button>
+                              )}
+                              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                                {filteredProposals.length.toLocaleString()}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="w-full sm:w-auto shrink-0">
@@ -2244,7 +2363,7 @@ export default function StudentDashboard() {
                                 <ol className="mt-3 space-y-2 border-l-2 border-border pl-4 text-xs text-gray-500 dark:border-border dark:text-zinc-400">
                                   {item.updates?.map((update) => (
                                     <li key={update.id}>
-                                      <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> — {update.message || "Status updated"}
+                                      <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> : {update.message || "Status updated"}
                                     </li>
                                   ))}
                                 </ol>
@@ -2304,7 +2423,7 @@ export default function StudentDashboard() {
                                   <option value="">Select an approved event...</option>
                                   {data.proposals?.filter((p) => p.status === "Approved").map((p) => (
                                     <option key={p.id} value={p.id}>
-                                      {p.title} ({p.event_date}) — {p.organization_name}
+                                      {p.title} ({p.event_date}) : {p.organization_name}
                                     </option>
                                   ))}
                                 </Select>
@@ -2429,7 +2548,7 @@ export default function StudentDashboard() {
                                     size="sm"
                                     onClick={() => handleOpenPdfPreview(null, {
                                       url: `/api/student/post-event-reports/${report.id}?file=narrative`,
-                                      title: `Narrative Report — ${report.event_title}`,
+                                      title: `Narrative Report: ${report.event_title}`,
                                       subtitle: `Submitted by ${report.submitted_by_email}`,
                                       studentName: me?.name || "Student",
                                       docType: "Post-Event Narrative Report",
@@ -2447,7 +2566,7 @@ export default function StudentDashboard() {
                                       size="sm"
                                       onClick={() => handleOpenPdfPreview(null, {
                                         url: `/api/student/post-event-reports/${report.id}?file=liquidation`,
-                                        title: `Financial Liquidation — ${report.event_title}`,
+                                        title: `Financial Liquidation: ${report.event_title}`,
                                         subtitle: `Submitted by ${report.submitted_by_email}`,
                                         studentName: me?.name || "Student",
                                         docType: "Financial Liquidation Report",
@@ -2621,7 +2740,7 @@ export default function StudentDashboard() {
                               variant="outline"
                               onClick={() => handleOpenPdfPreview(null, {
                                 url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1`,
-                                title: `${cblOrgData.name} — Constitution & By-Laws`,
+                                title: `${cblOrgData.name}: Constitution & By-Laws`,
                                 subtitle: `Official ratified charter on file with OSAS.`,
                                 studentName: me?.name || "Student Officer",
                                 docType: "Constitution & By-Laws",
@@ -2703,7 +2822,7 @@ export default function StudentDashboard() {
                                       onClick={() =>
                                         handleOpenPdfPreview(null, {
                                           url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1&versionId=${ver.id}`,
-                                          title: `${cblOrgData?.name || "Organization"} — ${ver.version_tag || "CBL"}`,
+                                          title: `${cblOrgData?.name || "Organization"}: ${ver.version_tag || "CBL"}`,
                                           subtitle: `Submitted by ${ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}. Status: ${ver.status}`,
                                           studentName: ver.submitted_by_name || me?.name || "Student",
                                           docType: "Constitution & By-Laws",
@@ -2754,14 +2873,14 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Request Details & Timeline — Sheet Slide-Over */}
+      {/* Request Details & Timeline: Sheet Slide-Over */}
       <Sheet
         open={Boolean(selectedRequestForDetail)}
         onOpenChange={(open) => !open && setSelectedRequestForDetail(null)}
       >
-        <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-3xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
-          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 space-y-2">
-            <div className="flex items-center justify-between pr-8">
+        <SheetContent side="right" className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
+          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 pr-16 space-y-2">
+            <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Request #{selectedRequestForDetail?.id}
               </span>
@@ -2771,7 +2890,7 @@ export default function StudentDashboard() {
               {selectedRequestForDetail?.doc_type}
             </SheetTitle>
             <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400">
-              Submitted on {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "—"} · {selectedRequestForDetail?.client_type || "Student"}
+              Submitted on {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"} · {selectedRequestForDetail?.client_type || "Student"}
               {selectedRequestForDetail?.student_no ? ` (${selectedRequestForDetail.student_no})` : ""}
               {selectedRequestForDetail?.course_code ? ` · ${selectedRequestForDetail.course_code}` : ""}
             </SheetDescription>
@@ -2915,7 +3034,7 @@ export default function StudentDashboard() {
                   <div>
                     <span className="text-[10px] text-gray-400 block font-medium uppercase">Requester Name</span>
                     <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_name || "—"}
+                      {selectedRequestForDetail.requester_name || "N/A"}
                     </span>
                   </div>
                   <div>
@@ -2927,7 +3046,7 @@ export default function StudentDashboard() {
                   <div>
                     <span className="text-[10px] text-gray-400 block font-medium uppercase">Contact Number</span>
                     <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_contact || "—"}
+                      {selectedRequestForDetail.requester_contact || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -3167,12 +3286,11 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="border-t border-border dark:border-border p-4 justify-end">
+          <SheetFooter className="border-t border-border dark:border-border p-4 px-6 flex flex-row items-center justify-end gap-2.5">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setSelectedRequestForDetail(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -3180,14 +3298,14 @@ export default function StudentDashboard() {
         </SheetContent>
       </Sheet>
 
-      {/* OSAS Proposal Details & Timeline — Sheet Slide-Over */}
+      {/* OSAS Proposal Details & Timeline: Sheet Slide-Over */}
       <Sheet
         open={Boolean(selectedProposalForDetail)}
         onOpenChange={(open) => !open && setSelectedProposalForDetail(null)}
       >
-        <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-3xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
-          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 space-y-2">
-            <div className="flex items-center justify-between pr-8">
+        <SheetContent side="right" className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
+          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 pr-16 space-y-2">
+            <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Proposal #{selectedProposalForDetail?.id}
               </span>
@@ -3197,7 +3315,7 @@ export default function StudentDashboard() {
               {selectedProposalForDetail?.title}
             </SheetTitle>
             <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400">
-              Submitted on {selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "—"}
+              Submitted on {selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"}
             </SheetDescription>
           </SheetHeader>
 
@@ -3207,13 +3325,13 @@ export default function StudentDashboard() {
               <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-border dark:border-border">
                 <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Organization</span>
                 <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                  {selectedProposalForDetail?.organization_name || "—"}
+                  {selectedProposalForDetail?.organization_name || "N/A"}
                 </span>
               </div>
               <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-border dark:border-border">
                 <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Event Date</span>
                 <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block">
-                  {selectedProposalForDetail?.event_date || "—"}
+                  {selectedProposalForDetail?.event_date || "N/A"}
                 </span>
               </div>
             </div>
@@ -3325,12 +3443,11 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="border-t border-border dark:border-border p-4 justify-end">
+          <SheetFooter className="border-t border-border dark:border-border p-4 px-6 flex flex-row items-center justify-end gap-2.5">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setSelectedProposalForDetail(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -3361,5 +3478,22 @@ export default function StudentDashboard() {
         onFeedbackSubmitted={handleFeedbackSubmitted}
       />
     </TooltipProvider>
+  );
+}
+
+export default function StudentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50/30 flex items-center justify-center font-jakarta p-4 dark:bg-zinc-950/30">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border dark:border-t-primary"></div>
+            <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading Portal...</p>
+          </div>
+        </div>
+      }
+    >
+      <StudentDashboard />
+    </Suspense>
   );
 }

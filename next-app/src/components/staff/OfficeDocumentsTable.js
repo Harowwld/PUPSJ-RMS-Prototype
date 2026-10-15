@@ -56,13 +56,31 @@ export default function OfficeDocumentsTable({
           </p>
         </div>
         <div className="relative w-full max-w-xs group">
-          <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <HugeIcon className="ph-bold ph-magnifying-glass text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+          </div>
           <Input
             value={query}
             onChange={(event) => { setQuery(event.target.value); setPage(1) }}
             placeholder="Search this office's documents"
-            className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-4 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+            className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
           />
+          <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+            {query && (
+              <button
+                type="button"
+                onClick={() => { setQuery(""); setPage(1) }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+              </button>
+            )}
+            <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+              {rows.length.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -81,44 +99,47 @@ export default function OfficeDocumentsTable({
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="w-full text-sm table-fixed min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                  <th className="w-44 p-4 font-medium">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
-                  <th className="p-4 min-w-[200px] max-w-[260px] font-medium">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
-                  <th className="p-4 min-w-[180px] font-medium">Document</th>
-                  <th className="w-24 p-4 font-medium">Year</th>
-                  <th className="w-28 p-4 font-medium">Status</th>
-                  <th className="w-24 p-4 text-right font-medium">Action</th>
+                  <th className="w-[16%] p-4 font-medium">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
+                  <th className="w-[26%] p-4 font-medium">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
+                  <th className="w-[28%] p-4 font-medium">Document</th>
+                  <th className="w-[10%] p-4 font-medium">Year</th>
+                  <th className="w-[12%] p-4 font-medium">Status</th>
+                  <th className="w-20 p-4 pr-6 text-right font-medium">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-transparent">
                 {visibleRows.map((document) => (
                   <tr key={document.id} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
-                    <td className="w-44 p-4 whitespace-nowrap align-middle">
+                    <td className="p-4 align-middle overflow-hidden whitespace-nowrap">
                       {officeLabel === "OSAS" ? (
-                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                          {document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "—"}
+                        <span
+                          className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full"
+                          title={document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
+                        >
+                          {document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
                         </span>
                       ) : (
                         <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                          {document.student_no || "—"}
+                          {document.student_no || "N/A"}
                         </span>
                       )}
                     </td>
-                    <td className="p-4 min-w-[200px] max-w-[260px] align-middle">
+                    <td className="p-4 align-middle overflow-hidden">
                       <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(document.student_name)}>
-                        {formatTitleCase(document.student_name) || "—"}
+                        {formatTitleCase(document.student_name) || "N/A"}
                       </div>
                     </td>
-                    <td className="p-4 min-w-[180px] align-middle">
-                      <div className="font-semibold text-xs text-gray-900 dark:text-zinc-100">{document.doc_type}</div>
-                      <div className="max-w-[260px] truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.original_filename}>{document.original_filename}</div>
+                    <td className="p-4 align-middle overflow-hidden">
+                      <div className="font-semibold text-xs text-gray-900 dark:text-zinc-100 truncate" title={document.doc_type}>{document.doc_type}</div>
+                      <div className="truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.original_filename}>{document.original_filename}</div>
                     </td>
-                    <td className="w-24 p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                      {getYear(document) || "—"}
+                    <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                      {getYear(document) || "N/A"}
                     </td>
-                    <td className="w-28 p-4 align-middle">
+                    <td className="p-4 align-middle whitespace-nowrap">
                       <Badge variant="outline" className={cn(
                         "rounded-full text-[10px] font-medium px-2.5 py-0.5",
                         document.approval_status === "Approved"
@@ -126,7 +147,7 @@ export default function OfficeDocumentsTable({
                           : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
                       )}>{document.approval_status || "Pending"}</Badge>
                     </td>
-                    <td className="w-24 p-4 align-middle text-right">
+                    <td className="p-4 pr-6 align-middle text-right">
                       <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                         <Tooltip>
                           <TooltipTrigger asChild>

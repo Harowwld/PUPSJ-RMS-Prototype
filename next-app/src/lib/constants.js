@@ -59,11 +59,29 @@ export const ALLOWED_STATUS_TRANSITIONS = {
   Shredded: ["Shredded"],
 };
 
-export function canTransitionRequestStatus(currentStatus, newStatus) {
+export const ALLOWED_REOPEN_TRANSITIONS = {
+  Cancelled: ["Pending", "InProgress"],
+  Completed: ["InProgress", "Ready"],
+  Shredded: ["Pending", "InProgress"],
+};
+
+export function isTerminalRequestStatus(status) {
+  return Array.isArray(TERMINAL_REQUEST_STATUSES) && TERMINAL_REQUEST_STATUSES.includes(status);
+}
+
+export function canReopenRequestStatus(currentStatus, newStatus) {
+  if (!currentStatus || !newStatus) return false;
+  const allowed = ALLOWED_REOPEN_TRANSITIONS[currentStatus];
+  return Array.isArray(allowed) && allowed.includes(newStatus);
+}
+
+export function canTransitionRequestStatus(currentStatus, newStatus, { allowReopen = false } = {}) {
   if (!currentStatus || !newStatus) return false;
   if (currentStatus === newStatus) return true;
   const allowed = ALLOWED_STATUS_TRANSITIONS[currentStatus];
-  return Array.isArray(allowed) && allowed.includes(newStatus);
+  if (Array.isArray(allowed) && allowed.includes(newStatus)) return true;
+  if (allowReopen && canReopenRequestStatus(currentStatus, newStatus)) return true;
+  return false;
 }
 
 export const FOLDER_COLORS = {
@@ -183,3 +201,68 @@ export function normalizeProposalStatus(status) {
   if (s === "archived") return "Archived";
   return status || "";
 }
+
+export const BANNER_GRADIENT_PRESETS = [
+  {
+    id: "maroon",
+    label: "PUP Maroon",
+    description: "Heritage",
+    classes: "from-[#800000] via-[#6d0000] to-[#4a0000]",
+    previewGradient: "linear-gradient(135deg, #800000 0%, #6d0000 50%, #4a0000 100%)",
+  },
+  {
+    id: "navy",
+    label: "Midnight Navy",
+    description: "Engineering & Tech",
+    classes: "from-[#1e3a8a] via-[#1e293b] to-[#0f172a]",
+    previewGradient: "linear-gradient(135deg, #1e3a8a 0%, #1e293b 50%, #0f172a 100%)",
+  },
+  {
+    id: "emerald",
+    label: "Forest Emerald",
+    description: "Science & Nature",
+    classes: "from-[#064e3b] via-[#065f46] to-[#022c22]",
+    previewGradient: "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #022c22 100%)",
+  },
+  {
+    id: "violet",
+    label: "Royal Violet",
+    description: "Arts & Humanities",
+    classes: "from-[#4c1d95] via-[#5b21b6] to-[#2e1065]",
+    previewGradient: "linear-gradient(135deg, #4c1d95 0%, #5b21b6 50%, #2e1065 100%)",
+  },
+  {
+    id: "crimson",
+    label: "Crimson Ember",
+    description: "Leadership",
+    classes: "from-[#991b1b] via-[#7f1d1d] to-[#450a0a]",
+    previewGradient: "linear-gradient(135deg, #991b1b 0%, #7f1d1d 50%, #450a0a 100%)",
+  },
+  {
+    id: "azure",
+    label: "Ocean Azure",
+    description: "Media & Comms",
+    classes: "from-[#0369a1] via-[#0284c7] to-[#0c4a6e]",
+    previewGradient: "linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #0c4a6e 100%)",
+  },
+  {
+    id: "amber",
+    label: "Golden Amber",
+    description: "Business & Finance",
+    classes: "from-[#78350f] via-[#92400e] to-[#451a03]",
+    previewGradient: "linear-gradient(135deg, #78350f 0%, #92400e 50%, #451a03 100%)",
+  },
+  {
+    id: "slate",
+    label: "Obsidian Slate",
+    description: "Honor & Research",
+    classes: "from-[#18181b] via-[#27272a] to-[#09090b]",
+    previewGradient: "linear-gradient(135deg, #18181b 0%, #27272a 50%, #09090b 100%)",
+  },
+];
+
+export const getOrgBannerGradientClasses = (gradientId) => {
+  const preset = BANNER_GRADIENT_PRESETS.find((p) => p.id === gradientId);
+  return preset ? preset.classes : BANNER_GRADIENT_PRESETS[0].classes;
+};
+

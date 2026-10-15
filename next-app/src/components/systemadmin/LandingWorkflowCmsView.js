@@ -39,7 +39,7 @@ const DEFAULT_WORKFLOW = {
     {
       num: "02",
       title: "Select Your Document",
-      desc: "Browse the available documents and select what you need—such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
+      desc: "Browse the available documents and select what you need, such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
       tags: ["8 Document Types", "Official Records", "Clear Requirements"],
       actionLabel: "View Catalog",
       actionType: "scroll",

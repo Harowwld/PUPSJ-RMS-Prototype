@@ -19,6 +19,54 @@ function resolveFilePath(storageFilename) {
   return candidates.find((p) => fs.existsSync(p)) || null;
 }
 
+export async function HEAD(req, ctx) {
+  const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
+  if (access === null) return new NextResponse(null, { status: 401 });
+  if (!access) return new NextResponse(null, { status: 403 });
+
+  const { id } = await ctx.params;
+  const report = await getPostEventReportById(id);
+  if (!report) return new NextResponse(null, { status: 404 });
+
+  const fileParam = new URL(req.url).searchParams.get("file");
+  if (fileParam) {
+    const filename = fileParam === "liquidation" ? report.liquidation_storage_filename : report.narrative_storage_filename;
+    const origName = fileParam === "liquidation" ? report.liquidation_original_filename : report.narrative_original_filename;
+    const filePath = resolveFilePath(filename);
+
+    if (!filePath || !fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
+      return new NextResponse(null, {
+        status: 404,
+        headers: {
+          "X-File-Missing": "true",
+        },
+      });
+    }
+
+    try {
+      const stat = fs.statSync(/*turbopackIgnore: true*/ filePath);
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Length": String(stat.size),
+          "Content-Disposition": `inline; filename="${origName || "report.pdf"}"`,
+          ...FILE_SECURITY_HEADERS,
+        },
+      });
+    } catch {
+      return new NextResponse(null, {
+        status: 404,
+        headers: {
+          "X-File-Missing": "true",
+        },
+      });
+    }
+  }
+
+  return new NextResponse(null, { status: 200 });
+}
+
 export async function GET(req, ctx) {
   const access = await requireOfficeModule("osas_monitoring", { officeId: "osas" }, req);
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
@@ -35,7 +83,15 @@ export async function GET(req, ctx) {
     const filePath = resolveFilePath(filename);
 
     if (!filePath || !fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
-      return NextResponse.json({ ok: false, error: "File not found on storage" }, { status: 404 });
+      return NextResponse.json(
+        { ok: false, error: "File not found on storage" },
+        {
+          status: 404,
+          headers: {
+            "X-File-Missing": "true",
+          },
+        }
+      );
     }
 
     const bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);

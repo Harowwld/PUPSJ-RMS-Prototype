@@ -246,14 +246,14 @@ export default function RestoreModal({
                   </p>
                 </div>
               ) : previewData?.tables && previewData.tables.length > 0 ? (
-                <div className="max-h-48 overflow-y-auto custom-scrollbar">
-                  <table className="min-w-full text-xs">
+                <div className="max-h-48 overflow-y-auto custom-scrollbar select-none">
+                  <table className="w-full text-xs table-fixed min-w-[420px]">
                     <thead className="bg-gray-50/80 dark:bg-zinc-800/50 border-b border-border dark:border-border sticky top-0">
                       <tr className="text-left text-[11px] font-medium text-gray-500 dark:text-zinc-400">
-                        <th className="py-2.5 px-3.5 font-medium">Resource Table</th>
-                        <th className="py-2.5 px-3.5 font-medium text-center">Live Count</th>
-                        <th className="py-2.5 px-3.5 font-medium text-center">In Backup</th>
-                        <th className="py-2.5 px-3.5 font-medium text-right">Net Impact</th>
+                        <th className="py-2.5 px-3.5 w-[36%] font-medium">Resource Table</th>
+                        <th className="py-2.5 px-3.5 w-[18%] font-medium text-center">Live Count</th>
+                        <th className="py-2.5 px-3.5 w-[18%] font-medium text-center">In Backup</th>
+                        <th className="py-2.5 px-3.5 pr-4 w-[28%] font-medium text-right">Net Impact</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border dark:divide-border">
@@ -263,16 +263,16 @@ export default function RestoreModal({
 
                         return (
                           <tr key={t.name} className="hover:bg-gray-50/60 dark:hover:bg-zinc-800/40 transition-colors">
-                            <td className="py-2.5 px-3.5 font-medium text-gray-800 dark:text-zinc-200 font-mono">
+                            <td className="py-2.5 px-3.5 font-medium text-gray-800 dark:text-zinc-200 font-mono truncate" title={t.name}>
                               {t.name}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-600 dark:text-zinc-400 font-mono">
+                            <td className="py-2.5 px-3.5 text-center text-gray-600 dark:text-zinc-400 font-mono whitespace-nowrap">
                               {t.liveRows}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-600 dark:text-zinc-400 font-mono">
+                            <td className="py-2.5 px-3.5 text-center text-gray-600 dark:text-zinc-400 font-mono whitespace-nowrap">
                               {t.backupRows}
                             </td>
-                            <td className="py-2.5 px-3.5 text-right">
+                            <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">
                               {isSafeMerge ? (
                                 delta > 0 ? (
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
@@ -317,13 +317,13 @@ export default function RestoreModal({
         </div>
 
         {/* Footer with Action-Word Only Buttons */}
-        <DialogFooter className="p-6 pt-4 bg-gray-50/50 dark:bg-zinc-900/30 border-t border-border dark:border-border flex items-center justify-end gap-3">
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
             onClick={handleCancelAction}
             disabled={isLoading}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>

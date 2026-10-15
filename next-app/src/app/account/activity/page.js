@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { formatErrorMessage } from "@/lib/errorUtils";
 
 import Header from "@/components/layout/Header";
 import { getClientSession } from "@/lib/clientAuth";
@@ -567,10 +568,10 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             )}
           </button>
         </td>
-        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-normal text-[#111111] dark:text-zinc-50">
           {formattedTimestamp}
         </td>
-        <td className="py-0 px-4 align-middle">
+        <td className="py-0 px-4 align-middle whitespace-nowrap">
           <span
             className={cn(
               "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
@@ -580,13 +581,13 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             {severityInfo.label}
           </span>
         </td>
-        <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-medium text-[#111111] dark:text-zinc-50">
           {log.action === "Rotate Password" ? "Password Rotated" : log.action}
         </td>
-        <td className="py-0 px-4 align-middle">
+        <td className="py-0 px-4 align-middle overflow-hidden">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[500px] truncate text-[13px] font-normal text-[#8E8E93]">
+              <span className="block truncate text-[13px] font-normal text-[#8E8E93]">
                 {log.details || "No known description"}
               </span>
             </TooltipTrigger>
@@ -598,7 +599,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             </TooltipContent>
           </Tooltip>
         </td>
-        <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+        <td className="py-0 px-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-end gap-[12px]">
             <button
               onClick={() => setSelectedLog(log)}
@@ -675,25 +676,38 @@ function LogTable({
             ? "flex-1 min-h-0 flex flex-col border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
             : "rounded-2xl border border-gray-100 dark:border-white/10"
         )}>
-          <table className="min-w-full">
+          <table className="w-full text-sm table-fixed min-w-[900px]">
             <thead className="bg-transparent dark:bg-transparent">
               <tr>
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <th key={i} className="p-4">
-                    <Skeleton className="h-3 w-16 dark:bg-muted" />
-                  </th>
-                ))}
+                <th className="w-12 p-4 text-center">
+                  <Skeleton className="h-3 w-3 rounded mx-auto dark:bg-muted" />
+                </th>
+                <th className="w-[18%] p-4">
+                  <Skeleton className="h-3 w-20 dark:bg-muted" />
+                </th>
+                <th className="w-[12%] p-4">
+                  <Skeleton className="h-3 w-14 dark:bg-muted" />
+                </th>
+                <th className="w-[22%] p-4">
+                  <Skeleton className="h-3 w-24 dark:bg-muted" />
+                </th>
+                <th className="w-[48%] p-4">
+                  <Skeleton className="h-3 w-32 dark:bg-muted" />
+                </th>
+                <th className="w-20 p-4 pr-6 text-right">
+                  <Skeleton className="h-3 w-10 ml-auto dark:bg-muted" />
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/10">
               {[1, 2, 3, 4, 5, 6].map((row) => (
                 <tr key={row}>
-                  <td className="p-4"><Skeleton className="h-6 w-6 rounded-full dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-3 w-24 dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-6 w-20 rounded-full dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-4 w-40 dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-3 w-full dark:bg-muted" /></td>
-                  <td className="p-4 text-center"><Skeleton className="h-8 w-8 mx-auto rounded-full dark:bg-muted" /></td>
+                  <td className="p-4 align-middle text-center"><Skeleton className="h-4 w-4 mx-auto rounded dark:bg-muted" /></td>
+                  <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-3.5 w-24 dark:bg-muted" /></td>
+                  <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-5 w-16 rounded-full dark:bg-muted" /></td>
+                  <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
+                  <td className="p-4 align-middle overflow-hidden"><Skeleton className="h-3.5 w-full dark:bg-muted" /></td>
+                  <td className="p-4 pr-6 align-middle text-right whitespace-nowrap"><Skeleton className="h-7 w-7 ml-auto rounded-[6px] dark:bg-muted" /></td>
                 </tr>
               ))}
             </tbody>
@@ -749,11 +763,11 @@ function LogTable({
         )}
       >
         <div className="overflow-visible rounded-[inherit]">
-          <table className="min-w-full table-fixed text-sm">
+          <table className="w-full text-sm table-fixed min-w-[900px]">
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10 select-none">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                <th className="w-[50px] p-4 text-center"></th>
-                <th className="w-[180px] p-4">
+                <th className="w-12 p-4 text-center"></th>
+                <th className="w-[18%] p-4">
                   <button
                     onClick={() => handleSort("created_at")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
@@ -766,7 +780,7 @@ function LogTable({
                     />
                   </button>
                 </th>
-                <th className="w-[120px] p-4">
+                <th className="w-[12%] p-4">
                   <button
                     onClick={() => handleSort("severity")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
@@ -779,7 +793,7 @@ function LogTable({
                     />
                   </button>
                 </th>
-                <th className="w-[250px] p-4">
+                <th className="w-[22%] p-4">
                   <button
                     onClick={() => handleSort("action")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
@@ -792,8 +806,8 @@ function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
-                <th className="w-[80px] p-4 text-center text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
+                <th className="w-[48%] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
+                <th className="w-20 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -1088,16 +1102,16 @@ export default function AccountActivityPage() {
       const allLogs = await fetchAllForExport();
       const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"];
       const exportRows = allLogs.map((log) => [
-        log?.created_at ? formatPHDateTime(log.created_at) : "—",
+        log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
         log?.severity || "INFO",
         log?.actor || "System",
-        log?.role || "—",
-        log?.action || "—",
+        log?.role || "N/A",
+        log?.action || "N/A",
         log?.details || "No known description",
-        log?.ip || "—",
-        log?.user_agent || "—",
-        log?.entity_type || "—",
-        log?.entity_id || "—",
+        log?.ip || "N/A",
+        log?.user_agent || "N/A",
+        log?.entity_type || "N/A",
+        log?.entity_id || "N/A",
       ]);
       const csvContent = [
         headers.join(","),
@@ -1114,7 +1128,8 @@ export default function AccountActivityPage() {
       document.body.removeChild(link);
       toast.success("Export Success", { description: "Your activity logs have been exported to CSV." });
     } catch (err) {
-      toast.error("Export Failed", { description: err.message || "Unable to export activity logs." });
+      const errInfo = formatErrorMessage(err, { title: "Export Failed", description: "Unable to export activity logs." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setIsExporting(false);
     }
@@ -1134,7 +1149,8 @@ export default function AccountActivityPage() {
       setPdfPreviewUrl(url);
       setPdfPreviewOpen(true);
     } catch (err) {
-      toast.error("Preview Failed", { description: err.message || "Unable to generate PDF preview." });
+      const errInfo = formatErrorMessage(err, { title: "Preview Failed", description: "Unable to generate PDF preview." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -1151,8 +1167,9 @@ export default function AccountActivityPage() {
       link.click();
       document.body.removeChild(link);
       toast.success("Download Success", { description: "Activity report has been downloaded." });
-    } catch {
-      toast.error("Download Failed", { description: "Unable to download the PDF report." });
+    } catch (err) {
+      const errInfo = formatErrorMessage(err, { title: "Download Failed", description: "Unable to download the PDF report." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
 

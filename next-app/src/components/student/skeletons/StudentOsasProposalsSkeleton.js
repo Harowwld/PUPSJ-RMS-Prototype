@@ -33,12 +33,12 @@ export function StudentOsasProposalsListSkeleton({ count = 3 }) {
           <div className="mt-3 space-y-2 border-l-2 border-border pl-4 dark:border-border">
             <div className="flex items-center gap-2">
               <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
-              <span className="text-gray-300 dark:text-zinc-700">—</span>
+              <span className="text-gray-300 dark:text-zinc-700">:</span>
               <Skeleton className="h-3 w-48 rounded dark:bg-muted" />
             </div>
             <div className="flex items-center gap-2">
               <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
-              <span className="text-gray-300 dark:text-zinc-700">—</span>
+              <span className="text-gray-300 dark:text-zinc-700">:</span>
               <Skeleton className="h-3 w-40 rounded dark:bg-muted" />
             </div>
           </div>

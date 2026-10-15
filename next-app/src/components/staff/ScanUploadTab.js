@@ -211,7 +211,7 @@ export default function ScanUploadTab({
       if (files.length > 0) {
         e.preventDefault()
         handlePdfFileSelect(files)
-        showToast("File pasted from clipboard!")
+        showToast({ title: "File Pasted", description: "Document pasted from clipboard." })
       }
     }
 
@@ -348,10 +348,10 @@ export default function ScanUploadTab({
           ? String(suggestion.docType).trim()
           : ""
       if (suggestion.matchedStudent) {
-        // Existing student matched — lock the form fields to their record.
+        // Existing student matched: lock the form fields to their record.
         onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType)
       } else {
-        // No match — only fill in the name/docType, leave form unlocked for manual entry.
+        // No match: only fill in the name/docType, leave form unlocked for manual entry.
         const parsed = splitNameComponents(suggestion.name || "");
         setNewRec?.((p) => ({
           ...p,
@@ -542,12 +542,12 @@ export default function ScanUploadTab({
       }
       if (files.length > 0) {
         handlePdfFileSelect(files)
-        showToast("File pasted from clipboard!")
+        showToast({ title: "File Pasted", description: "Document pasted from clipboard." })
       } else {
-        showToast("No valid image or PDF in clipboard", "warning")
+        showToast({ title: "Clipboard Empty", description: "No valid image or PDF found in clipboard." }, "warning")
       }
     } catch {
-      showToast("Cannot read clipboard automatically. Try pressing Ctrl+V or Cmd+V.", "warning")
+      showToast({ title: "Clipboard Access Limited", description: "Browser prevented automatic paste. Press Ctrl+V (or Cmd+V) to paste." }, "warning")
     }
   }
 
@@ -737,16 +737,32 @@ export default function ScanUploadTab({
                           </div>
                           <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
                             <div className="relative group w-44 sm:w-60">
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                               </div>
                               <Input
                                 type="text"
-                                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-4 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                                 placeholder="Search records..."
                                 value={localCsvSearch}
                                 onChange={(e) => setLocalCsvSearch(e.target.value)}
                               />
+                              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                                {localCsvSearch && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setLocalCsvSearch("")}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                                    title="Clear search"
+                                    aria-label="Clear search"
+                                  >
+                                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                                  </button>
+                                )}
+                                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                                  {filteredCsvRows.length.toLocaleString()}
+                                </span>
+                              </div>
                             </div>
 
                             <Button
@@ -843,7 +859,7 @@ export default function ScanUploadTab({
                             </div>
                           )}
                           {filteredCsvRows.length ? (
-                            <table className="min-w-full text-sm">
+                            <table className="w-full text-sm table-fixed min-w-[960px]">
                               <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
                                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                                   <th className="w-12 p-4 text-center">
@@ -867,24 +883,24 @@ export default function ScanUploadTab({
                                   </th>
                                   {isOsas ? (
                                     <>
-                                      <th className="p-4 min-w-[200px] whitespace-nowrap">Organization Name</th>
-                                      <th className="p-4 w-32 whitespace-nowrap">Acronym</th>
-                                      <th className="p-4 w-36 whitespace-nowrap">Category</th>
-                                      <th className="p-4 min-w-[180px] whitespace-nowrap">Faculty Adviser</th>
+                                      <th className="p-4 w-[14%] whitespace-nowrap">Acronym</th>
+                                      <th className="p-4 w-[26%] whitespace-nowrap">Organization Name</th>
+                                      <th className="p-4 w-[14%] whitespace-nowrap">Category</th>
+                                      <th className="p-4 w-[18%] whitespace-nowrap">Faculty Adviser</th>
                                     </>
                                   ) : (
                                     <>
-                                      <th className="p-4 w-44 whitespace-nowrap">Student No.</th>
-                                      <th className={cn("p-4 whitespace-nowrap", hideBulkCard ? "min-w-[220px]" : "min-w-[200px] max-w-[260px]")}>Full Name</th>
-                                      <th className="p-4 w-32 whitespace-nowrap">Course</th>
-                                      <th className="p-4 w-24 whitespace-nowrap">Year</th>
-                                      <th className="p-4 w-28 whitespace-nowrap">Section</th>
+                                      <th className="p-4 w-[15%] whitespace-nowrap">Student No.</th>
+                                      <th className="p-4 w-[25%] whitespace-nowrap">Full Name</th>
+                                      <th className="p-4 w-[12%] whitespace-nowrap">Course</th>
+                                      <th className="p-4 w-[8%] whitespace-nowrap">Year</th>
+                                      <th className="p-4 w-[12%] whitespace-nowrap">Section</th>
                                     </>
                                   )}
-                                  <th className="p-4 whitespace-nowrap text-left w-28">Room</th>
-                                  <th className="p-4 whitespace-nowrap text-left w-36">Cabinet</th>
-                                  <th className="p-4 whitespace-nowrap text-left w-28">Drawer</th>
-                                  <th className="p-4 text-right whitespace-nowrap w-24">Status</th>
+                                  <th className="p-4 whitespace-nowrap text-left w-[7%]">Room</th>
+                                  <th className="p-4 whitespace-nowrap text-left w-[9%]">Cabinet</th>
+                                  <th className="p-4 whitespace-nowrap text-left w-[7%]">Drawer</th>
+                                  <th className="p-4 pr-6 text-right whitespace-nowrap w-[5%]">Status</th>
                                 </tr>
                               </thead>
                               <tbody className="bg-transparent">
@@ -919,15 +935,15 @@ export default function ScanUploadTab({
                                       </td>
                                       {isOsas ? (
                                         <>
-                                          <td className="p-4 min-w-[200px] align-middle font-semibold text-gray-900 dark:text-zinc-50 truncate" title={formatTitleCase(r.organization?.name || r.student?.name)}>
-                                            {formatTitleCase(r.organization?.name || r.student?.name)}
-                                          </td>
-                                          <td className="w-32 p-4 align-middle whitespace-nowrap">
+                                          <td className="p-4 align-middle whitespace-nowrap">
                                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                                              {r.organization?.acronym || r.student?.courseCode || "—"}
+                                              {r.organization?.acronym || r.student?.courseCode || "N/A"}
                                             </span>
                                           </td>
-                                          <td className="w-36 p-4 align-middle whitespace-nowrap">
+                                          <td className="p-4 align-middle overflow-hidden font-semibold text-gray-900 dark:text-zinc-50 truncate" title={formatTitleCase(r.organization?.name || r.student?.name)}>
+                                            {formatTitleCase(r.organization?.name || r.student?.name)}
+                                          </td>
+                                          <td className="p-4 align-middle whitespace-nowrap">
                                             <span className={cn(
                                               "inline-flex w-fit items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium",
                                               (r.organization?.category || "Academic") === "Academic"
@@ -937,36 +953,36 @@ export default function ScanUploadTab({
                                               {r.organization?.category || "Academic"}
                                             </span>
                                           </td>
-                                          <td className="p-4 min-w-[180px] align-middle text-xs font-medium text-gray-700 dark:text-zinc-300 truncate">
-                                            {r.organization?.adviserName || "—"}
+                                          <td className="p-4 align-middle overflow-hidden text-xs font-medium text-gray-700 dark:text-zinc-300 truncate" title={r.organization?.adviserName || "N/A"}>
+                                            {r.organization?.adviserName || "N/A"}
                                           </td>
                                         </>
                                       ) : (
                                         <>
-                                          <td className="w-44 p-4 align-middle whitespace-nowrap">
+                                          <td className="p-4 align-middle whitespace-nowrap">
                                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                               {r.student.studentNo}
                                             </span>
                                           </td>
-                                          <td className={cn("p-4 align-middle", hideBulkCard ? "min-w-[220px]" : "min-w-[200px] max-w-[260px]")}>
+                                          <td className="p-4 align-middle overflow-hidden">
                                             <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(r.student.name)}>
                                               {formatTitleCase(r.student.name)}
                                             </div>
                                           </td>
-                                          <td className="w-32 p-4 align-middle whitespace-nowrap">
+                                          <td className="p-4 align-middle whitespace-nowrap">
                                             <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
                                               {r.student.courseCode}
                                             </span>
                                           </td>
-                                          <td className="w-24 p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                          <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                             {r.student.yearLevel}
                                           </td>
-                                          <td className="w-28 p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                          <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                             {r.student.section}
                                           </td>
                                         </>
                                       )}
-                                      <td className="p-4 align-middle w-28" onClick={(e) => e.stopPropagation()}>
+                                      <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(room || "")}
@@ -985,7 +1001,7 @@ export default function ScanUploadTab({
                                           ))}
                                         </Select>
                                       </td>
-                                      <td className="p-4 align-middle w-36" onClick={(e) => e.stopPropagation()}>
+                                      <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-28 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(cabinet || "")}
@@ -1015,7 +1031,7 @@ export default function ScanUploadTab({
                                           )}
                                         </Select>
                                       </td>
-                                      <td className="p-4 align-middle w-28" onClick={(e) => e.stopPropagation()}>
+                                      <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
                                         <Select
                                           className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
                                           value={String(drawer || "")}
@@ -1046,7 +1062,7 @@ export default function ScanUploadTab({
                                           )}
                                         </Select>
                                       </td>
-                                      <td className="p-4 align-middle text-right w-24">
+                                      <td className="p-4 pr-6 align-middle text-right">
                                         <div className="inline-flex items-center justify-end">
                                           {r.error ? (
                                             <HugeIcon 
@@ -1589,8 +1605,8 @@ export default function ScanUploadTab({
                       <div className="space-y-5">
                         {ocrSuggestion && (
                           <div className="grid grid-cols-2 gap-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 dark:border-blue-400/20 dark:bg-blue-950/20">
-                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">{isOsas ? "Organization match" : "Student match"}</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{ocrSuggestion.matchPercent != null ? `${ocrSuggestion.matchPercent}%` : "—"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{ocrSuggestion.matchBand || ocrSuggestion.matchStatus || "Not scored"}</div></div>
-                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">OCR read quality</div><div className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{ocrSuggestion.ocrQualityPercent != null ? `${ocrSuggestion.ocrQualityPercent}%` : "—"}</div><div className="text-[11px] text-emerald-700 dark:text-emerald-300">{ocrSuggestion.ocrQualityBand || "Not scored"}</div></div>
+                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">{isOsas ? "Organization match" : "Student match"}</div><div className="text-lg font-bold text-blue-900 dark:text-blue-100">{ocrSuggestion.matchPercent != null ? `${ocrSuggestion.matchPercent}%` : "N/A"}</div><div className="text-[11px] text-blue-700 dark:text-blue-300">{ocrSuggestion.matchBand || ocrSuggestion.matchStatus || "Not scored"}</div></div>
+                            <div><div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">OCR read quality</div><div className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{ocrSuggestion.ocrQualityPercent != null ? `${ocrSuggestion.ocrQualityPercent}%` : "N/A"}</div><div className="text-[11px] text-emerald-700 dark:text-emerald-300">{ocrSuggestion.ocrQualityBand || "Not scored"}</div></div>
                             {ocrSuggestion.matchEvidence?.reason && <div className="col-span-2 border-t border-blue-100 pt-2 text-[11px] text-gray-600 dark:border-blue-400/20 dark:text-zinc-300">{ocrSuggestion.matchEvidence.reason}</div>}
                           </div>
                         )}
@@ -1642,7 +1658,7 @@ export default function ScanUploadTab({
                                         aria-hidden
                                       />
                                       <span>
-                                        Recognized organization selected — profile details locked. Adjust storage location or document type if needed, then submit.
+                                        Recognized organization selected: profile details locked. Adjust storage location or document type if needed, then submit.
                                       </span>
                                     </span>
                                   </div>
@@ -1724,7 +1740,7 @@ export default function ScanUploadTab({
                                           "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
                                           lockedField
                                         )}
-                                        value={newRec.acronym || "—"}
+                                        value={newRec.acronym || "N/A"}
                                         disabled
                                       />
                                     </div>
@@ -1738,7 +1754,7 @@ export default function ScanUploadTab({
                                           "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
                                           lockedField
                                         )}
-                                        value={newRec.category || "—"}
+                                        value={newRec.category || "N/A"}
                                         disabled
                                       />
                                     </div>
@@ -1896,7 +1912,7 @@ export default function ScanUploadTab({
                                     aria-hidden
                                   />
                                   <span>
-                                    Existing student — profile fields below are locked.
+                                    Existing student: profile fields below are locked.
                                     Adjust room, cabinet, drawer, or document type if
                                     needed, then submit.
                                   </span>
@@ -2316,12 +2332,6 @@ export default function ScanUploadTab({
                         >
                           Upload
                         </Button>
-
-                        {uploadError ? (
-                          <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 dark:bg-red-950/30">
-                            {uploadError}
-                          </div>
-                        ) : null}
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -2359,12 +2369,6 @@ export default function ScanUploadTab({
                             )}
                           </div>
                         </div>
-
-                        {csvError ? (
-                          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-800 dark:bg-red-950/30">
-                            {csvError}
-                          </div>
-                        ) : null}
 
                         <div>
                           <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">

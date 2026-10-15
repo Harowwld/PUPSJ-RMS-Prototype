@@ -49,6 +49,22 @@ export default function BulkImportTab({
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState("")
 
+  const filteredImportRows = useMemo(() => {
+    const q = searchTerm.toLowerCase().trim()
+    if (!q) return importRows
+    return importRows.filter((row) => {
+      return (
+        String(row.category || "").toLowerCase().includes(q) ||
+        String(row.name || "").toLowerCase().includes(q) ||
+        String(row.code || "").toLowerCase().includes(q) ||
+        (q === "compliance" && row.isCompliance) ||
+        (q === "requestable" && row.isRequestable) ||
+        String(row.error || "").toLowerCase().includes(q) ||
+        String(row.index).includes(q)
+      )
+    })
+  }, [importRows, searchTerm])
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchTerm("")
@@ -215,27 +231,34 @@ export default function BulkImportTab({
           <div className="flex items-center gap-4">
               <div className="relative group w-[220px]">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs"></HugeIcon>
+                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
                 </div>
                 <Input
                   type="text"
                   placeholder="Search preview..."
-                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-8 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
                     setCurrentPage(1)
                   }}
                 />
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm("")}
-                    className="absolute inset-y-0 right-3 flex items-center text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 border-0 bg-transparent p-0 cursor-pointer"
-                  >
-                    ×
-                  </button>
-                )}
+                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm("")}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                      title="Clear search"
+                      aria-label="Clear search"
+                    >
+                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                    </button>
+                  )}
+                  <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
+                    {filteredImportRows.length.toLocaleString()}
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-3.5 text-[12px] text-[#111111] dark:text-zinc-300">
@@ -259,26 +282,14 @@ export default function BulkImportTab({
 
           <div className="flex flex-1 flex-col w-full min-h-0 bg-white dark:bg-card">
                 {(() => {
-                  const q = searchTerm.toLowerCase().trim()
-                  const filteredRows = importRows.filter((row) => {
-                    if (!q) return true
-                    return (
-                      String(row.category || "").toLowerCase().includes(q) ||
-                      String(row.name || "").toLowerCase().includes(q) ||
-                      String(row.code || "").toLowerCase().includes(q) ||
-                      (q === "compliance" && row.isCompliance) ||
-                      (q === "requestable" && row.isRequestable) ||
-                      String(row.error || "").toLowerCase().includes(q) ||
-                      String(row.index).includes(q)
-                    )
-                  })
+                  const filteredRows = filteredImportRows
                   const totalPages = Math.ceil(filteredRows.length / itemsPerPage) || 1
                   const displayPage = Math.min(currentPage, totalPages)
                   const paginatedRows = filteredRows.slice((displayPage - 1) * itemsPerPage, displayPage * itemsPerPage)
                   return (
                     <>
                       <div className="w-full overflow-x-auto bg-white dark:bg-card rounded-[inherit]">
-                        <table className="min-w-full text-sm">
+                        <table className="w-full text-sm table-fixed min-w-[800px]">
                   <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center">
@@ -292,11 +303,11 @@ export default function BulkImportTab({
                           onChange={(e) => toggleImportSelectAll(e.target.checked)}
                         />
                       </th>
-                      <th className="w-12 p-4 text-center font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Row</th>
-                      <th className="w-48 p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Category</th>
-                      <th className="p-4 min-w-[200px] font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Name / Label</th>
-                      <th className="w-48 p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Identifier</th>
-                      <th className="w-40 p-4 text-right font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Validation</th>
+                      <th className="w-[8%] p-4 text-center font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Row</th>
+                      <th className="w-[20%] p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Category</th>
+                      <th className="w-[36%] p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Name / Label</th>
+                      <th className="w-[20%] p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Identifier</th>
+                      <th className="w-[16%] p-4 pr-6 text-right font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Validation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
@@ -388,7 +399,7 @@ export default function BulkImportTab({
                         />
                       )}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 pr-6 text-right whitespace-nowrap">
                       <Button
                         size="sm"
                         disabled={!quickAdd.name}
@@ -418,10 +429,10 @@ export default function BulkImportTab({
                             disabled={!!row.error || isEditing}
                           />
                         </td>
-                        <td className="p-4 text-center text-xs font-mono text-gray-500 dark:text-zinc-400">
+                        <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                           {row.index}
                         </td>
-                        <td className="p-4">
+                        <td className="p-4 align-middle whitespace-nowrap">
                           {isEditing ? (
                             <Select
                               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -452,7 +463,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4">
+                        <td className="p-4 align-middle overflow-hidden">
                           {isEditing ? (
                             <Input
                               className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -469,7 +480,7 @@ export default function BulkImportTab({
                             <div className="flex flex-col gap-1">
                               <div
                                 className={cn(
-                                  "text-xs font-semibold truncate max-w-[400px]",
+                                  "text-xs font-semibold truncate",
                                   row.error && !row.name ? "text-red-500 italic" : "text-gray-900 dark:text-zinc-100"
                                 )}
                                 title={row.name}
@@ -493,7 +504,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4">
+                        <td className="p-4 align-middle whitespace-nowrap">
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
                               <Select
@@ -533,12 +544,12 @@ export default function BulkImportTab({
                                   {row.code}
                                 </span>
                               ) : (
-                                <span className="text-xs text-gray-400 dark:text-zinc-500">—</span>
+                                <span className="text-xs text-gray-400 dark:text-zinc-500">N/A</span>
                               )}
                             </div>
                           )}
                         </td>
-                        <td className="p-4 text-right">
+                        <td className="p-4 pr-6 align-middle text-right whitespace-nowrap">
                           {isEditing ? (
                             <div className="flex items-center justify-end gap-1.5">
                               <Tooltip>

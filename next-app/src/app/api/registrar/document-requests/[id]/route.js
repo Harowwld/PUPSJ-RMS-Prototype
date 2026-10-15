@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { transaction } from "@/lib/postgres";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "@/lib/constants";
+import { canTransitionRequestStatus, isTerminalRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES } from "@/lib/constants";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 
 export const runtime = "nodejs";
@@ -21,6 +21,13 @@ export async function PATCH(req, ctx) {
   const hasSpaVerified = body?.spaVerified !== undefined;
   const spaVerified = Boolean(body?.spaVerified);
 
+  const allowReopen =
+    body?.allowReopen === true ||
+    String(body?.allowReopen || "").toLowerCase() === "true" ||
+    body?.allowReopen === "1" ||
+    Boolean(body?.reopenReason);
+  const reopenReason = String(body?.reopenReason || body?.message || "").trim();
+
   if (status !== null && !statuses.has(status)) return NextResponse.json({ ok: false, error: "Invalid status." }, { status: 400 });
   if (status === null && !hasSpaVerified) return NextResponse.json({ ok: false, error: "A valid status or update is required." }, { status: 400 });
   if (hasSpaVerified && typeof body.spaVerified !== "boolean") return NextResponse.json({ ok: false, error: "spaVerified must be a boolean." }, { status: 400 });
@@ -33,17 +40,29 @@ export async function PATCH(req, ctx) {
     if (!existing || !canAccessResource(access, "request", existing)) return { error: "Not found", status: 404 };
 
     const nextStatus = status ?? existing.status;
+    const isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(nextStatus);
+
     if (nextStatus === "Deficient" && !rawMessage) {
       return { error: "Add a comment explaining what the student needs to provide.", status: 400 };
     }
-    if (existing.status && existing.status !== nextStatus && !canTransitionRequestStatus(existing.status, nextStatus)) {
-      return { error: `Cannot change status from "${existing.status}" to "${nextStatus}". Completed and finalized requests cannot be reverted.`, status: 400 };
+    if (existing.status && existing.status !== nextStatus && !canTransitionRequestStatus(existing.status, nextStatus, { allowReopen })) {
+      return { error: `Cannot change status from "${existing.status}" to "${nextStatus}". Completed and finalized requests cannot be reverted without reopening authorization.`, status: 400 };
+    }
+    if (isReopen) {
+      if (reopenReason.length < 5) {
+        return { error: "A written justification (at least 5 characters) explaining why this request is being reopened is required.", status: 400 };
+      }
     }
 
     const statusChanged = existing.status !== nextStatus;
-    const defaultMsg = hasSpaVerified
-      ? (spaVerified ? "Special Power of Attorney (SPA) and identity verified by Registrar." : "Special Power of Attorney (SPA) verification revoked.")
-      : (statusChanged ? (DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`) : "");
+    let defaultMsg = "";
+    if (isReopen) {
+      defaultMsg = `Request reopened to ${nextStatus}. Reason: ${reopenReason}`;
+    } else if (hasSpaVerified) {
+      defaultMsg = spaVerified ? "Special Power of Attorney (SPA) and identity verified by Registrar." : "Special Power of Attorney (SPA) verification revoked.";
+    } else if (statusChanged) {
+      defaultMsg = DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
+    }
     const finalMessage = rawMessage || defaultMsg;
     if (!statusChanged && !rawMessage && !hasSpaVerified) return { data: existing, changed: false };
 
@@ -74,17 +93,27 @@ export async function PATCH(req, ctx) {
         );
       }
     }
-    return { data: updated, changed: true, nextStatus, finalMessage };
+    return { data: updated, changed: true, prevStatus: existing.status, nextStatus, isReopen, reopenReason, finalMessage };
   });
 
   if (outcome.error) return NextResponse.json({ ok: false, error: outcome.error }, { status: outcome.status });
   if (!outcome.changed) return NextResponse.json({ ok: true, data: outcome.data });
 
-  await writeGlobalAuditLog(req, "Updated Registrar document request", {
-    officeId: "registrar",
-    details: `Changed request ${requestId} to ${outcome.nextStatus}.${outcome.finalMessage ? ` Update: "${outcome.finalMessage}"` : ""}`,
-    entity_type: "document_request",
-    entity_id: String(requestId),
-  });
+  if (outcome.isReopen) {
+    await writeGlobalAuditLog(req, "Reopen Document Request", {
+      officeId: "registrar",
+      details: `Reopened request #${requestId} (${outcome.prevStatus} → ${outcome.nextStatus}). Reason: ${outcome.reopenReason}`,
+      entity_type: "document_request",
+      entity_id: String(requestId),
+      severity: "WARN",
+    });
+  } else {
+    await writeGlobalAuditLog(req, "Updated Registrar document request", {
+      officeId: "registrar",
+      details: `Changed request ${requestId} to ${outcome.nextStatus}.${outcome.finalMessage ? ` Update: "${outcome.finalMessage}"` : ""}`,
+      entity_type: "document_request",
+      entity_id: String(requestId),
+    });
+  }
   return NextResponse.json({ ok: true, data: outcome.data });
 }

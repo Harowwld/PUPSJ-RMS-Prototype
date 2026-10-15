@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const DEFAULT_FOOTER = {
   brandName: "eManage",
   brandSubtitle:
-    "Polytechnic University of the Philippines — San Juan Campus Records Keeping & Online Document Request Platform.",
+    "Polytechnic University of the Philippines, San Juan Campus Records Keeping & Online Document Request Platform.",
   locationHall: "Ground Floor, Admin & Records Hall",
   locationAddress:
     "223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500",

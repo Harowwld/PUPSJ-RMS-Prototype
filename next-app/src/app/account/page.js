@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
+import { formatErrorMessage } from "@/lib/errorUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthGuard } from "@/components/shared/AuthGuard";
 import { getClientSession } from "@/lib/clientAuth";
@@ -65,21 +66,18 @@ function AccountPageContent() {
   const [clientType, setClientType] = useState("Student");
   const [username, setUsername] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState("");
 
   // Password Form State
   const [pwCurrent, setPwCurrent] = useState("");
   const [pwNext, setPwNext] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
-  const [pwError, setPwError] = useState("");
   const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
 
   // Security Form State
   const [globalQuestions, setGlobalQuestions] = useState([]);
   const [secAnswers, setSecAnswers] = useState({});
   const [secLoading, setSecLoading] = useState(false);
-  const [secError, setSecError] = useState("");
   const [hasSetSecurity, setHasSetSecurity] = useState(false);
   const [editingSecQuestions, setEditingSecQuestions] = useState({});
 
@@ -91,7 +89,6 @@ function AccountPageContent() {
   const [totpLoading, setTotpLoading] = useState(false);
   const [totpSetupLoading, setTotpSetupLoading] = useState(false);
   const [recoveryCodesLoading, setRecoveryCodesLoading] = useState(false);
-  const [totpError, setTotpError] = useState("");
   const [totpStep, setTotpStep] = useState("idle");
   const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [recoveryCodesCount, setRecoveryCodesCount] = useState(0);
@@ -188,9 +185,8 @@ function AccountPageContent() {
       if (key === "high_contrast") {
         setHighContrastPreference(Boolean(oldPrefs.high_contrast), authUser?.id);
       }
-      toast.error("Save Failed", {
-        description: error.message || "Could not update your preference."
-      });
+      const errInfo = formatErrorMessage(error, { title: "Preference Update Failed", description: "Could not update your preference." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
 
@@ -224,9 +220,8 @@ function AccountPageContent() {
       });
     } catch (error) {
       setUserPreferences(oldPrefs);
-      toast.error("Save Failed", {
-        description: error.message || "Could not update zoom preference."
-      });
+      const errInfo = formatErrorMessage(error, { title: "Zoom Setting Failed", description: "Could not update zoom preference." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
 
@@ -275,9 +270,8 @@ function AccountPageContent() {
         description: `Profile avatar set to Avatar ${avatarId}.`,
       });
     } catch (err) {
-      toast.error("Save Failed", {
-        description: err.message || "Could not save avatar.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Avatar Update Failed", description: "Could not save your selected avatar." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setAvatarSaving(false);
     }
@@ -288,11 +282,12 @@ function AccountPageContent() {
     if (profileLoading) return;
 
     if (!(fname || "").trim() || !(lname || "").trim()) {
-      setProfileError("Please fill all required fields.");
+      toast.error("Profile Incomplete", {
+        description: "Please fill all required profile fields.",
+      });
       return;
     }
 
-    setProfileError("");
     setProfileLoading(true);
 
     try {
@@ -327,10 +322,8 @@ function AccountPageContent() {
         window.location.reload();
       }, 1200);
     } catch (err) {
-      setProfileError(err?.message || "Failed to update profile");
-      toast.error("Update Failed", {
-        description: err?.message || "Unable to save profile changes.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Profile Update Failed", description: "Unable to save profile changes." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setProfileLoading(false);
     }
@@ -341,23 +334,30 @@ function AccountPageContent() {
     if (pwLoading) return;
 
     if (!pwCurrent || !pwNext || !pwConfirm) {
-      setPwError("Please provide all password fields.");
+      toast.error("Required Fields Missing", {
+        description: "Please provide all password fields.",
+      });
       return;
     }
     if (pwNext !== pwConfirm) {
-      setPwError("New passwords do not match.");
+      toast.error("Password Mismatch", {
+        description: "New passwords do not match.",
+      });
       return;
     }
     if (pwNext === pwCurrent) {
-      setPwError("New password cannot be the same as the current password.");
+      toast.error("Identical Password", {
+        description: "New password cannot be the same as the current password.",
+      });
       return;
     }
     if (pwNext.length < 8) {
-      setPwError("New password must be at least 8 characters long.");
+      toast.error("Password Too Short", {
+        description: "New password must be at least 8 characters long.",
+      });
       return;
     }
 
-    setPwError("");
     setPwLoading(true);
 
     try {
@@ -381,10 +381,8 @@ function AccountPageContent() {
       setPwNext("");
       setPwConfirm("");
     } catch (err) {
-      setPwError(err?.message || "Failed to change password");
-      toast.error("Password Change Failed", {
-        description: err?.message || "Unable to update password.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Password Change Failed", description: "Unable to update password." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setPwLoading(false);
     }
@@ -407,17 +405,20 @@ function AccountPageContent() {
       const hasExisting = q.hasAnswer;
       const hasNewInput = !!(secAnswers[q.id] && secAnswers[q.id].trim());
       if (!hasExisting && !hasNewInput) {
-        setSecError(`Please provide an answer for the required question: "${q.question}"`);
+        toast.error("Security Answer Required", {
+          description: `Please provide an answer for the required question: "${q.question}"`,
+        });
         return;
       }
     }
 
     if (payload.length === 0) {
-      setSecError("Please provide at least one answer to save.");
+      toast.error("Empty Submission", {
+        description: "Please provide at least one answer to save.",
+      });
       return;
     }
 
-    setSecError("");
     setSecLoading(true);
 
     const headers = { "Content-Type": "application/json" };
@@ -441,7 +442,6 @@ function AccountPageContent() {
         }
         if (json?.notConfigured) {
           const msg = "Please configure Two-Factor Authentication or generate recovery codes before updating security questions.";
-          setSecError(msg);
           toast.error("2FA Required", { description: msg });
           return;
         }
@@ -475,10 +475,8 @@ function AccountPageContent() {
     } catch (err) {
       const cleanMsg = (err?.message || "Failed to update security questions").replace("TOTP verification required: ", "");
       if (totpToken) throw new Error(cleanMsg);
-      setSecError(cleanMsg);
-      toast.error("Update Failed", {
-        description: cleanMsg,
-      });
+      const errInfo = formatErrorMessage(err, { title: "Security Answers Failed", description: cleanMsg });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setSecLoading(false);
     }
@@ -500,7 +498,6 @@ function AccountPageContent() {
 
   const startTOTPSetup = async () => {
     setTotpSetupLoading(true);
-    setTotpError("");
     try {
       const res = await fetch("/api/auth/totp", {
         method: "POST",
@@ -514,10 +511,8 @@ function AccountPageContent() {
       setTotpSetupData(json.data);
       setTotpStep("setup");
     } catch (err) {
-      setTotpError(err?.message || "Failed to start setup");
-      toast.error("Setup Failed", {
-        description: err?.message || "Unable to initialize two-factor auth.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Two-Factor Setup Failed", description: "Unable to initialize two-factor authentication." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTotpSetupLoading(false);
     }
@@ -526,11 +521,12 @@ function AccountPageContent() {
   const verifyTOTP = async (e) => {
     e.preventDefault();
     if (!totpToken || totpToken.length !== 6) {
-      setTotpError("Please enter a 6-digit code");
+      toast.error("Invalid Code Length", {
+        description: "Please enter the 6-digit verification code from your authenticator app.",
+      });
       return;
     }
     setTotpLoading(true);
-    setTotpError("");
     try {
       const res = await fetch("/api/auth/totp", {
         method: "POST",
@@ -551,10 +547,8 @@ function AccountPageContent() {
       });
       await refreshTOTPStatus();
     } catch (err) {
-      setTotpError(err?.message || "Invalid code");
-      toast.error("Verification Failed", {
-        description: err?.message || "The code you entered is incorrect.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Verification Failed", description: "The verification code you entered is invalid or expired." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTotpLoading(false);
     }
@@ -562,11 +556,12 @@ function AccountPageContent() {
 
   const disableTOTP = async () => {
     if (!totpToken || totpToken.length !== 6) {
-      setTotpError("Please enter your current code to disable");
+      toast.error("Invalid Code Length", {
+        description: "Please enter your current 6-digit code to disable two-factor authentication.",
+      });
       return;
     }
     setTotpLoading(true);
-    setTotpError("");
     try {
       const res = await fetch("/api/auth/totp", {
         method: "POST",
@@ -585,10 +580,8 @@ function AccountPageContent() {
       });
       await refreshTOTPStatus();
     } catch (err) {
-      setTotpError(err?.message || "Invalid code");
-      toast.error("Disable Failed", {
-        description: err?.message || "Unable to turn off two-factor auth.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Disable Two-Factor Failed", description: "Unable to turn off two-factor authentication." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTotpLoading(false);
     }
@@ -607,14 +600,12 @@ function AccountPageContent() {
       setTotpStep("idle");
       setTotpSetupData(null);
       setTotpToken("");
-      setTotpError("");
       setTotpSetupLoading(false);
     }
   };
 
   const generateNewRecoveryCodes = async () => {
     setRecoveryCodesLoading(true);
-    setTotpError("");
     try {
       const res = await fetch("/api/auth/totp", {
         method: "POST",
@@ -633,9 +624,8 @@ function AccountPageContent() {
         description: "Please save these codes somewhere safe.",
       });
     } catch (err) {
-      toast.error("Generation Failed", {
-        description: err?.message || "Unable to generate recovery codes.",
-      });
+      const errInfo = formatErrorMessage(err, { title: "Generation Failed", description: "Unable to generate recovery codes." });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setRecoveryCodesLoading(false);
     }
@@ -852,13 +842,6 @@ function AccountPageContent() {
 
                     <div className="mt-6">
                   <form onSubmit={submitProfile} className="space-y-6">
-                    {profileError && (
-                      <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                        <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
-                        {profileError}
-                      </div>
-                    )}
-
                     <div className="merged-container bg-white dark:bg-zinc-800">
                       <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
                         <div className="flex-1 min-w-0">
@@ -1004,13 +987,6 @@ function AccountPageContent() {
 
                   <div className="mt-6">
                     <form onSubmit={submitPassword} className="space-y-6">
-                      {pwError && (
-                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                          <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
-                          {pwError}
-                        </div>
-                      )}
-
                       <div className="merged-container bg-white dark:bg-zinc-800">
                         <div className={`field-wrapper border-b border-border dark:border-border/50 ${pwCurrent ? "active" : ""}`}>
                           <label>Current Password</label>
@@ -1113,13 +1089,6 @@ function AccountPageContent() {
 
                   <div className="mt-6">
                     <form onSubmit={submitSecurity} className="space-y-6">
-                      {secError && (
-                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-semibold rounded-lg flex items-center gap-3 animate-in shake-1 dark:bg-red-500/10 dark:border-red-500/20">
-                          <HugeIcon  className="ph-fill ph-warning-circle text-lg"></HugeIcon>
-                          {secError}
-                        </div>
-                      )}
-
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
                           <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-border text-gray-400 font-medium text-sm dark:bg-card dark:border-border dark:text-zinc-500">
@@ -1258,13 +1227,6 @@ function AccountPageContent() {
                           />
                         </div>
 
-                        {totpError && (
-                          <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
-                            <HugeIcon  className="ph-fill ph-warning-circle text-xl"></HugeIcon>
-                            {totpError}
-                          </div>
-                        )}
-
                         <div className="pt-8 border-t border-border flex justify-end gap-2.5 dark:border-border">
                           <Button
                             type="button"
@@ -1354,17 +1316,10 @@ function AccountPageContent() {
                                 />
                              </div>
 
-                             {totpError && (
-                               <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-semibold rounded-xl flex items-center gap-4 animate-in shake-1 dark:bg-red-500/10">
-                                 <HugeIcon  className="ph-fill ph-warning-circle text-xl"></HugeIcon>
-                                 {totpError}
-                               </div>
-                             )}
-
                              <div className="flex justify-end gap-2.5">
                                 <Button
                                   type="button"
-                                  onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
+                                  onClick={() => { setTotpStep("idle"); setTotpToken(""); }}
                                   variant="outline"
                                   className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
@@ -1432,9 +1387,8 @@ function AccountPageContent() {
                                       throw new Error(json.error);
                                     }
                                   } catch (err) {
-                                    toast.error("Action Failed", {
-                                      description: "Failed to disable recovery codes: " + err.message
-                                    });
+                                    const errInfo = formatErrorMessage(err, { title: "Disable Recovery Codes Failed", description: "Could not disable recovery codes." });
+                                    toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
                                   } finally {
                                     setRecoveryCodesLoading(false);
                                   }

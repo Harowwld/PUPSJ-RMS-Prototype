@@ -362,7 +362,7 @@ export const DEFAULT_WORKFLOW_CONTENT = {
     {
       num: "02",
       title: "Select Your Document",
-      desc: "Browse the available documents and select what you need—such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
+      desc: "Browse the available documents and select what you need, such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
       tags: ["8 Document Types", "Official Records", "Clear Requirements"],
       actionLabel: "View Catalog",
       actionType: "scroll",
@@ -911,7 +911,7 @@ export const DEFAULT_FOOTER_CONTENT = {
   // Column 1: Institutional Credentials & Location
   brandName: "eManage",
   brandSubtitle:
-    "Polytechnic University of the Philippines — San Juan Campus Records Keeping & Online Document Request Platform.",
+    "Polytechnic University of the Philippines, San Juan Campus Records Keeping & Online Document Request Platform.",
   locationHall: "Ground Floor, Admin & Records Hall",
   locationAddress:
     "223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500",

@@ -4,7 +4,7 @@ function parseToDate(input) {
     return isNaN(input.getTime()) ? null : input;
   }
   let s = String(input).trim();
-  if (!s || s === "—") return null;
+  if (!s || s === "N/A") return null;
   if (!s.includes("T") && !s.includes("Z")) {
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
       s = s.replace(" ", "T") + "Z";
@@ -15,7 +15,7 @@ function parseToDate(input) {
 }
 
 export function formatPHDateTime(dateInput) {
-  if (!dateInput) return "—";
+  if (!dateInput) return "N/A";
   try {
     const date = parseToDate(dateInput);
     if (!date) return String(dateInput);
@@ -35,7 +35,7 @@ export function formatPHDateTime(dateInput) {
 }
 
 export function formatPHDateTimeParts(dateInput) {
-  if (!dateInput) return { date: "—", time: "" };
+  if (!dateInput) return { date: "N/A", time: "" };
   try {
     const date = parseToDate(dateInput);
     if (!date) return { date: String(dateInput), time: "" };
@@ -62,7 +62,7 @@ export function formatPHDateTimeParts(dateInput) {
  * for dates within the last 48 hours.
  */
 export function formatRelativeTime(dateInput) {
-  if (!dateInput || dateInput === "—") return { relative: "", date: "—", time: "" };
+  if (!dateInput || dateInput === "N/A") return { relative: "", date: "N/A", time: "" };
   try {
     const date = parseToDate(dateInput);
     if (!date) return { relative: "", date: String(dateInput), time: "" };
