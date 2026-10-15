@@ -174,7 +174,7 @@ function DocumentsTable({
         {!hasActiveFilters && docsRows.length === 0 ? (
           <tr className="border-0 hover:bg-transparent flex-1 flex">
             <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-              <Empty className="flex flex-1 h-full min-h-[500px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              <Empty className="flex flex-1 h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -193,7 +193,7 @@ function DocumentsTable({
         ) : docsRows.length === 0 ? (
           <tr className="border-0 hover:bg-transparent flex-1 flex">
             <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-              <Empty className="flex flex-1 h-full min-h-[500px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              <Empty className="flex flex-1 h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -671,18 +671,12 @@ export default function DocumentsTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-documents"
-        className={cn(
-          "flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta",
-          filteredRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[680px]"
-        )}
+        className="flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
         tabIndex={0}
       >
         {/* ONE Single Card Container encapsulating Header, Toolbar, Filters, Table & Pagination */}
         <Card
-          className={cn(
-            "flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4",
-            filteredRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[680px]"
-          )}
+          className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4"
         >
           {/* 1. Page Header */}
           <PageHeader
@@ -825,7 +819,7 @@ export default function DocumentsTab({
                 <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
               ) : docsError ? (
                 <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
-                  <Empty className="h-full min-h-[480px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                  <Empty className="h-full min-h-0 flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
                         <HugeIcon  className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />

@@ -2137,12 +2137,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
+        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
-            className="p-4 flex flex-col min-h-full w-full"
+            className={cn("p-4 flex flex-col w-full", view === "batch_review" ? "flex-1 h-full min-h-0" : "min-h-full", view !== "batch_review" && "min-w-0")}
             style={zoomStyle}
           >
-            <TabsContent value="students" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+            <TabsContent value="students" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StudentDirectoryTab
               authUser={authUser}
               loading={!storageLayout || loading}
@@ -2159,7 +2159,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="search" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="search" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -2258,7 +2258,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="storage" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="storage" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StorageExplorerTab
               loading={!storageLayout}
               locatorModel={locatorModel}
@@ -2277,7 +2277,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="upload" className="w-full min-h-full flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="upload" className="w-full min-w-0 min-h-full flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <ScanUploadTab
               authUser={authUser}
               isOsas={isOsas}
@@ -2724,11 +2724,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="batch_review" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="batch_review" className="w-full h-full min-h-0 flex-1 flex flex-col overflow-hidden m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
           </TabsContent>
 
-          <TabsContent value="requests" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="requests" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <DocumentRequestsTab
               students={students}
               courses={courses}
@@ -2739,15 +2739,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="osas_monitoring" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="osas_monitoring" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <OsasMonitoringTab showToast={showToast} />
           </TabsContent>
 
-          <TabsContent value="organizations" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="organizations" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StudentOrganizationsTab showToast={showToast} />
           </TabsContent>
 
-          <TabsContent value="documents" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="documents" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <DocumentsTab
               docsForm={docsForm}
               setDocsForm={setDocsForm}
@@ -2828,7 +2828,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="notifications" className="w-full min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="notifications" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <NotificationsTab
               onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
               onPreviewDocument={handlePreviewDocument}

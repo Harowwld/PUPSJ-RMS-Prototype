@@ -156,7 +156,7 @@ export async function updateReview(id, patch, reviewedBy, { officeId } = {}) {
 
 export async function resetForRetry(id, { officeId } = {}) {
   const normalizedOfficeId = requireOfficeId(officeId);
-  const updated = await query(`UPDATE ingest_queue SET status = 'pending', ocr_status = 'pending', review_status = 'Processing', ocr_text = NULL, ocr_name = NULL, staff_selected_student_no = NULL, proposed_doc_type = NULL, ocr_student_candidates = '[]'::jsonb, ocr_detected_rotation = 0, ocr_regions = NULL, ocr_page_index = NULL, last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL WHERE id = $1 AND office_id = $2 AND status IN ('failed', 'rejected') RETURNING id`, [id, normalizedOfficeId]);
+  const updated = await query(`UPDATE ingest_queue SET status = 'pending', ocr_status = 'pending', review_status = 'Processing', ocr_text = NULL, ocr_name = NULL, staff_selected_student_no = NULL, proposed_doc_type = NULL, ocr_student_candidates = '[]'::jsonb, ocr_detected_rotation = 0, ocr_regions = NULL, ocr_page_index = NULL, last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL WHERE id = $1 AND office_id = $2 AND status <> 'promoted' AND (status IN ('failed', 'rejected') OR lower(COALESCE(review_status, '')) IN ('failed', 'rejected')) RETURNING id`, [id, normalizedOfficeId]);
   if (!updated.length) return null;
   return getIngestById(id, { officeId: normalizedOfficeId });
 }

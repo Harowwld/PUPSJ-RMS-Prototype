@@ -1,6 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { cn } from "@/lib/utils";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { getAdjacentRowId, getBulkActionSkipReason, getRangeIds, getRowClickSelection } from "@/lib/batchReviewSelection";
 
 const STATUS_TABS = [
   { id: "Needs Review", label: "Needs Review" },
@@ -29,7 +30,7 @@ const STATUS_TABS = [
   { id: "Failed", label: "Failed" },
   { id: "", label: "All" },
 ];
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 50;
 
 function readStudentCandidates(value) {
   if (Array.isArray(value)) return value;
@@ -51,7 +52,6 @@ const REGION_LABELS = {
 export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [] }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(0);
   const [statusFilters, setStatusFilters] = useState(["Needs Review"]);
   const [docTypeFilters, setDocTypeFilters] = useState([]);
   const [query, setQuery] = useState("");
@@ -62,23 +62,50 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const [note, setNote] = useState("");
   const [studentAssignmentQuery, setStudentAssignmentQuery] = useState("");
   const [fullscreenPreview, setFullscreenPreview] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [bulkAction, setBulkAction] = useState("");
+  const [confirmBulkDismiss, setConfirmBulkDismiss] = useState(false);
+  const [bulkResults, setBulkResults] = useState(null);
+  const listRef = useRef(null);
+  const rowRefs = useRef(new Map());
+  const rowsRef = useRef([]);
+  const selectionAnchorId = useRef(null);
+  const requestVersion = useRef(0);
 
   const selected = useMemo(() => rows.find((row) => Number(row.id) === Number(selectedId)) || null, [rows, selectedId]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ append = false, preserveSelection = false, fallbackIndex = 0, statusFilterOverride } = {}) => {
+    const version = ++requestVersion.current;
+    if (append) setLoadingMore(true);
+    else setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) });
-      if (statusFilters.length > 0) params.set("status", statusFilters.join(","));
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(append ? rowsRef.current.length : 0) });
+      const effectiveStatuses = statusFilterOverride ?? statusFilters;
+      if (effectiveStatuses.length > 0) params.set("status", effectiveStatuses.join(","));
       if (docTypeFilters.length > 0) params.set("docType", docTypeFilters.join(","));
       if (query.trim()) params.set("q", query.trim());
       const response = await fetch(`/api/ingest/review?${params}`, { cache: "no-store" });
       const json = await response.json().catch(() => null);
       if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to load review queue");
-      setRows(json.data?.rows || []);
+      if (version !== requestVersion.current) return;
+      const nextRows = json.data?.rows || [];
+      rowsRef.current = append ? [...rowsRef.current, ...nextRows] : nextRows;
+      setRows(rowsRef.current);
       setTotal(Number(json.data?.total || 0));
-      setSelectedId((current) => (json.data?.rows || []).some((row) => Number(row.id) === Number(current)) ? current : json.data?.rows?.[0]?.id || null);
+      if (!append && !preserveSelection) {
+        setSelectedId((current) => nextRows.some((row) => Number(row.id) === Number(current)) ? current : nextRows[0]?.id || null);
+        setSelectedIds([]);
+        selectionAnchorId.current = null;
+      } else if (!append && Number.isInteger(fallbackIndex)) {
+        setSelectedId((current) => nextRows.some((row) => Number(row.id) === Number(current)) ? current : nextRows[Math.min(fallbackIndex, nextRows.length - 1)]?.id || null);
+      }
+      if (!append && preserveSelection) {
+        const availableIds = new Set(nextRows.map((row) => Number(row.id)));
+        setSelectedIds((current) => current.filter((id) => availableIds.has(Number(id))));
+      }
     } catch (error) {
+      if (version !== requestVersion.current) return;
       showToast(
         formatErrorMessage(error, {
           title: "Review Queue Failed",
@@ -87,13 +114,86 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         true
       );
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
-  }, [page, query, showToast, statusFilters, docTypeFilters]);
+  }, [query, showToast, statusFilters, docTypeFilters]);
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) load();
+    });
+    return () => { cancelled = true; };
   }, [load]);
+
+  const loadMore = useCallback(() => {
+    if (loading || loadingMore || rows.length >= total) return;
+    load({ append: true });
+  }, [load, loading, loadingMore, rows.length, total]);
+
+  useEffect(() => {
+    const element = listRef.current;
+    if (!element || loading || loadingMore || rows.length >= total || element.scrollHeight > element.clientHeight + 1) return undefined;
+    const frame = requestAnimationFrame(() => loadMore());
+    return () => cancelAnimationFrame(frame);
+  }, [loadMore, loading, loadingMore, rows.length, total]);
+
+  const selectRange = useCallback((targetId) => {
+    setSelectedIds(getRangeIds(rows, selectionAnchorId.current || selectedId, targetId));
+  }, [rows, selectedId]);
+
+  const focusRow = useCallback((id) => {
+    setSelectedId(id);
+    const rowData = rows.find((row) => Number(row.id) === Number(id));
+    setNote(rowData?.review_note || "");
+    setStudentAssignmentQuery("");
+    const row = rowRefs.current.get(Number(id));
+    row?.scrollIntoView({ block: "nearest" });
+    row?.focus({ preventScroll: true });
+  }, [rows]);
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (!selectedId || bulkAction || confirmBulkDismiss || bulkResults || fullscreenPreview || event.altKey) return;
+      const target = event.target;
+      const tagName = target?.tagName?.toLowerCase();
+      const isQueueRow = target?.closest?.("[data-review-row]");
+      if (target?.isContentEditable || ["input", "textarea", "select"].includes(tagName) || (tagName === "button" && !isQueueRow) || target?.getAttribute?.("role") === "combobox") return;
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelectedIds(rows.map((row) => row.id));
+        selectionAnchorId.current = selectedId;
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelectedIds([]);
+        selectionAnchorId.current = null;
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const nextId = getAdjacentRowId(rows, selectedId, event.key === "ArrowDown" ? "down" : "up");
+      if (nextId === null) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.shiftKey) {
+        if (!selectionAnchorId.current) selectionAnchorId.current = selectedId;
+        selectRange(nextId);
+      } else {
+        selectionAnchorId.current = nextId;
+        setSelectedIds([nextId]);
+      }
+      focusRow(nextId);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [bulkAction, bulkResults, confirmBulkDismiss, focusRow, fullscreenPreview, rows, selectRange, selectedId]);
 
   useEffect(() => {
     let source = null;
@@ -105,7 +205,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       try {
         source = new EventSource("/api/ingest/events");
         source.addEventListener("ingest", () => {
-          load();
+          load({ preserveSelection: true });
         });
         source.onerror = () => {
           source?.close();
@@ -180,10 +280,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const handleFilterChange = useCallback((groupId, values) => {
     if (groupId === "status") {
       setStatusFilters(values);
-      setPage(0);
     } else if (groupId === "docType") {
       setDocTypeFilters(values);
-      setPage(0);
     }
   }, []);
 
@@ -191,7 +289,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     setQuery("");
     setStatusFilters([]);
     setDocTypeFilters([]);
-    setPage(0);
   }, []);
 
 
@@ -201,7 +298,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       chips.push({
         id: "search",
         label: `Search: ${query.trim()}`,
-        onRemove: () => { setQuery(""); setPage(0); },
+        onRemove: () => { setQuery(""); },
       });
     }
     statusFilters.forEach((st) => {
@@ -211,7 +308,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         label: `Status: ${label}`,
         onRemove: () => {
           setStatusFilters((prev) => prev.filter((s) => s !== st));
-          setPage(0);
         },
       });
     });
@@ -221,7 +317,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         label: `Type: ${dt}`,
         onRemove: () => {
           setDocTypeFilters((prev) => prev.filter((t) => t !== dt));
-          setPage(0);
         },
       });
     });
@@ -244,7 +339,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         // Retry changes review_status to Processing. Keep it visible instead
         // of letting the current Needs Review filter make it look deleted.
         setStatusFilters([]);
-        setPage(0);
         setSelectedId(actionId);
       }
       showToast({
@@ -263,6 +357,55 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     } finally {
       setSaving(false);
     }
+  };
+
+  const runBulkAction = async (kind, { confirmed = false } = {}) => {
+    if (kind === "dismiss" && !confirmed) {
+      setConfirmBulkDismiss(true);
+      return;
+    }
+    const batch = rows.filter((row) => selectedIds.some((id) => Number(id) === Number(row.id)));
+    if (batch.length === 0) return;
+    const fallbackIndex = Math.max(0, rows.findIndex((row) => Number(row.id) === Number(selectedId)));
+    setBulkAction(kind);
+    setConfirmBulkDismiss(false);
+    const results = [];
+    for (const row of batch) {
+      const reason = getBulkActionSkipReason(kind, row);
+      if (reason) {
+        results.push({ id: row.id, filename: row.original_filename, status: "Skipped", detail: reason });
+        continue;
+      }
+      try {
+        const student = students.find((candidate) => String(candidate.studentNo || candidate.student_no) === String(row.staff_selected_student_no || ""));
+        const body = kind === "confirm"
+          ? { studentNo: row.staff_selected_student_no, studentName: student?.name || row.ocr_name || "", docType: row.proposed_doc_type }
+          : kind === "dismiss"
+            ? { reason: String(row.review_status || "").toLowerCase() === "failed" ? "Dismissed from failed review" : "Rejected during review" }
+            : {};
+        const endpointAction = kind === "dismiss" ? "reject" : kind;
+        const response = await fetch(`/api/ingest/review/${row.id}/${endpointAction}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const json = await response.json().catch(() => null);
+        if (!response.ok || !json?.ok) throw new Error(json?.error || `${kind} failed`);
+        results.push({ id: row.id, filename: row.original_filename, status: "Completed", detail: "" });
+      } catch (error) {
+        results.push({ id: row.id, filename: row.original_filename, status: "Failed", detail: error.message });
+      }
+    }
+    setSelectedIds([]);
+    selectionAnchorId.current = null;
+    if (kind === "retry") {
+      setStatusFilters([]);
+      await load({ fallbackIndex, statusFilterOverride: [] });
+    } else {
+      await load({ fallbackIndex });
+    }
+    setBulkResults({ action: kind, items: results });
+    setBulkAction("");
   };
 
   const update = async (patch) => {
@@ -304,17 +447,17 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={cn("font-jakarta w-full flex flex-1 flex-col min-h-full focus:outline-none animate-fade-up", rows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+      <div className="font-jakarta w-full h-full min-h-0 min-w-0 flex flex-1 flex-col focus:outline-none animate-fade-up">
         {/* ONE Single Card Container */}
-        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1", rows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+        <Card className="flex h-full min-h-0 min-w-0 w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-1">
           <PageHeader
             icon="ph-check-square"
             title="Batch Review"
             description="Assign a student and document type before creating formal records."
             showBorder={false}
-            className="p-6"
+            className="p-1.5 sm:p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px] max-md:hidden"
             actions={
               <div className="flex items-center gap-2">
                 {statusFilters.length === 1 && statusFilters[0] === "Failed" && total > 0 && (
@@ -339,9 +482,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           />
 
           {/* Navigation Toolbar */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="shrink-0 border-t border-border dark:border-border p-1.5 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Status Line Tabs */}
-            <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+            <div className="flex items-center gap-4 sm:gap-6 min-w-0 select-none overflow-x-auto">
               {STATUS_TABS.map((item) => {
                 const isActive = item.id === ""
                   ? statusFilters.length === 0
@@ -352,7 +495,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                     type="button"
                     onClick={() => {
                       setStatusFilters(item.id ? [item.id] : []);
-                      setPage(0);
                     }}
                     className={cn(
                       "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
@@ -368,8 +510,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             </div>
 
             {/* Right: Search Input & MultiCriteriaFilter */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+            <div className="flex min-w-0 flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:shrink-0">
+              <div className="w-full sm:w-[min(260px,40vw)] lg:w-[300px] relative group min-w-0 sm:shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                   <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
@@ -377,7 +519,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   value={query}
                   onChange={(e) => {
                     setQuery(e.target.value);
-                    setPage(0);
                   }}
                   placeholder="Search filename or OCR text..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -419,17 +560,20 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           <ActiveFilterChips
             chips={activeChips}
             onClearAll={handleClearFilters}
-            className="border-t border-border dark:border-border px-6 py-2.5"
+            className="hidden border-t border-border px-6 py-2.5 dark:border-border lg:block"
           />
 
           {loading ? (
             <BatchReviewSkeleton />
           ) : (
-            <div className="grid min-h-[580px] flex-1 border-t border-border dark:border-border lg:grid-cols-[minmax(280px,0.8fr)_minmax(460px,1.4fr)]">
+            <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 border-t border-border dark:border-border" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }}>
               {/* Left Column: Review Queue */}
-              <div className="flex min-h-0 flex-col border-b border-border dark:border-border lg:border-b-0 lg:border-r">
+              <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
                 <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Review Queue</h3>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Review Queue</h3>
+                    <p className="mt-1 text-[10px] text-gray-500 dark:text-zinc-400 max-md:hidden">↑/↓ move · Shift-click or Shift+↑/↓ range · ⌘/Ctrl-click toggle · ⌘/Ctrl+A select loaded · Esc clear</p>
+                  </div>
                   <div className="flex items-center gap-2">
                     {statusFilters.length === 1 && statusFilters[0] === "Failed" && rows.length > 0 && (
                       <Button
@@ -448,10 +592,18 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                     </span>
                   </div>
                 </div>
-                <div className="flex h-full min-h-0 flex-col overflow-auto p-3 flex-1">
+                {selectedIds.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 dark:border-border">
+                    <span className="mr-auto text-xs font-semibold text-gray-700 dark:text-zinc-200">{selectedIds.length} selected</span>
+                    <Button size="xs" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("confirm")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "confirm" ? "Confirming…" : "Confirm"}</Button>
+                    <Button size="xs" variant="outline" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("retry")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "retry" ? "Retrying…" : "Retry"}</Button>
+                    <Button size="xs" variant="destructive" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("dismiss")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "dismiss" ? "Dismissing…" : "Dismiss"}</Button>
+                  </div>
+                )}
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2 sm:p-3">
                 {rows.length === 0 ? (
                   <div className="flex flex-1 items-center justify-center p-6">
-                    <Empty className="flex flex-1 h-full min-h-[420px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                    <Empty className="flex min-h-0 flex-1 flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-5">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -472,15 +624,42 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-1.5 overflow-y-auto flex-1 pr-0.5">
+                    <div
+                      ref={listRef}
+                      role="listbox"
+                      aria-label="Review queue files"
+                      aria-multiselectable="true"
+                      onScroll={(event) => {
+                        const element = event.currentTarget;
+                        if (element.scrollHeight - element.scrollTop - element.clientHeight < 160) loadMore();
+                      }}
+                      className="space-y-1.5 overflow-y-auto flex-1 pr-0.5"
+                    >
                       {rows.map((row) => {
                         const isCurrent = Number(selectedId) === Number(row.id);
+                        const isSelected = selectedIds.some((id) => Number(id) === Number(row.id));
                         return (
                           <button
                             type="button"
                             key={row.id}
-                            onClick={() => {
+                            disabled={Boolean(bulkAction)}
+                            ref={(element) => {
+                              if (element) rowRefs.current.set(Number(row.id), element);
+                              else rowRefs.current.delete(Number(row.id));
+                            }}
+                            data-review-row
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={(event) => {
                               setSelectedId(row.id);
+                              const selection = getRowClickSelection(
+                                rows,
+                                { anchorId: selectionAnchorId.current, activeId: selectedId, selectedIds },
+                                row.id,
+                                { shiftKey: event.shiftKey, modifierKey: event.metaKey || event.ctrlKey },
+                              );
+                              selectionAnchorId.current = selection.anchorId;
+                              setSelectedIds(selection.selectedIds);
                               setNote(row.review_note || "");
                               setStudentAssignmentQuery("");
                             }}
@@ -488,10 +667,15 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               "group w-full rounded-xl border p-3 text-left transition-all cursor-pointer",
                               isCurrent
                                 ? "border-pup-maroon/40 bg-red-50/50 shadow-xs dark:border-red-500/40 dark:bg-red-950/20"
+                                : isSelected
+                                  ? "border-blue-300 bg-blue-50/70 dark:border-blue-500/40 dark:bg-blue-950/20"
                                 : "border-border/80 bg-white hover:bg-gray-50/80 dark:border-border dark:bg-zinc-900/40 dark:hover:bg-zinc-800/60"
                             )}
                           >
                             <div className="flex items-center gap-2">
+                              <span aria-hidden="true" className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]", isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 dark:border-zinc-600")}>
+                                {isSelected ? "✓" : ""}
+                              </span>
                               <HugeIcon  className={cn(
                                 "ph-bold ph-file-text text-sm shrink-0",
                                 isCurrent
@@ -522,37 +706,16 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       })}
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3 px-1 text-xs dark:border-border">
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        onClick={() => setPage((current) => Math.max(0, current - 1))}
-                        disabled={page === 0 || loading}
-                        className="h-7 px-2.5 text-xs font-medium rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40"
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-xs text-gray-900 dark:text-zinc-300">
-                        Page {page + 1} of {Math.max(1, Math.ceil(total / PAGE_SIZE))}
-                      </span>
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        onClick={() => setPage((current) => current + 1)}
-                        disabled={(page + 1) * PAGE_SIZE >= total || loading}
-                        className="h-7 px-2.5 text-xs font-medium rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40"
-                      >
-                        Next
-                      </Button>
-                    </div>
+                    {loadingMore && <p className="py-3 text-center text-xs text-gray-500">Loading more files…</p>}
+                    {!loadingMore && rows.length < total && <p className="py-2 text-center text-[11px] text-gray-400">Scroll for more · {rows.length} of {total}</p>}
                   </>
                 )}
               </div>
             </div>
 
             {/* Right Column: Document Inspector */}
-            <div className="flex min-h-0 flex-col flex-1">
-              <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
+            <div className="flex min-h-0 min-w-0 flex-col flex-1">
+              <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 max-sm:px-2 max-sm:py-1.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
                 <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-50">
                   {selected?.original_filename || "Document Inspector"}
                 </h3>
@@ -569,9 +732,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </span>
                 )}
               </div>
-              <div className="flex flex-1 min-h-0 overflow-auto p-5">
+              <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-3 sm:p-5">
                 {selected ? (
-                  <div className="grid min-h-0 w-full grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                  <div className="grid min-h-0 min-w-0 w-full grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 sm:gap-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
                     {/* Preview Sub-column */}
                     <div className="flex min-w-0 flex-col gap-3">
                       {selected.review_status === "Processing" && (
@@ -580,13 +743,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         </div>
                       )}
 
-                      <div className="relative flex min-h-[360px] flex-1 items-start justify-center overflow-auto rounded-2xl border border-border bg-gray-300 p-3 dark:border-border dark:bg-zinc-800">
+                      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border border-border bg-gray-300 p-3 max-md:h-10 max-md:flex-none max-md:p-1 dark:border-border dark:bg-zinc-800">
                         <button
                           type="button"
                           onClick={openFullscreenPreview}
                           aria-label="Open document preview fullscreen"
                           title="View fullscreen"
-                          className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                          className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white max-md:right-0 max-md:top-0 max-md:h-8 max-md:w-8"
                         >
                           <HugeIcon className="ph-bold ph-corners-out text-base" />
                         </button>
@@ -603,7 +766,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                 openFullscreenPreview();
                               }
                             }}
-                            className="relative flex min-h-[360px] w-full cursor-zoom-in items-start justify-center pt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
+                            className="relative hidden h-full min-h-0 w-full cursor-zoom-in items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon lg:flex"
                           >
                             <Image
                               src={previewUrl}
@@ -611,7 +774,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               width={800}
                               height={1000}
                               unoptimized
-                              className="block h-auto max-h-[520px] w-auto max-w-full rounded-lg object-contain"
+                              className="block h-auto max-h-full w-auto max-w-full rounded-lg object-contain"
                             />
                             {Object.entries(ocrRegions).map(([key, region]) => {
                               const field = REGION_LABELS[key];
@@ -639,7 +802,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             })}
                           </div>
                         ) : (
-                          <div className="flex h-[520px] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+                          <div className="hidden h-full min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl lg:flex">
                             <iframe
                               title="Scanned document preview"
                               src={previewUrl}
@@ -655,16 +818,16 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       </div>
 
                       {!Object.keys(ocrRegions).length && (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-[11px] text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
+                        <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-[11px] text-amber-800 max-md:hidden dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
                           No OCR field regions were saved for this item. Click <strong>Retry</strong> to apply the current recognition template and display highlighted boxes.
                         </div>
                       )}
                     </div>
 
                     {/* Verification Form Sub-column */}
-                    <div className="space-y-4">
+                    <div className="grid min-h-0 min-w-0 grid-cols-2 content-start gap-x-3 gap-y-1 overflow-hidden md:block md:space-y-4">
                       {/* Student Assignment */}
-                      <div className="space-y-2">
+                      <div className="col-span-2 min-w-0 space-y-0.5 sm:space-y-2">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Student Assignment
                         </label>
@@ -674,8 +837,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           </p>
                         )}
                         {ocrStudentCandidates.length > 0 && (
-                          <div className="space-y-1.5 rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
-                            <p className="text-[11px] text-blue-800 dark:text-blue-200">
+                            <div className="space-y-1 rounded-xl border border-blue-100 bg-blue-50/60 p-1.5 sm:space-y-1.5 sm:p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
+                            <p className="hidden text-[11px] text-blue-800 dark:text-blue-200 lg:block">
                               Configured name fields found candidates within 10% letter difference. Choose a record to assign it.
                             </p>
                             {ocrStudentCandidates.map((candidate) => {
@@ -701,7 +864,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                     );
                                   }}
                                   className={cn(
-                                    "flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-xs transition-colors",
+                                    "flex w-full items-center justify-between gap-3 rounded-lg px-2 py-0.5 text-left text-xs transition-colors sm:py-1.5",
                                     isSelected ? "bg-white ring-1 ring-pup-maroon/30 dark:bg-zinc-900" : "hover:bg-white dark:hover:bg-zinc-900",
                                   )}
                                 >
@@ -723,7 +886,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               role="combobox"
                               aria-expanded={Boolean(studentAssignmentQuery.trim())}
                               aria-controls={`student-search-results-${selected.id}`}
-                              className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                              className="h-8 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon sm:h-10"
                             />
                             {studentAssignmentQuery.trim() && (
                               <div
@@ -769,18 +932,18 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               </div>
                             )}
                         </div>
-                        <span className="block text-[11px] font-normal text-gray-900 dark:text-zinc-300">
+                        <span className="hidden text-[11px] font-normal text-gray-900 dark:text-zinc-300 lg:block">
                           Search by name or student number, then select the student for this document.
                         </span>
                       </div>
 
                       {/* Document Type */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      <div className="min-w-0">
+                        <label className="mb-0.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300 sm:mb-1.5">
                           Document Type
                         </label>
                         <Select
-                          className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-8 rounded-xl px-2 sm:h-10 sm:px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                           value={selected.proposed_doc_type || ""}
                           onChange={(event) =>
                             update({ docType: event.target.value }).catch((error) =>
@@ -804,8 +967,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       </div>
 
                       {/* Scanned Name */}
-                      <div>
-                        <label htmlFor={`scanned-name-${selected.id}`} className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      <div className="min-w-0">
+                        <label htmlFor={`scanned-name-${selected.id}`} className="mb-0.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300 sm:mb-1.5">
                           Scanned Name
                         </label>
                         <Input
@@ -813,16 +976,16 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           value={selected.ocr_name || ""}
                           readOnly
                           placeholder="No name was extracted"
-                          className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-900 text-xs text-gray-700 dark:text-zinc-200 shadow-none"
+                          className="h-8 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-900 text-xs text-gray-700 dark:text-zinc-200 shadow-none sm:h-10"
                         />
-                        <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
+                        <p className="mt-1 hidden text-[11px] text-gray-500 dark:text-zinc-400 lg:block">
                           Name recognized from the scan. Confirm the student assignment above.
                         </p>
                       </div>
 
                       {/* Review Note */}
-                      <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      <div className="col-span-2 min-w-0">
+                        <label className="mb-0.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300 sm:mb-1.5">
                           Review Note
                         </label>
                         <Input
@@ -830,12 +993,12 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           onChange={(event) => setNote(event.target.value)}
                           onBlur={() => update({ reviewNote: note }).catch(() => {})}
                           placeholder="Optional review or conflict note..."
-                          className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-8 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon sm:h-10"
                         />
                       </div>
 
                       {/* Actions */}
-                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border dark:border-border">
+                      <div className="col-span-2 flex flex-wrap items-center gap-2 border-t border-border pt-1 dark:border-border sm:col-span-1 sm:border-0 sm:pt-2">
                         <Button
                           size="sm"
                           onClick={() =>
@@ -850,7 +1013,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             !selected.staff_selected_student_no ||
                             !selected.proposed_doc_type
                           }
-                          className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs sm:h-10 sm:px-5"
                           style={{ color: "#ffffff" }}
                         >
                           {saving ? "Confirming..." : "Confirm"}
@@ -860,7 +1023,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           variant="outline"
                           onClick={() => action("retry")}
                           disabled={saving}
-                          className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40 sm:h-10 sm:px-4"
                         >
                           Retry
                         </Button>
@@ -873,7 +1036,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             })
                           }
                           disabled={saving}
-                          className="h-10 px-4 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/70 dark:hover:bg-red-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/70 dark:hover:bg-red-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40 sm:h-10 sm:px-4"
                         >
                           {selected.review_status === "Failed" ? "Dismiss" : "Reject"}
                         </Button>
@@ -882,7 +1045,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </div>
                 ) : (
                   <div className="flex flex-1 items-center justify-center p-8">
-                    <Empty className="flex h-full min-h-[380px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                    <Empty className="flex h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-5">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -906,6 +1069,48 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         )}
         </Card>
       </div>
+      <Dialog open={confirmBulkDismiss} onOpenChange={setConfirmBulkDismiss}>
+        <DialogContent className="flex flex-col gap-0 sm:max-w-md rounded-2xl bg-white p-0 dark:bg-zinc-900">
+          <DialogHeader className="border-b border-border p-6 pb-4 text-left">
+            <DialogTitle className="text-base font-semibold">Dismiss selected files?</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 text-sm text-gray-600 dark:text-zinc-300">
+            This will dismiss up to {selectedIds.length} selected files that are still eligible. Other files will be skipped and listed in the results.
+          </div>
+          <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
+            <Button variant="outline" onClick={() => setConfirmBulkDismiss(false)} className="rounded-xl">Cancel</Button>
+            <Button variant="destructive" onClick={() => runBulkAction("dismiss", { confirmed: true })} className="rounded-xl">Dismiss</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={Boolean(bulkResults)} onOpenChange={(open) => !open && setBulkResults(null)}>
+        <DialogContent className="flex flex-col gap-0 sm:max-w-xl rounded-2xl bg-white p-0 dark:bg-zinc-900">
+          <DialogHeader className="border-b border-border p-6 pb-4 text-left">
+            <DialogTitle className="text-base font-semibold">Bulk action results</DialogTitle>
+          </DialogHeader>
+          {bulkResults && (
+            <div className="space-y-3 p-6">
+              <p className="text-sm text-gray-600 dark:text-zinc-300">
+                {bulkResults.items.filter((item) => item.status === "Completed").length} completed · {bulkResults.items.filter((item) => item.status === "Skipped").length} skipped · {bulkResults.items.filter((item) => item.status === "Failed").length} failed
+              </p>
+              <div className="max-h-[50vh] space-y-2 overflow-y-auto">
+                {bulkResults.items.map((item) => (
+                  <div key={item.id} className="rounded-xl border border-border p-3 text-xs">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="min-w-0 truncate font-medium" title={item.filename}>{item.filename}</span>
+                      <span className={cn("shrink-0 font-semibold", item.status === "Completed" ? "text-emerald-600" : item.status === "Skipped" ? "text-amber-600" : "text-red-600")}>{item.status}</span>
+                    </div>
+                    {item.detail && <p className="mt-1 text-gray-500 dark:text-zinc-400">{item.detail}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end border-t border-border px-6 py-4">
+            <Button onClick={() => setBulkResults(null)} className="rounded-xl">Done</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(fullscreenPreview)} onOpenChange={(open) => !open && setFullscreenPreview(null)}>
         <DialogContent
           hideClose
