@@ -64,19 +64,6 @@ function labelIs(line, ...candidates) {
 
 const DOC_CLUSTERS = [
   {
-    id: "grade11ReportCard",
-    phrases: [
-      "grade 11 report card",
-      "grade 11",
-      "senior high school report card",
-      "learner's progress report card",
-      "report card",
-      "general average",
-      "school year",
-    ],
-    labelHints: ["grade 11 report card"],
-  },
-  {
     id: "birth",
     /** phrases likely in PSA / NSO birth certificates */
     phrases: [
@@ -1078,10 +1065,9 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
   const templateExtractedName = coordinateRecognition?.extractedName || "";
   const naturalLanguageName = detectName(lines, { nlp });
   const rawExtracted = templateExtractedName || naturalLanguageName;
-  const suggestedName = rawExtracted ? formatToLNFnMi(rawExtracted) : "";
   const matchingStartedAt = performance.now();
   let studentMatches = [];
-  if (templateExtractedName && matchStudents) {
+  if (matchStudents && (templateExtractedName || rawText)) {
     try {
       const csrfToken = typeof document === "undefined"
         ? ""
@@ -1092,7 +1078,7 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
           "Content-Type": "application/json",
           ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
         },
-        body: JSON.stringify({ extractedName: templateExtractedName }),
+        body: JSON.stringify({ extractedName: templateExtractedName, ocrText: rawText }),
         cache: "no-store",
       });
       const data = await response.json().catch(() => null);
@@ -1103,6 +1089,11 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
   }
   const matchingMs = performance.now() - matchingStartedAt;
 
+  const suggestedName = studentMatches.length === 1
+    ? studentMatches[0].name
+    : rawExtracted
+      ? formatToLNFnMi(rawExtracted)
+      : "";
   const nameComponents = splitNameComponents(suggestedName);
 
   const suggestion = {

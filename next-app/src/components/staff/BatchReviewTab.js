@@ -839,7 +839,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         {ocrStudentCandidates.length > 0 && (
                             <div className="space-y-1 rounded-xl border border-blue-100 bg-blue-50/60 p-1.5 sm:space-y-1.5 sm:p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
                             <p className="hidden text-[11px] text-blue-800 dark:text-blue-200 lg:block">
-                              Configured name fields found candidates within 10% letter difference. Choose a record to assign it.
+                              OCR found possible roster matches within 10% letter difference. Choose a record to assign it.
                             </p>
                             {ocrStudentCandidates.map((candidate) => {
                               const studentNo = candidate.studentNo || candidate.student_no;
