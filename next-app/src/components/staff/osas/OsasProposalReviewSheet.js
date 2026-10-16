@@ -84,10 +84,10 @@ export default function OsasProposalReviewSheet({
     >
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[50vw] xl:max-w-[50vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[50vw] data-[side=right]:xl:max-w-[50vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* 1. EXECUTIVE SHEET HEADER */}
-        <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-slate-50/70 dark:bg-zinc-900/50 text-left">
+        <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
           <div className="min-w-0 flex-1">
             {/* Eyebrow & Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -117,12 +117,12 @@ export default function OsasProposalReviewSheet({
             </div>
 
             {/* Proposal Title */}
-            <SheetTitle className="text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-50 leading-snug">
+            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug truncate">
               {selected.title}
             </SheetTitle>
 
             {/* Proponent & Submitter Info */}
-            <SheetDescription className="mt-1.5 text-xs text-slate-600 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+            <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1">
                 <HugeIcon className="ph-bold ph-user text-slate-400 text-xs" />
                 <span>Proponent:</span>
@@ -211,41 +211,41 @@ export default function OsasProposalReviewSheet({
                 )}
               >
                 {/* Target Attendance */}
-                <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-3 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
                     <HugeIcon className="ph-bold ph-users text-xs" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Attendance</span>
                   </div>
-                  <p className="mt-1 text-base font-bold text-slate-900 dark:text-zinc-100 font-mono">
+                  <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
                     {selected.target_attendance ? Number(selected.target_attendance).toLocaleString() : "—"}
                   </p>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">Expected attendees</span>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">Expected attendees</span>
                 </div>
 
                 {/* Proposed Budget */}
-                <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-3 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
                     <HugeIcon className="ph-bold ph-coins text-xs text-amber-500" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Budget</span>
                   </div>
-                  <p className="mt-1 text-base font-bold text-slate-900 dark:text-zinc-100 font-mono">
+                  <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
                     {selected.estimated_budget
                       ? `₱${Number(selected.estimated_budget).toLocaleString(undefined, { minimumFractionDigits: 0 })}`
                       : "—"}
                   </p>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">Estimated cost</span>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">Estimated cost</span>
                 </div>
 
                 {/* Event Schedule Date */}
-                <div className="col-span-2 sm:col-span-1 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-3 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                <div className="col-span-2 sm:col-span-1 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
                     <HugeIcon className="ph-bold ph-calendar text-xs" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Target Date</span>
                   </div>
-                  <p className="mt-1 text-xs font-bold text-slate-800 dark:text-zinc-200 font-mono">
+                  <p className="mt-1 text-xs font-bold text-gray-800 dark:text-zinc-200 font-mono">
                     {eventDateStr || "To Be Announced"}
                   </p>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                     Submitted: {submittedDateStr}
                   </span>
                 </div>
@@ -255,13 +255,13 @@ export default function OsasProposalReviewSheet({
               {selected.venue && (
                 <div
                   className={cn(
-                    "flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/40 dark:bg-zinc-900/20 text-xs text-slate-700 dark:text-zinc-300",
+                    "flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 text-xs text-gray-700 dark:text-zinc-300",
                     mobileTab === "documents" && "hidden md:flex"
                   )}
                 >
                   <HugeIcon className="ph-bold ph-map-pin text-sm text-pup-maroon dark:text-red-400 shrink-0" />
                   <span>
-                    Venue: <strong className="text-slate-900 dark:text-zinc-100">{selected.venue}</strong>
+                    Venue: <strong className="text-gray-900 dark:text-zinc-100">{selected.venue}</strong>
                   </span>
                 </div>
               )}
@@ -270,14 +270,14 @@ export default function OsasProposalReviewSheet({
               {selected.description && (
                 <div
                   className={cn(
-                    "rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-1.5",
+                    "rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-1.5",
                     mobileTab === "documents" && "hidden md:block"
                   )}
                 >
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                     Event Overview & Objectives
                   </h4>
-                  <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                     {selected.description}
                   </p>
                 </div>
@@ -419,16 +419,16 @@ export default function OsasProposalReviewSheet({
                     onOpenPreview={() => handleOpenPdfPreview?.(selected)}
                   />
                 ) : (
-                  <div className="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-4 flex items-center justify-between">
+                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-xl shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
                         <HugeIcon className="ph-bold ph-file-pdf" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate max-w-[260px]">
+                        <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[260px]">
                           {selected.title}.pdf
                         </p>
-                        <p className="text-[11px] text-slate-400 dark:text-zinc-500">
+                        <p className="text-[11px] text-gray-400 dark:text-zinc-500">
                           Complete proposal and activity flow document
                         </p>
                       </div>
@@ -439,7 +439,7 @@ export default function OsasProposalReviewSheet({
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenPdfPreview?.(selected)}
-                      className="h-8 px-3 text-xs font-semibold rounded-lg border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-slate-50 cursor-pointer shadow-2xs"
+                      className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs"
                     >
                       <HugeIcon className="ph-bold ph-eye mr-1.5 text-xs" />
                       <span>Inspect PDF</span>
@@ -459,22 +459,22 @@ export default function OsasProposalReviewSheet({
               {/* EVALUATION ACTION MODULE */}
               <div
                 className={cn(
-                  "rounded-2xl border border-slate-200/90 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/40 p-4.5 space-y-3.5 shadow-2xs",
+                  "rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4.5 space-y-3.5 shadow-2xs",
                   mobileTab === "history" && "hidden md:block"
                 )}
               >
                 <div className="flex items-center justify-between pb-2 border-b border-border/80 dark:border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Evaluation & Decision
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Stage: <strong className="text-slate-900 dark:text-zinc-100">{selected.status}</strong>
+                  <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                    Stage: <strong className="text-gray-900 dark:text-zinc-100">{selected.status}</strong>
                   </span>
                 </div>
 
                 {/* Quick Stage Selection Pills */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
+                  <label className="text-[11px] font-semibold text-gray-600 dark:text-zinc-400">
                     Stage Action:
                   </label>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -489,7 +489,7 @@ export default function OsasProposalReviewSheet({
                             "px-2.5 py-1.5 text-xs font-semibold rounded-xl border text-center transition-all cursor-pointer",
                             isChosen
                               ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-slate-900 dark:border-zinc-100 shadow-xs"
-                              : "bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700"
+                              : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-700"
                           )}
                         >
                           {opt}
@@ -623,15 +623,15 @@ export default function OsasProposalReviewSheet({
               {/* TRANSACTION & AUDIT TIMELINE */}
               <div
                 className={cn(
-                  "rounded-2xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 p-4 space-y-3",
+                  "rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/30 p-4 space-y-3",
                   mobileTab === "evaluation" && "hidden md:block"
                 )}
               >
                 <div className="flex items-center justify-between pb-2 border-b border-border/80 dark:border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Audit Timeline
                   </span>
-                  <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500">
+                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500">
                     {selected.updates?.length || 0} events
                   </span>
                 </div>
@@ -656,7 +656,7 @@ export default function OsasProposalReviewSheet({
                             {update.status}
                           </span>
                           {update.created_at && (
-                            <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
                               {new Date(update.created_at).toLocaleDateString(undefined, {
                                 month: "short",
                                 day: "numeric",
@@ -666,14 +666,14 @@ export default function OsasProposalReviewSheet({
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed bg-slate-50/70 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-slate-200/70 dark:border-zinc-800">
+                        <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-gray-50/60 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-border/80 dark:border-border">
                           {update.message}
                         </p>
                       </li>
                     ))}
                   </ol>
                 ) : (
-                  <div className="py-6 text-center text-slate-400 dark:text-zinc-500 text-xs">
+                  <div className="py-6 text-center text-gray-400 dark:text-zinc-500 text-xs">
                     No status transitions recorded yet.
                   </div>
                 )}
@@ -683,11 +683,16 @@ export default function OsasProposalReviewSheet({
         </div>
 
         {/* 3. SHEET FOOTER */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-slate-50/70 dark:bg-zinc-900/50 flex flex-row items-center justify-end gap-2.5">
+        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+              Proposal ID: #{selected.id}
+            </span>
+          </div>
           <Button
             variant="outline"
             onClick={() => setSheetOpen(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

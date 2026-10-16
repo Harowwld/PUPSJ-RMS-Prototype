@@ -34,6 +34,7 @@ import {
 import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
 import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import {
   getInstitutionalBranding,
   DEFAULT_BRANDING_LOGO,
@@ -169,6 +170,44 @@ export default function StudentComplianceTab({ authUser }) {
     setSearchQuery("");
     setSortConfig({ column: "priority", direction: "asc" });
   };
+
+  const complianceFilterGroups = useMemo(() => {
+    const groups = [
+      {
+        id: "status",
+        label: "Status",
+        options: [
+          { value: "missing", label: "Pending Submission" },
+          { value: "submitted", label: "Completed" },
+        ],
+      },
+    ];
+    if (availableCategories.length > 0) {
+      groups.push({
+        id: "category",
+        label: "Category",
+        options: availableCategories.map((cat) => ({ value: cat, label: cat })),
+      });
+    }
+    return groups;
+  }, [availableCategories]);
+
+  const sortChip = useMemo(() => {
+    if (sortConfig.column === "priority") return [];
+    const sortLabel =
+      sortConfig.column === "docType"
+        ? "Requirement"
+        : sortConfig.column === "category"
+        ? "Category"
+        : "Status";
+    return [
+      {
+        groupLabel: "Sort",
+        label: `${sortLabel} (${sortConfig.direction === "asc" ? "Asc" : "Desc"})`,
+        onClear: () => setSortConfig({ column: "priority", direction: "asc" }),
+      },
+    ];
+  }, [sortConfig]);
 
   const activeFilterCount = statusFilters.length + categoryFilters.length;
 
@@ -632,13 +671,11 @@ export default function StudentComplianceTab({ authUser }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-border dark:bg-zinc-800 dark:border-border dark:text-zinc-300">
-                <HugeIcon className="ph-bold ph-eye text-[12px]"></HugeIcon>
+              <span className="hidden md:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-border dark:bg-zinc-800 dark:border-border dark:text-zinc-300">
                 Viewer Only
               </span>
               {student.studentNo && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                  <HugeIcon className="ph-fill ph-student text-[13px]"></HugeIcon>
+                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
                   {student.studentNo}
                 </span>
               )}
@@ -963,98 +1000,58 @@ export default function StudentComplianceTab({ authUser }) {
         </div>
 
         {/* D. Active Filter Chips Bar */}
-        {(statusFilters.length > 0 || categoryFilters.length > 0 || sortConfig.column !== "priority" || searchQuery) && (
-          <div className="flex-none border-t border-border bg-white px-6 py-2.5 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-border dark:bg-card">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                Active filters:
-              </span>
-              {statusFilters.map((s) => (
-                <div
-                  key={s}
-                  className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50"
-                >
-                  Status: {s === "missing" ? "PENDING" : "COMPLETED"}
-                  <button
-                    type="button"
-                    onClick={() => toggleStatusFilter(s)}
-                    className="hover:text-red-500 cursor-pointer"
-                  >
-                    <HugeIcon className="ph-bold ph-x text-[10px]" />
-                  </button>
-                </div>
-              ))}
-              {categoryFilters.map((cat) => (
-                <div
-                  key={cat}
-                  className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50"
-                >
-                  Category: {cat}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategoryFilter(cat)}
-                    className="hover:text-red-500 cursor-pointer"
-                  >
-                    <HugeIcon className="ph-bold ph-x text-[10px]" />
-                  </button>
-                </div>
-              ))}
-              {sortConfig.column !== "priority" && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Sort: {sortConfig.column === "docType" ? "Requirement" : sortConfig.column === "category" ? "Category" : "Status"} ({sortConfig.direction === "asc" ? "Asc" : "Desc"})
-                  <button
-                    type="button"
-                    onClick={() => setSortConfig({ column: "priority", direction: "asc" })}
-                    className="hover:text-red-500 cursor-pointer"
-                    title="Reset to priority sort"
-                  >
-                    <HugeIcon className="ph-bold ph-x text-[10px]" />
-                  </button>
-                </div>
-              )}
-              {searchQuery && (
-                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                  Query: &ldquo;{searchQuery}&rdquo;
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="hover:text-red-500 cursor-pointer"
-                  >
-                    <HugeIcon className="ph-bold ph-x text-[10px]" />
-                  </button>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                title="Clear all filters"
-                className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer ml-1"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        )}
+        <ActiveFilterChips
+          groups={complianceFilterGroups}
+          selected={{ status: statusFilters, category: categoryFilters }}
+          onRemove={(groupId, val) => {
+            if (groupId === "status") toggleStatusFilter(val);
+            if (groupId === "category") toggleCategoryFilter(val);
+          }}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery("")}
+          extraChips={sortChip}
+          onClearAll={clearAllFilters}
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+        />
 
         {/* E. Requirements Content (Cards or Table) */}
         <div className="p-6 border-t border-border dark:border-border">
           {sortedRequirements.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl border border-dashed border-border dark:border-border">
-              <Empty>
-                <EmptyMedia>
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 mx-auto">
-                    <HugeIcon className="ph-duotone ph-files text-3xl" />
+            <div className="p-12 text-center">
+              <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                      <HugeIcon
+                        className={
+                          searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
+                            ? "ph-magnifying-glass text-2xl text-pup-maroon dark:text-primary"
+                            : "ph-clipboard-check text-2xl text-pup-maroon dark:text-primary"
+                        }
+                      />
+                    </EmptyMedia>
                   </div>
-                </EmptyMedia>
-                <EmptyHeader>
-                  <EmptyTitle className="text-base font-bold text-gray-900 dark:text-zinc-100 mt-2">
-                    No Matching Requirements Found
+                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                    {searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
+                      ? "No Matches Found"
+                      : "No Document Requirements Assigned"}
                   </EmptyTitle>
-                  <EmptyDescription className="text-xs text-gray-900 dark:text-zinc-300 max-w-sm mx-auto mt-1">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                     {searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
                       ? "Try adjusting your search query or clearing some of the combined filters."
                       : "There are currently no document requirements assigned for your degree program."}
                   </EmptyDescription>
+                  {(searchQuery || statusFilters.length > 0 || categoryFilters.length > 0) && (
+                    <Button
+                      variant="outline"
+                      onClick={clearAllFilters}
+                      title="Reset Filters"
+                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    >
+                      Reset
+                    </Button>
+                  )}
                 </EmptyHeader>
               </Empty>
             </div>
@@ -1065,7 +1062,7 @@ export default function StudentComplianceTab({ authUser }) {
                 <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 select-none">
                     <th
-                      className="p-4 w-[54%] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      className="p-4 w-[42%] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                       onClick={() => handleSort("docType")}
                     >
                       <div className="flex items-center gap-1.5">
@@ -1083,7 +1080,7 @@ export default function StudentComplianceTab({ authUser }) {
                       </div>
                     </th>
                     <th
-                      className="p-4 w-[26%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      className="p-4 w-[24%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                       onClick={() => handleSort("category")}
                     >
                       <div className="flex items-center gap-1.5">
@@ -1101,7 +1098,7 @@ export default function StudentComplianceTab({ authUser }) {
                       </div>
                     </th>
                     <th
-                      className="p-4 pr-6 w-[20%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
+                      className="p-4 w-[22%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                       onClick={() => handleSort("status")}
                     >
                       <div className="flex items-center gap-1.5">
@@ -1118,6 +1115,9 @@ export default function StudentComplianceTab({ authUser }) {
                         )}
                       </div>
                     </th>
+                    <th className="p-4 pr-6 w-[12%] text-right whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border">
@@ -1127,7 +1127,7 @@ export default function StudentComplianceTab({ authUser }) {
                     return (
                       <tr
                         key={item.id}
-                        className="hover:bg-gray-50/60 dark:hover:bg-zinc-800/30 transition-colors"
+                        className="group border-b-[0.5px] border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none"
                       >
                         <td className="p-4 overflow-hidden">
                           <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate" title={item.docType}>
@@ -1140,16 +1140,99 @@ export default function StudentComplianceTab({ authUser }) {
                         <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap">
                           {item.category}
                         </td>
-                        <td className="p-4 pr-6 whitespace-nowrap">
+                        <td className="p-4 whitespace-nowrap">
                           {isSubmitted ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
-                              <HugeIcon className="ph-bold ph-check text-xs" /> Completed
+                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
+                              Completed
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
-                              <HugeIcon className="ph-bold ph-clock text-xs" /> Pending Submission
+                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
+                              Pending Submission
                             </span>
                           )}
+                        </td>
+                        <td className="p-4 pr-6 text-right whitespace-nowrap">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer shrink-0"
+                              >
+                                <span>Details</span>
+                                <HugeIcon className="ph-bold ph-caret-right text-[10px]" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              side="top"
+                              align="end"
+                              className="w-80 sm:w-96 rounded-2xl p-4 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-xl font-jakarta space-y-3"
+                            >
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                                    {item.category}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "text-xs font-bold px-2 py-0.5 rounded-full border",
+                                      isSubmitted
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                        : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                                    )}
+                                  >
+                                    {isSubmitted ? "Submitted" : "Pending Submission"}
+                                  </span>
+                                </div>
+                                <h5 className="text-sm font-bold text-gray-900 dark:text-zinc-100 mt-1">
+                                  {item.docType}
+                                </h5>
+                                <p className="text-xs text-gray-900 dark:text-zinc-300 mt-1 leading-relaxed">
+                                  {item.description}
+                                </p>
+                              </div>
+
+                              <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
+                                <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                  <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                                  Submission Guidelines
+                                </div>
+                                <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
+                                  {item.instructions || "Please submit original physical copies directly to Room 102."}
+                                </p>
+                              </div>
+
+                              {item.document ? (
+                                <div className="space-y-1.5 text-xs border-t border-border dark:border-border pt-2">
+                                  <div className="flex justify-between text-gray-900 dark:text-zinc-300">
+                                    <span>Archival Status:</span>
+                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                      {item.document.approvalStatus || "Approved"}
+                                    </span>
+                                  </div>
+                                  {item.document.createdAt && (
+                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300">
+                                      <span>Archived On:</span>
+                                      <span className="font-mono text-gray-900 dark:text-zinc-200">
+                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {item.document.originalFilename && (
+                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
+                                      <span>File:</span>
+                                      <span className="font-mono text-gray-900 dark:text-zinc-200 truncate max-w-[180px]" title={item.document.originalFilename}>
+                                        {item.document.originalFilename}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-[11px] text-gray-400 dark:text-zinc-500 border-t border-border dark:border-border pt-2">
+                                  Physical archive submission required.
+                                </div>
+                              )}
+                            </PopoverContent>
+                          </Popover>
                         </td>
                       </tr>
                     );
@@ -1234,13 +1317,11 @@ export default function StudentComplianceTab({ authUser }) {
 
                           {/* Status Badge */}
                           {isSubmitted ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300 shrink-0">
                               Completed
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300 shrink-0">
                               Pending
                             </span>
                           )}

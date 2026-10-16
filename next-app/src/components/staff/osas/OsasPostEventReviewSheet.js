@@ -60,17 +60,17 @@ export default function OsasPostEventReviewSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[50vw] xl:max-w-[50vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[50vw] data-[side=right]:xl:max-w-[50vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* 1. EXECUTIVE SHEET HEADER */}
-        <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-slate-50/70 dark:bg-zinc-900/50 text-left">
+        <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
           <div className="min-w-0 flex-1">
             {/* Eyebrow & Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-2">
-              <span className="font-mono text-[11px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+              <span className="font-mono text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                 Post-Event Clearance #{selectedPostEvent.id}
               </span>
-              <span className="text-slate-300 dark:text-zinc-700">·</span>
+              <span className="text-gray-300 dark:text-zinc-700">·</span>
               <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60">
                 {trackingNo}
               </span>
@@ -86,26 +86,26 @@ export default function OsasPostEventReviewSheet({
             </div>
 
             {/* Event Title */}
-            <SheetTitle className="text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-50 leading-snug">
+            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
               {selectedPostEvent.event_title}
             </SheetTitle>
 
             {/* Proponent & Organization Info */}
-            <SheetDescription className="mt-1.5 text-xs text-slate-600 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+            <SheetDescription className="mt-1.5 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded-md border border-red-200/60 dark:border-red-900/40 flex items-center gap-1">
                 {selectedPostEvent.organization_acronym && <span>[{selectedPostEvent.organization_acronym}]</span>}
                 <span className="truncate max-w-[200px]">{selectedPostEvent.organization_name}</span>
               </span>
-              <span className="text-slate-300 dark:text-zinc-700">·</span>
+              <span className="text-gray-300 dark:text-zinc-700">·</span>
               <span className="inline-flex items-center gap-1">
-                <HugeIcon className="ph-bold ph-user text-slate-400 text-xs" />
+                <HugeIcon className="ph-bold ph-user text-gray-400 text-xs" />
                 <span>Submitter:</span>
-                <strong className="text-slate-900 dark:text-zinc-200">{proponentName}</strong>
+                <strong className="text-gray-900 dark:text-zinc-200">{proponentName}</strong>
               </span>
               {selectedPostEvent.submitted_by_email && (
                 <>
-                  <span className="text-slate-300 dark:text-zinc-700">·</span>
-                  <span className="font-mono text-slate-500 dark:text-zinc-400 text-[11px]">
+                  <span className="text-gray-300 dark:text-zinc-700">·</span>
+                  <span className="font-mono text-gray-500 dark:text-zinc-400 text-[11px]">
                     {selectedPostEvent.submitted_by_email}
                   </span>
                 </>
@@ -172,39 +172,39 @@ export default function OsasPostEventReviewSheet({
                 )}
               >
                 {/* Actual Attendance */}
-                <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-3 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
                     <HugeIcon className="ph-bold ph-users text-xs" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Attendance</span>
                   </div>
-                  <p className="mt-1 text-base font-bold text-slate-900 dark:text-zinc-100 font-mono">
+                  <p className="mt-1 text-base font-bold text-gray-900 dark:text-zinc-100 font-mono">
                     {Number(attendeesCount).toLocaleString()}
                   </p>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">Verified attendees</span>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">Verified attendees</span>
                 </div>
 
                 {/* Total Liquidated Expenses */}
-                <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-3 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
                     <HugeIcon className="ph-bold ph-receipt text-xs text-emerald-500" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Total Spend</span>
                   </div>
                   <p className="mt-1 text-base font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                     ₱{expensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">Liquidated expenses</span>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">Liquidated expenses</span>
                 </div>
 
                 {/* Submission Date */}
-                <div className="col-span-2 sm:col-span-1 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-3 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                <div className="col-span-2 sm:col-span-1 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3 flex flex-col justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
                     <HugeIcon className="ph-bold ph-calendar text-xs" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Submitted</span>
                   </div>
-                  <p className="mt-1 text-xs font-bold text-slate-800 dark:text-zinc-200 font-mono">
+                  <p className="mt-1 text-xs font-bold text-gray-800 dark:text-zinc-200 font-mono">
                     {dateSubmittedStr}
                   </p>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">Post-event report</span>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">Post-event report</span>
                 </div>
               </div>
 
@@ -212,14 +212,14 @@ export default function OsasPostEventReviewSheet({
               {selectedPostEvent.narrative_summary && (
                 <div
                   className={cn(
-                    "rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-1.5",
+                    "rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-1.5",
                     mobileTab === "documents" && "hidden md:block"
                   )}
                 >
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                     Accomplishment & Narrative Summary
                   </h4>
-                  <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                     {selectedPostEvent.narrative_summary}
                   </p>
                 </div>
@@ -228,26 +228,26 @@ export default function OsasPostEventReviewSheet({
               {/* Submitted Compliance Documents (Narrative & Liquidation) */}
               <div className={cn("space-y-3", mobileTab === "overview" && "hidden md:block")}>
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Compliance Documents
                   </h4>
-                  <span className="text-[11px] text-slate-400 dark:text-zinc-500">
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">
                     Official attachments submitted for clearance
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Narrative Report Card */}
-                  <div className="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-4 flex flex-col justify-between space-y-3.5">
+                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex flex-col justify-between space-y-3.5">
                     <div className="flex items-start gap-3">
                       <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
                         <HugeIcon className="ph-bold ph-file-text" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 block">
+                        <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block">
                           Narrative Report
                         </span>
-                        <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-[200px]">
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate max-w-[200px]">
                           {selectedPostEvent.narrative_original_filename || "Narrative-Report.pdf"}
                         </p>
                       </div>
@@ -258,7 +258,7 @@ export default function OsasPostEventReviewSheet({
                       variant="outline"
                       size="sm"
                       title="Inspect Narrative Accomplishment Report"
-                      className="w-full h-8 text-xs font-semibold rounded-lg border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-slate-50 cursor-pointer shadow-2xs"
+                      className="w-full h-8 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs"
                       onClick={() => {
                         handleOpenPdfPreview?.({
                           url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
@@ -275,16 +275,16 @@ export default function OsasPostEventReviewSheet({
                   </div>
 
                   {/* Financial Liquidation Report Card */}
-                  <div className="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 p-4 flex flex-col justify-between space-y-3.5">
+                  <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex flex-col justify-between space-y-3.5">
                     <div className="flex items-start gap-3">
                       <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-emerald-100 dark:border-emerald-900/30">
                         <HugeIcon className="ph-bold ph-receipt" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 block">
+                        <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block">
                           Financial Liquidation
                         </span>
-                        <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-[200px]">
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate max-w-[200px]">
                           {selectedPostEvent.liquidation_original_filename || "Liquidation-Vouchers.pdf"}
                         </p>
                       </div>
@@ -296,7 +296,7 @@ export default function OsasPostEventReviewSheet({
                         variant="outline"
                         size="sm"
                         title="Inspect Financial Liquidation & Vouchers"
-                        className="w-full h-8 text-xs font-semibold rounded-lg border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 cursor-pointer shadow-2xs"
+                        className="w-full h-8 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs"
                         onClick={() => {
                           handleOpenPdfPreview?.({
                             url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
@@ -311,7 +311,7 @@ export default function OsasPostEventReviewSheet({
                         <span>Inspect Liquidation</span>
                       </Button>
                     ) : (
-                      <div className="h-8 flex items-center justify-center text-[11px] text-slate-400 italic">
+                      <div className="h-8 flex items-center justify-center text-[11px] text-gray-400 italic">
                         No liquidation file uploaded
                       </div>
                     )}
@@ -328,19 +328,19 @@ export default function OsasPostEventReviewSheet({
               )}
             >
               {/* CLEARANCE EVALUATION MODULE */}
-              <div className="rounded-2xl border border-slate-200/90 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/40 p-4.5 space-y-3.5 shadow-2xs">
+              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4.5 space-y-3.5 shadow-2xs">
                 <div className="flex items-center justify-between pb-2 border-b border-border/80 dark:border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Clearance Evaluation
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Current: <strong className="text-slate-900 dark:text-zinc-100">{selectedPostEvent.status}</strong>
+                  <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                    Current: <strong className="text-gray-900 dark:text-zinc-100">{selectedPostEvent.status}</strong>
                   </span>
                 </div>
 
                 {/* Quick Stage Selection Pills */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
+                  <label className="text-[11px] font-semibold text-gray-600 dark:text-zinc-400">
                     Clearance Decision:
                   </label>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -355,7 +355,7 @@ export default function OsasPostEventReviewSheet({
                             "px-2.5 py-1.5 text-xs font-semibold rounded-xl border text-center transition-all cursor-pointer",
                             isChosen
                               ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-slate-900 dark:border-zinc-100 shadow-xs"
-                              : "bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700"
+                              : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-700"
                           )}
                         >
                           {opt}
@@ -371,8 +371,8 @@ export default function OsasPostEventReviewSheet({
                     value={postEventStatus}
                     onValueChange={(val) => handleSelectStatusPill(val)}
                     usePortal={false}
-                    className="h-9 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border text-slate-900 dark:text-zinc-100 shadow-none cursor-pointer"
-                    buttonClassName="h-9 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border text-slate-900 dark:text-zinc-100"
+                    className="h-9 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border text-gray-900 dark:text-zinc-100 shadow-none cursor-pointer"
+                    buttonClassName="h-9 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border text-gray-900 dark:text-zinc-100"
                   >
                     {availablePostEventStatusOptions.map((opt) => (
                       <option key={opt} value={opt}>
@@ -428,7 +428,7 @@ export default function OsasPostEventReviewSheet({
                 {/* Justification / Remarks Textarea */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className={cn("font-semibold", isPostEventNoteRequired ? "text-pup-maroon dark:text-red-400" : "text-slate-600 dark:text-zinc-400")}>
+                    <span className={cn("font-semibold", isPostEventNoteRequired ? "text-pup-maroon dark:text-red-400" : "text-gray-600 dark:text-zinc-400")}>
                       Remarks & Evaluation Notes {isPostEventNoteRequired && "(Required, min 5 chars)"}
                     </span>
                     {isPostEventNoteRequired && (
@@ -439,7 +439,7 @@ export default function OsasPostEventReviewSheet({
                   </div>
                   <textarea
                     className={cn(
-                      "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition-colors dark:bg-zinc-900 dark:text-zinc-100",
+                      "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none transition-colors dark:bg-zinc-900 dark:text-zinc-100",
                       isPostEventNoteRequired && !isPostEventNoteValid
                         ? "border-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600"
                         : "border-border focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-border"
@@ -484,11 +484,11 @@ export default function OsasPostEventReviewSheet({
 
               {/* Past Review Remarks */}
               {selectedPostEvent.review_notes && (
-                <div className="rounded-2xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 p-4 space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-zinc-500 pb-2 border-b border-border/80 dark:border-border">
+                <div className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/30 p-4 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pb-2 border-b border-border/80 dark:border-border">
                     <span>
                       Previous Evaluation by:{" "}
-                      <strong className="text-slate-700 dark:text-zinc-300">
+                      <strong className="text-gray-700 dark:text-zinc-300">
                         {selectedPostEvent.reviewer_name || "OSAS Officer"}
                       </strong>
                     </span>
@@ -498,7 +498,7 @@ export default function OsasPostEventReviewSheet({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed pt-1">
+                  <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed pt-1">
                     {selectedPostEvent.review_notes}
                   </p>
                 </div>
@@ -508,11 +508,16 @@ export default function OsasPostEventReviewSheet({
         </div>
 
         {/* 3. SHEET FOOTER */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-slate-50/70 dark:bg-zinc-900/50 flex flex-row items-center justify-end gap-2.5">
+        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+              Clearance ID: #{selectedPostEvent.id}
+            </span>
+          </div>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

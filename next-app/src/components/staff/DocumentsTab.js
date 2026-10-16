@@ -20,6 +20,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -66,9 +67,8 @@ function DocumentsTable({
   onViewDetails,
   onRescan,
 }) {
-  const isEmpty = docsRows.length === 0;
   return (
-    <table className={cn("w-full text-sm table-fixed min-w-[960px]", isEmpty && "h-full flex-1 flex flex-col")}>
+    <table className="w-full text-sm table-fixed min-w-[960px]">
       <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
         <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
           <th className="w-[15%] p-4">
@@ -170,48 +170,8 @@ function DocumentsTable({
           <th className="w-20 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
         </tr>
       </thead>
-      <tbody className={cn("divide-y divide-border dark:divide-border", isEmpty && "h-full flex-1 flex flex-col")}>
-        {!hasActiveFilters && docsRows.length === 0 ? (
-          <tr className="border-0 hover:bg-transparent flex-1 flex">
-            <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-              <Empty className="flex flex-1 h-full min-h-[500px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
-                    Enter a student, document type, or file name to find related records.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            </td>
-          </tr>
-        ) : docsRows.length === 0 ? (
-          <tr className="border-0 hover:bg-transparent flex-1 flex">
-            <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-              <Empty className="flex flex-1 h-full min-h-[500px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1">
-                    We couldn&apos;t find any documents matching your
-                    search criteria.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            </td>
-          </tr>
-        ) : (
-          paginatedRows.map((r, idx) => (
+      <tbody className="divide-y divide-border dark:divide-border">
+        {paginatedRows.map((r, idx) => (
             <tr
               key={r.id || idx}
               className={cn(
@@ -350,8 +310,7 @@ function DocumentsTable({
                 </div>
               </td>
             </tr>
-          ))
-        )}
+          ))}
       </tbody>
     </table>
   );
@@ -361,6 +320,7 @@ export default function DocumentsTab({
   docsForm,
   setDocsForm,
   refreshDocuments,
+  onRefreshDocuments,
   docTypes,
   courses,
   storageLayout,
@@ -700,6 +660,9 @@ export default function DocumentsTab({
                     setIsManualRefreshing(true);
                     const startTime = Date.now();
                     try {
+                      if (onRefreshDocuments) {
+                        await onRefreshDocuments();
+                      }
                       await refreshDocuments(docsForm);
                       const elapsed = Date.now() - startTime;
                       if (elapsed < 600) {
@@ -781,21 +744,8 @@ export default function DocumentsTab({
                   placeholder="Search student, document type, or file..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => handleSearchChange("")}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                      title="Clear search"
-                      aria-label="Clear search"
-                    >
-                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                    </button>
-                  )}
-                  <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                    {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
-                  </span>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                  {filteredRows.length > 0 ? filteredRows.length.toLocaleString() : "0"}
                 </div>
               </div>
 
@@ -875,18 +825,54 @@ export default function DocumentsTab({
                     </div>
                   )}
 
-                  <div className={cn("w-full overflow-x-auto", filteredRows.length === 0 && "flex flex-col")}>
-                    <DocumentsTable
-                      docsRows={filteredRows}
-                      paginatedRows={paginatedRows}
-                      hasActiveFilters={hasActiveFilters}
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                      handleSort={handleSort}
-                      onViewDetails={handleViewDetails}
-                      onRescan={onRescan}
-                    />
-                  </div>
+                  {filteredRows.length === 0 ? (
+                    <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[460px] w-full">
+                      <Empty className="flex flex-1 h-full min-h-[380px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                        <EmptyHeader className="flex flex-col items-center gap-0">
+                          <div className="relative mb-5">
+                            <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                            <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                              <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
+                            </EmptyMedia>
+                          </div>
+                          <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                            {hasActiveFilters ? "No Results Found" : "No Documents Found"}
+                          </EmptyTitle>
+                          <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                            {hasActiveFilters
+                              ? "We couldn't find any documents matching your search criteria."
+                              : "No documents have been uploaded or digitized for this office yet."}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                        {hasActiveFilters && (
+                          <EmptyContent>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleClearAllFilters}
+                              title="Reset Filters"
+                              className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                            >
+                              Reset
+                            </Button>
+                          </EmptyContent>
+                        )}
+                      </Empty>
+                    </div>
+                  ) : (
+                    <div className="w-full overflow-x-auto">
+                      <DocumentsTable
+                        docsRows={filteredRows}
+                        paginatedRows={paginatedRows}
+                        hasActiveFilters={hasActiveFilters}
+                        sortBy={sortBy}
+                        sortOrder={sortOrder}
+                        handleSort={handleSort}
+                        onViewDetails={handleViewDetails}
+                        onRescan={onRescan}
+                      />
+                    </div>
+                  )}
 
                   {filteredRows.length > 0 && (
                     <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none rounded-b-2xl">

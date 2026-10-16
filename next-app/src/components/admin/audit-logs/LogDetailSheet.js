@@ -110,7 +110,7 @@ export default function LogDetailSheet({
       onOpenChange={(open) => !open && setSelectedLog(null)}
     >
       <SheetContent
-        className="flex flex-col border-l border-border dark:border-border bg-white dark:bg-card p-0 shadow-2xl w-full sm:max-w-[480px] md:max-w-[540px] data-[side=right]:w-full data-[side=right]:sm:max-w-[480px] data-[side=right]:md:max-w-[540px] overflow-hidden"
+        className="flex flex-col border-l border-border dark:border-border bg-white dark:bg-card p-0 shadow-2xl w-full sm:max-w-[480px] md:max-w-[540px] lg:max-w-[540px] xl:max-w-[540px] data-[side=right]:w-full data-[side=right]:sm:max-w-[480px] data-[side=right]:md:max-w-[540px] data-[side=right]:lg:max-w-[540px] data-[side=right]:xl:max-w-[540px] overflow-hidden"
       >
         {/* Executive Header */}
         <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
@@ -313,24 +313,29 @@ export default function LogDetailSheet({
         )}
 
         {/* Sticky Navigation Footer */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border/80 bg-white/90 p-4 px-6 backdrop-blur-md dark:border-border dark:bg-card/90">
-          <div className="flex items-center justify-end gap-2.5">
-            <Button
-              variant="outline"
-              disabled={!hasPrev}
-              onClick={onPrev}
-              className="h-10 px-5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={!hasNext}
-              onClick={onNext}
-              className="h-10 px-5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
-            >
-              Next
-            </Button>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+              Log Record #{selectedLog?.id}
+            </span>
+            <div className="flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                disabled={!hasPrev}
+                onClick={onPrev}
+                className="h-10 px-5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!hasNext}
+                onClick={onNext}
+                className="h-10 px-5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </div>
       </SheetContent>

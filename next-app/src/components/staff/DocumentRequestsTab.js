@@ -31,6 +31,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty";
 import {
@@ -750,24 +751,8 @@ export default function DocumentRequestsTab({
                     placeholder="Search student, name, program..."
                     className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                    {q && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setQ("");
-                          setPage(1);
-                        }}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                        title="Clear search"
-                        aria-label="Clear search"
-                      >
-                        <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                      </button>
-                    )}
-                    <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                      {total > 0 ? `${total.toLocaleString()}` : "0"}
-                    </span>
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                    {total > 0 ? `${total.toLocaleString()}` : "0"}
                   </div>
                 </div>
 
@@ -799,7 +784,7 @@ export default function DocumentRequestsTab({
             {(loading && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
-              <div className="p-12 rounded-b-2xl">
+              <div className="p-12 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
@@ -812,9 +797,54 @@ export default function DocumentRequestsTab({
                   </EmptyHeader>
                 </Empty>
               </div>
+            ) : displayedRows.length === 0 ? (
+              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                <Empty className="flex flex-1 h-full min-h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                        <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                      {activeChips.length > 0
+                        ? "No document requests match your active filters or search terms."
+                        : clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
+                        ? "No document requests found matching your filters."
+                        : clientTypeFilters.includes("Student") && !clientTypeFilters.includes("Alumni")
+                        ? "No student requests found matching your filters."
+                        : "There are currently no document requests filed in the system."}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    {activeChips.length > 0 ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleClearFilters}
+                        title="Reset Filters"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      >
+                        Reset
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={() => setCreateOpen(true)}
+                        title="Create Document Request"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
+                      >
+                        Create Request
+                      </Button>
+                    )}
+                  </EmptyContent>
+                </Empty>
+              </div>
             ) : (
               <div className="overflow-x-auto w-full">
-                <table className={cn("w-full text-sm table-fixed min-w-[1000px]", displayedRows.length === 0 && "h-full")}>
+                <table className="w-full text-sm table-fixed min-w-[1000px]">
                   <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="p-4 w-[8%]">
@@ -892,32 +922,8 @@ export default function DocumentRequestsTab({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={cn("divide-y divide-border dark:divide-border", displayedRows.length === 0 && "h-full flex-1 flex flex-col")}>
-                    {displayedRows.length === 0 ? (
-                      <tr className="border-0 hover:bg-transparent flex-1 flex">
-                        <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-                          <Empty className="flex flex-1 h-full min-h-[480px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <div className="relative mb-6">
-                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                  <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                                </EmptyMedia>
-                              </div>
-                              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
-                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                                {clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
-                                  ? "No document requests found matching your filters."
-                                  : clientTypeFilters.includes("Student") && !clientTypeFilters.includes("Alumni")
-                                  ? "No student requests found matching your filters."
-                                  : "No document requests match your active filters."}
-                              </EmptyDescription>
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    ) : (
-                      displayedRows.map((r) => {
+                  <tbody className="divide-y divide-border dark:divide-border">
+                    {displayedRows.map((r) => {
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
                         const charter = getRequestCharterStatus(r, slaStandards);
@@ -1029,8 +1035,7 @@ export default function DocumentRequestsTab({
                             </td>
                           </tr>
                         );
-                      })
-                    )}
+                      })}
                   </tbody>
                 </table>
               </div>

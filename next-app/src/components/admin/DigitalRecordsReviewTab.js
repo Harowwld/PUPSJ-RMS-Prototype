@@ -1048,21 +1048,8 @@ export default function DigitalRecordsReviewTab({
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-              {localSearch && (
-                <button
-                  type="button"
-                  onClick={() => setLocalSearch("")}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                  title="Clear search"
-                  aria-label="Clear search"
-                >
-                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                </button>
-              )}
-              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                {sortedRecords.length.toLocaleString()}
-              </span>
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              {sortedRecords.length.toLocaleString()}
             </div>
           </div>
 
@@ -1368,7 +1355,13 @@ export default function DigitalRecordsReviewTab({
                             "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
-                          onClick={(e) => toggleSelectRow(r.id, e)}
+                          onClick={(e) => {
+                            if (r.approval_status === "Pending") {
+                              toggleSelectRow(r.id, e)
+                            } else {
+                              handlePreview(r)
+                            }
+                          }}
                         >
                           <td className="w-12 p-4 text-center">
                             {r.approval_status === "Pending" ? (

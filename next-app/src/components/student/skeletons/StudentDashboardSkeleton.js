@@ -4,8 +4,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import StudentRequestsTableSkeleton from "./StudentRequestsTableSkeleton"
 import StudentOsasProposalsSkeleton from "./StudentOsasProposalsSkeleton"
 import StudentComplianceSkeleton from "./StudentComplianceSkeleton"
+import StudentOverviewSkeleton from "./StudentOverviewSkeleton"
 
-export default function StudentDashboardSkeleton({ view = "odrs" }) {
+export default function StudentDashboardSkeleton({ view = "overview" }) {
   return (
     <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30 select-none">
       {/* Shared dashboard liquid-gradient background */}
@@ -65,7 +66,9 @@ export default function StudentDashboardSkeleton({ view = "odrs" }) {
         {/* Main Content Skeleton Area */}
         <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
           <div className="flex min-h-0 w-full flex-1 flex-col p-4">
-            {view === "osas" ? (
+            {view === "overview" ? (
+              <StudentOverviewSkeleton />
+            ) : view === "osas" ? (
               <StudentOsasProposalsSkeleton />
             ) : view === "compliance" ? (
               <StudentComplianceSkeleton />

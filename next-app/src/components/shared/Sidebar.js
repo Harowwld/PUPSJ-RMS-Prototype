@@ -38,6 +38,7 @@ const ICON_MAP = {
   notifications: { icon: "ti ti-bell" },
   search: { icon: "ti ti-archive" },
   storage: { icon: "ti ti-folder-open" },
+  overview: { icon: "ph-bold ph-squares-four" },
 }
 
 export default function Sidebar({ open = true, items, activeKey, onSelect, zoomNode, setZoomNode, handleZoomMouseDown, accentColor, officeName, authUser, bottomContent, children }) {

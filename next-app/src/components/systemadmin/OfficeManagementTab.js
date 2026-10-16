@@ -19,6 +19,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
@@ -123,6 +124,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [confirmMatrixLeaveOpen, setConfirmMatrixLeaveOpen] = useState(false)
   const [layoutView, setLayoutView] = useState("grid")
   
+  // Multi-Selection State & Batch Actions
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [lastSelectedId, setLastSelectedId] = useState(null)
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
+  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
+
   // Table Sorting state
   const [sortBy, setSortBy] = useState("short_name")
   const [sortOrder, setSortOrder] = useState("ASC")
@@ -147,6 +156,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1)
+    setSelectedIds(new Set())
+    setLastSelectedId(null)
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
       if (params.has("page")) {
@@ -279,6 +290,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   }, [fetchOffices, fetchModules])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOffices()
     fetchModules()
   }, [fetchOffices, fetchModules])
@@ -525,6 +537,153 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const paginatedOffices = useMemo(() => {
     return filteredOffices.slice(startIndex, startIndex + pageSize)
   }, [filteredOffices, startIndex, pageSize])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const validIds = new Set(filteredOffices.map((o) => o.id))
+      let needsPruning = false
+      for (const id of prev) {
+        if (!validIds.has(id)) {
+          needsPruning = true
+          break
+        }
+      }
+      if (!needsPruning) return prev
+      const next = new Set()
+      for (const id of prev) {
+        if (validIds.has(id)) next.add(id)
+      }
+      return next
+    })
+  }, [filteredOffices])
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(new Set(paginatedOffices.map((o) => o.id)))
+    } else {
+      setSelectedIds(new Set())
+    }
+    setLastSelectedId(null)
+  }
+
+  const toggleSelect = (id, event) => {
+    const isSelected = selectedIds.has(id)
+
+    if (event?.shiftKey && lastSelectedId) {
+      if (isSelected) {
+        if (selectedIds.size > 1) {
+          setSelectedIds(new Set([id]))
+          setLastSelectedId(id)
+        } else {
+          setSelectedIds(new Set())
+          setLastSelectedId(null)
+        }
+        return
+      }
+
+      const currentIdx = paginatedOffices.findIndex((o) => o.id === id)
+      const lastIdx = paginatedOffices.findIndex((o) => o.id === lastSelectedId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const idsInRange = paginatedOffices
+          .slice(start, end + 1)
+          .map((o) => o.id)
+
+        const next = new Set(selectedIds)
+        idsInRange.forEach((rangeId) => next.add(rangeId))
+
+        setSelectedIds(next)
+        setLastSelectedId(id)
+        return
+      }
+    }
+
+    const next = new Set(selectedIds)
+    if (isSelected) {
+      next.delete(id)
+      setLastSelectedId(null)
+    } else {
+      next.add(id)
+      setLastSelectedId(id)
+    }
+    setSelectedIds(next)
+  }
+
+  const confirmBulkArchive = async () => {
+    if (bulkArchiveLoading || selectedIds.size === 0) return
+    setBulkArchiveLoading(true)
+    try {
+      let successCount = 0
+      let failCount = 0
+      const idsToArchive = Array.from(selectedIds)
+
+      for (const id of idsToArchive) {
+        const res = await fetch(`/api/offices/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Inactive" }),
+        })
+        const json = await res.json()
+        if (res.ok && json.ok) {
+          setOffices((prev) => prev.map((o) => (o.id === id ? { ...o, status: "Inactive" } : o)))
+          successCount++
+        } else {
+          failCount++
+        }
+      }
+
+      showToast(`Archived ${successCount} department(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      setBulkArchiveOpen(false)
+      setSelectedIds(new Set())
+      invalidateDataCache("systemadmin_offices_stats")
+      invalidateDataCache("systemadmin_offices")
+      fetchOffices(true)
+    } catch {
+      showToast("Network error archiving selected departments", true)
+    } finally {
+      setBulkArchiveLoading(false)
+    }
+  }
+
+  const confirmBulkRestore = async () => {
+    if (bulkRestoreLoading || selectedIds.size === 0) return
+    setBulkRestoreLoading(true)
+    try {
+      let successCount = 0
+      let failCount = 0
+      const idsToRestore = Array.from(selectedIds)
+
+      for (const id of idsToRestore) {
+        const res = await fetch(`/api/offices/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Active" }),
+        })
+        const json = await res.json()
+        if (res.ok && json.ok) {
+          setOffices((prev) => prev.map((o) => (o.id === id ? { ...o, status: "Active" } : o)))
+          successCount++
+        } else {
+          failCount++
+        }
+      }
+
+      showToast(`Restored ${successCount} department(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      setBulkRestoreOpen(false)
+      setSelectedIds(new Set())
+      invalidateDataCache("systemadmin_offices_stats")
+      invalidateDataCache("systemadmin_offices")
+      fetchOffices(true)
+    } catch {
+      showToast("Network error restoring selected departments", true)
+    } finally {
+      setBulkRestoreLoading(false)
+    }
+  }
 
   const updatePage = useCallback((newPage) => {
     const validPage = Math.max(1, Math.min(totalPages, newPage))
@@ -814,20 +973,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               placeholder="Search offices by name, acronym, ID..."
               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
             />
-            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer"
-                  title="Clear search"
-                >
-                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                </button>
-              )}
-              <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
-                {filteredOffices.length}
-              </span>
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+              {filteredOffices.length}
             </div>
           </div>
         </div>
@@ -891,69 +1038,84 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <Card
                 key={office.id}
                 className={cn(
-                  "overflow-hidden border relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 rounded-2xl flex flex-col justify-between",
+                  "group overflow-hidden border relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 rounded-2xl flex flex-col justify-between p-0 py-0 gap-0",
                   isActive
                     ? "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5"
                     : "border-dashed border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
                 )}
               >
+                {/* Office Accent Banner */}
+                <div
+                  className={cn(
+                    "relative h-[72px] w-full overflow-hidden rounded-t-[15px] border-b transition-all duration-300 flex items-center justify-between px-5 select-none",
+                    isActive
+                      ? "border-black/10 dark:border-white/10"
+                      : "border-black/5 dark:border-white/5 opacity-65 grayscale"
+                  )}
+                  style={{
+                    background: isActive
+                      ? `linear-gradient(135deg, ${accent} 0%, color-mix(in srgb, ${accent} 85%, #000) 45%, color-mix(in srgb, ${accent} 65%, #000) 100%)`
+                      : `linear-gradient(135deg, #9ca3af 0%, #4b5563 100%)`,
+                  }}
+                >
+                  {/* Left: Office Icon & ID chip */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "h-11 w-11 rounded-xl flex items-center justify-center border text-xl shadow-xs shrink-0 transition-all",
+                        isActive
+                          ? "bg-white/20 text-white border-white/35 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+                          : "bg-white/10 text-white/70 border-white/20"
+                      )}
+                    >
+                      <HugeIcon className={cn(office.icon || "ti ti-building", "drop-shadow-xs text-white")} />
+                    </div>
+                    <span className="px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-md bg-black/25 text-white backdrop-blur-xs border border-white/20 shadow-2xs">
+                      ID: {office.id}
+                    </span>
+                  </div>
+
+                  {/* Right: Status badge */}
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full backdrop-blur-xs select-none border shrink-0",
+                      isActive
+                        ? "bg-emerald-500/25 text-white border-emerald-400/40"
+                        : "bg-black/35 text-white/80 border-white/20"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        isActive ? "bg-emerald-400" : "bg-zinc-400"
+                      )}
+                    />
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
                 <CardContent className="p-6 flex flex-col h-full justify-between">
                   <div>
                     {!isActive && (
                       <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-border/60 dark:border-border">
                         <span className="flex items-center gap-1.5">
-                          <HugeIcon  className="ph-bold ph-archive text-gray-400"></HugeIcon>
+                          <HugeIcon className="ph-bold ph-archive text-gray-400" />
                           <span>Archived Department</span>
                         </span>
                         <span className="text-[10px] font-medium text-gray-400">Archived</span>
                       </div>
                     )}
 
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-sm",
-                            isActive
-                              ? "rms-office-accent"
-                              : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
-                          )}
-                          {...(isActive ? { "data-color": accent } : {})}
-                          style={isActive ? {
-                            color: accent,
-                            backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`,
-                            borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
-                          } : undefined}
-                        >
-                          <HugeIcon  className={office.icon || "ti ti-building"}></HugeIcon>
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900 dark:text-zinc-50 leading-tight">
-                            {office.short_name}
-                          </h3>
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                            ID: {office.id}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div
-                        className={cn(
-                          "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
-                          isActive
-                            ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
-                            : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
-                        )}
-                      >
-                        {isActive ? "Active" : "Inactive"}
-                      </div>
+                    <div className="mb-2">
+                      <h3 className="font-bold text-gray-900 dark:text-zinc-50 leading-tight text-base mb-1">
+                        {office.short_name}
+                      </h3>
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300 leading-snug">
+                        {office.name}
+                      </h4>
                     </div>
 
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-[#f2f2f7] mb-1.5 leading-snug">
-                      {office.name}
-                    </h4>
-
-                    <p className="text-xs text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed mb-4">
+                    <p className="text-xs text-gray-600 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">
                       {office.description || "No description provided."}
                     </p>
                   </div>
@@ -1045,7 +1207,20 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 table-fixed min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
                 <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-                  <th className="px-5 py-3 w-[24%] whitespace-nowrap">
+                  <th className="w-12 p-4 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
+                      checked={
+                        paginatedOffices.length > 0 &&
+                        paginatedOffices.every((o) => selectedIds.has(o.id))
+                      }
+                      onChange={(e) => toggleSelectAll(e.target.checked)}
+                      disabled={paginatedOffices.length === 0}
+                      aria-label="Select all departments on this page"
+                    />
+                  </th>
+                  <th className="p-4 w-[22%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("short_name")}
                       className={cn(
@@ -1057,7 +1232,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 w-[30%] whitespace-nowrap">
+                  <th className="p-4 w-[28%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("name")}
                       className={cn(
@@ -1069,7 +1244,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 w-[22%] whitespace-nowrap">
+                  <th className="p-4 w-[22%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("station_name")}
                       className={cn(
@@ -1081,7 +1256,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 w-[8%] text-center whitespace-nowrap">
+                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
                     <button
                       onClick={() => handleSort("staff_count")}
                       className={cn(
@@ -1093,7 +1268,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 w-[8%] text-center whitespace-nowrap">
+                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
                     <button
                       onClick={() => handleSort("module_count")}
                       className={cn(
@@ -1105,7 +1280,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 py-3 w-[8%] whitespace-nowrap">
+                  <th className="p-4 w-[8%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("status")}
                       className={cn(
@@ -1117,7 +1292,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="px-5 pr-6 py-3 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     Actions
                   </th>
                 </tr>
@@ -1126,15 +1301,30 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 {paginatedOffices.map((office) => {
                   const accent = office.accent_color || "#800000"
                   const isActive = office.status === "Active"
+                  const isSelected = selectedIds.has(office.id)
                   return (
                     <tr
                       key={office.id}
+                      onClick={(e) => toggleSelect(office.id, e)}
                       className={cn(
-                        "hover:bg-gray-50/70 dark:hover:bg-zinc-900/40 transition-colors",
-                        !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75"
+                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/70 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75",
+                        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                       )}
                     >
-                      <td className="px-5 py-3.5 whitespace-nowrap">
+                      <td className="w-12 p-4 align-middle text-center">
+                        <input
+                          type="checkbox"
+                          className={cn(
+                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                          )}
+                          checked={isSelected}
+                          onChange={() => {}}
+                          aria-label={`Select ${office.short_name}`}
+                        />
+                      </td>
+                      <td className="p-4 align-middle whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
@@ -1163,7 +1353,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3.5 overflow-hidden">
+                      <td className="p-4 align-middle overflow-hidden">
                         <div className="truncate">
                           <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
                             {office.name}
@@ -1174,7 +1364,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3.5 whitespace-nowrap overflow-hidden">
+                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden">
                         <div className="text-[11px] space-y-0.5 truncate">
                           <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
                             <HugeIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs shrink-0"></HugeIcon>
@@ -1186,10 +1376,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3.5 text-center whitespace-nowrap">
+                      <td className="p-4 align-middle text-center whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))
+                          }}
                           title="View assigned personnel in Global Directory"
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
                         >
@@ -1198,10 +1391,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="px-5 py-3.5 text-center whitespace-nowrap">
+                      <td className="p-4 align-middle text-center whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))
+                          }}
                           title={`Configure workspace modules for ${office.short_name}`}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
                         >
@@ -1210,7 +1406,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="px-5 py-3.5 whitespace-nowrap">
+                      <td className="p-4 align-middle whitespace-nowrap">
                         <div
                           className={cn(
                             "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
@@ -1223,7 +1419,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="px-5 pr-6 py-3.5 text-right whitespace-nowrap">
+                      <td className="p-4 pr-6 align-middle text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           {isActive ? (
                             <>
@@ -1463,11 +1659,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                   Description
                 </label>
-                <Input
+                <textarea
+                  rows={3}
                   value={form.description}
                   onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe the department's institutional role and functions..."
-                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                  className="w-full min-h-[84px] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 transition-all resize-y shadow-xs"
                 />
               </div>
 
@@ -1794,12 +1991,20 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 pt-3 border-t border-border/70 dark:border-border">
                     <div className="flex items-center gap-3">
                       <div className="relative flex items-center">
-                        <input
-                          type="color"
-                          value={form.accent_color?.match(/^#[0-9a-fA-F]{6}$/) ? form.accent_color : "#800000"}
-                          onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
-                          className="w-10 h-10 border rounded-xl overflow-hidden cursor-pointer bg-transparent shrink-0"
-                        />
+                        <div
+                          className="w-10 h-10 rounded-xl border border-border dark:border-border shadow-2xs flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 overflow-hidden shrink-0 group relative"
+                          style={{ backgroundColor: form.accent_color?.match(/^#[0-9a-fA-F]{6}$/) ? form.accent_color : "#800000" }}
+                        >
+                          <input
+                            type="color"
+                            value={form.accent_color?.match(/^#[0-9a-fA-F]{6}$/) ? form.accent_color : "#800000"}
+                            onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer p-0 border-0"
+                            title="Choose custom color"
+                            aria-label="Custom color picker"
+                          />
+                          <HugeIcon className="ti ti-palette text-white text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></HugeIcon>
+                        </div>
                       </div>
                       <Input
                         value={form.accent_color}
@@ -1900,6 +2105,59 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isPersonnelModal={true}
         isRestoreModal={true}
         selectedItems={restoreOfficeTarget ? [`${restoreOfficeTarget.short_name} (${restoreOfficeTarget.id}): ${restoreOfficeTarget.staff_count || 0} Staff assigned`] : []}
+      />
+
+      {/* Batch Archive Confirmation Modal */}
+      <ConfirmModal
+        open={bulkArchiveOpen}
+        onCancel={() => setBulkArchiveOpen(false)}
+        onConfirm={confirmBulkArchive}
+        isLoading={bulkArchiveLoading}
+        title="Batch Archive Departments"
+        message={`${selectedIds.size} department(s) will be archived. Staff members assigned to these departments will not have access until they are restored.`}
+        confirmLabel="Archive"
+        variant="warning"
+        isAppleStyled={true}
+        isPersonnelModal={true}
+        isArchiveModal={true}
+        selectedItems={Array.from(selectedIds).map((id) => {
+          const o = offices.find((x) => x.id === id)
+          return o ? `${o.short_name} (${o.id}): ${o.staff_count || 0} Staff assigned` : id
+        })}
+      />
+
+      {/* Batch Restore Confirmation Modal */}
+      <ConfirmModal
+        open={bulkRestoreOpen}
+        onCancel={() => setBulkRestoreOpen(false)}
+        onConfirm={confirmBulkRestore}
+        isLoading={bulkRestoreLoading}
+        title="Batch Restore Departments"
+        message={`${selectedIds.size} department(s) will be reactivated. Assigned staff members will regain access to their department workspace.`}
+        confirmLabel="Restore"
+        variant="success"
+        isAppleStyled={true}
+        isPersonnelModal={true}
+        isRestoreModal={true}
+        selectedItems={Array.from(selectedIds).map((id) => {
+          const o = offices.find((x) => x.id === id)
+          return o ? `${o.short_name} (${o.id}): ${o.staff_count || 0} Staff assigned` : id
+        })}
+      />
+
+      {/* Floating Action Bar */}
+      <FloatingActionBar
+        selectedCount={selectedIds.size}
+        onCancel={() => setSelectedIds(new Set())}
+        onAction={() => {
+          if (statusFilter === "Active") {
+            setBulkArchiveOpen(true)
+          } else {
+            setBulkRestoreOpen(true)
+          }
+        }}
+        actionLabel={statusFilter === "Active" ? "Archive" : "Restore"}
+        actionVariant={statusFilter === "Active" ? "danger" : "success"}
       />
     </div>
   )

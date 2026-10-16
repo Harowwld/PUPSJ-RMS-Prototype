@@ -124,19 +124,57 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
 
+  const lastUrlStateRef = useRef({
+    page: !isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1,
+    search: initialSearchFromUrl,
+  })
+
+  const updateUrl = useCallback((newPage, newSearch) => {
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+
+    const cleanSearch = typeof newSearch === "string" ? newSearch.trim() : ""
+    if (cleanSearch) {
+      params.set("search", cleanSearch)
+    } else {
+      params.delete("search")
+    }
+
+    const cleanPage = Number(newPage) || 1
+    if (cleanPage > 1) {
+      params.set("page", String(cleanPage))
+    } else {
+      params.delete("page")
+    }
+
+    lastUrlStateRef.current = {
+      page: cleanPage,
+      search: cleanSearch,
+    }
+
+    const queryString = params.toString()
+    const nextUrl = queryString
+      ? `${window.location.pathname}?${queryString}`
+      : window.location.pathname
+
+    router.replace(nextUrl, { scroll: false })
+  }, [router])
+
   useEffect(() => {
     const pageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
     const validPage = !isNaN(pageFromUrl) && pageFromUrl >= 1 ? pageFromUrl : 1
-    if (validPage !== page) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPage(validPage)
-    }
     const searchFromUrl = searchParams?.get("search") || ""
-    if (searchFromUrl !== search) {
+
+    if (
+      lastUrlStateRef.current.page !== validPage ||
+      lastUrlStateRef.current.search !== searchFromUrl
+    ) {
+      lastUrlStateRef.current = { page: validPage, search: searchFromUrl }
+      setPage(validPage)
       setSearch(searchFromUrl)
       setLocalSearch(searchFromUrl)
     }
-  }, [searchParams, page, search])
+  }, [searchParams])
 
   // Sorting
   const [sortBy, setSortBy] = useState("created_at")
@@ -156,18 +194,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
       if (localSearch !== search) {
         setSearch(localSearch)
         setPage(1)
-        const params = new URLSearchParams(window.location.search)
-        if (localSearch) {
-          params.set("search", localSearch)
-        } else {
-          params.delete("search")
-        }
-        params.delete("page")
-        router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+        updateUrl(1, localSearch)
       }
     }, 500)
     return () => clearTimeout(timer)
-  }, [localSearch, search, router])
+  }, [localSearch, search, updateUrl])
 
   const fetchOffices = useCallback(async () => {
     const cached = getCachedData("systemadmin_offices")
@@ -313,8 +344,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
             }
           })
           setLogs(formatted)
-          setTotal(json.total || 0)
-          setCachedData(logsKey, { logs: formatted, total: json.total || 0 }, 30000)
+          const fetchedTotal = json.total || 0
+          setTotal(fetchedTotal)
+          setCachedData(logsKey, { logs: formatted, total: fetchedTotal }, 30000)
+
+          const maxPages = Math.max(1, Math.ceil(fetchedTotal / limit))
+          if (page > maxPages && fetchedTotal > 0) {
+            setPage(1)
+            updateUrl(1, search)
+            return
+          }
         } else {
           setError(json.error || "Failed to fetch audit logs")
           showToast?.(json.error || "Failed to fetch audit logs", true)
@@ -327,7 +366,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         setIsManualLoading(false)
       }
     },
-    [page, limit, logFilters, search, startDate, endDate, sortBy, sortOrder, showToast]
+    [page, limit, logFilters, search, startDate, endDate, sortBy, sortOrder, showToast, updateUrl]
   )
 
   useEffect(() => {
@@ -365,6 +404,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       setSortOrder("ASC")
     }
     setPage(1)
+    updateUrl(1, search)
   }
 
   const handleQuickRange = (range) => {
@@ -372,6 +412,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       setStartDate("")
       setEndDate("")
       setPage(1)
+      updateUrl(1, search)
       return
     }
 
@@ -401,6 +442,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     setStartDate(format(start, "yyyy-MM-dd"))
     setEndDate(format(end, "yyyy-MM-dd"))
     setPage(1)
+    updateUrl(1, search)
   }
 
   const activeShortcut = (() => {
@@ -589,14 +631,22 @@ export default function GlobalAuditLogsTab({ showToast }) {
     }
   }
 
-  const handleClearFilters = () => {
+  const handleClearSearch = useCallback(() => {
+    setLocalSearch("")
+    setSearch("")
+    setPage(1)
+    updateUrl(1, "")
+  }, [updateUrl])
+
+  const handleClearFilters = useCallback(() => {
     setLocalSearch("")
     setSearch("")
     setLogFilters({ severity: [], office: [] })
     setStartDate("")
     setEndDate("")
     setPage(1)
-  }
+    updateUrl(1, "")
+  }, [updateUrl])
 
   const totalPages = Math.ceil(total / limit) || 1
   const displayPage = Math.min(page, totalPages)
@@ -604,10 +654,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const updatePage = useCallback((newPage) => {
     const validPage = Math.max(1, Math.min(totalPages, newPage))
     setPage(validPage)
-    const params = new URLSearchParams(window.location.search)
-    params.set("page", String(validPage))
-    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
-  }, [totalPages, router])
+    updateUrl(validPage, search)
+  }, [totalPages, search, updateUrl])
   const hasActiveFilters =
     localSearch !== "" ||
     (logFilters.severity?.length > 0) ||
@@ -689,20 +737,22 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape" && localSearch) {
+                    handleClearSearch()
+                  }
+                }}
               />
               <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
                 {localSearch && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setLocalSearch("")
-                      setSearch("")
-                      setPage(1)
-                    }}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
+                    onClick={handleClearSearch}
+                    aria-label="Clear search"
                     title="Clear search"
+                    className="flex h-5 w-5 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                   >
-                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+                    <HugeIcon className="ph-bold ph-x text-[11px]" />
                   </button>
                 )}
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
@@ -722,11 +772,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 onChange={(newFilters) => {
                   setLogFilters(newFilters)
                   setPage(1)
+                  updateUrl(1, search)
                 }}
                 totalCount={total}
                 onReset={() => {
                   setLogFilters({ severity: [], office: [] })
                   setPage(1)
+                  updateUrl(1, search)
                 }}
               />
             </div>
@@ -780,6 +832,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onSelect={(date) => {
                         setStartDate(date ? format(date, "yyyy-MM-dd") : "")
                         setPage(1)
+                        updateUrl(1, search)
                       }}
                       initialFocus
                     />
@@ -807,6 +860,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onSelect={(date) => {
                         setEndDate(date ? format(date, "yyyy-MM-dd") : "")
                         setPage(1)
+                        updateUrl(1, search)
                       }}
                       initialFocus
                     />
@@ -827,13 +881,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 [groupId]: (prev[groupId] || []).filter((v) => v !== val),
               }))
               setPage(1)
+              updateUrl(1, search)
             }}
             searchQuery={localSearch}
-            onClearSearch={() => {
-              setLocalSearch("")
-              setSearch("")
-              setPage(1)
-            }}
+            onClearSearch={handleClearSearch}
             extraChips={[
               ...(startDate || endDate
                 ? [
@@ -844,14 +895,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         setStartDate("")
                         setEndDate("")
                         setPage(1)
+                        updateUrl(1, search)
                       },
                     },
                   ]
                 : []),
             ]}
-            onClearAll={() => {
-              handleClearFilters()
-            }}
+            onClearAll={handleClearFilters}
             className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
           />
 
@@ -1137,6 +1187,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       onClick={() => {
                         setLimit(size)
                         setPage(1)
+                        updateUrl(1, search)
                       }}
                       className={cn(
                         "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
@@ -1188,9 +1239,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
           setSelectedLog={setSelectedLog}
           handleCopy={handleCopy}
           onSearchSimilar={(term) => {
-            setLocalSearch(term)
-            setSearch(term)
+            const cleanTerm = term || ""
+            setLocalSearch(cleanTerm)
+            setSearch(cleanTerm)
             setPage(1)
+            updateUrl(1, cleanTerm)
           }}
           onNext={handleNextLog}
           onPrev={handlePrevLog}

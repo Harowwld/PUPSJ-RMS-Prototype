@@ -742,21 +742,8 @@ export default function ScanUploadTab({
                                 value={localCsvSearch}
                                 onChange={(e) => setLocalCsvSearch(e.target.value)}
                               />
-                              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                                {localCsvSearch && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setLocalCsvSearch("")}
-                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                                    title="Clear search"
-                                    aria-label="Clear search"
-                                  >
-                                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                                  </button>
-                                )}
-                                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                                  {filteredCsvRows.length.toLocaleString()}
-                                </span>
+                              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                                {filteredCsvRows.length.toLocaleString()}
                               </div>
                             </div>
 

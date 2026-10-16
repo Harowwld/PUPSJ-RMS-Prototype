@@ -1017,24 +1017,8 @@ export default function StudentDirectoryTab({
                   }}
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setPage(1);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                      title="Clear search"
-                      aria-label="Clear search"
-                    >
-                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                    </button>
-                  )}
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
-                    {filteredStudents.length.toLocaleString()}
-                  </span>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                  {filteredStudents.length.toLocaleString()}
                 </div>
               </div>
 

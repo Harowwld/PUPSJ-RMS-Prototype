@@ -243,21 +243,8 @@ export default function BulkImportTab({
                     setCurrentPage(1)
                   }}
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                  {searchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchTerm("")}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                      title="Clear search"
-                      aria-label="Clear search"
-                    >
-                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                    </button>
-                  )}
-                  <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                    {filteredImportRows.length.toLocaleString()}
-                  </span>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                  {filteredImportRows.length.toLocaleString()}
                 </div>
               </div>
 
@@ -412,21 +399,36 @@ export default function BulkImportTab({
                   </tr>
                   {paginatedRows.map((row) => {
                     const isEditing = editingRowIndex === row.index
+                    const isSelected = !!importSelected[row.index]
+                    const isSelectable = !row.error && !isEditing
                     return (
                       <tr
                         key={row.index}
+                        onClick={() => {
+                          if (isSelectable) {
+                            toggleImportRowSelected(row.index)
+                          }
+                        }}
                         className={cn(
                           "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                          isSelectable && "cursor-pointer",
+                          isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                           row.error && "bg-red-50/40 dark:bg-red-500/5 hover:bg-red-50/60 dark:hover:bg-red-500/10"
                         )}
                       >
-                        <td className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}>
+                        <td
+                          className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
-                            className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30 dark:text-primary dark:border-border"
-                            checked={!!importSelected[row.index]}
+                            className={cn(
+                              "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30 dark:text-primary dark:border-border transition-opacity",
+                              isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                            )}
+                            checked={isSelected}
                             onChange={() => toggleImportRowSelected(row.index)}
-                            disabled={!!row.error || isEditing}
+                            disabled={!isSelectable}
                           />
                         </td>
                         <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap">
@@ -549,7 +551,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 pr-6 align-middle text-right whitespace-nowrap">
+                        <td className="p-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           {isEditing ? (
                             <div className="flex items-center justify-end gap-1.5">
                               <Tooltip>

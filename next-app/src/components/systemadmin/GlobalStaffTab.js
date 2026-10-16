@@ -1247,7 +1247,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               <button
                                 onClick={() => router.push("/account")}
                                 aria-label="My Account Settings"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
                                 <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                               </button>

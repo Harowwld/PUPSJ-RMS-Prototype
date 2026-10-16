@@ -720,6 +720,20 @@ export default function Header({ authUser, onLogout, children }) {
     } else if (isStudent || activeView === "student") {
       candidateGroups = [
         {
+          id: "stu_general",
+          title: "Portal Home",
+          badge: "Student Portal",
+          items: [
+            {
+              label: "Overview & Status Hub",
+              view: "overview",
+              icon: "ph-bold ph-squares-four",
+              breadcrumb: "Student Portal • Home",
+              keywords: "overview dashboard home status recent activities tracking quick actions summary blockers alerts",
+            },
+          ],
+        },
+        {
           id: "stu_academic",
           title: "Academic Records",
           badge: "Student Portal",
@@ -1179,19 +1193,6 @@ export default function Header({ authUser, onLogout, children }) {
               onKeyDown={handleCommandKeyDown}
               className="flex-1 bg-transparent border-0 outline-none text-[16px] font-normal text-gray-900 dark:text-zinc-50 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setFocusedIndex(0);
-                  commandInputRef.current?.focus();
-                }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 p-1 text-xs cursor-pointer"
-              >
-                <HugeIcon  className="ph-bold ph-x-circle text-base"></HugeIcon>
-              </button>
-            )}
             <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded select-none">
               ESC
             </kbd>

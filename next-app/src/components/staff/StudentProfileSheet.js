@@ -175,7 +175,7 @@ export default function StudentProfileSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[50vw] xl:max-w-[50vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[50vw] data-[side=right]:xl:max-w-[50vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* Executive Header */}
         <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
@@ -215,7 +215,7 @@ export default function StudentProfileSheet({
                 {displayName}
               </SheetTitle>
 
-              <SheetDescription className="mt-0.5 text-xs text-gray-600 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+              <SheetDescription className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
                 <span>Program: <strong className="text-gray-800 dark:text-zinc-200">{courseInfo?.code || student.courseCode || "N/A"}</strong></span>
                 <span>•</span>
                 <span>Section: <strong className="text-gray-800 dark:text-zinc-200">{student.section || "N/A"}</strong></span>
@@ -709,41 +709,46 @@ export default function StudentProfileSheet({
         </div>
 
         {/* Executive Footer */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/90 dark:bg-zinc-900/60 flex flex-row items-center justify-end gap-2.5">
-          {isArchived ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                onOpenChange(false);
-                onRestoreStudent?.(student.studentNo);
-              }}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Restore
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                onOpenChange(false);
-                onArchiveStudent?.(student.studentNo);
-              }}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Archive
-            </Button>
-          )}
+        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
+          <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+            Student No: {student.studentNo}
+          </span>
+          <div className="flex items-center gap-2.5">
+            {isArchived ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onOpenChange(false);
+                  onRestoreStudent?.(student.studentNo);
+                }}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Restore
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onOpenChange(false);
+                  onArchiveStudent?.(student.studentNo);
+                }}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Archive
+              </Button>
+            )}
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-          >
-            Close
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              Close
+            </Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

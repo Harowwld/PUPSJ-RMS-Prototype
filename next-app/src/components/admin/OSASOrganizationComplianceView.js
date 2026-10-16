@@ -1152,19 +1152,8 @@ export default function OSASOrganizationComplianceView({
                   placeholder="Search org, acronym, adviser..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                  {search && (
-                    <button
-                      type="button"
-                      onClick={() => { setSearch(""); setPage(1); }}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer"
-                    >
-                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                    </button>
-                  )}
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 pointer-events-none">
-                    {filteredOrganizations.length}
-                  </span>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                  {filteredOrganizations.length}
                 </div>
               </div>
 
@@ -1533,7 +1522,7 @@ export default function OSASOrganizationComplianceView({
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+            className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
             {/* Sheet Header */}
             <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
@@ -1555,7 +1544,7 @@ export default function OSASOrganizationComplianceView({
               <SheetTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50 leading-snug">
                 {selectedOrgForOfficers?.name}
               </SheetTitle>
-              <SheetDescription className="text-xs text-gray-900 dark:text-zinc-300 mt-1">
+              <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                 Accredited Student Leadership Roster & Authorized Event Signatories.
               </SheetDescription>
 
@@ -1604,15 +1593,7 @@ export default function OSASOrganizationComplianceView({
                     placeholder="Search by name, position, or email..."
                     className="h-8.5 pl-8 pr-8 text-xs rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500 dark:focus-visible:ring-red-500"
                   />
-                  {officerSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setOfficerSearch("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
-                    >
-                      <HugeIcon className="ph-bold ph-x text-xs" />
-                    </button>
-                  )}
+
                 </div>
               </div>
             )}
@@ -1642,7 +1623,7 @@ export default function OSASOrganizationComplianceView({
                       <h4 className="text-sm font-bold text-gray-900 dark:text-white">
                         No Whitelisted Officers Found
                       </h4>
-                      <p className="text-xs text-gray-900 dark:text-zinc-300 mt-1 max-w-sm mx-auto">
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
                         {officerSearch.trim()
                           ? "No student officers match your search query inside this organization roster."
                           : "This student organization currently has no active student officers recorded on the OSAS accreditation whitelist."}
@@ -1707,7 +1688,7 @@ export default function OSASOrganizationComplianceView({
                             </Badge>
                           </div>
 
-                          <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-gray-900 dark:text-zinc-300">
+                          <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-gray-600 dark:text-zinc-400">
                             {officer.studentNo && (
                               <span className="font-mono text-[11px] font-medium text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-border/50 dark:border-border">
                                 {officer.studentNo}
@@ -1752,7 +1733,10 @@ export default function OSASOrganizationComplianceView({
             </div>
 
             {/* Sheet Footer */}
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-row items-center justify-end gap-2.5">
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
+              <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+                {selectedOrgForOfficers?.acronym ? `ORG: ${selectedOrgForOfficers.acronym}` : "OSAS Roster"} • {selectedOrgForOfficers?.activeOfficerCount || 0} {selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}
+              </span>
               <Button
                 type="button"
                 variant="outline"

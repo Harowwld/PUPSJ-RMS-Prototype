@@ -126,7 +126,7 @@ const formatDocTypeName = (value) => {
   return value;
 };
 
-const SlaCharts = React.memo(function SlaCharts({ data, pieData }) {
+const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all" }) {
   const isDark = false
   const [timeGrain, setTimeGrain] = useState("monthly") // "monthly", "weekly", "daily"
   const [activeBarName, setActiveBarName] = useState(null)
@@ -142,10 +142,16 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData }) {
   const latestTrendPoint = trendData[trendData.length - 1]
   const displayPoint = hoveredTrendPoint || latestTrendPoint
 
+  const showSlaSection = viewMode === "all" || viewMode === "sla"
+  const showCsmSection = viewMode === "all" || viewMode === "csm"
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
-      <div className="lg:col-span-2 flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
+      {/* SLA Operational Charts Grid */}
+      {showSlaSection && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
         {/* Card 1: Request Trends Chart */}
         <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col">
           <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
@@ -555,109 +561,113 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData }) {
           </div>
         </div>
       </div>
+    </div>
+  )}
 
       {/* Card 5: Client Satisfaction Measurement (CSM) */}
-      <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col gap-6 lg:col-span-3">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <HugeIcon className="ph-fill ph-star text-amber-500 text-[18px]" />
-              <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
-                Client Satisfaction Measurement (CSM)
-              </h3>
+      {showCsmSection && (
+        <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col gap-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <HugeIcon className="ph-fill ph-star text-amber-500 text-[18px]" />
+                <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
+                  Client Satisfaction Measurement (CSM)
+                </h3>
+              </div>
+              <p className="text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+                Student feedback ratings, satisfaction rate, and public service quality evaluations.
+              </p>
             </div>
-            <p className="text-[13px] font-normal text-gray-900 dark:text-zinc-300">
-              Student feedback ratings, satisfaction rate, and public service quality evaluations.
-            </p>
+
+            {data?.feedback?.totalResponses > 0 && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/40 text-amber-900 dark:text-amber-200">
+                  <span className="text-amber-500 text-sm">★</span>
+                  <span className="text-sm font-bold">{data.feedback.averageRating}</span>
+                  <span className="text-xs text-amber-700 dark:text-amber-400">/ 5.0</span>
+                </div>
+                <span className="text-xs font-medium text-gray-900 dark:text-zinc-300">
+                  {data.feedback.satisfactionRate}% Positive ({data.feedback.totalResponses} {data.feedback.totalResponses === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )}
           </div>
 
-          {data?.feedback?.totalResponses > 0 && (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/40 text-amber-900 dark:text-amber-200">
-                <span className="text-amber-500 text-sm">★</span>
-                <span className="text-sm font-bold">{data.feedback.averageRating}</span>
-                <span className="text-xs text-amber-700 dark:text-amber-400">/ 5.0</span>
+          {data?.feedback?.totalResponses > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-2 border-t border-border dark:border-border">
+              {/* Rating Breakdown Bars */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Rating Distribution
+                </span>
+                <div className="flex flex-col gap-2.5">
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const count = data.feedback.ratingBreakdown?.[stars] || 0;
+                    const pct = data.feedback.totalResponses > 0 
+                      ? Math.round((count / data.feedback.totalResponses) * 100) 
+                      : 0;
+                    return (
+                      <div key={stars} className="flex items-center gap-3 text-xs">
+                        <span className="w-9 font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1">
+                          {stars} <span className="text-amber-500">★</span>
+                        </span>
+                        <div className="flex-1 h-3 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden relative">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500 bg-amber-500 dark:bg-amber-400"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-14 text-right font-medium text-gray-900 dark:text-zinc-300">
+                          {count} ({pct}%)
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <span className="text-xs font-medium text-gray-900 dark:text-zinc-300">
-                {data.feedback.satisfactionRate}% Positive ({data.feedback.totalResponses} {data.feedback.totalResponses === 1 ? "review" : "reviews"})
-              </span>
+
+              {/* Evaluation Aspects */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Top Service Highlights
+                </span>
+                {data.feedback.topAspects?.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {data.feedback.topAspects.map((aspect) => (
+                      <div
+                        key={aspect.tag}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 text-xs"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-zinc-200 truncate mr-2">
+                          {aspect.label}
+                        </span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-300 shrink-0">
+                          {aspect.percentage}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 dark:text-zinc-500 italic">
+                    No specific aspect tags submitted yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 flex flex-col items-center justify-center text-center border-t border-border dark:border-border">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 border border-amber-200/60 dark:border-amber-800/30">
+                <HugeIcon className="ph-duotone ph-star text-2xl" />
+              </div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">No student feedback recorded yet</p>
+              <p className="text-xs text-gray-900 dark:text-zinc-300 max-w-sm mt-1">
+                Feedback scores and service ratings will automatically populate here as students rate completed document requests.
+              </p>
             </div>
           )}
         </div>
-
-        {data?.feedback?.totalResponses > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-2 border-t border-border dark:border-border">
-            {/* Rating Breakdown Bars */}
-            <div className="flex flex-col gap-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Rating Distribution
-              </span>
-              <div className="flex flex-col gap-2.5">
-                {[5, 4, 3, 2, 1].map((stars) => {
-                  const count = data.feedback.ratingBreakdown?.[stars] || 0;
-                  const pct = data.feedback.totalResponses > 0 
-                    ? Math.round((count / data.feedback.totalResponses) * 100) 
-                    : 0;
-                  return (
-                    <div key={stars} className="flex items-center gap-3 text-xs">
-                      <span className="w-9 font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1">
-                        {stars} <span className="text-amber-500">★</span>
-                      </span>
-                      <div className="flex-1 h-3 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden relative">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500 bg-amber-500 dark:bg-amber-400"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="w-14 text-right font-medium text-gray-900 dark:text-zinc-300">
-                        {count} ({pct}%)
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Evaluation Aspects */}
-            <div className="flex flex-col gap-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Top Service Highlights
-              </span>
-              {data.feedback.topAspects?.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {data.feedback.topAspects.map((aspect) => (
-                    <div
-                      key={aspect.tag}
-                      className="flex items-center justify-between p-2.5 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 text-xs"
-                    >
-                      <span className="font-medium text-gray-800 dark:text-zinc-200 truncate mr-2">
-                        {aspect.label}
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-zinc-300 shrink-0">
-                        {aspect.percentage}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-400 dark:text-zinc-500 italic">
-                  No specific aspect tags submitted yet.
-                </p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="py-8 flex flex-col items-center justify-center text-center border-t border-border dark:border-border">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 border border-amber-200/60 dark:border-amber-800/30">
-              <HugeIcon className="ph-duotone ph-star text-2xl" />
-            </div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">No student feedback recorded yet</p>
-            <p className="text-xs text-gray-900 dark:text-zinc-300 max-w-sm mt-1">
-              Feedback scores and service ratings will automatically populate here as students rate completed document requests.
-            </p>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 })

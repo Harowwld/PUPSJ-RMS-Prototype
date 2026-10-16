@@ -663,7 +663,7 @@
   padding: 0 !important;
   height: auto !important;
   width: auto !important;
-  color: #0A84FF !important;
+  color: var(--brand-accent, #800000) !important;
   font-size: 14px !important;
   font-weight: 500 !important;
   text-decoration: none !important;
@@ -689,7 +689,22 @@
 .dark [data-slot="empty"] a.button,
 .dark [data-slot="empty"] a[class*="border"],
 .dark [data-slot="empty"] .btn-brand-red {
-  color: #0A84FF !important;
+  color: var(--brand-accent, #800000) !important;
+}
+
+.dark [style*="--brand-accent: #000000"] [data-slot="empty"] button,
+.dark [style*="--brand-accent:#000000"] [data-slot="empty"] button,
+.dark [style*="--brand-accent: #0F172A"] [data-slot="empty"] button,
+.dark [style*="--brand-accent:#0F172A"] [data-slot="empty"] button,
+.dark [data-brand-accent="#000000"] [data-slot="empty"] button,
+.dark [data-brand-accent="#0F172A"] [data-slot="empty"] button,
+.dark [style*="--brand-accent: #000000"] [data-slot="empty"] .btn-brand-red,
+.dark [style*="--brand-accent:#000000"] [data-slot="empty"] .btn-brand-red,
+.dark [style*="--brand-accent: #0F172A"] [data-slot="empty"] .btn-brand-red,
+.dark [style*="--brand-accent:#0F172A"] [data-slot="empty"] .btn-brand-red,
+.dark [data-brand-accent="#000000"] [data-slot="empty"] .btn-brand-red,
+.dark [data-brand-accent="#0F172A"] [data-slot="empty"] .btn-brand-red {
+  color: #f4f4f5 !important;
 }
 
 .chat-message-list::-webkit-scrollbar {
@@ -1153,7 +1168,7 @@ th {
 
 /* Brand Buttons - Solid Maroon Style */
 .btn-brand-red {
-  background-color: #0070e2 !important;
+  background-color: var(--brand-accent, #800000) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1167,12 +1182,13 @@ th {
 }
 
 .dark .btn-brand-red {
-  background-color: #0070e2 !important;
+  background-color: var(--brand-accent, #800000) !important;
+  color: var(--brand-foreground, #ffffff) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-color: #005bb8 !important;
+  background-color: color-mix(in srgb, var(--brand-accent, #800000) 85%, black) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1181,12 +1197,12 @@ th {
 }
 
 .dark .btn-brand-red:hover {
-  background-color: #005bb8 !important;
+  background-color: color-mix(in srgb, var(--brand-accent, #800000) 85%, black) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:active {
-  background-color: #004d9c !important;
+  background-color: color-mix(in srgb, var(--brand-accent, #800000) 75%, black) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1194,9 +1210,31 @@ th {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
+/* System Admin Dark Mode Contrast Optimization:
+ * When brand accent is black (#000000 or #0F172A), dark mode flips to high-contrast zinc-100 / zinc-900 */
+.dark [style*="--brand-accent: #000000"] .btn-brand-red,
+.dark [style*="--brand-accent:#000000"] .btn-brand-red,
+.dark [style*="--brand-accent: #0F172A"] .btn-brand-red,
+.dark [style*="--brand-accent:#0F172A"] .btn-brand-red,
+.dark [data-brand-accent="#000000"] .btn-brand-red,
+.dark [data-brand-accent="#0F172A"] .btn-brand-red {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
+}
+
+.dark [style*="--brand-accent: #000000"] .btn-brand-red:hover,
+.dark [style*="--brand-accent:#000000"] .btn-brand-red:hover,
+.dark [style*="--brand-accent: #0F172A"] .btn-brand-red:hover,
+.dark [style*="--brand-accent:#0F172A"] .btn-brand-red:hover,
+.dark [data-brand-accent="#000000"] .btn-brand-red:hover,
+.dark [data-brand-accent="#0F172A"] .btn-brand-red:hover {
+  background-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+
 /* Brand Orange Button */
 .btn-brand-orange {
-  background-color: #0070e2 !important;
+  background-color: #ff9b11 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1211,7 +1249,7 @@ th {
 }
 
 .dark .btn-brand-orange {
-  background-color: #0070e2 !important;
+  background-color: #ea580c !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1222,7 +1260,7 @@ th {
 }
 
 .btn-brand-orange:hover {
-  background-color: #005bb8 !important;
+  background-color: #d97706 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1233,7 +1271,7 @@ th {
 }
 
 .dark .btn-brand-orange:hover {
-  background-color: #005bb8 !important;
+  background-color: #c2410c !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
@@ -1310,12 +1348,14 @@ button.bg-yellow-400:hover,
 }
 
 /* Global Checkbox Visibility Style */
-input[type="checkbox"] {
+input[type="checkbox"]:not(.sr-only) {
   appearance: none !important;
   -webkit-appearance: none !important;
-  width: 16px; /* default size */
-  height: 16px; /* default size */
-  border-radius: 50% !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  border-radius: 4px !important;
   border-width: 1.5px !important;
   border-style: solid !important;
   border-color: #9ca3af !important; /* gray-400 */
@@ -1323,21 +1363,78 @@ input[type="checkbox"] {
   background-image: none !important;
   cursor: pointer;
   margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  transition: all 0.15s ease-in-out;
 }
 
-input[type="checkbox"]:checked {
-  background-color: #2563eb !important; /* solid blue */
-  border-color: #2563eb !important;
-  background-image: none !important;
+input[type="checkbox"]:not(.sr-only):hover:not(:disabled):not(:checked) {
+  border-color: #6b7280 !important; /* gray-500 */
 }
 
-.dark input[type="checkbox"] {
+input[type="checkbox"]:not(.sr-only):focus-visible {
+  outline: 2px solid var(--brand-accent, #800000) !important;
+  outline-offset: 2px !important;
+}
+
+input[type="checkbox"]:not(.sr-only):checked {
+  background-color: var(--brand-accent, #800000) !important;
+  border-color: var(--brand-accent, #800000) !important;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+input[type="checkbox"]:not(.sr-only):indeterminate {
+  background-color: var(--brand-accent, #800000) !important;
+  border-color: var(--brand-accent, #800000) !important;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='3.5' y1='8' x2='12.5' y2='8'/%3E%3C/svg%3E") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.dark input[type="checkbox"]:not(.sr-only) {
   border-color: #71717a !important; /* zinc-500 */
 }
 
-.dark input[type="checkbox"]:checked {
-  background-color: #3b82f6 !important; /* solid blue */
-  border-color: #3b82f6 !important;
+.dark input[type="checkbox"]:not(.sr-only):hover:not(:disabled):not(:checked) {
+  border-color: #a1a1aa !important; /* zinc-400 */
+}
+
+.dark input[type="checkbox"]:not(.sr-only):checked {
+  background-color: var(--brand-accent, #800000) !important;
+  border-color: var(--brand-accent, #800000) !important;
+}
+
+.dark input[type="checkbox"]:not(.sr-only):disabled,
+input[type="checkbox"]:not(.sr-only):disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+.dark [style*="--brand-accent: #000000"] input[type="checkbox"]:not(.sr-only):checked,
+.dark [style*="--brand-accent:#000000"] input[type="checkbox"]:not(.sr-only):checked,
+.dark [style*="--brand-accent: #0F172A"] input[type="checkbox"]:not(.sr-only):checked,
+.dark [style*="--brand-accent:#0F172A"] input[type="checkbox"]:not(.sr-only):checked,
+.dark [data-brand-accent="#000000"] input[type="checkbox"]:not(.sr-only):checked,
+.dark [data-brand-accent="#0F172A"] input[type="checkbox"]:not(.sr-only):checked {
+  background-color: #f4f4f5 !important;
+  border-color: #f4f4f5 !important;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' stroke='%2318181b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") !important;
+}
+
+.dark [style*="--brand-accent: #000000"] input[type="checkbox"]:not(.sr-only):indeterminate,
+.dark [style*="--brand-accent:#000000"] input[type="checkbox"]:not(.sr-only):indeterminate,
+.dark [style*="--brand-accent: #0F172A"] input[type="checkbox"]:not(.sr-only):indeterminate,
+.dark [style*="--brand-accent:#0F172A"] input[type="checkbox"]:not(.sr-only):indeterminate,
+.dark [data-brand-accent="#000000"] input[type="checkbox"]:not(.sr-only):indeterminate,
+.dark [data-brand-accent="#0F172A"] input[type="checkbox"]:not(.sr-only):indeterminate {
+  background-color: #f4f4f5 !important;
+  border-color: #f4f4f5 !important;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' stroke='%2318181b' stroke-width='2.2' stroke-linecap='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='3.5' y1='8' x2='12.5' y2='8'/%3E%3C/svg%3E") !important;
 }
 
 /* Global button text transform reset to enforce sentence casing */
@@ -1631,6 +1728,16 @@ button,
   border: 2px solid #ffffff !important;
   background-color: #09090b !important;
   color: #ffffff !important;
+}
+
+/* Remove native browser clear ('x') buttons in search inputs */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
 /* Focus Outlines */

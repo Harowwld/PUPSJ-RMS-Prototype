@@ -35,6 +35,7 @@ import {
   EmptyMedia,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
 } from "@/components/ui/empty";
 
 export function normalizeProposalStatus(status) {
@@ -1216,24 +1217,8 @@ export default function OsasMonitoringTab({ showToast }) {
                 }}
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setPage(1);
-                    }}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                    title="Clear search"
-                    aria-label="Clear search"
-                  >
-                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                  </button>
-                )}
-                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  {activeFilteredList.length.toLocaleString()}
-                </span>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                {activeFilteredList.length.toLocaleString()}
               </div>
             </div>
 
@@ -1263,8 +1248,44 @@ export default function OsasMonitoringTab({ showToast }) {
         {activeStream === "proposals" && (
           <>
             {viewMode === "list" ? (
-              <div className={cn("w-full flex flex-col border-t border-border dark:border-border", filteredRows.length === 0 && "rounded-b-2xl overflow-hidden")}>
-                <div className="overflow-x-auto w-full select-none">
+              filteredRows.length === 0 ? (
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className="ph-duotone ph-calendar-check text-3xl text-pup-maroon dark:text-red-400" />
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                        No Event Proposals Found
+                      </EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        {hasActiveFilters
+                          ? "Try adjusting your search criteria or resetting active filters."
+                          : "Student organizations have not submitted any event proposals yet."}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                    {hasActiveFilters && (
+                      <EmptyContent>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearFilters}
+                          title="Reset Filters"
+                          className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                        >
+                          Reset
+                        </Button>
+                      </EmptyContent>
+                    )}
+                  </Empty>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col border-t border-border dark:border-border">
+                  <div className="overflow-x-auto w-full select-none">
                   <table className="w-full text-left text-xs table-fixed min-w-[960px]">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
@@ -1370,48 +1391,12 @@ export default function OsasMonitoringTab({ showToast }) {
                           </td>
                         </tr>
                       ))}
-                      {!filteredRows.length && (
-                        <tr className="border-0 hover:bg-transparent">
-                          <td colSpan={6} className="py-16 px-6 text-center border-0">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-calendar-check text-3xl text-pup-maroon dark:text-red-400" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
-                                  No Event Proposals Found
-                                </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
-                                  {hasActiveFilters
-                                    ? "Try adjusting your search criteria or resetting active filters."
-                                    : "Student organizations have not submitted any event proposals yet."}
-                                </EmptyDescription>
-                                {hasActiveFilters && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleClearFilters}
-                                    title="Reset Filters"
-                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
-                                  >
-                                    Reset
-                                  </Button>
-                                )}
-                              </EmptyHeader>
-                            </Empty>
-                          </td>
-                        </tr>
-                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
-            ) : filteredRows.length === 0 ? (
-              <div className="w-full flex-1 flex items-center justify-center border-t border-border dark:border-border p-16 bg-gray-50/20 dark:bg-zinc-900/10 min-h-[360px]">
+            )) : filteredRows.length === 0 ? (
+              <div className="w-full flex-1 flex flex-col items-center justify-center border-t border-border dark:border-border py-16 bg-gray-50/20 dark:bg-zinc-900/10 min-h-[420px]">
                 <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
@@ -1428,19 +1413,21 @@ export default function OsasMonitoringTab({ showToast }) {
                         ? "No proposals match your active search terms or filters."
                         : "There are currently no event proposals in the pipeline."}
                     </EmptyDescription>
-                    {hasActiveFilters && (
+                  </EmptyHeader>
+                  {hasActiveFilters && (
+                    <EmptyContent>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                        className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                       >
                         Reset
                       </Button>
-                    )}
-                  </EmptyHeader>
+                    </EmptyContent>
+                  )}
                 </Empty>
               </div>
             ) : (
@@ -1470,8 +1457,44 @@ export default function OsasMonitoringTab({ showToast }) {
         {activeStream === "post_events" && (
           <>
             {viewMode === "list" ? (
-              <div className={cn("w-full flex flex-col border-t border-border dark:border-border", filteredPostEvents.length === 0 && "rounded-b-2xl overflow-hidden")}>
-                <div className="overflow-x-auto w-full select-none">
+              filteredPostEvents.length === 0 ? (
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                        No Post-Event Reports Found
+                      </EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        {hasActiveFilters
+                          ? "No reports match your active search or filter criteria."
+                          : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                    {hasActiveFilters && (
+                      <EmptyContent>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearFilters}
+                          title="Reset Filters"
+                          className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                        >
+                          Reset
+                        </Button>
+                      </EmptyContent>
+                    )}
+                  </Empty>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col border-t border-border dark:border-border">
+                  <div className="overflow-x-auto w-full select-none">
                   <table className="w-full text-left text-xs table-fixed min-w-[1040px]">
                     <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
@@ -1568,51 +1591,15 @@ export default function OsasMonitoringTab({ showToast }) {
                           </tr>
                         );
                       })}
-                      {!filteredPostEvents.length && (
-                        <tr className="border-0 hover:bg-transparent">
-                          <td colSpan={7} className="py-16 px-6 text-center border-0">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
-                                  No Post-Event Reports Found
-                                </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
-                                  {hasActiveFilters
-                                    ? "No reports match your active search or filter criteria."
-                                    : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
-                                </EmptyDescription>
-                                {hasActiveFilters && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleClearFilters}
-                                    title="Reset Filters"
-                                    className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
-                                  >
-                                    Reset
-                                  </Button>
-                                )}
-                              </EmptyHeader>
-                            </Empty>
-                          </td>
-                        </tr>
-                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
-            ) : (
+            )) : (
               /* KANBAN BOARD VIEW FOR POST-EVENTS */
               <div className="w-full flex-1 min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
                 {filteredPostEvents.length === 0 ? (
-                  <div className="py-20 px-6 text-center w-full">
+                  <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                     <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
@@ -1629,19 +1616,21 @@ export default function OsasMonitoringTab({ showToast }) {
                             ? "No reports match your active search or filter criteria."
                             : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
                         </EmptyDescription>
-                        {hasActiveFilters && (
+                      </EmptyHeader>
+                      {hasActiveFilters && (
+                        <EmptyContent>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={handleClearFilters}
                             title="Reset Filters"
-                            className="mt-4 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                           >
                             Reset
                           </Button>
-                        )}
-                      </EmptyHeader>
+                        </EmptyContent>
+                      )}
                     </Empty>
                   </div>
                 ) : (

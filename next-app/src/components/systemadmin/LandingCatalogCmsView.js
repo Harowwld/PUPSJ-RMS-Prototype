@@ -464,14 +464,15 @@ export default function LandingCatalogCmsView({ showToast }) {
                         {catalogData.description?.length || 0}/200
                       </span>
                     </div>
-                    <Input
+                    <textarea
+                      rows={3}
                       value={catalogData.description || ""}
                       onChange={(e) =>
                         setCatalogData((prev) => ({ ...prev, description: e.target.value }))
                       }
                       placeholder="Explore authentic credentials, university clearance protocols..."
                       maxLength={200}
-                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-normal focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                      className="w-full min-h-[72px] rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 resize-y transition-all shadow-xs"
                     />
                   </div>
                 </div>

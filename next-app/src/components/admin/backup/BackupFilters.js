@@ -107,26 +107,11 @@ export default function BackupFilters({
           onChange={handleSearchChange}
           disabled={isLoading}
         />
-        <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-          {localSearch && (
-            <button
-              type="button"
-              onClick={() => {
-                setLocalSearch("")
-                setBackupSearch("")
-                setPage?.(1)
-              }}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-              title="Clear search"
-              aria-label="Clear search"
-            >
-              <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-            </button>
-          )}
+        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
           {isLoading ? (
             <Skeleton className="h-3.5 w-6 rounded dark:bg-muted" />
           ) : (
-            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
               {(backupTotal || 0).toLocaleString()}
             </span>
           )}

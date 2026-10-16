@@ -405,24 +405,8 @@ export default function DocTypesTab({
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                {localSearch && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLocalSearch("")
-                      setDocSearch("")
-                      setPageDoc(1)
-                    }}
-                    className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none text-xs"
-                    title="Clear search"
-                  >
-                    <HugeIcon className="ph-bold ph-x" />
-                  </button>
-                )}
-                <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  {filteredDocTypesFull.length}
-                </span>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                {filteredDocTypesFull.length}
               </div>
             </div>
 

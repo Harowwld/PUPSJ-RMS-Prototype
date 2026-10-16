@@ -12,7 +12,8 @@ export default function SlaKpiCards({
   sla = {},
   feedback = {},
   statusCounts = {},
-  topDocTypes = []
+  topDocTypes = [],
+  viewMode = "all"
 }) {
   const [selectedKpi, setSelectedKpi] = useState(null)
   const [kpiOrder, setKpiOrder] = useState(["rate", "satisfaction", "total"])

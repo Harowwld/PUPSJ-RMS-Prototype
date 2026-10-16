@@ -552,20 +552,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               placeholder="Search student, document, or org..."
               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
             />
-            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                  title="Clear search"
-                >
-                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                </button>
-              )}
-              <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
-                {filteredTransactions.length}
-              </span>
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+              {filteredTransactions.length}
             </div>
           </div>
 
@@ -908,28 +896,28 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
       <Sheet open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-xl data-[side=right]:w-full data-[side=right]:sm:max-w-md data-[side=right]:md:max-w-lg data-[side=right]:lg:max-w-xl data-[side=right]:xl:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-white dark:bg-card text-left">
+          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   {sheetItem?.officeId === "registrar" ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                    <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 inline-flex items-center gap-1.5">
                       <HugeIcon className="ph-bold ph-certificate text-xs" />
                       Registrar Document Request
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                    <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30 inline-flex items-center gap-1.5">
                       <HugeIcon className="ph-bold ph-student text-xs" />
                       OSAS Event Proposal
                     </span>
                   )}
                 </div>
-                <SheetTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
+                <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug truncate">
                   {sheetItem?.title}
                 </SheetTitle>
-                <SheetDescription className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                   Submitted on {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
                 </SheetDescription>
               </div>
@@ -939,8 +927,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {/* Requester & Stage */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
-                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
+                <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                   Student Requester
                 </span>
                 <div
@@ -954,11 +942,11 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
-                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
+                <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                   Current Stage
                 </span>
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap mt-1">
                   <span className={cn(
                     "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
                     statusBadgeClass(sheetItem?.status)
@@ -974,8 +962,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
             {/* Organization (if OSAS) */}
             {sheetItem?.organizationName && (
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
-                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
+                <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                   Student Organization Chapter
                 </span>
                 <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">
@@ -990,8 +978,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             )}
 
             {/* Notes / Purpose */}
-            <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 p-3.5">
-              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+            <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
+              <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                 Purpose / Remarks
               </span>
               <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
@@ -1001,7 +989,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
             {/* Attached Document File */}
             {sheetItem?.originalFilename && (
-              <div className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
+              <div className="p-4 rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
                     <HugeIcon className="ph-bold ph-file-pdf text-base" />
@@ -1023,7 +1011,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpenPdfPreview(sheetItem)}
-                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
+                  className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
                   <HugeIcon className="ph-bold ph-eye text-sm mr-1" /> Preview
                 </Button>
@@ -1031,8 +1019,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             )}
           </div>
 
-          <SheetFooter className="p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0 gap-0">
-            <span className="text-xs text-gray-900 dark:text-zinc-300">
+          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
+            <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
               Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{sheetItem?.officeId}</strong>
             </span>
             <Button

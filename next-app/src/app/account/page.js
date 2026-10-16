@@ -42,7 +42,7 @@ function AccountPageContent() {
   const [loading, setLoading] = useState(true);
 
   const roleBranding = getRoleBranding(authUser);
-  const brandAccent = "#0070e2";
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#800000";
   const brandForeground = roleBranding.foreground || "#FFFFFF";
 
   useEffect(() => {

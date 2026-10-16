@@ -111,7 +111,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser);
 
   const roleBranding = getRoleBranding(authUser);
-  const brandAccent = "#0070e2";
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#ffcb00";
   const brandForeground = roleBranding.foreground || "#FFFFFF";
 
   useEffect(() => {
@@ -568,8 +568,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [authUser?.id]);
 
   useEffect(() => {
-    // Load document list lazily when search view is visible.
-    if (view !== "search" || docsLoadedRef.current) return;
+    // Load document list lazily when search or documents view is visible.
+    if ((view !== "search" && view !== "documents") || docsLoadedRef.current) return;
     setTimeout(() => {
       fetchAllDocs();
     }, 0);
@@ -1729,16 +1729,28 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         const hasTypeFilter = selectedTypes.length > 0;
 
         if (!query && !hasTypeFilter) {
-          setDocsRows(staffDocs.filter((doc) => doc.source_type === "event_proposal").map((doc) => ({
-            id: doc.id,
-            student_no: doc.student_no,
-            student_name: doc.student_name,
-            doc_type: doc.doc_type,
-            status: "uploaded",
-            verificationStatus: doc.approval_status === "Approved" ? "verified" : "unverified",
-            doc,
-            reviewDoc: doc,
-          })));
+          const defaultDocs = isOsas
+            ? staffDocs
+            : staffDocs.filter((doc) => doc.source_type !== "event_proposal");
+
+          setDocsRows(
+            defaultDocs.map((doc) => {
+              const matchedStudent = students.find(
+                (s) => String(s.studentNo || "").trim() === String(doc.student_no || "").trim()
+              );
+              return {
+                id: doc.id,
+                student_no: doc.student_no,
+                student_name: doc.student_name || matchedStudent?.name || doc.student_no,
+                doc_type: doc.doc_type,
+                status: "uploaded",
+                verificationStatus: doc.approval_status === "Approved" ? "verified" : "unverified",
+                doc,
+                reviewDoc: doc,
+                student: matchedStudent || null,
+              };
+            })
+          );
           return;
         }
 
@@ -1758,7 +1770,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
         for (const student of baseStudents) {
           const studentDocs = staffDocs.filter(
-            (d) => String(d.student_no || "") === String(student.studentNo || "")
+            (d) =>
+              String(d.student_no || "") === String(student.studentNo || "") &&
+              (isOsas || d.source_type !== "event_proposal")
           );
 
           const seenTypes = new Set();
@@ -1796,6 +1810,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   doc.approval_status === "Approved" ? "verified" : "unverified",
                 doc: doc,
                 reviewDoc: doc,
+                student: student,
               });
             }
 
@@ -1831,6 +1846,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 verificationStatus: "",
                 doc: null,
                 reviewDoc: null,
+                student: student,
               });
             }
           }
@@ -1838,6 +1854,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
         // 3. Include any documents in staffDocs not tied to baseStudents (e.g. event proposals or standalone documents)
         for (const doc of staffDocs) {
+          if (!isOsas && doc.source_type === "event_proposal") continue;
           if (seenDocIds.has(doc.id)) continue;
           if (hasTypeFilter && !selectedTypes.includes(doc.doc_type)) continue;
 
@@ -1858,16 +1875,20 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
           if (docMatches) {
             seenDocIds.add(doc.id);
+            const matchedStudent = students.find(
+              (s) => String(s.studentNo || "").trim() === String(doc.student_no || "").trim()
+            );
             rows.push({
               id: doc.id,
               student_no: doc.student_no,
-              student_name: doc.student_name,
+              student_name: doc.student_name || matchedStudent?.name || doc.student_no,
               doc_type: doc.doc_type,
               status: "uploaded",
               verificationStatus:
                 doc.approval_status === "Approved" ? "verified" : "unverified",
               doc: doc,
               reviewDoc: doc,
+              student: matchedStudent || null,
             });
           }
         }
@@ -1880,7 +1901,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         setDocsLoading(false);
       }
     },
-    [students, docTypes, staffDocs],
+    [students, docTypes, staffDocs, isOsas],
   );
 
   useEffect(() => {
@@ -2752,6 +2773,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               docsForm={docsForm}
               setDocsForm={setDocsForm}
               refreshDocuments={refreshDocuments}
+              onRefreshDocuments={fetchAllDocs}
               docTypes={docTypes}
               courses={courses}
               storageLayout={storageLayout}

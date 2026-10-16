@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import HugeIcon from "@/components/shared/HugeIcon"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -35,6 +36,8 @@ export default function SlaFilters({
   endDate,
   setEndDate,
   isLoading,
+  activeView = "all",
+  setActiveView,
 }) {
   const [startOpen, setStartOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
@@ -96,91 +99,139 @@ export default function SlaFilters({
   }
 
   return (
-    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
-      {/* Time Shortcuts */}
-      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
-        {[
-          { key: "today", label: "Today" },
-          { key: "yesterday", label: "Yest." },
-          { key: "last7", label: "7d" },
-          { key: "last30", label: "30d" },
-        ].map((range) => {
-          const isActive = activeShortcut === range.key
-          return (
-            <button
-              key={range.key}
-              type="button"
-              onClick={() => handleQuickRange(range.key)}
-              disabled={isLoading}
-              className={cn(
-                "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                isActive
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-              )}
-            >
-              {range.label}
-            </button>
-          )
-        })}
+    <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+      {/* Overview / View Mode Tab Group (Left side) */}
+      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveView?.("all")}
+          disabled={isLoading}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap",
+            activeView === "all"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+          )}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView?.("sla")}
+          disabled={isLoading}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
+            activeView === "sla"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+          )}
+        >
+          <HugeIcon className="ph-bold ph-timer text-[13px] text-pup-maroon dark:text-red-400" />
+          <span>Turnaround & SLA</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView?.("csm")}
+          disabled={isLoading}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
+            activeView === "csm"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+          )}
+        >
+          <HugeIcon className="ph-fill ph-star text-[13px] text-amber-500" />
+          <span>Client Satisfaction (CSM)</span>
+        </button>
       </div>
 
-      {/* Date Range Pickers */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <div className="w-[105px]">
-          <Popover open={startOpen} onOpenChange={setStartOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
+      {/* Date Range & Time Shortcuts (Right side) */}
+      <div className="flex flex-wrap items-center md:justify-end gap-3 shrink-0">
+        {/* Time Shortcuts */}
+        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
+          {[
+            { key: "today", label: "Today" },
+            { key: "yesterday", label: "Yest." },
+            { key: "last7", label: "7d" },
+            { key: "last30", label: "30d" },
+          ].map((range) => {
+            const isActive = activeShortcut === range.key
+            return (
+              <button
+                key={range.key}
+                type="button"
+                onClick={() => handleQuickRange(range.key)}
                 disabled={isLoading}
                 className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                  !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  isActive
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                {formatButtonDate(startDate, "Start")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
-              <Calendar
-                mode="single"
-                selected={startDate ? parseDateLocal(startDate) : undefined}
-                onSelect={(date) => {
-                  setStartDate(date ? format(date, "yyyy-MM-dd") : "")
-                  setStartOpen(false)
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+                {range.label}
+              </button>
+            )
+          })}
         </div>
-        <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
-        <div className="w-[105px]">
-          <Popover open={endOpen} onOpenChange={setEndOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                disabled={isLoading}
-                className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                  !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                )}
-              >
-                {formatButtonDate(endDate, "End")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
-              <Calendar
-                mode="single"
-                selected={endDate ? parseDateLocal(endDate) : undefined}
-                onSelect={(date) => {
-                  setEndDate(date ? format(date, "yyyy-MM-dd") : "")
-                  setEndOpen(false)
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+
+        {/* Date Range Pickers */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-[105px]">
+            <Popover open={startOpen} onOpenChange={setStartOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isLoading}
+                  className={cn(
+                    "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                    !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  )}
+                >
+                  {formatButtonDate(startDate, "Start")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate ? parseDateLocal(startDate) : undefined}
+                  onSelect={(date) => {
+                    setStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                    setStartOpen(false)
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
+          <div className="w-[105px]">
+            <Popover open={endOpen} onOpenChange={setEndOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isLoading}
+                  className={cn(
+                    "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                    !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  )}
+                >
+                  {formatButtonDate(endDate, "End")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate ? parseDateLocal(endDate) : undefined}
+                  onSelect={(date) => {
+                    setEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                    setEndOpen(false)
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
     </div>

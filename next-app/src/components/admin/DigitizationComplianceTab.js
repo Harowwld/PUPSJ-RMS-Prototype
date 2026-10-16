@@ -783,20 +783,8 @@ export default function DigitizationComplianceTab({
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-              {tableSearch && (
-                <button
-                  type="button"
-                  onClick={() => setTableSearch("")}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                  title="Clear search"
-                >
-                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                </button>
-              )}
-              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                {sortedByCourse.length}
-              </span>
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              {sortedByCourse.length}
             </div>
           </div>
 
@@ -1040,8 +1028,26 @@ export default function DigitizationComplianceTab({
                     </tr>
                   </thead>
                   <tbody className="bg-transparent">
-                    {paginatedByCourse.map((row) => (
-                      <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
+                    {paginatedByCourse.map((row) => {
+                      const isSelected = Array.isArray(courseFilter) && courseFilter.includes(row.courseCode)
+                      return (
+                        <tr
+                          key={row.courseCode}
+                          onClick={() => {
+                            setCourseFilter((prev) => {
+                              const current = Array.isArray(prev) ? prev : []
+                              if (current.includes(row.courseCode)) {
+                                return current.filter((c) => c !== row.courseCode)
+                              }
+                              return [...current, row.courseCode]
+                            })
+                          }}
+                          className={cn(
+                            "h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02] cursor-pointer select-none",
+                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                          )}
+                          title={`Click to ${isSelected ? "clear" : "filter by"} ${row.courseCode}`}
+                        >
                         <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
                           {row.courseCode || "N/A"}
                         </td>
@@ -1073,8 +1079,9 @@ export default function DigitizationComplianceTab({
                             </div>
                           </div>
                         </td>
-                      </tr>
-                    ))}
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               ) : (

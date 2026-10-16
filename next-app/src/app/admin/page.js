@@ -238,7 +238,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser)
 
   const roleBranding = getRoleBranding(authUser)
-  const brandAccent = "#0070e2"
+  const brandAccent = authUser?.accent_color || roleBranding.color || "#800000"
   const brandForeground = roleBranding.foreground || "#FFFFFF"
 
   useEffect(() => {

@@ -27,66 +27,213 @@ export const generateExportFilename = (entity, type, extension) => {
  * @param {number} total - Total lifetime requests
  * @param {number} completionRate - Completion percentage
  * @param {Function} onLogAction - Callback to log the action
- * @param {string} fileName - Optional custom filename
+/**
+ * Exports dedicated Citizen's Charter SLA compliance data to CSV
  */
-export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileName) => {
-  if (!data) return
-  
-  const finalFileName = fileName || generateExportFilename("SLA-ANALYTICS", "REPORT", "csv");
-  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
-  const row = (cells) => cells.map(q).join(",")
+export const downloadSlaComplianceCsv = (data, total, completionRate, onLogAction, fileName) => {
+  if (!data) return;
+
+  const finalFileName = fileName || generateExportFilename("SLA-COMPLIANCE", "DATA", "csv");
+  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
+  const row = (cells) => cells.map(q).join(",");
+
+  const compliantCount = data?.sla?.compliantCompleted ?? (Number.isFinite(data?.sla?.totalCompleted) ? data.sla.totalCompleted : 0);
+  const activeOverdue = data?.sla?.activeOverdue || 0;
+  const delayedCompleted = data?.sla?.delayedCompleted || 0;
 
   const lines = [
-    row(["Service Level Agreement Analytics", ""]),
+    row(["Citizen's Charter SLA Compliance Dataset", ""]),
+    row(["Legal Mandate", "Republic Act No. 11032 / Anti-Red Tape Authority (ARTA)"]),
     row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
     "",
-    row(["Summary Metrics", "Value"]),
-    row(["Total Lifetime Requests", total ?? 0]),
-    row(["Overall Completion Rate", `${completionRate ?? 0}%`]),
+    row(["Summary Operational Metrics", "Value"]),
+    row(["Total Document Inflow", total ?? 0]),
+    row(["Overall SLA Compliance Rate", `${completionRate ?? 0}%`]),
+    row(["On-Time Fulfillments", compliantCount]),
+    row(["Delayed / Exceeded Window", delayedCompleted + activeOverdue]),
+    row(["Active Overdue Watchlist", activeOverdue]),
     "",
-    row(["Status Distribution", "Count"]),
-  ]
+    row(["Transaction Status Distribution", "Count"]),
+  ];
 
   for (const [st, val] of Object.entries(data.statusCounts || {})) {
-    if (val > 0) lines.push(row([st, val ?? 0]))
+    if (val > 0) lines.push(row([st, val ?? 0]));
   }
 
-  lines.push("")
-  lines.push(row(["Top Requested Documents", "Count"]))
-  for (const dt of data.topDocTypes || []) {
-    lines.push(row([dt?.name || "Unspecified Document", dt?.count ?? 0]))
-  }
-
-  if (data?.feedback) {
-    lines.push("")
-    lines.push(row(["Client Satisfaction Measurement (CSM)", "Value"]))
-    lines.push(row(["Average Satisfaction Score", `${data.feedback.averageRating ?? 0} / 5.0`]))
-    lines.push(row(["Total Client Ratings", data.feedback.totalResponses ?? 0]))
-    lines.push(row(["Positive Rating Rate", `${data.feedback.satisfactionRate ?? 0}%`]))
-    lines.push("")
-    lines.push(row(["Star Rating Breakdown", "Count"]))
-    for (const [star, count] of Object.entries(data.feedback.ratingBreakdown || {})) {
-      lines.push(row([`${star} Star`, count ?? 0]))
+  const tierStats = data?.sla?.tierStats || {};
+  if (Object.keys(tierStats).length > 0) {
+    lines.push("");
+    lines.push(row(["Service Classification Tier", "Statutory Window", "Total", "Compliant", "Delayed", "Compliance Rate"]));
+    for (const [key, stat] of Object.entries(tierStats)) {
+      const rate = stat.total > 0 ? Math.round((stat.compliant / stat.total) * 100) : 100;
+      const delayed = (stat.delayed || 0) + (stat.overdue || 0);
+      lines.push(row([
+        stat.label || key,
+        stat.windowDays ? `${stat.windowDays} Working Days` : "Standard",
+        stat.total ?? 0,
+        stat.compliant ?? 0,
+        delayed,
+        `${rate}%`
+      ]));
     }
   }
 
-  const blob = new Blob([lines.join("\n")], {
-    type: "text/csv;charset=utf-8;",
-  })
-  const link = document.createElement("a")
-  const url = URL.createObjectURL(blob)
-  link.href = url
-  link.download = finalFileName
-  link.click()
-  URL.revokeObjectURL(url)
+  lines.push("");
+  lines.push(row(["Top Academic Credential Demand", "Request Count", "Workload Share"]));
+  for (const dt of data.topDocTypes || []) {
+    const count = dt?.count ?? 0;
+    const share = total > 0 ? `${Math.round((count / total) * 100)}%` : "0%";
+    lines.push(row([dt?.name || "Unspecified Document", count, share]));
+  }
+
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = finalFileName;
+  link.click();
+  URL.revokeObjectURL(url);
 
   onLogAction?.({
     action: "Export CSV",
-    details:
-      `exported comprehensive SLA compliance dataset (${finalFileName}) to local CSV storage volume`,
+    details: `exported dedicated Citizen's Charter SLA compliance dataset (${finalFileName}) to local CSV storage volume`,
     entityType: "Report",
-  })
-}
+  });
+};
+
+/**
+ * Exports dedicated Client Satisfaction Measurement (CSM) feedback data to CSV
+ */
+export const downloadCsmRatingsCsv = (data, onLogAction, fileName) => {
+  if (!data?.feedback) return;
+
+  const finalFileName = fileName || generateExportFilename("CSM-RATINGS", "DATA", "csv");
+  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
+  const row = (cells) => cells.map(q).join(",");
+
+  const fb = data.feedback;
+  const feedbackTotal = fb.totalResponses ?? 0;
+  const satRate = fb.satisfactionRate ?? 0;
+  const avgRating = fb.averageRating ?? 0;
+
+  const lines = [
+    row(["Client Satisfaction Measurement (CSM) & Service Quality Dataset", ""]),
+    row(["Regulatory Standard", "ARTA Memorandum Circular No. 2019-002 / ISO 9001:2015"]),
+    row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
+    "",
+    row(["Executive Quality Index", "Value"]),
+    row(["Mean Client Satisfaction Score", `${avgRating} / 5.0 Stars`]),
+    row(["Positive Sentiment Rate", `${satRate}% Positive`]),
+    row(["Total Verified Evaluations", feedbackTotal]),
+    row(["Quality Standing", satRate >= 90 ? "Exceeded Target" : (satRate >= 75 ? "Satisfactory" : "Needs Action")]),
+    "",
+    row(["Five-Point Likert Rating Distribution", "Count", "Percentage"]),
+  ];
+
+  const labels = {
+    5: "5 Stars (Outstanding)",
+    4: "4 Stars (Very Satisfactory)",
+    3: "3 Stars (Satisfactory)",
+    2: "2 Stars (Unsatisfactory)",
+    1: "1 Star (Poor)",
+  };
+
+  for (const star of [5, 4, 3, 2, 1]) {
+    const count = fb.ratingBreakdown?.[star] ?? 0;
+    const pct = feedbackTotal > 0 ? `${Math.round((count / feedbackTotal) * 100)}%` : "0%";
+    lines.push(row([labels[star], count, pct]));
+  }
+
+  if (Array.isArray(fb.topAspects) && fb.topAspects.length > 0) {
+    lines.push("");
+    lines.push(row(["Service Quality Dimension (SQD)", "Recorded Positive %", "Statutory Benchmark"]));
+    for (const aspect of fb.topAspects) {
+      lines.push(row([aspect.label || aspect.tag, `${aspect.percentage ?? 0}%`, "≥ 90.0%"]));
+    }
+  }
+
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = finalFileName;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  onLogAction?.({
+    action: "Export CSV",
+    details: `exported dedicated Client Satisfaction Measurement (CSM) ratings dataset (${finalFileName}) to local CSV storage volume`,
+    entityType: "Report",
+  });
+};
+
+/**
+ * Exports comprehensive combined SLA and CSM dataset to CSV
+ */
+export const downloadComprehensiveSlaCsv = (data, total, completionRate, onLogAction, fileName) => {
+  if (!data) return;
+
+  const finalFileName = fileName || generateExportFilename("SLA-CSM-COMBINED", "REPORT", "csv");
+  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
+  const row = (cells) => cells.map(q).join(",");
+
+  const lines = [
+    row(["Comprehensive Service Level Agreement & Client Satisfaction Analytics", ""]),
+    row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
+    "",
+    row(["Section I: Operational SLA Metrics", "Value"]),
+    row(["Total Inflow Requests", total ?? 0]),
+    row(["Overall Completion Rate", `${completionRate ?? 0}%`]),
+    row(["On-Time Fulfillments", data?.sla?.compliantCompleted ?? 0]),
+    row(["Active Overdue Watchlist", data?.sla?.activeOverdue ?? 0]),
+    "",
+    row(["Status Distribution", "Count"]),
+  ];
+
+  for (const [st, val] of Object.entries(data.statusCounts || {})) {
+    if (val > 0) lines.push(row([st, val ?? 0]));
+  }
+
+  lines.push("");
+  lines.push(row(["Top Requested Academic Credentials", "Count"]));
+  for (const dt of data.topDocTypes || []) {
+    lines.push(row([dt?.name || "Unspecified Document", dt?.count ?? 0]));
+  }
+
+  if (data?.feedback) {
+    lines.push("");
+    lines.push(row(["Section II: Client Satisfaction Measurement (CSM)", "Value"]));
+    lines.push(row(["Mean Satisfaction Score", `${data.feedback.averageRating ?? 0} / 5.0`]));
+    lines.push(row(["Positive Sentiment Rate", `${data.feedback.satisfactionRate ?? 0}%`]));
+    lines.push(row(["Total Evaluations Recorded", data.feedback.totalResponses ?? 0]));
+    lines.push("");
+    lines.push(row(["Star Rating Breakdown", "Count"]));
+    for (const star of [5, 4, 3, 2, 1]) {
+      lines.push(row([`${star} Star`, data.feedback.ratingBreakdown?.[star] ?? 0]));
+    }
+  }
+
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = finalFileName;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  onLogAction?.({
+    action: "Export CSV",
+    details: `exported comprehensive SLA and CSM dataset (${finalFileName}) to local CSV storage volume`,
+    entityType: "Report",
+  });
+};
+
+/**
+ * Backward compatibility alias for downloadSlaCsv
+ */
+export const downloadSlaCsv = (data, total, completionRate, onLogAction, fileName) => {
+  return downloadComprehensiveSlaCsv(data, total, completionRate, onLogAction, fileName);
+};
 
 /**
  * Exports OSAS Student Organization Compliance data to CSV

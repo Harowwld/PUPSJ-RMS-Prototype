@@ -48,6 +48,7 @@ import {
   StudentOsasProposalsListSkeleton,
 } from "@/components/student/skeletons";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
+import StudentOverviewTab from "@/components/student/StudentOverviewTab";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
 import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedbackCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -159,7 +160,8 @@ function StudentDashboard() {
   });
   const [proposalForm, setProposalForm] = useState({ title: "", organizationId: "", organizationName: "", eventDate: "", file: null });
   const [myOrganizations, setMyOrganizations] = useState([]);
-  const [view, setView] = useState("odrs");
+  const [view, setView] = useState("overview");
+  const [complianceData, setComplianceData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [paymentUploadRequestId, setPaymentUploadRequestId] = useState(null);
@@ -536,8 +538,8 @@ function StudentDashboard() {
       router.push("/account/activity");
       return;
     }
-    const allowed = new Set(["odrs", "osas", "compliance"]);
-    const target = allowed.has(nextView) ? nextView : "odrs";
+    const allowed = new Set(["overview", "odrs", "osas", "compliance"]);
+    const target = allowed.has(nextView) ? nextView : "overview";
     setView(target);
     const params = new URLSearchParams();
     params.set("view", target);
@@ -563,8 +565,8 @@ function StudentDashboard() {
       router.replace("/account/activity");
       return;
     }
-    const allowed = new Set(["odrs", "osas", "compliance"]);
-    setView(allowed.has(tab) ? tab : "odrs");
+    const allowed = new Set(["overview", "odrs", "osas", "compliance"]);
+    setView(allowed.has(tab) ? tab : "overview");
   }, [searchParams, router]);
 
   const load = useCallback(async () => {
@@ -585,24 +587,29 @@ function StudentDashboard() {
         clientType: session.data.client_type || prev.clientType || "Student",
         studentNo: prev.studentNo || session.data.student_no || "",
       }));
-      const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes] = await Promise.all([
+      const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes, complianceRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
         fetch("/api/student/event-proposals", { cache: "no-store" }),
         fetch("/api/doc-types?scope=requestable", { cache: "no-store" }),
         fetch("/api/courses", { cache: "no-store" }),
         fetch("/api/student/organizations", { cache: "no-store" }),
         fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
+        fetch("/api/student/compliance", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
       ]);
-      const [requestJson, proposalJson, typesJson, coursesJson, orgsJson, postEventJson] = await Promise.all([
+      const [requestJson, proposalJson, typesJson, coursesJson, orgsJson, postEventJson, complianceJson] = await Promise.all([
         requestRes.json(),
         proposalRes.json(),
         typesRes.json(),
         coursesRes.json(),
         orgsRes.json(),
         postEventRes.ok ? postEventRes.json().catch(() => ({})) : {},
+        complianceRes.ok ? complianceRes.json().catch(() => ({})) : {},
       ]);
       if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
+      }
+      if (complianceJson?.ok && complianceJson?.data) {
+        setComplianceData(complianceJson.data);
       }
       setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
       setCourses(Array.isArray(coursesJson?.data) ? coursesJson.data : []);
@@ -1065,17 +1072,44 @@ function StudentDashboard() {
     }
   }
 
-  if (!me) {
+  if (!me || (loading && !data.requests?.length && !data.proposals?.length && !complianceData)) {
     return <StudentDashboardSkeleton view={view} />;
   }
 
-  const sidebarItems = [
-    { type: "header", label: "Academic Records" },
-    { key: "odrs", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
-    { key: "compliance", label: "Document Checklist", iconClass: "ph-bold ph-clipboard-text" },
+  const readyRequestsCount = (data.requests || []).filter(
+    (r) => String(r.status || "").toLowerCase().trim() === "ready"
+  ).length;
 
+  const missingComplianceCount = complianceData?.summary?.missingCount || 0;
+
+  const osasActionCount =
+    (data.proposals || []).filter((p) => {
+      const s = String(p.status || "").toLowerCase().trim();
+      return s === "needs revision" || s === "revisionsrequested" || s === "revision";
+    }).length + (pendingPostEvents || []).length;
+
+  const sidebarItems = [
+    { key: "overview", label: "Overview", iconClass: "ph-bold ph-squares-four" },
+    { type: "header", label: "Academic Records" },
+    {
+      key: "odrs",
+      label: "Document Requests",
+      iconClass: "ph-bold ph-tray-arrow-up",
+      badge: readyRequestsCount > 0 ? readyRequestsCount : undefined,
+    },
+    {
+      key: "compliance",
+      label: "Document Checklist",
+      iconClass: "ph-bold ph-clipboard-text",
+      badge: missingComplianceCount > 0 ? missingComplianceCount : undefined,
+    },
     { type: "header", label: "Student Affairs" },
-    { key: "osas", label: "OSAS Submissions", iconClass: "ph-bold ph-student" },
+    {
+      key: "osas",
+      label: "OSAS Submissions",
+      iconClass: "ph-bold ph-student",
+      badge: osasActionCount > 0 ? osasActionCount : undefined,
+    },
   ];
 
   async function handleLogout() {
@@ -1124,7 +1158,31 @@ function StudentDashboard() {
             >
               <div className="w-full flex flex-col">
 
-              {view === "compliance" ? (
+              {view === "overview" ? (
+                <StudentOverviewTab
+                  authUser={me}
+                  data={data}
+                  complianceData={complianceData}
+                  myOrganizations={myOrganizations}
+                  pendingPostEvents={pendingPostEvents}
+                  postEventReports={postEventReports}
+                  onNavigate={(targetView) => switchView(targetView)}
+                  onNewRequest={() => {
+                    switchView("odrs");
+                    setIsFormOpen(true);
+                  }}
+                  onRefresh={async () => {
+                    setRefreshing(true);
+                    try {
+                      await load();
+                    } finally {
+                      setRefreshing(false);
+                    }
+                  }}
+                  refreshing={refreshing}
+                  loading={loading}
+                />
+              ) : view === "compliance" ? (
                 <StudentComplianceTab authUser={me} onLogout={handleLogout} />
               ) : view === "odrs" ? (
                 <div className="flex flex-col w-full">
@@ -1146,8 +1204,7 @@ function StudentDashboard() {
                       actions={
                         <div className="flex items-center gap-3 sm:gap-4">
                           {me?.student_no && (
-                            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                              <HugeIcon  className="ph-fill ph-student text-[13px]"></HugeIcon>
+                            <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
                               {me.student_no}
                             </span>
                           )}
@@ -1915,8 +1972,7 @@ function StudentDashboard() {
                     actions={
                       <div className="flex items-center gap-3 sm:gap-4">
                         {me?.student_no && (
-                          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                            <HugeIcon  className="ph-fill ph-student text-[13px]"></HugeIcon>
+                          <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
                             {me.student_no}
                           </span>
                         )}
@@ -2211,21 +2267,8 @@ function StudentDashboard() {
                               value={proposalSearch}
                               onChange={(e) => setProposalSearch(e.target.value)}
                             />
-                            <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                              {proposalSearch && (
-                                <button
-                                  type="button"
-                                  onClick={() => setProposalSearch("")}
-                                  className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                                  title="Clear search"
-                                  aria-label="Clear search"
-                                >
-                                  <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                                </button>
-                              )}
-                              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-                                {filteredProposals.length.toLocaleString()}
-                              </span>
+                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                              {filteredProposals.length.toLocaleString()}
                             </div>
                           </div>
 
@@ -2243,6 +2286,25 @@ function StudentDashboard() {
                         </div>
                       </div>
 
+                      {/* Active Filter Chips Bar */}
+                      <ActiveFilterChips
+                        groups={proposalFilterGroups}
+                        selected={proposalFilters}
+                        onRemove={(groupId, val) => {
+                          setProposalFilters((prev) => ({
+                            ...prev,
+                            [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+                          }));
+                        }}
+                        searchQuery={proposalSearch}
+                        onClearSearch={() => setProposalSearch("")}
+                        onClearAll={() => {
+                          setProposalSearch("");
+                          setProposalFilters({ status: [], organization: [] });
+                        }}
+                        className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                      />
+
                       {/* Proposals List */}
                       <div className="border-t border-border dark:border-border flex-1">
                         {loading ? (
@@ -2253,34 +2315,59 @@ function StudentDashboard() {
                           <div className="p-12 text-center">
                             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-file-text text-2xl text-pup-maroon dark:text-primary" />
+                                  </EmptyMedia>
+                                </div>
                                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                                   No Event Proposals Yet
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                                   You haven&apos;t submitted any event proposals yet. Use the form above to submit your first proposal.
                                 </EmptyDescription>
-                                <Button
-                                  type="button"
-                                  onClick={() => setIsFormOpen(true)}
-                                  title="New Event Proposal"
-                                  className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
-                                  style={{ color: "#ffffff" }}
-                                >
-                                  Submit
-                                </Button>
+                                {myOrganizations.length > 0 && (
+                                  <Button
+                                    type="button"
+                                    onClick={() => setIsFormOpen(true)}
+                                    title="New Event Proposal"
+                                    className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                    style={{ color: "#ffffff" }}
+                                  >
+                                    Submit
+                                  </Button>
+                                )}
                               </EmptyHeader>
                             </Empty>
                           </div>
                         ) : filteredProposals.length === 0 ? (
                           <div className="p-12 text-center">
-                            <Empty className="flex h-[240px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
-                                <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
-                                  No matching proposals
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-magnifying-glass text-2xl text-pup-maroon dark:text-primary" />
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                  No Matches Found
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1">
-                                  No event proposals match your current search or combined filter criteria.
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                  Try adjusting your search query or filter criteria.
                                 </EmptyDescription>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setProposalSearch("");
+                                    setProposalFilters({ status: [], organization: [] });
+                                  }}
+                                  title="Reset Filters"
+                                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                >
+                                  Reset
+                                </Button>
                               </EmptyHeader>
                             </Empty>
                           </div>
@@ -2329,13 +2416,11 @@ function StudentDashboard() {
                                   {item.status === "Approved" && (
                                     <div className="flex items-center gap-2">
                                       {item.post_event_status === "Cleared" ? (
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                                          <HugeIcon className="ph-bold ph-check text-xs" />
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
                                           Post-Event Cleared
                                         </span>
                                       ) : item.post_event_status === "Submitted" || item.post_event_status === "Under Review" ? (
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
-                                          <HugeIcon className="ph-bold ph-hourglass text-xs" />
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
                                           Post-Event In Review
                                         </span>
                                       ) : (
@@ -2527,8 +2612,34 @@ function StudentDashboard() {
 
                       <div className="border-t border-border dark:border-border flex-1 p-5 space-y-3">
                         {postEventReports.length === 0 ? (
-                          <div className="p-8 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            No post-event reports submitted yet. Use the form above to submit your first report.
+                          <div className="p-12 text-center">
+                            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-clipboard-text text-2xl text-pup-maroon dark:text-primary" />
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                  No Post-Event Reports Yet
+                                </EmptyTitle>
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                  You haven&apos;t submitted any accomplishment or liquidation reports yet. Use the form above to submit your report.
+                                </EmptyDescription>
+                                {myOrganizations.length > 0 && !isFormOpen && (
+                                  <Button
+                                    type="button"
+                                    onClick={() => setIsFormOpen(true)}
+                                    title="New Post-Event Report"
+                                    className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                    style={{ color: "#ffffff" }}
+                                  >
+                                    Submit
+                                  </Button>
+                                )}
+                              </EmptyHeader>
+                            </Empty>
                           </div>
                         ) : (
                           postEventReports.map((report) => (
@@ -2716,13 +2827,11 @@ function StudentDashboard() {
                                 Current Active Charter
                               </h3>
                               {cblOrgData?.hasBylaws ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40">
-                                  <HugeIcon className="ph-fill ph-check-circle text-xs" />
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40">
                                   Active & Ratified
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
-                                  <HugeIcon className="ph-fill ph-warning-circle text-xs" />
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
                                   Not Yet Archived
                                 </span>
                               )}
@@ -2772,22 +2881,34 @@ function StudentDashboard() {
                             <Skeleton className="h-20 w-full rounded-2xl" />
                           </div>
                         ) : cblVersions.length === 0 ? (
-                          <div className="rounded-2xl border border-dashed border-border dark:border-border p-8 text-center text-xs text-gray-500 dark:text-zinc-400 bg-gray-50/40 dark:bg-zinc-900/30">
-                            <HugeIcon className="ph-duotone ph-book-open text-3xl text-gray-400 mb-2" />
-                            <p className="font-semibold text-gray-700 dark:text-zinc-300">No CBL submissions yet</p>
-                            <p className="text-[11px] text-gray-400 mt-0.5">
-                              Click &quot;Submit CBL&quot; above to submit your organization&apos;s Constitution & By-Laws or proposed amendments.
-                            </p>
-                            {myOrganizations.length > 0 && !isFormOpen && (
-                              <Button
-                                type="button"
-                                onClick={() => setIsFormOpen(true)}
-                                title="Submit CBL Document"
-                                className="mt-3 h-8 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
-                              >
-                                Submit
-                              </Button>
-                            )}
+                          <div className="p-8 text-center">
+                            <Empty className="flex h-[280px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-book-open text-2xl text-pup-maroon dark:text-primary" />
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                  No CBL Submissions Yet
+                                </EmptyTitle>
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                  Click the button below to submit your organization&apos;s Constitution & By-Laws or proposed amendments.
+                                </EmptyDescription>
+                                {myOrganizations.length > 0 && !isFormOpen && (
+                                  <Button
+                                    type="button"
+                                    onClick={() => setIsFormOpen(true)}
+                                    title="Submit CBL Document"
+                                    className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                    style={{ color: "#ffffff" }}
+                                  >
+                                    Submit
+                                  </Button>
+                                )}
+                              </EmptyHeader>
+                            </Empty>
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -2878,15 +2999,18 @@ function StudentDashboard() {
         open={Boolean(selectedRequestForDetail)}
         onOpenChange={(open) => !open && setSelectedRequestForDetail(null)}
       >
-        <SheetContent side="right" className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
-          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 pr-16 space-y-2">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Request #{selectedRequestForDetail?.id}
               </span>
               <StatusBadge status={selectedRequestForDetail?.status} />
             </div>
-            <SheetTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
               {selectedRequestForDetail?.doc_type}
             </SheetTitle>
             <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400">
@@ -2896,8 +3020,8 @@ function StudentDashboard() {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-5">
-            <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3.5 border border-border dark:border-border">
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
+            <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1">
                 Purpose / Description
               </h4>
@@ -2908,7 +3032,7 @@ function StudentDashboard() {
 
             {/* Experience Rating & Feedback */}
             {selectedRequestForDetail?.feedback ? (
-              <div className="rounded-xl bg-amber-50/50 dark:bg-amber-950/20 p-4 border border-amber-200/70 dark:border-amber-900/40 space-y-2.5">
+              <div className="rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 p-4 border border-amber-200/70 dark:border-amber-900/40 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
@@ -2982,7 +3106,7 @@ function StudentDashboard() {
                 )}
               </div>
             ) : (
-              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 p-3.5 border border-dashed border-border dark:border-border flex items-center justify-between gap-3">
+              <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-dashed border-border dark:border-border flex items-center justify-between gap-3">
                 <div>
                   <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                     Experience Feedback
@@ -3010,7 +3134,7 @@ function StudentDashboard() {
 
             {/* Parent / Legal Guardian Profile Card */}
             {selectedRequestForDetail?.client_type === "Parent" && (
-              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-border/80 dark:border-border space-y-2.5">
+              <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-sm" />
@@ -3019,13 +3143,11 @@ function StudentDashboard() {
                     </h4>
                   </div>
                   {selectedRequestForDetail.spa_verified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                      <HugeIcon className="ph-fill ph-check-circle text-xs" />
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
                       SPA Verified
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
-                      <HugeIcon className="ph-fill ph-clock text-xs" />
+                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
                       SPA Verification Pending
                     </span>
                   )}
@@ -3062,7 +3184,7 @@ function StudentDashboard() {
                   const file = event.dataTransfer.files?.[0];
                   if (file) handlePaymentProofUpload(selectedRequestForDetail.id, file);
                 }}
-                className="rounded-xl border border-dashed border-amber-400 bg-amber-50/70 p-4 dark:border-amber-700 dark:bg-amber-950/20"
+                className="rounded-2xl border border-dashed border-amber-400 bg-amber-50/70 p-4 dark:border-amber-700 dark:bg-amber-950/20"
               >
                 <div className="flex flex-col items-center justify-center gap-2 text-center">
                   <HugeIcon className="ph-bold ph-receipt text-xl text-amber-700 dark:text-amber-300" />
@@ -3094,7 +3216,7 @@ function StudentDashboard() {
 
             {/* Attached Supporting Documents */}
             {Array.isArray(selectedRequestForDetail?.attachments) && selectedRequestForDetail.attachments.length > 0 && (
-              <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-900/50 p-4 border border-border/80 dark:border-border space-y-3">
+              <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <HugeIcon className="ph-bold ph-paperclip text-gray-600 dark:text-zinc-400 text-sm" />
@@ -3279,14 +3401,19 @@ function StudentDashboard() {
                     )}
                 </div>
               ) : (
-                <div className="rounded-lg bg-gray-50 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500">
+                <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
                   No updates posted yet. Your request is queued for review by the Registrar.
                 </div>
               )}
             </div>
           </div>
 
-          <SheetFooter className="border-t border-border dark:border-border p-4 px-6 flex flex-row items-center justify-end gap-2.5">
+          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+                REQ-{selectedRequestForDetail?.id}
+              </span>
+            </div>
             <Button
               variant="outline"
               onClick={() => setSelectedRequestForDetail(null)}
@@ -3303,15 +3430,18 @@ function StudentDashboard() {
         open={Boolean(selectedProposalForDetail)}
         onOpenChange={(open) => !open && setSelectedProposalForDetail(null)}
       >
-        <SheetContent side="right" className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col font-jakarta dark:bg-[#1c1c1e]">
-          <SheetHeader className="border-b border-border dark:border-border p-5 pb-4 pr-16 space-y-2">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                 Proposal #{selectedProposalForDetail?.id}
               </span>
               <StatusBadge status={selectedProposalForDetail?.status} />
             </div>
-            <SheetTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
               {selectedProposalForDetail?.title}
             </SheetTitle>
             <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400">
@@ -3319,16 +3449,16 @@ function StudentDashboard() {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
             {/* Event & Organization Info */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-border dark:border-border">
+              <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 border border-border/80 dark:border-border">
                 <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Organization</span>
                 <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate block">
                   {selectedProposalForDetail?.organization_name || "N/A"}
                 </span>
               </div>
-              <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3 border border-border dark:border-border">
+              <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 border border-border/80 dark:border-border">
                 <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Event Date</span>
                 <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block">
                   {selectedProposalForDetail?.event_date || "N/A"}
@@ -3337,7 +3467,7 @@ function StudentDashboard() {
             </div>
 
             {/* Attached PDF Proposal File */}
-            <div className="rounded-xl bg-gray-50 dark:bg-zinc-900/50 p-3.5 border border-border dark:border-border">
+            <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">
                 Attached Proposal Document
               </h4>
@@ -3436,14 +3566,19 @@ function StudentDashboard() {
                   })}
                 </div>
               ) : (
-                <div className="rounded-lg bg-gray-50 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500">
+                <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
                   No updates posted yet. Your proposal is queued for evaluation by OSAS.
                 </div>
               )}
             </div>
           </div>
 
-          <SheetFooter className="border-t border-border dark:border-border p-4 px-6 flex flex-row items-center justify-end gap-2.5">
+          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+                Proposal #{selectedProposalForDetail?.id}
+              </span>
+            </div>
             <Button
               variant="outline"
               onClick={() => setSelectedProposalForDetail(null)}
@@ -3483,16 +3618,7 @@ function StudentDashboard() {
 
 export default function StudentPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-slate-50/30 flex items-center justify-center font-jakarta p-4 dark:bg-zinc-950/30">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border dark:border-t-primary"></div>
-            <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading Portal...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<StudentDashboardSkeleton />}>
       <StudentDashboard />
     </Suspense>
   );

@@ -121,7 +121,7 @@ export default function FloatingActionBar({
             className={cn(
               "flex h-[36px] items-center justify-center rounded-xl px-5 text-[13px] font-medium transition-all active:scale-95 shadow-none cursor-pointer whitespace-nowrap",
               actionVariant === "danger"
-                ? "btn-brand-red !text-white text-white"
+                ? "bg-rose-600 hover:bg-rose-700 active:bg-rose-800 !text-white text-white border-0"
                 : actionVariant === "success"
                 ? "btn-brand-green !text-white text-white"
                 : actionVariant === "warning"

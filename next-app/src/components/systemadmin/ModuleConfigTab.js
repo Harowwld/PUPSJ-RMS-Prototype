@@ -1323,7 +1323,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           </div>
 
           {isSystem ? (
-            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-[9px] font-semibold border-0 rounded-full px-2 py-0.5">
+            <Badge className="bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 text-[9px] font-semibold border-0 rounded-full px-2 py-0.5">
               Required
             </Badge>
           ) : (
@@ -1372,10 +1372,10 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
                 "w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer",
                 "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700",
                 isSystem
-                  ? "peer-checked:bg-blue-500 cursor-not-allowed"
+                  ? "peer-checked:bg-slate-700 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
                   : isOfficeArchived
                   ? "peer-checked:bg-gray-400 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
-                  : "peer-checked:bg-pup-maroon dark:peer-checked:bg-zinc-100"
+                  : "peer-checked:bg-slate-900 dark:peer-checked:bg-zinc-100"
               )}
             ></div>
           </label>
@@ -1405,7 +1405,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                 {m.name}
               </span>
               {isSystem && (
-                <span className="bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                <span className="bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 text-[9px] font-semibold px-2 py-0.5 rounded-full">
                   Required
                 </span>
               )}
@@ -1451,10 +1451,10 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                       "w-8 h-4 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer",
                       "peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-border after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700",
                       isSystem
-                        ? "peer-checked:bg-blue-500 cursor-not-allowed"
+                        ? "peer-checked:bg-slate-700 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
                         : isOfficeArchived
                         ? "peer-checked:bg-gray-400 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
-                        : "peer-checked:bg-pup-maroon dark:peer-checked:bg-zinc-100"
+                        : "peer-checked:bg-slate-900 dark:peer-checked:bg-zinc-100"
                     )}
                   ></div>
                 </label>

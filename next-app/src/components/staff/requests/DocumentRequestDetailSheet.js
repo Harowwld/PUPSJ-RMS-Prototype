@@ -97,7 +97,7 @@ export default function DocumentRequestDetailSheet({
     >
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[50vw] xl:max-w-[50vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[50vw] data-[side=right]:xl:max-w-[50vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* Executive Header */}
         <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
@@ -139,7 +139,7 @@ export default function DocumentRequestDetailSheet({
               {detail?.doc_type || "Document Request"}
             </SheetTitle>
 
-            <SheetDescription className="mt-1 text-xs text-gray-600 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
+            <SheetDescription className="mt-1 text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
               <span>Requester: <strong className="text-gray-900 dark:text-zinc-200">{formatTitleCase(detail?.student_name || detail?.requester_name) || "N/A"}</strong></span>
               {detail?.student_no && (
                 <>
@@ -759,8 +759,8 @@ export default function DocumentRequestDetailSheet({
         </div>
 
         {/* Executive Footer */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/90 dark:bg-zinc-900/60 flex items-center justify-between flex-row">
-          <span className="text-xs text-gray-500">
+        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex items-center justify-between flex-row">
+          <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
             {detail ? `Transaction ID: REQ-${detail.id}` : ""}
           </span>
 
@@ -768,7 +768,7 @@ export default function DocumentRequestDetailSheet({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

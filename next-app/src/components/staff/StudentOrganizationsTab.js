@@ -1541,21 +1541,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   placeholder="Search org name, acronym, adviser..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                  {search && (
-                    <button
-                      type="button"
-                      onClick={() => setSearch("")}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                      title="Clear search"
-                      aria-label="Clear search"
-                    >
-                      <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                    </button>
-                  )}
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
-                    {filteredOrganizations.length.toLocaleString()}
-                  </span>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                  {filteredOrganizations.length.toLocaleString()}
                 </div>
               </div>
 
@@ -2131,7 +2118,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:md:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+            className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
             <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
               <div className="flex items-center gap-2 mb-1">
@@ -2147,7 +2134,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50">
                 {selectedOrgForOfficers?.name}
               </SheetTitle>
-              <SheetDescription className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+              <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                 Manage organization profile, accredited student officers, and official Constitution & By-Laws records.
               </SheetDescription>
             </SheetHeader>
@@ -2507,7 +2494,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         <Skeleton className="h-12 w-full rounded-xl" />
                       </div>
                     ) : officersList.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-border dark:border-border p-6 text-center text-xs text-gray-900 dark:text-zinc-300">
+                      <div className="rounded-xl border border-dashed border-border dark:border-border p-6 text-center text-xs text-gray-500 dark:text-zinc-400">
                         No officers have been whitelisted for this organization yet. Add a student account email above.
                       </div>
                     ) : (
@@ -2758,30 +2745,37 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               )}
             </div>
 
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-row items-center justify-end gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setSelectedOrgForOfficers(null);
-                  setEditingOrg(null);
-                }}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-              >
-                Close
-              </Button>
-              {sheetSubTab === "info" && (
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
+                  {selectedOrgForOfficers?.acronym ? `ORG: ${selectedOrgForOfficers.acronym}` : "Organization"} • {officersList.length} Officers
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
                 <Button
-                  type="submit"
-                  form="org-info-form"
-                  onClick={handleSaveOrg}
-                  disabled={savingOrg}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
-                  style={{ color: "#ffffff" }}
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedOrgForOfficers(null);
+                    setEditingOrg(null);
+                  }}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  {savingOrg ? "Saving..." : "Save"}
+                  Close
                 </Button>
-              )}
+                {sheetSubTab === "info" && (
+                  <Button
+                    type="submit"
+                    form="org-info-form"
+                    onClick={handleSaveOrg}
+                    disabled={savingOrg}
+                    className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
+                    style={{ color: "#ffffff" }}
+                  >
+                    {savingOrg ? "Saving..." : "Save"}
+                  </Button>
+                )}
+              </div>
             </SheetFooter>
           </SheetContent>
         </Sheet>

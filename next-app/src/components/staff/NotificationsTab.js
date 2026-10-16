@@ -14,6 +14,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
@@ -488,6 +489,53 @@ export default function NotificationsTab({
                 </EmptyHeader>
               </Empty>
             </div>
+          ) : items.length === 0 ? (
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] border-t border-border dark:border-border w-full">
+              <Empty className="flex flex-1 h-full min-h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-5">
+                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
+                      <HugeIcon 
+                        className={cn(
+                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
+                          hasActiveFilters
+                            ? "ph-magnifying-glass"
+                            : activeTab === "archive"
+                            ? "ph-archive-box"
+                            : "ph-bell-slash"
+                        )}
+                      />
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
+                    {hasActiveFilters
+                      ? "No matching notifications"
+                      : activeTab === "archive"
+                      ? "No archived notifications"
+                      : "No notifications found"}
+                  </EmptyTitle>
+                  <EmptyDescription className="mt-1 max-w-sm text-sm font-medium text-gray-900 dark:text-zinc-300">
+                    {hasActiveFilters
+                      ? "No notifications match your current filter criteria. Try resetting your search or filters."
+                      : activeTab === "archive"
+                      ? "Archived notifications will appear here for reference."
+                      : "When administrators review uploaded documents, status decisions will be delivered here."}
+                  </EmptyDescription>
+                </EmptyHeader>
+                {hasActiveFilters && (
+                  <EmptyContent>
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      title="Reset Filters"
+                      className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    >
+                      Reset
+                    </Button>
+                  </EmptyContent>
+                )}
+              </Empty>
+            </div>
           ) : (
             <div className="overflow-x-auto border-t border-border dark:border-border w-full">
               <table className="w-full table-fixed min-w-[1000px] text-sm">
@@ -616,55 +664,7 @@ export default function NotificationsTab({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border">
-                  {items.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={8} className="border-0 p-0">
-                        <Empty className="flex h-[400px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <div className="relative mb-4">
-                              <EmptyMedia className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
-                                <HugeIcon 
-                                  className={cn(
-                                    "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                                    hasActiveFilters
-                                      ? "ph-magnifying-glass"
-                                      : activeTab === "archive"
-                                      ? "ph-archive-box"
-                                      : "ph-bell-slash"
-                                  )}
-                                />
-                              </EmptyMedia>
-                            </div>
-                            <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-100">
-                              {hasActiveFilters
-                                ? "No matching notifications"
-                                : activeTab === "archive"
-                                ? "No archived notifications"
-                                : "No notifications found"}
-                            </EmptyTitle>
-                            <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-900 dark:text-zinc-300">
-                              {hasActiveFilters
-                                ? "No notifications match your current filter criteria. Try resetting your search or filters."
-                                : activeTab === "archive"
-                                ? "Archived notifications will appear here for reference."
-                                : "When administrators review uploaded documents, status decisions will be delivered here."}
-                            </EmptyDescription>
-                            {hasActiveFilters && (
-                              <Button
-                                variant="outline"
-                                onClick={handleClearFilters}
-                                title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                              >
-                                Reset
-                              </Button>
-                            )}
-                          </EmptyHeader>
-                        </Empty>
-                      </td>
-                    </tr>
-                  ) : (
-                    items.map((n) => {
+                  {items.map((n) => {
                       const ui = statusUi(n.approval_status)
                       const reviewed = formatPHDateTimeParts(n.reviewed_at)
                       const isUnread = n.is_read === 0
@@ -826,8 +826,7 @@ export default function NotificationsTab({
                           </td>
                         </tr>
                       )
-                    })
-                  )}
+                    })}
                 </tbody>
               </table>
             </div>

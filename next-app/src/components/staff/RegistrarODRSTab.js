@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import RegistrarODRSSkeleton from "@/components/staff/skeletons/RegistrarODRSSkeleton";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -247,10 +248,23 @@ export default function RegistrarODRSTab({ showToast }) {
             </div>
             <div className="space-y-2">
               {rows.length === 0 ? (
-                <div className="rounded-brand border border-dashed border-border bg-gray-50 px-4 py-12 text-center dark:border-border dark:bg-zinc-900/50">
-                  <HugeIcon  className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500 mb-2 block"></HugeIcon>
-                  <p className="text-sm font-semibold text-gray-700 dark:text-zinc-300">No document requests yet.</p>
-                  <p className="mt-1 text-xs text-gray-900 dark:text-zinc-300">New student requests will appear here automatically.</p>
+                <div className="py-16 flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className="ph-duotone ph-tray text-3xl text-pup-maroon dark:text-red-400" />
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                        No Document Requests Yet
+                      </EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        New student requests submitted via ODRS will appear here automatically.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </div>
               ) : (
                 rows.map((item) => {
@@ -529,9 +543,23 @@ export default function RegistrarODRSTab({ showToast }) {
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 dark:text-zinc-500">
-                <HugeIcon  className="ph-duotone ph-cursor-click text-3xl mb-2"></HugeIcon>
-                <p className="text-sm font-medium text-gray-600 dark:text-zinc-400">Select a request from the queue to view details and post updates.</p>
+              <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center py-16 px-4">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                        <HugeIcon className="ph-duotone ph-cursor-click text-3xl text-pup-maroon dark:text-red-400" />
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                      No Request Selected
+                    </EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                      Select a request from the queue to view details and post updates.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               </div>
             )}
           </aside>

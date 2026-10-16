@@ -5,7 +5,7 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia, EmptyContent } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
@@ -71,37 +71,47 @@ export default function OfficeDocumentsTable({
             placeholder="Search this office's documents"
             className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
           />
-          <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-            {query && (
-              <button
-                type="button"
-                onClick={() => { setQuery(""); setPage(1) }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                title="Clear search"
-                aria-label="Clear search"
-              >
-                <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-              </button>
-            )}
-            <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 pointer-events-none">
-              {rows.length.toLocaleString()}
-            </span>
+          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+            {rows.length.toLocaleString()}
           </div>
         </div>
       </div>
 
       {visibleRows.length === 0 ? (
-        <Empty className="flex min-h-[200px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300 rounded-b-2xl">
-          <EmptyHeader className="flex flex-col items-center gap-0">
-            <EmptyMedia className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-900">
-              <HugeIcon  className="ph-duotone ph-files text-3xl text-gray-400 dark:text-zinc-500" />
-            </EmptyMedia>
-            <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">No {officeLabel} documents</EmptyTitle>
-            <EmptyDescription className="max-w-sm text-sm text-gray-900 dark:text-zinc-300">
-              Documents from other offices are intentionally excluded from this table.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
+          <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
+            <EmptyHeader className="flex flex-col items-center gap-0">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                  <HugeIcon className="ph-duotone ph-files text-3xl text-pup-maroon dark:text-red-400" />
+                </EmptyMedia>
+              </div>
+              <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                No {officeLabel} Documents
+              </EmptyTitle>
+              <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                {query.trim()
+                  ? "No documents match your active search terms. Try clearing your query."
+                  : "Documents from other offices are intentionally excluded from this table."}
+              </EmptyDescription>
+            </EmptyHeader>
+            {query.trim() && (
+              <EmptyContent>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuery("")}
+                  title="Clear Search"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                >
+                  Clear Search
+                </Button>
+              </EmptyContent>
+            )}
+          </Empty>
+        </div>
       ) : (
         <>
           <div className="overflow-x-auto">

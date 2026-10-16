@@ -515,21 +515,8 @@ export default function RecordsArchiveTab({
                 value={quickQuery}
                 onChange={(e) => setQuickQuery(e.target.value)}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                {quickQuery !== "" && (
-                  <button
-                    type="button"
-                    onClick={() => setQuickQuery("")}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer p-0.5 transition-colors border-0 bg-transparent flex items-center justify-center"
-                    title="Clear search"
-                    aria-label="Clear search"
-                  >
-                    <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
-                  </button>
-                )}
-                <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
-                  {quickMatchCount.toLocaleString()}
-                </span>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                {quickMatchCount.toLocaleString()}
               </div>
             </div>
 
@@ -662,56 +649,60 @@ export default function RecordsArchiveTab({
               {loading ? (
                 <RecordsArchiveSkeleton />
               ) : students.length === 0 && !showArchived ? (
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className={cn(
-                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                          isOsas ? "ph-buildings" : "ph-users-three"
-                        )}></HugeIcon>
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      {isOsas ? "No Student Organization Records Yet" : "No Student Records Yet"}
-                    </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                      {isOsas
-                        ? "Register recognized student organizations in the Student Organizations tab to view and manage their Constitution & By-Laws and physical archives here."
-                        : "Register your first student record in the Upload tab. After that, you can browse, search, and locate drawers here."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button
-                      type="button"
-                      onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
-                      title={isOsas ? "Go to Student Organizations" : "Go to Upload"}
-                      className="mt-4 flex h-10 items-center justify-center rounded-xl btn-brand-red active:scale-95 transition-all dark:shadow-none px-5 text-xs font-semibold cursor-pointer"
-                    >
-                      {isOsas ? "Register" : "Upload"}
-                    </Button>
-                  </EmptyContent>
-                </Empty>
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className={cn(
+                            "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
+                            isOsas ? "ph-buildings" : "ph-users-three"
+                          )}></HugeIcon>
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                        {isOsas ? "No Student Organization Records Yet" : "No Student Records Yet"}
+                      </EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                        {isOsas
+                          ? "Register recognized student organizations in the Student Organizations tab to view and manage their Constitution & By-Laws and physical archives here."
+                          : "Register your first student record in the Upload tab. After that, you can browse, search, and locate drawers here."}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      <Button
+                        type="button"
+                        onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
+                        title={isOsas ? "Go to Student Organizations" : "Go to Upload"}
+                        className="mt-4 h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      >
+                        {isOsas ? "Register" : "Upload"}
+                      </Button>
+                    </EmptyContent>
+                  </Empty>
+                </div>
               ) : archivedStudents.length === 0 && showArchived ? (
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className="ph-duotone ph-archive text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      {isOsas ? "No Archived Organizations" : "No Archived Students"}
-                    </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                      {isOsas
-                        ? "There are currently no archived organization records found in the system."
-                        : "There are currently no archived records found in the system."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className="ph-duotone ph-archive text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                        {isOsas ? "No Archived Organizations" : "No Archived Students"}
+                      </EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                        {isOsas
+                          ? "There are currently no archived organization records found in the system."
+                          : "There are currently no archived records found in the system."}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                </div>
               ) : !isLeafLevel ? (
                 <div 
                   key={`folders-${showArchived}`}
@@ -736,33 +727,35 @@ export default function RecordsArchiveTab({
                   })}
                 </div>
               ) : filteredExplorerItems.length === 0 ? (
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className={cn(
-                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                          showArchived ? "ph-archive" : (isOsas ? "ph-buildings" : "ph-users")
-                        )}></HugeIcon>
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      {showArchived
-                        ? (isOsas ? "No Archived Organizations" : "No Archived Students")
-                        : (isOsas ? "No Organizations In This Category" : "No Students In This Year")}
-                    </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                      {showArchived
-                        ? (isOsas
-                            ? "There are currently no archived organizations found for this category."
-                            : "There are currently no archived records found for this academic period.")
-                        : (isOsas
-                            ? "There are no student organizations filed under this category yet."
-                            : "There are no student records filed under this year yet.")}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-2xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className={cn(
+                            "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
+                            showArchived ? "ph-archive" : (isOsas ? "ph-buildings" : "ph-users")
+                          )}></HugeIcon>
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                        {showArchived
+                          ? (isOsas ? "No Archived Organizations" : "No Archived Students")
+                          : (isOsas ? "No Organizations In This Category" : "No Students In This Year")}
+                      </EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                        {showArchived
+                          ? (isOsas
+                              ? "There are currently no archived organizations found for this category."
+                              : "There are currently no archived records found for this academic period.")
+                          : (isOsas
+                              ? "There are no student organizations filed under this category yet."
+                              : "There are no student records filed under this year yet.")}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                </div>
               ) : listType === "card" ? (
                 <div 
                   key={`cards-${currentLevel}-${showArchived}`}

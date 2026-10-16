@@ -25,11 +25,28 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
-import { generateSLAAnalyticsPdf } from "@/lib/pdfGenerator"
+import { 
+  generateSLACompliancePdf, 
+  generateCSMReportPdf, 
+  generateComprehensiveSLAPdf, 
+  generateSLAAnalyticsPdf 
+} from "@/lib/pdfGenerator"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { formatErrorMessage } from "@/lib/errorUtils"
-import { downloadSlaCsv } from "@/lib/exportHelpers"
+import { 
+  downloadSlaComplianceCsv, 
+  downloadCsmRatingsCsv, 
+  downloadComprehensiveSlaCsv, 
+  downloadSlaCsv 
+} from "@/lib/exportHelpers"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
@@ -37,7 +54,7 @@ import SlaFilters from "./analytics/SlaFilters"
 const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
-   const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [manualLoading, setManualLoading] = useState(false)
   const [error, setError] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
@@ -45,6 +62,8 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const [previewFrameReady, setPreviewFrameReady] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isExportingCsv, setIsExportingCsv] = useState(false)
+  const [activeView, setActiveView] = useState("all") // "all", "sla", "csm"
+  const [previewReportType, setPreviewReportType] = useState("sla") // "sla", "csm", "comprehensive"
 
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -98,11 +117,25 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       .filter((d) => d.value > 0)
   }, [data?.statusCounts])
 
-  const handlePreview = async () => {
+  const generateBlobForType = async (type) => {
+    if (!data) return null;
+    if (type === "csm") {
+      return await generateCSMReportPdf(data, { startDate, endDate });
+    }
+    if (type === "comprehensive") {
+      return await generateComprehensiveSLAPdf(data, total, completionRate, { startDate, endDate });
+    }
+    return await generateSLACompliancePdf(data, total, completionRate, { startDate, endDate });
+  };
+
+  const handlePreview = async (type = activeView === "csm" ? "csm" : (activeView === "sla" ? "sla" : "comprehensive")) => {
     if (!data || loading) return;
     setIsGeneratingPdf(true);
+    setPreviewReportType(type);
+    setPreviewFrameReady(false);
     try {
-      const blob = await generateSLAAnalyticsPdf(data, total, completionRate, { startDate, endDate });
+      const blob = await generateBlobForType(type);
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
       setReportOpen(true);
@@ -112,14 +145,42 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
     } finally {
       setIsGeneratingPdf(false);
     }
-  }
+  };
+
+  const handleSwitchPreviewReport = async (newType) => {
+    if (newType === previewReportType || !data) return;
+    setIsGeneratingPdf(true);
+    setPreviewReportType(newType);
+    setPreviewFrameReady(false);
+    try {
+      const blob = await generateBlobForType(newType);
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+      const url = URL.createObjectURL(blob);
+      setPdfPreviewUrl(url);
+    } catch (e) {
+      console.error("Failed to switch report preview:", e);
+      showToast?.(formatErrorMessage(e, "Report Switch Failed"), true);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handlePrint = async () => {
-    const fileName = generateExportFilename("SLA-ANALYTICS", "REPORT", "pdf");
+    let basePrefix = "SLA-COMPLIANCE";
+    let reportLabel = "Citizen's Charter SLA Compliance Report";
+    if (previewReportType === "csm") {
+      basePrefix = "CSM-RATINGS";
+      reportLabel = "Client Satisfaction Measurement (CSM) Report";
+    } else if (previewReportType === "comprehensive") {
+      basePrefix = "SLA-CSM-COMBINED";
+      reportLabel = "Comprehensive SLA and CSM Executive Dossier";
+    }
+
+    const fileName = generateExportFilename(basePrefix, "REPORT", "pdf");
     if (!pdfBlobUrl) {
       setIsGeneratingPdf(true);
       try {
-        const blob = await generateSLAAnalyticsPdf(data, total, completionRate, { startDate, endDate });
+        const blob = await generateBlobForType(previewReportType);
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -146,27 +207,43 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
 
     onLogAction?.({
       action: "Generate Report",
-      details: `generated formal SLA compliance report (${fileName}) for administrative records`,
+      details: `generated formal ${reportLabel} (${fileName}) for administrative records`,
       entityType: "Report",
-    })
-    showToast?.({ title: "Report Downloaded", description: "The SLA Analytics report has been successfully downloaded." });
-  }
+    });
+    showToast?.({ title: "Report Downloaded", description: `The ${reportLabel} has been successfully downloaded.` });
+  };
 
-  const handleCsvExport = async () => {
+  const handleCsvExport = async (type = activeView === "csm" ? "csm" : (activeView === "sla" ? "sla" : "comprehensive")) => {
     setIsExportingCsv(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
-      const fileName = generateExportFilename("SLA-ANALYTICS", "DATA", "csv");
-      downloadSlaCsv(data, total, completionRate, onLogAction, fileName);
-      showToast?.({ title: "Export Successful", description: `The SLA data has been successfully exported to ${fileName}.` });
+      if (type === "csm") {
+        const fileName = generateExportFilename("CSM-RATINGS", "DATA", "csv");
+        downloadCsmRatingsCsv(data, onLogAction, fileName);
+        showToast?.({ title: "Export Successful", description: `Client Satisfaction feedback dataset exported to ${fileName}.` });
+      } else if (type === "sla") {
+        const fileName = generateExportFilename("SLA-COMPLIANCE", "DATA", "csv");
+        downloadSlaComplianceCsv(data, total, completionRate, onLogAction, fileName);
+        showToast?.({ title: "Export Successful", description: `Citizen's Charter SLA compliance dataset exported to ${fileName}.` });
+      } else {
+        const fileName = generateExportFilename("SLA-CSM-COMBINED", "DATA", "csv");
+        downloadComprehensiveSlaCsv(data, total, completionRate, onLogAction, fileName);
+        showToast?.({ title: "Export Successful", description: `Complete SLA and CSM dataset exported to ${fileName}.` });
+      }
     } catch (e) {
       showToast?.(formatErrorMessage(e, "Export Failed"), true);
     } finally {
       setIsExportingCsv(false);
     }
-  }
+  };
 
-  const hasActiveFilters = startDate !== "" || endDate !== ""
+  const hasActiveFilters = startDate !== "" || endDate !== "";
+
+  const pageDescription = activeView === "csm"
+    ? "Student satisfaction evaluations, 5-point Likert ratings, and service quality dimensions."
+    : activeView === "sla"
+    ? "Citizen's Charter turnaround times, fulfillment velocity, and overdue watches."
+    : "Monitor request metrics, turnaround times, and constituent feedback.";
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
@@ -175,7 +252,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
-          description="Monitor request metrics and turnaround times."
+          description={pageDescription}
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -188,34 +265,95 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 title="Refresh Analytics"
               />
 
-              
-
               <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCsvExport}
-                  disabled={loading || !data || isExportingCsv}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                >
-                  {isExportingCsv ? (
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
-                  ) : (
-                    "Export"
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handlePreview}
-                  disabled={loading || !data || isGeneratingPdf}
-                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
-                >
-                  {isGeneratingPdf ? (
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
-                  ) : (
-                    "Download"
-                  )}
-                </Button>
+                {/* Discrete Export CSV Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={loading || !data || isExportingCsv}
+                      className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 gap-1.5"
+                    >
+                      {isExportingCsv ? (
+                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
+                      ) : (
+                        <>
+                          <span>Export</span>
+                          <HugeIcon className="ph-bold ph-caret-down text-[10px] opacity-70" />
+                        </>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl p-1 shadow-lg bg-white dark:bg-zinc-900 border border-border">
+                    <DropdownMenuItem 
+                      onClick={() => handleCsvExport("sla")} 
+                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-bold ph-clock-countdown text-sm text-pup-maroon dark:text-red-400" />
+                      <span>SLA Compliance Data</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleCsvExport("csm")} 
+                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
+                      <span>CSM Ratings Data</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1 bg-border/60" />
+                    <DropdownMenuItem 
+                      onClick={() => handleCsvExport("comprehensive")} 
+                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-bold ph-table text-sm text-gray-400" />
+                      <span>Complete Combined Dataset</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Discrete Generate Report Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      disabled={loading || !data || isGeneratingPdf}
+                      className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs gap-1.5"
+                    >
+                      {isGeneratingPdf ? (
+                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
+                      ) : (
+                        <>
+                          <span>Download</span>
+                          <HugeIcon className="ph-bold ph-caret-down text-[10px] text-white/80" />
+                        </>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64 rounded-xl p-1 shadow-lg bg-white dark:bg-zinc-900 border border-border">
+                    <DropdownMenuItem 
+                      onClick={() => handlePreview("sla")} 
+                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400" />
+                      <span>Citizen&apos;s Charter SLA Report</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handlePreview("csm")} 
+                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
+                      <span>Client Satisfaction (CSM) Report</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1 bg-border/60" />
+                    <DropdownMenuItem 
+                      onClick={() => handlePreview("comprehensive")} 
+                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-bold ph-files text-sm text-gray-400" />
+                      <span>Executive Dossier (Combined)</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           }
@@ -240,6 +378,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 feedback={data?.feedback}
                 statusCounts={data?.statusCounts}
                 topDocTypes={data?.topDocTypes}
+                viewMode={activeView}
               />
             </div>
           </div>
@@ -253,6 +392,8 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           setEndDate={setEndDate}
           isLoading={loading}
           onRefresh={handleRefresh}
+          activeView={activeView}
+          setActiveView={setActiveView}
         />
 
         {/* Active Filter Chips Row */}
@@ -317,7 +458,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             </Empty>
           ) : data ? (
             <div className={cn("space-y-6 transition-all duration-slow", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
-              <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
+              <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} viewMode={activeView} />
             </div>
           ) : null}
         </div>
@@ -341,38 +482,77 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-jakarta xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
         >
           <DialogHeader 
-            className="shrink-0 bg-gray-50 dark:bg-white/5"
+            className="shrink-0 bg-gray-50 dark:bg-white/5 flex flex-row items-center justify-between"
             style={{
-              padding: '20px 24px',
+              padding: '16px 24px',
               borderBottom: '0.5px solid rgba(0,0,0,0.08)',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px'
             }}
           >
-            <div className="min-w-0">
-              <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
-                SLA Analytics Report Preview
+            <div className="min-w-0 flex flex-col gap-0.5">
+              <DialogTitle className="text-left text-sm font-semibold text-gray-900 dark:text-zinc-50 tracking-tight flex items-center gap-2">
+                <HugeIcon className="ph-bold ph-file-pdf text-pup-maroon dark:text-red-400 text-base" />
+                <span>
+                  {previewReportType === "csm" 
+                    ? "Client Satisfaction Measurement (CSM) Report" 
+                    : previewReportType === "comprehensive"
+                    ? "Executive Dossier: SLA & Client Satisfaction"
+                    : "Citizen's Charter SLA Compliance Report"}
+                </span>
               </DialogTitle>
-              <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
-                Period: {startDate || "All"} · {endDate || "Present"}
+              <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-left">
+                Reporting Coverage: {startDate || "Earliest Records"} – {endDate || "Present"}
               </p>
+            </div>
+
+            {/* Seamless Report Switcher Inside Modal */}
+            <div className="flex items-center gap-1 bg-gray-200/80 dark:bg-zinc-800 p-1 rounded-xl border border-gray-300/60 dark:border-white/5 mx-2">
+              <button
+                type="button"
+                onClick={() => handleSwitchPreviewReport("sla")}
+                disabled={isGeneratingPdf}
+                className={cn(
+                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                  previewReportType === "sla"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                SLA Compliance
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchPreviewReport("csm")}
+                disabled={isGeneratingPdf}
+                className={cn(
+                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                  previewReportType === "csm"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Client Ratings (CSM)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchPreviewReport("comprehensive")}
+                disabled={isGeneratingPdf}
+                className={cn(
+                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                  previewReportType === "comprehensive"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                Combined
+              </button>
             </div>
             
             <DialogClose asChild>
               <button
                 type="button"
-                className="hover:text-[#111] dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-0"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#8E8E93',
-                  cursor: 'pointer'
-                }}
+                className="hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
               >
-                <HugeIcon  className="ti ti-x" style={{ fontSize: '16px' }}></HugeIcon>
+                <HugeIcon className="ph-bold ph-x text-base" />
               </button>
             </DialogClose>
           </DialogHeader>

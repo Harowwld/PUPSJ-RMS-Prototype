@@ -436,7 +436,8 @@ export default function LandingFaqCmsView({ showToast }) {
                         {(faqData.description || "").length}/200
                       </span>
                     </div>
-                    <Input
+                    <textarea
+                      rows={3}
                       value={faqData.description || ""}
                       onChange={(e) =>
                         setFaqData((prev) => ({
@@ -446,7 +447,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       }
                       placeholder="Quick answers on requesting, tracking, and claiming your official school records."
                       maxLength={200}
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                      className="w-full min-h-[72px] rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed text-gray-900 dark:border-border dark:bg-card dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 resize-y transition-all shadow-xs"
                     />
                   </div>
                 </div>
