@@ -64,6 +64,19 @@ function labelIs(line, ...candidates) {
 
 const DOC_CLUSTERS = [
   {
+    id: "grade11ReportCard",
+    phrases: [
+      "grade 11 report card",
+      "grade 11",
+      "senior high school report card",
+      "learner's progress report card",
+      "report card",
+      "general average",
+      "school year",
+    ],
+    labelHints: ["grade 11 report card"],
+  },
+  {
     id: "birth",
     /** phrases likely in PSA / NSO birth certificates */
     phrases: [
