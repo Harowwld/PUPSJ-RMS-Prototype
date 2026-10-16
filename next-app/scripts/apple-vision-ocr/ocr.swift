@@ -30,32 +30,42 @@ struct OcrRecognition {
     let error: String?
 }
 
-final class OcrRecognitionBatch {
-    private let lock = NSLock()
-    private var values: [OcrRecognition?]
-
-    init(count: Int) {
-        values = [OcrRecognition?](repeating: nil, count: count)
+func debugImageDescription(_ image: CGImage) -> String {
+    let colorModel: String
+    switch image.colorSpace?.model {
+    case .some(.monochrome): colorModel = "monochrome"
+    case .some(.rgb): colorModel = "rgb"
+    case .some(.cmyk): colorModel = "cmyk"
+    case .some(.lab): colorModel = "lab"
+    case .some(.deviceN): colorModel = "deviceN"
+    case .some(.indexed): colorModel = "indexed"
+    case .some(.pattern): colorModel = "pattern"
+    case .some(.XYZ): colorModel = "xyz"
+    case .some(.unknown), .none: colorModel = "unknown"
+    @unknown default: colorModel = "unknown"
     }
-
-    func set(_ value: OcrRecognition, at index: Int) {
-        lock.lock()
-        values[index] = value
-        lock.unlock()
-    }
-
-    func get(_ index: Int) -> OcrRecognition? {
-        lock.lock()
-        defer { lock.unlock() }
-        return values[index]
-    }
+    return "width=\(image.width) height=\(image.height) bitsPerPixel=\(image.bitsPerPixel) bitsPerComponent=\(image.bitsPerComponent) bytesPerRow=\(image.bytesPerRow) bitmapInfo=\(image.bitmapInfo.rawValue) colorModel=\(colorModel)"
 }
 
-func runVisionOcr(on cgImage: CGImage, pageIndex: Int) -> OcrRecognition {
+func debugErrorChain(_ error: Error) -> String {
+    var parts = [String]()
+    var current: NSError? = error as NSError
+    var depth = 0
+    while let item = current, depth < 6 {
+        parts.append("\(item.domain)(\(item.code), keys=\(item.userInfo.keys.sorted().joined(separator: ",")))")
+        current = item.userInfo[NSUnderlyingErrorKey] as? NSError
+        depth += 1
+    }
+    return parts.joined(separator: " <- ")
+}
+
+func runVisionOcr(on cgImage: CGImage, pageIndex: Int, source: String, attempt: Int) -> OcrRecognition {
     var observations = [OcrObservation]()
     var failed = false
     var failureMessage: String?
     let semaphore = DispatchSemaphore(value: 0)
+    let startedAt = Date()
+    fputs("[OCR-DEBUG-20261016] begin source=\(source) page=\(pageIndex) attempt=\(attempt) \(debugImageDescription(cgImage))\n", stderr)
     
     let request = VNRecognizeTextRequest { request, error in
         defer { semaphore.signal() }
@@ -63,6 +73,7 @@ func runVisionOcr(on cgImage: CGImage, pageIndex: Int) -> OcrRecognition {
             failed = true
             failureMessage = error.localizedDescription
             fputs("OCR Error: \(error.localizedDescription)\n", stderr)
+            fputs("[OCR-DEBUG-20261016] callback-error source=\(source) page=\(pageIndex) attempt=\(attempt) elapsedMs=\(Int(Date().timeIntervalSince(startedAt) * 1000)) chain=\(debugErrorChain(error))\n", stderr)
             return
         }
         
@@ -95,7 +106,10 @@ func runVisionOcr(on cgImage: CGImage, pageIndex: Int) -> OcrRecognition {
         failed = true
         failureMessage = error.localizedDescription
         fputs("Vision Handler Error: \(error.localizedDescription)\n", stderr)
+        fputs("[OCR-DEBUG-20261016] handler-error source=\(source) page=\(pageIndex) attempt=\(attempt) elapsedMs=\(Int(Date().timeIntervalSince(startedAt) * 1000)) chain=\(debugErrorChain(error))\n", stderr)
     }
+
+    fputs("[OCR-DEBUG-20261016] end source=\(source) page=\(pageIndex) attempt=\(attempt) elapsedMs=\(Int(Date().timeIntervalSince(startedAt) * 1000)) failed=\(failed) observations=\(observations.count)\n", stderr)
     
     return OcrRecognition(
         page: OcrPage(
@@ -109,19 +123,19 @@ func runVisionOcr(on cgImage: CGImage, pageIndex: Int) -> OcrRecognition {
     )
 }
 
-func recognizeImages(_ images: [(Int, CGImage)]) -> [OcrRecognition] {
-    let batch = OcrRecognitionBatch(count: images.count)
-    let finished = DispatchSemaphore(value: 0)
-    DispatchQueue.global(qos: .userInitiated).async {
-        DispatchQueue.concurrentPerform(iterations: images.count) { index in
-            let (pageIndex, image) = images[index]
-            batch.set(runVisionOcr(on: image, pageIndex: pageIndex), at: index)
+func recognizeImages(_ images: [(Int, CGImage)], source: String) -> [OcrRecognition] {
+    // Vision can fail with CRImageReaderError under concurrent page requests.
+    // Process pages serially in the persistent worker to limit pressure on
+    // Vision's image reader and preserve deterministic result ordering.
+    images.map { pageIndex, image in
+        var result = runVisionOcr(on: image, pageIndex: pageIndex, source: source, attempt: 1)
+        if result.failed, result.error?.contains("CRImageReaderError") == true {
+            fputs("[OCR-DEBUG-20261016] retry source=\(source) page=\(pageIndex) afterMs=250\n", stderr)
+            Thread.sleep(forTimeInterval: 0.25)
+            result = runVisionOcr(on: image, pageIndex: pageIndex, source: source, attempt: 2)
         }
-        finished.signal()
+        return result
     }
-    finished.wait()
-
-    return images.indices.compactMap { batch.get($0) }
 }
 
 func renderPDFPage(_ page: PDFPage, scale: CGFloat) -> CGImage? {
@@ -193,7 +207,7 @@ func recognizeFile(at filePath: String) throws -> OcrPayload {
                 }
                 images.append((pageIndex, cgImg))
             }
-            let recognized = recognizeImages(images)
+            let recognized = recognizeImages(images, source: "pdf")
             if let failedPage = recognized.first(where: { $0.failed }) {
                 throw NSError(domain: "NativeOcr", code: 4, userInfo: [NSLocalizedDescriptionKey: "Vision recognition failed for page \(failedPage.page.pageIndex): \(failedPage.error ?? "unknown Vision error")"])
             }
@@ -209,7 +223,7 @@ func recognizeFile(at filePath: String) throws -> OcrPayload {
           let cgImg = normalizeImage(decoded) else {
         throw NSError(domain: "NativeOcr", code: 3, userInfo: [NSLocalizedDescriptionKey: "Could not load image file"])
     }
-    let recognized = recognizeImages([(0, cgImg)])
+    let recognized = recognizeImages([(0, cgImg)], source: "image")
     if let failedPage = recognized.first(where: { $0.failed }) {
         throw NSError(domain: "NativeOcr", code: 4, userInfo: [NSLocalizedDescriptionKey: "Vision recognition failed for page \(failedPage.page.pageIndex): \(failedPage.error ?? "unknown Vision error")"])
     }
@@ -260,7 +274,7 @@ func makeWarmupImage() throws -> CGImage {
 }
 
 func runWarmup() throws {
-    let result = runVisionOcr(on: try makeWarmupImage(), pageIndex: 0)
+    let result = runVisionOcr(on: try makeWarmupImage(), pageIndex: 0, source: "warmup", attempt: 1)
     if result.failed {
         throw NSError(domain: "NativeOcr", code: 6, userInfo: [NSLocalizedDescriptionKey: "Vision warmup request failed: \(result.error ?? "unknown Vision error")"])
     }

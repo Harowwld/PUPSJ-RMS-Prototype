@@ -9,7 +9,7 @@ import {
   rotateOcrPages,
 } from "./ocrClient.js";
 import { query } from "./postgres.js";
-import { matchStudentsByConfiguredOcrName } from "./studentNameMatcher.js";
+import { matchStudentsByConfiguredOcrName, matchStudentsByOcrText, mergeStudentMatchCandidates } from "./studentNameMatcher.js";
 import { getOcrStudentRoster } from "./ocrStudentRoster.js";
 import {
   claimNextBatchItem,
@@ -89,21 +89,26 @@ export async function processNextBatchItem(batchId, officeId) {
       if (templateName) break;
     }
 
-    let studentMatches = [];
+    let configuredStudentMatches = [];
+    let textStudentMatches = [];
     let matchingMs = 0;
-    if (templateName) {
-      const matchingStartedAt = performance.now();
-      studentMatches = matchStudentsByConfiguredOcrName(templateName, await getOcrStudentRoster(officeId));
-      matchingMs = performance.now() - matchingStartedAt;
-    }
-    const confidentMatches = studentMatches.filter((match) => match.mismatchRatio < 0.10);
-    const autoMatchedStudent = confidentMatches.length === 1 ? confidentMatches[0] : null;
+    const matchingStartedAt = performance.now();
+    const studentRoster = await getOcrStudentRoster(officeId);
+    if (templateName) configuredStudentMatches = matchStudentsByConfiguredOcrName(templateName, studentRoster);
+    textStudentMatches = matchStudentsByOcrText(text, studentRoster);
+    const studentMatches = mergeStudentMatchCandidates(configuredStudentMatches, textStudentMatches);
+    matchingMs = performance.now() - matchingStartedAt;
+    // A unique roster match from either the configured OCR fields or the
+    // whole-page OCR text is sufficient for automatic assignment. Multiple
+    // plausible roster records remain in review for staff to disambiguate.
+    const autoMatchedStudent = studentMatches.length === 1 ? studentMatches[0] : null;
     const studentCandidates = studentMatches.map(({ studentNo, mismatchPercent }) => ({ studentNo, mismatchPercent }));
+    const ocrName = templateName || (studentMatches.length === 1 ? studentMatches[0].name : extractNameCandidate(text));
     const duplicate = await findDuplicateIngest(item.id, item.content_sha256, { officeId });
 
     const saved = await saveOcrResult(item.id, {
       text,
-      name: templateName || extractNameCandidate(text),
+      name: ocrName,
       docType: docType || null,
       studentNo: !duplicate ? autoMatchedStudent?.studentNo : null,
       studentCandidates,

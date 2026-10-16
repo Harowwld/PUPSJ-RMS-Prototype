@@ -16,6 +16,10 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
   const [recentSuccesses, setRecentSuccesses] = useState([]);
   const [completedScans, setCompletedScans] = useState([]);
   const [currentFile, setCurrentFile] = useState("");
+  const [retryingFile, setRetryingFile] = useState("");
+  const [queueBusy, setQueueBusy] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [controlLoading, setControlLoading] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [completedPage, setCompletedPage] = useState(0);
   const [completedQuery, setCompletedQuery] = useState("");
@@ -25,12 +29,9 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
     const json = await response.json().catch(() => null);
     if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to read OCR queue");
     const rows = Array.isArray(json.data?.rows) ? json.data.rows : [];
+    const queueStats = json.data?.stats || {};
     const successfulRows = rows.filter((row) => row.ocr_status === "completed");
-    const processingRows = rows.filter((row) => !["completed", "failed"].includes(String(row.ocr_status || "").toLowerCase()));
-    const confirmedRows = rows.filter((row) => row.review_status === "Confirmed");
-    const reviewRows = rows.filter((row) => ["Needs Review", "Conflict", "Duplicate"].includes(row.review_status));
-    const failedRows = rows.filter((row) => row.ocr_status === "failed" || row.review_status === "Failed");
-    setBatch({ total: rows.length, rows });
+    setBatch({ total: Number(json.data?.total || 0), rows });
     if (successfulRows.length) {
       setCompletedScans((current) => {
         const merged = [...successfulRows, ...current].filter((row, index, all) => (
@@ -45,17 +46,52 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
         return merged.slice(0, 5);
       });
     }
-    setCurrentFile(rows.find((row) => row.review_status === "Processing")?.original_filename || "");
-    setStats(rows.length > 0 ? {
-      total: rows.length,
-      remaining: processingRows.length,
-      succeeded: successfulRows.length,
-      confirmed: confirmedRows.length,
-      review: reviewRows.length,
-      failed: failedRows.length,
+    const active = json.data?.active;
+    setCurrentFile(active?.original_filename || "");
+    setRetryingFile(Number(active?.auto_retry_count) > 0 ? active.original_filename : "");
+    const isPaused = Boolean(json.data?.paused);
+    setPaused(isPaused);
+    setQueueBusy(Boolean(active) || (!isPaused && Number(queueStats.remaining || 0) > 0));
+    setStats(Number(json.data?.total || 0) > 0 ? {
+      total: Number(queueStats.total ?? json.data?.total ?? 0),
+      remaining: Number(queueStats.remaining ?? 0),
+      succeeded: Number(queueStats.succeeded ?? successfulRows.length),
+      confirmed: Number(queueStats.confirmed ?? 0),
+      review: Number(queueStats.review ?? 0),
+      failed: Number(queueStats.failed ?? 0),
     } : EMPTY_STATS);
     return rows;
   }, []);
+
+  const toggleScanning = useCallback(async () => {
+    setControlLoading(true);
+    try {
+      const response = await fetch("/api/ingest/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paused: !paused }),
+      });
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to update scanning state");
+      setPaused(Boolean(json.data?.paused));
+      showToast(json.data?.paused
+        ? { title: "Scanning Paused", description: "The current document will finish. Queued and incoming documents will wait." }
+        : { title: "Scanning Resumed", description: "OCR is continuing through the inbound queue." });
+      await loadMonitor();
+    } catch (error) {
+      showToast(formatErrorMessage(error, { title: "Scanning Update Failed", actionContext: "Updating continuous scanning" }), true);
+    } finally {
+      setControlLoading(false);
+    }
+  }, [loadMonitor, paused, showToast]);
+
+  useEffect(() => {
+    if (!queueBusy) return;
+    const poll = setInterval(() => {
+      loadMonitor().catch(() => {});
+    }, 1500);
+    return () => clearInterval(poll);
+  }, [loadMonitor, queueBusy]);
 
   useEffect(() => {
     let disposed = false;
@@ -124,10 +160,19 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
             <span className={`h-2.5 w-2.5 rounded-full ${workerConnected ? "bg-emerald-500" : "bg-amber-500"}`} />
             Continuous Scanning
           </div>
-          <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">OCR starts automatically when a stable inbound file is received.</p>
+          <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">{paused ? "Scanning is paused. Incoming documents will wait in the queue." : "OCR starts automatically when a stable inbound file is received."}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-gray-900 dark:text-zinc-300">{workerConnected ? "Event stream connected" : "Reconnecting"}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={controlLoading}
+            onClick={toggleScanning}
+            className={`h-9 px-4 text-xs font-semibold rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all ${paused ? "border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:bg-zinc-800 dark:text-emerald-300 dark:hover:bg-zinc-700" : "border-rose-200 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-zinc-800 dark:text-rose-300 dark:hover:bg-zinc-700"}`}
+          >
+            {controlLoading ? "Updating…" : paused ? "Resume scanning" : "Stop scanning"}
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -138,12 +183,14 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
           </Button>
         </div>
       </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80 dark:bg-zinc-800">
-        <div className="h-full rounded-full bg-blue-600 transition-all duration-300" style={{ width: `${percent}%` }} />
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80 dark:bg-zinc-800" aria-label="OCR queue progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} aria-valuetext={`${percent}% complete${queueBusy ? `; processing ${currentFile || "a document"}` : ""}`}>
+        <div className="h-full rounded-full bg-blue-600 transition-all duration-500" style={{ width: `${percent}%` }} />
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-gray-600 dark:text-zinc-400">
         <span>{batch?.total > 0 ? `${stats.total} total in batch` : `${stats.total} waiting in inbound queue`}</span><span>{batch?.total > 0 ? `${stats.remaining} OCR remaining` : `${stats.remaining} waiting to be claimed`}</span><span className="text-emerald-700 dark:text-emerald-400">{stats.succeeded} OCR complete</span><span>{stats.confirmed} confirmed</span><span>{stats.review} review</span><span>{stats.failed} failed</span>
         {currentFile && <span className="max-w-[360px] truncate" title={currentFile}>Current: {currentFile}</span>}
+        {retryingFile && <span className="max-w-[360px] truncate font-semibold text-blue-700 dark:text-blue-300" title={retryingFile}>Retrying OCR: {retryingFile}</span>}
+        {queueBusy && !retryingFile && <span className="font-semibold text-blue-700 dark:text-blue-300">OCR engine processing queue…</span>}
       </div>
       {recentSuccesses.length > 0 && (
         <div className="mt-3 border-t border-blue-100 pt-3 dark:border-blue-400/20">

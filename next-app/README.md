@@ -275,14 +275,16 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 
 ## Apple Vision OCR Setup (macOS)
 
-The PSA coordinate-recognition workflow uses the native OCR binary. Build it once from `next-app/`:
+The PSA coordinate-recognition workflow uses the native OCR binary. On macOS, the shared RMS launcher builds it from `scripts/apple-vision-ocr/ocr.swift` whenever the executable is missing or older than the source. This applies to `pnpm dev`, `pnpm dev:next`, and `pnpm start`.
+
+The launcher requires `swiftc` from Xcode Command Line Tools. If a rebuild is needed and compilation fails, startup stops with an error instead of running an outdated OCR worker. To build the helper manually from `next-app/`:
 
 ```bash
 mkdir -p bin
 swiftc -O scripts/apple-vision-ocr/ocr.swift -o bin/apple-vision-ocr
 ```
 
-The binary must exist at `next-app/bin/apple-vision-ocr`. Rebuild it after changing the Swift helper. If it is missing, RMS remains available while the OCR supervisor logs the problem and retries worker startup.
+The binary is written to `next-app/bin/apple-vision-ocr`. Rebuilds use a temporary output and replace the executable only after compilation succeeds.
 
 On macOS, `pnpm dev`, `pnpm dev:next`, and `pnpm start` run one Apple Vision worker beside Next.js. It signals process readiness before warming Vision, so scans can proceed even when warmup fails. Warmup retries in the same worker with backoff from 5 seconds up to 60 seconds. Scans run one at a time; each attempt has a five-second limit and may be retried once. A Vision recognition error is returned after the retry; three consecutive failed scan jobs restart the worker so a degraded Vision process cannot keep failing every later scan. A worker crash or scan timeout restarts the worker and retries the affected scan once. The supervisor uses a current-user-only Unix socket and shuts down with RMS. Windows uses the same supervised worker lifecycle through a token-authenticated loopback endpoint. Linux retains its Tesseract command-line path.
 

@@ -2077,7 +2077,7 @@ export default function ScanUploadTab({
                                     {ocrSuggestion?.studentMatches?.length > 0 && !uploadStudentIsExisting && (
                                       <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
                                         <p className="mb-2 text-[11px] text-blue-800 dark:text-blue-200">
-                                          Configured name fields found records within 10% letter difference. Select one to assign it.
+                                          OCR found possible roster matches within 10% letter difference. Select one to assign it.
                                         </p>
                                         <div className="space-y-1">
                                           {ocrSuggestion.studentMatches.map((candidate) => {
