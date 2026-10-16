@@ -220,6 +220,7 @@ async function main() {
     { docType: "Diploma", code: "DIPLOMA" },
     { docType: "Certificate of Good Moral Character", code: "CGMC" },
     { docType: "Certificate of Enrollment", code: "COE" },
+    { docType: "Grade 11 Report Card", code: "G11RC" },
     { docType: "Grade 12 Report Card", code: "G12RC" },
   ];
 
