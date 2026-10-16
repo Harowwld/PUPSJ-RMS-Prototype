@@ -661,9 +661,9 @@ export default function DocumentRequestsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className={cn("font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up", displayedRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className={cn("flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4", displayedRows.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]")}>
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-tray"
@@ -922,8 +922,32 @@ export default function DocumentRequestsTab({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border dark:divide-border">
-                    {displayedRows.map((r) => {
+                  <tbody className={cn("divide-y divide-border dark:divide-border", displayedRows.length === 0 && "h-full flex-1 flex flex-col")}>
+                    {displayedRows.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent flex-1 flex">
+                        <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
+                          <Empty className="flex flex-1 h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <div className="relative mb-6">
+                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                                  <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
+                                </EmptyMedia>
+                              </div>
+                              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                                {clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
+                                  ? "No document requests found matching your filters."
+                                  : clientTypeFilters.includes("Student") && !clientTypeFilters.includes("Alumni")
+                                  ? "No student requests found matching your filters."
+                                  : "No document requests match your active filters."}
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
+                        </td>
+                      </tr>
+                    ) : (
+                      displayedRows.map((r) => {
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
                         const charter = getRequestCharterStatus(r, slaStandards);
@@ -1035,7 +1059,8 @@ export default function DocumentRequestsTab({
                             </td>
                           </tr>
                         );
-                      })}
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>

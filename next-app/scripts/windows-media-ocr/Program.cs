@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
@@ -13,8 +14,25 @@ using Windows.Globalization;
 
 namespace WindowsNativeOcr
 {
+    sealed class WorkerCommand
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = "";
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = "";
+
+        [JsonPropertyName("filePath")]
+        public string? FilePath { get; set; }
+    }
+
     class Program
     {
+        static readonly JsonSerializerOptions WorkerJsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         static OcrEngine CreateOcrEngine()
         {
             OcrEngine? engine = OcrEngine.TryCreateFromUserProfileLanguages();
@@ -129,8 +147,65 @@ namespace WindowsNativeOcr
             return fullText.ToString().Trim();
         }
 
+        static void WriteWorkerResponse(string id, string type, bool ok, object? result = null, string? error = null)
+        {
+            Console.Out.WriteLine(JsonSerializer.Serialize(new { id, type, ok, result, error }));
+            Console.Out.Flush();
+        }
+
+        static async Task WarmupAsync(OcrEngine[] engines)
+        {
+            using SoftwareBitmap bitmap = new(BitmapPixelFormat.Bgra8, 32, 32, BitmapAlphaMode.Premultiplied);
+            _ = await engines[0].RecognizeAsync(bitmap);
+        }
+
+        static async Task<int> RunWorkerAsync()
+        {
+            Console.OutputEncoding = new UTF8Encoding(false);
+            OcrEngine[]? engines = null;
+
+            // Process readiness is independent of Windows OCR engine warmup.
+            Console.Out.WriteLine("{\"type\":\"ready\"}");
+            Console.Out.Flush();
+            string? line;
+            while ((line = await Console.In.ReadLineAsync()) != null)
+            {
+                WorkerCommand? command = null;
+                try
+                {
+                    command = JsonSerializer.Deserialize<WorkerCommand>(line, WorkerJsonOptions);
+                    if (command == null) throw new InvalidDataException("Worker command is empty.");
+                    if (command.Type == "warmup")
+                    {
+                        engines ??= new[] { CreateOcrEngine(), CreateOcrEngine() };
+                        await WarmupAsync(engines);
+                        WriteWorkerResponse(command.Id, command.Type, true);
+                    }
+                    else if (command.Type == "scan")
+                    {
+                        if (string.IsNullOrWhiteSpace(command.FilePath)) throw new InvalidDataException("Missing scan file path.");
+                        engines ??= new[] { CreateOcrEngine(), CreateOcrEngine() };
+                        string text = await RecognizeFileAsync(command.FilePath, engines);
+                        WriteWorkerResponse(command.Id, command.Type, true, new { text, pages = Array.Empty<object>() });
+                    }
+                    else
+                    {
+                        throw new InvalidDataException($"Unknown OCR worker command: {command.Type}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Windows OCR worker error: {ex.Message}");
+                    if (command != null) WriteWorkerResponse(command.Id, command.Type, false, error: ex.Message);
+                }
+            }
+
+            return 0;
+        }
+
         static async Task<int> Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == "--worker") return await RunWorkerAsync();
             if (args.Length < 1)
             {
                 Console.Error.WriteLine("Error: Missing file path. Usage: windows-media-ocr <file-path>");

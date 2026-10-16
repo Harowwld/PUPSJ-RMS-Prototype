@@ -701,7 +701,7 @@ export default function ScanUploadTab({
               <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
                 <section
                   className={cn(
-                    "relative flex h-auto min-h-[580px] flex-col transition-all duration-normal",
+                    "relative flex h-auto min-h-[min(580px,50dvh)] flex-col transition-all duration-normal",
                     uploadMode === "csv"
                       ? (hideBulkCard ? "w-full" : "w-full lg:w-[68%]")
                       : "w-full lg:w-[48%]"
@@ -1150,7 +1150,7 @@ export default function ScanUploadTab({
                     ) : (
                       <div
                         className={cn(
-                          "group relative flex min-h-[580px] flex-1 cursor-pointer flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-border bg-gray-50/50 transition-all duration-150 ease-out hover:border-pup-maroon/40 dark:bg-zinc-900/30 dark:border-border dark:hover:border-red-500/40",
+                          "group relative flex min-h-[min(580px,50dvh)] flex-1 cursor-pointer flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-border bg-gray-50/50 transition-all duration-150 ease-out hover:border-pup-maroon/40 dark:bg-zinc-900/30 dark:border-border dark:hover:border-red-500/40",
                           csvDropActive ? "border-pup-maroon bg-red-50/10 dark:border-red-500/80" : ""
                         )}
                         onDragOver={(e) => {
@@ -1213,7 +1213,7 @@ export default function ScanUploadTab({
                     <div className="flex flex-col gap-4 w-full h-full">
                       <div
                         className={cn(
-                          "group relative flex flex-1 min-h-[580px] w-full flex-col overflow-hidden rounded-2xl border transition-all duration-150 ease-out",
+                          "group relative flex flex-1 min-h-[min(580px,50dvh)] w-full flex-col overflow-hidden rounded-2xl border transition-all duration-150 ease-out",
                           uploadedFile ? "bg-white border-border dark:bg-card dark:border-border" : "bg-gray-50/50 border-2 border-dashed border-border dark:bg-zinc-900/30 dark:border-border hover:border-pup-maroon/40 dark:hover:border-red-500/40",
                           fe.pdfFile ? "border-amber-400 bg-amber-50/20" : ""
                         )}
@@ -2064,7 +2064,7 @@ export default function ScanUploadTab({
                                     {ocrSuggestion?.studentMatches?.length > 0 && !uploadStudentIsExisting && (
                                       <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
                                         <p className="mb-2 text-[11px] text-blue-800 dark:text-blue-200">
-                                          Configured name fields found records within 10% letter difference. Select one to assign it.
+                                          OCR found possible roster matches within 10% letter difference. Select one to assign it.
                                         </p>
                                         <div className="space-y-1">
                                           {ocrSuggestion.studentMatches.map((candidate) => {

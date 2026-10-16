@@ -374,7 +374,7 @@ export async function seed({ force: forceOverride } = {}) {
       await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [section, courseCode]);
     }
 
-    for (const name of ["Transcript of Records", "Diploma", "Certificate of Good Moral", "Form 137", "Certificate of Enrollment", "Birth Certificate"]) {
+    for (const name of ["Transcript of Records", "Diploma", "Certificate of Good Moral", "Form 137", "Grade 11 Report Card", "Grade 12 Report Card", "Certificate of Enrollment", "Birth Certificate"]) {
       await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
     }
 

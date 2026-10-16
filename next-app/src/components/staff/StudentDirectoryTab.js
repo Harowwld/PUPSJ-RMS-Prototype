@@ -605,17 +605,11 @@ export default function StudentDirectoryTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-student-directory"
-        className={cn(
-          "animate-fade-up font-jakarta flex h-auto w-full flex-col",
-          filteredStudents.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]"
-        )}
+        className="animate-fade-up font-jakarta flex h-auto w-full flex-col"
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
         <Card
-          className={cn(
-            "flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4",
-            filteredStudents.length === 0 && "min-h-[calc(100vh-10rem)] min-h-[640px]"
-          )}
+          className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4"
         >
           {/* 1. Page Header */}
           <PageHeader
@@ -1051,7 +1045,7 @@ export default function StudentDirectoryTab({
                 ))}
               </div>
             ) : paginatedStudents.length === 0 ? (
-              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px]">
+              <div className="py-10 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-0">
                 <Empty className="flex flex-1 h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">

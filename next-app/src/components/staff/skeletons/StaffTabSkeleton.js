@@ -4,11 +4,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StaffTabSkeleton() {
   return (
-    <div className="flex flex-1 flex-col min-h-full w-full gap-4 animate-fade-up select-none font-jakarta">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col w-full gap-4 animate-fade-up select-none font-jakarta">
       {/* ONE Single Container Card */}
-      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate font-jakarta">
+      <div className="min-h-0 min-w-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 mb-4 isolate font-jakarta">
         {/* Header Skeleton */}
-        <div className="flex items-center justify-between p-6">
+        <div className="flex min-w-0 items-center justify-between p-3 sm:p-6">
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
             <div className="space-y-2">
@@ -22,7 +22,7 @@ export default function StaffTabSkeleton() {
         </div>
 
         {/* Toolbar / Search Row */}
-        <div className="flex items-center justify-between p-4 px-6 border-t border-border dark:border-border bg-gray-50/40 dark:bg-white/[0.02]">
+        <div className="flex min-w-0 items-center justify-between gap-3 p-3 sm:p-4 sm:px-6 border-t border-border dark:border-border bg-gray-50/40 dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <Skeleton className="h-9 w-64 rounded-lg dark:bg-muted" />
             <Skeleton className="h-9 w-32 rounded-lg dark:bg-muted" />
@@ -31,7 +31,7 @@ export default function StaffTabSkeleton() {
         </div>
 
         {/* Content Placeholder Rows */}
-        <div className="p-6 space-y-4 flex-1">
+        <div className="min-h-0 min-w-0 overflow-hidden p-3 sm:p-6 space-y-2 sm:space-y-4 flex-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}

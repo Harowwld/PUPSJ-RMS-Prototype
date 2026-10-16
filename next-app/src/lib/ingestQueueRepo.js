@@ -41,6 +41,22 @@ export async function getIngestById(id, { officeId } = {}) {
   return dbGet("SELECT * FROM ingest_queue WHERE id = ? AND office_id = ?", [id, normalizedOfficeId]);
 }
 
+export async function getIngestProcessingPaused(officeId) {
+  const normalizedOfficeId = requireOfficeId(officeId);
+  const row = await queryOne("SELECT ingest_paused FROM offices WHERE id = $1", [normalizedOfficeId]);
+  return Boolean(row?.ingest_paused);
+}
+
+export async function setIngestProcessingPaused(officeId, paused) {
+  const normalizedOfficeId = requireOfficeId(officeId);
+  const rows = await query(
+    "UPDATE offices SET ingest_paused = $1 WHERE id = $2 RETURNING ingest_paused",
+    [Boolean(paused), normalizedOfficeId],
+  );
+  if (!rows.length) throw new Error("Office was not found");
+  return Boolean(rows[0].ingest_paused);
+}
+
 export async function listPendingIngest({ limit = 100, offset = 0, includeFailed = true, includeRejected = true, onlyUnprocessed = false, batchId = null, officeId } = {}) {
   const normalizedOfficeId = requireOfficeId(officeId);
   const lim = Math.min(Math.max(Number(limit) || 100, 1), 500);
@@ -156,9 +172,27 @@ export async function updateReview(id, patch, reviewedBy, { officeId } = {}) {
 
 export async function resetForRetry(id, { officeId } = {}) {
   const normalizedOfficeId = requireOfficeId(officeId);
-  const updated = await query(`UPDATE ingest_queue SET status = 'pending', ocr_status = 'pending', review_status = 'Processing', ocr_text = NULL, ocr_name = NULL, staff_selected_student_no = NULL, proposed_doc_type = NULL, ocr_student_candidates = '[]'::jsonb, ocr_detected_rotation = 0, ocr_regions = NULL, ocr_page_index = NULL, last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL WHERE id = $1 AND office_id = $2 AND status IN ('failed', 'rejected') RETURNING id`, [id, normalizedOfficeId]);
+  const updated = await query(`UPDATE ingest_queue SET status = 'pending', ocr_status = 'pending', review_status = 'Processing', ocr_text = NULL, ocr_name = NULL, staff_selected_student_no = NULL, proposed_doc_type = NULL, ocr_student_candidates = '[]'::jsonb, ocr_detected_rotation = 0, ocr_regions = NULL, ocr_page_index = NULL, last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL, auto_retry_count = 0 WHERE id = $1 AND office_id = $2 AND status <> 'promoted' AND (status IN ('failed', 'rejected') OR lower(COALESCE(review_status, '')) IN ('failed', 'rejected')) RETURNING id`, [id, normalizedOfficeId]);
   if (!updated.length) return null;
   return getIngestById(id, { officeId: normalizedOfficeId });
+}
+
+export async function autoRetryFailedIngests(officeId) {
+  const normalizedOfficeId = requireOfficeId(officeId);
+  return query(
+    `UPDATE ingest_queue
+        SET status = 'pending', ocr_status = 'pending', review_status = 'Processing',
+            ocr_text = NULL, ocr_name = NULL, staff_selected_student_no = NULL,
+            proposed_doc_type = NULL, ocr_student_candidates = '[]'::jsonb,
+            ocr_detected_rotation = 0, ocr_regions = NULL, ocr_page_index = NULL,
+            last_error = NULL, reviewed_by = NULL, reviewed_at = NULL, review_note = NULL,
+            auto_retry_count = auto_retry_count + 1
+      WHERE office_id = $1 AND status <> 'promoted' AND status <> 'rejected'
+        AND (lower(COALESCE(ocr_status, '')) = 'failed' OR lower(COALESCE(review_status, '')) = 'failed')
+        AND auto_retry_count < 1
+      RETURNING id, batch_id`,
+    [normalizedOfficeId],
+  );
 }
 
 export async function rejectIngest(id, reason, reviewedBy, { officeId } = {}) {

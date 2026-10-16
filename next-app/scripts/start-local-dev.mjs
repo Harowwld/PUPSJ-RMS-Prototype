@@ -1,11 +1,19 @@
 import { spawn, spawnSync } from "node:child_process";
 import process from "node:process";
 import dotenv from "dotenv";
+import { assertNextPortAvailable } from "./nextPort.mjs";
 
 dotenv.config({ path: ".env" });
 
 const isWindows = process.platform === "win32";
 const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
+
+try {
+  await assertNextPortAvailable();
+} catch (error) {
+  console.error(`[dev] ${error.message}`);
+  process.exit(1);
+}
 
 function run(command, args, label) {
   const result = spawnSync(command, args, { stdio: "inherit", cwd: process.cwd(), shell: isWindows });
@@ -26,7 +34,7 @@ try {
   console.log("[dev] Starting Next.js and the hot-folder watcher...");
 
   const devCommands = [
-    "\"next dev\"",
+    "\"node scripts/run-next-with-ocr.mjs dev\"",
     "\"wait-on tcp:3000 && node scripts/warm-local-routes.mjs\"",
   ];
   const processNames = ["next", "warmup"];
@@ -40,7 +48,7 @@ try {
   }
   const dev = spawn(
     pnpmCommand,
-    ["exec", "concurrently", "-n", processNames.join(","), "-c", colors.join(","), ...devCommands],
+    ["exec", "concurrently", "--kill-others-on-fail", "-n", processNames.join(","), "-c", colors.join(","), ...devCommands],
     { stdio: "inherit", cwd: process.cwd(), shell: isWindows }
   );
 

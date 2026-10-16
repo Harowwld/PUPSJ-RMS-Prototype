@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
-import { matchStudentsByConfiguredOcrName } from "../../../../lib/studentNameMatcher";
+import { matchStudentsByConfiguredOcrName, matchStudentsByOcrText, mergeStudentMatchCandidates } from "../../../../lib/studentNameMatcher";
 import { getOcrStudentRoster } from "../../../../lib/ocrStudentRoster";
 
 export const runtime = "nodejs";
@@ -13,15 +13,21 @@ export async function POST(req) {
 
   const body = await req.json().catch(() => null);
   const extractedName = String(body?.extractedName || "").trim();
-  if (!extractedName || extractedName.length > 200) {
-    return NextResponse.json({ ok: false, error: "A valid extracted name is required" }, { status: 400 });
+  const ocrText = String(body?.ocrText || "").trim();
+  if ((!extractedName && !ocrText) || extractedName.length > 200 || ocrText.length > 100_000) {
+    return NextResponse.json({ ok: false, error: "A valid extracted name or OCR text is required" }, { status: 400 });
   }
   if (String(officeId).toLowerCase() === "osas") {
     return NextResponse.json({ ok: true, data: [] });
   }
 
   try {
-    const candidates = matchStudentsByConfiguredOcrName(extractedName, await getOcrStudentRoster(officeId));
+    const roster = await getOcrStudentRoster(officeId);
+    const configuredMatches = extractedName
+      ? matchStudentsByConfiguredOcrName(extractedName, roster)
+      : [];
+    const textMatches = ocrText ? matchStudentsByOcrText(ocrText, roster) : [];
+    const candidates = mergeStudentMatchCandidates(configuredMatches, textMatches);
     return NextResponse.json({
       ok: true,
       data: candidates.map(({ studentNo, name, mismatchPercent, student }) => ({

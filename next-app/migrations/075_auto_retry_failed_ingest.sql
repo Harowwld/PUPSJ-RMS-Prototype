@@ -1,0 +1,2 @@
+ALTER TABLE ingest_queue
+  ADD COLUMN IF NOT EXISTS auto_retry_count INTEGER NOT NULL DEFAULT 0;

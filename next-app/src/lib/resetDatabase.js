@@ -112,6 +112,7 @@ export async function resetDatabase() {
   const registrarDocTypes = [
     { name: "Birth Certificate", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
     { name: "Form 137", isCompliance: true, isRequestable: false, category: "Academic Records" },
+    { name: "Grade 11 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
     { name: "Grade 12 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
     { name: "Health Information Sheet", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
     { name: "Certified True Copy of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },

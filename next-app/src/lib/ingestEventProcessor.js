@@ -1,4 +1,4 @@
-import { createBatch } from "./ingestQueueRepo.js";
+import { autoRetryFailedIngests, createBatch, getIngestProcessingPaused } from "./ingestQueueRepo.js";
 import { processNextBatchItem } from "./ingestBatchProcessor.js";
 import { publishIngestEvent } from "./ingestEvents.js";
 
@@ -10,21 +10,40 @@ function normalizeOfficeId(value) {
 
 async function drainOffice(officeId) {
   while (true) {
-    const batch = await createBatch({ officeId, sourceStation: "Ingest Event" });
-    if (!batch.claimed) return;
+    while (true) {
+      if (await getIngestProcessingPaused(officeId)) return;
+      const batch = await createBatch({ officeId, sourceStation: "Ingest Event" });
+      if (!batch.claimed) break;
 
-    const item = await processNextBatchItem(batch.batchId, officeId);
-    if (!item) continue;
+      const item = await processNextBatchItem(batch.batchId, officeId);
+      if (!item) continue;
 
-    await publishIngestEvent({
-      type: "ocr_completed",
-      officeId,
-      id: item.id,
-      batchId: batch.batchId,
-      status: item.ocr_status,
-      reviewStatus: item.review_status,
-    });
-    console.log(`[ingest-event] Processed ingest #${item.id} for ${officeId}: ${item.review_status}`);
+      await publishIngestEvent({
+        type: "ocr_completed",
+        officeId,
+        id: item.id,
+        batchId: batch.batchId,
+        status: item.ocr_status,
+        reviewStatus: item.review_status,
+      });
+      console.log(`[ingest-event] Processed ingest #${item.id} for ${officeId}: ${item.review_status}`);
+    }
+
+    if (await getIngestProcessingPaused(officeId)) return;
+    const retryItems = await autoRetryFailedIngests(officeId);
+    if (!retryItems.length) return;
+
+    for (const retryItem of retryItems) {
+      await publishIngestEvent({
+        type: "ocr_auto_retry_queued",
+        officeId,
+        id: retryItem.id,
+        batchId: retryItem.batch_id,
+        status: "pending",
+        reviewStatus: "Processing",
+      });
+    }
+    console.log(`[ingest-event] Retrying ${retryItems.length} failed ingest item(s) for ${officeId} after the queue drained.`);
   }
 }
 

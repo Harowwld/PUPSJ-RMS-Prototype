@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
-import { query } from "../../../../lib/postgres";
+import { query, queryOne } from "../../../../lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { getIngestFilePath } from "../../../../lib/ingestQueueRepo";
 import { publishIngestEvent } from "@/lib/ingestEvents";
@@ -36,6 +36,9 @@ export async function GET(req) {
       const placeholders = uniqueStatuses.map((_, i) => `$${values.length + 1 + i}`);
       values.push(...uniqueStatuses);
       filters.push(`review_status IN (${placeholders.join(", ")})`);
+      if (uniqueStatuses.includes("Failed")) {
+        filters.push("(review_status <> 'Failed' OR auto_retry_count >= 1)");
+      }
     }
   }
 
@@ -52,7 +55,25 @@ export async function GET(req) {
   if (q) { values.push(`%${q}%`); filters.push(`(original_filename ILIKE $${values.length} OR COALESCE(ocr_name, '') ILIKE $${values.length} OR COALESCE(ocr_text, '') ILIKE $${values.length})`); }
   const where = filters.join(" AND ");
   const rows = await query(`SELECT * FROM ingest_queue WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`, [...values, limit, offset]);
-  const count = await query(`SELECT COUNT(*)::int AS count FROM ingest_queue WHERE ${where}`, values);
+  const count = await query(
+    `SELECT COUNT(*)::int AS total,
+            COUNT(*) FILTER (WHERE lower(COALESCE(ocr_status, '')) = 'completed')::int AS succeeded,
+            COUNT(*) FILTER (WHERE lower(COALESCE(ocr_status, '')) NOT IN ('completed', 'failed') OR ((lower(COALESCE(ocr_status, '')) = 'failed' OR review_status = 'Failed') AND auto_retry_count < 1))::int AS remaining,
+            COUNT(*) FILTER (WHERE review_status = 'Confirmed')::int AS confirmed,
+            COUNT(*) FILTER (WHERE review_status IN ('Needs Review', 'Conflict', 'Duplicate'))::int AS review,
+            COUNT(*) FILTER (WHERE (lower(COALESCE(ocr_status, '')) = 'failed' OR review_status = 'Failed') AND auto_retry_count >= 1)::int AS failed
+       FROM ingest_queue WHERE ${where}`,
+    values,
+  );
+  const active = await queryOne(
+    `SELECT id, original_filename, auto_retry_count
+       FROM ingest_queue
+      WHERE office_id = $1 AND status = 'processing'
+      ORDER BY id ASC
+      LIMIT 1`,
+    [officeId],
+  );
+  const control = await queryOne("SELECT ingest_paused FROM offices WHERE id = $1", [officeId]);
   const accessibleRows = rows.filter((row) => canAccessResource(user, "ingest", row));
   const candidateStudentNos = [...new Set(accessibleRows.flatMap((row) =>
     (Array.isArray(row.ocr_student_candidates) ? row.ocr_student_candidates : [])
@@ -86,7 +107,11 @@ export async function GET(req) {
       })
       .filter(Boolean),
   }));
-  return NextResponse.json({ ok: true, data: { rows: enrichedRows, total: Number(count[0]?.count || 0), limit, offset } });
+  const stats = Object.fromEntries(
+    ["total", "remaining", "succeeded", "confirmed", "review", "failed"]
+      .map((key) => [key, Number(count[0]?.[key] || 0)])
+  );
+  return NextResponse.json({ ok: true, data: { rows: enrichedRows, total: stats.total, stats, active, paused: Boolean(control?.ingest_paused), limit, offset } });
 }
 
 export async function DELETE(req) {
@@ -97,11 +122,12 @@ export async function DELETE(req) {
 
   const { searchParams } = new URL(req.url);
   const statusParam = String(searchParams.get("status") || "Failed").trim();
+  const retryExhaustedFilter = statusParam === "Failed" ? " AND auto_retry_count >= 1" : "";
 
   // Find matching items to delete files
   const items = await query(
     `SELECT id, storage_filename FROM ingest_queue
-      WHERE office_id = $1 AND review_status = $2 AND status <> 'promoted'`,
+      WHERE office_id = $1 AND review_status = $2 AND status <> 'promoted'${retryExhaustedFilter}`,
     [officeId, statusParam]
   );
 
@@ -117,6 +143,7 @@ export async function DELETE(req) {
         SET review_status = 'Rejected', status = 'rejected', reviewed_by = $1,
             reviewed_at = NOW(), review_note = 'Cleared from review queue'
       WHERE office_id = $2 AND review_status = $3 AND status <> 'promoted'
+        ${retryExhaustedFilter}
       RETURNING id`,
     [user.id, officeId, statusParam]
   );
