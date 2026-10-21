@@ -244,6 +244,8 @@ export default function BackupTab({
     }))
     try {
       await onSyncExternal(id)
+    } catch {
+      // toast.promise in onSyncExternal handles user notification
     } finally {
       setLocalLoading((prev) => ({ ...prev, syncingId: null, syncStatus: "" }))
     }
@@ -335,7 +337,7 @@ export default function BackupTab({
                           <span>Restoring...</span>
                         </span>
                       ) : (
-                        "Restore"
+                        "Restore Backup"
                       )}
                     </Button>
                     <Button
@@ -349,7 +351,7 @@ export default function BackupTab({
                           <span>Creating...</span>
                         </span>
                       ) : (
-                        "Create"
+                        "Create Backup"
                       )}
                     </Button>
                     <input
@@ -409,7 +411,7 @@ export default function BackupTab({
                         onClick={onRefresh}
                         className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                       >
-                        Retry
+                        Retry Connection
                       </Button>
                     </EmptyHeader>
                   </Empty>

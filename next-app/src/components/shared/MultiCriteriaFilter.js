@@ -156,7 +156,7 @@ export default function MultiCriteriaFilter({
               />
               <span className="truncate">{triggerLabel}</span>
               {activeCount > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-bold text-white dark:bg-red-500">
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-semibold text-white dark:bg-red-500">
                   {activeCount}
                 </span>
               )}
@@ -168,7 +168,7 @@ export default function MultiCriteriaFilter({
         <PopoverContent
           align={align}
           sideOffset={6}
-          className="w-80 sm:w-96 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"
+          className="w-80 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"
         >
           {/* Popover Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
@@ -185,8 +185,8 @@ export default function MultiCriteriaFilter({
                 title="Reset all filter criteria"
                 className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
               >
-                Reset
-              </button>
+                    Reset Filters
+                  </button>
             )}
           </div>
 
@@ -201,7 +201,7 @@ export default function MultiCriteriaFilter({
                   className={cn(groupIdx > 0 && "pt-3 border-t border-border dark:border-border")}
                 >
                   <div className="flex items-center justify-between px-1 mb-1.5">
-                    <span className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                    <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                       {group.label}
                     </span>
                     {selectedInGroup.length > 0 && (

@@ -168,6 +168,11 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     return layout.rooms.find((r) => String(r.id) === String(activeRoomId)) || null
   }, [layout, activeRoomId])
 
+  const selectedDeletableCabinetIds = useMemo(
+    () => new Set((activeRoom?.cabinets || []).filter((cabinet) => selectedCabinetIds.has(cabinet.id)).map((cabinet) => cabinet.id)),
+    [activeRoom, selectedCabinetIds]
+  )
+
   const selectedCabinet = useMemo(() => {
     if (!activeRoom || selectedCabinetIds.size === 0) return null
     const arr = Array.from(selectedCabinetIds)
@@ -1011,7 +1016,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         e.preventDefault()
         pasteCabinets()
       } else if (key === "backspace" || key === "delete") {
-        if (selectedCabinetIds.size > 0) {
+        if (selectedDeletableCabinetIds.size > 0) {
           e.preventDefault()
           pushHistory(layout)
           removeSelectedCabinet()
@@ -1027,6 +1032,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [
     selectedCabinetIds,
+    selectedDeletableCabinetIds,
     undo,
     redo,
     copyCabinets,
@@ -1042,28 +1048,25 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     setBulkConfirmOpen(false)
   }
 
-  const isSingleCabinet = selectedCabinetIds.size === 1
+  const isSingleCabinet = selectedDeletableCabinetIds.size === 1
   const deleteCabinetTitle = isSingleCabinet
-    ? (selectedCabinet?.isDoor ? "Delete Entrance Door" : `Delete Cabinet ${selectedCabinet?.id || ""}`)
+    ? `Delete Cabinet ${Array.from(selectedDeletableCabinetIds)[0]}`
     : "Delete Selected Cabinets"
 
   const deleteCabinetMessage = isSingleCabinet
-    ? (selectedCabinet?.isDoor
-        ? "Are you sure you want to remove this entrance door indicator? You can add it back anytime."
-        : `Are you sure you want to delete Cabinet ${selectedCabinet?.id || ""}? This will remove the cabinet and its drawer layout from this room.`)
-    : `Are you sure you want to delete the ${selectedCabinetIds.size} selected cabinets? This will permanently remove them and their drawer layouts from this room.`
+    ? `Are you sure you want to delete Cabinet ${Array.from(selectedDeletableCabinetIds)[0]}? This will remove the cabinet and its drawer layout from this room.`
+    : `Are you sure you want to delete the ${selectedDeletableCabinetIds.size} selected cabinets? This will permanently remove them and their drawer layouts from this room.`
 
-  const deleteCabinetConfirmLabel = "Delete"
+  const deleteCabinetConfirmLabel = isSingleCabinet ? "Delete Cabinet" : "Delete Cabinets"
 
   const deleteCabinetItems = useMemo(() => {
-    if (selectedCabinetIds.size === 0) return []
-    return Array.from(selectedCabinetIds).map((id) => {
-      if (id === "DOOR") return "Entrance Door"
+    if (selectedDeletableCabinetIds.size === 0) return []
+    return Array.from(selectedDeletableCabinetIds).map((id) => {
       const cab = activeRoom?.cabinets?.find((c) => String(c.id) === String(id))
       const count = (cab?.drawerIds || []).length
       return `Cabinet ${id}${count > 0 ? ` (${count} ${count === 1 ? "drawer" : "drawers"})` : ""}`
     })
-  }, [selectedCabinetIds, activeRoom])
+  }, [selectedDeletableCabinetIds, activeRoom])
 
   async function saveCurrentAsTemplate(name) {
     if (!activeRoom || !name) return
@@ -1454,21 +1457,21 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           variant="outline"
           onClick={addCabinet}
           disabled={!activeRoom}
-          className="h-9 px-3.5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center"
+          className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center"
           title="Add a new cabinet to the room"
         >
-          Add
+          Add Cabinet
         </Button>
 
         {/* Group 5: Unified Template Suite Capsule */}
-        <div className="flex items-center h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-xs divide-x divide-border dark:divide-border">
+        <div className="flex min-w-[360px] items-center h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-xs divide-x divide-border dark:divide-border">
           <div className="flex items-center pl-3 pr-1 text-gray-400 dark:text-zinc-500 rounded-l-xl">
             <HugeIcon className="ph-bold ph-squares-four text-[14px]" />
           </div>
           <Select
-            className="h-full w-auto min-w-[120px] cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 gap-1 text-sm font-medium text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none!"
+            className="h-full w-auto min-w-[140px] flex-1 cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 gap-1 text-xs font-medium text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none!"
             menuClassName="bg-white! border border-border! rounded-xl! shadow-xl! dark:border-border dark:bg-card min-w-[200px] w-max z-50"
-            optionClassName="text-sm! font-normal! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
+            optionClassName="text-xs! font-normal! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
             disabled={!activeRoom || templates.length === 0}
@@ -1480,10 +1483,10 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             type="button"
             onClick={() => setTemplateApplyConfirmOpen(true)}
             disabled={!activeRoom || !selectedTemplateId}
-            className="h-full px-3 text-sm font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center border-0 bg-transparent active:scale-95 shadow-none"
+            className="h-full shrink-0 whitespace-nowrap px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center border-0 bg-transparent active:scale-95 shadow-none"
             title="Apply selected template to current room"
           >
-            Apply
+            Apply Template
           </button>
 
           <DropdownMenu>
@@ -1493,17 +1496,51 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             >
               <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 rounded-xl border border-border bg-white shadow-xl dark:bg-zinc-900 dark:border-border p-1 z-50">
-              <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer text-sm font-medium py-2 rounded-lg" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
-                <HugeIcon className="ph-bold ph-floppy-disk mr-2 text-sm text-gray-600 dark:text-zinc-300" /> Save as Template
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-sm font-medium py-2 rounded-lg text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
-                <HugeIcon className="ph-bold ph-trash mr-2 text-sm" /> Delete Template
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-white/10" />
-              <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-sm font-medium py-2 rounded-lg text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
-                <HugeIcon className="ph-bold ph-arrow-counter-clockwise mr-2 text-sm" /> Restore Defaults
-              </DropdownMenuItem>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={6}
+              className="w-56 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50"
+            >
+              {/* Zone 1: Header */}
+              <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <HugeIcon className="ph-bold ph-layout text-xs text-pup-maroon dark:text-red-400 shrink-0" />
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                    Template Actions
+                  </span>
+                </div>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400">
+                  Presets
+                </span>
+              </div>
+
+              {/* Zone 2: Body */}
+              <div className="p-1.5 space-y-0.5">
+                <DropdownMenuItem
+                  onClick={() => setSaveTemplateOpen(true)}
+                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  disabled={!activeRoom || activeRoom.cabinets?.length === 0}
+                >
+                  <HugeIcon className="ph-bold ph-floppy-disk text-xs text-gray-600 dark:text-zinc-300" />
+                  <span>Save as Template</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeleteTemplateConfirmOpen(true)}
+                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
+                  disabled={!selectedTemplateId}
+                >
+                  <HugeIcon className="ph-bold ph-trash text-xs" />
+                  <span>Delete Template</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                <DropdownMenuItem
+                  onClick={() => setRestoreTemplatesConfirmOpen(true)}
+                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                >
+                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                  <span>Restore Defaults</span>
+                </DropdownMenuItem>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -1530,12 +1567,12 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             <Button
               onClick={saveLayout}
               disabled={saving || hasAnyCollisions}
-              className="flex h-10 px-5 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-sm active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
+              className="flex h-10 px-5 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
             >
               {saving ? (
-                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
               ) : (
-                "Save"
+                "Save Layout"
               )}
             </Button>
           </div>
@@ -1594,7 +1631,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         {renderEditorContent()}
       </Card>
 
-      <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
+      <FloatingActionBar selectedCount={selectedDeletableCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
       <ConfirmModal
         open={bulkConfirmOpen}
@@ -1726,6 +1763,5 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     </div>
   )
 }
-
 
 

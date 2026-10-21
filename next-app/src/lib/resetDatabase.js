@@ -14,7 +14,8 @@ export async function resetDatabase() {
       transaction_updates, event_proposals, document_requests, documents,
       student_identity_link_reviews, student_accounts, student_office_memberships,
       students, student_identity_profiles, staff, global_audit_logs, backups,
-      staff_notification_item_states, staff_notification_state, settings
+      staff_notification_item_states, staff_notification_state, settings,
+      notifications, staff_notification_reads
       RESTART IDENTITY CASCADE`);
   });
 

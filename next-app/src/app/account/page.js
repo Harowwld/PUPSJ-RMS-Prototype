@@ -731,7 +731,7 @@ function AccountPageContent() {
                     const path = getDefaultDashboardPath(authUser?.role);
                     router.push(path);
                   }}
-                  className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Dashboard
                 </Button>
@@ -959,7 +959,7 @@ function AccountPageContent() {
                         {profileLoading && (
                           <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                         )}
-                        {profileLoading ? "Saving..." : "Save"}
+                        {profileLoading ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>
                   </form>
@@ -1064,7 +1064,7 @@ function AccountPageContent() {
                           {pwLoading && (
                             <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                           )}
-                          {pwLoading ? "Updating..." : "Update"}
+                          {pwLoading ? "Updating..." : "Update Password"}
                         </Button>
                       </div>
                     </form>
@@ -1162,7 +1162,7 @@ function AccountPageContent() {
                           {secLoading && (
                             <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                           )}
-                          {secLoading ? "Saving..." : "Save"}
+                          {secLoading ? "Saving..." : "Save Security Questions"}
                         </Button>
                       </div>
                     </form>
@@ -1233,7 +1233,7 @@ function AccountPageContent() {
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
                             Cancel
                           </Button>
@@ -1241,12 +1241,12 @@ function AccountPageContent() {
                             type="button"
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {totpLoading && (
-                              <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                              <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
                             )}
-                            Activate
+                            Activate 2FA
                           </Button>
                         </div>
                       </div>
@@ -1278,21 +1278,21 @@ function AccountPageContent() {
                                  type="button"
                                  onClick={() => setTotpStep("disable-flow")}
                                  variant="outline"
-                                 className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                 className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                >
-                                 Disable
+                                 Disable 2FA
                                </Button>
                              ) : (
                                <Button
                                  type="button"
                                  onClick={startTOTPSetup}
                                  disabled={totpSetupLoading}
-                                 className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                 className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                >
                                  {totpSetupLoading && (
-                                   <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                                   <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
                                  )}
-                                 Configure
+                                 Configure 2FA
                                </Button>
                              )}
                            </div>
@@ -1321,7 +1321,7 @@ function AccountPageContent() {
                                   type="button"
                                   onClick={() => { setTotpStep("idle"); setTotpToken(""); }}
                                   variant="outline"
-                                  className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Cancel
                                 </Button>
@@ -1332,12 +1332,12 @@ function AccountPageContent() {
                                     setTotpStep("idle");
                                   }}
                                   disabled={totpLoading || totpToken.length !== 6}
-                                  className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {totpLoading && (
-                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
                                   )}
-                                  Disable
+                                  Disable 2FA
                                 </Button>
                              </div>
                           </div>
@@ -1395,21 +1395,21 @@ function AccountPageContent() {
                                 }}
                                 disabled={recoveryCodesLoading}
                                 variant="outline"
-                                className="h-10 px-5 text-sm font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
-                                Disable
+                                Disable Codes
                               </Button>
                             )}
                             <Button
                               type="button"
                               onClick={generateNewRecoveryCodes}
                               disabled={recoveryCodesLoading}
-                              className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {recoveryCodesLoading && (
-                                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                                <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
                               )}
-                              {recoveryCodesCount > 0 ? "Regenerate" : "Generate"}
+                              {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
                             </Button>
                           </div>
                         </div>

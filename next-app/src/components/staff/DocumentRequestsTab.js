@@ -15,13 +15,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { getDocAvailabilityForType } from "@/lib/docAvailability";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import DocumentRequestDetailSheet from "@/components/staff/requests/DocumentRequestDetailSheet";
@@ -109,6 +102,7 @@ export default function DocumentRequestsTab({
   onLocateOnMap,
   showToast,
   error = null,
+  officeId = "registrar",
 }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -131,9 +125,13 @@ export default function DocumentRequestsTab({
   const [createStudentNo, setCreateStudentNo] = useState("");
   const [createCourseCode, setCreateCourseCode] = useState("");
   const [createRequesterName, setCreateRequesterName] = useState("");
+  const [createRequesterRelationship, setCreateRequesterRelationship] = useState("Mother");
+  const [createRequesterContact, setCreateRequesterContact] = useState("");
+  const [createAttachments, setCreateAttachments] = useState([]);
   const [createDocType, setCreateDocType] = useState("");
   const [createNotes, setCreateNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const attachmentInputRef = useRef(null);
 
   const [studentSearch, setStudentSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -179,19 +177,24 @@ export default function DocumentRequestsTab({
     return () => clearTimeout(timer);
   }, [loadSlaStandards]);
 
-  // Reset creation state on modal open/close
-  useEffect(() => {
-    if (!createOpen) {
-      setCreateClientType("Student");
-      setCreateStudentNo("");
-      setCreateCourseCode("");
-      setCreateRequesterName("");
-      setCreateDocType("");
-      setCreateNotes("");
-      setStudentSearch("");
-      setSelectedStudent(null);
-    }
-  }, [createOpen]);
+  const resetCreateForm = () => {
+    setCreateClientType("Student");
+    setCreateStudentNo("");
+    setCreateCourseCode("");
+    setCreateRequesterName("");
+    setCreateRequesterRelationship("Mother");
+    setCreateRequesterContact("");
+    setCreateAttachments([]);
+    setCreateDocType("");
+    setCreateNotes("");
+    setStudentSearch("");
+    setSelectedStudent(null);
+  };
+
+  const handleCreateOpenChange = (open) => {
+    setCreateOpen(open);
+    if (!open) resetCreateForm();
+  };
 
   const studentMap = useMemo(() => {
     const map = new Map();
@@ -492,17 +495,27 @@ export default function DocumentRequestsTab({
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (createClientType === "Student" && !createStudentNo.trim()) {
-      showToast?.({ title: "Missing Student Number", description: "Please select or enter a student number." }, true);
+    if (createClientType !== "Alumni" && !createStudentNo.trim()) {
+      showToast?.({ title: "Missing Student Number", description: "Please provide the student number for this request." }, true);
       return;
     }
-    if (createClientType === "Alumni") {
+    if (createClientType === "Alumni" || createClientType === "Parent") {
       if (!createRequesterName.trim()) {
-        showToast?.({ title: "Missing Requester Name", description: "Please provide the alumni requester name." }, true);
+        showToast?.({ title: "Missing Requester Name", description: "Please provide the requester's full name." }, true);
         return;
       }
-      if (!createCourseCode) {
+      if (createClientType === "Alumni" && !createStudentNo.trim() && !createCourseCode) {
         showToast?.({ title: "Missing Academic Program", description: "Please select the academic program attended." }, true);
+        return;
+      }
+    }
+    if (createClientType === "Parent") {
+      if (!createRequesterRelationship) {
+        showToast?.({ title: "Missing Relationship", description: "Please select the requester's relationship to the student." }, true);
+        return;
+      }
+      if (!createAttachments.some((item) => item.attachmentType === "spa") || !createAttachments.some((item) => item.attachmentType === "valid_id")) {
+        showToast?.({ title: "Authorization Documents Required", description: "Attach both an SPA / authorization letter and a valid government ID." }, true);
         return;
       }
     }
@@ -510,25 +523,34 @@ export default function DocumentRequestsTab({
       showToast?.({ title: "Missing Document Type", description: "Please select a document type to request." }, true);
       return;
     }
+    if (createNotes.trim().length < 5) {
+      showToast?.({ title: "Purpose Required", description: "Enter a purpose of at least 5 characters." }, true);
+      return;
+    }
 
     setSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append("clientType", createClientType);
+      if (createStudentNo.trim()) formData.append("studentNo", createStudentNo.trim());
+      if (createRequesterName.trim()) formData.append("requesterName", createRequesterName.trim());
+      if (createRequesterRelationship) formData.append("requesterRelationship", createRequesterRelationship);
+      if (createRequesterContact.trim()) formData.append("requesterContact", createRequesterContact.trim());
+      if (createCourseCode) formData.append("courseCode", createCourseCode);
+      formData.append("docType", createDocType);
+      formData.append("notes", createNotes.trim());
+      createAttachments.forEach(({ file, attachmentType }) => {
+        formData.append("files", file);
+        formData.append("file_types", attachmentType);
+      });
       const res = await fetch("/api/document-requests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientType: createClientType,
-          studentNo: createStudentNo.trim() || null,
-          requesterName: createRequesterName.trim() || null,
-          courseCode: createCourseCode || null,
-          docType: createDocType,
-          notes: createNotes.trim() || null,
-        }),
+        body: formData,
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create request");
       showToast?.({ title: "Request Created", description: "Request added successfully." });
-      setCreateOpen(false);
+      handleCreateOpenChange(false);
       setPage(1);
       loadList({ showLoading: true });
     } catch (err) {
@@ -542,6 +564,117 @@ export default function DocumentRequestsTab({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleAddAttachments = (event) => {
+    const files = Array.from(event.target.files || []);
+    const allowedTypes = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+    const validFiles = files.filter((file) => {
+      if (file.size > 10 * 1024 * 1024) return false;
+      if (!allowedTypes.has(String(file.type || "").toLowerCase())) return false;
+      return true;
+    });
+    if (validFiles.length !== files.length) {
+      showToast?.({ title: "Unsupported Attachment", description: "Choose PDF, PNG, JPG, or WEBP files up to 10 MB each." }, true);
+    }
+    const remaining = 5 - createAttachments.length;
+    const accepted = validFiles.slice(0, remaining).map((file) => {
+      const lowerName = file.name.toLowerCase();
+      const attachmentType = createClientType === "Parent"
+        ? (lowerName.includes("id") || lowerName.includes("passport") || lowerName.includes("license") ? "valid_id" : "spa")
+        : lowerName.includes("receipt") || lowerName.includes("pay") || lowerName.includes("proof")
+        ? "receipt"
+        : lowerName.includes("clearance")
+        ? "clearance"
+        : "evidence";
+      return { id: `${Date.now()}-${Math.random()}`, file, attachmentType };
+    });
+    if (validFiles.length > remaining) {
+      showToast?.({ title: "Attachment Limit", description: "You can add up to 5 files." }, true);
+    }
+    setCreateAttachments((current) => [...current, ...accepted]);
+    event.target.value = "";
+  };
+
+  const renderAttachmentPicker = (required = false) => (
+    <div className="space-y-2">
+      <input
+        ref={attachmentInputRef}
+        type="file"
+        accept="application/pdf,image/png,image/jpeg,image/webp"
+        multiple
+        className="hidden"
+        onChange={handleAddAttachments}
+      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+          {required ? "Authorization files" : "Supporting Documents & Attachments"}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={createAttachments.length >= 5}
+          onClick={() => attachmentInputRef.current?.click()}
+          className="h-9 rounded-xl px-4 text-xs"
+        >
+          Add File ({createAttachments.length}/5)
+        </Button>
+      </div>
+      <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+        {required
+          ? "Attach both an SPA / authorization letter and a valid government ID."
+          : "Optional: PDF, PNG, JPG, or WEBP files up to 10 MB each (maximum 5)."}
+      </p>
+      {createAttachments.length > 0 && (
+        <div className="space-y-2">
+          {createAttachments.map(({ id, file, attachmentType }) => (
+            <div key={id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-white p-2 dark:bg-zinc-900">
+              <span className="min-w-0 flex-1 truncate text-xs">{file.name}</span>
+              <Select
+                value={attachmentType}
+                aria-label={`Attachment category for ${file.name}`}
+                onChange={(event) => setCreateAttachments((items) => items.map((item) => item.id === id ? { ...item, attachmentType: event.target.value } : item))}
+                className="h-8 w-48 rounded-lg border border-border bg-white px-2 text-[11px] dark:bg-zinc-800"
+              >
+                {createClientType === "Parent" ? (
+                  <>
+                    <option value="spa">SPA / Authorization</option>
+                    <option value="valid_id">Valid Government ID</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="evidence">Supporting Evidence</option>
+                    <option value="receipt">Proof of Payment / Receipt</option>
+                    <option value="clearance">Clearance Slip</option>
+                    <option value="other">Other Document</option>
+                  </>
+                )}
+              </Select>
+              <button
+                type="button"
+                onClick={() => setCreateAttachments((items) => items.filter((item) => item.id !== id))}
+                className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-zinc-800"
+                aria-label={`Remove ${file.name}`}
+              >
+                <HugeIcon className="ph-bold ph-x text-xs" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const selectCreateClientType = (clientType) => {
+    setCreateClientType(clientType);
+    setCreateStudentNo("");
+    setCreateCourseCode("");
+    setCreateRequesterName("");
+    setCreateRequesterRelationship("Mother");
+    setCreateRequesterContact("");
+    setCreateAttachments([]);
+    setSelectedStudent(null);
   };
 
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
@@ -692,7 +825,7 @@ export default function DocumentRequestsTab({
                       className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                       style={{ color: "#ffffff" }}
                     >
-                      Create
+                      Create Request
                     </Button>
                   )}
                 </div>
@@ -827,8 +960,8 @@ export default function DocumentRequestsTab({
                         title="Reset Filters"
                         className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                        Reset
-                      </Button>
+                    Reset Filters
+                  </Button>
                     ) : (
                       <Button
                         type="button"
@@ -1127,45 +1260,62 @@ export default function DocumentRequestsTab({
         </Card>
 
         {/* 6. Request Detail Sheet Slide-Over Drawer */}
-        <DocumentRequestDetailSheet
-          open={Boolean(selectedId)}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedId(null);
-              setDetail(null);
-              setEditUpdateMessage("");
-            }
-          }}
-          selectedId={selectedId}
-          detail={detail}
-          detailLoading={detailLoading}
-          editStatus={editStatus}
-          setEditStatus={setEditStatus}
-          editUpdateMessage={editUpdateMessage}
-          setEditUpdateMessage={setEditUpdateMessage}
-          availableStatuses={availableStatuses}
-          isTerminalStatus={isTerminalStatus}
-          saving={saving}
-          hasEdits={hasEdits}
-          handleResetEdits={handleResetEdits}
-          handleManualSave={handleManualSave}
-          patchDetail={patchDetail}
-          studentForRequest={studentForRequest}
-          requestNeedsPhysicalVerification={requestNeedsPhysicalVerification}
-          setFileWarningOpen={setFileWarningOpen}
-          onLocateOnMap={onLocateOnMap}
-          setPdfPreviewData={setPdfPreviewData}
-          setPdfPreviewOpen={setPdfPreviewOpen}
-          slaStandards={slaStandards}
-          setReopenTargetStatus={setReopenTargetStatus}
-          setReopenReason={setReopenReason}
-          setReopenModalOpen={setReopenModalOpen}
-          retentionExpiryDate={retentionExpiryDate}
-          daysRemaining={daysRemaining}
-        />
+        {(() => {
+          const selectedIndex = rows.findIndex((r) => r.id === selectedId);
+          return (
+            <DocumentRequestDetailSheet
+              open={Boolean(selectedId)}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setSelectedId(null);
+                  setDetail(null);
+                  setEditUpdateMessage("");
+                }
+              }}
+              selectedId={selectedId}
+              currentIndex={selectedIndex}
+              totalCount={rows.length}
+              onNavigatePrev={() => {
+                if (selectedIndex > 0) {
+                  openDetail(rows[selectedIndex - 1].id);
+                }
+              }}
+              onNavigateNext={() => {
+                if (selectedIndex >= 0 && selectedIndex < rows.length - 1) {
+                  openDetail(rows[selectedIndex + 1].id);
+                }
+              }}
+              detail={detail}
+              detailLoading={detailLoading}
+              editStatus={editStatus}
+              setEditStatus={setEditStatus}
+              editUpdateMessage={editUpdateMessage}
+              setEditUpdateMessage={setEditUpdateMessage}
+              availableStatuses={availableStatuses}
+              isTerminalStatus={isTerminalStatus}
+              saving={saving}
+              hasEdits={hasEdits}
+              handleResetEdits={handleResetEdits}
+              handleManualSave={handleManualSave}
+              patchDetail={patchDetail}
+              studentForRequest={studentForRequest}
+              requestNeedsPhysicalVerification={requestNeedsPhysicalVerification}
+              setFileWarningOpen={setFileWarningOpen}
+              onLocateOnMap={onLocateOnMap}
+              setPdfPreviewData={setPdfPreviewData}
+              setPdfPreviewOpen={setPdfPreviewOpen}
+              slaStandards={slaStandards}
+              setReopenTargetStatus={setReopenTargetStatus}
+              setReopenReason={setReopenReason}
+              setReopenModalOpen={setReopenModalOpen}
+              retentionExpiryDate={retentionExpiryDate}
+              daysRemaining={daysRemaining}
+            />
+          );
+        })()}
 
         {/* 7. Dialog: Create Request */}
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
           <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card flex flex-col gap-0">
             <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
               <div className="flex items-start gap-4">
@@ -1174,7 +1324,7 @@ export default function DocumentRequestsTab({
                     New Document Request
                   </DialogTitle>
                   <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
-                    Create a document request for a student or alumni record.
+                    Create a request for a student, alumnus, or parent/guardian.
                   </DialogDescription>
                 </div>
               </div>
@@ -1186,13 +1336,11 @@ export default function DocumentRequestsTab({
                   <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                     Client Type
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => {
-                        setCreateClientType("Student");
-                        setSelectedStudent(null);
-                        setCreateStudentNo("");
+                        selectCreateClientType("Student");
                       }}
                       className={cn(
                         "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
@@ -1206,9 +1354,7 @@ export default function DocumentRequestsTab({
                     <button
                       type="button"
                       onClick={() => {
-                        setCreateClientType("Alumni");
-                        setSelectedStudent(null);
-                        setCreateStudentNo("");
+                        selectCreateClientType("Alumni");
                       }}
                       className={cn(
                         "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
@@ -1219,11 +1365,25 @@ export default function DocumentRequestsTab({
                     >
                       Alumni / Former Student
                     </button>
+                    {String(officeId).toLowerCase() === "registrar" && (
+                      <button
+                        type="button"
+                        onClick={() => selectCreateClientType("Parent")}
+                        className={cn(
+                          "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
+                          createClientType === "Parent"
+                            ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
+                            : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
+                        )}
+                      >
+                        Parent / Guardian
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {/* Form fields for Student vs Alumni */}
-                {createClientType === "Student" ? (
+                {createClientType !== "Alumni" ? (
                   selectedStudent ? (
                     <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-border dark:bg-red-950/20">
                       <button
@@ -1303,9 +1463,9 @@ export default function DocumentRequestsTab({
                       <div>
                         <div className="flex items-center justify-between">
                           <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                            Or Enter Student Number
+                            {createClientType === "Parent" ? "Student Number" : "Or Enter Student Number"}
                           </label>
-                          <span className="text-[10px] text-gray-400 font-medium">If record is not in database</span>
+                          <span className="text-[10px] text-gray-400 font-medium">Use a registered student number</span>
                         </div>
                         <Input
                           className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -1334,13 +1494,13 @@ export default function DocumentRequestsTab({
 
                     <div>
                       <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                        Academic Program / Degree <span className="text-red-500">*</span>
+                        Academic Program / Degree {!createStudentNo.trim() && <span className="text-red-500">*</span>}
                       </label>
                       <Select
                         className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
                         value={createCourseCode}
                         onChange={(e) => setCreateCourseCode(e.target.value)}
-                        required
+                        required={!createStudentNo.trim()}
                       >
                         <option value="">Select Degree Program…</option>
                         {courses.map((c) => (
@@ -1350,14 +1510,14 @@ export default function DocumentRequestsTab({
                         ))}
                       </Select>
                       <span className="text-[11px] text-gray-900 dark:text-zinc-300 mt-1 block">
-                        Required for locating physical records when student number is not present.
+                        Required when the student number is unavailable.
                       </span>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                          Student Number (Optional)
+                          Student Number {createCourseCode ? "(Optional)" : ""}
                         </label>
                         <span className="text-[10px] text-gray-400 font-medium">If remembered</span>
                       </div>
@@ -1390,16 +1550,76 @@ export default function DocumentRequestsTab({
                   </Select>
                 </div>
 
+                {createClientType === "Parent" && String(officeId).toLowerCase() === "registrar" && (
+                  <div className="space-y-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+                    <p className="text-xs leading-relaxed text-amber-900 dark:text-amber-200">
+                      Parent or guardian requests require the requester&apos;s full name, relationship to the student, and both an SPA / authorization letter and a valid government ID.
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      <div>
+                        <label htmlFor="staff-requester-name" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                          Parent / Guardian Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          id="staff-requester-name"
+                          className="mt-1.5 h-10 rounded-xl"
+                          value={createRequesterName}
+                          onChange={(event) => setCreateRequesterName(event.target.value)}
+                          placeholder="e.g. Maria Santos"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="staff-requester-relationship" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                          Relationship to Student <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          id="staff-requester-relationship"
+                          className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:bg-zinc-800"
+                          value={createRequesterRelationship}
+                          onChange={(event) => setCreateRequesterRelationship(event.target.value)}
+                          required
+                        >
+                          <option value="Mother">Mother</option>
+                          <option value="Father">Father</option>
+                          <option value="Legal Guardian">Legal Guardian</option>
+                          <option value="Authorized Representative">Authorized Representative</option>
+                        </Select>
+                      </div>
+                      <div>
+                        <label htmlFor="staff-requester-contact" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                          Contact / Mobile Number
+                        </label>
+                        <Input
+                          id="staff-requester-contact"
+                          className="mt-1.5 h-10 rounded-xl"
+                          value={createRequesterContact}
+                          onChange={(event) => setCreateRequesterContact(event.target.value)}
+                          placeholder="09171234567"
+                          inputMode="tel"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {String(officeId).toLowerCase() === "registrar" && renderAttachmentPicker(createClientType === "Parent")}
+
                 <div>
-                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                    Notes (Optional)
+                  <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                    Description / Purpose <span className="text-red-500">*</span>
                   </label>
                   <textarea
+                    id="staff-request-description"
                     className="mt-1.5 w-full min-h-[72px] rounded-xl border border-border p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
                     value={createNotes}
                     onChange={(e) => setCreateNotes(e.target.value)}
-                    placeholder="Requester purpose or special remarks…"
+                    placeholder="Provide the purpose of this request (at least 5 characters)…"
+                    minLength={5}
+                    maxLength={1000}
+                    required
                   />
+                  <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">Explain how the requested document will be used.</p>
                 </div>
               </div>
 
@@ -1409,7 +1629,7 @@ export default function DocumentRequestsTab({
                   type="button"
                   variant="outline"
                   className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  onClick={() => setCreateOpen(false)}
+                  onClick={() => handleCreateOpenChange(false)}
                 >
                   Cancel
                 </Button>
@@ -1425,7 +1645,7 @@ export default function DocumentRequestsTab({
                       Saving...
                     </>
                   ) : (
-                    "Create"
+                    "Create Request"
                   )}
                 </Button>
               </DialogFooter>
@@ -1497,7 +1717,7 @@ export default function DocumentRequestsTab({
                     if (target) onLocateOnMap(target);
                   }}
                 >
-                  Locate
+                  Locate Drawer
                 </Button>
               ) : null}
             </DialogFooter>
@@ -1523,7 +1743,7 @@ export default function DocumentRequestsTab({
               </div>
             </DialogHeader>
 
-            <div className="p-6 space-y-4">
+            <div className="max-h-[65vh] overflow-y-auto p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                   Target Reactivation Status

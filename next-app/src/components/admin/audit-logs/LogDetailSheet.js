@@ -8,28 +8,55 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+
+/**
+ * Standard Information Row (label : value)
+ * Clean metadata layout aligned with colons and icons.
+ */
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  );
+}
 
 function getSeverityInfo(sev) {
   const s = String(sev || "").toUpperCase();
   if (s === "CRITICAL") {
     return {
       label: "Critical",
-      classes: "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200/60 dark:border-red-900/40",
+      classes: "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40",
       dotClass: "bg-red-500",
     };
   }
   if (s === "WARNING") {
     return {
       label: "Warning",
-      classes: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40",
+      classes: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/40",
       dotClass: "bg-amber-500",
     };
   }
   return {
     label: "Info",
-    classes: "bg-sky-50 text-sky-800 dark:bg-blue-950/40 dark:text-blue-400 border border-sky-200/60 dark:border-blue-900/40",
+    classes: "bg-sky-50 text-sky-800 dark:bg-blue-950/40 dark:text-blue-400 border-sky-200/60 dark:border-blue-900/40",
     dotClass: "bg-sky-500",
   };
 }
@@ -74,6 +101,8 @@ export default function LogDetailSheet({
   onPrev,
   hasNext,
   hasPrev,
+  currentIndex,
+  totalCount,
   hideActor = false,
 }) {
   const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
@@ -85,7 +114,7 @@ export default function LogDetailSheet({
         .join("")
         .slice(0, 2)
         .toUpperCase()
-    : "";
+    : "AU";
 
   const formattedDescription = (() => {
     if (!selectedLog) return "";
@@ -104,240 +133,329 @@ export default function LogDetailSheet({
     });
   })();
 
+  const isNavigable = typeof totalCount === "number" && totalCount > 1;
+
   return (
     <Sheet
       open={!!selectedLog}
       onOpenChange={(open) => !open && setSelectedLog(null)}
     >
       <SheetContent
-        className="flex flex-col border-l border-border dark:border-border bg-white dark:bg-card p-0 shadow-2xl w-full sm:max-w-[480px] md:max-w-[540px] lg:max-w-[540px] xl:max-w-[540px] data-[side=right]:w-full data-[side=right]:sm:max-w-[480px] data-[side=right]:md:max-w-[540px] data-[side=right]:lg:max-w-[540px] data-[side=right]:xl:max-w-[540px] overflow-hidden"
+        side="right"
+        size="default"
+        showCloseButton={false}
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* Executive Header */}
-        <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
-          <div className="flex flex-col text-left">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60">
-                #LOG-{selectedLog?.id}
-              </span>
-              {severityInfo && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                    severityInfo.classes
-                  )}
-                >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", severityInfo.dotClass)} />
-                  {severityInfo.label}
-                </span>
-              )}
+        {/* Top Header matching reference design: Audit Event Details < > 01 of 100 X */}
+        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                Audit Event Details
+              </SheetTitle>
+              <SheetDescription className="sr-only">
+                Immutable forensic log entry recorded by PUPSJ Records Keeper.
+              </SheetDescription>
             </div>
 
-            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50">
-              Audit Event Details
-            </SheetTitle>
-            <SheetDescription className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-              Immutable forensic log entry recorded by PUPSJ Records Keeper.
-            </SheetDescription>
+            <div className="flex items-center gap-3">
+              {isNavigable && (
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                  <button
+                    type="button"
+                    disabled={!hasPrev && (typeof currentIndex === "number" ? currentIndex <= 0 : false)}
+                    onClick={onPrev}
+                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                    aria-label="Previous Log"
+                    title="Previous Log"
+                  >
+                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!hasNext && (typeof currentIndex === "number" ? currentIndex >= totalCount - 1 : false)}
+                    onClick={onNext}
+                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                    aria-label="Next Log"
+                    title="Next Log"
+                  >
+                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                  </button>
+                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
+                  </span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setSelectedLog(null)}
+                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                aria-label="Close"
+                title="Close"
+              >
+                <HugeIcon className="ph-bold ph-x text-sm" />
+              </button>
+            </div>
           </div>
         </SheetHeader>
 
         {selectedLog && (
-          <div className="flex-1 space-y-6 overflow-y-auto p-6 pb-28">
-            {/* Timestamp Info Tile */}
-            <div className="p-3.5 rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-0.5">
-                  Timestamp
-                </p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono">
-                  {formattedTime}
-                </p>
-              </div>
-
-              <div className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-800 border border-border/60 dark:border-border flex items-center justify-center text-gray-500">
-                <HugeIcon className="ph-bold ph-calendar text-sm" />
-              </div>
-            </div>
-
-            {/* Actor Section */}
-            {!hideActor && (
-              <div className="space-y-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 flex items-center gap-1.5">
-                  <HugeIcon className="ph-bold ph-user text-xs" />
-                  Responsible Actor
-                </h4>
-                <div className="flex items-center gap-3.5 bg-white dark:bg-zinc-900/40 p-4 rounded-2xl border border-border/80 dark:border-border shadow-xs">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-pup-maroon/20 bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 font-bold text-xs">
-                    {initials || "ST"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
-                      {selectedLog.user}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-gray-500 dark:text-zinc-400">
-                      {selectedLog.role}
-                      {selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
-                    </p>
-                  </div>
+          <div className="flex-1 space-y-6 overflow-y-auto p-6">
+            {/* Identity / Actor Summary Strip */}
+            <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border border-pup-maroon/20 bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                  {initials || "AU"}
                 </div>
-              </div>
-            )}
-
-            {/* Event Details */}
-            <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 flex items-center gap-1.5">
-                <HugeIcon className="ph-bold ph-file-text text-xs" />
-                Action & Specification
-              </h4>
-              <div className="space-y-3.5 bg-white dark:bg-zinc-900/40 p-4 rounded-2xl border border-border/80 dark:border-border shadow-xs">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">
-                    Action Type
-                  </p>
-                  <p className="text-xs font-bold text-gray-900 dark:text-zinc-50">
-                    {selectedLog.action === "Rotate Password" ? "Password Rotated" : selectedLog.action}
+                <div className="min-w-0">
+                  <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                    {hideActor ? "Account Activity" : (selectedLog.user || "System")}
+                  </span>
+                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
+                    {hideActor ? selectedLog.user : (selectedLog.role || "System")}
+                    {selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
                   </p>
                 </div>
+              </div>
 
-                <div className="border-t border-border/70 dark:border-border pt-3">
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                      Description & Narrative
-                    </p>
-                    <button
-                      onClick={() => handleCopy(selectedLog.details || "No description", "Description")}
-                      aria-label="Copy Description"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                    >
-                      <HugeIcon className="ph-bold ph-copy text-xs" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                    {formattedDescription}
-                  </p>
-                </div>
-
-                {(selectedLog.entityType || selectedLog.entityId || selectedLog.officeName || selectedLog.scope) && (
-                  <div className="grid grid-cols-2 gap-3 border-t border-border/70 dark:border-border pt-3">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-0.5">
-                        Target Entity
-                      </p>
-                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-200">
-                        {selectedLog.entityType || "N/A"}
-                      </span>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-0.5">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                          Reference ID
-                        </p>
-                        {selectedLog.entityId && (
-                          <button
-                            onClick={() => handleCopy(selectedLog.entityId, "Reference ID")}
-                            aria-label="Copy Reference ID"
-                            className="w-6 h-6 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                          >
-                            <HugeIcon className="ph-bold ph-copy text-[11px]" />
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-xs font-mono font-semibold text-gray-900 dark:text-zinc-100">
-                        {selectedLog.entityId || "N/A"}
-                      </p>
-                    </div>
-
-                    {(selectedLog.officeName || selectedLog.scope) && (
-                      <div className="col-span-2 border-t border-border/70 dark:border-border pt-2.5">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-0.5">
-                          Scope / Assigned Office
-                        </p>
-                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          {selectedLog.officeName || selectedLog.scope}
-                        </span>
-                      </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                  #LOG-{selectedLog.id}
+                </span>
+                {severityInfo && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
+                      severityInfo.classes
                     )}
-                  </div>
+                  >
+                    <span className={cn("w-1.5 h-1.5 rounded-full", severityInfo.dotClass)} />
+                    {severityInfo.label}
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Network & Device Forensics */}
+            {/* 1. Event Specification (Standard Information Rows) */}
             <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 flex items-center gap-1.5">
-                <HugeIcon className="ph-bold ph-shield-check text-xs" />
-                Network & Forensic Origin
-              </h4>
-              <div className="space-y-3 bg-white dark:bg-zinc-900/40 p-4 rounded-2xl border border-border/80 dark:border-border shadow-xs">
-                <div>
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                      IP Address
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => onSearchSimilar(selectedLog.ip)}
-                        aria-label="Search Similar IP"
-                        className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                        title="Filter logs by this IP"
+              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-sm" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                  Event Specification
+                </h3>
+              </div>
+
+              <div className="divide-y-0">
+                <InfoRow
+                  icon="ph-bold ph-hash"
+                  label="Log Sequence ID"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                      #{selectedLog.id}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy?.(String(selectedLog.id), "Log ID")}
+                      className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy Log ID"
+                    >
+                      <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                    </button>
+                  </div>
+                </InfoRow>
+
+                <InfoRow
+                  icon="ph-bold ph-lightning"
+                  label="Action Type"
+                  value={selectedLog.action === "Rotate Password" ? "Password Rotated" : selectedLog.action}
+                />
+
+                <InfoRow
+                  icon="ph-bold ph-warning-circle"
+                  label="Security Severity"
+                >
+                  {severityInfo && (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
+                        severityInfo.classes
+                      )}
+                    >
+                      <span className={cn("w-1.5 h-1.5 rounded-full", severityInfo.dotClass)} />
+                      {severityInfo.label}
+                    </span>
+                  )}
+                </InfoRow>
+
+                <InfoRow
+                  icon="ph-bold ph-clock"
+                  label="Timestamp"
+                >
+                  <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    {formattedTime}
+                  </span>
+                </InfoRow>
+
+                {!hideActor && (
+                  <InfoRow
+                    icon="ph-bold ph-user"
+                    label="Responsible Actor"
+                  >
+                    <span>
+                      {selectedLog.user}
+                      <span className="text-gray-500 dark:text-zinc-400 font-normal ml-1">
+                        ({selectedLog.role || "User"}{selectedLog.officeName ? ` • ${selectedLog.officeName}` : ""})
+                      </span>
+                    </span>
+                  </InfoRow>
+                )}
+
+                {(selectedLog.entityType || selectedLog.entityId) && (
+                  <>
+                    <InfoRow
+                      icon="ph-bold ph-cube"
+                      label="Target Entity"
+                      value={selectedLog.entityType || "N/A"}
+                    />
+
+                    {selectedLog.entityId && (
+                      <InfoRow
+                        icon="ph-bold ph-identification-card"
+                        label="Reference ID"
                       >
-                        <HugeIcon className="ph-bold ph-magnifying-glass text-xs" />
-                      </button>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                            {selectedLog.entityId}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy?.(selectedLog.entityId, "Reference ID")}
+                            className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Copy Reference ID"
+                          >
+                            <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                          </button>
+                        </div>
+                      </InfoRow>
+                    )}
+                  </>
+                )}
+
+                {(selectedLog.officeName || selectedLog.scope) && (
+                  <InfoRow
+                    icon="ph-bold ph-buildings"
+                    label="Office / Scope"
+                    value={selectedLog.officeName || selectedLog.scope}
+                  />
+                )}
+
+                <InfoRow
+                  icon="ph-bold ph-text-align-left"
+                  label="Narrative Details"
+                >
+                  <div className="space-y-1">
+                    <div className="text-xs text-gray-800 dark:text-zinc-200 leading-relaxed font-normal">
+                      {formattedDescription}
+                    </div>
+                    {selectedLog.details && (
                       <button
-                        onClick={() => handleCopy(selectedLog.ip, "IP Address")}
-                        aria-label="Copy IP Address"
-                        className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                        title="Copy IP"
+                        type="button"
+                        onClick={() => handleCopy?.(selectedLog.details, "Description")}
+                        className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer pt-0.5"
                       >
                         <HugeIcon className="ph-bold ph-copy text-xs" />
+                        <span>Copy full narrative</span>
+                      </button>
+                    )}
+                  </div>
+                </InfoRow>
+              </div>
+            </div>
+
+            {/* 2. Network & Forensic Origin (Standard Information Rows) */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                <HugeIcon className="ph-bold ph-globe text-pup-maroon dark:text-red-400 text-sm" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                  Forensic & Network Origin
+                </h3>
+              </div>
+
+              <div className="divide-y-0">
+                <InfoRow
+                  icon="ph-bold ph-map-pin"
+                  label="IP Address"
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                      {selectedLog.ip || "::1"}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {onSearchSimilar && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onSearchSimilar(selectedLog.ip)}
+                          className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                          title="Filter logs by this IP"
+                        >
+                          Filter IP
+                        </Button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleCopy?.(selectedLog.ip, "IP Address")}
+                        className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Copy IP"
+                      >
+                        <HugeIcon className="ph-bold ph-copy text-[11px]" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs font-mono font-semibold text-gray-900 dark:text-zinc-100">
-                    {selectedLog.ip || "::1"}
-                  </p>
-                </div>
+                </InfoRow>
 
-                <div className="border-t border-border/70 dark:border-border pt-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">
-                    User Agent & Client Environment
-                  </p>
-                  <p className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed font-mono break-all">
+                <InfoRow
+                  icon="ph-bold ph-desktop"
+                  label="Client Environment"
+                >
+                  <span className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed font-mono break-all font-normal">
                     {selectedLog.userAgent || selectedLog.user_agent || "Direct System Execution"}
-                  </p>
-                </div>
+                  </span>
+                </InfoRow>
               </div>
             </div>
           </div>
         )}
 
-        {/* Sticky Navigation Footer */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-              Log Record #{selectedLog?.id}
-            </span>
-            <div className="flex items-center gap-2.5">
+        {/* Executive Action Bar Footer */}
+        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+          <div>
+            {selectedLog && (
               <Button
+                type="button"
                 variant="outline"
-                disabled={!hasPrev}
-                onClick={onPrev}
-                className="h-10 px-5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => handleCopy?.(JSON.stringify(selectedLog, null, 2), "Log JSON")}
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
+                title="Copy raw audit log JSON"
               >
-                Previous
+                <HugeIcon className="ph-bold ph-copy text-sm" />
+                <span>Copy JSON</span>
               </Button>
-              <Button
-                variant="outline"
-                disabled={!hasNext}
-                onClick={onNext}
-                className="h-10 px-5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:pointer-events-none"
-              >
-                Next
-              </Button>
-            </div>
+            )}
           </div>
-        </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSelectedLog(null)}
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+          >
+            Close
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

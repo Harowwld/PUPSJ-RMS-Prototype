@@ -45,7 +45,12 @@ const CabinetCanvas = memo(({
         "relative w-full overflow-hidden border border-border bg-[#f8fafc] dark:bg-zinc-800 dark:border-border transition-all duration-normal rounded-2xl",
         isModalOpen ? "h-full" : ""
       )}
-      style={!isModalOpen ? { aspectRatio: "16 / 10", transform: "rotateX(35deg) scale(0.95)", transformStyle: "preserve-3d" } : { transform: "rotateX(35deg) scale(0.95)", transformStyle: "preserve-3d" }}
+      style={{
+        ...(!isModalOpen ? { aspectRatio: "16 / 10" } : {}),
+        transform: "rotateX(35deg) scale(0.95)",
+        transformStyle: "preserve-3d",
+        containerType: "inline-size",
+      }}
       onPointerMove={handleCanvasPointerMove}
       onPointerUp={handleCanvasPointerUp}
       onPointerCancel={handleCanvasPointerUp}
@@ -351,7 +356,7 @@ const CabinetElement = memo(({
         const otherCabinets = (activeRoom?.cabinets || []).filter(c => c.id !== cab.id)
         
         // Approximate normalized dimensions of the badge
-        const wl = 0.075
+        const wl = 0.12
         const hl = 0.035
 
         // Check if candidate placement rect overlaps canvas bounds or any other cabinet
@@ -417,14 +422,18 @@ const CabinetElement = memo(({
         return (
           <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
             <div className={cn(
-              "inline-flex w-fit items-center justify-center rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-[0.02em] whitespace-nowrap shadow-xs border font-sans",
+              "inline-flex w-fit min-w-0 max-w-full items-center justify-center rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-[0.02em] shadow-xs border font-sans",
               isSelected
                 ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
                 : isConflict
                   ? "bg-[#FEF2F2] text-[#DC2626] border-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/30"
                   : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30"
-            )}>
-              {cab.id}
+            )}
+            style={{ maxWidth: "12cqw" }}
+            >
+              <span className="block min-w-0 max-w-full truncate whitespace-nowrap" title={cab.id}>
+                {cab.id}
+              </span>
             </div>
           </div>
         )
@@ -502,4 +511,3 @@ CabinetCanvas.displayName = "CabinetCanvas"
 CabinetElement.displayName = "CabinetElement"
 
 export default CabinetCanvas
-

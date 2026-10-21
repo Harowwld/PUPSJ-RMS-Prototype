@@ -776,7 +776,7 @@ export default function SystemBackupsTab({ showToast }) {
                           <span>Restoring...</span>
                         </span>
                       ) : (
-                        "Restore"
+                        "Restore Backup"
                       )}
                     </Button>
                     <Button
@@ -790,7 +790,7 @@ export default function SystemBackupsTab({ showToast }) {
                           <span>Creating...</span>
                         </span>
                       ) : (
-                        "Create"
+                        "Create Backup"
                       )}
                     </Button>
                     <input

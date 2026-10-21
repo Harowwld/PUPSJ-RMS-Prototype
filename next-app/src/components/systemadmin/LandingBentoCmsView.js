@@ -212,7 +212,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save Feature Showcase"
                 )}
               </Button>
             </div>

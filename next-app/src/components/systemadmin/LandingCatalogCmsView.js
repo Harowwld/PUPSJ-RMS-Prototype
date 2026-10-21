@@ -382,7 +382,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save Catalog Content"
                 )}
               </Button>
             </div>
@@ -713,7 +713,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                           disabled={!newRequirementText.trim()}
                           className="h-9 rounded-xl bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-700 dark:hover:bg-zinc-600 text-xs font-semibold px-3 cursor-pointer shadow-xs"
                         >
-                          Add
+                          Add Requirement
                         </Button>
                       </div>
                     </div>

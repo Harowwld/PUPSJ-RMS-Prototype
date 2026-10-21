@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { CardTitle, CardDescription } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
@@ -393,7 +393,7 @@ export default function BulkImportTab({
                         onClick={handleQuickAdd}
                         className="h-9 px-4 text-xs font-semibold rounded-xl btn-brand-orange text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
                       >
-                        Add
+                        Add Item
                       </Button>
                     </td>
                   </tr>

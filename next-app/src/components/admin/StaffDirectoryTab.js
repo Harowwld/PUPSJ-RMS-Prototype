@@ -617,7 +617,7 @@ export default function StaffDirectoryTab({
                 disabled={activeTab === "archived" || isLoading}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
               >
-                Register
+                Register Staff
               </Button>
             </div>
           }
@@ -886,15 +886,15 @@ export default function StaffDirectoryTab({
                                 title="Reset Filters"
                                 className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                Reset
-                              </Button>
+                    Reset Filters
+                  </Button>
                             ) : (
                               activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                                 <Button
                                   onClick={() => onSwitchView("create")}
                                   className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red px-6 text-xs font-semibold text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
-                                  Register
+                                  Register Staff
                                 </Button>
                               )
                             )}
@@ -993,7 +993,7 @@ export default function StaffDirectoryTab({
             onBulkRestore(Array.from(selectedIds))
           }
         }}
-        actionLabel={activeTab === "active" ? "Archive" : "Restore"}
+        actionLabel={activeTab === "active" ? "Archive Staff" : "Restore Staff"}
         actionVariant={activeTab === "active" ? "danger" : "success"}
       />
     </div>

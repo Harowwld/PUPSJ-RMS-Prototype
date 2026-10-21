@@ -263,7 +263,7 @@ export default function AuditLogsTab({
                     {isExporting ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                     ) : (
-                      "Export"
+                      "Export CSV"
                     )}
                   </Button>
                   <Button
@@ -275,7 +275,7 @@ export default function AuditLogsTab({
                     {isGeneratingPdf ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                     ) : (
-                      "Download"
+                      "Official Report (PDF)"
                     )}
                   </Button>
                 </div>
@@ -422,6 +422,8 @@ export default function AuditLogsTab({
           onPrev={handlePrevLog}
           hasNext={logs.length > 0 && selectedLog && logs.findIndex(l => l.id === selectedLog.id) < logs.length - 1}
           hasPrev={logs.length > 0 && selectedLog && logs.findIndex(l => l.id === selectedLog.id) > 0}
+          currentIndex={selectedLog ? logs.findIndex(l => l.id === selectedLog.id) : -1}
+          totalCount={logs.length}
         />
 
         {/* PDF Export Preview */}

@@ -26,12 +26,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { Reorder } from "framer-motion";
 import RegisterStudentModal from "./RegisterStudentModal";
+import BulkImportStudentsModal from "./BulkImportStudentsModal";
 import EditStudentModal from "./EditStudentModal";
 import StudentProfileSheet from "./StudentProfileSheet";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { hasAdminPrivileges } from "@/lib/roleUtils";
+import { generateExportFilename } from "@/lib/exportHelpers";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -97,6 +100,7 @@ export default function StudentDirectoryTab({
 
   // Modals
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [activeStudent, setActiveStudent] = useState(null);
@@ -441,8 +445,17 @@ export default function StudentDirectoryTab({
     }
   };
 
-  // Export CSV
-  const handleExportCSV = () => {
+  // Export CSV (Admin only, audited)
+  const canExport = hasAdminPrivileges(authUser?.role);
+
+  const handleExportCSV = async () => {
+    if (!canExport) {
+      showToast?.({
+        title: "Export Restricted",
+        description: "Student directory export is restricted to administrative personnel.",
+      });
+      return;
+    }
     if (filteredStudents.length === 0) return;
     const headers = [
       "Student No",
@@ -475,14 +488,33 @@ export default function StudentDirectoryTab({
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+    const fileName = generateExportFilename("STUDENT-DIRECTORY", "DATA", "csv");
     link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `PUPSJ_Student_Directory_${new Date().toISOString().slice(0, 10)}.csv`
-    );
+    link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast?.({
+      title: "Export Success",
+      description: `Student directory exported successfully as ${fileName}.`,
+    });
+
+    try {
+      await fetch("/api/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "Export Student Directory",
+          details: `exported ${filteredStudents.length} student directory records to CSV`,
+          severity: "WARNING",
+          entity_type: "StudentDirectory",
+        }),
+      });
+    } catch {
+      // ignore
+    }
   };
 
   // Single Archive
@@ -631,14 +663,25 @@ export default function StudentDirectoryTab({
                 
 
                 <div className="flex items-center gap-2">
+                  {canExport && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleExportCSV}
+                      disabled={filteredStudents.length === 0}
+                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    >
+                      Export CSV
+                    </Button>
+                  )}
+
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleExportCSV}
-                    disabled={filteredStudents.length === 0}
+                    onClick={() => setBulkImportOpen(true)}
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    Export
+                    Import Students
                   </Button>
 
                   <Button
@@ -646,7 +689,7 @@ export default function StudentDirectoryTab({
                     onClick={() => setRegisterOpen(true)}
                     className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                   >
-                    Register
+                    Register Student
                   </Button>
                 </div>
               </div>
@@ -1258,7 +1301,7 @@ export default function StudentDirectoryTab({
                                     <HugeIcon  className="ph-bold ph-eye text-[14px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent>View Dossier</TooltipContent>
+                                <TooltipContent>View Student Details</TooltipContent>
                               </Tooltip>
 
                               {/* Edit Profile */}
@@ -1400,7 +1443,7 @@ export default function StudentDirectoryTab({
         <FloatingActionBar
           selectedCount={selectedIds.size}
           onCancel={() => setSelectedIds(new Set())}
-          actionLabel={activeTab === "active" ? "Archive" : "Restore"}
+          actionLabel={activeTab === "active" ? "Archive Students" : "Restore Students"}
           actionVariant={activeTab === "active" ? "danger" : "success"}
           onAction={() => {
             if (activeTab === "active") {
@@ -1425,6 +1468,17 @@ export default function StudentDirectoryTab({
           authUser={authUser}
         />
 
+        {/* Bulk Import Students Modal */}
+        <BulkImportStudentsModal
+          open={bulkImportOpen}
+          onOpenChange={setBulkImportOpen}
+          storageLayout={storageLayout}
+          courses={courses}
+          sections={sections}
+          onSuccess={fetchData}
+          showToast={showToast}
+        />
+
         {/* Edit Student Modal */}
         <EditStudentModal
           open={editOpen}
@@ -1439,28 +1493,47 @@ export default function StudentDirectoryTab({
         />
 
         {/* Student Profile / Dossier Sheet */}
-        <StudentProfileSheet
-          open={profileOpen}
-          onOpenChange={setProfileOpen}
-          student={activeStudent}
-          courses={courses}
-          allDocs={allDocs}
-          onLocateStudent={onLocateStudent}
-          onPreviewDocument={onPreviewDocument}
-          onEditStudent={(s) => {
-            setActiveStudent(s);
-            setEditOpen(true);
-          }}
-          onArchiveStudent={() => {
-            setArchiveTarget(activeStudent);
-            setArchiveModalOpen(true);
-          }}
-          onRestoreStudent={() => {
-            setRestoreTarget(activeStudent);
-            setRestoreModalOpen(true);
-          }}
-          authUser={authUser}
-        />
+        {(() => {
+          const selectedIndex = activeStudent
+            ? paginatedStudents.findIndex((s) => s.studentNo === activeStudent.studentNo)
+            : -1;
+          return (
+            <StudentProfileSheet
+              open={profileOpen}
+              onOpenChange={setProfileOpen}
+              student={activeStudent}
+              currentIndex={selectedIndex}
+              totalCount={paginatedStudents.length}
+              onNavigatePrev={() => {
+                if (selectedIndex > 0) {
+                  setActiveStudent(paginatedStudents[selectedIndex - 1]);
+                }
+              }}
+              onNavigateNext={() => {
+                if (selectedIndex >= 0 && selectedIndex < paginatedStudents.length - 1) {
+                  setActiveStudent(paginatedStudents[selectedIndex + 1]);
+                }
+              }}
+              courses={courses}
+              allDocs={allDocs}
+              onLocateStudent={onLocateStudent}
+              onPreviewDocument={onPreviewDocument}
+              onEditStudent={(s) => {
+                setActiveStudent(s);
+                setEditOpen(true);
+              }}
+              onArchiveStudent={() => {
+                setArchiveTarget(activeStudent);
+                setArchiveModalOpen(true);
+              }}
+              onRestoreStudent={() => {
+                setRestoreTarget(activeStudent);
+                setRestoreModalOpen(true);
+              }}
+              authUser={authUser}
+            />
+          );
+        })()}
 
         {/* Single Archive Confirm Modal */}
         <ConfirmModal
@@ -1499,7 +1572,7 @@ export default function StudentDirectoryTab({
               ? `Are you sure you want to archive ${selectedIds.size} student record(s)?`
               : `Are you sure you want to restore ${selectedIds.size} student record(s) to Active status?`
           }
-          confirmLabel={bulkActionType === "archive" ? "Archive" : "Restore"}
+          confirmLabel={bulkActionType === "archive" ? "Archive Students" : "Restore Students"}
           variant={bulkActionType === "archive" ? "warning" : "success"}
           isArchiveModal={bulkActionType === "archive"}
           isRestoreModal={bulkActionType === "restore"}

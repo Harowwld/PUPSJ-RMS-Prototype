@@ -74,7 +74,7 @@ export default function StudentOverviewTab({
         priority: 2,
         title: "Proof of Payment Required",
         description: `Ticket #${req.ticket_no || req.id} for ${req.doc_type} requires your official payment receipt for processing.`,
-        actionLabel: "Upload",
+        actionLabel: "Upload Payment",
         action: () => onNavigate("odrs"),
         icon: "ph-bold ph-receipt",
         badge: "Action Required",
@@ -96,7 +96,7 @@ export default function StudentOverviewTab({
         priority: 3,
         title: "Missing Permanent Admission Records",
         description: `You have ${missingDocs.length} unsubmitted enrollment requirement${missingDocs.length > 1 ? "s" : ""} (${topMissing}${extraText}).`,
-        actionLabel: "Resolve",
+        actionLabel: "Resolve Missing",
         action: () => onNavigate("compliance"),
         icon: "ph-bold ph-clipboard-text",
         badge: "Enrollment Clearance",
@@ -116,7 +116,7 @@ export default function StudentOverviewTab({
         priority: 4,
         title: "Event Proposal Returned for Revision",
         description: `OSAS requested revisions for "${prop.title || prop.event_title}". Please review the evaluation notes and resubmit.`,
-        actionLabel: "Revise",
+        actionLabel: "Revise Proposal",
         action: () => onNavigate("osas"),
         icon: "ph-bold ph-arrow-counter-clockwise",
         badge: "OSAS Evaluation",
@@ -132,7 +132,7 @@ export default function StudentOverviewTab({
         priority: 5,
         title: "Post-Event Report Due",
         description: `You have ${pendingPostEvents.length} completed event${pendingPostEvents.length > 1 ? "s" : ""} pending liquidation and post-activity reports.`,
-        actionLabel: "Submit",
+        actionLabel: "Submit Report",
         action: () => onNavigate("osas"),
         icon: "ph-bold ph-file-arrow-up",
         badge: "Liquidation Due",
@@ -250,7 +250,7 @@ export default function StudentOverviewTab({
         icon,
         tone,
         statusLabel,
-        actionLabel: "View",
+        actionLabel: "View Details",
         onClick: () => onNavigate("odrs"),
       });
     });
@@ -291,7 +291,7 @@ export default function StudentOverviewTab({
         icon,
         tone,
         statusLabel,
-        actionLabel: "View",
+        actionLabel: "View Details",
         onClick: () => onNavigate("osas"),
       });
     });
@@ -311,7 +311,7 @@ export default function StudentOverviewTab({
           icon: "ph-bold ph-file-check",
           tone: "emerald",
           statusLabel: "Archived",
-          actionLabel: "View",
+          actionLabel: "View Details",
           onClick: () => onNavigate("compliance"),
         });
       });
@@ -329,7 +329,7 @@ export default function StudentOverviewTab({
         icon: "ph-bold ph-clipboard-text",
         tone: "blue",
         statusLabel: report.status || "Submitted",
-        actionLabel: "View",
+        actionLabel: "View Details",
         onClick: () => onNavigate("osas"),
       });
     });
@@ -398,7 +398,7 @@ export default function StudentOverviewTab({
             className="flex h-10 px-5 text-xs font-semibold rounded-xl active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white border-0"
             style={{ color: "#ffffff" }}
           >
-            Request
+            Request Document
           </Button>
         </div>
       </div>
@@ -605,7 +605,7 @@ export default function StudentOverviewTab({
                 onClick={onNewRequest}
                 className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0 self-start sm:self-auto"
               >
-                Request
+                Request Document
               </Button>
             </Card>
           )}

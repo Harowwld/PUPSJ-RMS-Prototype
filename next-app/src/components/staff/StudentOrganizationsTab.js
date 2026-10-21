@@ -32,6 +32,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import BulkImportOrganizationsModal from "./BulkImportOrganizationsModal";
 import {
   Empty,
   EmptyHeader,
@@ -336,6 +337,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
   // Register / Edit Modal State
   const [orgModalOpen, setOrgModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
   const [orgForm, setOrgForm] = useState({
     name: "",
@@ -854,6 +856,22 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     });
   }, [organizations, statusFilters, categoryFilters, search]);
 
+  const currentOrgIndex = selectedOrgForOfficers
+    ? filteredOrganizations.findIndex((o) => o.id === selectedOrgForOfficers.id)
+    : -1;
+
+  const handlePrevOrg = () => {
+    if (currentOrgIndex > 0) {
+      openManageOrgSheet(filteredOrganizations[currentOrgIndex - 1], sheetSubTab);
+    }
+  };
+
+  const handleNextOrg = () => {
+    if (currentOrgIndex >= 0 && currentOrgIndex < filteredOrganizations.length - 1) {
+      openManageOrgSheet(filteredOrganizations[currentOrgIndex + 1], sheetSubTab);
+    }
+  };
+
   const activeChips = useMemo(() => {
     const chips = [];
     if (search.trim()) {
@@ -1012,6 +1030,17 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   title="Refresh Organizations"
                 />
 
+                {/* Import Organizations Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setBulkImportOpen(true)}
+                  title="Import Organizations"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Import Organizations
+                </Button>
+
                 {/* Register Organization Button */}
                 <Button
                   type="button"
@@ -1019,7 +1048,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   title="Register Organization"
                   className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                 >
-                  Register
+                  Register Organization
                 </Button>
               </div>
             }
@@ -1628,7 +1657,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       className="mt-5 h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs"
                       style={{ color: "#ffffff" }}
                     >
-                      Register
+                      Register Organization
                     </Button>
                   </EmptyHeader>
                 </Empty>
@@ -2118,25 +2147,101 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+            size="default"
+            showCloseButton={false}
+            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
-            <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50">
-              <div className="flex items-center gap-2 mb-1">
-                {selectedOrgForOfficers?.acronym && (
-                  <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20">
-                    {selectedOrgForOfficers.acronym}
-                  </span>
-                )}
-                <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 uppercase tracking-wider">
-                  Manage Organization
-                </span>
+            {/* TOP HEADER: Manage Organization + < > 01 of XX + X button */}
+            <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+              <div className="flex items-center justify-between px-6 py-4">
+                <div>
+                  <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                    Manage Organization
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Manage organization profile, accredited student officers, and official Constitution & By-Laws records
+                  </SheetDescription>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {filteredOrganizations.length > 1 && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                      <button
+                        type="button"
+                        disabled={currentOrgIndex <= 0}
+                        onClick={handlePrevOrg}
+                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        aria-label="Previous Organization"
+                        title="Previous Organization"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={currentOrgIndex >= filteredOrganizations.length - 1}
+                        onClick={handleNextOrg}
+                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        aria-label="Next Organization"
+                        title="Next Organization"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                      </button>
+                      <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                        {String(Math.max(1, currentOrgIndex + 1)).padStart(2, "0")} of {String(filteredOrganizations.length).padStart(2, "0")}
+                      </span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedOrgForOfficers(null);
+                      setEditingOrg(null);
+                    }}
+                    className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                    aria-label="Close"
+                    title="Close"
+                  >
+                    <HugeIcon className="ph-bold ph-x text-sm" />
+                  </button>
+                </div>
               </div>
-              <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50">
-                {selectedOrgForOfficers?.name}
-              </SheetTitle>
-              <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                Manage organization profile, accredited student officers, and official Constitution & By-Laws records.
-              </SheetDescription>
+
+              {/* Organization Profile Strip */}
+              <div className="flex items-center gap-3 px-6 pb-3 pt-1 border-t border-gray-100/80 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/30">
+                <div className="w-10 h-10 rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-red-200/60 dark:border-red-900/40">
+                  <HugeIcon className="ph-bold ph-buildings" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {selectedOrgForOfficers?.acronym && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20">
+                        {selectedOrgForOfficers.acronym}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
+                      {selectedOrgForOfficers?.category}
+                    </span>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full border",
+                        getOrgStatusBadgeClass(selectedOrgForOfficers?.status)
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          getOrgStatusDotClass(selectedOrgForOfficers?.status)
+                        )}
+                      />
+                      {selectedOrgForOfficers?.status}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate mt-0.5">
+                    {selectedOrgForOfficers?.name}
+                  </h4>
+                </div>
+              </div>
             </SheetHeader>
 
             {/* Sub-tab segmented switcher */}
@@ -2745,37 +2850,30 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               )}
             </div>
 
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                  {selectedOrgForOfficers?.acronym ? `ORG: ${selectedOrgForOfficers.acronym}` : "Organization"} • {officersList.length} Officers
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5">
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-end gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSelectedOrgForOfficers(null);
+                  setEditingOrg(null);
+                }}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Close
+              </Button>
+              {sheetSubTab === "info" && (
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedOrgForOfficers(null);
-                    setEditingOrg(null);
-                  }}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  type="submit"
+                  form="org-info-form"
+                  onClick={handleSaveOrg}
+                  disabled={savingOrg}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
+                  style={{ color: "#ffffff" }}
                 >
-                  Close
+                  {savingOrg ? "Saving..." : "Save Organization Details"}
                 </Button>
-                {sheetSubTab === "info" && (
-                  <Button
-                    type="submit"
-                    form="org-info-form"
-                    onClick={handleSaveOrg}
-                    disabled={savingOrg}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
-                    style={{ color: "#ffffff" }}
-                  >
-                    {savingOrg ? "Saving..." : "Save"}
-                  </Button>
-                )}
-              </div>
+              )}
             </SheetFooter>
           </SheetContent>
         </Sheet>
@@ -2958,8 +3056,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   {savingOrg
                     ? "Saving..."
                     : editingOrg
-                    ? "Update"
-                    : "Register"}
+                    ? "Update Organization"
+                    : "Register Organization"}
                 </Button>
               </DialogFooter>
             </form>
@@ -3017,7 +3115,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                   style={{ color: "#ffffff" }}
                 >
-                  {uploadingCbl ? "Uploading..." : "Upload"}
+                  {uploadingCbl ? "Uploading..." : "Upload Charter"}
                 </Button>
               </DialogFooter>
             </form>
@@ -3102,10 +3200,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   ) : (
                     <span>
                       {cblReviewAction === "Approved"
-                        ? "Approve"
+                        ? "Approve Charter"
                         : cblReviewAction === "Needs Revision"
-                        ? "Revise"
-                        : "Decline"}
+                        ? "Request Revision"
+                        : "Decline Charter"}
                     </span>
                   )}
                 </Button>
@@ -3137,6 +3235,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             onClose={() => setPreviewPdf(null)}
           />
         )}
+
+        {/* Bulk Import Organizations Modal */}
+        <BulkImportOrganizationsModal
+          open={bulkImportOpen}
+          onOpenChange={setBulkImportOpen}
+          onSuccess={() => fetchOrganizations(true)}
+          showToast={showToast}
+        />
       </div>
     </TooltipProvider>
   );

@@ -279,35 +279,55 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
                       ) : (
                         <>
-                          <span>Export</span>
+                          <span>Export CSV</span>
                           <HugeIcon className="ph-bold ph-caret-down text-[10px] opacity-70" />
                         </>
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-xl p-1 shadow-lg bg-white dark:bg-zinc-900 border border-border">
-                    <DropdownMenuItem 
-                      onClick={() => handleCsvExport("sla")} 
-                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    >
-                      <HugeIcon className="ph-bold ph-clock-countdown text-sm text-pup-maroon dark:text-red-400" />
-                      <span>SLA Compliance Data</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleCsvExport("csm")} 
-                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    >
-                      <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
-                      <span>CSM Ratings Data</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-1 bg-border/60" />
-                    <DropdownMenuItem 
-                      onClick={() => handleCsvExport("comprehensive")} 
-                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    >
-                      <HugeIcon className="ph-bold ph-table text-sm text-gray-400" />
-                      <span>Complete Combined Dataset</span>
-                    </DropdownMenuItem>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={6}
+                    className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+                  >
+                    {/* Zone 1: Header */}
+                    <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <HugeIcon className="ph-bold ph-file-csv text-xs text-pup-maroon dark:text-red-400" />
+                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          Export Dataset
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                        CSV
+                      </span>
+                    </div>
+
+                    {/* Zone 2: Body */}
+                    <div className="p-1.5 space-y-0.5">
+                      <DropdownMenuItem 
+                        onClick={() => handleCsvExport("sla")} 
+                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <HugeIcon className="ph-bold ph-clock-countdown text-sm text-pup-maroon dark:text-red-400" />
+                        <span>SLA Compliance Data</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleCsvExport("csm")} 
+                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
+                        <span>CSM Ratings Data</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                      <DropdownMenuItem 
+                        onClick={() => handleCsvExport("comprehensive")} 
+                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <HugeIcon className="ph-bold ph-table text-sm text-gray-400" />
+                        <span>Complete Combined Dataset</span>
+                      </DropdownMenuItem>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -323,35 +343,55 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
                       ) : (
                         <>
-                          <span>Download</span>
+                          <span>Official Report (PDF)</span>
                           <HugeIcon className="ph-bold ph-caret-down text-[10px] text-white/80" />
                         </>
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64 rounded-xl p-1 shadow-lg bg-white dark:bg-zinc-900 border border-border">
-                    <DropdownMenuItem 
-                      onClick={() => handlePreview("sla")} 
-                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    >
-                      <HugeIcon className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400" />
-                      <span>Citizen&apos;s Charter SLA Report</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handlePreview("csm")} 
-                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    >
-                      <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
-                      <span>Client Satisfaction (CSM) Report</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-1 bg-border/60" />
-                    <DropdownMenuItem 
-                      onClick={() => handlePreview("comprehensive")} 
-                      className="cursor-pointer text-xs font-medium py-2 rounded-lg flex items-center gap-2 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    >
-                      <HugeIcon className="ph-bold ph-files text-sm text-gray-400" />
-                      <span>Executive Dossier (Combined)</span>
-                    </DropdownMenuItem>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={6}
+                    className="w-64 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+                  >
+                    {/* Zone 1: Header */}
+                    <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <HugeIcon className="ph-bold ph-file-pdf text-xs text-pup-maroon dark:text-red-400" />
+                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          Official Report
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400">
+                        PDF
+                      </span>
+                    </div>
+
+                    {/* Zone 2: Body */}
+                    <div className="p-1.5 space-y-0.5">
+                      <DropdownMenuItem 
+                        onClick={() => handlePreview("sla")} 
+                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <HugeIcon className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400" />
+                        <span>Citizen&apos;s Charter SLA Report</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handlePreview("csm")} 
+                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
+                        <span>Client Satisfaction (CSM) Report</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                      <DropdownMenuItem 
+                        onClick={() => handlePreview("comprehensive")} 
+                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      >
+                        <HugeIcon className="ph-bold ph-files text-sm text-gray-400" />
+                        <span>Executive Dossier (Combined)</span>
+                      </DropdownMenuItem>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -625,7 +665,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 disabled={!pdfBlobUrl}
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
-                Download
+                Download Report
               </Button>
             </div>
           </div>

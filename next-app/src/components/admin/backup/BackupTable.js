@@ -30,6 +30,39 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   )
 }
 
+function getBackupTypeBadge(backup) {
+  const type = String(backup?.backup_type || "").trim().toLowerCase();
+  if (type === "pre-restore safety" || type === "safety snapshot") {
+    return (
+      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+        Safety Snapshot
+      </span>
+    );
+  }
+  if (type === "manual") {
+    return (
+      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+        Manual
+      </span>
+    );
+  }
+  if (type === "scheduled") {
+    return (
+      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40">
+        Scheduled
+      </span>
+    );
+  }
+  if (type === "governance") {
+    return (
+      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40">
+        Governance
+      </span>
+    );
+  }
+  return null;
+}
+
 export default function BackupTable({
   backups,
   sortedAndPaginatedBackups,
@@ -180,14 +213,14 @@ export default function BackupTable({
                           title="Reset Filters"
                           className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
-                          Reset
-                        </Button>
+                    Reset Filters
+                  </Button>
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
                           className="mt-6 h-10 rounded-xl btn-brand-red px-6 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                         >
-                          Create
+                          Create Backup
                         </Button>
                       )}
                     </EmptyHeader>
@@ -222,10 +255,11 @@ export default function BackupTable({
                       />
                     </td>
                     <td className="p-4 align-middle overflow-hidden">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full" title={b.filename}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]" title={b.filename}>
                           {b.filename}
                         </span>
+                        {getBackupTypeBadge(b)}
                       </div>
                     </td>
                     <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100">

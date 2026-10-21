@@ -41,7 +41,7 @@ function PopoverContent({
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(
-            "z-50 flex w-80 sm:w-96 origin-(--transform-origin) flex-col gap-2.5 rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "z-50 flex w-80 origin-(--transform-origin) flex-col gap-0 rounded-2xl bg-white dark:bg-zinc-900 border border-border dark:border-white/10 p-2.5 text-sm text-popover-foreground shadow-2xl outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props} />
@@ -57,8 +57,41 @@ function PopoverHeader({
   return (
     <div
       data-slot="popover-header"
-      className={cn("flex flex-col gap-0.5 text-sm", className)}
-      {...props} />
+      className={cn(
+        "flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 text-sm",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+function PopoverBody({
+  className,
+  ...props
+}) {
+  return (
+    <div
+      data-slot="popover-body"
+      className={cn("p-3 space-y-3", className)}
+      {...props}
+    />
+  );
+}
+
+function PopoverFooter({
+  className,
+  ...props
+}) {
+  return (
+    <div
+      data-slot="popover-footer"
+      className={cn(
+        "flex items-center justify-between px-4 py-2.5 border-t border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 text-xs text-gray-600 dark:text-zinc-400",
+        className
+      )}
+      {...props}
+    />
   );
 }
 
@@ -69,7 +102,7 @@ function PopoverTitle({
   return (
     <PopoverPrimitive.Title
       data-slot="popover-title"
-      className={cn("font-medium", className)}
+      className={cn("text-sm font-semibold text-gray-900 dark:text-zinc-100", className)}
       {...props} />
   );
 }
@@ -81,7 +114,7 @@ function PopoverDescription({
   return (
     <PopoverPrimitive.Description
       data-slot="popover-description"
-      className={cn("text-muted-foreground", className)}
+      className={cn("text-xs font-normal text-gray-500 dark:text-zinc-400", className)}
       {...props} />
   );
 }
@@ -91,6 +124,8 @@ export {
   PopoverContent,
   PopoverDescription,
   PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
   PopoverTitle,
   PopoverTrigger,
 }

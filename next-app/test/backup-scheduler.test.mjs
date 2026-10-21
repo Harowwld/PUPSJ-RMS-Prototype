@@ -8,6 +8,7 @@ let copied;
 let externalError;
 let localError;
 let pauseBackup;
+let retentionRuns;
 
 mock.module("../src/lib/postgresCompat.js", {
   namedExports: {
@@ -31,6 +32,14 @@ mock.module("../src/lib/backupsRepo.js", {
       copied.push(id);
       if (externalError) throw externalError;
       return { ok: true };
+    },
+  },
+});
+mock.module("../src/lib/backupRetention.js", {
+  namedExports: {
+    applyGfsRetention: async (options) => {
+      retentionRuns.push(options);
+      return { evaluatedCount: 1, retainedCount: 1, prunedCount: 0, prunedFilenames: [], tiers: {} };
     },
   },
 });
@@ -58,6 +67,7 @@ function prepare(keys) {
   savedSchedules = [];
   created = [];
   copied = [];
+  retentionRuns = [];
   externalError = null;
   localError = null;
   pauseBackup = null;
@@ -69,9 +79,10 @@ test("scheduled system and office backups automatically copy their new archives 
   await checkAndRunScheduledBackups();
 
   assert.deepEqual(created, [
-    { scope: "system", actorId: "admin-test" },
-    { scope: "office", officeId: "registrar", actorId: "admin-test" },
+    { scope: "system", actorId: "admin-test", backupType: "Scheduled" },
+    { scope: "office", officeId: "registrar", actorId: "admin-test", backupType: "Scheduled" },
   ]);
+  assert.equal(retentionRuns.length, 2);
   assert.deepEqual(copied, [71, 72]);
   assert.equal(savedSchedules.length, 2);
   for (const { schedule } of savedSchedules) {

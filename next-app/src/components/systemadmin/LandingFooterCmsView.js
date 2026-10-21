@@ -344,7 +344,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save Footer Content"
                 )}
               </Button>
             </div>

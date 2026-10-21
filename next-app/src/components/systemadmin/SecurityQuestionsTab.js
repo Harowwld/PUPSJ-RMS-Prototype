@@ -308,7 +308,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 {saving ? (
                   <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
                 ) : (
-                  "Save"
+                  "Save Questions"
                 )}
               </Button>
             </div>
@@ -482,7 +482,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                   title="Add Security Question"
                   className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
-                  Add
+                  Add Question
                 </button>
               </div>
             </div>

@@ -164,7 +164,7 @@ export default function StorageExplorerTab({
               title="Return to Records & Archive"
               className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
-              Return
+              Return to Records
             </Button>
           }
         />
@@ -707,7 +707,7 @@ export default function StorageExplorerTab({
                                       })
                                     ) : (
                                       <div className="flex flex-col items-center justify-center p-4 rounded-[12px] bg-[#F5F5F7] dark:bg-zinc-800/40 border border-dashed border-border dark:border-border text-center select-none">
-                                        <HugeIcon className="ph-duotone ph-folder-dashed text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
+                                        <HugeIcon className="ph-duotone ph-folder-open text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
                                         <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                           Empty Drawer Slot
                                         </p>

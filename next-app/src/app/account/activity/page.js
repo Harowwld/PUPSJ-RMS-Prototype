@@ -833,8 +833,8 @@ function LogTable({
                             title="Reset Filters"
                             className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            Reset
-                          </Button>
+                    Reset Filters
+                  </Button>
                         )}
                       </EmptyHeader>
                     </Empty>
@@ -1260,7 +1260,7 @@ export default function AccountActivityPage() {
                     disabled={total === 0 || isExporting || isGeneratingPdf}
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    {isExporting ? "Exporting..." : "Export"}
+                    {isExporting ? "Exporting..." : "Export CSV"}
                   </Button>
 
                   <Button
@@ -1269,7 +1269,7 @@ export default function AccountActivityPage() {
                     disabled={total === 0 || isExporting || isGeneratingPdf}
                     className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
                   >
-                    {isGeneratingPdf ? "Generating..." : "Report"}
+                    {isGeneratingPdf ? "Generating..." : "Official Report (PDF)"}
                   </Button>
 
                 </div>
@@ -1380,6 +1380,8 @@ export default function AccountActivityPage() {
             onPrev={handlePrevLog}
             hasNext={rows.length > 0 && selectedLog && rows.findIndex(l => l.id === selectedLog.id) < rows.length - 1}
             hasPrev={rows.length > 0 && selectedLog && rows.findIndex(l => l.id === selectedLog.id) > 0}
+            currentIndex={selectedLog ? rows.findIndex(l => l.id === selectedLog.id) : -1}
+            totalCount={rows.length}
             hideActor={true}
           />
 

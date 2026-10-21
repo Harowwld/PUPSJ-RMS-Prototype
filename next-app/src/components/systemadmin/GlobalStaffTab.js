@@ -825,7 +825,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 onClick={handleOpenCreate}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
               >
-                Register
+                Register Personnel
               </Button>
             </div>
           }
@@ -1070,14 +1070,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   title="Reset Filters"
                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
-                  Reset
-                </Button>
+                    Reset Filters
+                  </Button>
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
                   className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  Register
+                  Register Personnel
                 </Button>
               ) : null}
             </EmptyHeader>
@@ -1556,7 +1556,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 disabled={submitLoading}
                 className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
               >
-                {submitLoading ? "Saving..." : isEditing ? "Save" : "Register"}
+                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Register Personnel"}
               </Button>
             </DialogFooter>
           </form>
@@ -1698,7 +1698,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             setBulkRestoreOpen(true)
           }
         }}
-        actionLabel={statusFilter === "Active" ? "Archive" : "Restore"}
+        actionLabel={statusFilter === "Active" ? "Archive Personnel" : "Restore Personnel"}
         actionVariant={statusFilter === "Active" ? "danger" : "success"}
       />
     </div>

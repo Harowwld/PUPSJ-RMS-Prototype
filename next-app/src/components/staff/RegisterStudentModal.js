@@ -388,7 +388,7 @@ export default function RegisterStudentModal({
                   Registering...
                 </span>
               ) : (
-                "Register"
+                "Register Student"
               )}
             </Button>
           </DialogFooter>

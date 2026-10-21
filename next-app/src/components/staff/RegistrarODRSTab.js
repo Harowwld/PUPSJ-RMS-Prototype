@@ -386,7 +386,7 @@ export default function RegistrarODRSTab({ showToast }) {
                             : "bg-emerald-600 hover:bg-emerald-700 text-white"
                         }`}
                       >
-                        {selected.spa_verified ? "Revoke" : "Verify"}
+                        {selected.spa_verified ? "Revoke SPA" : "Verify SPA"}
                       </Button>
                     </div>
                   </div>

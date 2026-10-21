@@ -11,6 +11,14 @@ import { StudentNoSchema, PhoneSchema, PersonNameSchema } from "@/lib/validation
 
 export const runtime = "nodejs";
 
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_TYPES = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+]);
+
 function decryptField(val) {
   if (!val || typeof val !== "string") return val;
   return decryptPII(val);
@@ -170,6 +178,18 @@ export async function POST(req) {
   const requesterRelationship = String(body?.requesterRelationship || "").trim() || null;
   const requesterContact = String(body?.requesterContact || "").trim() || null;
 
+  if (uploadedFiles.length > 5) {
+    return NextResponse.json({ ok: false, error: "You can attach a maximum of 5 files." }, { status: 400 });
+  }
+  for (const { file } of uploadedFiles) {
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      return NextResponse.json({ ok: false, error: "Each attachment must be 10 MB or smaller." }, { status: 400 });
+    }
+    if (!ALLOWED_ATTACHMENT_TYPES.has(String(file.type || "").toLowerCase())) {
+      return NextResponse.json({ ok: false, error: "Attachments must be PDF, PNG, JPG, or WEBP files." }, { status: 415 });
+    }
+  }
+
   let accountId = session.accountId;
   let acc = null;
   if (accountId) {
@@ -211,17 +231,22 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+    if (!String(body?.requesterName || "").trim()) {
+      return NextResponse.json({ ok: false, error: "Requester full name is required for parent or guardian requests." }, { status: 400 });
+    }
     if (!requesterRelationship) {
       return NextResponse.json(
         { ok: false, error: "Relationship to student (e.g. Mother, Father, Legal Guardian) is required for parent/guardian requests." },
         { status: 400 }
       );
     }
-    // Mandatory Special Power of Attorney / Authorization document check
     const hasSpaAttachment = uploadedFiles.some(
-      (f) => f.attachmentType === "spa" || f.attachmentType === "valid_id" || f.file.name.toLowerCase().includes("spa") || f.file.name.toLowerCase().includes("power") || f.file.name.toLowerCase().includes("auth")
+      (item) => item.attachmentType === "spa"
     );
-    if (uploadedFiles.length === 0 || !hasSpaAttachment) {
+    const hasValidIdAttachment = uploadedFiles.some(
+      (item) => item.attachmentType === "valid_id"
+    );
+    if (!hasSpaAttachment || !hasValidIdAttachment) {
       return NextResponse.json(
         {
           ok: false,
@@ -257,9 +282,9 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Document type is required." }, { status: 400 });
   }
 
-  if (!notes || notes.length < 5) {
+  if (!notes || notes.length < 5 || notes.length > 1000) {
     return NextResponse.json(
-      { ok: false, error: "Please provide a meaningful purpose description (at least 5 characters)." },
+      { ok: false, error: "Please provide a meaningful purpose description between 5 and 1000 characters." },
       { status: 400 }
     );
   }

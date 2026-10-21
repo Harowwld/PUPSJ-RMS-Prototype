@@ -138,6 +138,31 @@ function StatusBadge({ status }) {
   return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{label}</span>;
 }
 
+/**
+ * Standard Information Row (label : value)
+ * Clean unboxed metadata layout aligned with colons and icons.
+ */
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  );
+}
 
 function StudentDashboard() {
   const router = useRouter();
@@ -480,6 +505,38 @@ function StudentDashboard() {
     [totalPages]
   );
 
+  const currentRequestDetailIndex = selectedRequestForDetail
+    ? sortedRequests.findIndex((r) => r.id === selectedRequestForDetail.id)
+    : -1;
+
+  const handlePrevRequestDetail = () => {
+    if (currentRequestDetailIndex > 0) {
+      setSelectedRequestForDetail(sortedRequests[currentRequestDetailIndex - 1]);
+    }
+  };
+
+  const handleNextRequestDetail = () => {
+    if (currentRequestDetailIndex >= 0 && currentRequestDetailIndex < sortedRequests.length - 1) {
+      setSelectedRequestForDetail(sortedRequests[currentRequestDetailIndex + 1]);
+    }
+  };
+
+  const currentProposalDetailIndex = selectedProposalForDetail
+    ? filteredProposals.findIndex((p) => p.id === selectedProposalForDetail.id)
+    : -1;
+
+  const handlePrevProposalDetail = () => {
+    if (currentProposalDetailIndex > 0) {
+      setSelectedProposalForDetail(filteredProposals[currentProposalDetailIndex - 1]);
+    }
+  };
+
+  const handleNextProposalDetail = () => {
+    if (currentProposalDetailIndex >= 0 && currentProposalDetailIndex < filteredProposals.length - 1) {
+      setSelectedProposalForDetail(filteredProposals[currentProposalDetailIndex + 1]);
+    }
+  };
+
   const showToast = useCallback((msgOrTitle, maybeDescOrError = false, maybeIsError = false, options = {}) => {
     if (msgOrTitle && typeof msgOrTitle === "object") {
       if (msgOrTitle instanceof Error) {
@@ -726,15 +783,13 @@ function StudentDashboard() {
           return;
         }
         const hasSpa = attachments.some(
-          (a) =>
-            a.attachmentType === "spa" ||
-            a.attachmentType === "valid_id" ||
-            a.file?.name?.toLowerCase().includes("spa") ||
-            a.file?.name?.toLowerCase().includes("power") ||
-            a.file?.name?.toLowerCase().includes("auth")
+          (a) => a.attachmentType === "spa" || /spa|power|auth/i.test(a.file?.name || "")
         );
-        if (attachments.length === 0 || !hasSpa) {
-          showToast("Authorization Document Required", "Under RA 10173 (Data Privacy Act), please attach a signed SPA or Authorization Letter and a valid government ID.", true);
+        const hasValidId = attachments.some(
+          (a) => a.attachmentType === "valid_id" || /valid|passport|license|(^|[^a-z])id([^a-z]|$)/i.test(a.file?.name || "")
+        );
+        if (!hasSpa || !hasValidId) {
+          showToast("Authorization Documents Required", "Under RA 10173 (Data Privacy Act), attach both a signed SPA or Authorization Letter and a valid government ID.", true);
           return;
         }
       }
@@ -1385,6 +1440,7 @@ function StudentDashboard() {
                                   placeholder="e.g. Maria Santos Dela Cruz"
                                   value={requestForm.requesterName || ""}
                                   onChange={(e) => setRequestForm({ ...requestForm, requesterName: e.target.value })}
+                                  required
                                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
@@ -1434,6 +1490,8 @@ function StudentDashboard() {
                               className="w-full min-h-[72px] rounded-xl border border-border bg-white p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 resize-none transition-all shadow-none"
                               placeholder="Provide the purpose of your request (e.g. employment verification, board exam, transfer credentials, etc.)"
                               value={requestForm.notes}
+                              minLength={5}
+                              maxLength={1000}
                               onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
                             />
                           </div>
@@ -1577,7 +1635,7 @@ function StudentDashboard() {
                                     Submitting...
                                   </>
                                 ) : (
-                                  "Submit"
+                                  "Submit Request"
                                 )}
                               </Button>
                             </div>
@@ -1768,8 +1826,8 @@ function StudentDashboard() {
                                         title="Reset Filters"
                                         className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                       >
-                                        Reset
-                                      </Button>
+                    Reset Filters
+                  </Button>
                                     ) : (
                                       <Button
                                         type="button"
@@ -2232,7 +2290,7 @@ function StudentDashboard() {
                                       Submitting...
                                     </>
                                   ) : (
-                                    "Submit"
+                                    "Submit Proposal"
                                   )}
                                 </Button>
                               </div>
@@ -2366,8 +2424,8 @@ function StudentDashboard() {
                                   title="Reset Filters"
                                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
-                                  Reset
-                                </Button>
+                    Reset Filters
+                  </Button>
                               </EmptyHeader>
                             </Empty>
                           </div>
@@ -2591,7 +2649,7 @@ function StudentDashboard() {
                                   className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
                                   style={{ color: "#ffffff" }}
                                 >
-                                  {postEventSubmitting ? "Submitting..." : "Submit"}
+                                  {postEventSubmitting ? "Submitting..." : "Submit Post-Event Report"}
                                 </Button>
                               </div>
                             </div>
@@ -2810,7 +2868,7 @@ function StudentDashboard() {
                                     <span>Submitting...</span>
                                   </>
                                 ) : (
-                                  <span>Submit</span>
+                                  <span>Submit Constitution & By-Laws</span>
                                 )}
                               </Button>
                             </div>
@@ -3001,26 +3059,105 @@ function StudentDashboard() {
       >
         <SheetContent
           side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
-                Request #{selectedRequestForDetail?.id}
-              </span>
-              <StatusBadge status={selectedRequestForDetail?.status} />
+          {/* TOP HEADER: Document Request Details + < > 01 of XX + X button */}
+          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div>
+                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                  Document Request Details
+                </SheetTitle>
+                <SheetDescription className="sr-only">
+                  Detailed status, documents, and updates for student request
+                </SheetDescription>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {sortedRequests.length > 1 && (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                    <button
+                      type="button"
+                      disabled={currentRequestDetailIndex <= 0}
+                      onClick={handlePrevRequestDetail}
+                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      aria-label="Previous Request"
+                      title="Previous Request"
+                    >
+                      <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentRequestDetailIndex >= sortedRequests.length - 1}
+                      onClick={handleNextRequestDetail}
+                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      aria-label="Next Request"
+                      title="Next Request"
+                    >
+                      <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                    </button>
+                    <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                      {String(Math.max(1, currentRequestDetailIndex + 1)).padStart(2, "0")} of {String(sortedRequests.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedRequestForDetail(null)}
+                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <HugeIcon className="ph-bold ph-x text-sm" />
+                </button>
+              </div>
             </div>
-            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
-              {selectedRequestForDetail?.doc_type}
-            </SheetTitle>
-            <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400">
-              Submitted on {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"} · {selectedRequestForDetail?.client_type || "Student"}
-              {selectedRequestForDetail?.student_no ? ` (${selectedRequestForDetail.student_no})` : ""}
-              {selectedRequestForDetail?.course_code ? ` · ${selectedRequestForDetail.course_code}` : ""}
-            </SheetDescription>
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
+            {/* Request Summary Strip */}
+            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+              <div className="w-12 h-12 rounded-2xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
+                <HugeIcon className="ph-bold ph-file-text" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                    #{selectedRequestForDetail?.id}
+                  </span>
+                  <StatusBadge status={selectedRequestForDetail?.status} />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                  {selectedRequestForDetail?.doc_type}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  Submitted: {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"}
+                </p>
+              </div>
+            </div>
+
+            {/* Request Specification InfoRow */}
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Request Specification
+              </h4>
+              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                <InfoRow icon="ph-certificate" label="Document Type" value={selectedRequestForDetail?.doc_type} />
+                <InfoRow icon="ph-user" label="Requester" value={selectedRequestForDetail?.student_name || me?.name || "Student"} />
+                <InfoRow icon="ph-tag" label="Client Type" value={selectedRequestForDetail?.client_type || "Student"} />
+                <InfoRow icon="ph-identification-badge" label="Student Number" value={selectedRequestForDetail?.student_no} />
+                {selectedRequestForDetail?.course_code && (
+                  <InfoRow icon="ph-graduation-cap" label="Program / Course" value={selectedRequestForDetail.course_code} />
+                )}
+                <InfoRow icon="ph-clock" label="Date Submitted" value={selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"} />
+                <InfoRow icon="ph-chart-pie-slice" label="Current Status">
+                  <StatusBadge status={selectedRequestForDetail?.status} />
+                </InfoRow>
+              </div>
+            </div>
             <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1">
                 Purpose / Description
@@ -3408,12 +3545,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                REQ-{selectedRequestForDetail?.id}
-              </span>
-            </div>
+          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
             <Button
               variant="outline"
               onClick={() => setSelectedRequestForDetail(null)}
@@ -3432,37 +3564,98 @@ function StudentDashboard() {
       >
         <SheetContent
           side="right"
-          className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
-                Proposal #{selectedProposalForDetail?.id}
-              </span>
-              <StatusBadge status={selectedProposalForDetail?.status} />
+          {/* TOP HEADER: Event Proposal Details + < > 01 of XX + X button */}
+          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div>
+                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                  Event Proposal Details
+                </SheetTitle>
+                <SheetDescription className="sr-only">
+                  Detailed evaluation, attachments, and timeline for event proposal
+                </SheetDescription>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {filteredProposals.length > 1 && (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                    <button
+                      type="button"
+                      disabled={currentProposalDetailIndex <= 0}
+                      onClick={handlePrevProposalDetail}
+                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      aria-label="Previous Proposal"
+                      title="Previous Proposal"
+                    >
+                      <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentProposalDetailIndex >= filteredProposals.length - 1}
+                      onClick={handleNextProposalDetail}
+                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      aria-label="Next Proposal"
+                      title="Next Proposal"
+                    >
+                      <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                    </button>
+                    <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                      {String(Math.max(1, currentProposalDetailIndex + 1)).padStart(2, "0")} of {String(filteredProposals.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedProposalForDetail(null)}
+                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <HugeIcon className="ph-bold ph-x text-sm" />
+                </button>
+              </div>
             </div>
-            <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug">
-              {selectedProposalForDetail?.title}
-            </SheetTitle>
-            <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400">
-              Submitted on {selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"}
-            </SheetDescription>
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
-            {/* Event & Organization Info */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 border border-border/80 dark:border-border">
-                <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Organization</span>
-                <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                  {selectedProposalForDetail?.organization_name || "N/A"}
-                </span>
+            {/* Proposal Summary Strip */}
+            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+              <div className="w-12 h-12 rounded-2xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
+                <HugeIcon className="ph-bold ph-calendar-check" />
               </div>
-              <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 border border-border/80 dark:border-border">
-                <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 block mb-0.5">Event Date</span>
-                <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block">
-                  {selectedProposalForDetail?.event_date || "N/A"}
-                </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                    #{selectedProposalForDetail?.id}
+                  </span>
+                  <StatusBadge status={selectedProposalForDetail?.status} />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                  {selectedProposalForDetail?.title}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  {selectedProposalForDetail?.organization_name}
+                </p>
+              </div>
+            </div>
+
+            {/* Proposal Specification InfoRow */}
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Proposal Specification
+              </h4>
+              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                <InfoRow icon="ph-buildings" label="Organization" value={selectedProposalForDetail?.organization_name || "N/A"} />
+                <InfoRow icon="ph-calendar" label="Target Event Date" value={selectedProposalForDetail?.event_date || "To Be Announced"} />
+                <InfoRow icon="ph-clock" label="Date Submitted" value={selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"} />
+                <InfoRow icon="ph-chart-pie-slice" label="Current Stage">
+                  <StatusBadge status={selectedProposalForDetail?.status} />
+                </InfoRow>
               </div>
             </div>
 
@@ -3501,7 +3694,7 @@ function StudentDashboard() {
                   className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 border border-pup-maroon/20 hover:border-pup-maroon/40 bg-red-50/50 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/40 cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
                   <HugeIcon  className="ph-bold ph-eye text-sm" />
-                  <span>View</span>
+                  <span>View Attached PDF</span>
                 </Button>
               </div>
             </div>
@@ -3573,12 +3766,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                Proposal #{selectedProposalForDetail?.id}
-              </span>
-            </div>
+          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
             <Button
               variant="outline"
               onClick={() => setSelectedProposalForDetail(null)}

@@ -497,6 +497,11 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 
 - **Sizing Standards**: Standard forms/headers use `h-10 px-5 text-xs font-semibold rounded-xl`. Compact tables/toolbars use `h-9 px-4 text-xs font-semibold rounded-xl` (or `h-8` for inline action badges).
 - **Icons on Buttons**: Keep primary action buttons text-only to maintain visual focus. Dynamic icons (e.g. `ph-spinner animate-spin`) are permitted only during loading/saving states.
+- **Button Naming Convention (`[Action Verb] + [Specific Noun]`)**:
+  - Always label primary action, header, and confirmation submit buttons explicitly using `[Action Verb] + [Specific Noun]` (e.g., `Register Student`, `Register Staff`, `Register Personnel`, `Register Organization`, `Add Program`, `Add Block`, `Add Document Type`, `Save Changes`, `Save Layout`, `Save Standards`, `Save Questions`, `Submit Request`, `Submit Proposal`, `Submit Post-Event Report`).
+  - Avoid vague single-word action labels (e.g., never use a bare `Save`, `Register`, `Submit`, `Add`, `Create` on actions without its noun target), as they cause ambiguity and cognitive friction for non-technical users.
+  - **Single-Word Exception**: Negative, dismissive, or navigation actions remain clean atomic words: `Cancel`, `Close`, `Back`, `Done`.
+  - **Refresh Standard**: Never use a text button labeled "Refresh"; always use the squircle `<RefreshButton>` icon component.
 
 ### 8.5 Border Radius Hierarchy (Apple HIG Tokens)
 

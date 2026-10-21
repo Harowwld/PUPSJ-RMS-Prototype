@@ -548,7 +548,41 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
     [approvalStatus, reviewedBy || null, reviewNote || null, id, scopedOfficeId]
   );
 
-  return await getDocumentById(id, { officeId: scopedOfficeId });
+  const updated = await getDocumentById(id, { officeId: scopedOfficeId });
+  if (updated && ["Approved", "Declined"].includes(approvalStatus)) {
+    try {
+      const { createNotification } = await import("./notificationsRepo.js");
+      await createNotification({
+        officeId: scopedOfficeId,
+        type: "document_review",
+        title: approvalStatus === "Approved" ? `Document Approved: ${updated.doc_type}` : `Document Declined: ${updated.doc_type}`,
+        message: approvalStatus === "Approved"
+          ? `${reviewedBy || "Admin"} approved ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})`
+          : `${reviewedBy || "Admin"} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
+        severity: approvalStatus === "Approved" ? "success" : "error",
+        actorName: reviewedBy || "Admin",
+        entityType: "document",
+        entityId: id,
+        metadata: {
+          document_id: id,
+          student_no: updated.student_no,
+          student_name: updated.student_name,
+          doc_type: updated.doc_type,
+          original_filename: updated.original_filename,
+          approval_status: approvalStatus,
+          reviewed_by: reviewedBy,
+          reviewed_at: updated.reviewed_at,
+          review_note: reviewNote,
+          is_previewed: updated.is_previewed,
+          mime_type: updated.mime_type,
+        },
+      });
+    } catch (e) {
+      console.error("Failed to create document_review notification:", e);
+    }
+  }
+
+  return updated;
 }
 
 export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote }, { officeId } = {}) {
@@ -568,7 +602,39 @@ export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote 
     [reviewedBy || null, reviewNote || null, id, scopedOfficeId]
   );
 
-  return await getDocumentById(id, { officeId: scopedOfficeId });
+  const updated = await getDocumentById(id, { officeId: scopedOfficeId });
+  if (updated) {
+    try {
+      const { createNotification } = await import("./notificationsRepo.js");
+      await createNotification({
+        officeId: scopedOfficeId,
+        type: "document_review",
+        title: `Document Declined: ${updated.doc_type}`,
+        message: `${reviewedBy || "Admin"} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
+        severity: "error",
+        actorName: reviewedBy || "Admin",
+        entityType: "document",
+        entityId: id,
+        metadata: {
+          document_id: id,
+          student_no: updated.student_no,
+          student_name: updated.student_name,
+          doc_type: updated.doc_type,
+          original_filename: updated.original_filename,
+          approval_status: "Declined",
+          reviewed_by: reviewedBy,
+          reviewed_at: updated.reviewed_at,
+          review_note: reviewNote,
+          is_previewed: updated.is_previewed,
+          mime_type: updated.mime_type,
+        },
+      });
+    } catch (e) {
+      console.error("Failed to create document_review notification:", e);
+    }
+  }
+
+  return updated;
 }
 
 export async function deleteDocument(id, { officeId } = {}) {

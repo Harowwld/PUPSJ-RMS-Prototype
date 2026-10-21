@@ -1631,7 +1631,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         )
         return
       }
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed")
+      if (!res.ok || !json?.ok) {
+        refreshBackups()
+        throw new Error(json?.error || "Sync failed")
+      }
       refreshBackups()
       return json
     })()

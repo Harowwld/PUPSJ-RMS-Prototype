@@ -151,7 +151,7 @@ export default function PdfPreviewDialog({
               disabled={!pdfBlobUrl}
               className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none h-10 px-5 rounded-xl! text-xs font-semibold shadow-xs cursor-pointer"
             >
-              Download
+              Download PDF
             </Button>
           </div>
         </div>

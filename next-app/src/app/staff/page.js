@@ -283,8 +283,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedCabinet, setSelectedCabinet] = useState(null);
 
-  /** "pdf" = single PDF upload (existing or new student); "csv" = batch import */
-  const [uploadMode, setUploadMode] = useState("pdf");
   /** When true, submit attaches the PDF to an existing student (no new student row). */
   const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
   const [dropActive, setDropActive] = useState(false);
@@ -320,18 +318,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [newRecStudentNoTouched, setNewRecStudentNoTouched] = useState(false);
   const newStudentNoInputRef = useRef(null);
 
-  const [csvFile, setCsvFile] = useState(null);
-  const [csvRows, setCsvRows] = useState([]);
-  const [csvSelected, setCsvSelected] = useState({});
-  const [csvLoading, setCsvLoading] = useState(false);
-  const [csvResults, setCsvResults] = useState([]);
   /** Keys: pdfFile, studentNo, name, course, year, sectionPart, room, cabinet, drawer, docType */
   const [uploadFieldErrors, setUploadFieldErrors] = useState({});
-  const [csvBulkRoom, setCsvBulkRoom] = useState("");
-  const [csvBulkCabinet, setCsvBulkCabinet] = useState("");
-  const [csvBulkDrawer, setCsvBulkDrawer] = useState("");
-  const [csvDropActive, setCsvDropActive] = useState(false);
-  const csvInputRef = useRef(null);
 
   const [docsForm, setDocsForm] = useState({
     studentNo: "",
@@ -1277,7 +1265,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     setOcrError("");
     setOcrSuggestion(null);
 
-    if (uploadMode === "pdf" && !skipOcr) {
+    if (!skipOcr) {
       // In merge mode (multiple pages), only run OCR autofill for the very first page.
       // We capture the queue length *before* the new file was enqueued (skipQueue path
       // bypasses the setUploadedFiles call, so we can rely on the pre-call snapshot).
@@ -1447,11 +1435,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (!uploadedFile) {
       setUploadFieldErrors({ pdfFile: true });
       showToast({ title: "No File Selected", description: "Attach a document before submitting." }, true);
-      return;
-    }
-
-    if (uploadMode !== "pdf") {
-      showToast({ title: "Wrong Mode", description: "Switch to the PDF upload tab to submit a document." }, true);
       return;
     }
 
@@ -2276,6 +2259,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onSelectionChange={setSelectedStudentIds}
               onBulkArchive={() => setBulkArchiveOpen(true)}
               onBulkRestore={() => setBulkRestoreOpen(true)}
+              courses={courses}
+              sections={sections}
+              storageLayout={storageLayout}
+              onStudentUpdated={fetchData}
+              showToast={showToast}
+              allDocs={allDocs}
+              authUser={authUser}
             />
           </TabsContent>
 
@@ -2303,12 +2293,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               authUser={authUser}
               isOsas={isOsas}
               loading={!storageLayout}
-              uploadMode={uploadMode}
               uploadStudentIsExisting={uploadStudentIsExisting}
               setUploadStudentIsExisting={setUploadStudentIsExisting}
-              setUploadMode={(m) => {
-                setUploadMode(m);
-              }}
               dropActive={dropActive}
               setDropActive={setDropActive}
               uploadedFile={uploadedFile}
@@ -2333,26 +2319,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               ocrLoading={ocrLoading}
               ocrError={ocrError}
               ocrSuggestion={ocrSuggestion}
-              csvFile={csvFile}
-              csvRows={csvRows}
-              csvSelected={csvSelected}
-              toggleCsvSelectAll={(c) => {
-                const n = {};
-                if (c) csvRows.forEach((r) => (n[r.index] = true));
-                setCsvSelected(n);
-              }}
-              toggleCsvRowSelected={(i) =>
-                setCsvSelected((p) => ({ ...p, [i]: !p[i] }))
-              }
-              setCsvRowField={(i, f, v) => {
-                const n = [...csvRows];
-                const r = n.find((x) => x.index === i);
-                if (r) {
-                  if (r.student) r.student[f] = v;
-                  if (r.organization) r.organization[f] = v;
-                }
-                setCsvRows(n);
-              }}
               courses={courses}
               docTypes={docTypes}
               processSubmission={processSubmission}
@@ -2367,367 +2333,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               newStudentNoInputRef={newStudentNoInputRef}
               sysSections={availableSectionsForNewRecord}
               storageLayout={storageLayout}
-              csvInputRef={csvInputRef}
-              handleCsvFileSelect={(f) => {
-                if (!f) {
-                  setCsvFile(null);
-                  setCsvRows([]);
-                  setCsvResults([]);
-                  setCsvSelected({});
-                  if (csvInputRef.current) csvInputRef.current.value = "";
-                  return;
-                }
-                setCsvFile(f);
-                setCsvResults([]);
-                setCsvLoading(true);
-                const r = new FileReader();
-                r.onerror = () => {
-                  setCsvLoading(false);
-                  showToast({ title: "File Read Error", description: "Failed to read the selected CSV file." }, true);
-                };
-                r.onload = (e) => {
-                  try {
-                    const text = e.target?.result;
-                    if (!text || typeof text !== "string") {
-                      throw new Error("File is empty or could not be read.");
-                    }
-                    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-                    if (lines.length < 2) {
-                      throw new Error("CSV file must contain a header row and at least one record row.");
-                    }
-
-                    const parseCsvTokens = (line) => {
-                      const fields = [];
-                      let current = "";
-                      let inQuotes = false;
-                      for (let i = 0; i < line.length; i++) {
-                        const char = line[i];
-                        if (char === '"') {
-                          if (inQuotes && line[i + 1] === '"') {
-                            current += '"';
-                            i++;
-                          } else {
-                            inQuotes = !inQuotes;
-                          }
-                        } else if (char === "," && !inQuotes) {
-                          fields.push(current.trim());
-                          current = "";
-                        } else {
-                          current += char;
-                        }
-                      }
-                      fields.push(current.trim());
-                      return fields;
-                    };
-
-                    const headers = parseCsvTokens(lines[0])
-                      .map((h) => h.toLowerCase().replace(/[\s_-]+/g, ""));
-                    
-                    const isOfficeOsas = Boolean(isOsas || (authUser?.office_id || "").toLowerCase() === "osas");
-                    if (isOfficeOsas) {
-                      const rows = lines
-                        .slice(1)
-                        .filter((l) => l.trim())
-                        .map((l, i) => {
-                          const vals = parseCsvTokens(l);
-                          const row = {};
-                          headers.forEach((h, idx) => (row[h] = vals[idx]?.trim() || ""));
-                          const name = row.organization || row.name || row.organizationname || "";
-                          const acronym = (row.acronym || "").toUpperCase();
-                          const category = row.category || "Academic";
-                          const adviserName = row.adviser || row.advisername || "";
-                          const adviserEmail = row.email || row.adviseremail || "";
-                          const room = parseInt(row.room) || 1;
-                          const defaultCab = category.toLowerCase().includes("non-academic") ? "NON-ACADEMIC ORGANIZATIONS" : "ACADEMIC ORGANIZATIONS";
-                          const cabinet = row.cabinet || defaultCab;
-                          const drawer = parseInt(row.drawer) || 1;
-                          return {
-                            index: i + 1,
-                            organization: {
-                              name,
-                              acronym,
-                              category,
-                              adviserName,
-                              adviserEmail,
-                              room,
-                              cabinet,
-                              drawer,
-                            },
-                            student: {
-                              studentNo: acronym || `ORG-${i + 1}`,
-                              name,
-                              courseCode: acronym,
-                              yearLevel: 1,
-                              section: category,
-                              room,
-                              cabinet,
-                              drawer,
-                            },
-                            error: "",
-                          };
-                        });
-                      setCsvRows(rows);
-                      const defaultSelection = {};
-                      rows.forEach((row) => {
-                        defaultSelection[row.index] = true;
-                      });
-                      setCsvSelected(defaultSelection);
-                      return;
-                    }
-
-                    // Use first valid location from layout as fallback if CSV data is missing/invalid
-                    const defaultRoomId = storageLayout?.rooms?.[0]?.id || 1;
-                    const defaultCabId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.id || "A";
-                    const defaultDrawerId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.drawerIds?.[0] || 1;
-
-                    const rows = lines
-                      .slice(1)
-                      .filter((l) => l.trim())
-                      .map((l, i) => {
-                        const vals = parseCsvTokens(l);
-                        const row = {};
-                        headers.forEach((h, idx) => (row[h] = vals[idx]?.trim() || ""));
-                        const studentNo = row.studentno || row.student_no || "";
-                        let rawYear = parseInt(row.academicyear || row.yearlevel || row.year, 10);
-                        if (!Number.isInteger(rawYear) || (rawYear >= 1 && rawYear <= 5)) {
-                          const prefixMatch = studentNo.match(/^(\d{4})/);
-                          if (prefixMatch && Number(prefixMatch[1]) >= 2000 && Number(prefixMatch[1]) <= 2100) {
-                            rawYear = Number(prefixMatch[1]);
-                          } else {
-                            rawYear = new Date().getFullYear();
-                          }
-                        }
-
-                        return {
-                          index: i + 1,
-                          student: {
-                            studentNo,
-                            name: row.name || "",
-                            courseCode: (row.coursecode || row.course || "").toUpperCase(),
-                            yearLevel: rawYear,
-                            section: row.section || "",
-                            room: parseInt(row.room) || defaultRoomId,
-                            cabinet: row.cabinet || defaultCabId,
-                            drawer: parseInt(row.drawer) || defaultDrawerId,
-                          },
-                          error: "",
-                        };
-                      });
-                    setCsvRows(rows);
-                    const defaultSelection = {};
-                    rows.forEach((row) => {
-                      defaultSelection[row.index] = true;
-                    });
-                    setCsvSelected(defaultSelection);
-                  } catch (err) {
-                    showToast(
-                      formatErrorMessage(err, {
-                        title: "CSV Parsing Failed",
-                        actionContext: "Parsing student CSV upload",
-                      }),
-                      true
-                    );
-                  } finally {
-                    setCsvLoading(false);
-                  }
-                };
-                r.readAsText(f);
-              }}
-              csvDropActive={csvDropActive}
-              setCsvDropActive={setCsvDropActive}
-              csvBulkRoom={csvBulkRoom}
-              setCsvBulkRoom={setCsvBulkRoom}
-              csvBulkCabinet={csvBulkCabinet}
-              setCsvBulkCabinet={setCsvBulkCabinet}
-              csvBulkDrawer={csvBulkDrawer}
-              setCsvBulkDrawer={setCsvBulkDrawer}
-              applyCsvBulkLocation={() => {
-                const n = [...csvRows];
-                n.forEach((r) => {
-                  if (csvSelected[r.index]) {
-                    if (csvBulkRoom) {
-                      if (r.student) r.student.room = parseInt(csvBulkRoom);
-                      if (r.organization) r.organization.room = parseInt(csvBulkRoom);
-                    }
-                    if (csvBulkCabinet) {
-                      if (r.student) r.student.cabinet = csvBulkCabinet;
-                      if (r.organization) r.organization.cabinet = csvBulkCabinet;
-                    }
-                    if (csvBulkDrawer) {
-                      if (r.student) r.student.drawer = parseInt(csvBulkDrawer);
-                      if (r.organization) r.organization.drawer = parseInt(csvBulkDrawer);
-                    }
-                  }
-                });
-                setCsvRows(n);
-              }}
-              setCsvSelected={setCsvSelected}
-              importCsvStudents={async () => {
-                const targets = csvRows.filter((r) => csvSelected[r.index]);
-                if (targets.length === 0) {
-                  showToast({ title: "No Rows Selected", description: "Select at least one row from the CSV to import." }, true);
-                  return;
-                }
-                setCsvLoading(true);
-                try {
-                  const isOfficeOsas = Boolean(isOsas || (authUser?.office_id || "").toLowerCase() === "osas");
-                  if (isOfficeOsas) {
-                    const rs = await fetch("/api/osas/organizations/batch", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        rows: targets.map((t) => t.organization || t.student),
-                      }),
-                    });
-                    const json = await rs.json().catch(() => null);
-                    if (!rs.ok || !json?.ok || !Array.isArray(json?.data)) {
-                      throw new Error(json?.error || "Batch import failed");
-                    }
-
-                    const res = json.data;
-                    setCsvResults(res);
-                    const byIndex = new Map(res.map((item, idx) => [targets[idx]?.index, item]));
-                    const nextRows = csvRows.map((row) => {
-                      const result = byIndex.get(row.index);
-                      if (!result) return row;
-                      return {
-                        ...row,
-                        error: result.ok ? "" : String(result.error || "Import failed"),
-                      };
-                    });
-                    setCsvRows(nextRows);
-
-                    const orgsRes = await fetch("/api/osas/organizations").then(r => r.json()).catch(() => null);
-                    if (orgsRes?.ok && Array.isArray(orgsRes.data)) {
-                      setOrganizations(orgsRes.data);
-                    }
-
-                    const successCount = res.filter((r) => r.ok).length;
-                    const failCount = res.length - successCount;
-
-                    if (successCount === res.length) {
-                      showToast({
-                        title: "Import Successful",
-                        description: `Successfully registered all ${res.length} student organizations.`,
-                      });
-                      setCsvFile(null);
-                      setCsvRows([]);
-                      setCsvResults([]);
-                      if (csvInputRef.current) csvInputRef.current.value = "";
-                    } else if (successCount > 0) {
-                      showToast(
-                        {
-                          title: "Partial Import",
-                          description: `${successCount} organizations registered, ${failCount} skipped.`,
-                        },
-                        "warning"
-                      );
-                    } else {
-                      showToast(
-                        {
-                          title: "No Records Added",
-                          description: "All selected entries failed validation.",
-                        },
-                        "warning"
-                      );
-                    }
-
-                    setCsvError("");
-                    setCsvSelected({});
-                    fetchData();
-                    return;
-                  }
-
-                  const rs = await fetch("/api/students/batch", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      rows: targets.map((t) => t.student),
-                    }),
-                  });
-                  const json = await rs.json().catch(() => null);
-                  if (!rs.ok || !json?.ok || !Array.isArray(json?.data)) {
-                    throw new Error(json?.error || "Batch import failed");
-                  }
-
-                  const res = json.data;
-                  setCsvResults(res);
-
-                  const byIndex = new Map(
-                    res.map((item, idx) => [targets[idx]?.index, item])
-                  );
-                  const nextRows = csvRows.map((row) => {
-                    const result = byIndex.get(row.index);
-                    if (!result) return row;
-                    return {
-                      ...row,
-                      error: result.ok ? "" : String(result.error || "Import failed"),
-                    };
-                  });
-                  setCsvRows(nextRows);
-
-                  const createdRows = res
-                    .filter((r) => r.ok && r.data)
-                    .map((r) => normalizeStudentRow(r.data));
-                  if (createdRows.length > 0) {
-                    setStudents((prev) => {
-                      const map = new Map(prev.map((s) => [s.studentNo, s]));
-                      createdRows.forEach((row) => {
-                        const key = row.studentNo;
-                        map.set(key, row);
-                      });
-                      return Array.from(map.values());
-                    });
-                  }
-
-                  const successCount = res.filter((r) => r.ok).length;
-                  const failCount = res.length - successCount;
-
-                  if (successCount === res.length) {
-                    showToast({ 
-                      title: "Import Successful", 
-                      description: `Successfully added all ${res.length} student records.` 
-                    });
-                    // Clear CSV preview after fully successful import.
-                    setCsvFile(null);
-                    setCsvRows([]);
-                    setCsvResults([]);
-                    if (csvInputRef.current) csvInputRef.current.value = "";
-                  } else if (successCount > 0) {
-                    showToast(
-                      { 
-                        title: "Partial Import", 
-                        description: `${successCount} records added, ${failCount} skipped (duplicates or invalid).` 
-                      },
-                      "warning"
-                    );
-                  } else {
-                    showToast(
-                      { 
-                        title: "No Records Added", 
-                        description: `All ${failCount} selected entries already exist or contain errors.` 
-                      },
-                      "warning"
-                    );
-                  }
-
-                  setCsvSelected({});
-                  // Keep data in sync in background even after optimistic in-memory update.
-                  fetchData();
-                } catch (err) {
-                  showToast(
-                    formatErrorMessage(err, {
-                      title: "Import Failed",
-                      actionContext: "Batch importing student records",
-                    }),
-                    true
-                  );
-                } finally {
-                  setCsvLoading(false);
-                }
-              }}
-              csvLoading={csvLoading}
-              csvResults={csvResults}
               students={students}
               organizations={organizations}
               showToast={showToast}
@@ -2755,6 +2360,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               courses={courses}
               docTypes={requestableDocTypes}
               staffDocs={staffDocs}
+              officeId={authUser?.office_id}
               onLocateOnMap={goToStorageMapFromRequest}
               showToast={showToast}
             />
@@ -2855,6 +2461,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
               onPreviewDocument={handlePreviewDocument}
               onRescan={handleRescan}
+              onNavigateTab={switchView}
             />
           </TabsContent>
           </div>

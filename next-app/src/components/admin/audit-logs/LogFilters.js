@@ -213,7 +213,7 @@ export default function LogFilters({
                   {logStartDate ? format(parseDateLocal(logStartDate), "MMM d") : "Start"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+              <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={logStartDate ? parseDateLocal(logStartDate) : undefined}
@@ -240,7 +240,7 @@ export default function LogFilters({
                   {logEndDate ? format(parseDateLocal(logEndDate), "MMM d") : "End"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+              <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={logEndDate ? parseDateLocal(logEndDate) : undefined}

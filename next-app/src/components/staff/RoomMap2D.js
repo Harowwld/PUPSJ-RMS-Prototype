@@ -213,6 +213,7 @@ export default function RoomMap2D({
     <div
       ref={containerRef}
       className="relative h-full w-full overflow-hidden rounded-brand border border-border dark:border-border bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal"
+      style={{ containerType: "inline-size" }}
     >
       {!isPreview && (
       <div className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-[#292929]" style={{ backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`, backgroundSize: "2.5% 4%, 2.5% 4%" }} />
@@ -298,6 +299,7 @@ export default function RoomMap2D({
                 onCabinetClick?.(c.cab)
               }
             }}
+            title={`Cabinet ${c.cab}`}
           >
             {/* Physical Drawer Divisions & Handle Notches (Skeuomorphic-lite) */}
             <div className="absolute inset-0 flex flex-col pointer-events-none overflow-hidden rounded-[4px]">
@@ -332,7 +334,7 @@ export default function RoomMap2D({
               const otherCabinets = cabinetRects.filter((other) => other.cab !== c.cab)
               
               // Approximate normalized dimensions of the badge
-              const wl = 0.075
+              const wl = 0.12
               const hl = 0.035
 
               // Check if candidate placement rect overlaps canvas bounds or any other cabinet
@@ -396,19 +398,24 @@ export default function RoomMap2D({
               return (
                 <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
                   <div className={cn(
-                    "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap shadow-xs border font-sans",
+                    "inline-flex w-fit min-w-0 max-w-full items-center justify-center rounded-full px-[10px] py-[2px] text-[11px] font-medium tracking-[0.04em] shadow-xs border font-sans",
                     isTarget
                       ? "text-white"
                       : isSelected
                         ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
                         : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30"
                   )}
-                  style={isTarget ? {
-                    backgroundColor: theme.frontStart,
-                    borderColor: theme.frontEnd,
-                  } : undefined}
+                  style={{
+                    maxWidth: "12cqw",
+                    ...(isTarget ? {
+                      backgroundColor: theme.frontStart,
+                      borderColor: theme.frontEnd,
+                    } : {}),
+                  }}
                   >
-                    {c.cab}
+                    <span className="block min-w-0 max-w-full truncate whitespace-nowrap" title={c.cab}>
+                      {c.cab}
+                    </span>
                   </div>
                 </div>
               )

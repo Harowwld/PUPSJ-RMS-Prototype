@@ -364,7 +364,7 @@ export default function EditStudentModal({
                   Saving...
                 </span>
               ) : (
-                "Save"
+                "Save Changes"
               )}
             </Button>
           </DialogFooter>

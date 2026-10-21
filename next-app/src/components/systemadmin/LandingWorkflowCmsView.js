@@ -365,7 +365,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save Workflow Content"
                 )}
               </Button>
             </div>
@@ -721,7 +721,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                   title={`Add Another Workflow Step (${currentSteps.length}/${MAX_STEPS})`}
                   className="w-full py-4 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
-                  Add
+                  Add Step
                 </button>
               ) : (
                 <div className="w-full py-3.5 px-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">

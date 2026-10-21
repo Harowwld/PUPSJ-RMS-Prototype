@@ -529,7 +529,7 @@ export default function BulkImportQuestionsModal({
                   onClick={handleAddRow}
                   className="w-full h-9 text-xs font-semibold rounded-xl border border-dashed border-border dark:border-border hover:border-pup-maroon/60 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-700 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-pup-maroon shadow-none cursor-pointer active:scale-95 transition-all"
                 >
-                  Add
+                  Add Row
                 </Button>
               </div>
             </div>
@@ -552,7 +552,7 @@ export default function BulkImportQuestionsModal({
             disabled={!canImport}
             className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
           >
-            Import
+            Import Questions
           </Button>
         </DialogFooter>
       </DialogContent>

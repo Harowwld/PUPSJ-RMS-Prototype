@@ -311,6 +311,7 @@ export async function createDocumentRequest({
   studentAccountId = null,
   requesterRelationship = null,
   requesterContact = null,
+  attachments = [],
 }) {
   const sn = String(studentNo || "").trim().toUpperCase() || null;
   const dt = String(docType || "").trim();
@@ -348,9 +349,52 @@ export async function createDocumentRequest({
        VALUES ($1, 'Pending', 'Request initiated by Registrar Staff.', $2)`,
       [inserted.id, createdBy ?? null]
     );
+    for (const attachment of attachments) {
+      await run(
+        `INSERT INTO document_request_attachments (
+           document_request_id, original_filename, storage_filename, mime_type,
+           size_bytes, attachment_type, uploaded_by
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          inserted.id,
+          attachment.originalFilename,
+          attachment.storageFilename,
+          attachment.mimeType,
+          attachment.sizeBytes,
+          attachment.attachmentType || "evidence",
+          createdBy ?? null,
+        ]
+      );
+    }
     return inserted.id;
   });
+
   if (!id) return null;
+
+  try {
+    const { createNotification } = await import("./notificationsRepo.js");
+    await createNotification({
+      officeId,
+      type: "document_request",
+      title: `Document Request: ${dt} (Pending)`,
+      message: `Request #${id} for ${dt} (${rn || sn || "Student"}) submitted`,
+      severity: "info",
+      actorName: createdBy || "Student",
+      entityType: "document_request",
+      entityId: id,
+      metadata: {
+        request_id: id,
+        student_no: sn,
+        requester_name: rn,
+        doc_type: dt,
+        status: "Pending",
+        notes,
+        client_type: ct,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to create document_request notification:", err);
+  }
 
   return await getDocumentRequestById(id);
 }
@@ -488,7 +532,37 @@ export async function updateDocumentRequest(id, fields) {
   return true;
   });
   if (!updated) return null;
-  return await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
+  const result = await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
+  if (result && fields.status) {
+    try {
+      const { createNotification } = await import("./notificationsRepo.js");
+      const sev = result.status === "Completed" || result.status === "Ready" ? "success"
+        : result.status === "Cancelled" ? "error"
+        : result.status === "Deficient" ? "warning"
+        : "info";
+      await createNotification({
+        officeId: result.office_id || fields.officeId,
+        type: "document_request",
+        title: `Request ${result.status}: ${result.doc_type}`,
+        message: `Request #${id} for ${result.doc_type} (${result.requester_name || result.student_no || "Student"}) updated to ${result.status}`,
+        severity: sev,
+        actorName: fields.updatedBy || "Staff",
+        entityType: "document_request",
+        entityId: id,
+        metadata: {
+          request_id: id,
+          student_no: result.student_no,
+          requester_name: result.requester_name,
+          doc_type: result.doc_type,
+          status: result.status,
+          notes: fields.message || result.notes,
+        },
+      });
+    } catch (err) {
+      console.error("Failed to create document_request update notification:", err);
+    }
+  }
+  return result;
 }
 
 export async function addRequestAttachment({

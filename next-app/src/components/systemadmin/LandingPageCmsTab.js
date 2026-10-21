@@ -445,7 +445,7 @@ export default function LandingPageCmsTab({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save Landing Content"
                 )}
               </Button>
             </div>
@@ -636,7 +636,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         Uploading...
                       </>
                     ) : (
-                      "Upload"
+                      "Upload Photo"
                     )}
                   </Button>
                 </div>
@@ -714,7 +714,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   </div>
                   <div className="text-center">
                     <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      {isAddingPhoto ? "Uploading..." : "Add"}
+                      {isAddingPhoto ? "Uploading..." : "Add Photo"}
                     </span>
                     <span className="block text-[11px] text-gray-400 mt-0.5">
                       Click to choose an image from your computer

@@ -102,6 +102,32 @@ function getInitials(name = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/**
+ * Standard Information Row (label : value)
+ * Clean unboxed metadata layout aligned with colons and icons.
+ */
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  );
+}
+
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
@@ -564,6 +590,24 @@ export default function OSASOrganizationComplianceView({
     return sortedOrganizations.slice(startIndex, startIndex + pageSize);
   }, [sortedOrganizations, page, pageSize]);
 
+  const currentOrgIndex = selectedOrgForOfficers
+    ? sortedOrganizations.findIndex((o) => o.id === selectedOrgForOfficers.id)
+    : -1;
+
+  const handlePrevOrg = () => {
+    if (currentOrgIndex > 0) {
+      setSelectedOrgForOfficers(sortedOrganizations[currentOrgIndex - 1]);
+      setOfficerSearch("");
+    }
+  };
+
+  const handleNextOrg = () => {
+    if (currentOrgIndex >= 0 && currentOrgIndex < sortedOrganizations.length - 1) {
+      setSelectedOrgForOfficers(sortedOrganizations[currentOrgIndex + 1]);
+      setOfficerSearch("");
+    }
+  };
+
   const handleSort = (column) => {
     if (sortBy === column) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -745,7 +789,7 @@ export default function OSASOrganizationComplianceView({
                   {isExportingCsv ? (
                     <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
                   ) : (
-                    "Export"
+                    "Export CSV"
                   )}
                 </Button>
 
@@ -1364,7 +1408,7 @@ export default function OSASOrganizationComplianceView({
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer active:scale-95"
                                 title="Add Officers to Whitelist"
                               >
-                                <span>Add</span>
+                                <span>Add Officers</span>
                               </button>
                             )}
                           </td>
@@ -1440,8 +1484,8 @@ export default function OSASOrganizationComplianceView({
                             title="Reset Filters"
                             className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                           >
-                            Reset
-                          </Button>
+                    Reset Filters
+                  </Button>
                         </div>
                       )}
                     </EmptyHeader>
@@ -1522,221 +1566,292 @@ export default function OSASOrganizationComplianceView({
         >
           <SheetContent
             side="right"
-            className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-[48vw] xl:max-w-[48vw] data-[side=right]:w-full data-[side=right]:sm:max-w-xl data-[side=right]:md:max-w-2xl data-[side=right]:lg:max-w-[48vw] data-[side=right]:xl:max-w-[48vw] flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+            size="default"
+            showCloseButton={false}
+            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
-            {/* Sheet Header */}
-            <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                {selectedOrgForOfficers?.acronym && (
-                  <span className="px-2.5 py-0.5 text-[11px] font-bold font-mono tracking-wider rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border">
-                    {selectedOrgForOfficers.acronym}
-                  </span>
-                )}
-                <span className="px-2.5 py-0.5 text-[11px] font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                  {selectedOrgForOfficers?.category || "Student Org"}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {selectedOrgForOfficers?.status || "Active"}
-                </span>
-              </div>
-
-              <SheetTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50 leading-snug">
-                {selectedOrgForOfficers?.name}
-              </SheetTitle>
-              <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                Accredited Student Leadership Roster & Authorized Event Signatories.
-              </SheetDescription>
-
-              {/* Organization Summary Strip */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-3 border-t border-border dark:border-border">
-                {/* Officer Count Badge */}
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-800/60 border border-border/70 dark:border-border">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    <HugeIcon className="ph-bold ph-shield-check text-[15px]" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-zinc-500 block">
-                      Accredited Leadership
-                    </span>
-                    <span className="text-xs font-bold text-gray-900 dark:text-white">
-                      {selectedOrgForOfficers?.activeOfficerCount || 0} Whitelisted {selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}
-                    </span>
-                  </div>
+            {/* TOP HEADER: Organization Leadership Roster + < > 01 of XX + X button */}
+            <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+              <div className="flex items-center justify-between px-6 py-4">
+                <div>
+                  <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                    Organization Leadership Roster
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Accredited Student Leadership Roster & Authorized Event Signatories
+                  </SheetDescription>
                 </div>
 
-                {/* Faculty Adviser Snippet */}
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-800/60 border border-border/70 dark:border-border">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <HugeIcon className="ph-bold ph-chalkboard-teacher text-[15px]" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-zinc-500 block">
-                      Faculty Adviser
-                    </span>
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate block">
-                      {selectedOrgForOfficers?.adviserName || "Not assigned"}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3">
+                  {sortedOrganizations.length > 1 && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                      <button
+                        type="button"
+                        disabled={currentOrgIndex <= 0}
+                        onClick={handlePrevOrg}
+                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        aria-label="Previous Organization"
+                        title="Previous Organization"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={currentOrgIndex >= sortedOrganizations.length - 1}
+                        onClick={handleNextOrg}
+                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                        aria-label="Next Organization"
+                        title="Next Organization"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                      </button>
+                      <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                        {String(Math.max(1, currentOrgIndex + 1)).padStart(2, "0")} of {String(sortedOrganizations.length).padStart(2, "0")}
+                      </span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedOrgForOfficers(null);
+                      setOfficerSearch("");
+                    }}
+                    className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                    aria-label="Close"
+                    title="Close"
+                  >
+                    <HugeIcon className="ph-bold ph-x text-sm" />
+                  </button>
                 </div>
               </div>
             </SheetHeader>
 
-            {/* In-Sheet Search Filter */}
-            {selectedOrgForOfficers?.officers && selectedOrgForOfficers.officers.length > 2 && (
-              <div className="px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-                <div className="relative">
-                  <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <Input
-                    value={officerSearch}
-                    onChange={(e) => setOfficerSearch(e.target.value)}
-                    placeholder="Search by name, position, or email..."
-                    className="h-8.5 pl-8 pr-8 text-xs rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500 dark:focus-visible:ring-red-500"
-                  />
-
+            {/* SCROLLABLE 1-COLUMN BODY */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Summary Strip */}
+              <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 flex items-center justify-center text-xl shrink-0 font-bold border border-blue-500/20 dark:border-blue-800/40 mt-0.5">
+                  <HugeIcon className="ph-bold ph-shield-check" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    {selectedOrgForOfficers?.acronym && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold font-mono tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border">
+                        {selectedOrgForOfficers.acronym}
+                      </span>
+                    )}
+                    <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                      {selectedOrgForOfficers?.category || "Student Org"}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {selectedOrgForOfficers?.status || "Active"}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                    {selectedOrgForOfficers?.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                    Adviser: <strong className="text-gray-900 dark:text-zinc-200">{selectedOrgForOfficers?.adviserName || "Unassigned"}</strong>
+                  </p>
                 </div>
               </div>
-            )}
 
-            {/* Scrollable Officers Roster */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3">
-              {(() => {
-                const list = selectedOrgForOfficers?.officers || [];
-                const filtered = officerSearch.trim()
-                  ? list.filter((o) => {
-                      const q = officerSearch.toLowerCase().trim();
+              {/* SECTION 1: Leadership Overview (Unboxed InfoRow) */}
+              <div className="space-y-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Organization Standing
+                </h4>
+                <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                  <InfoRow icon="ph-buildings" label="Organization">
+                    <span>
+                      {selectedOrgForOfficers?.name}
+                      {selectedOrgForOfficers?.acronym && (
+                        <span className="text-gray-400 font-normal ml-1">({selectedOrgForOfficers.acronym})</span>
+                      )}
+                    </span>
+                  </InfoRow>
+
+                  <InfoRow icon="ph-tag" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
+
+                  <InfoRow icon="ph-chalkboard-teacher" label="Faculty Adviser">
+                    <span>
+                      {selectedOrgForOfficers?.adviserName || "Unassigned"}
+                      {selectedOrgForOfficers?.adviserEmail && (
+                        <span className="text-gray-400 font-normal ml-1">({selectedOrgForOfficers.adviserEmail})</span>
+                      )}
+                    </span>
+                  </InfoRow>
+
+                  <InfoRow
+                    icon="ph-shield-check"
+                    label="Accredited Officers"
+                    value={`${selectedOrgForOfficers?.activeOfficerCount || 0} Whitelisted ${selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}`}
+                  />
+
+                  <InfoRow icon="ph-chart-pie-slice" label="Accreditation Status">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {selectedOrgForOfficers?.status || "Active"}
+                    </span>
+                  </InfoRow>
+                </div>
+              </div>
+
+              {/* SECTION 2: Accredited Officers Roster */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Accredited Officer Roster
+                  </h4>
+                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 font-mono">
+                    {selectedOrgForOfficers?.officers?.length || 0} registered
+                  </span>
+                </div>
+
+                {/* In-Sheet Search Filter */}
+                {selectedOrgForOfficers?.officers && selectedOrgForOfficers.officers.length > 2 && (
+                  <div className="relative">
+                    <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                    <Input
+                      value={officerSearch}
+                      onChange={(e) => setOfficerSearch(e.target.value)}
+                      placeholder="Search by name, position, or email..."
+                      className="h-9 pl-8 pr-8 text-xs rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500 dark:focus-visible:ring-red-500"
+                    />
+                  </div>
+                )}
+
+                {/* Officers List */}
+                <div className="space-y-2.5">
+                  {(() => {
+                    const list = selectedOrgForOfficers?.officers || [];
+                    const filtered = officerSearch.trim()
+                      ? list.filter((o) => {
+                          const q = officerSearch.toLowerCase().trim();
+                          return (
+                            (o.name || "").toLowerCase().includes(q) ||
+                            (o.position || "").toLowerCase().includes(q) ||
+                            (o.email || "").toLowerCase().includes(q) ||
+                            (o.studentNo || "").toLowerCase().includes(q)
+                          );
+                        })
+                      : list;
+
+                    if (filtered.length === 0) {
                       return (
-                        (o.name || "").toLowerCase().includes(q) ||
-                        (o.position || "").toLowerCase().includes(q) ||
-                        (o.email || "").toLowerCase().includes(q) ||
-                        (o.studentNo || "").toLowerCase().includes(q)
+                        <div className="py-10 px-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 text-center">
+                          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center mx-auto mb-2.5 shadow-xs">
+                            <HugeIcon className="ph-duotone ph-users-three text-xl" />
+                          </div>
+                          <h4 className="text-xs font-bold text-gray-900 dark:text-white">
+                            No Officers Found
+                          </h4>
+                          <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 max-w-xs mx-auto">
+                            {officerSearch.trim()
+                              ? "No student officers match your search query."
+                              : "This organization currently has no active student officers recorded on the OSAS whitelist."}
+                          </p>
+                        </div>
                       );
-                    })
-                  : list;
+                    }
 
-                if (filtered.length === 0) {
-                  return (
-                    <div className="py-12 px-6 rounded-2xl border border-dashed border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 text-center">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center mx-auto mb-3 shadow-xs">
-                        <HugeIcon className="ph-duotone ph-users-three text-2xl" />
-                      </div>
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                        No Whitelisted Officers Found
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
-                        {officerSearch.trim()
-                          ? "No student officers match your search query inside this organization roster."
-                          : "This student organization currently has no active student officers recorded on the OSAS accreditation whitelist."}
-                      </p>
-                      <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-gray-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-border dark:border-border shadow-xs">
-                        <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
-                        <span>Student officers can be whitelisted by OSAS personnel in the Student Organizations tab</span>
-                      </div>
-                    </div>
-                  );
-                }
+                    return filtered.map((officer) => {
+                      const roleStyle = getOfficerRoleStyle(officer.position);
+                      const initials = getInitials(officer.name);
+                      const avatarSrc = officer.avatarFilename
+                        ? `/api/account/avatar?id=${officer.studentAccountId || officer.studentNo || officer.id}&t=${officer.avatarFilename}`
+                        : null;
 
-                return filtered.map((officer) => {
-                  const roleStyle = getOfficerRoleStyle(officer.position);
-                  const initials = getInitials(officer.name);
-                  const avatarSrc = officer.avatarFilename
-                    ? `/api/account/avatar?id=${officer.studentAccountId || officer.studentNo || officer.id}&t=${officer.avatarFilename}`
-                    : null;
+                      return (
+                        <div
+                          key={officer.id || officer.email}
+                          className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/40 dark:bg-zinc-900/40 hover:border-border dark:hover:border-white/20 transition-all shadow-2xs group"
+                        >
+                          {/* Left: Avatar + Details */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="shrink-0">
+                              <Avatar className={cn("size-10 rounded-full ring-2 shadow-2xs font-jakarta", roleStyle.ring)}>
+                                {avatarSrc && (
+                                  <AvatarImage
+                                    src={avatarSrc}
+                                    alt={officer.name}
+                                    className="rounded-full object-cover"
+                                  />
+                                )}
+                                <AvatarFallback
+                                  className={cn(
+                                    "rounded-full font-bold text-xs tracking-wider bg-gradient-to-br select-none",
+                                    roleStyle.gradient
+                                  )}
+                                >
+                                  {initials}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
 
-                  return (
-                    <div
-                      key={officer.id || officer.email}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 p-4 rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/80 hover:border-border dark:hover:border-white/20 transition-all shadow-xs group"
-                    >
-                      {/* Left: Modern Avatar + Details */}
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        {/* Standardized Circular Avatar */}
-                        <div className="shrink-0">
-                          <Avatar className={cn("size-12 rounded-full ring-2 shadow-sm font-jakarta", roleStyle.ring)}>
-                            {avatarSrc && (
-                              <AvatarImage
-                                src={avatarSrc}
-                                alt={officer.name}
-                                className="rounded-full object-cover"
-                              />
-                            )}
-                            <AvatarFallback
-                              className={cn(
-                                "rounded-full font-bold text-sm tracking-wider bg-gradient-to-br select-none",
-                                roleStyle.gradient
-                              )}
-                            >
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate">
+                                  {officer.name}
+                                </h5>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[9px] font-semibold px-2 py-0 rounded-full border",
+                                    roleStyle.badge
+                                  )}
+                                >
+                                  {officer.position}
+                                </Badge>
+                              </div>
 
-                        {/* Officer Identity & Badges */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h5 className="text-sm font-bold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] truncate">
-                              {officer.name}
-                            </h5>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border",
-                                roleStyle.badge
-                              )}
-                            >
-                              {officer.position}
-                            </Badge>
+                              <div className="mt-0.5 flex items-center gap-2 flex-wrap text-[11px] text-gray-500 dark:text-zinc-400">
+                                {officer.studentNo && (
+                                  <span className="font-mono text-[10px] text-gray-600 dark:text-zinc-400">
+                                    {officer.studentNo}
+                                  </span>
+                                )}
+                                {officer.studentNo && <span className="text-gray-300 dark:text-zinc-600">·</span>}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!officer.email) return;
+                                    navigator.clipboard.writeText(officer.email);
+                                    showToast?.({
+                                      title: "Email Copied",
+                                      description: `${officer.name || "Officer"}'s email copied to clipboard.`,
+                                    });
+                                  }}
+                                  className="group/btn inline-flex items-center gap-1 font-mono text-[10px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+                                  title="Click to copy email"
+                                >
+                                  <HugeIcon className="ph-bold ph-envelope-simple text-[11px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
+                                  <span className="truncate max-w-[160px]">{officer.email}</span>
+                                  <HugeIcon className="ph-bold ph-copy text-[10px] opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                                </button>
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-gray-600 dark:text-zinc-400">
-                            {officer.studentNo && (
-                              <span className="font-mono text-[11px] font-medium text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-border/50 dark:border-border">
-                                {officer.studentNo}
-                              </span>
-                            )}
-                            {officer.studentNo && <span className="text-gray-300 dark:text-zinc-600">·</span>}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!officer.email) return;
-                                navigator.clipboard.writeText(officer.email);
-                                showToast?.({
-                                  title: "Email Copied",
-                                  description: `${officer.name || "Officer"}'s email copied to clipboard.`,
-                                });
-                              }}
-                              className="group/btn inline-flex items-center gap-1 font-mono text-[11px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-                              title="Click to copy institutional email"
-                            >
-                              <HugeIcon className="ph-bold ph-envelope-simple text-[12px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
-                              <span className="truncate max-w-[200px]">{officer.email}</span>
-                              <HugeIcon className="ph-bold ph-copy text-[11px] opacity-0 group-hover/btn:opacity-100 transition-opacity ml-0.5" />
-                            </button>
+                          {/* Right: Authorization Pill */}
+                          <div className="shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                              <HugeIcon className="ph-bold ph-shield-check text-xs text-emerald-600 dark:text-emerald-400" />
+                              <span>Signatory</span>
+                            </span>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Right: Authorization Status Pill */}
-                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border dark:border-border">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
-                          <HugeIcon className="ph-bold ph-shield-check text-xs text-emerald-600 dark:text-emerald-400" />
-                          <span>Authorized Signatory</span>
-                        </span>
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
-                          OSAS Whitelist
-                        </span>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
             </div>
 
-            {/* Sheet Footer */}
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
-              <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-                {selectedOrgForOfficers?.acronym ? `ORG: ${selectedOrgForOfficers.acronym}` : "OSAS Roster"} • {selectedOrgForOfficers?.activeOfficerCount || 0} {selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}
-              </span>
+            {/* STICKY SHEET FOOTER */}
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-end shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -1884,7 +1999,7 @@ export default function OSASOrganizationComplianceView({
                   disabled={!pdfBlobUrl}
                   className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                 >
-                  Download
+                  Download PDF
                 </Button>
               </div>
             </div>

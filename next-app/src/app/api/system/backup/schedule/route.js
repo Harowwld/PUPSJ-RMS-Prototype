@@ -68,12 +68,21 @@ export async function GET(req) {
         lastRunStatus: null,
         lastRunFilename: null,
         createdBy: null,
+        retention: {
+          enabled: true,
+          daily: 7,
+          weekly: 4,
+          monthly: 12,
+        },
       },
     });
   }
 
   try {
     const schedule = JSON.parse(raw);
+    if (!schedule.retention) {
+      schedule.retention = { enabled: true, daily: 7, weekly: 4, monthly: 12 };
+    }
     return NextResponse.json({ ok: true, data: schedule });
   } catch {
     return NextResponse.json({
@@ -87,6 +96,12 @@ export async function GET(req) {
         lastRunStatus: null,
         lastRunFilename: null,
         createdBy: null,
+        retention: {
+          enabled: true,
+          daily: 7,
+          weekly: 4,
+          monthly: 12,
+        },
       },
     });
   }
@@ -95,7 +110,7 @@ export async function GET(req) {
 /**
  * POST /api/system/backup/schedule
  * Updates the auto backup schedule configuration.
- * Body: { enabled, frequency, time, dayOfWeek }
+ * Body: { enabled, frequency, time, dayOfWeek, retention }
  */
 export async function POST(req) {
   const { user, error } = await requireAdmin(req);
@@ -107,15 +122,15 @@ export async function POST(req) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
   }
-  const allowedFields = new Set(["enabled", "frequency", "time", "dayOfWeek", "scope", "officeId"]);
+  const allowedFields = new Set(["enabled", "frequency", "time", "dayOfWeek", "scope", "officeId", "retention"]);
   const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
   if (unsupportedField) {
     return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
   }
-  if (!["enabled", "frequency", "time", "dayOfWeek"].some((field) => body[field] !== undefined)) {
+  if (!["enabled", "frequency", "time", "dayOfWeek", "retention"].some((field) => body[field] !== undefined)) {
     return NextResponse.json({ ok: false, error: "At least one schedule field is required" }, { status: 400 });
   }
-  const { enabled, frequency, time, dayOfWeek, scope: reqScope, officeId: reqOfficeId } = body;
+  const { enabled, frequency, time, dayOfWeek, scope: reqScope, officeId: reqOfficeId, retention } = body;
 
   if (enabled !== undefined && typeof enabled !== "boolean") {
     return NextResponse.json({ ok: false, error: "enabled must be a boolean" }, { status: 400 });
@@ -154,6 +169,16 @@ export async function POST(req) {
     }
   }
 
+  // Validate retention
+  if (retention !== undefined) {
+    if (typeof retention !== "object" || retention === null || Array.isArray(retention)) {
+      return NextResponse.json({ ok: false, error: "retention must be an object" }, { status: 400 });
+    }
+    if (retention.enabled !== undefined && typeof retention.enabled !== "boolean") {
+      return NextResponse.json({ ok: false, error: "retention.enabled must be a boolean" }, { status: 400 });
+    }
+  }
+
   const key = getSettingsKey(user, reqScope, reqOfficeId);
 
   // Read existing schedule to preserve lastRun data
@@ -174,10 +199,25 @@ export async function POST(req) {
     time: time || existing.time || "02:00",
     dayOfWeek:
       dayOfWeek !== undefined ? Number(dayOfWeek) : existing.dayOfWeek ?? 0,
+    retention: retention !== undefined
+      ? {
+          enabled: retention.enabled !== undefined ? !!retention.enabled : true,
+          daily: Number(retention.daily) || 7,
+          weekly: Number(retention.weekly) || 4,
+          monthly: Number(retention.monthly) || 12,
+        }
+      : existing.retention || {
+          enabled: true,
+          daily: 7,
+          weekly: 4,
+          monthly: 12,
+        },
     lastRunAt: existing.lastRunAt || null,
     lastRunStatus: existing.lastRunStatus || null,
     lastRunFilename: existing.lastRunFilename || null,
     lastRunError: existing.lastRunError || null,
+    lastRetentionPrunedCount: existing.lastRetentionPrunedCount ?? null,
+    lastRetentionRunAt: existing.lastRetentionRunAt ?? null,
     createdBy: user.id,
   };
 

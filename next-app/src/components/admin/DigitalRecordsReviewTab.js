@@ -13,7 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { formatPHDateTime } from "@/lib/timeFormat"
-import { generateExportFilename } from "@/lib/exportHelpers"
 import {
   Empty,
   EmptyHeader,
@@ -118,7 +117,6 @@ export default function DigitalRecordsReviewTab({
   const [sortOrder, setSortOrder] = useState("DESC")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
-  const [isExporting, setIsExporting] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
   const [selectedKpi, setSelectedKpi] = useState(null)
@@ -346,53 +344,7 @@ export default function DigitalRecordsReviewTab({
     setCurrentPage(1)
   }
 
-  const handleExportCSV = async () => {
-    if (isExporting) return
-    setIsExporting(true)
-    try {
-      const rows = sortedRecords
-      const headers = ["Record ID", "Student no.", "Student Name", "Document Type", "Filename", "Status", "Reviewed By", "Reviewed At", "Uploaded At"]
-      const csvRows = rows.map((r) => [
-        r?.id ?? "",
-        r?.student_no || "N/A",
-        r?.student_name || "N/A",
-        r?.doc_type || "N/A",
-        r?.original_filename || "N/A",
-        r?.approval_status || "Pending",
-        r?.reviewed_by || "N/A",
-        r?.reviewed_at ? formatPHDateTime(r.reviewed_at) : "N/A",
-        r?.created_at ? formatPHDateTime(r.created_at) : "N/A",
-      ])
-      const csvContent = [
-        headers.join(","),
-        ...csvRows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
-      ].join("\n")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      const url = URL.createObjectURL(blob)
-      const fileName = generateExportFilename("DIGITAL-RECORDS", "REVIEW", "csv")
-      link.setAttribute("href", url)
-      link.setAttribute("download", fileName)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
 
-      showToast?.({
-        title: "Export Success",
-        description: `Dataset exported successfully as ${fileName}.`
-      })
-
-      onLogAction?.({
-        action: "Export Records",
-        details: `exported ${rows.length} digital records to CSV for administrative review`,
-        entityType: "Report"
-      })
-    } catch (err) {
-      console.error("[Export Error]", err)
-    } finally {
-      setIsExporting(false)
-    }
-  }
 
   const sortedRecords = useMemo(() => {
     const baseFiltered = (records || []).filter((r) => {
@@ -751,23 +703,6 @@ export default function DigitalRecordsReviewTab({
                   isLoading={isManualLoading} 
                   title="Refresh Review Data"
                 />
-
-                
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleExportCSV}
-                    disabled={isLoading || isExporting}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                  >
-                    {isExporting ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
-                    ) : (
-                      "Export"
-                    )}
-                  </Button>
-                </div>
               </div>
             }
           />
@@ -1104,7 +1039,7 @@ export default function DigitalRecordsReviewTab({
                       {dateFrom ? format(new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00"), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateFrom ? new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00") : undefined}
@@ -1131,7 +1066,7 @@ export default function DigitalRecordsReviewTab({
                       {dateTo ? format(new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00"), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateTo ? new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00") : undefined}
@@ -1337,8 +1272,8 @@ export default function DigitalRecordsReviewTab({
                                 title="Reset Filters"
                                 className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                Reset
-                              </Button>
+                    Reset Filters
+                  </Button>
                             )}
                           </EmptyHeader>
                         </Empty>
@@ -1563,12 +1498,12 @@ export default function DigitalRecordsReviewTab({
                 onCancel={() => setSelectedIds(new Set())}
                 actions={[
                   {
-                    label: "Approve",
+                    label: "Approve Records",
                     variant: "success",
                     onClick: handleBulkApprove,
                   },
                   {
-                    label: "Decline",
+                    label: "Decline Records",
                     variant: "danger",
                     onClick: handleBulkDecline,
                   },

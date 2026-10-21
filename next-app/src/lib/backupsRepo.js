@@ -81,7 +81,7 @@ export function getExternalBackupsDir() {
       targetDir = path.join(targetDir, "PUPSJ_BACKUPS");
     }
     if (!fs.existsSync(/*turbopackIgnore: true*/ targetDir)) {
-      fs.mkdirSync(targetDir);
+      fs.mkdirSync(targetDir, { recursive: true });
     }
     return targetDir;
   }
@@ -262,63 +262,77 @@ export async function deleteBackupAndFile(id, backupRecord) {
   return { backup, deleted: changes > 0, cleanupPending };
 }
 
+const activeSyncPromises = new Map();
+
 export async function syncBackupExternally(id) {
-  let temporaryPath;
-  try {
-    const backup = await getBackupById(id);
-    if (!backup) {
-      console.error(`[SYNC DEBUG] CRITICAL: Backup record ${id} not found in DB.`);
-      throw new Error("Backup record not found");
-    }
-
-    const backupsDir = getBackupsDir();
-    const sourcePath = getBackupFilePath(backup.filename, backupsDir);
-
-    if (!fs.existsSync(sourcePath)) {
-      throw new Error("Source backup file is unavailable.");
-    }
-
-    // Ensure PUPSJRMS Backups folder exists on the external drive
-    const externalDir = getExternalBackupsDir();
-
-    // Create a dated subfolder: YYYY-MM-DD
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-    const dailyDir = path.join(/*turbopackIgnore: true*/ externalDir, today);
-    if (!fs.existsSync(/*turbopackIgnore: true*/ dailyDir)) {
-      fs.mkdirSync(dailyDir);
-    }
-
-    const destPath = getBackupFilePath(backup.filename, dailyDir);
-    
-    temporaryPath = `${destPath}.${crypto.randomBytes(8).toString("hex")}.partial`;
-    fs.copyFileSync(sourcePath, temporaryPath, fs.constants.COPYFILE_EXCL);
-    const copiedChecksum = crypto.createHash("sha256").update(fs.readFileSync(/*turbopackIgnore: true*/ temporaryPath)).digest("hex");
-    if (!backup.checksum || copiedChecksum !== backup.checksum) {
-      throw new Error("External backup checksum verification failed.");
-    }
-    fs.renameSync(temporaryPath, destPath);
-    temporaryPath = null;
-
-    // Update DB status
-    await updateBackupStatus(id, "status_external", "Success");
-    
-    return { ok: true };
-  } catch (error) {
-    if (temporaryPath) {
-      try {
-        fs.unlinkSync(temporaryPath);
-      } catch (cleanupError) {
-        if (cleanupError.code !== "ENOENT") console.error("Failed to remove incomplete external backup:", cleanupError.message);
-      }
-    }
-    console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
-    try {
-      await updateBackupStatus(id, "status_external", "Failed");
-    } catch (dbErr) {
-      console.error(`[SYNC DEBUG] Failed to record failure status in DB:`, dbErr.message);
-    }
-    throw error;
+  const normalizedId = String(id);
+  if (activeSyncPromises.has(normalizedId)) {
+    return activeSyncPromises.get(normalizedId);
   }
+
+  const syncPromise = (async () => {
+    let temporaryPath;
+    try {
+      const backup = await getBackupById(id);
+      if (!backup) {
+        console.error(`[SYNC DEBUG] CRITICAL: Backup record ${id} not found in DB.`);
+        throw new Error("Backup record not found");
+      }
+
+      const backupsDir = getBackupsDir();
+      const sourcePath = getBackupFilePath(backup.filename, backupsDir);
+
+      if (!fs.existsSync(sourcePath)) {
+        throw new Error("Source backup file is unavailable.");
+      }
+
+      // Ensure PUPSJRMS Backups folder exists on the external drive
+      const externalDir = getExternalBackupsDir();
+
+      // Create a dated subfolder: YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const dailyDir = path.join(/*turbopackIgnore: true*/ externalDir, today);
+      if (!fs.existsSync(/*turbopackIgnore: true*/ dailyDir)) {
+        fs.mkdirSync(dailyDir, { recursive: true });
+      }
+
+      const destPath = getBackupFilePath(backup.filename, dailyDir);
+      
+      temporaryPath = `${destPath}.${crypto.randomBytes(8).toString("hex")}.partial`;
+      fs.copyFileSync(sourcePath, temporaryPath, fs.constants.COPYFILE_EXCL);
+      const copiedChecksum = crypto.createHash("sha256").update(fs.readFileSync(/*turbopackIgnore: true*/ temporaryPath)).digest("hex");
+      if (!backup.checksum || copiedChecksum !== backup.checksum) {
+        throw new Error("External backup checksum verification failed.");
+      }
+      fs.renameSync(temporaryPath, destPath);
+      temporaryPath = null;
+
+      // Update DB status
+      await updateBackupStatus(id, "status_external", "Success");
+      
+      return { ok: true };
+    } catch (error) {
+      if (temporaryPath) {
+        try {
+          fs.unlinkSync(temporaryPath);
+        } catch (cleanupError) {
+          if (cleanupError.code !== "ENOENT") console.error("Failed to remove incomplete external backup:", cleanupError.message);
+        }
+      }
+      console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
+      try {
+        await updateBackupStatus(id, "status_external", "Failed");
+      } catch (dbErr) {
+        console.error(`[SYNC DEBUG] Failed to record failure status in DB:`, dbErr.message);
+      }
+      throw error;
+    } finally {
+      activeSyncPromises.delete(normalizedId);
+    }
+  })();
+
+  activeSyncPromises.set(normalizedId, syncPromise);
+  return syncPromise;
 }
 
 function dumpPostgresTables(tables, targetSqlPath) {

@@ -700,7 +700,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     {isExporting ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                     ) : (
-                      "Export"
+                      "Export CSV"
                     )}
                   </Button>
                   <Button
@@ -713,7 +713,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     {isGeneratingPdf ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                     ) : (
-                      "Download"
+                      "Official Report (PDF)"
                     )}
                   </Button>
                 </div>
@@ -825,7 +825,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -853,7 +853,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto sm:w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={endDate ? parseDateLocal(endDate) : undefined}
@@ -950,8 +950,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       title="Reset Filters"
                       className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                      Reset
-                    </Button>
+                    Reset Filters
+                  </Button>
                   )}
                 </EmptyHeader>
               </Empty>
@@ -1249,6 +1249,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
           onPrev={handlePrevLog}
           hasNext={logs.length > 0 && selectedLog && logs.findIndex((l) => l.id === selectedLog.id) < logs.length - 1}
           hasPrev={logs.length > 0 && selectedLog && logs.findIndex((l) => l.id === selectedLog.id) > 0}
+          currentIndex={selectedLog ? logs.findIndex((l) => l.id === selectedLog.id) : -1}
+          totalCount={logs.length}
         />
 
         {/* PDF Export Preview Dialog */}

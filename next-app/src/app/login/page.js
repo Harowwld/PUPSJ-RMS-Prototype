@@ -970,7 +970,7 @@ export default function Home() {
                     </div>
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                       <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white disabled:opacity-50">
-                        {forgotLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-lg" /> : "Reset"}
+                        {forgotLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-lg" /> : "Reset Password"}
                       </Button>
                     </div>
                     <div className="absolute bottom-[38px] left-[52px] right-[52px] text-center">
@@ -1222,7 +1222,7 @@ export default function Home() {
                 side="top"
                 sideOffset={10}
                 align="center"
-                className="w-[370px] p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
+                className="w-80 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
               >
                 {/* Header */}
                 <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
@@ -1256,7 +1256,7 @@ export default function Home() {
                           <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate">
                             {acc.role}
                           </span>
-                          <span className={`text-[9px] font-medium px-1.5 py-0.2 rounded-full shrink-0 ${acc.badgeColor}`}>
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${acc.badgeColor}`}>
                             {acc.badge}
                           </span>
                         </div>
@@ -1343,7 +1343,7 @@ export default function Home() {
                       Verifying...
                     </>
                   ) : (
-                    "Verify"
+                    "Verify & Log In"
                   )}
                 </Button>
                 <Button

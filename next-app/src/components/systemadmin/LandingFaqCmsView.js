@@ -351,7 +351,7 @@ export default function LandingFaqCmsView({ showToast }) {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save FAQ Content"
                 )}
               </Button>
             </div>
@@ -741,7 +741,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   title={`Add Another Question (${faqData.faqs.length}/${MAX_FAQ_ITEMS})`}
                   className="w-full py-3.5 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
-                  Add
+                  Add Question
                 </button>
               ) : (
                 <div className="w-full py-3 px-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">

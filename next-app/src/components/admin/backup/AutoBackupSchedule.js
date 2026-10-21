@@ -90,6 +90,12 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
     lastRunAt: null,
     lastRunStatus: null,
     lastRunFilename: null,
+    retention: {
+      enabled: true,
+      daily: 7,
+      weekly: 4,
+      monthly: 12,
+    },
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -177,6 +183,14 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
   const handleDayChange = (e) => {
     const newDay = Number(e.target.value)
     const updated = { ...schedule, dayOfWeek: newDay }
+    setSchedule(updated)
+    saveSchedule({ ...updated })
+  }
+
+  const handleRetentionToggle = () => {
+    const currentRetention = schedule.retention ?? { enabled: true, daily: 7, weekly: 4, monthly: 12 }
+    const updatedRetention = { ...currentRetention, enabled: !currentRetention.enabled }
+    const updated = { ...schedule, retention: updatedRetention }
     setSchedule(updated)
     saveSchedule({ ...updated })
   }
@@ -387,6 +401,46 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 ))}
               </Select>
             </div>
+          </div>
+
+          {/* Row 4: GFS 7/4/12 Smart Storage Retention Toggle */}
+          <div className="min-h-[52px] px-5 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+            <div className="flex flex-col max-w-[80%]">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                  Smart Storage Retention (GFS 7/4/12)
+                </span>
+                <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40 px-2 py-0.5 text-[10px] font-semibold">
+                  Recommended
+                </span>
+              </div>
+              <span className="text-[11px] text-gray-600 dark:text-zinc-400 mt-0.5 leading-normal">
+                Retains 7 daily, 4 weekly, and 12 monthly recovery points on local disk (~23 archives/year). Manual and safety snapshots are permanently preserved.
+              </span>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={schedule.retention?.enabled !== false}
+              onClick={handleRetentionToggle}
+              disabled={isSaving}
+              aria-label="Toggle GFS smart storage retention"
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 active:scale-95",
+                schedule.retention?.enabled !== false
+                  ? "bg-blue-600"
+                  : "bg-gray-200 dark:bg-zinc-700",
+                isSaving && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-out",
+                  schedule.retention?.enabled !== false ? "translate-x-4" : "translate-x-0"
+                )}
+              />
+            </button>
           </div>
 
           {/* Apple Time Machine Status Strip */}

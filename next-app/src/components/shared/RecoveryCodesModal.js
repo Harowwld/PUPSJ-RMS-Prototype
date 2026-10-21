@@ -161,7 +161,7 @@ export default function RecoveryCodesModal({
               className="flex-1 h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center gap-1.5"
             >
               <HugeIcon className="ph-bold ph-download-simple" />
-              Download
+              Download Codes
             </Button>
           </div>
         </div>

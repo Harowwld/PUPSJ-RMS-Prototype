@@ -1,6 +1,7 @@
 import { dbAll, dbRun } from "./postgresCompat.js";
 import { executeSystemBackup, executeOfficeBackup, syncBackupExternally } from "./backupsRepo.js";
 import { createAuditLog } from "./auditLogsRepo.js";
+import { applyGfsRetention } from "./backupRetention.js";
 
 /**
  * Next.js Instrumentation Hook: Auto Backup Scheduler
@@ -73,11 +74,13 @@ async function runScheduledBackups() {
       if (isSystem) {
         record = await executeSystemBackup({
           actorId: schedule.createdBy || null,
+          backupType: "Scheduled",
         });
       } else {
         record = await executeOfficeBackup({
           officeId: officeId || "registrar",
           actorId: schedule.createdBy || null,
+          backupType: "Scheduled",
         });
       }
 
@@ -95,6 +98,23 @@ async function runScheduledBackups() {
         schedule.lastRunExternalStatus = "failed";
         schedule.lastRunExternalError = externalErr.message;
         console.error("[AutoBackup] Local backup saved; external copy failed:", externalErr.message);
+      }
+
+      // Apply GFS retention policy (7 daily, 4 weekly, 12 monthly) to local primary storage
+      const retentionConfig = schedule.retention ?? { enabled: true, daily: 7, weekly: 4, monthly: 12 };
+      if (retentionConfig.enabled !== false) {
+        try {
+          const retentionResult = await applyGfsRetention({
+            scope: isSystem ? "system" : "office",
+            officeId: isSystem ? null : (officeId || "registrar"),
+            retentionConfig,
+            actorId: "System Scheduler",
+          });
+          schedule.lastRetentionPrunedCount = retentionResult.prunedCount;
+          schedule.lastRetentionRunAt = now.toISOString();
+        } catch (retentionErr) {
+          console.error("[AutoBackup] Retention pruning failed:", retentionErr.message);
+        }
       }
 
       await dbRun(

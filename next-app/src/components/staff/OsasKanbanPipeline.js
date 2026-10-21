@@ -590,7 +590,7 @@ export default function OsasKanbanPipeline({
                               {dateStr}
                             </span>
                             <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                              <span>Review</span>
+                              <span>Review Proposal</span>
                               <HugeIcon className="ph-bold ph-arrow-right text-[10px]" />
                             </span>
                           </div>

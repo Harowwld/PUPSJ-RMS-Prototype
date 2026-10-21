@@ -119,7 +119,7 @@ export default function PublicTracker() {
               title="Verify Request Status"
               className="h-13 px-8 rounded-2xl bg-[#800000] hover:bg-[#600000] text-xs font-semibold text-white shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              {loading ? "Checking..." : "Verify"}
+              {loading ? "Checking..." : "Track Request Status"}
             </Button>
           </div>
         </form>

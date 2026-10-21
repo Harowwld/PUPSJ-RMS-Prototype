@@ -69,7 +69,6 @@ export default function DocTypesTab({
   sortDoc,
   showToast,
   loadAll,
-  handleExportDocTypes: handleExportProp,
 }) {
   const [localSearch, setLocalSearch] = useState(docSearch)
 
@@ -89,7 +88,6 @@ export default function DocTypesTab({
     isRequestable: false,
     isCompliance: false,
   })
-  const [isExporting, setIsExporting] = useState(false)
 
   const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
 
@@ -225,42 +223,7 @@ export default function DocTypesTab({
   }
 
 
-  const handleExportDocTypes = handleExportProp || (() => {
-    const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
-    const csvContent = [
-      ["ID", "Name", "Status"],
-      ...docTypes.map((dt) => [dt?.id ?? "", dt?.name || "", dt?.status || "Active"]),
-    ]
-      .map((row) => row.map(q).join(","))
-      .join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    link.href = URL.createObjectURL(blob)
-    link.setAttribute(
-      "download",
-      `document_types_${new Date().toISOString().split("T")[0]}.csv`
-    )
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
 
-    if (showToast) {
-      showToast({
-        title: "Export Success",
-        description: "Document types taxonomy has been successfully exported to CSV.",
-      })
-    }
-  })
-
-  const onExportClick = async () => {
-    setIsExporting(true)
-    try {
-      await new Promise(resolve => setTimeout(resolve, 600))
-      await handleExportDocTypes()
-    } finally {
-      setIsExporting(false)
-    }
-  }
 
   const totalInView = docTypes.filter((dt) => 
     showArchived ? dt.status === "Archived" : dt.status !== "Archived"
@@ -277,7 +240,7 @@ export default function DocTypesTab({
       message: showArchived 
         ? "These document types will be visible for new records again."
         : "These document types will be hidden from new registrations but their history will be preserved.",
-      confirmLabel: showArchived ? "Restore" : "Archive",
+      confirmLabel: showArchived ? "Restore Types" : "Archive Types",
       variant: showArchived ? "success" : "warning",
       buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
@@ -411,25 +374,11 @@ export default function DocTypesTab({
             </div>
 
             <Button
-              type="button"
-              variant="outline"
-              onClick={onExportClick}
-              disabled={isExporting}
-              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-            >
-              {isExporting ? (
-                <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
-              ) : (
-                "Export"
-              )}
-            </Button>
-
-            <Button
               onClick={() => setIsAddDocTypeOpen(true)}
               disabled={showArchived}
               className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
             >
-              Add
+              Add Document Type
             </Button>
           </div>
         </div>
@@ -686,7 +635,7 @@ export default function DocTypesTab({
                                         title: "Restore Document Type",
                                         message:
                                           "This document type will be visible for new records again.",
-                                        confirmLabel: "Restore",
+                                        confirmLabel: "Restore Document Type",
                                         variant: "success",
                                         buttonIcon:
                                           "ph-bold ph-archive-restore",
@@ -766,8 +715,8 @@ export default function DocTypesTab({
                                   title="Reset Filters"
                                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
-                                  Reset
-                                </Button>
+                    Reset Filters
+                  </Button>
                               ) : (
                                 !showArchived && (
                                   <Button
@@ -848,7 +797,7 @@ export default function DocTypesTab({
         selectionStatus="Selected Document Types"
         onCancel={() => toggleAllDocTypes(false)}
         onAction={handleBulkAction}
-        actionLabel={showArchived ? "Restore" : "Archive"}
+        actionLabel={showArchived ? "Restore Types" : "Archive Types"}
         actionIcon={showArchived ? "ph-archive-restore" : "ph-archive"}
         actionVariant={showArchived ? "success" : "danger"}
       />
@@ -945,7 +894,7 @@ export default function DocTypesTab({
                 type="submit"
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
-                Create
+                Create Document Type
               </Button>
             </DialogFooter>
           </form>
@@ -1054,7 +1003,7 @@ export default function DocTypesTab({
                 type="submit"
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
-                Save
+                Save Changes
               </Button>
             </DialogFooter>
           </form>

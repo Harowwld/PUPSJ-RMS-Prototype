@@ -115,3 +115,64 @@ export function formatDurationHuman(decimalHours) {
   return `${hours}h ${minutes}m`;
 }
 
+export function getNotificationDateGroup(dateInput) {
+  if (!dateInput) return "EARLIER";
+  const date = parseToDate(dateInput);
+  if (!date) return "EARLIER";
+
+  const now = new Date();
+  
+  const toManilaDateString = (d) => {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d);
+  };
+
+  const itemDateStr = toManilaDateString(date);
+  const todayStr = toManilaDateString(now);
+
+  const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayStr = toManilaDateString(yesterdayDate);
+
+  if (itemDateStr === todayStr) {
+    return "TODAY";
+  }
+  if (itemDateStr === yesterdayStr) {
+    return "YESTERDAY";
+  }
+
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays >= 0 && diffDays < 7) {
+    return "THIS WEEK";
+  }
+
+  return "EARLIER";
+}
+
+export function formatNotificationTimeAgo(dateInput) {
+  if (!dateInput) return "";
+  const date = parseToDate(dateInput);
+  if (!date) return "";
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+
+  const diffInDays = Math.floor(diffInSeconds / 86400);
+  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  return date.toLocaleDateString("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+

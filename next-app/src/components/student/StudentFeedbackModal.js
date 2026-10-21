@@ -273,9 +273,9 @@ export default function StudentFeedbackModal({
                   Submitting...
                 </span>
               ) : request?.feedback ? (
-                "Update"
+                "Update Feedback"
               ) : (
-                "Submit"
+                "Submit Feedback"
               )}
             </Button>
           </DialogFooter>

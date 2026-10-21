@@ -6,14 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
@@ -1023,6 +1015,40 @@ export default function OsasMonitoringTab({ showToast }) {
     return POST_EVENT_STATUS_OPTIONS.filter((opt) => opt === current || nextAllowed.includes(opt));
   }, [selectedPostEvent]);
 
+  const proposalNavigationList = filteredRows;
+  const currentProposalIndex = selected
+    ? proposalNavigationList.findIndex((p) => p.id === selected.id)
+    : -1;
+
+  const handlePrevProposal = () => {
+    if (currentProposalIndex > 0) {
+      select(proposalNavigationList[currentProposalIndex - 1]);
+    }
+  };
+
+  const handleNextProposal = () => {
+    if (currentProposalIndex >= 0 && currentProposalIndex < proposalNavigationList.length - 1) {
+      select(proposalNavigationList[currentProposalIndex + 1]);
+    }
+  };
+
+  const postEventNavigationList = filteredPostEvents;
+  const currentPostEventIndex = selectedPostEvent
+    ? postEventNavigationList.findIndex((p) => p.id === selectedPostEvent.id)
+    : -1;
+
+  const handlePrevPostEvent = () => {
+    if (currentPostEventIndex > 0) {
+      selectPostEvent(postEventNavigationList[currentPostEventIndex - 1]);
+    }
+  };
+
+  const handleNextPostEvent = () => {
+    if (currentPostEventIndex >= 0 && currentPostEventIndex < postEventNavigationList.length - 1) {
+      selectPostEvent(postEventNavigationList[currentPostEventIndex + 1]);
+    }
+  };
+
   if (loading) {
     return <OsasMonitoringSkeleton />;
   }
@@ -1277,8 +1303,8 @@ export default function OsasMonitoringTab({ showToast }) {
                           title="Reset Filters"
                           className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                         >
-                          Reset
-                        </Button>
+                    Reset Filters
+                  </Button>
                       </EmptyContent>
                     )}
                   </Empty>
@@ -1424,8 +1450,8 @@ export default function OsasMonitoringTab({ showToast }) {
                         title="Reset Filters"
                         className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                       >
-                        Reset
-                      </Button>
+                    Reset Filters
+                  </Button>
                     </EmptyContent>
                   )}
                 </Empty>
@@ -1486,8 +1512,8 @@ export default function OsasMonitoringTab({ showToast }) {
                           title="Reset Filters"
                           className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                         >
-                          Reset
-                        </Button>
+                    Reset Filters
+                  </Button>
                       </EmptyContent>
                     )}
                   </Empty>
@@ -1627,8 +1653,8 @@ export default function OsasMonitoringTab({ showToast }) {
                             title="Reset Filters"
                             className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                           >
-                            Reset
-                          </Button>
+                    Reset Filters
+                  </Button>
                         </EmptyContent>
                       )}
                     </Empty>
@@ -1723,6 +1749,10 @@ export default function OsasMonitoringTab({ showToast }) {
         setSheetOpen={setSheetOpen}
         selected={selected}
         setSelected={setSelected}
+        currentIndex={currentProposalIndex}
+        totalCount={proposalNavigationList.length}
+        onNavigatePrev={handlePrevProposal}
+        onNavigateNext={handleNextProposal}
         status={status}
         setStatus={setStatus}
         note={note}
@@ -1747,6 +1777,10 @@ export default function OsasMonitoringTab({ showToast }) {
         open={postEventSheetOpen}
         onOpenChange={setPostEventSheetOpen}
         selectedPostEvent={selectedPostEvent}
+        currentIndex={currentPostEventIndex}
+        totalCount={postEventNavigationList.length}
+        onNavigatePrev={handlePrevPostEvent}
+        onNavigateNext={handleNextPostEvent}
         postEventStatus={postEventStatus}
         setPostEventStatus={setPostEventStatus}
         postEventNote={postEventNote}

@@ -579,9 +579,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                 {selectedIds.length > 1 && (
                   <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 dark:border-border">
                     <span className="mr-auto text-xs font-semibold text-gray-700 dark:text-zinc-200">{selectedIds.length} selected</span>
-                    <Button size="xs" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("confirm")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "confirm" ? "Confirming…" : "Confirm"}</Button>
-                    <Button size="xs" variant="outline" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("retry")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "retry" ? "Retrying…" : "Retry"}</Button>
-                    <Button size="xs" variant="destructive" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("dismiss")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "dismiss" ? "Dismissing…" : "Dismiss"}</Button>
+                    <Button size="xs" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("confirm")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "confirm" ? "Confirming…" : "Confirm Selection"}</Button>
+                    <Button size="xs" variant="outline" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("retry")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "retry" ? "Retrying…" : "Retry OCR"}</Button>
+                    <Button size="xs" variant="destructive" disabled={Boolean(bulkAction)} onClick={() => runBulkAction("dismiss")} className="h-8 rounded-lg px-3 text-xs disabled:opacity-50">{bulkAction === "dismiss" ? "Dismissing…" : "Dismiss Selection"}</Button>
                   </div>
                 )}
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2 sm:p-3">
@@ -1001,7 +1001,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           className="h-8 px-3 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs sm:h-10 sm:px-5"
                           style={{ color: "#ffffff" }}
                         >
-                          {saving ? "Confirming..." : "Confirm"}
+                          {saving ? "Confirming..." : "Confirm Document"}
                         </Button>
                         <Button
                           size="sm"
@@ -1010,7 +1010,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           disabled={saving}
                           className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40 sm:h-10 sm:px-4"
                         >
-                          Retry
+                          Retry OCR
                         </Button>
                         <Button
                           size="sm"
@@ -1023,7 +1023,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           disabled={saving}
                           className="h-8 px-3 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/60 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/70 dark:hover:bg-red-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40 sm:h-10 sm:px-4"
                         >
-                          {selected.review_status === "Failed" ? "Dismiss" : "Reject"}
+                          {selected.review_status === "Failed" ? "Dismiss Scan" : "Reject Document"}
                         </Button>
                       </div>
                     </div>
@@ -1064,7 +1064,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           </div>
           <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
             <Button variant="outline" onClick={() => setConfirmBulkDismiss(false)} className="rounded-xl">Cancel</Button>
-            <Button variant="destructive" onClick={() => runBulkAction("dismiss", { confirmed: true })} className="rounded-xl">Dismiss</Button>
+            <Button variant="destructive" onClick={() => runBulkAction("dismiss", { confirmed: true })} className="rounded-xl">Dismiss Selected Files</Button>
           </div>
         </DialogContent>
       </Dialog>

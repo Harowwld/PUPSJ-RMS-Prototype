@@ -139,13 +139,13 @@ export async function POST(req) {
     let logDescription = "";
 
     if (isSuper && requestedScope === "system") {
-      record = await executeSystemBackup({ actorId: user.id });
+      record = await executeSystemBackup({ actorId: user.id, backupType: "Manual" });
       logDescription = `initiated platform governance backup (Package: ${record?.filename})`;
     } else {
       const targetOffice = isSuper
         ? (body?.officeId || userOffice || "registrar").toLowerCase()
         : (userOffice || "registrar").toLowerCase();
-      record = await executeOfficeBackup({ officeId: targetOffice, actorId: user.id });
+      record = await executeOfficeBackup({ officeId: targetOffice, actorId: user.id, backupType: "Manual" });
       logDescription = `initiated [${targetOffice}] office partition backup (Package: ${record?.filename})`;
     }
 

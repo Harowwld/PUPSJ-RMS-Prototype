@@ -1088,83 +1088,109 @@ export default function Header({ authUser, onLogout, children }) {
               </div>
             </DropdownMenuTrigger>
             
-            {/* Popover content matching the user's preferred previous popover design */}
-            <DropdownMenuContent align="end" sideOffset={8} className="w-80 rounded-[20px] border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 dark:border-white/10 dark:shadow-none">
-               <div className="bg-gray-50 dark:bg-zinc-800/50 px-6 py-5 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
-                 <span className="font-bold text-[20px] text-gray-900 dark:text-zinc-50 leading-tight">
-                   {displayName}
-                 </span>
-                 <span className="text-[14.5px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
-                   {authUser?.email || authUser?.username}
-                 </span>
-               </div>
+            {/* Popover content with Three-Zone Architecture */}
+            <DropdownMenuContent align="end" sideOffset={8} className="w-80 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none">
+              {/* 1. Header Zone */}
+              <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b border-border dark:border-white/10 flex items-center justify-between text-left">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
+                    {currentAvatarFilename && !imageError ? (
+                      <img 
+                        src={`/api/account/avatar?id=${authUser.id}&t=${avatarTimestamp}`}
+                        alt=""
+                        className="w-full h-full object-cover scale-[1.2]"
+                      />
+                    ) : (
+                      initials
+                    )}
+                  </div>
+                  <div className="min-w-0 flex flex-col">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                      {displayName}
+                    </span>
+                    <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 truncate">
+                      {authUser?.email || authUser?.username}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/15 dark:text-red-300 border-pup-maroon/20 shrink-0">
+                  {displayRole}
+                </span>
+              </div>
 
-               <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
-                  {(isSettingsActive || isActivityActive) && (
-                     <DropdownMenuItem
-                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5 transition-colors outline-none"
-                       onClick={handleMainDashboardClick}
-                     >
-                       <HugeIcon  className="ti ti-layout-dashboard text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white"></HugeIcon>
-                       <span>Return to Dashboard</span>
-                     </DropdownMenuItem>
-                   )}
+              {/* 2. Body Zone */}
+              <DropdownMenuGroup className="p-1.5 flex flex-col gap-0.5">
+                {(isSettingsActive || isActivityActive) && (
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+                    onClick={handleMainDashboardClick}
+                  >
+                    <HugeIcon className="ph-bold ph-layout text-sm text-pup-maroon dark:text-red-400 shrink-0" />
+                    <span>Return to Dashboard</span>
+                  </DropdownMenuItem>
+                )}
 
+                <DropdownMenuItem
+                  className={cn(
+                    "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
+                    isSettingsActive
+                      ? "text-gray-900 bg-gray-100 dark:text-zinc-50 dark:bg-zinc-800 font-semibold"
+                      : "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  )}
+                  onClick={() => router.push("/account")}
+                >
+                  <HugeIcon className="ph-bold ph-gear text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                  <span>Account Settings</span>
+                </DropdownMenuItem>
+
+                {!isActivityActive && (
                   <DropdownMenuItem
                     className={cn(
-                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 transition-colors outline-none",
-                      isSettingsActive
-                        ? "text-gray-900 bg-gray-50 dark:text-zinc-100 dark:bg-white/5 font-normal"
-                        : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
+                      "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
+                      "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                     )}
-                    onClick={() => router.push("/account")}
+                    onClick={() => router.push("/account/activity")}
                   >
-                    <HugeIcon  className="ti ti-settings text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white"></HugeIcon>
-                    <span>Account Settings</span>
+                    <HugeIcon className="ph-bold ph-clock-counter-clockwise text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                    <span>My Activity</span>
                   </DropdownMenuItem>
- 
-                  {!isActivityActive && (
-                    <DropdownMenuItem
-                      className={cn(
-                        "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 transition-colors outline-none",
-                        "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
-                      )}
-                      onClick={() => router.push("/account/activity")}
-                    >
-                      <HugeIcon  className="ti ti-history text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white"></HugeIcon>
-                      <span>My Activity</span>
-                    </DropdownMenuItem>
-                  )}
- 
+                )}
 
-                  {!isSuperAdmin && hasAdminRights && (
-                    <DropdownMenuItem
-                      onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
-                      className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
-                    >
-                      <HugeIcon  className={cn(
-                        "text-[22px] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none text-black dark:text-white",
-                        activeView === "admin" ? "ti ti-users" : "ti ti-shield-check"
-                      )}
-                      ></HugeIcon>
-                      <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
-                    </DropdownMenuItem>
-                  )}
+                {!isSuperAdmin && hasAdminRights && (
+                  <DropdownMenuItem
+                    onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
+                    className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 transition-colors outline-none"
+                  >
+                    <HugeIcon className={cn(
+                      "text-sm shrink-0",
+                      activeView === "admin" ? "ph-bold ph-users text-blue-600 dark:text-blue-400" : "ph-bold ph-shield-check text-purple-600 dark:text-purple-400"
+                    )} />
+                    <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuGroup>
 
-               </DropdownMenuGroup>
-
-               <div className="border-t border-gray-100 dark:border-white/5 my-1 mx-1.5"></div>
-
-               <DropdownMenuGroup className="p-1.5">
-                 <DropdownMenuItem
-                   onClick={handleLogoutAction}
-                   className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[16px] py-3 px-4 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
-                 >
-                   <HugeIcon  className="ti ti-circle-x text-[22px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[22px] w-[22px] leading-none"></HugeIcon>
-                   <span>Sign Out</span>
-                 </DropdownMenuItem>
-               </DropdownMenuGroup>
-             </DropdownMenuContent>
+              {/* 3. Footer Zone */}
+              <div className="p-2 border-t border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/50 flex flex-col gap-1.5 text-xs">
+                <div className="px-2 pt-1 flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    Active Session
+                  </span>
+                  <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500">
+                    {authUser?.role || "Authorized"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogoutAction}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-900/40"
+                >
+                  <HugeIcon className="ph-bold ph-sign-out text-sm" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>

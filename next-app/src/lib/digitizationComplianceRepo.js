@@ -1,5 +1,6 @@
-import { dbAll } from "./postgresCompat.js";
-import { query } from "./postgres.js";
+import { dbAll, dbGet } from "./postgresCompat.js";
+import { query, queryOne } from "./postgres.js";
+import { decryptStudentRow } from "./studentAuth.js";
 
 function buildDocQualifiesSql(requireApproved) {
   if (requireApproved) {
@@ -78,7 +79,7 @@ export async function getDigitizationComplianceSummary({
   // Read lookup data from PostgreSQL directly; document_types is part of the
   // migrated schema and the legacy docTypesRepo still targets SQLite.
   const typeRows = await query(
-    `SELECT name FROM document_types
+    `SELECT id, name FROM document_types
       WHERE status = 'Active' AND is_compliance = TRUE${normalizedOfficeId ? " AND office_id = $1" : ""}
       ORDER BY LOWER(name) ASC`,
     normalizedOfficeId ? [normalizedOfficeId] : [],
@@ -136,6 +137,35 @@ export async function getDigitizationComplianceSummary({
     params
   );
 
+  const missingByDocumentTypeRows = await dbAll(
+    `
+    SELECT
+      dt.id AS document_type_id,
+      dt.name AS document_type,
+      COUNT(DISTINCT s.student_no) AS total_students,
+      COUNT(DISTINCT CASE WHEN d.student_no IS NOT NULL THEN s.student_no END) AS digitized_students,
+      COUNT(DISTINCT CASE WHEN d.student_no IS NULL THEN s.student_no END) AS missing_students
+    FROM document_types dt
+    CROSS JOIN students s
+    LEFT JOIN documents d
+      ON d.student_no = s.student_no
+      AND d.doc_type = dt.name
+      AND ${docQualifies}
+      ${documentOfficeFilter}
+    WHERE dt.status = 'Active'
+      AND dt.is_compliance = TRUE
+      ${normalizedOfficeId ? "AND dt.office_id = ?" : ""}
+      ${where ? `AND ${where.slice(6)}` : ""}
+    GROUP BY dt.id, dt.name
+    ORDER BY LOWER(dt.name) ASC
+    `,
+    [
+      ...(normalizedOfficeId ? [normalizedOfficeId] : []),
+      ...(normalizedOfficeId ? [normalizedOfficeId] : []),
+      ...params,
+    ]
+  );
+
   let totalStudents = 0;
   let fullyDigitizedCount = 0;
   let totalDigitizedDocsCount = 0;
@@ -164,6 +194,21 @@ export async function getDigitizationComplianceSummary({
   const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : 0;
   const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : 0;
   const totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
+  const missingByDocumentType = totalStudents === 0
+    ? typeRows.map((row) => ({
+        documentTypeId: Number(row.id),
+        documentType: String(row.name || ""),
+        totalStudents: 0,
+        digitizedStudents: 0,
+        missingStudents: 0,
+      }))
+    : missingByDocumentTypeRows.map((row) => ({
+        documentTypeId: Number(row.document_type_id),
+        documentType: String(row.document_type || ""),
+        totalStudents: Number(row.total_students) || 0,
+        digitizedStudents: Number(row.digitized_students) || 0,
+        missingStudents: Number(row.missing_students) || 0,
+      }));
 
   const byYear = yearRows.map((row) => ({
     year: Number(row.year_level) || 0,
@@ -186,6 +231,7 @@ export async function getDigitizationComplianceSummary({
     },
     byCourse,
     byYear,
+    missingByDocumentType,
     meta: {
       studentStatus: String(studentStatus || "").trim() || "Active",
       courseCode: selectedCourses.length === 1 ? selectedCourses[0] : (selectedCourses.length > 1 ? selectedCourses.join(", ") : null),
@@ -202,5 +248,73 @@ export async function getDigitizationComplianceSummary({
       },
       generatedAt,
     },
+  };
+}
+
+export async function getMissingStudentsForDocumentType({
+  documentTypeId,
+  studentStatus = "Active",
+  courseCodes,
+  requireApproved = false,
+  officeId,
+  limit = 20,
+  offset = 0,
+} = {}) {
+  const normalizedOfficeId = String(officeId || "").trim().toLowerCase() || null;
+  const parsedTypeId = Number.parseInt(documentTypeId, 10);
+  if (!Number.isInteger(parsedTypeId) || parsedTypeId < 1) return null;
+
+  const typeRow = await queryOne(
+    `SELECT id, name FROM document_types
+      WHERE id = $1 AND status = 'Active' AND is_compliance = TRUE${normalizedOfficeId ? " AND office_id = $2" : ""}`,
+    normalizedOfficeId ? [parsedTypeId, normalizedOfficeId] : [parsedTypeId],
+  );
+  if (!typeRow) return null;
+
+  const { where, params } = buildStudentWhere({
+    studentStatus,
+    courseCodes,
+    officeId: normalizedOfficeId,
+  });
+  const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
+  const documentOfficeFilter = normalizedOfficeId ? "AND d.office_id = ?" : "";
+  const missingClause = `NOT EXISTS (
+    SELECT 1 FROM documents d
+    WHERE d.student_no = s.student_no
+      AND d.doc_type = ?
+      AND ${docQualifies}
+      ${documentOfficeFilter}
+  )`;
+  const missingParams = [
+    ...params,
+    String(typeRow.name || ""),
+    ...(normalizedOfficeId ? [normalizedOfficeId] : []),
+  ];
+  const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 100);
+  const safeOffset = Math.max(Number.parseInt(offset, 10) || 0, 0);
+  const filterSql = where ? `${where} AND ${missingClause}` : `WHERE ${missingClause}`;
+
+  const countRow = await dbGet(
+    `SELECT COUNT(s.student_no) AS total
+      FROM students s
+      ${filterSql}`,
+    missingParams,
+  );
+  const rows = await dbAll(
+    `SELECT s.student_no, s.name, s.course_code
+      FROM students s
+      ${filterSql}
+      ORDER BY s.student_no ASC
+      LIMIT ? OFFSET ?`,
+    [...missingParams, safeLimit, safeOffset],
+  );
+
+  return {
+    documentTypeId: parsedTypeId,
+    documentType: String(typeRow.name || ""),
+    total: Number(countRow?.total) || 0,
+    students: rows.map((row) => decryptStudentRow(row)),
+    limit: safeLimit,
+    offset: safeOffset,
   };
 }

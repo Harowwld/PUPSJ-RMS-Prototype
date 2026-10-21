@@ -562,6 +562,26 @@ export function detectExternalDrive(options = {}) {
     return configuredDrive;
   }
 
+  // If a configured path was specified but is unreachable/not mounted, do not fallback to arbitrary USB drives
+  if (isConfigured) {
+    return {
+      configured: true,
+      connected: false,
+      path: null,
+      mountPoint: null,
+      label: null,
+      isWritable: false,
+      isRemovable: false,
+      isEmulated: false,
+      freeBytes: null,
+      totalBytes: null,
+      freeFormatted: null,
+      totalFormatted: null,
+      drives: [],
+      message: `Configured external backup volume ("${rawConfiguredPath}") is unavailable or not mounted.`,
+    };
+  }
+
   // 3. Scan physical hardware / removable USB devices
   let detectedDrives = [];
   const platform = os.platform();

@@ -452,7 +452,7 @@ export default function ForgotPasswordPage() {
                     {forgotLoading ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
                     ) : (
-                      <span>Reset</span>
+                      <span>Reset Password</span>
                     )}
                   </Button>
                 </div>

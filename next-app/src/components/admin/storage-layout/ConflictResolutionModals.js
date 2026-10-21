@@ -299,7 +299,7 @@ const ConflictResolutionModals = memo(({
               onClick={applyTemplateWithMappings}
               className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
             >
-              Apply
+              Apply Template
             </Button>
           </DialogFooter>
         </DialogContent>

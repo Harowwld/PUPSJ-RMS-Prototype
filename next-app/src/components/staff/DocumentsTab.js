@@ -812,7 +812,7 @@ export default function DocumentsTab({
                             title="Edit Student Profile"
                             className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
-                            Edit
+                            Edit Profile
                           </Button>
                         </div>
                       </div>
@@ -847,8 +847,8 @@ export default function DocumentsTab({
                               title="Reset Filters"
                               className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                             >
-                              Reset
-                            </Button>
+                    Reset Filters
+                  </Button>
                           </EmptyContent>
                         )}
                       </Empty>
@@ -1095,7 +1095,7 @@ export default function DocumentsTab({
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  "Save Changes"
                 )}
               </Button>
             </DialogFooter>

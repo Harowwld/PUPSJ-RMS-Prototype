@@ -37,10 +37,8 @@ export default function ScanUploadTab({
   authUser = null,
   loading,
   error = null,
-  uploadMode,
   uploadStudentIsExisting,
   setUploadStudentIsExisting,
-  setUploadMode,
   dropActive,
   setDropActive,
   uploadedFile,
@@ -53,11 +51,6 @@ export default function ScanUploadTab({
   onFileSelect,
   onClearFile,
   ocrLoading,
-  csvFile,
-  csvRows,
-  csvSelected,
-  toggleCsvRowSelected,
-  setCsvRowField,
   storageLayout,
   courses,
   docTypes,
@@ -73,22 +66,6 @@ export default function ScanUploadTab({
   applyStudentNoMask,
   newStudentNoInputRef,
   sysSections = [],
-  csvInputRef,
-  handleCsvFileSelect,
-  csvDropActive,
-  setCsvDropActive,
-  csvError,
-  csvBulkRoom,
-  setCsvBulkRoom,
-  csvBulkCabinet,
-  setCsvBulkCabinet,
-  csvBulkDrawer,
-  setCsvBulkDrawer,
-  applyCsvBulkLocation,
-  setCsvSelected,
-  importCsvStudents,
-  csvLoading,
-  csvResults,
   students = [],
   organizations = [],
   showToast = () => {},
@@ -106,37 +83,6 @@ export default function ScanUploadTab({
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
-  const [csvPage, setCsvPage] = useState(1)
-  const [csvRowsPerPage, setCsvRowsPerPage] = useState(10)
-  const [csvSearch, setCsvSearch] = useState("")
-  const [localCsvSearch, setLocalCsvSearch] = useState("")
-  const [hideBulkCard, setHideBulkCard] = useState(false)
-
-  useEffect(() => {
-    if (!csvFile) {
-      setHideBulkCard(false)
-    }
-  }, [csvFile])
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setCsvSearch(localCsvSearch)
-      setCsvPage(1)
-    }, 300)
-    return () => clearTimeout(handler)
-  }, [localCsvSearch])
-
-  const filteredCsvRows = useMemo(() => {
-    if (!csvSearch) return csvRows
-    const q = csvSearch.toLowerCase()
-    return csvRows.filter(r => {
-      return (
-        String(r.student?.studentNo || "").toLowerCase().includes(q) ||
-        String(r.student?.name || "").toLowerCase().includes(q) ||
-        String(r.student?.courseCode || "").toLowerCase().includes(q)
-      )
-    })
-  }, [csvRows, csvSearch])
 
   const [showStudentNoSuggestions, setShowStudentNoSuggestions] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
@@ -168,12 +114,6 @@ export default function ScanUploadTab({
   };
 
   useEffect(() => {
-    setCsvPage(1)
-  }, [csvFile])
-
-  useEffect(() => {
-    if (uploadMode !== "pdf") return
-
     const handleWindowPaste = (e) => {
       const target = e.target
       if (
@@ -214,7 +154,7 @@ export default function ScanUploadTab({
     return () => {
       window.removeEventListener("paste", handleWindowPaste)
     }
-  }, [uploadMode, showToast])
+  }, [showToast])
 
   const fe = uploadFieldErrors || {}
   const ring = (key) =>
@@ -324,13 +264,8 @@ export default function ScanUploadTab({
     }
   }, [manualPreviewUrl])
 
-  const paginatedCsvRows = useMemo(() => {
-    const startIndex = (csvPage - 1) * csvRowsPerPage
-    return filteredCsvRows.slice(startIndex, startIndex + csvRowsPerPage)
-  }, [filteredCsvRows, csvPage, csvRowsPerPage])
-
   const hf = useHotFolderInbox({
-    enabled: uploadMode === "pdf",
+    enabled: true,
     students: isOsas ? [] : students,
     docTypes,
     showToast,
@@ -363,7 +298,7 @@ export default function ScanUploadTab({
   })
 
   useEffect(() => {
-    if (uploadMode !== "pdf" || (!uploadedFile && !hf.selectedRow)) return
+    if (!uploadedFile && !hf.selectedRow) return
 
     let dragCounter = 0
 
@@ -405,7 +340,7 @@ export default function ScanUploadTab({
       window.removeEventListener("dragover", handleDragOver)
       window.removeEventListener("drop", handleDrop)
     }
-  }, [uploadMode, uploadedFile, hf.selectedRow, setDropActive])
+  }, [uploadedFile, hf.selectedRow, setDropActive])
 
   const [pdfPreviewDataUrl, setPdfPreviewDataUrl] = useState(null)
   const [pdfRendering, setPdfRendering] = useState(false)
@@ -563,16 +498,14 @@ export default function ScanUploadTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
-              uploadMode === "pdf" && (
-                <RefreshButton
-                  onRefresh={(e) => {
-                    e?.stopPropagation?.()
-                    hf.refresh()
-                  }}
-                  isLoading={hf.loading}
-                  title="Refresh Scanner Inbox"
-                />
-              )
+              <RefreshButton
+                onRefresh={(e) => {
+                  e?.stopPropagation?.()
+                  hf.refresh()
+                }}
+                isLoading={hf.loading}
+                title="Refresh Scanner Inbox"
+              />
             }
           />
 
@@ -614,35 +547,7 @@ export default function ScanUploadTab({
             </div>
           </div>
 
-          {uploadMode === "pdf" && <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />}
-
-          {/* Mode Toggles as Sub-tabs (Polymorphic: Document vs Batch CSV) */}
-          <div className="flex items-center gap-6 shrink-0 h-9 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
-            <button
-              type="button"
-              onClick={() => setUploadMode("pdf")}
-              className={cn(
-                "relative h-full flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                uploadMode === "pdf"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                  : "text-gray-500 font-normal hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-              )}
-            >
-              Document
-            </button>
-            <button
-              type="button"
-              onClick={() => setUploadMode("csv")}
-              className={cn(
-                "relative h-full flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-                uploadMode === "csv"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                  : "text-gray-500 font-normal hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-              )}
-            >
-              Batch (CSV)
-            </button>
-          </div>
+          <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />
 
           <CardContent className="flex flex-col p-6 pt-3 rounded-b-2xl">
           {loading ? (
@@ -699,518 +604,8 @@ export default function ScanUploadTab({
               />
 
               <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
-                <section
-                  className={cn(
-                    "relative flex h-auto min-h-[min(580px,50dvh)] flex-col transition-all duration-normal",
-                    uploadMode === "csv"
-                      ? (hideBulkCard ? "w-full" : "w-full lg:w-[68%]")
-                      : "w-full lg:w-[48%]"
-                  )}
-                >
-                  {uploadMode === "csv" ? (
-                    csvFile ? (
-                      <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-normal rounded-2xl border border-border dark:bg-card dark:border-border">
-                        <div className="flex flex-col items-center justify-between gap-4 border-b border-border bg-gray-50/50 p-5 px-6 sm:flex-row dark:border-border dark:bg-white/5">
-                          <div className="flex items-center gap-4">
-                            <div>
-                              <h3 className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                                CSV Preview
-                              </h3>
-                              <div className="mt-1 text-xs font-normal text-gray-900 dark:text-zinc-300">
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="break-all text-pup-maroon dark:text-red-400 font-medium text-xs">
-                                    {csvFile.name}
-                                  </span>
-                                  <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">
-                                    {csvRows.length} rows detected ·{" "}
-                                    {csvRows.filter((r) => r.error).length} invalid
-                                    rows
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
-                            <div className="relative group w-44 sm:w-60">
-                              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-                              </div>
-                              <Input
-                                type="text"
-                                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                                placeholder="Search records..."
-                                value={localCsvSearch}
-                                onChange={(e) => setLocalCsvSearch(e.target.value)}
-                              />
-                              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-                                {filteredCsvRows.length.toLocaleString()}
-                              </div>
-                            </div>
-
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setHideBulkCard((prev) => !prev)}
-                              className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                              title={hideBulkCard ? "Show Bulk Upload panel" : "Hide Bulk Upload card to expand table"}
-                            >
-                              {hideBulkCard ? "Show Panel" : "Hide Panel"}
-                            </Button>
-
-                            {hideBulkCard && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={importCsvStudents}
-                                disabled={csvLoading || Object.values(csvSelected).filter(Boolean).length === 0}
-                                className="h-9 px-3.5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                                style={{ color: "#ffffff" }}
-                                title={isOsas ? "Import Selected Organizations" : "Import Selected Students"}
-                              >
-                                {csvLoading ? (
-                                  <span className="flex items-center gap-1.5">
-                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
-                                    <span>Importing...</span>
-                                  </span>
-                                ) : (
-                                  <span>Import ({Object.values(csvSelected).filter(Boolean).length})</span>
-                                )}
-                              </Button>
-                            )}
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setHideBulkCard(false);
-                                handleCsvFileSelect(null);
-                              }}
-                              className="h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                            >
-                              Clear
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div
-                          className={`relative min-h-0 flex-1 overflow-auto transition-colors duration-fast ${csvDropActive ? "bg-[#FAFAFA]" : ""} dark:bg-[#2c2c2c]`}
-                          onDragOver={(e) => {
-                            e.preventDefault()
-                            setCsvDropActive(true)
-                          }}
-                        >
-                          {csvDropActive && (
-                            <div
-                              className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0A84FF]/5 backdrop-blur-xs border-2 border-dashed border-[#D1D1D6] rounded-[16px] animate-fade-up dark:bg-blue-600/[0.04] dark:border-primary/50"
-                              onDragOver={(e) => {
-                                e.preventDefault()
-                                setCsvDropActive(true)
-                              }}
-                              onDragLeave={(e) => {
-                                e.preventDefault()
-                                setCsvDropActive(false)
-                              }}
-                              onDrop={(e) => {
-                                e.preventDefault()
-                                setCsvDropActive(false)
-                                const file = e.dataTransfer.files?.[0]
-                                if (
-                                  file &&
-                                  (file.name.toLowerCase().endsWith(".csv") ||
-                                    file.type === "text/csv" ||
-                                    file.type === "application/vnd.ms-excel" ||
-                                    file.type === "application/csv" ||
-                                    file.type === "")
-                                ) {
-                                  handleCsvFileSelect(file)
-                                }
-                              }}
-                            >
-                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-border animate-scale-up">
-                                <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3 dark:bg-blue-950/30">
-                                  <HugeIcon  className="ph-duotone ph-file-csv text-xl text-[#0A84FF] dark:text-primary animate-bounce"></HugeIcon>
-                                </div>
-                                <p className="text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
-                                  Drop CSV here to replace data
-                                </p>
-                                <p className="text-[11px] font-semibold text-[#0A84FF] dark:text-primary mt-1.5 tracking-wider dark:text-primary">
-                                  Load new batch
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {filteredCsvRows.length ? (
-                            <table className="w-full text-sm table-fixed min-w-[960px]">
-                              <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
-                                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                                  <th className="w-12 p-4 text-center">
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border"
-                                      checked={
-                                        filteredCsvRows.length > 0 &&
-                                        Object.keys(csvSelected).filter(k => csvSelected[k]).length >= filteredCsvRows.length &&
-                                        filteredCsvRows.every(r => csvSelected[r.index])
-                                      }
-                                      onChange={(e) => {
-                                        const checked = e.target.checked
-                                        const next = { ...csvSelected }
-                                        filteredCsvRows.forEach(r => {
-                                          next[r.index] = checked
-                                        })
-                                        setCsvSelected(next)
-                                      }}
-                                    />
-                                  </th>
-                                  {isOsas ? (
-                                    <>
-                                      <th className="p-4 w-[14%] whitespace-nowrap">Acronym</th>
-                                      <th className="p-4 w-[26%] whitespace-nowrap">Organization Name</th>
-                                      <th className="p-4 w-[14%] whitespace-nowrap">Category</th>
-                                      <th className="p-4 w-[18%] whitespace-nowrap">Faculty Adviser</th>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <th className="p-4 w-[15%] whitespace-nowrap">Student No.</th>
-                                      <th className="p-4 w-[25%] whitespace-nowrap">Full Name</th>
-                                      <th className="p-4 w-[12%] whitespace-nowrap">Course</th>
-                                      <th className="p-4 w-[8%] whitespace-nowrap">Year</th>
-                                      <th className="p-4 w-[12%] whitespace-nowrap">Section</th>
-                                    </>
-                                  )}
-                                  <th className="p-4 whitespace-nowrap text-left w-[7%]">Room</th>
-                                  <th className="p-4 whitespace-nowrap text-left w-[9%]">Cabinet</th>
-                                  <th className="p-4 whitespace-nowrap text-left w-[7%]">Drawer</th>
-                                  <th className="p-4 pr-6 text-right whitespace-nowrap w-[5%]">Status</th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-transparent">
-                                {paginatedCsvRows.map((r) => {
-                                  const room = r.organization?.room ?? r.student?.room
-                                  const cabinet = r.organization?.cabinet ?? r.student?.cabinet
-                                  const drawer = r.organization?.drawer ?? r.student?.drawer
-                                  const isValid = isOsas
-                                    ? Boolean(room && cabinet && drawer)
-                                    : isLocationValid(r.student?.room, r.student?.cabinet, r.student?.drawer)
-                                  const isSelected = !!csvSelected?.[r.index]
-
-                                  return (
-                                    <tr
-                                      key={r.index}
-                                      className={cn(
-                                        "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
-                                        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
-                                      )}
-                                      onClick={() => toggleCsvRowSelected(r.index)}
-                                    >
-                                      <td className="w-12 p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
-                                        <input
-                                          type="checkbox"
-                                          className={cn(
-                                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
-                                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                                          )}
-                                          checked={isSelected}
-                                          onChange={() => toggleCsvRowSelected(r.index)}
-                                        />
-                                      </td>
-                                      {isOsas ? (
-                                        <>
-                                          <td className="p-4 align-middle whitespace-nowrap">
-                                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                                              {r.organization?.acronym || r.student?.courseCode || "N/A"}
-                                            </span>
-                                          </td>
-                                          <td className="p-4 align-middle overflow-hidden font-semibold text-gray-900 dark:text-zinc-50 truncate" title={formatTitleCase(r.organization?.name || r.student?.name)}>
-                                            {formatTitleCase(r.organization?.name || r.student?.name)}
-                                          </td>
-                                          <td className="p-4 align-middle whitespace-nowrap">
-                                            <span className={cn(
-                                              "inline-flex w-fit items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium",
-                                              (r.organization?.category || "Academic") === "Academic"
-                                                ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
-                                                : "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
-                                            )}>
-                                              {r.organization?.category || "Academic"}
-                                            </span>
-                                          </td>
-                                          <td className="p-4 align-middle overflow-hidden text-xs font-medium text-gray-700 dark:text-zinc-300 truncate" title={r.organization?.adviserName || "N/A"}>
-                                            {r.organization?.adviserName || "N/A"}
-                                          </td>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <td className="p-4 align-middle whitespace-nowrap">
-                                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                                              {r.student.studentNo}
-                                            </span>
-                                          </td>
-                                          <td className="p-4 align-middle overflow-hidden">
-                                            <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(r.student.name)}>
-                                              {formatTitleCase(r.student.name)}
-                                            </div>
-                                          </td>
-                                          <td className="p-4 align-middle whitespace-nowrap">
-                                            <span className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
-                                              {r.student.courseCode}
-                                            </span>
-                                          </td>
-                                          <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                                            {r.student.yearLevel}
-                                          </td>
-                                          <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                                            {r.student.section}
-                                          </td>
-                                        </>
-                                      )}
-                                      <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                                        <Select
-                                          className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
-                                          value={String(room || "")}
-                                          onChange={(e) =>
-                                            setCsvRowField(
-                                              r.index,
-                                              "room",
-                                              parseInt(e.target.value)
-                                            )
-                                          }
-                                        >
-                                          {roomOptions.map((rm) => (
-                                            <option key={rm} value={rm}>
-                                              {rm}
-                                            </option>
-                                          ))}
-                                        </Select>
-                                      </td>
-                                      <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                                        <Select
-                                          className="h-8 w-28 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
-                                          value={String(cabinet || "")}
-                                          onChange={(e) =>
-                                            setCsvRowField(
-                                              r.index,
-                                              "cabinet",
-                                              e.target.value
-                                            )
-                                          }
-                                        >
-                                          {isOsas ? (
-                                            ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"].map((c) => (
-                                              <option key={c} value={c}>
-                                                {c}
-                                              </option>
-                                            ))
-                                          ) : (
-                                            mergeSelectedCabinetId(
-                                              r.student?.room,
-                                              r.student?.cabinet
-                                            ).map((c) => (
-                                              <option key={c} value={c}>
-                                                {c}
-                                              </option>
-                                            ))
-                                          )}
-                                        </Select>
-                                      </td>
-                                      <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                                        <Select
-                                          className="h-8 w-20 rounded-lg border border-border px-2 py-0 text-[11px] font-normal dark:border-border shadow-none"
-                                          value={String(drawer || "")}
-                                          onChange={(e) =>
-                                            setCsvRowField(
-                                              r.index,
-                                              "drawer",
-                                              parseInt(e.target.value) || e.target.value
-                                            )
-                                          }
-                                        >
-                                          {isOsas ? (
-                                            [1, 2, 3, 4].map((d) => (
-                                              <option key={d} value={d}>
-                                                Drawer {d}
-                                              </option>
-                                            ))
-                                          ) : (
-                                            mergeSelectedDrawerId(
-                                              r.student?.room,
-                                              r.student?.cabinet,
-                                              r.student?.drawer
-                                            ).map((d) => (
-                                              <option key={d} value={d}>
-                                                {d}
-                                              </option>
-                                            ))
-                                          )}
-                                        </Select>
-                                      </td>
-                                      <td className="p-4 pr-6 align-middle text-right">
-                                        <div className="inline-flex items-center justify-end">
-                                          {r.error ? (
-                                            <HugeIcon 
-                                              className="ph-bold ph-x-circle text-red-500 dark:text-red-400 text-[18px]"
-                                              title={`Error: ${r.error}`}
-                                            />
-                                          ) : !isValid ? (
-                                            <HugeIcon 
-                                              className="ph-bold ph-warning-circle text-amber-500 dark:text-amber-400 text-[18px]"
-                                              title="Invalid: This location does not exist in the physical system."
-                                            />
-                                          ) : (
-                                            <HugeIcon 
-                                              className="ph-bold ph-check-circle text-emerald-500 dark:text-emerald-400 text-[18px]"
-                                              title="Valid location"
-                                            />
-                                          )}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  )
-                                })}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <Empty className="py-12">
-                              <EmptyMedia>
-                                <HugeIcon  className="ph-magnifying-glass" />
-                              </EmptyMedia>
-                              <EmptyTitle>No Matches Found</EmptyTitle>
-                              <EmptyDescription>
-                                We couldn&apos;t find any rows matching &quot;{csvSearch}&quot;.
-                              </EmptyDescription>
-                              <Button
-                                variant="outline"
-                                onClick={() => setLocalCsvSearch("")}
-                                title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                              >
-                                Reset
-                              </Button>
-                            </Empty>
-                          )}
-                        </div>
-
-                        {filteredCsvRows.length > 0 && (
-                          <div className="flex items-center justify-between border-t border-border bg-white p-5 px-6 dark:border-border dark:bg-card">
-                            <div className="flex items-center gap-8">
-                              <div className="flex items-center gap-6 text-xs font-normal text-gray-400 dark:text-zinc-500">
-                                <span>
-                                  Showing {paginatedCsvRows.length} of {filteredCsvRows.length}
-                                </span>
-                                <div className="flex items-center gap-1.5 border-l border-border pl-6 dark:border-border">
-                                  <span className="text-xs text-gray-400 dark:text-zinc-500">Rows:</span>
-                                  <div className="flex items-center gap-1">
-                                    {[10, 20, 50, 100].map((size) => (
-                                      <button
-                                        key={size}
-                                        type="button"
-                                        onClick={() => {
-                                          setCsvRowsPerPage(size)
-                                          setCsvPage(1)
-                                        }}
-                                        className={cn(
-                                          "px-2 py-0.5 rounded-lg text-xs font-normal cursor-pointer transition-colors border-0",
-                                          csvRowsPerPage === size
-                                            ? "bg-gray-100 text-gray-900 font-semibold dark:bg-white/10 dark:text-zinc-50"
-                                            : "bg-transparent text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-200"
-                                        )}
-                                      >
-                                        {size}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex shrink-0 items-center gap-3">
-                              <button
-                                disabled={csvPage <= 1}
-                                onClick={() => setCsvPage((p) => Math.max(1, p - 1))}
-                                className="h-8 bg-transparent text-xs font-medium text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                              >
-                                Prev
-                              </button>
-
-                              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-lg border border-border bg-white px-2.5 text-xs font-medium text-gray-900 dark:border-border dark:bg-card dark:text-zinc-100">
-                                {csvPage}
-                              </div>
-
-                              <button
-                                disabled={csvPage >= Math.ceil(filteredCsvRows.length / csvRowsPerPage)}
-                                onClick={() => setCsvPage((p) => Math.min(Math.ceil(filteredCsvRows.length / csvRowsPerPage), p + 1))}
-                                className="h-8 bg-transparent text-xs font-medium text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                              >
-                                Next
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div
-                        className={cn(
-                          "group relative flex min-h-[min(580px,50dvh)] flex-1 cursor-pointer flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-border bg-gray-50/50 transition-all duration-150 ease-out hover:border-pup-maroon/40 dark:bg-zinc-900/30 dark:border-border dark:hover:border-red-500/40",
-                          csvDropActive ? "border-pup-maroon bg-red-50/10 dark:border-red-500/80" : ""
-                        )}
-                        onDragOver={(e) => {
-                          e.preventDefault()
-                          setCsvDropActive(true)
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault()
-                          setCsvDropActive(false)
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          setCsvDropActive(false)
-                          const file = e.dataTransfer.files?.[0]
-                          if (
-                            file &&
-                            (file.name.toLowerCase().endsWith(".csv") ||
-                              file.type === "text/csv" ||
-                              file.type === "application/vnd.ms-excel" ||
-                              file.type === "application/csv" ||
-                              file.type === "")
-                          ) {
-                            handleCsvFileSelect(file)
-                          }
-                        }}
-                      >
-                        <input
-                          type="file"
-                          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                          accept=".csv"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              handleCsvFileSelect(file)
-                            }
-                          }}
-                        />
-                        <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                          <HugeIcon className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-fast", csvDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
-                          <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
-                            {isOsas ? "Drop Organizations CSV Here" : "Drop CSV File Here"}
-                          </p>
-                          <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 m-0">
-                            or click to <span className="text-pup-maroon dark:text-red-400 font-medium cursor-pointer hover:underline">browse</span> local files (.csv)
-                          </p>
-                          <div className="pointer-events-auto mt-4">
-                            <a
-                              href={isOsas ? "/sample_osas_organizations.csv" : "/sample_registrar_students.csv"}
-                              download={isOsas ? "sample_osas_organizations.csv" : "sample_registrar_students.csv"}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all cursor-pointer"
-                            >
-                              Download Sample CSV Template
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex flex-col gap-4 w-full h-full">
+                <section className="relative flex h-auto min-h-[min(580px,50dvh)] flex-col transition-all duration-normal w-full lg:w-[48%]">
+                  <div className="flex flex-col gap-4 w-full h-full">
                       <div
                         className={cn(
                           "group relative flex flex-1 min-h-[min(580px,50dvh)] w-full flex-col overflow-hidden rounded-2xl border transition-all duration-150 ease-out",
@@ -1532,8 +927,7 @@ export default function ScanUploadTab({
                           onChange={(e) => handlePdfFileSelect(e.target.files)}
                         />
                       </div>
-                  )}
-                  {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
+                  {(ocrLoading || hf.ocrLoading) ? (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-[16px] bg-white/95 backdrop-blur-sm dark:bg-card/90">
                       <div className="w-full max-w-xs px-6">
                         <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-[26px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:border-border dark:bg-zinc-900 dark:shadow-none flex flex-col items-center justify-center">
@@ -1547,43 +941,21 @@ export default function ScanUploadTab({
                   ) : null}
                 </section>
 
-                <section
-                  className={cn(
-                    "font-jakarta flex h-fit flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-normal dark:border-border dark:bg-card dark:shadow-none",
-                    uploadMode === "csv"
-                      ? (hideBulkCard ? "hidden" : "w-full lg:w-[32%]")
-                      : "lg:w-[52%]"
-                  )}
-                >
+                <section className="font-jakarta flex h-fit flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-normal dark:border-border dark:bg-card dark:shadow-none w-full lg:w-[52%]">
                   <div className="flex items-start justify-between gap-4 border-b border-border bg-transparent p-5 dark:border-border">
                     <div className="flex flex-col gap-1">
                       <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-50 m-0">
-                        {uploadMode === "csv" ? "Bulk Upload" : (isOsas ? "Organization Document" : "Label Document")}
+                        {isOsas ? "Organization Document" : "Label Document"}
                       </h3>
                       <p className="text-xs text-gray-900 dark:text-zinc-300 m-0 leading-normal">
-                        {uploadMode === "csv"
-                          ? "Review rows, bulk-edit locations, then import students."
-                          : uploadedFile
-                            ? (isOsas ? "Review detected organization details and assign storage." : "Review scanned information and fill in missing fields.")
-                            : (isOsas ? "Drop or select a file on the left, then associate an organization." : "Drop or select a file on the left, then fill in the form here.")}
+                        {uploadedFile
+                          ? (isOsas ? "Review detected organization details and assign storage." : "Review scanned information and fill in missing fields.")
+                          : (isOsas ? "Drop or select a file on the left, then associate an organization." : "Drop or select a file on the left, then fill in the form here.")}
                       </p>
                     </div>
-                    {uploadMode === "csv" && csvFile && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setHideBulkCard(true)}
-                        className="h-8 px-3 text-xs font-semibold rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0 ml-3"
-                        title="Hide Bulk Upload card to expand preview table"
-                      >
-                        Hide
-                      </Button>
-                    )}
                   </div>
 
                   <div className="p-5 bg-white dark:bg-transparent">
-                    {uploadMode === "pdf" ? (
                       <div className="space-y-5">
 
                         {isOsas ? (
@@ -2333,259 +1705,9 @@ export default function ScanUploadTab({
                           className="w-full h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                           style={{ color: "#ffffff" }}
                         >
-                          Upload
+                          Upload Document
                         </Button>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                            Source File
-                          </label>
-                          <div className="flex items-center gap-2">
-                            <div className="relative flex-1">
-                              <input
-                                ref={csvInputRef}
-                                type="file"
-                                accept=".csv,text/csv"
-                                className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                                onChange={(e) =>
-                                  handleCsvFileSelect(e.target.files?.[0] || null)
-                                }
-                              />
-                              <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-white px-3 transition-all hover:bg-gray-50 dark:bg-card dark:border-border">
-                                <HugeIcon  className="ph-bold ph-file-csv text-gray-400 dark:text-zinc-500"></HugeIcon>
-                                <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-300">
-                                  {csvFile ? csvFile.name : "Select CSV..."}
-                                </span>
-                              </div>
-                            </div>
-                            {csvFile && (
-                              <button
-                                type="button"
-                                onClick={() => handleCsvFileSelect(null)}
-                                className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white text-gray-500 transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-400 dark:border-border cursor-pointer active:scale-95"
-                                title="Clear File"
-                              >
-                                <HugeIcon  className="ph-bold ph-trash text-base transition-colors group-hover:text-red-500" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
-                            <div className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                              Bulk Edit
-                            </div>
-                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-300">
-                              <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                                {Object.values(csvSelected).filter(Boolean).length}
-                              </span>{" "}
-                              rows selected
-                            </div>
-                          </div>
-
-                          <div className="space-y-3 pt-3">
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                                Room
-                              </label>
-                              <Select
-                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
-                                value={csvBulkRoom}
-                                onChange={(e) => setCsvBulkRoom(e.target.value)}
-                              >
-                                <option value="">No change</option>
-                                {roomOptions.map((r) => (
-                                  <option key={r} value={String(r)}>
-                                    {r}
-                                  </option>
-                                ))}
-                              </Select>
-                            </div>
-
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                                Cabinet
-                              </label>
-                              <Select
-                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
-                                value={csvBulkCabinet}
-                                onChange={(e) => setCsvBulkCabinet(e.target.value)}
-                              >
-                                <option value="">No change</option>
-                                {isOsas ? (
-                                  ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"].map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                  ))
-                                ) : (() => {
-                                  const bulkRoomId = coerceRoomId(csvBulkRoom)
-                                  const ids = bulkRoomId
-                                    ? getCabinetsForRoom(bulkRoomId).map(
-                                        (c) => c.id
-                                      )
-                                    : Array.from(
-                                        new Set(
-                                          storageLayout?.rooms?.flatMap((r) =>
-                                            r.cabinets.map((c) => c.id)
-                                          ) || []
-                                        )
-                                      )
-                                  return ids.map((c) => (
-                                    <option key={c} value={c}>
-                                      {c}
-                                    </option>
-                                  ))
-                                })()}
-                              </Select>
-                            </div>
-
-                            <div>
-                              <label className="mb-1.5 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                                Drawer
-                              </label>
-                              <Select
-                                className="h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all"
-                                value={csvBulkDrawer}
-                                onChange={(e) => setCsvBulkDrawer(e.target.value)}
-                              >
-                                <option value="">No change</option>
-                                {isOsas ? (
-                                  [1, 2, 3, 4].map((d) => (
-                                    <option key={d} value={String(d)}>Drawer {d}</option>
-                                  ))
-                                ) : (() => {
-                                  const bulkRoomId = coerceRoomId(csvBulkRoom)
-                                  const bulkCabId = String(
-                                    csvBulkCabinet || ""
-                                  ).trim()
-                                  const ids =
-                                    bulkRoomId && bulkCabId
-                                      ? getDrawerIdsFor(bulkRoomId, bulkCabId)
-                                      : Array.from(
-                                          new Set(
-                                            storageLayout?.rooms?.flatMap((r) =>
-                                              r.cabinets.flatMap(
-                                                (c) => c.drawerIds || []
-                                              )
-                                            ) || []
-                                          )
-                                        )
-                                  ids.sort((a, b) => a - b)
-                                  return ids.map((d) => (
-                                    <option key={d} value={String(d)}>
-                                      {d}
-                                    </option>
-                                  ))
-                                })()}
-                              </Select>
-                            </div>
-
-                            <div className="flex items-center gap-2 pt-2">
-                              <Button
-                                type="button"
-                                onClick={applyCsvBulkLocation}
-                                className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                                style={{ color: "#ffffff" }}
-                                disabled={
-                                  Object.values(csvSelected).filter(Boolean)
-                                    .length === 0
-                                }
-                              >
-                                Apply
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setCsvSelected({})}
-                                className="flex-1 h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
-                                disabled={
-                                  Object.values(csvSelected).filter(Boolean)
-                                    .length === 0
-                                }
-                              >
-                                Clear
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="border-t border-border pt-4 dark:border-border" />
-
-                        {(() => {
-                          const selectedIndices = Object.keys(csvSelected).filter(k => csvSelected[k])
-                          const selectedRows = csvRows.filter(r => selectedIndices.includes(String(r.index)))
-                          const hasInvalidSelected = isOsas
-                            ? selectedRows.some(r => {
-                                const rm = r.organization?.room ?? r.student?.room
-                                const cb = r.organization?.cabinet ?? r.student?.cabinet
-                                return !rm || !cb
-                              })
-                            : selectedRows.some(r => !isLocationValid(r.student?.room, r.student?.cabinet, r.student?.drawer))
-                          const importDisabled = csvLoading || selectedRows.length === 0 || hasInvalidSelected
-
-                          return (
-                            <>
-                              <Button
-                                type="button"
-                                onClick={importCsvStudents}
-                                disabled={importDisabled}
-                                title={isOsas ? "Import Organizations" : "Import Students"}
-                                className="w-full h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                                style={{ color: "#ffffff" }}
-                              >
-                                {csvLoading ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm" />
-                                    <span>Importing...</span>
-                                  </span>
-                                ) : (
-                                  isOsas ? "Import Organizations" : "Import Students"
-                                )}
-                              </Button>
-
-                              {hasInvalidSelected && (
-                                <div className="mt-3 flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 p-3 text-[11px] font-semibold text-orange-800 animate-in fade-in slide-in-from-top-2 dark:bg-orange-950/20 dark:border-orange-900/30">
-                                  <HugeIcon  className="ph-fill ph-warning-circle text-sm shrink-0" />
-                                  <p>
-                                    Cannot import: One or more selected rows have storage locations that do not exist in the system.
-                                    Use the dropdowns or Bulk edit to assign valid physical rooms, cabinets, and drawers.
-                                  </p>
-                                </div>
-                              )}
-                            </>
-                          )
-                        })()}
-
-                        {csvResults.length > 0 && (
-                          <div className="rounded-xl border border-border bg-white p-4 shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                            <div className="mb-2 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                              Import Summary
-                            </div>
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                <span className="flex items-center gap-1.5">
-                                  <HugeIcon  className="ph-fill ph-check-circle text-emerald-500" />{" "}
-                                  Created:
-                                </span>
-                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                                  {csvResults.filter((r) => r.ok).length}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                <span className="flex items-center gap-1.5">
-                                  <HugeIcon  className="ph-fill ph-x-circle text-red-500" />{" "}
-                                  Failed:
-                                </span>
-                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-600 dark:bg-red-950/30">
-                                  {csvResults.filter((r) => !r.ok).length}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </section>
               </div>

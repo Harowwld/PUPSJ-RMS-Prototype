@@ -129,7 +129,7 @@ export default function ActiveFilterChips({
           title="Clear all active filters"
           className="text-[11px] font-medium text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 dark:hover:text-red-300 hover:underline cursor-pointer ml-1 py-0.5 px-1.5 transition-colors select-none"
         >
-          Clear
+          Clear Filters
         </button>
       )}
     </div>

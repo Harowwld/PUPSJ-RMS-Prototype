@@ -450,6 +450,72 @@ All search bars across table toolbars, master lists, directories, and archive sc
 3. **Always ensure `pr-16` right padding**: Standard `pr-4` or `pr-8` causes text to type underneath the count badge.
 4. **Never use raw "×" characters**: Always render `<HugeIcon className="ph-bold ph-x-circle text-[13px]" />` for the clear button.
 
+### 5.9 Standard Popovers (`Popover`) & The Three-Zone Architecture
+All popovers (filter drawers, contextual utility popups, color pickers, and detail cards) must follow the **Three-Zone Architecture (Header, Body, Footer)** established by the canonical Combine Filter (`MultiCriteriaFilter`):
+
+- **The Three-Zone Architecture**:
+  1. **Header Zone (`PopoverHeader`)**: Inset top bar with `px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-sm`.
+     - **Left**: Contextual icon + title/category (`text-sm font-semibold text-gray-900 dark:text-zinc-100` or `text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500`).
+     - **Right**: Action link (`Reset Filters`, `text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline`), or active status pill badge.
+  2. **Body Zone (`PopoverBody`)**: Main content area with snug `p-3` or `p-3.5 space-y-3` (`bg-white dark:bg-zinc-900`). Holds scrollable criteria groups, color swatch grids, or guideline callouts.
+  3. **Footer Zone (`PopoverFooter`)**: Inset bottom bar with `px-4 py-2 border-t border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 text-[11px] text-gray-500 dark:text-zinc-400`.
+     - **When to include a footer**: ONLY include a footer when it provides genuine functional value (such as live filter calculation results like `Matching: X of Y` in `MultiCriteriaFilter`, or account state & sign out actions in the user profile menu).
+     - **Never include filler footers**: Action dropdowns and utility menus (e.g. Official Report PDF, Export CSV, Document Actions, Template Actions, Arrange Records, Folder Color) must NEVER include artificial filler footers (such as "generator / archival dossier", "target", "selected", "sort mode").
+     - **Profile Menu Stacked Layout**: In profile menus with footers, session status and primary actions like Sign Out must be stacked on **new lines** (`flex flex-col gap-1.5`), never squished side-by-side.
+
+#### Code Blueprint: Three-Zone Popover
+```jsx
+<PopoverContent className="w-80 p-0 rounded-2xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta">
+  {/* 1. Header Zone */}
+  <PopoverHeader>
+    <div className="flex items-center gap-2">
+      <HugeIcon className="ph-bold ph-faders text-sm text-gray-900 dark:text-zinc-300" />
+      <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+        Combine Filter Criteria
+      </span>
+    </div>
+    {hasActiveFilters && (
+      <button type="button" onClick={handleReset} className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer">
+        Reset Filters
+      </button>
+    )}
+  </PopoverHeader>
+
+  {/* 2. Body Zone */}
+  <PopoverBody className="max-h-72 overflow-y-auto">
+    {/* Criteria options, controls, or swatches */}
+  </PopoverBody>
+
+  {/* 3. Footer Zone */}
+  <PopoverFooter>
+    <span>
+      Matching: <strong className="text-gray-900 dark:text-zinc-100">{matchingCount}</strong> of {totalCount}
+    </span>
+    <span className="font-medium text-emerald-600 dark:text-emerald-400">
+      Combined active
+    </span>
+  </PopoverFooter>
+</PopoverContent>
+```
+
+- **Geometry & Hierarchy**:
+  - **Multi-Criteria Filter Drawers & Persona Dialogs**: `w-80` (`320px` width) with `rounded-2xl border border-border dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden p-0`.
+  - **Contextual Utility Popups & Swatch Pickers**: `w-60` (`240px` width) with `p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 shadow-2xl overflow-hidden` and tactile `h-8 rounded-lg` swatches.
+  - **Action & Sort Dropdown Menus**: `w-56 rounded-xl p-1 bg-white dark:bg-zinc-900 border border-border shadow-xl` with `py-1.5 px-2 rounded-lg text-xs font-medium` item padding and `px-2 py-1` header labels.
+  - **Calendar Pickers**: `w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card`.
+- **Snug Padding Principle**:
+  - The primitive `<PopoverContent />` must use `gap-0` so child dividers (`border-b`) and containers sit flush without artificial flex gaps.
+  - Detail popovers use snug `p-3.5 space-y-2.5` inside the body zone (never bloated `p-4 space-y-4`).
+  - Dropdown menu items must never use oversized `py-2 px-2.5` padding; always use Apple HIG standard `py-1.5 px-2`.
+- **No Hardcoded Responsive Blowout**: **NEVER** add `sm:w-96` or responsive width modifiers to the primitive `<PopoverContent />` or custom popovers. Responsive media queries in CSS override callers that declare fixed widths on desktop viewports.
+- **Typographic & Font-Weight Standards**:
+  - **Header Titles**: `text-sm font-semibold text-gray-900 dark:text-zinc-100` with hairline divider `border-b border-border dark:border-border`.
+  - **Category / Section Labels**: `text-[10px]` or `text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500`.
+  - **Item / Option Labels**: `text-xs font-medium text-gray-700 dark:text-zinc-200` (or `text-sm font-medium` for master lists).
+  - **Badges & Counts**: `text-[9px]` or `text-[10px] font-semibold rounded-full`.
+  - **Secondary Subtext**: `text-[10px]` or `text-xs font-normal text-gray-500 dark:text-zinc-400`.
+  - **Action / Reset Buttons**: `text-[11px]` or `text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer`.
+
 ---
 
 ## 6. Color Tokens & Brand Styles

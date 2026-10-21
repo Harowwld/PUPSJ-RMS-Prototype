@@ -699,7 +699,7 @@ export default function StudentComplianceTab({ authUser }) {
                     Downloading...
                   </span>
                 ) : (
-                  "Download"
+                  "Download PDF Slip"
                 )}
               </Button>
 
@@ -709,7 +709,7 @@ export default function StudentComplianceTab({ authUser }) {
                 className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white! border-0 shadow-xs cursor-pointer active:scale-95 transition-all"
                 style={{ color: "#ffffff" }}
               >
-                Print
+                Print Slip
               </Button>
             </div>
           }
@@ -802,7 +802,7 @@ export default function StudentComplianceTab({ authUser }) {
                 <PopoverContent
                   align="end"
                   sideOffset={6}
-                  className="w-80 sm:w-96 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"
+                  className="w-80 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"
                 >
                   {/* Popover Header */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
@@ -819,8 +819,8 @@ export default function StudentComplianceTab({ authUser }) {
                         title="Reset all filters"
                         className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
                       >
-                        Reset
-                      </button>
+                    Reset Filters
+                  </button>
                     )}
                   </div>
 
@@ -829,7 +829,7 @@ export default function StudentComplianceTab({ authUser }) {
                     {/* Status Group */}
                     <div>
                       <div className="flex items-center justify-between px-1 mb-1.5">
-                        <span className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                        <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                           Status Criteria
                         </span>
                         {statusFilters.length > 0 && (
@@ -905,7 +905,7 @@ export default function StudentComplianceTab({ authUser }) {
                     {availableCategories.length > 0 && (
                       <div className="pt-2 border-t border-border dark:border-border">
                         <div className="flex items-center justify-between px-1 mb-1.5">
-                          <span className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                          <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                             Categories
                           </span>
                           {categoryFilters.length > 0 && (
@@ -1049,8 +1049,8 @@ export default function StudentComplianceTab({ authUser }) {
                       title="Reset Filters"
                       className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                      Reset
-                    </Button>
+                    Reset Filters
+                  </Button>
                   )}
                 </EmptyHeader>
               </Empty>
@@ -1165,72 +1165,76 @@ export default function StudentComplianceTab({ authUser }) {
                             <PopoverContent
                               side="top"
                               align="end"
-                              className="w-80 sm:w-96 rounded-2xl p-4 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-xl font-jakarta space-y-3"
+                              className="w-80 rounded-2xl p-0 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta"
                             >
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                              {/* 1. Header Zone */}
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
+                                <div className="flex items-center gap-1.5">
+                                  <HugeIcon className="ph-bold ph-file-text text-xs text-pup-maroon dark:text-red-400" />
+                                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                                     {item.category}
                                   </span>
-                                  <span
-                                    className={cn(
-                                      "text-xs font-bold px-2 py-0.5 rounded-full border",
-                                      isSubmitted
-                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                        : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
-                                    )}
-                                  >
-                                    {isSubmitted ? "Submitted" : "Pending Submission"}
-                                  </span>
                                 </div>
-                                <h5 className="text-sm font-bold text-gray-900 dark:text-zinc-100 mt-1">
-                                  {item.docType}
-                                </h5>
-                                <p className="text-xs text-gray-900 dark:text-zinc-300 mt-1 leading-relaxed">
-                                  {item.description}
-                                </p>
+                                <span
+                                  className={cn(
+                                    "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                                    isSubmitted
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                      : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                                  )}
+                                >
+                                  {isSubmitted ? "Submitted" : "Pending Submission"}
+                                </span>
                               </div>
 
-                              <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
-                                <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                  <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
-                                  Submission Guidelines
+                              {/* 2. Body Zone */}
+                              <div className="p-3.5 space-y-2.5">
+                                <div>
+                                  <h5 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                                    {item.docType}
+                                  </h5>
+                                  <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                                    {item.description}
+                                  </p>
                                 </div>
-                                <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
-                                  {item.instructions || "Please submit original physical copies directly to Room 102."}
-                                </p>
-                              </div>
 
-                              {item.document ? (
-                                <div className="space-y-1.5 text-xs border-t border-border dark:border-border pt-2">
-                                  <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                    <span>Archival Status:</span>
-                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                      {item.document.approvalStatus || "Approved"}
-                                    </span>
+                                <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
+                                  <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                                    Submission Guidelines
                                   </div>
-                                  {item.document.createdAt && (
+                                  <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
+                                    {item.instructions || "Please submit original physical copies directly to Room 102."}
+                                  </p>
+                                </div>
+
+                                {item.document && (
+                                  <div className="space-y-1 text-xs pt-1 border-t border-border/50">
                                     <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                      <span>Archived On:</span>
-                                      <span className="font-mono text-gray-900 dark:text-zinc-200">
-                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                      <span>Archival Status:</span>
+                                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                        {item.document.approvalStatus || "Approved"}
                                       </span>
                                     </div>
-                                  )}
-                                  {item.document.originalFilename && (
-                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
-                                      <span>File:</span>
-                                      <span className="font-mono text-gray-900 dark:text-zinc-200 truncate max-w-[180px]" title={item.document.originalFilename}>
-                                        {item.document.originalFilename}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="text-[11px] text-gray-400 dark:text-zinc-500 border-t border-border dark:border-border pt-2">
-                                  Physical archive submission required.
-                                </div>
-                              )}
+                                    {item.document.createdAt && (
+                                      <div className="flex justify-between text-gray-900 dark:text-zinc-300">
+                                        <span>Archived On:</span>
+                                        <span className="font-mono text-gray-900 dark:text-zinc-200">
+                                          {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {item.document.originalFilename && (
+                                      <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
+                                        <span>File:</span>
+                                        <span className="font-mono text-gray-900 dark:text-zinc-200 truncate max-w-[180px]" title={item.document.originalFilename}>
+                                          {item.document.originalFilename}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </PopoverContent>
                           </Popover>
                         </td>
@@ -1410,73 +1414,76 @@ export default function StudentComplianceTab({ authUser }) {
                           <PopoverContent
                             side="top"
                             align="end"
-                            className="w-80 sm:w-96 rounded-2xl p-4 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-xl font-jakarta space-y-3"
+                            className="w-80 rounded-2xl p-0 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta"
                           >
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                            {/* 1. Header Zone */}
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
+                              <div className="flex items-center gap-1.5">
+                                <HugeIcon className="ph-bold ph-file-text text-xs text-pup-maroon dark:text-red-400" />
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                                   {item.category}
                                 </span>
-                                <span
-                                  className={cn(
-                                    "text-xs font-bold px-2 py-0.5 rounded-full border",
-                                    isSubmitted
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                      : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
-                                  )}
-                                >
-                                  {isSubmitted ? "Submitted" : "Pending Submission"}
-                                </span>
                               </div>
-                              <h5 className="text-sm font-bold text-gray-900 dark:text-zinc-100 mt-1">
-                                {item.docType}
-                              </h5>
-                              <p className="text-xs text-gray-900 dark:text-zinc-300 mt-1 leading-relaxed">
-                                {item.description}
-                              </p>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                                  isSubmitted
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                    : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                                )}
+                              >
+                                {isSubmitted ? "Submitted" : "Pending Submission"}
+                              </span>
                             </div>
 
-                            <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
-                              <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
-                                Submission Guidelines
+                            {/* 2. Body Zone */}
+                            <div className="p-3.5 space-y-2.5">
+                              <div>
+                                <h5 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                                  {item.docType}
+                                </h5>
+                                <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                                  {item.description}
+                                </p>
                               </div>
-                              <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
-                                {item.instructions || "Please submit original physical copies directly to Room 102."}
-                              </p>
-                            </div>
 
-                            {item.document ? (
-                              <div className="space-y-1.5 text-xs border-t border-border dark:border-border pt-2">
-                                <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                  <span>Archival Status:</span>
-                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {item.document.approvalStatus || "Approved"}
-                                  </span>
+                              <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
+                                <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                  <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                                  Submission Guidelines
                                 </div>
-                                {item.document.createdAt && (
+                                <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
+                                  {item.instructions || "Please submit original physical copies directly to Room 102."}
+                                </p>
+                              </div>
+
+                              {item.document && (
+                                <div className="space-y-1 text-xs pt-1">
                                   <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                    <span>Archived On:</span>
-                                    <span className="font-mono text-gray-900 dark:text-zinc-200">
-                                      {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                    <span>Archival Status:</span>
+                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                      {item.document.approvalStatus || "Approved"}
                                     </span>
                                   </div>
-                                )}
-                                {item.document.originalFilename && (
-                                  <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
-                                    <span className="shrink-0">Digital Copy:</span>
-                                    <span className="font-mono text-[10px] text-gray-900 dark:text-zinc-200 truncate">
-                                      {item.document.originalFilename}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="text-[10.5px] text-gray-900 dark:text-zinc-300 border-t border-border dark:border-border pt-2 flex items-center gap-1.5">
-                                <HugeIcon className="ph-bold ph-buildings text-pup-maroon dark:text-red-400 text-xs shrink-0" />
-                                <span>Registrar Archives &bull; Room 102, Main Admin Building</span>
-                              </div>
-                            )}
+                                  {item.document.createdAt && (
+                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300">
+                                      <span>Archived On:</span>
+                                      <span className="font-mono text-gray-900 dark:text-zinc-200">
+                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {item.document.originalFilename && (
+                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
+                                      <span className="shrink-0">Digital Copy:</span>
+                                      <span className="font-mono text-[10px] text-gray-900 dark:text-zinc-200 truncate">
+                                        {item.document.originalFilename}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </PopoverContent>
                         </Popover>
                       </div>
@@ -1635,7 +1642,7 @@ export default function StudentComplianceTab({ authUser }) {
                   Generating...
                 </span>
               ) : (
-                "Download"
+                "Download PDF Slip"
               )}
             </Button>
             <Button
@@ -1644,7 +1651,7 @@ export default function StudentComplianceTab({ authUser }) {
               className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white! border-0 cursor-pointer active:scale-95 shadow-xs transition-all"
               style={{ color: "#ffffff" }}
             >
-              Print
+              Print Slip
             </Button>
           </DialogFooter>
 

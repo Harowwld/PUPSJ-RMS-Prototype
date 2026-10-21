@@ -787,7 +787,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 onClick={handleOpenCreate}
                 className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
               >
-                Add
+                Add Department
               </Button>
             </div>
           }
@@ -1015,14 +1015,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   title="Reset Filters"
                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
-                  Reset
-                </Button>
+                    Reset Filters
+                  </Button>
               ) : statusFilter === "Active" ? (
                 <Button
                   onClick={handleOpenCreate}
                   className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
                 >
-                  Create
+                  Create Department
                 </Button>
               ) : null}
             </EmptyHeader>
@@ -1737,8 +1737,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           placeholder="Default: .local/hot-folder/INBOUND"
                           className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
                         />
-                        <Button type="button" variant="outline" disabled={folderPickerLoading || !isEditing} onClick={handlePickInboundFolder} className="h-10 shrink-0 rounded-xl px-3 text-xs">
-                          {folderPickerLoading ? "Opening…" : "Browse"}
+                        <Button type="button" variant="outline" disabled={folderPickerLoading || !isEditing} onClick={handlePickInboundFolder} className="h-10 shrink-0 rounded-xl px-3 text-xs font-semibold">
+                          {folderPickerLoading ? "Opening…" : "Browse Folder"}
                         </Button>
                       </div>
                       <span className="text-[10px] text-gray-400 mt-1 block">
@@ -1885,7 +1885,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       title="Open Module Matrix"
                       className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center shrink-0 self-start sm:self-auto"
                     >
-                      Open
+                      Open Matrix
                     </Button>
                   </div>
                 )}
@@ -2051,7 +2051,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 disabled={submitLoading}
                 className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
               >
-                {submitLoading ? "Saving..." : isEditing ? "Save" : "Create"}
+                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Office"}
               </Button>
             </DialogFooter>
           </form>

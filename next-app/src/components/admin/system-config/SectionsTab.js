@@ -71,10 +71,8 @@ export default function SectionsTab({
   sortSection,
   showToast,
   loadAll,
-  handleExportSections: handleExportProp,
 }) {
   const [localSearch, setLocalSearch] = useState(sectionSearch)
-  const [isExporting, setIsExporting] = useState(false)
 
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false)
   const [newSectionName, setNewSectionName] = useState("")
@@ -206,39 +204,7 @@ export default function SectionsTab({
 
 
 
-  const handleExportSections = handleExportProp || (() => {
-    const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`
-    const csvContent = [
-      ["Course", "Block Name", "Status"],
-      ...sections.map((s) => [s.course_code || "", s.name || "", s.status || "Active"]),
-    ]
-      .map((row) => row.map(q).join(","))
-      .join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    link.href = URL.createObjectURL(blob)
-    link.setAttribute("download", `course_blocks_${new Date().toISOString().split('T')[0]}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
 
-    if (showToast) {
-      showToast({
-        title: "Export Success",
-        description: "Course blocks configuration has been successfully exported to CSV.",
-      })
-    }
-  })
-
-  const onExportClick = async () => {
-    setIsExporting(true)
-    try {
-      await new Promise(resolve => setTimeout(resolve, 600))
-      await handleExportSections()
-    } finally {
-      setIsExporting(false)
-    }
-  }
 
   const selectedCount = Object.values(selectedSections).filter(Boolean).length
   const selectedNames = filteredSections
@@ -255,7 +221,7 @@ export default function SectionsTab({
       message: showArchived 
         ? "These course blocks will be visible for new records again."
         : "These course blocks will be hidden from new registrations but their history will be preserved.",
-      confirmLabel: showArchived ? "Restore" : "Archive",
+      confirmLabel: showArchived ? "Restore Blocks" : "Archive Blocks",
       variant: showArchived ? "success" : "warning",
       buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
@@ -359,26 +325,11 @@ export default function SectionsTab({
             </div>
 
             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onExportClick}
-              disabled={isExporting}
-              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-            >
-              {isExporting ? (
-                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
-              ) : (
-                "Export"
-              )}
-            </Button>
-
-            <Button
               onClick={() => setIsAddSectionOpen(true)}
               disabled={showArchived}
               className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
             >
-              Add
+              Add Block
             </Button>
           </div>
         </div>
@@ -622,7 +573,7 @@ export default function SectionsTab({
                                         title: "Restore Course Block",
                                         message:
                                           "This course block will be visible for new records again.",
-                                        confirmLabel: "Restore",
+                                        confirmLabel: "Restore Block",
                                         variant: "success",
                                         buttonIcon: "ph-bold ph-archive-restore",
                                         icon: "ph-duotone ph-archive-restore",
@@ -710,8 +661,8 @@ export default function SectionsTab({
                                     title="Reset Filters"
                                     className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                   >
-                                    Reset
-                                  </Button>
+                    Reset Filters
+                  </Button>
                                 ) : !showArchived && (
                                   <Button
                                     onClick={() => setIsAddSectionOpen(true)}
@@ -790,7 +741,7 @@ export default function SectionsTab({
         selectionStatus="Selected Sections"
         onCancel={() => toggleAllSections(false)}
         onAction={handleBulkAction}
-        actionLabel={showArchived ? "Restore" : "Archive"}
+        actionLabel={showArchived ? "Restore Blocks" : "Archive Blocks"}
         actionIcon={showArchived ? "ph-archive-restore" : "ph-archive"}
         actionVariant={showArchived ? "success" : "danger"}
       />
@@ -869,7 +820,7 @@ export default function SectionsTab({
                 type="submit"
                 className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
-                Create
+                Create Block
               </Button>
             </DialogFooter>
           </form>
@@ -955,7 +906,7 @@ export default function SectionsTab({
                 type="submit"
                 className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
-                Save
+                Save Changes
               </Button>
             </DialogFooter>
           </form>

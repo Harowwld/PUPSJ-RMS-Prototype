@@ -156,7 +156,7 @@ export default function EditUserModal({
               disabled={isLoading}
               className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
             >
-              {isLoading ? "Saving..." : "Save"}
+              {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

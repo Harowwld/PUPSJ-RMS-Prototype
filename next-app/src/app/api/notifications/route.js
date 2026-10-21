@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import {
   getStaffReviewNotificationsState,
-  listDocumentReviewNotifications,
+  listNotifications,
   markStaffReviewNotificationsSeen,
-  setNotificationItemState,
-  markAllStaffNotificationsReadState,
+  setNotificationReadState,
+  markAllNotificationsReadState,
 } from "../../../lib/notificationsRepo";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
@@ -14,34 +14,37 @@ export const runtime = "nodejs";
 
 export async function GET(req) {
   const access = await requireStaff(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  if (access.error || !access.user) {
+    return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  }
   const staff = access.user;
   const officeId = getPrincipalOfficeId(staff);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
 
   const { searchParams } = new URL(req.url);
-  const limit = searchParams.get("limit") || "20";
+  const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
-  const sortBy = searchParams.get("sortBy") || "reviewed_at";
+  const sortBy = searchParams.get("sortBy") || "created_at";
   const sortOrder = searchParams.get("sortOrder") || "DESC";
-  const tab = searchParams.get("tab") || "inbox";
+  const tab = searchParams.get("tab") || "unread"; // "unread" or "read"
   const search = searchParams.get("search") || searchParams.get("q") || "";
+  const type = searchParams.get("type") || "";
   const decision = searchParams.get("decision") || "";
-  const readStatus = searchParams.get("readStatus") || "";
+  const severity = searchParams.get("severity") || "";
 
   const state = await getStaffReviewNotificationsState(staff.id);
-  const res = await listDocumentReviewNotifications({
+  const res = await listNotifications({
     limit,
     offset,
-    lastSeenReviewedAt: state.lastSeenReviewedAt,
     staffId: staff.id,
     officeId,
     sortBy,
     sortOrder,
     tab,
     search,
+    type,
     decision,
-    readStatus,
+    severity,
   });
 
   return NextResponse.json({
@@ -50,16 +53,19 @@ export async function GET(req) {
       items: res.items.filter((item) => canAccessResource(staff, "notification", item)),
       total: res.total,
       unreadCount: res.unreadCount,
+      readCount: res.readCount,
       lastSeenReviewedAt: state.lastSeenReviewedAt,
-      inboxCount: res.inboxCount,
-      archiveCount: res.archiveCount,
+      inboxCount: res.unreadCount, // for legacy callers
+      archiveCount: 0,
     },
   });
 }
 
 export async function POST(req) {
   const access = await requireStaff(req);
-  if (access.error || !access.user) return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  if (access.error || !access.user) {
+    return createAuthErrorResponse(access.error || "Staff authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
+  }
   const staff = access.user;
   const officeId = getPrincipalOfficeId(staff);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
@@ -70,7 +76,7 @@ export async function POST(req) {
   }
   const action = String(body.action || "");
   let ids = [];
-  if (["markRead", "markUnread", "archive", "unarchive"].includes(action)) {
+  if (["markRead", "markUnread"].includes(action)) {
     if (!Array.isArray(body.ids) || body.ids.length === 0) {
       return NextResponse.json({ ok: false, error: "At least one notification ID is required." }, { status: 400 });
     }
@@ -87,24 +93,20 @@ export async function POST(req) {
     ids = [...new Set(normalizedIds)];
   }
 
-  if (action === "markSeen") {
-    await markAllStaffNotificationsReadState(staff.id, officeId, true);
+  if (action === "markSeen" || action === "markAllRead") {
+    await markAllNotificationsReadState(staff.id, officeId, true);
     await markStaffReviewNotificationsSeen(staff.id);
   } else if (action === "markAllUnread") {
-    await markAllStaffNotificationsReadState(staff.id, officeId, false);
+    await markAllNotificationsReadState(staff.id, officeId, false);
   } else if (action === "markRead") {
-    await setNotificationItemState(staff.id, ids, "read", 1, officeId);
+    await setNotificationReadState(staff.id, ids, true);
   } else if (action === "markUnread") {
-    await setNotificationItemState(staff.id, ids, "read", 0, officeId);
-  } else if (action === "archive") {
-    await setNotificationItemState(staff.id, ids, "archive", 1, officeId);
-  } else if (action === "unarchive") {
-    await setNotificationItemState(staff.id, ids, "archive", 0, officeId);
+    await setNotificationReadState(staff.id, ids, false);
   } else {
     return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
   }
 
-  if (["markSeen", "markAllUnread", "markRead", "markUnread", "archive", "unarchive"].includes(action)) {
+  if (["markSeen", "markAllRead", "markAllUnread", "markRead", "markUnread"].includes(action)) {
     await writeAuditLog(req, `Notifications ${action}`, {
       details: ids.length ? `Notification IDs: ${ids.join(", ")}` : "Notification state updated.",
       entity_type: "notification",
@@ -112,11 +114,9 @@ export async function POST(req) {
     });
   }
 
-  const state = await getStaffReviewNotificationsState(staff.id);
-  const meta = await listDocumentReviewNotifications({
+  const meta = await listNotifications({
     limit: 1,
     offset: 0,
-    lastSeenReviewedAt: state.lastSeenReviewedAt,
     staffId: staff.id,
     officeId,
   });
@@ -124,8 +124,8 @@ export async function POST(req) {
   return NextResponse.json({
     ok: true,
     data: {
-      lastSeenReviewedAt: state.lastSeenReviewedAt,
       unreadCount: meta.unreadCount,
+      readCount: meta.readCount,
     },
   });
 }

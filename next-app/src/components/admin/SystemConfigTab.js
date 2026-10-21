@@ -1091,7 +1091,6 @@ export default function SystemConfigTab({
                 sortDoc={sortDoc}
                 showToast={showToast}
                 loadAll={loadAll}
-                handleExportDocTypes={handleExportDocTypes}
               />
 
             </TabsContent>
@@ -1129,7 +1128,6 @@ export default function SystemConfigTab({
                 sortCourse={sortCourse}
                 showToast={showToast}
                 loadAll={loadAll}
-                handleExportCourses={handleExportCourses}
               />
             </TabsContent>
 
@@ -1164,7 +1162,6 @@ export default function SystemConfigTab({
                 sortSection={sortSection}
                 showToast={showToast}
                 loadAll={loadAll}
-                handleExportSections={handleExportSections}
               />
             </TabsContent>
 

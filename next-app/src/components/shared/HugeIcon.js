@@ -324,7 +324,12 @@ const iconMapping = {
   "handshake": "Agreement01Icon",
   "panel-left": "SidebarLeftIcon",
   "panel-left-dashed": "SidebarLeft01Icon",
-  "star": "StarIcon"
+  "star": "StarIcon",
+  "folder": "Folder01Icon",
+  "folder-dashed": "Folder01Icon",
+  "folder-notch": "Folder01Icon",
+  "folder-simple": "Folder01Icon",
+  "folder-user": "FolderLibraryIcon"
 };
 
 function toCamelCase(str) {
@@ -339,7 +344,7 @@ function getHugeName(rawIconName, title) {
     const fromTitle = getIconByTitle(title);
     if (fromTitle) return fromTitle;
   }
-  if (!rawIconName) return "HelpCircleIcon";
+  if (!rawIconName) return "File01Icon";
   const camelName = toCamelCase(rawIconName);
   const capitalized = camelName.charAt(0).toUpperCase() + camelName.slice(1);
   return capitalized + 'Icon';
@@ -383,7 +388,7 @@ export default function HugeIcon({ className, size, title, name, ...props }) {
   }
   
   if (!IconComponent) {
-    IconComponent = icons['HelpCircleIcon'] || icons['File01Icon'] || Object.values(icons)[0];
+    IconComponent = icons['File01Icon'] || icons['Folder01Icon'] || Object.values(icons)[0];
   }
   
   if (!IconComponent) return null;

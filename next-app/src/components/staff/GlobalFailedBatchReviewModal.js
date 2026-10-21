@@ -234,7 +234,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
                       disabled={retryingId !== null || dismissingId !== null || clearingAll}
                       className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
-                      {dismissingId === row.id ? "Clearing..." : "Dismiss"}
+                      {dismissingId === row.id ? "Clearing..." : "Dismiss Scan"}
                     </Button>
                   </div>
                 </li>
@@ -252,7 +252,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
               onClick={clearAllFailed}
               className="h-10 rounded-xl px-4 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              {clearingAll ? "Clearing..." : "Clear"}
+              {clearingAll ? "Clearing..." : "Clear All Failed"}
             </Button>
           ) : <div />}
           <Button

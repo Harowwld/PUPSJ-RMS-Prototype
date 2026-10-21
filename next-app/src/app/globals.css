@@ -746,6 +746,10 @@
   --color-pup-text: #1f1f1f;
   --color-pup-border: #d1d5db;
   
+  /* Motion & Easing curves (Emil Kowalski / iOS standards) */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+  
   /* Font size scale overrides */
   --font-size-micro: 10px;
   --font-size-xs: 11px;

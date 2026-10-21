@@ -71,6 +71,32 @@ function formatStudentRequester(name, studentNo) {
   return name
 }
 
+/**
+ * Standard Information Row (label : value)
+ * Clean unboxed metadata layout aligned with colons and icons.
+ */
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  );
+}
+
 export default function CampusOperationsTab() {
 const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     const [health, setHealth] = useState(null)
@@ -360,6 +386,22 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     return sortedTransactions.slice(startIndex, endIndex)
   }, [sortedTransactions, startIndex, endIndex])
 
+  const currentTxIndex = selectedItem
+    ? sortedTransactions.findIndex((t) => t.id === selectedItem.id)
+    : -1
+
+  const handlePrevTx = () => {
+    if (currentTxIndex > 0) {
+      handleOpenDetails(sortedTransactions[currentTxIndex - 1])
+    }
+  }
+
+  const handleNextTx = () => {
+    if (currentTxIndex >= 0 && currentTxIndex < sortedTransactions.length - 1) {
+      handleOpenDetails(sortedTransactions[currentTxIndex + 1])
+    }
+  }
+
   // Reset page when filters change
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -626,8 +668,8 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                         title="Reset Filters"
                         className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                        Reset
-                      </Button>
+                    Reset Filters
+                  </Button>
                     )}
                   </EmptyHeader>
                 </Empty>
@@ -892,137 +934,235 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           </div>
         </Card>
 
-      {/* Human-Friendly Details Sheet */}
+      {/* Standardized Operation Record Details Sheet */}
       <Sheet open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-xl data-[side=right]:w-full data-[side=right]:sm:max-w-md data-[side=right]:md:max-w-lg data-[side=right]:lg:max-w-xl data-[side=right]:xl:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-6 pb-4 pr-16 border-b border-border dark:border-border bg-gradient-to-r from-gray-50/90 via-white to-gray-50/50 dark:from-zinc-900/90 dark:via-card dark:to-zinc-900/50 text-left">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                  {sheetItem?.officeId === "registrar" ? (
-                    <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 inline-flex items-center gap-1.5">
-                      <HugeIcon className="ph-bold ph-certificate text-xs" />
-                      Registrar Document Request
-                    </span>
-                  ) : (
-                    <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30 inline-flex items-center gap-1.5">
-                      <HugeIcon className="ph-bold ph-student text-xs" />
-                      OSAS Event Proposal
-                    </span>
-                  )}
-                </div>
-                <SheetTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 leading-snug truncate">
-                  {sheetItem?.title}
+          {/* TOP HEADER: Operation Record Details + < > 01 of XX + X button */}
+          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div>
+                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                  Operation Record Details
                 </SheetTitle>
-                <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                  Submitted on {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
+                <SheetDescription className="sr-only">
+                  Detailed information for cross-office campus transaction
                 </SheetDescription>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {sortedTransactions.length > 1 && (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                    <button
+                      type="button"
+                      disabled={currentTxIndex <= 0}
+                      onClick={handlePrevTx}
+                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      aria-label="Previous Record"
+                      title="Previous Record"
+                    >
+                      <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentTxIndex >= sortedTransactions.length - 1}
+                      onClick={handleNextTx}
+                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      aria-label="Next Record"
+                      title="Next Record"
+                    >
+                      <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                    </button>
+                    <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                      {String(Math.max(1, currentTxIndex + 1)).padStart(2, "0")} of {String(sortedTransactions.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedItem(null)}
+                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <HugeIcon className="ph-bold ph-x text-sm" />
+                </button>
               </div>
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {/* Requester & Stage */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
-                <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-                  Student Requester
-                </span>
-                <div
-                  className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate max-w-full"
-                  title={formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}
-                >
-                  {formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}
-                </div>
-                <div className="text-[11px] font-mono text-gray-400 mt-0.5">
-                  {sheetItem?.studentNo}
-                </div>
+          {/* SCROLLABLE 1-COLUMN BODY */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Summary Strip */}
+            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border mt-0.5",
+                  sheetItem?.officeId === "registrar"
+                    ? "bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40"
+                    : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40"
+                )}
+              >
+                <HugeIcon
+                  className={
+                    sheetItem?.officeId === "registrar"
+                      ? "ph-bold ph-certificate"
+                      : "ph-bold ph-student"
+                  }
+                />
               </div>
-
-              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
-                <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-                  Current Stage
-                </span>
-                <div className="flex items-center justify-between gap-2 flex-wrap mt-1">
-                  <span className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                    statusBadgeClass(sheetItem?.status)
-                  )}>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  {sheetItem?.officeId === "registrar" ? (
+                    <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 inline-flex items-center gap-1">
+                      Registrar
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30 inline-flex items-center gap-1">
+                      OSAS
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      statusBadgeClass(sheetItem?.status)
+                    )}
+                  >
                     {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
                   </span>
-                  <span className="text-[11px] font-mono text-gray-400">
-                    {formatRelativeTime(sheetItem?.createdAt).relative}
+                  <span className="font-mono text-[11px] text-gray-400">
+                    #{sheetItem?.id}
                   </span>
                 </div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                  {sheetItem?.title}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  Requester: <strong className="text-gray-900 dark:text-zinc-200">{formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}</strong>
+                </p>
               </div>
             </div>
 
-            {/* Organization (if OSAS) */}
-            {sheetItem?.organizationName && (
-              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
-                <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-                  Student Organization Chapter
-                </span>
-                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                  {sheetItem.organizationName}
-                </div>
-                {sheetItem.eventDate && (
-                  <span className="text-[11px] font-mono text-gray-400 mt-1 block">
-                    Scheduled Event Date: {sheetItem.eventDate.substring(0, 10)}
-                  </span>
+            {/* SECTION 1: Operation Specification (Unboxed InfoRow) */}
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Transaction Specification
+              </h4>
+              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                <InfoRow
+                  icon={sheetItem?.officeId === "registrar" ? "ph-certificate" : "ph-student"}
+                  label="Department"
+                  value={sheetItem?.officeId === "registrar" ? "University Registrar" : "Student Affairs (OSAS)"}
+                />
+
+                <InfoRow
+                  icon="ph-user"
+                  label="Student Requester"
+                  value={formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}
+                />
+
+                <InfoRow
+                  icon="ph-identification-badge"
+                  label="Student Number"
+                  value={sheetItem?.studentNo}
+                />
+
+                <InfoRow icon="ph-chart-pie-slice" label="Current Stage">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        statusBadgeClass(sheetItem?.status)
+                      )}
+                    >
+                      {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
+                    </span>
+                    <span className="text-[11px] font-mono text-gray-400">
+                      {sheetItem?.createdAt ? formatRelativeTime(sheetItem.createdAt).relative : ""}
+                    </span>
+                  </div>
+                </InfoRow>
+
+                <InfoRow
+                  icon="ph-clock"
+                  label="Submitted At"
+                  value={sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
+                />
+
+                {sheetItem?.organizationName && (
+                  <InfoRow
+                    icon="ph-buildings"
+                    label="Organization"
+                    value={sheetItem.organizationName}
+                  />
+                )}
+
+                {sheetItem?.eventDate && (
+                  <InfoRow
+                    icon="ph-calendar"
+                    label="Event Schedule"
+                    value={sheetItem.eventDate.substring(0, 10)}
+                  />
                 )}
               </div>
-            )}
-
-            {/* Notes / Purpose */}
-            <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4">
-              <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-                Purpose / Remarks
-              </span>
-              <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                {sheetItem?.notes || "No special remarks provided by the applicant."}
-              </p>
             </div>
 
-            {/* Attached Document File */}
-            {sheetItem?.originalFilename && (
-              <div className="p-4 rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                    <HugeIcon className="ph-bold ph-file-pdf text-base" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate">
-                      {sheetItem.originalFilename}
-                    </span>
-                    {sheetItem.sizeBytes && (
-                      <span className="text-[10px] text-gray-400 font-mono">
-                        {(sheetItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
-                      </span>
-                    )}
-                  </div>
-                </div>
+            {/* SECTION 2: Purpose & Remarks */}
+            <div className="space-y-2 pt-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Purpose & Remarks
+              </h4>
+              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5">
+                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  {sheetItem?.notes || "No special remarks provided by the applicant."}
+                </p>
+              </div>
+            </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenPdfPreview(sheetItem)}
-                  className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
-                >
-                  <HugeIcon className="ph-bold ph-eye text-sm mr-1" /> Preview
-                </Button>
+            {/* SECTION 3: Attached Document */}
+            {sheetItem?.originalFilename && (
+              <div className="space-y-2 pt-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Attached Document
+                </h4>
+                <div className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
+                      <HugeIcon className="ph-bold ph-file-pdf text-base" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate max-w-[200px]">
+                        {sheetItem.originalFilename}
+                      </span>
+                      {sheetItem.sizeBytes && (
+                        <span className="text-[10px] text-gray-400 font-mono">
+                          {(sheetItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenPdfPreview(sheetItem)}
+                    className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
+                  >
+                    <HugeIcon className="ph-bold ph-eye text-sm mr-1" /> Preview
+                  </Button>
+                </div>
               </div>
             )}
           </div>
 
-          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
-            <span className="text-xs text-gray-500 dark:text-zinc-400 font-mono">
-              Department: <strong className="text-gray-700 dark:text-zinc-200 uppercase font-semibold">{sheetItem?.officeId}</strong>
-            </span>
+          {/* STICKY SHEET FOOTER */}
+          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-end shrink-0">
             <Button
               type="button"
               variant="outline"

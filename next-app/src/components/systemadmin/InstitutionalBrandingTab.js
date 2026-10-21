@@ -402,7 +402,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                 disabled={saving}
                 className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? "Saving..." : "Save Branding"}
               </Button>
             </div>
           }
@@ -996,10 +996,10 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     size="sm"
                     onClick={handleDownloadSamplePdf}
                     disabled={generatingPdf}
-                    title="Export Sample Preview PDF"
+                    title="Preview Official Seal Test Sheet (PDF)"
                     className="h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shadow-xs"
                   >
-                    {generatingPdf ? "Exporting..." : "Export"}
+                    {generatingPdf ? "Generating..." : "Preview Test PDF"}
                   </Button>
                 </div>
 

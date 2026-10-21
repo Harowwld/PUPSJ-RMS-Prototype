@@ -87,3 +87,34 @@ export async function GET(req) {
     total,
   });
 }
+
+export async function POST(req) {
+  const auth = await requireAuth(req);
+  if (auth.error || !auth.user) {
+    return createAuthErrorResponse(auth.error || "Authentication required", 401);
+  }
+
+  try {
+    const body = await req.json();
+    const action = String(body.action || "").trim();
+    if (!action) {
+      return NextResponse.json({ ok: false, error: "Action is required" }, { status: 400 });
+    }
+
+    const { writeAuditLog } = await import("../../../lib/auditLogRequest");
+    await writeAuditLog(req, action, {
+      actor: body.actor,
+      role: body.role,
+      details: body.details || "",
+      severity: body.severity || "INFO",
+      entity_type: body.entity_type || "",
+      entity_id: body.entity_id || "",
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[POST /api/audit-logs] Error:", err);
+    return NextResponse.json({ ok: false, error: "Failed to record audit log" }, { status: 500 });
+  }
+}
+

@@ -37,6 +37,15 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
@@ -105,6 +114,10 @@ export default function DigitizationComplianceTab({
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState(null);
   const statCardsRef = useRef(null);
+  const [missingDialog, setMissingDialog] = useState(null);
+  const [missingStudentsData, setMissingStudentsData] = useState(null);
+  const [missingStudentsLoading, setMissingStudentsLoading] = useState(false);
+  const [missingStudentsError, setMissingStudentsError] = useState("");
 
   useEffect(() => {
     if (!selectedKpi) return;
@@ -196,6 +209,46 @@ export default function DigitizationComplianceTab({
       setManualLoading(false);
     }
   }, [buildQueryString, showToast]);
+
+  const loadMissingStudents = useCallback(async (documentType, offset = 0) => {
+    if (!documentType) return;
+    setMissingStudentsLoading(true);
+    setMissingStudentsError("");
+    try {
+      const params = new URLSearchParams({
+        documentTypeId: String(documentType.documentTypeId),
+        status: statusFilter,
+        limit: "20",
+        offset: String(offset),
+      });
+      if (Array.isArray(courseFilter) && courseFilter.length) {
+        params.set("courseCode", courseFilter.join(","));
+      }
+      if (requireApproved) params.set("requireApproved", "1");
+      if (officeId) params.set("officeId", officeId);
+
+      const response = await fetch(
+        `/api/analytics/digitization-compliance/missing-students?${params}`,
+        { cache: "no-store" },
+      );
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to load students missing this document");
+      }
+      setMissingStudentsData(json.data);
+    } catch (loadError) {
+      setMissingStudentsData(null);
+      setMissingStudentsError(loadError?.message || "Failed to load students");
+    } finally {
+      setMissingStudentsLoading(false);
+    }
+  }, [courseFilter, officeId, requireApproved, statusFilter]);
+
+  const openMissingStudents = useCallback((documentType) => {
+    setMissingDialog(documentType);
+    setMissingStudentsData(null);
+    loadMissingStudents(documentType);
+  }, [loadMissingStudents]);
 
   const firstLoadRef = useRef(true);
   useEffect(() => {
@@ -503,7 +556,7 @@ export default function DigitizationComplianceTab({
                   {isExportingCsv ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
                   ) : (
-                    "Export"
+                    "Export CSV"
                   )}
                 </Button>
 
@@ -516,7 +569,7 @@ export default function DigitizationComplianceTab({
                   {isGeneratingPdf ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                   ) : (
-                    "Download"
+                    "Official Report (PDF)"
                   )}
                 </Button>
               </div>
@@ -753,8 +806,8 @@ export default function DigitizationComplianceTab({
                           </div>
 
                           <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Validated student records</span>
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">100% Correct</span>
+                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Students in current filter</span>
+                            <span className="font-bold text-gray-900 dark:text-zinc-50">{summary.totalStudents?.toLocaleString?.() ?? 0}</span>
                           </div>
                         </>
                       )}
@@ -882,6 +935,7 @@ export default function DigitizationComplianceTab({
             const percent = summary?.totalExpectedDocsCount > 0 
               ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100)) 
               : 0;
+            const fullyDigitizedCount = summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0;
             return (
               <div className={cn(
                 "transition-all duration-slow", 
@@ -895,7 +949,7 @@ export default function DigitizationComplianceTab({
                       <HugeIcon  className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
                       <div>
                         <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
-                          Digitization Target
+                          Digitization Progress
                         </h3>
                         <div className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mt-[2px]">
                           Requirement Basis
@@ -912,7 +966,7 @@ export default function DigitizationComplianceTab({
                     <div className="flex items-end justify-between mb-2">
                       <div className="flex flex-col">
                         <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] mb-1">
-                          Documents Digitized
+                          Document Coverage
                         </span>
                         <div className="flex items-baseline gap-1">
                           <span className="text-[28px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50">
@@ -925,7 +979,7 @@ export default function DigitizationComplianceTab({
                       </div>
                       <div className="flex flex-col items-end pb-1">
                         <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-500 text-right">
-                          {percent}% Complete
+                          {percent}% of expected documents
                         </div>
                       </div>
                     </div>
@@ -937,8 +991,74 @@ export default function DigitizationComplianceTab({
                         style={{ width: `${percent}%` }}
                       />
                     </div>
+                    <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-border pt-3 dark:border-border">
+                      <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-300">
+                        Students fully digitized
+                      </span>
+                      <span className="text-right text-[12px] font-semibold text-gray-900 dark:text-zinc-50">
+                        {fullyDigitizedCount.toLocaleString()} / {summary?.totalStudents?.toLocaleString() || 0}
+                        <span className="ml-1.5 font-medium text-emerald-700 dark:text-emerald-400">
+                          ({summary?.fullyDigitizedRate ?? 0}%)
+                        </span>
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                <section className="mt-7 border-t border-border pt-5 dark:border-border" aria-labelledby="missing-documents-title">
+                  <div className="mb-3">
+                    <h4 id="missing-documents-title" className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
+                      Missing Documents by Type
+                    </h4>
+                    <p className="mt-1 text-[11px] text-gray-600 dark:text-zinc-300">
+                      Each required type is counted once per student. Counts follow the selected status and approval filters.
+                    </p>
+                  </div>
+                  {summary?.totalStudents === 0 ? (
+                    <p className="rounded-xl border border-border bg-gray-50 px-4 py-3 text-[12px] text-gray-700 dark:border-border dark:bg-zinc-900 dark:text-zinc-300">
+                      No students match the current filters.
+                    </p>
+                  ) : Array.isArray(data.missingByDocumentType) && data.missingByDocumentType.length > 0 ? (
+                    <div className="divide-y divide-border rounded-xl border border-border dark:divide-border dark:border-border">
+                      {data.missingByDocumentType.map((item) => (
+                        <div
+                          key={item.documentTypeId}
+                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-[12px] font-medium text-gray-900 dark:text-zinc-100" title={item.documentType}>
+                              {item.documentType}
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-gray-600 dark:text-zinc-300">
+                              {item.digitizedStudents.toLocaleString()} of {item.totalStudents.toLocaleString()} students have this document
+                            </div>
+                          </div>
+                          <div className="text-right text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
+                            {item.missingStudents.toLocaleString()} missing
+                          </div>
+                          {item.missingStudents > 0 ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => openMissingStudents(item)}
+                              className="col-span-2 h-11 rounded-xl px-4 text-xs font-semibold sm:col-span-1"
+                            >
+                              View Missing Students
+                            </Button>
+                          ) : (
+                            <span className="col-span-2 text-right text-[11px] font-medium text-emerald-700 dark:text-emerald-400 sm:col-span-1">
+                              All present
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-xl border border-border bg-gray-50 px-4 py-3 text-[12px] text-gray-700 dark:border-border dark:bg-zinc-900 dark:text-zinc-300">
+                      No active compliance document types are configured for this view.
+                    </p>
+                  )}
+                </section>
               </div>
             );
           })() : null}
@@ -1106,8 +1226,8 @@ export default function DigitizationComplianceTab({
                         title="Reset Filters"
                         className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                        Reset
-                      </Button>
+                    Reset Filters
+                  </Button>
                     )}
                   </EmptyHeader>
                 </Empty>
@@ -1174,6 +1294,136 @@ export default function DigitizationComplianceTab({
           </div>
         ) : null}
       </Card>
+
+      <Sheet
+        open={Boolean(missingDialog)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMissingDialog(null);
+            setMissingStudentsData(null);
+            setMissingStudentsError("");
+          }
+        }}
+      >
+        <SheetContent
+          side="right"
+          size="default"
+          showCloseButton={false}
+          className="h-full w-full overflow-hidden border-l border-border bg-white p-0 dark:border-border dark:bg-card sm:max-w-lg md:max-w-xl lg:max-w-2xl"
+        >
+          <SheetHeader className="shrink-0 border-b border-border bg-white p-0 dark:border-border dark:bg-card">
+            <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <SheetTitle className="truncate text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  Students Missing {missingDialog?.documentType || "Document"}
+                </SheetTitle>
+                <SheetDescription className="mt-1 text-[13px] text-gray-600 dark:text-zinc-300">
+                  Students matching the current status, program, and approval filters.
+                </SheetDescription>
+              </div>
+              <SheetClose
+                type="button"
+                aria-label="Close missing students"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-gray-50 text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+              >
+                <HugeIcon className="ph-bold ph-x text-sm" />
+              </SheetClose>
+            </div>
+          </SheetHeader>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
+            {missingStudentsLoading ? (
+              <div className="space-y-3" aria-label="Loading students missing this document">
+                <Skeleton className="h-12 w-full rounded-lg" />
+                <Skeleton className="h-12 w-full rounded-lg" />
+                <Skeleton className="h-12 w-full rounded-lg" />
+              </div>
+            ) : missingStudentsError ? (
+              <div className="space-y-3" role="alert">
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+                  {missingStudentsError}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => loadMissingStudents(missingDialog)}
+                  className="h-11 rounded-xl px-5 text-xs font-semibold"
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : missingStudentsData?.students?.length ? (
+              <div className="overflow-x-auto rounded-xl border border-border dark:border-border">
+                <table className="w-full min-w-[440px] text-left text-[12px]">
+                  <thead className="bg-gray-50 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 font-semibold">Student</th>
+                      <th scope="col" className="px-4 py-3 font-semibold">Student No.</th>
+                      <th scope="col" className="px-4 py-3 font-semibold">Program</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border dark:divide-border">
+                    {missingStudentsData.students.map((student) => (
+                      <tr key={student.student_no} className="text-gray-900 dark:text-zinc-100">
+                        <td className="px-4 py-3 font-medium">{student.name || "Student"}</td>
+                        <td className="px-4 py-3">{student.student_no}</td>
+                        <td className="px-4 py-3">{student.course_code || "N/A"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="rounded-xl border border-border bg-gray-50 px-4 py-6 text-center text-[13px] text-gray-700 dark:border-border dark:bg-zinc-800 dark:text-zinc-300">
+                No students are missing this document for the current filters.
+              </p>
+            )}
+          </div>
+
+          <SheetFooter className="mt-0 flex shrink-0 flex-col gap-3 border-t border-border bg-gray-50/70 px-5 py-4 dark:border-border dark:bg-zinc-900/40 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <span className="text-[12px] text-gray-600 dark:text-zinc-300" aria-live="polite">
+              {missingStudentsData?.total > 0
+                ? `Showing ${missingStudentsData.offset + 1}-${Math.min(missingStudentsData.offset + missingStudentsData.students.length, missingStudentsData.total)} of ${missingStudentsData.total.toLocaleString()} students`
+                : `${(missingStudentsData?.total || 0).toLocaleString()} students missing this document`}
+            </span>
+            <div className="flex items-center justify-end gap-2">
+              {missingStudentsData?.total > missingStudentsData?.limit && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={missingStudentsLoading || missingStudentsData.offset <= 0}
+                    onClick={() => loadMissingStudents(
+                      missingDialog,
+                      Math.max(0, missingStudentsData.offset - missingStudentsData.limit),
+                    )}
+                    className="h-11 rounded-xl px-4 text-xs font-semibold"
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={missingStudentsLoading || missingStudentsData.offset + missingStudentsData.limit >= missingStudentsData.total}
+                    onClick={() => loadMissingStudents(
+                      missingDialog,
+                      missingStudentsData.offset + missingStudentsData.limit,
+                    )}
+                    className="h-11 rounded-xl px-4 text-xs font-semibold"
+                  >
+                    Next
+                  </Button>
+                </>
+              )}
+              <SheetClose asChild>
+                <Button type="button" variant="outline" className="h-11 rounded-xl px-5 text-xs font-semibold">
+                  Close
+                </Button>
+              </SheetClose>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* Report Preview Modal */}
       <Dialog
@@ -1299,7 +1549,7 @@ export default function DigitizationComplianceTab({
                 disabled={!pdfBlobUrl}
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
-                Download
+                Download Report
               </Button>
             </div>
           </div>
