@@ -50,7 +50,7 @@ export async function PUT(req) {
       }
       const resetStandards = await slaStandardsRepo.resetToDefault();
       await writeAuditLog(req, "Reset Service Standards", {
-        details: "Reset SLA turnaround standards to ARTA RA 11032 statutory default (3-7-20).",
+        details: "Reset processing-time standards to the ARTA RA 11032 statutory default (3-7-20).",
         entity_type: "setting",
         entity_id: "sla_turnaround_standards",
       });
@@ -90,7 +90,7 @@ export async function PUT(req) {
     });
 
     await writeAuditLog(req, "Update Service Standards", {
-      details: `Updated SLA standards to '${saved.frameworkName}' (${sDays}-${cDays}-${hDays} ${saved.workingDaysOnly ? "working" : "calendar"} days).`,
+      details: `Updated processing-time standards to '${saved.frameworkName}' (${sDays}-${cDays}-${hDays} ${saved.workingDaysOnly ? "working" : "calendar"} days).`,
       entity_type: "setting",
       entity_id: "sla_turnaround_standards",
     });

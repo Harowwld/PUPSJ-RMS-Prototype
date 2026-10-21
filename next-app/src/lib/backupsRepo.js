@@ -7,6 +7,15 @@ import { execFileSync } from "node:child_process";
 import { isSystemAdminRole } from "./roleUtils.js";
 import { clearHealthCache } from "./healthCache.js";
 import { detectExternalDrive } from "./externalDriveDetector.js";
+import {
+  buildRegistrarArchivalPath,
+  buildOsasArchivalPath,
+  generateRecordsCatalogCsv,
+  generateManifestJson,
+  computeBufferSha256,
+  formatLocationCode,
+} from "./archivalStructure.js";
+import { decryptPII } from "./piiEncryption.js";
 
 const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
 const BACKUP_ENC_ALGO = "aes-256-gcm";
@@ -444,6 +453,223 @@ export async function executeSystemBackup({ actorId = null, backupType = "Govern
   });
 }
 
+async function packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType = "Full") {
+  const manifestRecords = [];
+  const handledStorageFilenames = new Set();
+  const seenDocCounts = new Map();
+
+  let docRows = [];
+  try {
+    docRows = await dbAll(
+      `SELECT d.id, d.office_id, d.student_no, d.student_name, d.organization_id, d.doc_type,
+              d.original_filename, d.storage_filename, d.mime_type, d.size_bytes, d.created_at,
+              s.name AS s_name, s.course_code, s.year_level, s.section,
+              s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer,
+              o.name AS org_name, o.category AS org_category,
+              o.storage_room AS org_room, o.storage_cabinet AS org_cabinet, o.storage_drawer AS org_drawer
+         FROM documents d
+    LEFT JOIN students s ON d.student_no = s.student_no
+    LEFT JOIN student_organizations o ON d.organization_id = o.id
+        WHERE d.office_id = ?
+        ORDER BY d.id ASC`,
+      [normOffice]
+    );
+  } catch (err) {
+    console.warn("[BACKUP] Warning: Could not query documents metadata for structured archiving:", err.message);
+  }
+
+  const officeUploadsDir = path.join(localDir, "storage", normOffice, "uploads");
+  const officeBaseDir = path.join(localDir, "storage", normOffice);
+  const legacyUploadsDir = path.join(localDir, "uploads");
+
+  for (const row of (docRows || [])) {
+    if (!row.storage_filename) continue;
+
+    let diskPath = null;
+    const pathInOffice = path.join(officeUploadsDir, row.storage_filename);
+    const pathInLegacy = path.join(legacyUploadsDir, row.storage_filename);
+    const pathInBaseOffice = path.join(officeBaseDir, row.storage_filename);
+
+    if (fs.existsSync(pathInOffice)) {
+      diskPath = pathInOffice;
+    } else if (fs.existsSync(pathInLegacy)) {
+      diskPath = pathInLegacy;
+    } else if (fs.existsSync(pathInBaseOffice)) {
+      diskPath = pathInBaseOffice;
+    }
+
+    if (!diskPath) {
+      continue;
+    }
+
+    const dupKey = `${row.student_no || row.organization_id || "gen"}_${row.doc_type}`;
+    const dupIndex = seenDocCounts.get(dupKey) || 0;
+    seenDocCounts.set(dupKey, dupIndex + 1);
+
+    let rawStudentName = row.student_name || row.s_name || "STUDENT";
+    if (typeof rawStudentName === "string" && rawStudentName.startsWith("enc:v1:")) {
+      try {
+        const dec = decryptPII(rawStudentName);
+        if (dec && !dec.startsWith("enc:v1:")) rawStudentName = dec;
+      } catch {}
+    }
+
+    let archivePath;
+    let entityType;
+    let entityId;
+    let entityName;
+    let academicYear;
+    let programOrCategory;
+    let section;
+    let room;
+    let cabinet;
+    let drawer;
+
+    if (row.organization_id) {
+      entityType = "Organization";
+      entityId = row.organization_id;
+      entityName = row.org_name || rawStudentName || "Organization";
+      academicYear = row.created_at ? new Date(row.created_at).getFullYear().toString() : "2024";
+      programOrCategory = row.org_category || "Organizations";
+      section = "";
+      room = row.org_room;
+      cabinet = row.org_cabinet;
+      drawer = row.org_drawer;
+
+      archivePath = buildOsasArchivalPath({
+        orgId: entityId,
+        orgName: entityName,
+        category: programOrCategory,
+        academicYear,
+        room,
+        cabinet,
+        drawer,
+        docType: row.doc_type,
+        originalFilename: row.original_filename,
+        duplicateIndex: dupIndex,
+      });
+    } else {
+      entityType = "Student";
+      entityId = row.student_no || "STUDENT";
+      entityName = rawStudentName;
+      academicYear = row.year_level || (row.student_no && /^\d{4}/.test(row.student_no) ? row.student_no.substring(0, 4) : "2024");
+      programOrCategory = row.course_code || "GENERAL";
+      section = row.section || "1";
+      room = row.room;
+      cabinet = row.cabinet;
+      drawer = row.drawer;
+
+      archivePath = buildRegistrarArchivalPath({
+        studentNo: entityId,
+        studentName: entityName,
+        academicYear,
+        courseCode: programOrCategory,
+        section,
+        room,
+        cabinet,
+        drawer,
+        docType: row.doc_type,
+        originalFilename: row.original_filename,
+        duplicateIndex: dupIndex,
+      });
+    }
+
+    try {
+      const fileBuffer = fs.readFileSync(diskPath);
+      const sha256 = computeBufferSha256(fileBuffer);
+      zip.addFile(archivePath, fileBuffer);
+      handledStorageFilenames.add(row.storage_filename);
+
+      manifestRecords.push({
+        documentId: row.id,
+        officeId: normOffice,
+        entityType,
+        entityId,
+        entityName,
+        academicYear: String(academicYear),
+        programOrCategory,
+        section: String(section || ""),
+        docType: row.doc_type || "Document",
+        physicalLocation: {
+          room: room != null ? Number(room) : 1,
+          cabinet: cabinet || "A",
+          drawer: drawer != null ? Number(drawer) : 1,
+          code: formatLocationCode(room, cabinet, drawer),
+        },
+        originalFilename: row.original_filename || "",
+        storageFilename: row.storage_filename,
+        archivePath,
+        sizeBytes: fileBuffer.length,
+        sha256,
+      });
+    } catch (readErr) {
+      console.error(`[BACKUP] Failed reading ${diskPath}:`, readErr.message);
+    }
+  }
+
+  // Also include any raw files on disk not linked in documents (e.g. pending ingest files)
+  const scanDirectories = [
+    { dir: officeUploadsDir, targetSubfolder: "records/_raw_assets" },
+  ];
+  if (normOffice === "registrar") {
+    scanDirectories.push({ dir: legacyUploadsDir, targetSubfolder: "records/_raw_assets" });
+  }
+
+  for (const { dir, targetSubfolder } of scanDirectories) {
+    if (fs.existsSync(dir)) {
+      try {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+          const fullPath = path.join(dir, file);
+          const stat = fs.statSync(fullPath);
+          if (stat.isFile() && !handledStorageFilenames.has(file)) {
+            const rawBuffer = fs.readFileSync(fullPath);
+            const rawSha256 = computeBufferSha256(rawBuffer);
+            const rawArchivePath = `${targetSubfolder}/${file}`;
+            zip.addFile(rawArchivePath, rawBuffer);
+            handledStorageFilenames.add(file);
+
+            manifestRecords.push({
+              documentId: null,
+              officeId: normOffice,
+              entityType: "RawAsset",
+              entityId: file,
+              entityName: file,
+              academicYear: "",
+              programOrCategory: "RawAsset",
+              section: "",
+              docType: "RawFile",
+              physicalLocation: null,
+              originalFilename: file,
+              storageFilename: file,
+              archivePath: rawArchivePath,
+              sizeBytes: rawBuffer.length,
+              sha256: rawSha256,
+            });
+          }
+        }
+      } catch (scanErr) {
+        console.warn(`[BACKUP] Failed scanning unmapped directory ${dir}:`, scanErr.message);
+      }
+    }
+  }
+
+  // Add RECORDS_CATALOG.csv
+  const csvContent = generateRecordsCatalogCsv(manifestRecords);
+  zip.addFile("RECORDS_CATALOG.csv", Buffer.from(csvContent, "utf8"));
+
+  // Add manifest.json
+  const manifestContent = generateManifestJson({
+    scope: "office",
+    officeId: normOffice,
+    backupType,
+    records: manifestRecords,
+  });
+  zip.addFile("manifest.json", Buffer.from(manifestContent, "utf8"));
+
+  return manifestRecords;
+}
+
 export async function executeOfficeBackup({ officeId, actorId = null, backupType = "Full" } = {}) {
   const normOffice = String(officeId || "").toLowerCase().trim();
   if (!normOffice) {
@@ -501,19 +727,8 @@ export async function executeOfficeBackup({ officeId, actorId = null, backupType
     zip.addLocalFile(tempDbPath, "", "db.sql");
   }
 
-  // Include office-specific partition uploads/storage
-  const officeStorageDir = path.join(localDir, "storage", normOffice);
-  if (fs.existsSync(officeStorageDir)) {
-    zip.addLocalFolder(officeStorageDir, `storage/${normOffice}`);
-  }
-
-  // If registrar, also package legacy uploads folder if exists
-  if (normOffice === "registrar") {
-    const legacyUploadsDir = path.join(localDir, "uploads");
-    if (fs.existsSync(legacyUploadsDir)) {
-      zip.addLocalFolder(legacyUploadsDir, "uploads");
-    }
-  }
+  // Package records into structured archival hierarchy combining academic anchors and physical markers
+  await packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType);
 
   // Clean up temp SQL dump
   try {
@@ -786,10 +1001,27 @@ export async function inspectBackupBuffer(fileBuffer) {
     ["staff", "offices", "modules", "office_modules", "global_audit_logs"].includes(t)
   );
 
-  // Count files in archive
+  const manifestEntry = entries.find(
+    (e) => !e.isDirectory && (e.entryName === "manifest.json" || e.entryName.endsWith("/manifest.json"))
+  );
+  const isStructuredArchive = Boolean(manifestEntry);
+  const hasCatalog = Boolean(
+    entries.find((e) => !e.isDirectory && (e.entryName === "RECORDS_CATALOG.csv" || e.entryName.endsWith("/RECORDS_CATALOG.csv")))
+  );
+
+  // Count files in archive (excluding db.sql and archive metadata)
   let archiveFileCount = 0;
   for (const entry of entries) {
-    if (!entry.isDirectory && entry.entryName !== "db.sql" && !entry.entryName.endsWith("/db.sql")) {
+    const name = entry.entryName.replace(/\\/g, "/");
+    if (
+      !entry.isDirectory &&
+      name !== "db.sql" &&
+      !name.endsWith("/db.sql") &&
+      name !== "manifest.json" &&
+      !name.endsWith("/manifest.json") &&
+      name !== "RECORDS_CATALOG.csv" &&
+      !name.endsWith("/RECORDS_CATALOG.csv")
+    ) {
       archiveFileCount++;
     }
   }
@@ -819,6 +1051,8 @@ export async function inspectBackupBuffer(fileBuffer) {
   return {
     ok: true,
     isGovernanceBackup,
+    isStructuredArchive,
+    hasCatalog,
     targetTables,
     tables: tableDiffs,
     totalArchiveFiles: archiveFileCount,
@@ -933,44 +1167,135 @@ export async function executeRestoreBackup(
     }
   }
 
-  // 6. Restore filesystem assets (storage/ and uploads/)
+  // 6. Restore filesystem assets
   const localDir = getLocalDir();
   let extractedFileCount = 0;
 
-  for (const entry of entries) {
-    if (entry.isDirectory) continue;
-    const entryName = entry.entryName.replace(/\\/g, "/");
-    if (entryName === "db.sql" || entryName.endsWith("/db.sql")) continue;
-
-    // Security check: ensure path traversal is not possible
-    const resolvedRoot = path.resolve(/*turbopackIgnore: true*/ localDir);
-    const safeDestPath = path.resolve(/*turbopackIgnore: true*/ resolvedRoot, entryName);
-    const relativeDestPath = path.relative(resolvedRoot, safeDestPath);
-    if (!relativeDestPath || relativeDestPath === ".." || relativeDestPath.startsWith(`..${path.sep}`) || path.isAbsolute(relativeDestPath)) {
-      throw new Error(`Potentially malicious file path in backup archive: ${entryName}`);
+  const manifestEntry = entries.find(
+    (e) => !e.isDirectory && (e.entryName === "manifest.json" || e.entryName.endsWith("/manifest.json"))
+  );
+  let manifest = null;
+  if (manifestEntry) {
+    try {
+      manifest = JSON.parse(manifestEntry.getData().toString("utf8"));
+    } catch (e) {
+      console.warn("[RESTORE] Failed to parse manifest.json, using fallback extraction:", e.message);
     }
+  }
 
-    // Role check for partition assets
-    if (!isSuper) {
-      if (normUserOffice === "registrar" && entryName.startsWith("storage/osas/")) {
+  if (manifest?.records && Array.isArray(manifest.records) && manifest.records.length > 0) {
+    const handledEntryNames = new Set(["db.sql", "manifest.json", "RECORDS_CATALOG.csv"]);
+
+    for (const record of manifest.records) {
+      if (!record.archivePath || !record.storageFilename) continue;
+
+      const normArchivePath = record.archivePath.replace(/\\/g, "/");
+      handledEntryNames.add(normArchivePath);
+
+      const zipEntry = entries.find((e) => !e.isDirectory && e.entryName.replace(/\\/g, "/") === normArchivePath);
+      if (!zipEntry) {
+        console.warn(`[RESTORE] Archive entry not found for manifest path: ${record.archivePath}`);
         continue;
       }
+
+      const targetOffice = String(record.officeId || normUserOffice || manifest.officeId || "registrar").toLowerCase();
+
+      if (!isSuper) {
+        if (normUserOffice === "registrar" && targetOffice === "osas") continue;
+        if (normUserOffice === "osas" && targetOffice === "registrar") continue;
+      }
+
+      const officeUploadsDir = path.join(localDir, "storage", targetOffice, "uploads");
+      const destPath = path.resolve(officeUploadsDir, record.storageFilename);
+
+      const relOffice = path.relative(path.resolve(localDir), destPath);
+      if (!relOffice || relOffice.startsWith("..") || path.isAbsolute(relOffice)) {
+        throw new Error(`Potentially malicious file path in manifest: ${record.storageFilename}`);
+      }
+
+      if (mode === "merge" && fs.existsSync(destPath)) {
+        continue;
+      }
+
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.writeFileSync(destPath, zipEntry.getData());
+      extractedFileCount++;
+
+      // If registrar, also mirror to legacy uploads folder (.local/uploads/<storageFilename>)
+      if (targetOffice === "registrar") {
+        const legacyTarget = path.join(localDir, "uploads", record.storageFilename);
+        if (mode !== "merge" || !fs.existsSync(legacyTarget)) {
+          fs.mkdirSync(path.dirname(legacyTarget), { recursive: true });
+          fs.writeFileSync(legacyTarget, zipEntry.getData());
+        }
+      }
+    }
+
+    // Any remaining raw assets in the archive that were not in manifest
+    for (const entry of entries) {
+      if (entry.isDirectory) continue;
+      const entryName = entry.entryName.replace(/\\/g, "/");
       if (
-        normUserOffice === "osas" &&
-        (entryName.startsWith("storage/registrar/") || entryName.startsWith("uploads/"))
+        handledEntryNames.has(entryName) ||
+        entryName === "db.sql" ||
+        entryName.endsWith("/db.sql") ||
+        entryName === "manifest.json" ||
+        entryName.endsWith("/manifest.json") ||
+        entryName === "RECORDS_CATALOG.csv" ||
+        entryName.endsWith("/RECORDS_CATALOG.csv")
       ) {
         continue;
       }
-    }
 
-    // In merge mode: do not overwrite existing files if already present
-    if (mode === "merge" && fs.existsSync(safeDestPath)) {
-      continue;
-    }
+      let destPath;
+      if (entryName.startsWith("records/_raw_assets/")) {
+        const filename = path.basename(entryName);
+        const targetOffice = String(normUserOffice || manifest?.officeId || "registrar").toLowerCase();
+        destPath = path.join(localDir, "storage", targetOffice, "uploads", filename);
+      } else {
+        const resolvedRoot = path.resolve(localDir);
+        destPath = path.resolve(resolvedRoot, entryName);
+        const rel = path.relative(resolvedRoot, destPath);
+        if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) continue;
+      }
 
-    fs.mkdirSync(path.dirname(safeDestPath), { recursive: true });
-    fs.writeFileSync(safeDestPath, entry.getData());
-    extractedFileCount++;
+      if (mode === "merge" && fs.existsSync(destPath)) continue;
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.writeFileSync(destPath, entry.getData());
+      extractedFileCount++;
+    }
+  } else {
+    // Legacy fallback: direct folder extraction
+    for (const entry of entries) {
+      if (entry.isDirectory) continue;
+      const entryName = entry.entryName.replace(/\\/g, "/");
+      if (
+        entryName === "db.sql" ||
+        entryName.endsWith("/db.sql") ||
+        entryName === "manifest.json" ||
+        entryName === "RECORDS_CATALOG.csv"
+      ) {
+        continue;
+      }
+
+      const resolvedRoot = path.resolve(localDir);
+      const safeDestPath = path.resolve(resolvedRoot, entryName);
+      const relativeDestPath = path.relative(resolvedRoot, safeDestPath);
+      if (!relativeDestPath || relativeDestPath === ".." || relativeDestPath.startsWith(`..${path.sep}`) || path.isAbsolute(relativeDestPath)) {
+        throw new Error(`Potentially malicious file path in backup archive: ${entryName}`);
+      }
+
+      if (!isSuper) {
+        if (normUserOffice === "registrar" && entryName.startsWith("storage/osas/")) continue;
+        if (normUserOffice === "osas" && (entryName.startsWith("storage/registrar/") || entryName.startsWith("uploads/"))) continue;
+      }
+
+      if (mode === "merge" && fs.existsSync(safeDestPath)) continue;
+
+      fs.mkdirSync(path.dirname(safeDestPath), { recursive: true });
+      fs.writeFileSync(safeDestPath, entry.getData());
+      extractedFileCount++;
+    }
   }
 
   // 7. Execute SQL restoration

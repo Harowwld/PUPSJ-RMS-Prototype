@@ -135,7 +135,7 @@ export default function AuditLogsTab({
         ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const fileName = generateExportFilename("AUDIT-LOGS", "DATA", "csv")
+      const fileName = generateExportFilename("ACTIVITY-HISTORY", "DATA", "csv")
       const link = document.createElement("a")
       const url = URL.createObjectURL(blob)
       link.setAttribute("href", url)
@@ -143,10 +143,10 @@ export default function AuditLogsTab({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      showToast({ title: "Export Success", description: "Audit logs have been exported to CSV successfully." })
+      showToast({ title: "Export Success", description: "Activity history has been exported to CSV successfully." })
       if (onLogAction) {
         onLogAction({
-          action: "Exported Audit Logs to CSV",
+          action: "Exported Activity History to CSV",
           details: `Exported ${allLogs.length} records. Filters - Role: ${logRoleFilter}, Severity: ${logSeverityFilter}, Search: ${logSearch || "None"}`,
           severity: "INFO"
         })
@@ -176,7 +176,7 @@ export default function AuditLogsTab({
       setPdfPreviewOpen(true)
       if (onLogAction) {
         onLogAction({
-          action: "Generated Audit Logs PDF Report",
+          action: "Generated Activity History PDF Report",
           details: `Generated report for ${allLogs.length} records. Filters - Role: ${logRoleFilter}, Severity: ${logSeverityFilter}`,
           severity: "INFO"
         })
@@ -192,14 +192,14 @@ export default function AuditLogsTab({
   const handleDownloadFromPreview = () => {
     if (!pdfBlobUrl) return
     try {
-      const fileName = generateExportFilename("AUDIT-LOGS", "REPORT", "pdf")
+      const fileName = generateExportFilename("ACTIVITY-HISTORY", "REPORT", "pdf")
       const link = document.createElement("a")
       link.href = pdfBlobUrl
       link.setAttribute("download", fileName)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      showToast({ title: "Download Success", description: "Audit logs report has been downloaded successfully." })
+      showToast({ title: "Download Success", description: "Activity history report has been downloaded successfully." })
     } catch (err) {
       console.error("[PDF Download Error]", err)
       showToast({ title: "Download Failed", description: "Unable to download the PDF report." }, true)
@@ -237,8 +237,8 @@ export default function AuditLogsTab({
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
           <PageHeader
             icon="ph-shield-check"
-            title="Audit Logs"
-            description="Trace system activities, security events, and administrative actions with precision."
+            title="Activity History"
+            description="Review staff actions, security events, and administrative changes."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -248,7 +248,7 @@ export default function AuditLogsTab({
                 <RefreshButton 
                   onRefresh={onRefresh} 
                   isLoading={isManualLoading} 
-                  title="Refresh Audit Logs"
+                  title="Refresh Activity History"
                 />
 
                 
@@ -435,6 +435,7 @@ export default function AuditLogsTab({
           previewFrameReady={previewFrameReady}
           setPreviewFrameReady={setPreviewFrameReady}
           handleDownloadFromPreview={handleDownloadFromPreview}
+          showToast={showToast}
           isFullscreenPreview={isFullscreenPreview}
           setIsFullscreenPreview={setIsFullscreenPreview}
         />
@@ -442,5 +443,3 @@ export default function AuditLogsTab({
     </TooltipProvider>
   )
 }
-
-

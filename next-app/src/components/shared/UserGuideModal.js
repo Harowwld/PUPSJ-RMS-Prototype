@@ -198,8 +198,8 @@ export default function UserGuideModal({ open, onClose }) {
                       <div className="flex items-start gap-4 p-4 rounded-brand border border-border bg-white dark:border-border dark:bg-card">
                         <HugeIcon  className="ph-bold ph-list-magnifying-glass text-xl text-gray-600 shrink-0 dark:text-zinc-300"></HugeIcon>
                         <div>
-                          <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Audit Logs</h5>
-                          <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">Every action (login, upload, delete) is tracked by IP address and timestamp. Use the export feature for compliance reporting.</p>
+                          <h5 className="font-semibold text-gray-900 text-sm dark:text-zinc-50">Activity History</h5>
+                          <p className="text-xs text-gray-600 mt-1 font-medium dark:text-zinc-300">The system records key actions, such as logins and document changes, with the date and account. Use Export to save a copy.</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-4 p-4 rounded-brand border border-border bg-white dark:border-border dark:bg-card">
@@ -238,4 +238,3 @@ export default function UserGuideModal({ open, onClose }) {
     </Dialog>
   );
 }
-

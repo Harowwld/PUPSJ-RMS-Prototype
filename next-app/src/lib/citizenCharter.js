@@ -232,7 +232,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
         deadline,
         deadlineFormatted,
         status: "Compliant",
-        label: "Met SLA",
+        label: "Completed On Time",
         detail: `Completed within target ${tier.days}-${unitLabel} limit`,
         isOverdue: false,
         isDueSoon: false,

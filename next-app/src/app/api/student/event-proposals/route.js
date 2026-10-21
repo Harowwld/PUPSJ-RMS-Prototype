@@ -106,7 +106,7 @@ export async function POST(req) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Access Denied: Only authorized student organization officers whitelisted by OSAS can submit event proposals.",
+        error: "Access denied: only student organization officers authorized by OSAS can submit event proposals.",
       },
       { status: 403 }
     );

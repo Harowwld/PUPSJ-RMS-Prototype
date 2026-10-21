@@ -50,8 +50,8 @@ export const MODULE_REGISTRY = [
   },
   {
     id: "request_analytics",
-    name: "Request Analytics",
-    description: "SLA analytics for document requests",
+    name: "SLA Analytics",
+    description: "Shows how long document requests take to complete",
     category: "admin",
     icon: "ph-bold ph-trend-up",
     sidebar_group: "Operations & Fulfillment",
@@ -105,8 +105,8 @@ export const MODULE_REGISTRY = [
   },
   {
     id: "audit_logs",
-    name: "Audit Log",
-    description: "Activity audit trail with search and export",
+    name: "Activity History",
+    description: "Review and export a history of system activity",
     category: "admin",
     icon: "ph-bold ph-history",
     sidebar_group: "Personnel & Governance",
@@ -144,7 +144,7 @@ export const MODULE_REGISTRY = [
     description: "Scan and upload documents with OCR",
     category: "staff",
     icon: "ph-bold ph-scan",
-    sidebar_group: "Digitization & Ingestion",
+    sidebar_group: "Scanning & Document Upload",
     sort_order: 3,
     is_system: 1, // Cannot be disabled
     component_key: "ScanUploadTab",
@@ -163,7 +163,7 @@ export const MODULE_REGISTRY = [
   {
     id: "student_organizations",
     name: "Student Organizations",
-    description: "Manage recognized student organizations, Constitution & By-Laws (CBL), and officer whitelists",
+    description: "Manage recognized student organizations, Constitution and By-Laws, and authorized officers",
     category: "staff",
     icon: "ph-bold ph-buildings",
     sidebar_group: "Student & Organization Roster",
@@ -196,7 +196,7 @@ export const MODULE_REGISTRY = [
   {
     id: "documents",
     name: "Documents",
-    description: "Student document matrix view and management",
+    description: "View and manage student documents",
     category: "staff",
     icon: "ph-bold ph-file-text",
     sidebar_group: "Records & Communications",

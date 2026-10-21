@@ -17,6 +17,8 @@ import { cn, formatTitleCase } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
+import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 
 export function getRequestStatusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
@@ -117,14 +119,10 @@ export default function DocumentRequestDetailSheet({
   const attachments = Array.isArray(detail?.attachments) ? detail.attachments : [];
 
   const displayName = formatTitleCase(detail?.student_name || detail?.requester_name) || "Requester";
-  const initials = useMemo(() => {
-    if (!displayName) return "RQ";
-    const parts = displayName.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return displayName.slice(0, 2).toUpperCase();
-  }, [displayName]);
+  const nameParts = displayName ? displayName.trim().split(/\s+/) : [];
+  const initials = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : displayName.slice(0, 2).toUpperCase() || "RQ";
 
   const handleLocateCoordinates = () => {
     const target = studentForRequest || (detail?.room ? {
@@ -222,9 +220,14 @@ export default function DocumentRequestDetailSheet({
               {/* Profile Card Summary Strip */}
               <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-11 h-11 rounded-full bg-pup-maroon/10 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 border border-pup-maroon/20 flex items-center justify-center font-bold text-sm shrink-0">
-                    {initials}
-                  </div>
+                  <ProfileAvatar
+                    id={studentForRequest?.studentNo || detail.student_no}
+                    avatarFilename={studentForRequest?.avatar_filename || studentForRequest?.avatarFilename}
+                    name={displayName}
+                    initials={initials}
+                    className="size-11 rounded-full border border-pup-maroon/20"
+                    fallbackClassName="bg-pup-maroon/10 font-bold text-sm text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
+                  />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
@@ -490,7 +493,7 @@ export default function DocumentRequestDetailSheet({
                     No supporting attachments uploaded for this request.
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-border/80 dark:border-border divide-y divide-border/70 dark:divide-border overflow-hidden bg-white dark:bg-zinc-900/30">
+                  <div className="flex flex-wrap items-start gap-3 pt-1">
                     {attachments.map((att) => {
                       const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
                       const fileUrl = att.url || `/api/document-requests/${detail.id}/attachments/${att.id}`;
@@ -506,67 +509,26 @@ export default function DocumentRequestDetailSheet({
                           : "Supporting Document";
 
                       return (
-                        <div
+                        <AttachedFileCard
                           key={att.id}
-                          className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 border border-border/60">
-                              <HugeIcon className={isPdf ? "ph-bold ph-file-pdf text-red-500 text-base" : "ph-bold ph-file-image text-blue-500 text-base"} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate block">
-                                {att.original_filename}
-                              </span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
-                                  {typeLabel}
-                                </span>
-                                {att.size_bytes && (
-                                  <>
-                                    <span className="text-gray-300 dark:text-zinc-600">•</span>
-                                    <span className="text-[10px] text-gray-400 font-mono">
-                                      {(att.size_bytes / 1024).toFixed(1)} KB
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {isPdf && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setPdfPreviewData?.({
-                                    url: fileUrl,
-                                    title: att.original_filename,
-                                    subtitle: `${typeLabel} for Request #${detail.id}`,
-                                    studentName: detail.student_name || "Requester",
-                                    docType: typeLabel,
-                                    originalFilename: att.original_filename,
-                                  });
-                                  setPdfPreviewOpen?.(true);
-                                }}
-                                className="h-7 px-2.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
-                              >
-                                Preview
-                              </Button>
-                            )}
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              download={att.original_filename}
-                              className="inline-flex items-center justify-center h-7 px-2.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                            >
-                              Download
-                            </a>
-                          </div>
-                        </div>
+                          item={{ ...att, url: fileUrl }}
+                          readOnly={true}
+                          onPreview={() => {
+                            if (isPdf) {
+                              setPdfPreviewData?.({
+                                url: fileUrl,
+                                title: att.original_filename,
+                                subtitle: `${typeLabel} for Request #${detail.id}`,
+                                studentName: detail.student_name || "Requester",
+                                docType: typeLabel,
+                                originalFilename: att.original_filename,
+                              });
+                              setPdfPreviewOpen?.(true);
+                            } else if (fileUrl) {
+                              window.open(fileUrl, "_blank");
+                            }
+                          }}
+                        />
                       );
                     })}
                   </div>

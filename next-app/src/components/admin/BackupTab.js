@@ -100,8 +100,8 @@ export default function BackupTab({
       } else {
         showToast?.(
           {
-            title: "No External Storage Detected",
-            description: "No physical USB storage drive was found. Connect a drive or activate demo simulation.",
+            title: data?.unauthorizedDrives?.length ? "Unauthorized External Drive" : "No External Storage Detected",
+            description: data?.message || "No physical USB storage drive was found. Connect an authorized drive (PUPSJ_BACKUP) or activate demo simulation.",
           },
           "warning"
         )

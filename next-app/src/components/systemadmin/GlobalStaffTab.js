@@ -30,6 +30,7 @@ import {
   EmptyMedia,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
 } from "@/components/ui/empty"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { Reorder } from "framer-motion";
@@ -1039,50 +1040,56 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           {loading ? (
             <DirectoryTableSkeleton rowCount={8} />
           ) : filteredStaff.length === 0 ? (
-            <div className="flex h-[380px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
-          <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-            <EmptyHeader className="flex flex-col items-center gap-0">
-              <div className="relative mb-6">
-                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon  className={cn(
-                    hasActiveFilters ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-users"),
-                    "text-3xl text-gray-400 dark:text-zinc-500"
-                  )}></HugeIcon>
-                </EmptyMedia>
-              </div>
-              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                {hasActiveFilters 
-                  ? "No Results Found" 
-                  : (statusFilter === "Inactive" ? "No Archived Personnel Found" : "No Personnel Found")}
-              </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
-                {hasActiveFilters
-                  ? "We couldn't find any personnel matching your search criteria. Try adjusting your partition filters or keywords."
-                  : (statusFilter === "Inactive"
-                    ? "There are currently no archived or deactivated personnel accounts in the system."
-                    : "There are currently no personnel accounts registered in the directory.")}
-              </EmptyDescription>
-              {hasActiveFilters ? (
-                <Button
-                  variant="outline"
-                  onClick={handleClearFilters}
-                  title="Reset Filters"
-                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                >
-                    Reset Filters
-                  </Button>
-              ) : statusFilter === "Active" ? (
-                <Button
-                  onClick={handleOpenCreate}
-                  className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Register Personnel
-                </Button>
-              ) : null}
-            </EmptyHeader>
-          </Empty>
-        </div>
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                      <HugeIcon className={cn(
+                        hasActiveFilters ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-users"),
+                        "text-3xl text-gray-400 dark:text-zinc-500"
+                      )}></HugeIcon>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                    {hasActiveFilters 
+                      ? "No Results Found" 
+                      : (statusFilter === "Inactive" ? "No Archived Personnel Found" : "No Personnel Found")}
+                  </EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    {hasActiveFilters
+                      ? "We couldn't find any personnel matching your search criteria. Try adjusting your partition filters or keywords."
+                      : (statusFilter === "Inactive"
+                        ? "There are currently no archived or deactivated personnel accounts in the system."
+                        : "There are currently no personnel accounts registered in the directory.")}
+                  </EmptyDescription>
+                </EmptyHeader>
+                {(hasActiveFilters || statusFilter === "Active") && (
+                  <EmptyContent>
+                    {hasActiveFilters ? (
+                      <Button
+                        variant="outline"
+                        onClick={handleClearFilters}
+                        title="Reset Filters"
+                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      >
+                        Reset Filters
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleOpenCreate}
+                        title="Register Personnel"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                        style={{ color: "#ffffff" }}
+                      >
+                        Register Personnel
+                      </Button>
+                    )}
+                  </EmptyContent>
+                )}
+              </Empty>
+            </div>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -1497,7 +1504,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     }}
                     className="h-10 rounded-xl bg-white border border-border text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     disabled={isEditing && targetIsExistingSysAdmin}
                     required={form.role !== "SystemAdmin"}
                   >
@@ -1527,7 +1534,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     }}
                     className="h-10 rounded-xl bg-white border border-border text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white shadow-none cursor-pointer"
                     menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-normal py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     disabled={isEditing && targetIsExistingSysAdmin}
                     required
                   >

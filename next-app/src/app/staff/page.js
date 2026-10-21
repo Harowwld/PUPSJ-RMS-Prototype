@@ -181,7 +181,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       },
       {
         type: "group",
-        label: "Digitization & Ingestion",
+        label: "Scanning & Document Upload",
         children: [
           { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
           { key: "batch_review", label: "Batch Review", iconClass: "ph-bold ph-check-square" },
@@ -207,7 +207,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         type: "group",
         label: "Records & Communications",
         children: [
-          { key: "documents", label: "Documents Matrix", iconClass: "ph-bold ph-file-text" },
+          { key: "documents", label: "Student Documents", iconClass: "ph-bold ph-file-text" },
           { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
         ]
       }
@@ -234,6 +234,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [archivedOrganizations, setArchivedOrganizations] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [docTypes, setDocTypes] = useState([]);
+  const [complianceDocTypes, setComplianceDocTypes] = useState([]);
   const [requestableDocTypes, setRequestableDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -297,6 +298,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [ocrError, setOcrError] = useState("");
   const [rotation, setRotation] = useState(0);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+  const [duplicateTargetDoc, setDuplicateTargetDoc] = useState(null);
+  const [rescanContext, setRescanContext] = useState(null);
+  const [isReplaceMode, setIsReplaceMode] = useState(false);
 
   const [newRec, setNewRec] = useState({
     studentNo: "",
@@ -392,20 +396,22 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         ? fetch("/api/osas/organizations?status=Active,Inactive,Archived").then(r => r.json()).catch(() => ({ ok: false, data: [] }))
         : Promise.resolve({ ok: true, data: [] });
 
-      const [sRes, aRes, dRes, reqDRes, cRes, secRes, layoutRes, orgsData] = await Promise.all([
+      const [sRes, aRes, dRes, compDRes, reqDRes, cRes, secRes, layoutRes, orgsData] = await Promise.all([
         fetch("/api/students"),
         fetch("/api/students?includeArchived=true"),
         fetch("/api/doc-types"),
+        fetch("/api/doc-types?scope=compliance"),
         fetch("/api/doc-types?scope=requestable"),
         fetch("/api/courses"),
         fetch("/api/sections"),
         fetch("/api/storage-layout"),
         orgsPromise,
       ]);
-      const [sData, aData, dData, reqDData, cData, secData, layoutData] = await Promise.all([
+      const [sData, aData, dData, compDData, reqDData, cData, secData, layoutData] = await Promise.all([
         sRes.json(),
         aRes.json(),
         dRes.json(),
+        compDRes.json().catch(() => ({ ok: false, data: [] })),
         reqDRes.json().catch(() => ({ ok: false, data: [] })),
         cRes.json(),
         secRes.json(),
@@ -426,6 +432,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setArchivedOrganizations(allOrgs.filter(o => o.status === "Archived"));
 
       setDocTypes(dData.data || []);
+      setComplianceDocTypes(compDData?.data || []);
       setRequestableDocTypes(reqDData?.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
@@ -1418,7 +1425,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const cleanId = String(targetId).trim().toUpperCase();
     const cleanType = String(docType).trim().toUpperCase();
 
-    const hasDuplicate = staffDocs.some(
+    const existing = staffDocs.find(
       (d) =>
         (String(d.student_no || "").trim().toUpperCase() === cleanId ||
          String(d.organization_id || "").trim().toUpperCase() === cleanId) &&
@@ -1426,7 +1433,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         String(d.approval_status).toLowerCase() !== "declined"
     );
 
-    if (hasDuplicate) {
+    if (existing) {
+      setDuplicateTargetDoc(existing);
       setDuplicateConfirmOpen(true);
     }
   }, [staffDocs]);
@@ -1572,6 +1580,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
     const payload = new FormData();
     payload.append("file", fileToUpload, uploadFilename);
+    if (isReplaceMode || rescanContext) {
+      payload.append("allowOverwrite", "true");
+      payload.append("replaceExisting", "true");
+    }
 
     if (isOsas) {
       payload.append("docType", newRec.docType);
@@ -1651,6 +1663,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           { title: "Partial Upload", description: "Document saved, but storage location was not updated." },
           true,
         );
+      } else if (isReplaceMode || rescanContext) {
+        showToast({
+          title: "Document Replaced",
+          description: `The digital copy of ${newRec.docType} has been replaced and submitted for review.`,
+        });
       } else {
         showToast({ title: "Upload Complete", description: "Document has been submitted for review." });
       }
@@ -1668,6 +1685,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setSelectedQueuedFileIndex(0);
       setUploadFieldErrors({});
       setUploadStudentIsExisting(false);
+      setRescanContext(null);
+      setIsReplaceMode(false);
+      setDuplicateTargetDoc(null);
       setNewRec({
         studentNo: "",
         name: "",
@@ -1800,8 +1820,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             seenTypes.add(doc.doc_type);
           }
 
-          // 2. For missing documents, show active docTypes as placeholders if they match
-          for (const type of docTypes) {
+          // 2. For missing documents, show active compliance docTypes as placeholders if they match
+          const typesForMissing = complianceDocTypes.length > 0 ? complianceDocTypes : docTypes;
+          for (const type of typesForMissing) {
             if (seenTypes.has(type)) continue; // Already added as "uploaded"
             if (hasTypeFilter && !selectedTypes.includes(type)) continue;
 
@@ -1884,7 +1905,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         setDocsLoading(false);
       }
     },
-    [students, docTypes, staffDocs, isOsas],
+    [students, docTypes, complianceDocTypes, staffDocs, isOsas],
   );
 
   useEffect(() => {
@@ -1901,6 +1922,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     ]);
   const handleRescan = useCallback(async (targetId, docType, docId, filename, mimeType) => {
     const isOsas = authUser?.office_id === "osas";
+    setRescanContext({ targetId, docType, docId, filename, mimeType });
+    setIsReplaceMode(true);
     if (isOsas) {
       const org = organizations.find(
         (x) =>
@@ -1935,22 +1958,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
     }
     clearAllUploadFieldErrors();
+    // Clear previous uploads so the dropzone is ready for the new scan/replacement file
+    setUploadedFile(null);
+    setUploadedFiles([]);
+    setSelectedQueuedFileIndex(0);
+    setRotation(0);
     setView("upload");
-
-    if (docId) {
-      try {
-        const res = await fetch(`/api/documents/${docId}`);
-        if (res.ok) {
-          const blob = await res.blob();
-          const file = new File([blob], filename || "document.pdf", {
-            type: mimeType || "application/pdf",
-          });
-          setUploadedFile(file);
-        }
-      } catch (err) {
-        console.error("Failed to preload rejected document for rescan:", err);
-      }
-    }
   }, [students, organizations, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors]);
 
   const confirmBulkArchive = async () => {
@@ -2266,6 +2279,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               showToast={showToast}
               allDocs={allDocs}
               authUser={authUser}
+              onRescan={handleRescan}
             />
           </TabsContent>
 
@@ -2315,6 +2329,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 setUploadStudentIsExisting(false);
                 setUploadFieldErrors({});
                 setRotation(0);
+                setRescanContext(null);
+                setIsReplaceMode(false);
+                setDuplicateTargetDoc(null);
               }}
               ocrLoading={ocrLoading}
               ocrError={ocrError}
@@ -2335,6 +2352,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               storageLayout={storageLayout}
               students={students}
               organizations={organizations}
+              staffDocs={staffDocs}
+              rescanContext={rescanContext}
+              isReplaceMode={isReplaceMode}
+              setIsReplaceMode={setIsReplaceMode}
+              onCancelRescan={() => {
+                setRescanContext(null);
+                setIsReplaceMode(false);
+              }}
+              checkDuplicate={checkDuplicate}
               showToast={showToast}
               onIngestPromoted={() => {
                 fetchAllDocs();
@@ -2346,6 +2372,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 clearAllUploadFieldErrors();
                 checkDuplicate(student.organizationId || student.id || student.studentNo || student.student_no, ocrDocType);
               }}
+              onPreviewDocument={handlePreviewDocument}
               onOpenBatchReview={() => switchView("batch_review")}
             />
           </TabsContent>
@@ -2380,12 +2407,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               setDocsForm={setDocsForm}
               refreshDocuments={refreshDocuments}
               onRefreshDocuments={fetchAllDocs}
-              docTypes={docTypes}
+              docTypes={complianceDocTypes.length > 0 ? complianceDocTypes : docTypes}
               courses={courses}
+              sections={sections}
               storageLayout={storageLayout}
               docsLoading={docsLoading}
               docsError={docsError}
               docsRows={docsRows}
+              students={students}
+              staffDocs={staffDocs}
+              isOsas={isOsas}
+              onPreviewDocument={handlePreviewDocument}
               onRescan={handleRescan}
               onUpdateStudent={async (studentNo, data) => {
                 try {
@@ -2475,40 +2507,18 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       />
       <ConfirmModal
         open={duplicateConfirmOpen}
-        title="Duplicate Document Warning"
+        title="Document Already on File"
         message={authUser?.office_id === "osas"
-          ? `A document of type "${newRec.docType}" already exists for organization ${newRec.acronym || newRec.name || newRec.organizationId}.`
-          : `A document of type "${newRec.docType}" already exists for student ${newRec.studentNo}.`}
-        confirmLabel="Acknowledge"
-        cancelLabel="Clear"
+          ? `A document of type "${duplicateTargetDoc?.doc_type || newRec.docType}" already exists for organization ${newRec.acronym || newRec.name || newRec.organizationId} (${duplicateTargetDoc?.approval_status || "Approved"}). Would you like to rescan and replace the existing digital record?`
+          : `A document of type "${duplicateTargetDoc?.doc_type || newRec.docType}" already exists for student ${newRec.studentNo} (${duplicateTargetDoc?.approval_status || "Approved"}). Would you like to rescan and replace the existing digital record?`}
+        confirmLabel="Replace Existing Document"
+        cancelLabel="Cancel"
         onConfirm={() => {
+          setIsReplaceMode(true);
           setDuplicateConfirmOpen(false);
         }}
         onCancel={() => {
           setDuplicateConfirmOpen(false);
-          setUploadedFile(null);
-          setUploadedFiles([]);
-          setSelectedQueuedFileIndex(0);
-          setOcrSuggestion(null);
-          setUploadStudentIsExisting(false);
-          setUploadFieldErrors({});
-          setRotation(0);
-          setNewRec({
-            studentNo: "",
-            name: "",
-            course: "",
-            year: "",
-            sectionPart: "",
-            room: "",
-            cabinet: "",
-            drawer: "",
-            docType: "",
-            organizationId: "",
-            acronym: "",
-            category: "",
-            adviserName: "",
-            adviserEmail: "",
-          });
         }}
         variant="warning"
       />

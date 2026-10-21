@@ -80,7 +80,7 @@ export async function getDigitizationComplianceSummary({
   // migrated schema and the legacy docTypesRepo still targets SQLite.
   const typeRows = await query(
     `SELECT id, name FROM document_types
-      WHERE status = 'Active' AND is_compliance = TRUE${normalizedOfficeId ? " AND office_id = $1" : ""}
+      WHERE status = 'Active' AND is_compliance = TRUE AND is_requestable = FALSE${normalizedOfficeId ? " AND office_id = $1" : ""}
       ORDER BY LOWER(name) ASC`,
     normalizedOfficeId ? [normalizedOfficeId] : [],
   );
@@ -154,6 +154,7 @@ export async function getDigitizationComplianceSummary({
       ${documentOfficeFilter}
     WHERE dt.status = 'Active'
       AND dt.is_compliance = TRUE
+      AND dt.is_requestable = FALSE
       ${normalizedOfficeId ? "AND dt.office_id = ?" : ""}
       ${where ? `AND ${where.slice(6)}` : ""}
     GROUP BY dt.id, dt.name
@@ -266,7 +267,7 @@ export async function getMissingStudentsForDocumentType({
 
   const typeRow = await queryOne(
     `SELECT id, name FROM document_types
-      WHERE id = $1 AND status = 'Active' AND is_compliance = TRUE${normalizedOfficeId ? " AND office_id = $2" : ""}`,
+      WHERE id = $1 AND status = 'Active' AND is_compliance = TRUE AND is_requestable = FALSE${normalizedOfficeId ? " AND office_id = $2" : ""}`,
     normalizedOfficeId ? [parsedTypeId, normalizedOfficeId] : [parsedTypeId],
   );
   if (!typeRow) return null;

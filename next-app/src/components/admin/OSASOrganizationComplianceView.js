@@ -37,6 +37,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -194,6 +195,7 @@ export default function OSASOrganizationComplianceView({
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [previewFrameReady, setPreviewFrameReady] = useState(false);
+  const pdfPreviewFrameRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
@@ -309,9 +311,9 @@ export default function OSASOrganizationComplianceView({
       },
       {
         id: "officers",
-        label: "Officer Whitelist",
+        label: "Authorized Officers",
         options: [
-          { value: "roster", label: "Officers Whitelisted", indicatorColor: "bg-blue-500", count: counts.officersPresent },
+          { value: "roster", label: "Authorized Officers", indicatorColor: "bg-blue-500", count: counts.officersPresent },
           { value: "empty", label: "No Officers Recorded", indicatorColor: "bg-rose-500", count: counts.officersEmpty },
         ],
       },
@@ -664,7 +666,7 @@ export default function OSASOrganizationComplianceView({
       chips.push({
         id: `officers-${of}`,
         groupLabel: "Officers",
-        label: of === "roster" ? "Officers Whitelisted" : "No Officers Recorded",
+        label: of === "roster" ? "Authorized Officers" : "No Officers Recorded",
         onRemove: () => { setOfficerFilters((prev) => prev.filter((v) => v !== of)); setPage(1); },
       });
     });
@@ -721,6 +723,25 @@ export default function OSASOrganizationComplianceView({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handlePrintReport = () => {
+    const printWindow = pdfPreviewFrameRef.current?.contentWindow;
+    if (!printWindow || !previewFrameReady) {
+      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true);
+      return;
+    }
+
+    try {
+      printWindow.focus();
+      printWindow.print();
+    } catch (err) {
+      console.error("OSAS compliance report printing failed:", err);
+      showToast?.(
+        formatErrorMessage(err, { defaultTitle: "Report Printing Failed" }),
+        true
+      );
+    }
   };
 
   // CSV Export
@@ -1026,7 +1047,7 @@ export default function OSASOrganizationComplianceView({
 
                                 <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border space-y-1.5 text-xs">
                                   <div className="flex justify-between items-center">
-                                    <span className="font-medium text-gray-600 dark:text-zinc-400">With Whitelisted Officers</span>
+                                    <span className="font-medium text-gray-600 dark:text-zinc-400">With Authorized Officers</span>
                                     <span className="font-bold text-gray-900 dark:text-zinc-100">{filteredSummary.withOfficersCount} orgs</span>
                                   </div>
                                   <div className="flex justify-between items-center">
@@ -1257,14 +1278,14 @@ export default function OSASOrganizationComplianceView({
                         </button>
                       </th>
 
-                      {/* Column 4: Officer Whitelist */}
+                      {/* Column 4: Authorized Officers */}
                       <th className="py-3 px-6 w-[14%] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("activeOfficerCount")}
                           className="group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer"
                         >
-                          Officer Whitelist <SortIndicator column="activeOfficerCount" sortBy={sortBy} sortOrder={sortOrder} />
+                          Authorized Officers <SortIndicator column="activeOfficerCount" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
 
@@ -1381,7 +1402,7 @@ export default function OSASOrganizationComplianceView({
                             )}
                           </td>
 
-                          {/* Column 4: Officer Whitelist (1-Click Roster View) */}
+                          {/* Column 4: Authorized Officers (1-Click Roster View) */}
                           <td className="py-3.5 px-6 text-center whitespace-nowrap">
                             {org.activeOfficerCount > 0 ? (
                               <button
@@ -1391,7 +1412,7 @@ export default function OSASOrganizationComplianceView({
                                   setOfficerSearch("");
                                 }}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
-                                title="View Whitelisted Officers"
+                                title="View authorized officers"
                               >
                                 <HugeIcon className="ph-bold ph-users-three text-xs text-blue-600 dark:text-blue-400" />
                                 <span>
@@ -1406,7 +1427,7 @@ export default function OSASOrganizationComplianceView({
                                   setOfficerSearch("");
                                 }}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer active:scale-95"
-                                title="Add Officers to Whitelist"
+                                title="Authorize officers"
                               >
                                 <span>Add Officers</span>
                               </button>
@@ -1463,32 +1484,35 @@ export default function OSASOrganizationComplianceView({
                   ))}
                 </div>
               ) : (
-                <div className="py-12">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia>
-                        <HugeIcon className="ph-duotone ph-buildings text-4xl text-gray-400 dark:text-zinc-500" />
-                      </EmptyMedia>
-                      <EmptyTitle>No Student Organizations Found</EmptyTitle>
-                      <EmptyDescription>
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className="ph-duotone ph-buildings text-3xl text-gray-400 dark:text-zinc-500" />
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Student Organizations Found</EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                         {activeChips.length > 0
                           ? "No organizations match the selected filter criteria. Try clearing filters."
                           : "No recognized student organizations registered in OSAS."}
                       </EmptyDescription>
-                      {activeChips.length > 0 && (
-                        <div className="mt-6 flex justify-center">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleResetFilters}
-                            title="Reset Filters"
-                            className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                          >
-                    Reset Filters
-                  </Button>
-                        </div>
-                      )}
                     </EmptyHeader>
+                    {activeChips.length > 0 && (
+                      <EmptyContent>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleResetFilters}
+                          title="Reset Filters"
+                          className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        >
+                          Reset Filters
+                        </Button>
+                      </EmptyContent>
+                    )}
                   </Empty>
                 </div>
               )}
@@ -1554,7 +1578,7 @@ export default function OSASOrganizationComplianceView({
           )}
         </Card>
 
-        {/* Officers Whitelist Slide-Over Sheet */}
+        {/* Authorized Officers Slide-Over Sheet */}
         <Sheet
           open={Boolean(selectedOrgForOfficers)}
           onOpenChange={(open) => {
@@ -1687,7 +1711,7 @@ export default function OSASOrganizationComplianceView({
                   <InfoRow
                     icon="ph-shield-check"
                     label="Accredited Officers"
-                    value={`${selectedOrgForOfficers?.activeOfficerCount || 0} Whitelisted ${selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}`}
+                    value={`${selectedOrgForOfficers?.activeOfficerCount || 0} Authorized ${selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}`}
                   />
 
                   <InfoRow icon="ph-chart-pie-slice" label="Accreditation Status">
@@ -1751,7 +1775,7 @@ export default function OSASOrganizationComplianceView({
                           <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 max-w-xs mx-auto">
                             {officerSearch.trim()
                               ? "No student officers match your search query."
-                              : "This organization currently has no active student officers recorded on the OSAS whitelist."}
+                              : "This organization has no active student officers authorized by OSAS."}
                           </p>
                         </div>
                       );
@@ -1948,6 +1972,7 @@ export default function OSASOrganizationComplianceView({
                     </div>
                   )}
                   <iframe
+                    ref={pdfPreviewFrameRef}
                     src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
                     className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
                     title="OSAS PDF Report Preview"
@@ -1995,8 +2020,16 @@ export default function OSASOrganizationComplianceView({
                   Close
                 </Button>
                 <Button
+                  variant="outline"
+                  onClick={handlePrintReport}
+                  disabled={!pdfBlobUrl || !previewFrameReady || isGeneratingPdf}
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                >
+                  Print Report
+                </Button>
+                <Button
                   onClick={handleDownloadPdf}
-                  disabled={!pdfBlobUrl}
+                  disabled={!pdfBlobUrl || isGeneratingPdf}
                   className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
                 >
                   Download PDF

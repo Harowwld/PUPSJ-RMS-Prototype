@@ -28,6 +28,7 @@ import {
   EmptyMedia,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
 import { Reorder } from "framer-motion";
@@ -747,7 +748,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 <button
                   type="button"
                   onClick={() => setLayoutView("grid")}
-                  title="Grid Card View"
+                  title="Show each office as a card"
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                     layoutView === "grid"
@@ -756,12 +757,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   )}
                 >
                   <HugeIcon className="ph-bold ph-squares-four text-sm" />
-                  <span>Grid</span>
+                  <span>Cards</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setLayoutView("table")}
-                  title="Compact Table View"
+                  title="Show offices in rows and columns"
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                     layoutView === "table"
@@ -984,50 +985,55 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           {loading ? (
             <OfficeGridSkeleton layoutView={layoutView} count={6} />
           ) : filteredOffices.length === 0 ? (
-            <div className="flex h-[400px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
-          <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-            <EmptyHeader className="flex flex-col items-center gap-0">
-              <div className="relative mb-6">
-                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon  className={cn(
-                    searchQuery ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-buildings"),
-                    "text-3xl text-gray-400 dark:text-zinc-500"
-                  )}></HugeIcon>
-                </EmptyMedia>
-              </div>
-              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                {searchQuery
-                  ? "No Results Found"
-                  : (statusFilter === "Inactive" ? "No Archived Offices Found" : "No Offices Found")}
-              </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
-                {searchQuery
-                  ? "We couldn't find any offices matching your search criteria. Try adjusting your keywords."
-                  : (statusFilter === "Inactive"
-                    ? "There are currently no archived departments in the system."
-                    : "There are currently no administrative offices or campus departments configured in the system.")}
-              </EmptyDescription>
-              {searchQuery ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setSearchQuery("")}
-                  title="Reset Filters"
-                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                >
-                    Reset Filters
-                  </Button>
-              ) : statusFilter === "Active" ? (
-                <Button
-                  onClick={handleOpenCreate}
-                  className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
-                >
-                  Create Department
-                </Button>
-              ) : null}
-            </EmptyHeader>
-          </Empty>
-        </div>
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                      <HugeIcon className={cn(
+                        searchQuery ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-buildings"),
+                        "ph-duotone text-3xl text-gray-400 dark:text-zinc-500"
+                      )}></HugeIcon>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                    {searchQuery
+                      ? "No Results Found"
+                      : (statusFilter === "Inactive" ? "No Archived Offices Found" : "No Offices Found")}
+                  </EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    {searchQuery
+                      ? "We couldn't find any offices matching your search criteria. Try adjusting your keywords."
+                      : (statusFilter === "Inactive"
+                        ? "There are currently no archived departments in the system."
+                        : "There are currently no administrative offices or campus departments configured in the system.")}
+                  </EmptyDescription>
+                </EmptyHeader>
+                {(searchQuery || statusFilter === "Active") && (
+                  <EmptyContent>
+                    {searchQuery ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => setSearchQuery("")}
+                        title="Reset Filters"
+                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      >
+                        Reset Filters
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleOpenCreate}
+                        title="Create Department"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
+                      >
+                        Create Department
+                      </Button>
+                    )}
+                  </EmptyContent>
+                )}
+              </Empty>
+            </div>
       ) : layoutView === "grid" ? (
         <div className="p-6 bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1696,16 +1702,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Workstation Terminal Name (Optional)
+                    Workstation Name (Optional)
                   </label>
                   <Input
                     value={form.station_name}
                     onChange={(e) => setForm(prev => ({ ...prev, station_name: e.target.value }))}
-                    placeholder="e.g. REG-ARCHIVE-PC01 (leave blank to auto-assign)"
+                    placeholder="e.g. Registrar Archive PC (leave blank to assign automatically)"
                     className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                   />
                   <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1 block">
-                    Shows on staff terminal headers and audit logs. Storage partitions are automatically managed.
+                    This name appears on staff pages and activity history. Storage locations are set up automatically.
                   </span>
                 </div>
 
@@ -1874,7 +1880,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           Workspace Modules Configured
                         </span>
                         <span className="text-[11px] text-gray-900 dark:text-zinc-300">
-                          System modules are managed centrally in the Module Matrix tab. Save any changes here before navigating away.
+                          System features are managed centrally in Compare Features. Save any changes here before navigating away.
                         </span>
                       </div>
                     </div>
@@ -1882,10 +1888,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       variant="outline"
                       type="button"
                       onClick={() => setConfirmMatrixLeaveOpen(true)}
-                      title="Open Module Matrix"
+                      title="Compare features across departments"
                       className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center shrink-0 self-start sm:self-auto"
                     >
-                      Open Matrix
+                      Compare Features
                     </Button>
                   </div>
                 )}
@@ -2068,7 +2074,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules" } }))
         }}
         title="Discard Unsaved Changes?"
-        message="Switching to the Module Matrix tab will close this dialog and any unsaved edits to this office will be discarded. Do you want to proceed?"
+        message="Opening Compare Features will close this dialog and discard any unsaved changes to this department. Do you want to continue?"
         confirmLabel="Discard"
         cancelLabel="Cancel"
         variant="warning"

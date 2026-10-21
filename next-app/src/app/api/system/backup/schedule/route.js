@@ -122,7 +122,26 @@ export async function POST(req) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
   }
-  const allowedFields = new Set(["enabled", "frequency", "time", "dayOfWeek", "scope", "officeId", "retention"]);
+  const allowedFields = new Set([
+    "enabled",
+    "frequency",
+    "time",
+    "dayOfWeek",
+    "scope",
+    "officeId",
+    "retention",
+    // Read-only status & telemetry fields from GET (tolerated and preserved safely on server)
+    "lastRunAt",
+    "lastRunStatus",
+    "lastRunFilename",
+    "lastRunError",
+    "lastRunExternalStatus",
+    "lastRunExternalError",
+    "lastRetentionPrunedCount",
+    "lastRetentionRunAt",
+    "nextRunAt",
+    "createdBy",
+  ]);
   const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
   if (unsupportedField) {
     return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });

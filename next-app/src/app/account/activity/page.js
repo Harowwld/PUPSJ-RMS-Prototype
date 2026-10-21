@@ -35,6 +35,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty";
 
 // 1. CHILD COMPONENTS
@@ -704,33 +705,35 @@ function LogTable({
   if (error) {
     return (
       <div className={cn(
-        "flex flex-1 min-h-[320px] flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400",
+        "flex flex-1 min-h-[420px] flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400",
         embedded
           ? "border-t border-gray-100 dark:border-white/10 rounded-b-2xl bg-white dark:bg-card"
           : "overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card"
       )}>
         <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-          <EmptyHeader className="flex flex-col items-center gap-2">
-            <div className="relative mb-4">
-              <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
-              <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
-                <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-red-600" />
+          <EmptyHeader className="flex flex-col items-center gap-0">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
               </EmptyMedia>
             </div>
             <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
               Activity Log Error
             </EmptyTitle>
-            <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400">
+            <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
               {error}
             </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
             <Button 
               variant="outline" 
               onClick={() => window.location.reload()}
               className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              Retry
+              Retry Loading
             </Button>
-          </EmptyHeader>
+          </EmptyContent>
         </Empty>
       </div>
     );
@@ -746,102 +749,102 @@ function LogTable({
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
-        <div className="overflow-visible rounded-[inherit]">
-          <table className="w-full text-sm table-fixed min-w-[900px]">
-            <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10 select-none">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                <th className="w-12 p-4 text-center"></th>
-                <th className="w-[18%] p-4">
-                  <button
-                    onClick={() => handleSort("created_at")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+        {displayLogs.length === 0 ? (
+          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  {Boolean(localSearch !== "" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "")
+                    ? "No Activity Found"
+                    : "No Activity Recorded Yet"}
+                </EmptyTitle>
+                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  {Boolean(localSearch !== "" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "")
+                    ? "Try adjusting your search filters to find what you're looking for."
+                    : "Your sign-ins, security changes, and account actions will automatically appear here."}
+                </EmptyDescription>
+              </EmptyHeader>
+              {(localSearch !== "" ||
+                logSeverityFilter !== "All" ||
+                logStartDate !== "" ||
+                logEndDate !== "") && (
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setLocalSearch("");
+                      setLogSearch("");
+                      setLogSeverityFilter("All");
+                      setLogStartDate("");
+                      setLogEndDate("");
+                      setLogPage(1);
+                    }}
+                    title="Reset Filters"
+                    className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
-                    Timestamp{" "}
-                    <SortIndicator
-                      column="created_at"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="w-[12%] p-4">
-                  <button
-                    onClick={() => handleSort("severity")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
-                  >
-                    Level{" "}
-                    <SortIndicator
-                      column="severity"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="w-[22%] p-4">
-                  <button
-                    onClick={() => handleSort("action")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
-                  >
-                    Event / Action{" "}
-                    <SortIndicator
-                      column="action"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="w-[48%] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
-                <th className="w-20 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-              {displayLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-0">
-                    <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <HugeIcon  className="ph-bold ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-650"></HugeIcon>
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                          {Boolean(localSearch !== "" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "")
-                            ? "No Activity Found"
-                            : "No Activity Recorded Yet"}
-                        </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                          {Boolean(localSearch !== "" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "")
-                            ? "Try adjusting your search filters to find what you're looking for."
-                            : "Your sign-ins, security changes, and account actions will automatically appear here."}
-                        </EmptyDescription>
-                        {(localSearch !== "" ||
-                          logSeverityFilter !== "All" ||
-                          logStartDate !== "" ||
-                          logEndDate !== "") && (
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setLocalSearch("");
-                              setLogSearch("");
-                              setLogSeverityFilter("All");
-                              setLogStartDate("");
-                              setLogEndDate("");
-                              setLogPage(1);
-                            }}
-                            title="Reset Filters"
-                            className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                          >
                     Reset Filters
                   </Button>
-                        )}
-                      </EmptyHeader>
-                    </Empty>
-                  </td>
+                </EmptyContent>
+              )}
+            </Empty>
+          </div>
+        ) : (
+          <div className="overflow-visible rounded-[inherit]">
+            <table className="w-full text-sm table-fixed min-w-[900px]">
+              <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10 select-none">
+                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  <th className="w-12 p-4 text-center"></th>
+                  <th className="w-[18%] p-4">
+                    <button
+                      onClick={() => handleSort("created_at")}
+                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                    >
+                      Timestamp{" "}
+                      <SortIndicator
+                        column="created_at"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="w-[12%] p-4">
+                    <button
+                      onClick={() => handleSort("severity")}
+                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                    >
+                      Level{" "}
+                      <SortIndicator
+                        column="severity"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="w-[22%] p-4">
+                    <button
+                      onClick={() => handleSort("action")}
+                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
+                    >
+                      Event / Action{" "}
+                      <SortIndicator
+                        column="action"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="w-[48%] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
+                  <th className="w-20 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
                 </tr>
-              ) : (
-                displayLogs.map((log) => (
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                {displayLogs.map((log) => (
                   <LogRow
                     key={log.id}
                     log={log}
@@ -851,11 +854,11 @@ function LogTable({
                     setSelectedLog={setSelectedLog}
                     handleCopy={handleCopy}
                   />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
         {logTotal > 0 && (

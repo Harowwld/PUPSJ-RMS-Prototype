@@ -26,6 +26,7 @@ import { AdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { StaffRegistrationSchema, PersonNameSchema } from "@/lib/validationSchemas"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
+import { evaluateDriveStateTransition } from "@/lib/driveEventDetector"
 
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -223,8 +224,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   // External drive detection state
   const [extDriveModalOpen, setExtDriveModalOpen] = useState(false)
-  const [extDriveEvent, setExtDriveEvent] = useState(null) // { type: 'connected'|'disconnected', label, path }
-  const extDrivePrevConnectedRef = useRef(null) // null = not yet polled
+  const [extDriveEvent, setExtDriveEvent] = useState(null) // { type: 'connected'|'disconnected', label, path, freeFormatted, totalFormatted }
+  const extDriveStateRef = useRef(null) // tracks { connected, isEmulated, label, path, freeFormatted, totalFormatted }
+  const lastRealDriveRef = useRef(null) // tracks details of the last connected physical drive
+  const viewRef = useRef(view)
+  const showToastRef = useRef(null)
+  const switchViewRef = useRef(null)
 
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpModalLoading, setTotpModalLoading] = useState(false)
@@ -287,7 +292,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         children: [
           {
             key: "request_analytics",
-            label: "Request SLA Analytics",
+            label: "SLA Analytics",
             iconClass: "ph-bold ph-trend-up",
           },
           {
@@ -308,7 +313,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           },
           {
             key: "logs",
-            label: "Activity Audit Trail",
+            label: "Activity History",
             iconClass: "ph-bold ph-history",
           },
         ]
@@ -522,7 +527,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       ])
       const jsonLogs = await resLogs.json()
       if (!resLogs.ok || !jsonLogs?.ok)
-        throw new Error(jsonLogs?.error || "Failed to load audit logs")
+        throw new Error(jsonLogs?.error || "Unable to load activity history.")
 
       setLogTotal(jsonLogs.total || 0)
       const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : []
@@ -635,6 +640,22 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const json = await res.json()
       if (res.ok && json?.ok && json.data) {
         setExternalDrive(json.data)
+        extDriveStateRef.current = {
+          connected: Boolean(json.data.connected),
+          isEmulated: Boolean(json.data.isEmulated),
+          label: json.data.label || null,
+          path: json.data.path || null,
+          freeFormatted: json.data.freeFormatted || null,
+          totalFormatted: json.data.totalFormatted || null,
+        }
+        if (json.data.connected && !json.data.isEmulated) {
+          lastRealDriveRef.current = {
+            label: json.data.label || "PUPSJ_BACKUP",
+            path: json.data.path || null,
+            freeFormatted: json.data.freeFormatted || null,
+            totalFormatted: json.data.totalFormatted || null,
+          }
+        }
         return json.data
       }
     } catch (err) {
@@ -653,6 +674,14 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const json = await res.json()
       if (res.ok && json?.ok && json.data) {
         setExternalDrive(json.data)
+        extDriveStateRef.current = {
+          connected: Boolean(json.data.connected),
+          isEmulated: Boolean(json.data.isEmulated),
+          label: json.data.label || null,
+          path: json.data.path || null,
+          freeFormatted: json.data.freeFormatted || null,
+          totalFormatted: json.data.totalFormatted || null,
+        }
         return json.data
       }
     } catch (err) {
@@ -753,6 +782,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     },
     [isStorageDirty, view, performSwitchView]
   )
+
+  useEffect(() => {
+    viewRef.current = view
+  }, [view])
+
+  useEffect(() => {
+    showToastRef.current = showToast
+  }, [showToast])
+
+  useEffect(() => {
+    switchViewRef.current = switchView
+  }, [switchView])
 
   const confirmDiscardChanges = useCallback(() => {
     setIsStorageDirty(false)
@@ -937,28 +978,40 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         const json = await res.json()
         if (!res.ok || !json?.ok || cancelled) return
 
-        const { connected, label, path: drivePath, isEmulated, freeFormatted, totalFormatted } = json.data
-        setExternalDrive(json.data)
+        const currentData = json.data
+        setExternalDrive(currentData)
 
-        const prev = extDrivePrevConnectedRef.current
+        const prev = extDriveStateRef.current
+        const transition = evaluateDriveStateTransition({
+          prev,
+          current: currentData,
+          lastRealDrive: lastRealDriveRef.current,
+          currentView: viewRef.current,
+        })
 
-        if (prev === null) {
-          // First poll: just record state without firing a modal
-          extDrivePrevConnectedRef.current = connected
-          return
-        }
+        extDriveStateRef.current = transition.nextState
+        lastRealDriveRef.current = transition.nextLastRealDrive
 
-        if (prev !== connected) {
-          extDrivePrevConnectedRef.current = connected
-          if (!isEmulated) {
-            setExtDriveEvent({
-              type: connected ? "connected" : "disconnected",
-              label: label || drivePath || "External Drive",
-              path: drivePath,
-              freeFormatted,
-              totalFormatted,
-            })
+        if (transition.event) {
+          const { event } = transition
+          if (event.channel === "modal") {
+            setExtDriveEvent(event)
             setExtDriveModalOpen(true)
+          } else if (event.channel === "toast") {
+            const isDisconnect = event.type === "disconnected"
+            showToastRef.current?.({
+              title: isDisconnect
+                ? "External Backup Drive Disconnected"
+                : "External Backup Drive Connected",
+              description: isDisconnect
+                ? `"${event.label}" is no longer reachable. Local backups continue, but external synchronization is paused.`
+                : `"${event.label}" is online and ready for backup synchronization.`,
+              variant: isDisconnect ? "warning" : "default",
+              action: {
+                label: "View Backups",
+                onClick: () => switchViewRef.current?.("backup"),
+              },
+            })
           }
         }
       } catch {
@@ -2295,8 +2348,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               </DialogTitle>
               <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                 {extDriveEvent?.type === "connected"
-                  ? "An external backup storage device has been detected and is ready for use."
-                  : "The external backup drive is no longer reachable. Backup synchronization is unavailable."}
+                  ? "An authorized external backup volume has been detected and is ready for use."
+                  : "The external backup volume is no longer reachable. Local server backups continue, but external synchronization is paused."}
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -2310,18 +2363,25 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                 : "border-amber-200/60 bg-amber-50/40 dark:border-amber-900/30 dark:bg-amber-950/20"
             )}>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Connected Drive</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  {extDriveEvent?.type === "connected" ? "Connected Volume" : "Disconnected Volume"}
+                </p>
                 <p className="mt-0.5 text-sm font-semibold text-gray-900 truncate dark:text-zinc-50">
-                  {extDriveEvent?.label || "External Storage Device"}
+                  {extDriveEvent?.label || "PUPSJ_BACKUP"}
                 </p>
                 {extDriveEvent?.path && (
                   <p className="mt-0.5 text-[11px] text-gray-400 truncate dark:text-zinc-500 font-mono">
                     {extDriveEvent.path}
                   </p>
                 )}
-                {extDriveEvent?.freeFormatted && extDriveEvent?.totalFormatted && (
+                {extDriveEvent?.type === "connected" && extDriveEvent?.freeFormatted && extDriveEvent?.totalFormatted && (
                   <p className="mt-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
                     Storage: Free {extDriveEvent.freeFormatted} of {extDriveEvent.totalFormatted}
+                  </p>
+                )}
+                {extDriveEvent?.type === "disconnected" && extDriveEvent?.freeFormatted && extDriveEvent?.totalFormatted && (
+                  <p className="mt-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                    Last known capacity: Free {extDriveEvent.freeFormatted} of {extDriveEvent.totalFormatted}
                   </p>
                 )}
               </div>
@@ -2340,7 +2400,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               <p className="text-[12px] font-normal text-gray-600 dark:text-zinc-400 leading-relaxed">
                 {extDriveEvent?.type === "connected"
                   ? "Backup archives can now be synchronized to this external drive from the Backup & Maintenance panel."
-                  : "Any pending or future backup synchronization to this drive will fail until it is reconnected."}
+                  : "Automated local backups continue uninterrupted on the primary server. Off-site replication to this external drive is paused until it is reconnected."}
               </p>
             </div>
           </div>
@@ -2350,9 +2410,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               type="button"
               variant="outline"
               onClick={() => setExtDriveModalOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              Dismiss
+              {extDriveEvent?.type === "connected" ? "Dismiss" : "Acknowledge"}
             </Button>
             {extDriveEvent?.type === "connected" && (
               <Button
@@ -2362,7 +2422,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                 }}
                 className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Open
+                View Backups
               </Button>
             )}
           </DialogFooter>

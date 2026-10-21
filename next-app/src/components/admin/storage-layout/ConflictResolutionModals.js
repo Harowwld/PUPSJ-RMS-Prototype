@@ -157,7 +157,7 @@ const ConflictResolutionModals = memo(({
                           placeholder="Select target drawer..."
                           className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-medium text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80"
                           menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                          optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                          optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                         >
                           <option value="" disabled>Select destination drawer...</option>
                           {templateTargetOptions.map((opt) => (

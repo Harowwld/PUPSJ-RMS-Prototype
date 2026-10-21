@@ -16,6 +16,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 
 /**
  * Standard Information Row (label : value)
@@ -171,6 +172,7 @@ export default function StudentProfileSheet({
     if (!docTypes || docTypes.length === 0) return [];
     const seen = new Set();
     const uniqueTypes = docTypes.filter((dt) => {
+      if (typeof dt === "object" && (dt?.is_requestable || dt?.isRequestable)) return false;
       const name = typeof dt === "string" ? dt : dt?.name;
       if (!name) return false;
       const norm = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -293,16 +295,19 @@ export default function StudentProfileSheet({
           {/* Profile Card Summary Strip */}
           <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border"
-                style={{
+              <ProfileAvatar
+                id={student.studentNo}
+                avatarFilename={student.avatar_filename || student.avatarFilename}
+                name={displayName}
+                initials={initials}
+                className="size-11 rounded-full border"
+                fallbackClassName="font-bold text-sm"
+                fallbackStyle={{
                   backgroundColor: authUser?.accent_color ? `${authUser.accent_color}15` : "rgba(128, 0, 0, 0.08)",
                   color: authUser?.accent_color || "#800000",
                   borderColor: authUser?.accent_color ? `${authUser.accent_color}30` : "rgba(128, 0, 0, 0.2)",
                 }}
-              >
-                {initials}
-              </div>
+              />
               <div className="min-w-0">
                 <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
                   {displayName}

@@ -176,14 +176,13 @@ const Select = React.forwardRef(({
               disabled={option.disabled}
               onClick={() => handleSelect(option.value)}
               className={cn(
-                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-normal transition-colors min-w-0 cursor-pointer",
+                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors min-w-0 cursor-pointer",
                 isSelected
-                  ? "bg-pup-maroon/10 text-pup-maroon font-medium dark:bg-red-500/20 dark:text-red-400"
+                  ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
                   : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
                 option.disabled && "opacity-50 cursor-not-allowed",
                 optionClassName
               )}
-              title={typeof option.label === "string" ? option.label : undefined}
             >
               <span className="truncate flex-1 min-w-0">{option.label}</span>
               {isSelected && (
@@ -216,10 +215,7 @@ const Select = React.forwardRef(({
         )}
         {...props}
       >
-        <span 
-          className="flex-1 text-left truncate min-w-0"
-          title={selectedOption ? String(selectedOption.label ?? "") : ""}
-        >
+        <span className="flex-1 text-left truncate min-w-0">
           {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options.find((o) => !o.isHeader)?.label || "Select..."))}
         </span>
         {indicator === "updown" ? (

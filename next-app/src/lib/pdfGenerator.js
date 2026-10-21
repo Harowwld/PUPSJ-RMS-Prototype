@@ -367,7 +367,7 @@ const addSignatures = (doc, startY, options = {}) => {
 }
 
 /**
- * Generates an Audit Logs PDF Report
+ * Generates an activity history PDF report
  */
 export const generateAuditLogsPdf = async (logs = [], options = {}) => {
   const doc = new jsPDF("l", "pt", "a4")
@@ -381,7 +381,7 @@ export const generateAuditLogsPdf = async (logs = [], options = {}) => {
   const [brandR, brandG, brandB] = hexToRgb(branding?.brandColor || "#7A1E28")
   
   const docId = `${prefix}-LOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-  addPUPReportHeader(doc, "Audit Logs Summary Report", {
+  addPUPReportHeader(doc, "Activity History Summary Report", {
     documentId: docId,
     logoData,
     secondaryLogoData,
@@ -749,7 +749,7 @@ export const generateOrganizationCompliancePdf = async (data, summary, meta, org
 
   autoTable(doc, {
     startY: y,
-    head: [["Category", "Total Orgs", "Fully Compliant", "CBL Archived", "Officers Whitelisted", "Compliance Rate"]],
+    head: [["Category", "Total Organizations", "Meets Requirements", "CBL on File", "Authorized Officers", "Completion Rate"]],
     body: catTableData,
     theme: "striped",
     headStyles: { fillColor: [brandR, brandG, brandB], textColor: [255, 255, 255], fontStyle: "bold" },
@@ -975,7 +975,7 @@ function renderKpiCardsRow(doc, y, cards, brandRgb = [122, 30, 40]) {
 }
 
 /**
- * Generates Dedicated Citizen's Charter SLA Compliance PDF Report
+ * Generates Citizen's Charter Processing Time PDF Report
  */
 export const generateSLACompliancePdf = async (data = {}, total = 0, completionRate = 0, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4");
@@ -988,8 +988,8 @@ export const generateSLACompliancePdf = async (data = {}, total = 0, completionR
   const [brandR, brandG, brandB] = hexToRgb(branding.brandColor || "#7A1E28");
   const brandRgb = [brandR, brandG, brandB];
 
-  const docId = `${prefix}-SLA-COMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  addPUPReportHeader(doc, "Citizen's Charter SLA Compliance & Fulfillment Report", {
+  const docId = `${prefix}-PROCESSING-TIME-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  addPUPReportHeader(doc, "Citizen's Charter Processing Time & Fulfillment Report", {
     documentId: docId,
     logoData,
     secondaryLogoData,
@@ -1014,6 +1014,7 @@ export const generateSLACompliancePdf = async (data = {}, total = 0, completionR
 
   const safeTotal = typeof total === "number" ? total : (Number(total) || 0);
   const safeCompletionRate = typeof completionRate === "number" ? completionRate : (Number(completionRate) || 0);
+  const complianceLabel = data?.sla?.totalCompleted > 0 ? `${safeCompletionRate}%` : "N/A";
   const compliantCount = data?.sla?.compliantCompleted ?? (Number.isFinite(data?.sla?.totalCompleted) ? data.sla.totalCompleted : 0);
   const activeOverdue = data?.sla?.activeOverdue || 0;
   const delayedCompleted = data?.sla?.delayedCompleted || 0;
@@ -1026,13 +1027,13 @@ export const generateSLACompliancePdf = async (data = {}, total = 0, completionR
   const p1 = "This official compliance monitoring report evaluates the processing turnaround times and statutory fulfillment commitments for academic records administered by the Office of the University Registrar. Pursuant to Republic Act No. 11032 (Ease of Doing Business and Efficient Government Service Delivery Act of 2018), state universities and colleges are mandated to establish, uphold, and transparently audit service processing benchmarks.";
   y = renderRealisticParagraph(doc, p1, 40, y, pageWidth - 80, { fontSize: 9.5, gapAfter: 12 });
 
-  const p2 = `During the specified operational window, the registry logged an intake volume of ${safeTotal.toLocaleString()} total document requests. Of these transactions, the overall statutory SLA compliance rate achieved is recorded at ${safeCompletionRate}%, with ${compliantCount.toLocaleString()} requests successfully delivered within prescribed institutional windows.`;
+  const p2 = `During the specified operational window, the registry logged an intake volume of ${safeTotal.toLocaleString()} total document requests. Of these transactions, the overall statutory processing-time completion rate is recorded at ${complianceLabel}, with ${compliantCount.toLocaleString()} requests successfully delivered within prescribed institutional windows.`;
   y = renderRealisticParagraph(doc, p2, 40, y, pageWidth - 80, { fontSize: 9.5, gapAfter: 14 });
 
   const cards = [
     { label: "Intake Volume", value: safeTotal.toLocaleString(), subtext: "Total Requests Logged", valueColor: brandRgb, accentColor: brandRgb },
-    { label: "Charter Compliance", value: `${safeCompletionRate}%`, subtext: "Within Statutory Window", valueColor: [16, 185, 129], accentColor: [16, 185, 129] },
-    { label: "Fulfilled On-Time", value: compliantCount.toLocaleString(), subtext: "Standard Compliant", valueColor: [37, 99, 235], accentColor: [37, 99, 235] },
+    { label: "Charter Compliance", value: complianceLabel, subtext: "Within Statutory Window", valueColor: [16, 185, 129], accentColor: [16, 185, 129] },
+    { label: "Completed On Time", value: compliantCount.toLocaleString(), subtext: "Within the Set Time", valueColor: [37, 99, 235], accentColor: [37, 99, 235] },
     { label: "Overdue / Delayed", value: totalDelays.toLocaleString(), subtext: activeOverdue > 0 ? `${activeOverdue} currently active` : "Zero active bottlenecks", valueColor: totalDelays > 0 ? [220, 38, 38] : [100, 116, 139], accentColor: totalDelays > 0 ? [220, 38, 38] : [100, 116, 139] },
   ];
   y = renderKpiCardsRow(doc, y, cards, brandRgb);
@@ -1062,15 +1063,15 @@ export const generateSLACompliancePdf = async (data = {}, total = 0, completionR
     });
   } else {
     tierRows = [
-      ["Simple Transactions (Certifications, True Copy)", "≤ 3 Working Days", Number(safeTotal).toLocaleString(), Number(compliantCount).toLocaleString(), Number(totalDelays).toLocaleString(), `${safeCompletionRate}%`, safeCompletionRate >= 90 ? "COMPLIANT" : "NEEDS IMPROVEMENT"],
-      ["Complex Transactions (Transcript of Records, Honorable Dismissal)", "≤ 7 Working Days", "Included in Aggregate", "Included in Aggregate", "Included in Aggregate", `${safeCompletionRate}%`, "COMPLIANT"],
+      ["Simple Transactions (Certifications, True Copy)", "≤ 3 Working Days", Number(safeTotal).toLocaleString(), Number(compliantCount).toLocaleString(), Number(totalDelays).toLocaleString(), complianceLabel, data?.sla?.totalCompleted > 0 ? (safeCompletionRate >= 90 ? "COMPLIANT" : "NEEDS IMPROVEMENT") : "N/A"],
+      ["Complex Transactions (Transcript of Records, Honorable Dismissal)", "≤ 7 Working Days", "Included in Aggregate", "Included in Aggregate", "Included in Aggregate", complianceLabel, data?.sla?.totalCompleted > 0 ? "COMPLIANT" : "N/A"],
       ["Highly Technical Services (Form 137, Cav Verifications)", "≤ 20 Working Days", "Included in Aggregate", "Included in Aggregate", "Included in Aggregate", "100%", "COMPLIANT"],
     ];
   }
 
   autoTable(doc, {
     startY: y,
-    head: [["Service Classification Tier", "Statutory SLA", "Total Inflow", "Compliant", "Delayed", "Compliance %", "Audit Status"]],
+    head: [["Service Type", "Statutory Time Limit", "Total Requests", "On Time", "Delayed", "Completion Rate", "Review Status"]],
     body: tierRows,
     theme: "striped",
     headStyles: { fillColor: brandRgb, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8.5 },
@@ -1338,7 +1339,7 @@ export const generateCSMReportPdf = async (data = {}, options = {}) => {
 };
 
 /**
- * Generates Comprehensive Executive Briefing SLA & CSM Dossier
+ * Generates Combined Processing Time and Client Satisfaction Report
  */
 export const generateComprehensiveSLAPdf = async (data = {}, total = 0, completionRate = 0, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4");
@@ -1352,7 +1353,7 @@ export const generateComprehensiveSLAPdf = async (data = {}, total = 0, completi
   const brandRgb = [brandR, brandG, brandB];
 
   const docId = `${prefix}-EXEC-BRIEF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  addPUPReportHeader(doc, "Executive Brief: SLA Compliance & Client Satisfaction (CSM)", {
+  addPUPReportHeader(doc, "Processing Time and Client Satisfaction Report", {
     documentId: docId,
     logoData,
     secondaryLogoData,
@@ -1377,6 +1378,7 @@ export const generateComprehensiveSLAPdf = async (data = {}, total = 0, completi
 
   const safeTotal = typeof total === "number" ? total : (Number(total) || 0);
   const safeCompletionRate = typeof completionRate === "number" ? completionRate : (Number(completionRate) || 0);
+  const complianceLabel = data?.sla?.totalCompleted > 0 ? `${safeCompletionRate}%` : "N/A";
   const feedbackTotal = Number(data?.feedback?.totalResponses || 0);
   const avgRating = feedbackTotal > 0 && data?.feedback?.averageRating != null ? Number(data.feedback.averageRating).toFixed(1) : "0.0";
   const satRate = feedbackTotal > 0 && data?.feedback?.satisfactionRate != null ? Number(data.feedback.satisfactionRate) : 0;
@@ -1384,12 +1386,12 @@ export const generateComprehensiveSLAPdf = async (data = {}, total = 0, completi
   y = checkPdfPageBreak(doc, y, 160);
   y = renderSectionHeader(doc, "I. Executive Overview: Turnaround Operations & Constituent Sentiment", y, brandRgb);
 
-  const p1 = "This comprehensive executive dossier integrates operational fulfillment analytics with constituent satisfaction measurements. It provides campus directors, academic deans, and administrative committees with a holistic assessment of records registry efficiency, throughput capacity, and public service ratings.";
+  const p1 = "This report combines request processing results with feedback from students and other service users. It helps campus leaders review record request handling and service ratings.";
   y = renderRealisticParagraph(doc, p1, 40, y, pageWidth - 80, { fontSize: 9.5, gapAfter: 12 });
 
   const cards = [
     { label: "Total Volume", value: safeTotal.toLocaleString(), subtext: "Requests Processed", valueColor: brandRgb, accentColor: brandRgb },
-    { label: "SLA Compliance", value: `${safeCompletionRate}%`, subtext: "Turnaround Met", valueColor: [16, 185, 129], accentColor: [16, 185, 129] },
+    { label: "Completed On Time", value: complianceLabel, subtext: "Within the Set Time", valueColor: [16, 185, 129], accentColor: [16, 185, 129] },
     { label: "Student Rating", value: feedbackTotal > 0 ? `${avgRating} ★` : "N/A", subtext: `${satRate}% Positive`, valueColor: [245, 158, 11], accentColor: [245, 158, 11] },
     { label: "CSM Evaluations", value: feedbackTotal.toLocaleString(), subtext: "Student Reviews", valueColor: [37, 99, 235], accentColor: [37, 99, 235] },
   ];
@@ -1539,7 +1541,7 @@ export const generateSampleBrandingPdf = async (branding) => {
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const intro = "This sample document verifies that your custom university seal, institution name, and official brand accent color render with high fidelity across all official PDF transcripts, audit logs, and compliance records generated by the eManage Records Management System."
+  const intro = "This sample document verifies that your custom university seal, institution name, and official brand accent color render with high fidelity across official PDF transcripts, activity history reports, and compliance records generated by the eManage Records Management System."
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 20
@@ -1704,4 +1706,3 @@ export const generateStudentComplianceSlipPdf = async (student = {}, requirement
 
   return doc.output("blob")
 }
-

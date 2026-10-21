@@ -15,6 +15,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
 import { Card } from "@/components/ui/card"
@@ -747,8 +748,50 @@ export default function StaffDirectoryTab({
               </EmptyHeader>
             </Empty>
           </div>
+        ) : filteredStaff.length === 0 ? (
+          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                    <HugeIcon className={cn("text-3xl text-gray-400 dark:text-zinc-500", activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass")} />
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No Archived Personnel Found" : "No Personnel Found")}
+                </EmptyTitle>
+                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  {hasActiveFilters || search !== ""
+                    ? "Try adjusting your search filters to find what you're looking for."
+                    : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                {hasActiveFilters || search !== "" ? (
+                  <Button
+                    variant="outline"
+                    onClick={handleClearFilters}
+                    title="Reset Filters"
+                    className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  >
+                    Reset Filters
+                  </Button>
+                ) : (
+                  activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
+                    <Button
+                      onClick={() => onSwitchView("create")}
+                      className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    >
+                      Register Staff
+                    </Button>
+                  )
+                )}
+              </EmptyContent>
+            </Empty>
+          </div>
         ) : (
-          <div className={cn("w-full border-t border-border dark:border-border", filteredStaff.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className="w-full border-t border-border dark:border-border">
             <div className="w-full overflow-x-auto">
               <table className="w-full text-sm table-fixed min-w-[960px]">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
@@ -860,65 +903,21 @@ export default function StaffDirectoryTab({
                   </tr>
                 </thead>
                 <tbody className="bg-transparent">
-                  {filteredStaff.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={7} className="p-12 text-center">
-                        <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <div className="relative mb-6">
-                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                <HugeIcon  className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
-                              </EmptyMedia>
-                            </div>
-                            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                              {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No Archived Personnel Found" : "No Personnel Found")}
-                            </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                              {hasActiveFilters || search !== ""
-                                ? "Try adjusting your search filters to find what you're looking for."
-                                : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
-                            </EmptyDescription>
-                            {hasActiveFilters || search !== "" ? (
-                              <Button
-                                variant="outline"
-                                onClick={handleClearFilters}
-                                title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                              >
-                    Reset Filters
-                  </Button>
-                            ) : (
-                              activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
-                                <Button
-                                  onClick={() => onSwitchView("create")}
-                                  className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red px-6 text-xs font-semibold text-white shadow-xs cursor-pointer active:scale-95 transition-all"
-                                >
-                                  Register Staff
-                                </Button>
-                              )
-                            )}
-                          </EmptyHeader>
-                        </Empty>
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedStaff.map((s) => (
-                      <StaffTableRow
-                        key={s.id}
-                        s={s}
-                        offices={offices}
-                        isCurrentUser={s.id === currentUserId}
-                        isSelected={selectedIds.has(s.id)}
-                        active={formatRelativeTime(s.last_active)}
-                        toggleSelect={toggleSelect}
-                        onEditUser={onEditUser}
-                        onRestoreUser={onRestoreUser}
-                        onDeleteUser={onDeleteUser}
-                        activeTab={activeTab}
-                      />
-                    ))
-                  )}
+                  {paginatedStaff.map((s) => (
+                    <StaffTableRow
+                      key={s.id}
+                      s={s}
+                      offices={offices}
+                      isCurrentUser={s.id === currentUserId}
+                      isSelected={selectedIds.has(s.id)}
+                      active={formatRelativeTime(s.last_active)}
+                      toggleSelect={toggleSelect}
+                      onEditUser={onEditUser}
+                      onRestoreUser={onRestoreUser}
+                      onDeleteUser={onDeleteUser}
+                      activeTab={activeTab}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>

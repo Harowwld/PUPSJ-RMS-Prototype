@@ -368,7 +368,7 @@ export default function Header({ authUser, onLogout, children }) {
           badge: "System Admin",
           items: [
             {
-              label: "Service Standards & SLA",
+              label: "Processing Time Standards",
               view: "standards",
               icon: "ph-bold ph-clock-countdown",
               breadcrumb: "Campus Operations • View",
@@ -471,7 +471,7 @@ export default function Header({ authUser, onLogout, children }) {
           badge: "System Admin",
           items: [
             {
-              label: "Platform Audit Trail",
+              label: "Platform Activity History",
               view: "logs",
               icon: "ph-bold ph-history",
               breadcrumb: "System & Security • View",
@@ -518,7 +518,7 @@ export default function Header({ authUser, onLogout, children }) {
           badge: "Office Admin",
           items: [
             {
-              label: "Request SLA Analytics",
+              label: "SLA Analytics",
               view: "request_analytics",
               icon: "ph-bold ph-trend-up",
               module: "request_analytics",
@@ -549,7 +549,7 @@ export default function Header({ authUser, onLogout, children }) {
               keywords: "directory staff users personnel accounts team members roles active inactive",
             },
             {
-              label: "Activity Audit Trail",
+              label: "Activity History",
               view: "logs",
               icon: "ph-bold ph-history",
               module: "audit_logs",
@@ -616,7 +616,7 @@ export default function Header({ authUser, onLogout, children }) {
         },
         {
           id: "stf_ingest",
-          title: "Digitization & Ingestion",
+          title: "Scanning & Document Upload",
           badge: "Staff",
           items: [
             {
@@ -624,7 +624,7 @@ export default function Header({ authUser, onLogout, children }) {
               view: "upload",
               icon: "ph-bold ph-scan",
               module: "scan_upload",
-              breadcrumb: "Digitization & Ingestion • View",
+              breadcrumb: "Scanning & Document Upload • View",
               keywords: "scan upload ocr document new ingest single upload file scanner digitization",
             },
             {
@@ -632,7 +632,7 @@ export default function Header({ authUser, onLogout, children }) {
               view: "batch_review",
               icon: "ph-bold ph-check-square",
               module: "scan_upload",
-              breadcrumb: "Digitization & Ingestion • View",
+              breadcrumb: "Scanning & Document Upload • View",
               keywords: "batch review scan queue bulk verification inspect documents approve decline scans",
             },
           ],
@@ -656,7 +656,7 @@ export default function Header({ authUser, onLogout, children }) {
               icon: "ph-bold ph-buildings",
               module: "student_organizations",
               breadcrumb: "Student & Organization Roster • View",
-              keywords: "student organizations osas cbl bylaws officers whitelist student leaders roster accreditation",
+              keywords: "student organizations osas cbl bylaws officers authorized student leaders roster accreditation",
             },
           ],
         },
@@ -689,7 +689,7 @@ export default function Header({ authUser, onLogout, children }) {
           badge: "Staff",
           items: [
             {
-              label: "Documents Matrix",
+              label: "Student Documents",
               view: "documents",
               icon: "ph-bold ph-file-text",
               module: "documents",
@@ -861,7 +861,7 @@ export default function Header({ authUser, onLogout, children }) {
           label: "My Activity",
           url: "/account/activity",
           icon: "ph-bold ph-clock-counter-clockwise",
-          breadcrumb: "Audit Logs • Personal",
+          breadcrumb: "Activity History • Personal",
           keywords: "my activity history personal audit logs login sessions timeline recent actions",
         },
         {
@@ -1134,7 +1134,7 @@ export default function Header({ authUser, onLogout, children }) {
                   className={cn(
                     "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
                     isSettingsActive
-                      ? "text-gray-900 bg-gray-100 dark:text-zinc-50 dark:bg-zinc-800 font-semibold"
+                      ? "text-gray-900 bg-gray-100 dark:text-zinc-50 dark:bg-zinc-800"
                       : "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                   )}
                   onClick={() => router.push("/account")}
@@ -1171,16 +1171,7 @@ export default function Header({ authUser, onLogout, children }) {
               </DropdownMenuGroup>
 
               {/* 3. Footer Zone */}
-              <div className="p-2 border-t border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/50 flex flex-col gap-1.5 text-xs">
-                <div className="px-2 pt-1 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                    Active Session
-                  </span>
-                  <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500">
-                    {authUser?.role || "Authorized"}
-                  </span>
-                </div>
+              <div className="p-1.5 border-t border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/50">
                 <button
                   type="button"
                   onClick={handleLogoutAction}
@@ -1288,7 +1279,7 @@ export default function Header({ authUser, onLogout, children }) {
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                  <span className={cn("text-[14px] font-medium truncate", isFocused && "font-semibold")}>
+                                  <span className="text-[14px] font-medium truncate">
                                     {item.label}
                                   </span>
                                   {isActiveTab && (
@@ -1441,7 +1432,7 @@ export default function Header({ authUser, onLogout, children }) {
                         className={cn(
                           "w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer min-h-[44px]",
                           isActive
-                            ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 font-semibold"
+                            ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50"
                             : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5 active:scale-[0.98]"
                         )}
                       >

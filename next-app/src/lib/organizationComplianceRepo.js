@@ -172,7 +172,7 @@ export async function getOrganizationComplianceSummary({
 
     const missingRequirements = [];
     if (!hasCbl) missingRequirements.push("Constitution & By-Laws (CBL)");
-    if (!hasOfficers) missingRequirements.push("Accredited Officer Whitelist");
+    if (!hasOfficers) missingRequirements.push("Authorized Organization Officers");
     if (!hasAdviser) missingRequirements.push("Designated Faculty Adviser");
     if (!isActiveStanding) missingRequirements.push("Active Accreditation Standing");
 
@@ -285,7 +285,7 @@ export async function getOrganizationComplianceSummary({
       generatedAt: new Date().toISOString(),
       definitions: {
         population: "Recognized student organizations registered under OSAS",
-        criteriaFormula: "Institutional compliance score (0-100%) computed across 4 pillars: Archival CBL, Officer Whitelist, Faculty Adviser, and Active Standing.",
+        criteriaFormula: "Institutional compliance score (0-100%) computed across four areas: Constitution and By-Laws, authorized officers, faculty adviser, and active standing.",
       },
       criteria: [
         {
@@ -295,8 +295,8 @@ export async function getOrganizationComplianceSummary({
         },
         {
           key: "officers",
-          label: "Accredited Officer Whitelist",
-          description: "Authorized student leadership roster whitelisted for proposal submissions and governance.",
+          label: "Authorized Organization Officers",
+          description: "Student leaders approved to submit proposals and represent the organization.",
         },
         {
           key: "adviser",

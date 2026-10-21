@@ -13,6 +13,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty";
 import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
 
@@ -87,7 +88,7 @@ export default function StudentOverviewTab({
       (r) => r.status === "Not Submitted"
     );
     if (missingDocs.length > 0) {
-      const topMissing = missingDocs.slice(0, 2).map((d) => d.documentType).join(", ");
+      const topMissing = missingDocs.slice(0, 2).map((d) => d.docType || d.documentType || d.name).filter(Boolean).join(", ");
       const extraCount = missingDocs.length - 2;
       const extraText = extraCount > 0 ? ` and ${extraCount} more` : "";
       items.push({
@@ -882,16 +883,16 @@ export default function StudentOverviewTab({
               })}
             </div>
           ) : (
-            <div className="p-12 text-center">
-              <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className="ph-clock-counter-clockwise text-2xl text-pup-maroon dark:text-primary" />
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                      <HugeIcon className="ph-duotone ph-clock-counter-clockwise text-3xl text-gray-400 dark:text-zinc-500" />
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     {activityFilter === "all" ? "No Recent Activity Yet" : "No Activity in this Category"}
                   </EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
@@ -899,17 +900,19 @@ export default function StudentOverviewTab({
                       ? "Status updates for document requests, compliance archiving, and event proposals will be tracked here."
                       : `No status transitions recorded under ${activityFilter === "requests" ? "Registrar Requests" : activityFilter === "compliance" ? "Permanent Records" : "OSAS Affairs"}.`}
                   </EmptyDescription>
-                  {activityFilter !== "all" && (
+                </EmptyHeader>
+                {activityFilter !== "all" && (
+                  <EmptyContent>
                     <Button
                       variant="outline"
                       onClick={() => setActivityFilter("all")}
                       title="View All Activity"
                       className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                      View All
+                      View All Activity
                     </Button>
-                  )}
-                </EmptyHeader>
+                  </EmptyContent>
+                )}
               </Empty>
             </div>
           )}

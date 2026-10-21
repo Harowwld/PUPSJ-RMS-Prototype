@@ -246,17 +246,25 @@ export default function RestoreModal({
                   </p>
                 </div>
               ) : previewData?.tables && previewData.tables.length > 0 ? (
-                <div className="max-h-48 overflow-y-auto custom-scrollbar select-none">
+                <div className="max-h-48 overflow-y-auto custom-scrollbar select-none relative">
                   <table className="w-full text-xs table-fixed min-w-[420px]">
-                    <thead className="bg-gray-50/80 dark:bg-zinc-800/50 border-b border-border dark:border-border sticky top-0">
-                      <tr className="text-left text-[11px] font-medium text-gray-500 dark:text-zinc-400">
-                        <th className="py-2.5 px-3.5 w-[36%] font-medium">Resource Table</th>
-                        <th className="py-2.5 px-3.5 w-[18%] font-medium text-center">Live Count</th>
-                        <th className="py-2.5 px-3.5 w-[18%] font-medium text-center">In Backup</th>
-                        <th className="py-2.5 px-3.5 pr-4 w-[28%] font-medium text-right">Net Impact</th>
+                    <thead className="sticky top-0 z-20 bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border shadow-2xs">
+                      <tr className="text-left text-[11px] font-semibold text-gray-600 dark:text-zinc-300">
+                        <th className="sticky top-0 z-20 py-2.5 px-3.5 w-[36%] font-semibold bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                          Resource Table
+                        </th>
+                        <th className="sticky top-0 z-20 py-2.5 px-3.5 w-[18%] font-semibold text-center bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                          Live Count
+                        </th>
+                        <th className="sticky top-0 z-20 py-2.5 px-3.5 w-[18%] font-semibold text-center bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                          In Backup
+                        </th>
+                        <th className="sticky top-0 z-20 py-2.5 px-3.5 pr-4 w-[28%] font-semibold text-right bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                          Net Impact
+                        </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border dark:divide-border">
+                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                       {previewData.tables.map((t) => {
                         const delta = Number(t.delta || 0);
                         const isSafeMerge = mode === "merge";

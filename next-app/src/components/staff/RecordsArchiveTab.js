@@ -132,12 +132,9 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
           >
             {/* 1. Header Zone */}
             <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-              <div className="flex items-center gap-1.5">
-                <HugeIcon className="ph-bold ph-palette text-xs text-pup-maroon dark:text-red-400" />
-                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                  Folder Color
-                </span>
-              </div>
+              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                Folder Color
+              </span>
               <div className="flex items-center gap-2">
                 {currentColorKey !== "yellow" && (
                   <button
@@ -272,6 +269,7 @@ export default function RecordsArchiveTab({
   explorerItems,
   onSwitchView,
   onPreviewDocument,
+  onRescan,
   onRestoreStudent,
   selectedIds,
   onSelectionChange,
@@ -355,6 +353,9 @@ export default function RecordsArchiveTab({
     setPrevFilters({ currentLevel, showArchived, quickQuery, listType })
     setPage(1)
   }
+  // View Mode: "folders" (3D Mac folders) or "master-list" (flat all documents table)
+  const [archiveViewMode, setArchiveViewMode] = useState("folders")
+
   // Restore Modal State
   const [restoreStudentOpen, setRestoreStudentOpen] = useState(false)
   const [restoreTarget, setRestoreTarget] = useState(null)
@@ -698,9 +699,53 @@ export default function RecordsArchiveTab({
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          actions={
+            <div className="flex items-center bg-gray-100/90 dark:bg-zinc-800/80 p-0.5 rounded-xl border border-border/60 dark:border-border">
+              <button
+                type="button"
+                onClick={() => setArchiveViewMode("folders")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                  archiveViewMode === "folders"
+                    ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+                title="Browse records by folder"
+              >
+                <HugeIcon className="ph-bold ph-folder-open text-xs" />
+                <span>Browse Folders</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setArchiveViewMode("master-list")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                  archiveViewMode === "master-list"
+                    ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+                title="View all documents in a table"
+              >
+                <HugeIcon className="ph-bold ph-files text-xs" />
+                <span>All Documents</span>
+              </button>
+            </div>
+          }
         />
-        {/* Filter Section: Tabs (Active/Archived), Controls (Sort, Select All, View Toggle), Search */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
+
+        {archiveViewMode === "master-list" ? (
+          <OfficeDocumentsTable
+            documents={staffDocs}
+            officeLabel={officeLabel}
+            breadcrumbs={null}
+            onPreviewDocument={onPreviewDocument}
+            onRescan={onRescan}
+            embedded={true}
+          />
+        ) : (
+          <>
+            {/* Filter Section: Tabs (Active/Archived), Controls (Sort, Select All, View Toggle), Search */}
+            <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
           {/* Left: Active / Archived Tabs */}
           <div className="flex items-center gap-6 select-none shrink-0">
             <button
@@ -845,12 +890,9 @@ export default function RecordsArchiveTab({
               >
                 {/* Zone 1: Header */}
                 <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <HugeIcon className="ph-bold ph-arrows-down-up text-xs text-pup-maroon dark:text-red-400" />
-                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                      Arrange Records
-                    </span>
-                  </div>
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                    Arrange Records
+                  </span>
                   {folderSortBy !== "default" && (
                     <button
                       type="button"
@@ -965,10 +1007,10 @@ export default function RecordsArchiveTab({
                       ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
-                  title="Card View"
+                  title="Show each record as a card"
                 >
                   <HugeIcon className="ph-bold ph-squares-four text-xs" />
-                  <span>Card</span>
+                  <span>Cards</span>
                 </button>
                 <button
                   type="button"
@@ -979,7 +1021,7 @@ export default function RecordsArchiveTab({
                       ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
-                  title="Table View"
+                  title="Show records in rows and columns"
                 >
                   <HugeIcon className="ph-bold ph-list-dashes text-xs" />
                   <span>Table</span>
@@ -1577,9 +1619,12 @@ export default function RecordsArchiveTab({
                 officeLabel={officeLabel}
                 breadcrumbs={breadcrumbs}
                 onPreviewDocument={onPreviewDocument}
+                onRescan={onRescan}
                 embedded={true}
               />
             )}
+          </>
+        )}
       </Card>
 
       <ConfirmModal

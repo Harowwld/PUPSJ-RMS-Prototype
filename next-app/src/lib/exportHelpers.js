@@ -30,25 +30,28 @@ export const generateExportFilename = (entity, type, extension) => {
 /**
  * Exports dedicated Citizen's Charter SLA compliance data to CSV
  */
-export const downloadSlaComplianceCsv = (data, total, completionRate, onLogAction, fileName) => {
+export const downloadSlaComplianceCsv = (data, total, complianceRate, onLogAction, fileName) => {
   if (!data) return;
 
-  const finalFileName = fileName || generateExportFilename("SLA-COMPLIANCE", "DATA", "csv");
+  const finalFileName = fileName || generateExportFilename("PROCESSING-TIME", "DATA", "csv");
   const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
   const row = (cells) => cells.map(q).join(",");
 
   const compliantCount = data?.sla?.compliantCompleted ?? (Number.isFinite(data?.sla?.totalCompleted) ? data.sla.totalCompleted : 0);
   const activeOverdue = data?.sla?.activeOverdue || 0;
   const delayedCompleted = data?.sla?.delayedCompleted || 0;
+  const overallCompliance = data?.sla?.totalCompleted > 0
+    ? data.sla.complianceRate ?? complianceRate ?? 0
+    : "N/A";
 
   const lines = [
-    row(["Citizen's Charter SLA Compliance Dataset", ""]),
+    row(["Citizen's Charter Processing Time Report", ""]),
     row(["Legal Mandate", "Republic Act No. 11032 / Anti-Red Tape Authority (ARTA)"]),
     row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
     "",
     row(["Summary Operational Metrics", "Value"]),
     row(["Total Document Inflow", total ?? 0]),
-    row(["Overall SLA Compliance Rate", `${completionRate ?? 0}%`]),
+    row(["Requests Completed On Time", overallCompliance === "N/A" ? overallCompliance : `${overallCompliance}%`]),
     row(["On-Time Fulfillments", compliantCount]),
     row(["Delayed / Exceeded Window", delayedCompleted + activeOverdue]),
     row(["Active Overdue Watchlist", activeOverdue]),
@@ -63,7 +66,7 @@ export const downloadSlaComplianceCsv = (data, total, completionRate, onLogActio
   const tierStats = data?.sla?.tierStats || {};
   if (Object.keys(tierStats).length > 0) {
     lines.push("");
-    lines.push(row(["Service Classification Tier", "Statutory Window", "Total", "Compliant", "Delayed", "Compliance Rate"]));
+    lines.push(row(["Service Type", "Statutory Window", "Total", "On Time", "Delayed", "Completion Rate"]));
     for (const [key, stat] of Object.entries(tierStats)) {
       const rate = stat.total > 0 ? Math.round((stat.compliant / stat.total) * 100) : 100;
       const delayed = (stat.delayed || 0) + (stat.overdue || 0);
@@ -173,19 +176,25 @@ export const downloadCsmRatingsCsv = (data, onLogAction, fileName) => {
 export const downloadComprehensiveSlaCsv = (data, total, completionRate, onLogAction, fileName) => {
   if (!data) return;
 
-  const finalFileName = fileName || generateExportFilename("SLA-CSM-COMBINED", "REPORT", "csv");
+  const finalFileName = fileName || generateExportFilename("PROCESSING-TIME-CSM-COMBINED", "REPORT", "csv");
   const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
   const row = (cells) => cells.map(q).join(",");
 
   const lines = [
-    row(["Comprehensive Service Level Agreement & Client Satisfaction Analytics", ""]),
+    row(["Processing Time and Client Satisfaction Report", ""]),
     row(["Generated (Local)", formatPHDateTime(new Date().toISOString())]),
     "",
-    row(["Section I: Operational SLA Metrics", "Value"]),
+    row(["Section I: Processing Time Results", "Value"]),
     row(["Total Inflow Requests", total ?? 0]),
     row(["Overall Completion Rate", `${completionRate ?? 0}%`]),
+    row([
+      "Requests Completed On Time",
+      data?.sla?.totalCompleted > 0
+        ? `${data.sla.complianceRate ?? completionRate ?? 0}%`
+        : "N/A",
+    ]),
     row(["On-Time Fulfillments", data?.sla?.compliantCompleted ?? 0]),
-    row(["Active Overdue Watchlist", data?.sla?.activeOverdue ?? 0]),
+    row(["Requests Past Due", data?.sla?.activeOverdue ?? 0]),
     "",
     row(["Status Distribution", "Count"]),
   ];
@@ -324,4 +333,3 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName, o
     entityType: "Report",
   })
 }
-

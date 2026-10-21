@@ -183,10 +183,10 @@ export const DEFAULT_BENTO_CONTENT = {
   card5: {
     title: "Protected by Law (RA 10173)",
     description:
-      "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access.",
+      "Staff actions and request updates are recorded so authorized personnel can review how student records are handled.",
     badgeLabel: "RA 10173",
     item1: "Data Privacy Protected",
-    item2: "Tamper-Proof Audit Trail",
+    item2: "Staff Activity History",
     item3: "Transparent Tracking",
     // Legacy fields
     tab1Label: "Promise",
@@ -198,10 +198,10 @@ export const DEFAULT_BENTO_CONTENT = {
     ],
     artaItems: [
       { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance" },
-      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university SLA standards" },
+      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university processing time standards" },
     ],
     auditItems: [
-      { icon: "ph-fingerprint", title: "Tamper-Proof Audit Trail", desc: "Every personnel action logged" },
+      { icon: "ph-clock-counter-clockwise", title: "Staff Activity History", desc: "Staff actions are recorded" },
       { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression" },
     ],
     footerNote: "Fair, transparent university service",
@@ -303,9 +303,15 @@ function sanitizeBentoContent(raw) {
 
   // Card 5
   const rawC5 = raw.card5 || {};
+  const card5Description = typeof rawC5.description === "string" ? rawC5.description.trim() : "";
+  const legacyPrivacyDescription =
+    "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access.";
   const card5 = {
     title: typeof rawC5.title === "string" && rawC5.title.trim() !== "" ? rawC5.title.trim() : def.card5.title,
-    description: typeof rawC5.description === "string" && rawC5.description.trim() !== "" ? rawC5.description.trim() : def.card5.description,
+    description:
+      !card5Description || card5Description === legacyPrivacyDescription
+        ? def.card5.description
+        : card5Description,
     badgeLabel: typeof rawC5.badgeLabel === "string" && rawC5.badgeLabel.trim() !== "" ? rawC5.badgeLabel.trim() : def.card5.badgeLabel,
     item1: typeof rawC5.item1 === "string" && rawC5.item1.trim() !== "" ? rawC5.item1.trim() : def.card5.item1,
     item2: typeof rawC5.item2 === "string" && rawC5.item2.trim() !== "" ? rawC5.item2.trim() : def.card5.item2,
@@ -1090,4 +1096,3 @@ function sanitizeFooterContent(raw) {
     copyrightText,
   };
 }
-

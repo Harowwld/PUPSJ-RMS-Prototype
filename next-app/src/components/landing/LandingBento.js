@@ -47,10 +47,10 @@ const BENTO_CONTENT = {
   card5: {
     title: "Protected by Law (RA 10173)",
     description:
-      "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access.",
+      "Staff actions and request updates are recorded so authorized personnel can review how student records are handled.",
     badgeLabel: "RA 10173",
     item1: "Data Privacy Protected",
-    item2: "Tamper-Proof Audit Trail",
+    item2: "Staff Activity History",
     item3: "Transparent Tracking",
   },
 };
@@ -379,7 +379,7 @@ export default function LandingBento() {
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 4s' }}>
                      <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
                    </div>
-                   <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item2 || "Tamper-Proof Audit Trail"}</span>
+                   <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item2 || "Staff Activity History"}</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 4s' }}>
@@ -396,7 +396,7 @@ export default function LandingBento() {
                 {bento.card5?.title || "Protected by Law (RA 10173)"}
               </h3>
               <p className="text-xs text-zinc-500  mt-1.5 leading-relaxed font-normal">
-                {bento.card5?.description || "Compliant with the Data Privacy Act of 2012. Tamper-proof audit logs and transparent tracking with zero unauthorized access."}
+                {bento.card5?.description || "Staff actions and request updates are recorded so authorized personnel can review how student records are handled."}
               </p>
             </div>
           </motion.div>

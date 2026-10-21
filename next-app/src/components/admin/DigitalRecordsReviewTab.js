@@ -18,6 +18,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
@@ -1143,6 +1144,39 @@ export default function DigitalRecordsReviewTab({
               </EmptyHeader>
             </Empty>
           </div>
+        ) : sortedRecords.length === 0 ? (
+          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  {hasActiveFilters ? "No Records Found" : "No Records Yet"}
+                </EmptyTitle>
+                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  {hasActiveFilters
+                    ? "Try adjusting your search filters to find what you're looking for."
+                    : "There are currently no digital records in the system."}
+                </EmptyDescription>
+              </EmptyHeader>
+              {hasActiveFilters && (
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    onClick={handleClearFilters}
+                    title="Reset Filters"
+                    className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  >
+                    Reset Filters
+                  </Button>
+                </EmptyContent>
+              )}
+            </Empty>
+          </div>
         ) : (
           <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
             <div className="overflow-x-auto">
@@ -1246,58 +1280,24 @@ export default function DigitalRecordsReviewTab({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                  {sortedRecords.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={8} className="border-0 p-0">
-                        <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <div className="relative mb-6">
-                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                              </EmptyMedia>
-                            </div>
-                            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                              {hasActiveFilters ? "No Records Found" : "No Records Yet"}
-                            </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                              {hasActiveFilters
-                                ? "Try adjusting your search filters to find what you're looking for."
-                                : "There are currently no digital records in the system."}
-                            </EmptyDescription>
-                            {hasActiveFilters && (
-                              <Button
-                                variant="outline"
-                                onClick={handleClearFilters}
-                                title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                              >
-                    Reset Filters
-                  </Button>
-                            )}
-                          </EmptyHeader>
-                        </Empty>
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedRecords.map((r) => {
-                      const isSelected = selectedIds.has(r.id)
+                  {paginatedRecords.map((r) => {
+                    const isSelected = selectedIds.has(r.id)
 
-                      return (
-                        <tr
-                          key={r.id}
-                          className={cn(
-                            "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
-                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
-                          )}
-                          onClick={(e) => {
-                            if (r.approval_status === "Pending") {
-                              toggleSelectRow(r.id, e)
-                            } else {
-                              handlePreview(r)
-                            }
-                          }}
-                        >
+                    return (
+                      <tr
+                        key={r.id}
+                        className={cn(
+                          "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
+                          isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                        )}
+                        onClick={(e) => {
+                          if (r.approval_status === "Pending") {
+                            toggleSelectRow(r.id, e)
+                          } else {
+                            handlePreview(r)
+                          }
+                        }}
+                      >
                           <td className="w-12 p-4 text-center">
                             {r.approval_status === "Pending" ? (
                               <input
@@ -1418,8 +1418,7 @@ export default function DigitalRecordsReviewTab({
                           </td>
                         </tr>
                       )
-                    })
-                  )}
+                    })}
                 </tbody>
               </table>
             </div>

@@ -36,7 +36,7 @@ export async function PUT(req) {
       await writeGlobalAuditLog(req, "Update Landing Page Bento CMS", {
         entity_type: "LandingCMS",
         entity_id: "bento",
-        details: "Updated Landing Page Bento Grid: headlines, cards, SLA chips, and legal safeguard commitments.",
+        details: "Updated Landing Page Bento Grid: headlines, cards, processing-time labels, and legal safeguard commitments.",
       });
     }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useEffect, useState, useMemo, useRef } from "react"
 import {
   Card,
 } from "@/components/ui/card"
@@ -60,9 +60,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const [reportOpen, setReportOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
   const [previewFrameReady, setPreviewFrameReady] = useState(false)
+  const pdfPreviewFrameRef = useRef(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isExportingCsv, setIsExportingCsv] = useState(false)
-  const [activeView, setActiveView] = useState("all") // "all", "sla", "csm"
   const [previewReportType, setPreviewReportType] = useState("sla") // "sla", "csm", "comprehensive"
 
   const [startDate, setStartDate] = useState("")
@@ -87,7 +87,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       ])
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to load SLA data")
+        throw new Error(json?.error || "Failed to load processing time data")
       setData(json.data)
     } catch (e) {
       setError(e.message)
@@ -110,6 +110,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const total = data?.totalRequests || 0
   const completed = data?.sla?.totalCompleted || 0
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
+  const slaComplianceRate = data?.sla?.totalCompleted > 0
+    ? data.sla.complianceRate ?? 0
+    : null
 
   const pieData = useMemo(() => {
     return Object.entries(data?.statusCounts || {})
@@ -123,12 +126,12 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       return await generateCSMReportPdf(data, { startDate, endDate });
     }
     if (type === "comprehensive") {
-      return await generateComprehensiveSLAPdf(data, total, completionRate, { startDate, endDate });
+      return await generateComprehensiveSLAPdf(data, total, slaComplianceRate, { startDate, endDate });
     }
-    return await generateSLACompliancePdf(data, total, completionRate, { startDate, endDate });
+    return await generateSLACompliancePdf(data, total, slaComplianceRate, { startDate, endDate });
   };
 
-  const handlePreview = async (type = activeView === "csm" ? "csm" : (activeView === "sla" ? "sla" : "comprehensive")) => {
+  const handlePreview = async (type = "comprehensive") => {
     if (!data || loading) return;
     setIsGeneratingPdf(true);
     setPreviewReportType(type);
@@ -166,14 +169,14 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   };
 
   const handlePrint = async () => {
-    let basePrefix = "SLA-COMPLIANCE";
-    let reportLabel = "Citizen's Charter SLA Compliance Report";
+    let basePrefix = "PROCESSING-TIME";
+    let reportLabel = "Citizen's Charter Processing Time Report";
     if (previewReportType === "csm") {
       basePrefix = "CSM-RATINGS";
       reportLabel = "Client Satisfaction Measurement (CSM) Report";
     } else if (previewReportType === "comprehensive") {
-      basePrefix = "SLA-CSM-COMBINED";
-      reportLabel = "Comprehensive SLA and CSM Executive Dossier";
+      basePrefix = "PROCESSING-TIME-CSM-COMBINED";
+      reportLabel = "Combined Processing Time and Client Satisfaction Report";
     }
 
     const fileName = generateExportFilename(basePrefix, "REPORT", "pdf");
@@ -213,7 +216,28 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
     showToast?.({ title: "Report Downloaded", description: `The ${reportLabel} has been successfully downloaded.` });
   };
 
-  const handleCsvExport = async (type = activeView === "csm" ? "csm" : (activeView === "sla" ? "sla" : "comprehensive")) => {
+  const handlePrintReport = () => {
+    const printWindow = pdfPreviewFrameRef.current?.contentWindow
+    if (!printWindow || !previewFrameReady) {
+      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true)
+      return
+    }
+
+    try {
+      printWindow.focus()
+      printWindow.print()
+      onLogAction?.({
+        action: "Print Report",
+        details: `opened print dialog for ${previewReportType} report`,
+        entityType: "Report",
+      })
+    } catch (e) {
+      console.error("Report printing failed:", e)
+      showToast?.(formatErrorMessage(e, "Report Printing Failed"), true)
+    }
+  }
+
+  const handleCsvExport = async (type = "comprehensive") => {
     setIsExportingCsv(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -222,13 +246,13 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         downloadCsmRatingsCsv(data, onLogAction, fileName);
         showToast?.({ title: "Export Successful", description: `Client Satisfaction feedback dataset exported to ${fileName}.` });
       } else if (type === "sla") {
-        const fileName = generateExportFilename("SLA-COMPLIANCE", "DATA", "csv");
-        downloadSlaComplianceCsv(data, total, completionRate, onLogAction, fileName);
-        showToast?.({ title: "Export Successful", description: `Citizen's Charter SLA compliance dataset exported to ${fileName}.` });
+        const fileName = generateExportFilename("PROCESSING-TIME", "DATA", "csv");
+        downloadSlaComplianceCsv(data, total, slaComplianceRate, onLogAction, fileName);
+        showToast?.({ title: "Export Successful", description: `Citizen's Charter processing time report exported to ${fileName}.` });
       } else {
-        const fileName = generateExportFilename("SLA-CSM-COMBINED", "DATA", "csv");
+        const fileName = generateExportFilename("PROCESSING-TIME-CSM-COMBINED", "DATA", "csv");
         downloadComprehensiveSlaCsv(data, total, completionRate, onLogAction, fileName);
-        showToast?.({ title: "Export Successful", description: `Complete SLA and CSM dataset exported to ${fileName}.` });
+        showToast?.({ title: "Export Successful", description: `Complete processing time and client satisfaction report exported to ${fileName}.` });
       }
     } catch (e) {
       showToast?.(formatErrorMessage(e, "Export Failed"), true);
@@ -239,14 +263,10 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
 
   const hasActiveFilters = startDate !== "" || endDate !== "";
 
-  const pageDescription = activeView === "csm"
-    ? "Student satisfaction evaluations, 5-point Likert ratings, and service quality dimensions."
-    : activeView === "sla"
-    ? "Citizen's Charter turnaround times, fulfillment velocity, and overdue watches."
-    : "Monitor request metrics, turnaround times, and constituent feedback.";
+  const pageDescription = "Monitor request metrics, turnaround times, and constituent feedback."
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
+    <div data-light-only className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
         <PageHeader
@@ -286,18 +306,16 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
+                    data-light-only
                     align="end"
                     sideOffset={6}
                     className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
                   >
                     {/* Zone 1: Header */}
                     <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <HugeIcon className="ph-bold ph-file-csv text-xs text-pup-maroon dark:text-red-400" />
-                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          Export Dataset
-                        </span>
-                      </div>
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        Export Dataset
+                      </span>
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
                         CSV
                       </span>
@@ -310,7 +328,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <HugeIcon className="ph-bold ph-clock-countdown text-sm text-pup-maroon dark:text-red-400" />
-                        <span>SLA Compliance Data</span>
+                        <span>On-Time Processing Data</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handleCsvExport("csm")} 
@@ -350,18 +368,16 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
+                    data-light-only
                     align="end"
                     sideOffset={6}
                     className="w-64 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
                   >
                     {/* Zone 1: Header */}
                     <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <HugeIcon className="ph-bold ph-file-pdf text-xs text-pup-maroon dark:text-red-400" />
-                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          Official Report
-                        </span>
-                      </div>
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        Official Report
+                      </span>
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400">
                         PDF
                       </span>
@@ -374,7 +390,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <HugeIcon className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400" />
-                        <span>Citizen&apos;s Charter SLA Report</span>
+                        <span>Citizen&apos;s Charter Processing Time Report</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handlePreview("csm")} 
@@ -389,7 +405,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <HugeIcon className="ph-bold ph-files text-sm text-gray-400" />
-                        <span>Executive Dossier (Combined)</span>
+                        <span>Combined Report</span>
                       </DropdownMenuItem>
                     </div>
                   </DropdownMenuContent>
@@ -414,11 +430,11 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 total={total}
                 completionRate={completionRate}
                 completed={completed}
+                completionRate={completionRate}
                 sla={data?.sla}
                 feedback={data?.feedback}
                 statusCounts={data?.statusCounts}
                 topDocTypes={data?.topDocTypes}
-                viewMode={activeView}
               />
             </div>
           </div>
@@ -431,9 +447,6 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           endDate={endDate}
           setEndDate={setEndDate}
           isLoading={loading}
-          onRefresh={handleRefresh}
-          activeView={activeView}
-          setActiveView={setActiveView}
         />
 
         {/* Active Filter Chips Row */}
@@ -498,7 +511,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             </Empty>
           ) : data ? (
             <div className={cn("space-y-6 transition-all duration-slow", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
-              <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} viewMode={activeView} />
+              <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
             </div>
           ) : null}
         </div>
@@ -518,26 +531,20 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         }}
       >
         <DialogContent 
+          data-light-only
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-jakarta xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-gray-100 p-0 font-jakarta shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] dark:border-border dark:bg-muted"
         >
           <DialogHeader 
-            className="shrink-0 bg-gray-50 dark:bg-white/5 flex flex-row items-center justify-between"
-            style={{
-              padding: '16px 24px',
-              borderBottom: '0.5px solid rgba(0,0,0,0.08)',
-            }}
+            className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-b border-border bg-gray-50 px-6 py-4 dark:border-border dark:bg-white/5 sm:flex-row sm:items-center"
           >
             <div className="min-w-0 flex flex-col gap-0.5">
-              <DialogTitle className="text-left text-sm font-semibold text-gray-900 dark:text-zinc-50 tracking-tight flex items-center gap-2">
-                <HugeIcon className="ph-bold ph-file-pdf text-pup-maroon dark:text-red-400 text-base" />
-                <span>
-                  {previewReportType === "csm" 
-                    ? "Client Satisfaction Measurement (CSM) Report" 
-                    : previewReportType === "comprehensive"
-                    ? "Executive Dossier: SLA & Client Satisfaction"
-                    : "Citizen's Charter SLA Compliance Report"}
-                </span>
+              <DialogTitle className="text-left text-[15px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                {previewReportType === "csm"
+                  ? "Client Satisfaction Measurement (CSM) Report"
+                  : previewReportType === "comprehensive"
+                  ? "Combined Processing Time and Client Satisfaction Report"
+                  : "Citizen's Charter Processing Time Report"}
               </DialogTitle>
               <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-left">
                 Reporting Coverage: {startDate || "Earliest Records"} – {endDate || "Present"}
@@ -545,26 +552,26 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             </div>
 
             {/* Seamless Report Switcher Inside Modal */}
-            <div className="flex items-center gap-1 bg-gray-200/80 dark:bg-zinc-800 p-1 rounded-xl border border-gray-300/60 dark:border-white/5 mx-2">
+            <div className="mx-2 flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-gray-300/60 bg-gray-200/80 p-1 dark:border-white/5 dark:bg-zinc-800">
               <button
                 type="button"
                 onClick={() => handleSwitchPreviewReport("sla")}
                 disabled={isGeneratingPdf}
                 className={cn(
-                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
                   previewReportType === "sla"
                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                SLA Compliance
+                On-Time Processing
               </button>
               <button
                 type="button"
                 onClick={() => handleSwitchPreviewReport("csm")}
                 disabled={isGeneratingPdf}
                 className={cn(
-                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
                   previewReportType === "csm"
                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -577,7 +584,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 onClick={() => handleSwitchPreviewReport("comprehensive")}
                 disabled={isGeneratingPdf}
                 className={cn(
-                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
                   previewReportType === "comprehensive"
                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -587,26 +594,40 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               </button>
             </div>
             
-            <DialogClose asChild>
-              <button
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Button
                 type="button"
-                className="hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+                aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
+                title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
+                className="h-10 w-10 rounded-xl border-0 p-0 text-gray-500 shadow-none transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
               >
-                <HugeIcon className="ph-bold ph-x text-base" />
-              </button>
-            </DialogClose>
+                <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"} />
+              </Button>
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  aria-label="Close report preview"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-0 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:text-gray-400 dark:hover:bg-zinc-800 dark:hover:text-white cursor-pointer"
+                >
+                  <HugeIcon className="ph-bold ph-x text-base" />
+                </button>
+              </DialogClose>
+            </div>
           </DialogHeader>
 
           <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
             {pdfBlobUrl ? (
               <div className={cn("relative h-full w-full transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
                 {isFullscreenPreview && (
-                  <div className="absolute top-4 right-4 z-[10000]">
+                  <div className="absolute right-4 top-4 z-[10000]">
                     <Button
                       variant="default"
                       size="icon"
                       onClick={() => setIsFullscreenPreview(false)}
-                      className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
+                      className="h-11 w-11 rounded-full border-0 bg-black/50 text-white hover:bg-black/70"
                     >
                       <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
                     </Button>
@@ -622,10 +643,11 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   </div>
                 )}
                 <iframe
+                  ref={pdfPreviewFrameRef}
                   src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
                   className="h-full w-full border-none"
                   onLoad={() => setPreviewFrameReady(true)}
-                  title="SLA Analytics Report Preview"
+                  title="Processing Time Report Preview"
                 />
               </div>
             ) : (
@@ -640,34 +662,32 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
+          <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-border bg-white px-6 py-4 dark:border-border dark:bg-card">
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-              aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
-              title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
-              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
+              type="button"
+              variant="outline"
+              onClick={() => setReportOpen(false)}
+              className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
             >
-              <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"}></HugeIcon>
+              Close
             </Button>
-
-            <div className="flex items-center gap-2.5 ml-auto">
-              <Button
-                variant="outline"
-                onClick={() => setReportOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-              >
-                Close
-              </Button>
-              <Button
-                onClick={handlePrint}
-                disabled={!pdfBlobUrl}
-                className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-              >
-                Download Report
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrintReport}
+              disabled={!pdfBlobUrl || !previewFrameReady || isGeneratingPdf}
+              className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 disabled:opacity-50 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+            >
+              Print Report
+            </Button>
+            <Button
+              type="button"
+              onClick={handlePrint}
+              disabled={!pdfBlobUrl}
+              className="h-10 rounded-xl! px-5 text-xs font-semibold text-white shadow-xs transition-all btn-brand-red active:scale-95 disabled:opacity-50"
+            >
+              Download Report
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -676,6 +696,3 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
 })
 
 export default SLAAnalyticsTab
-
-
-

@@ -16,6 +16,7 @@ import {
 import { cn, formatTitleCase } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { motion } from "framer-motion";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 
 export default function StudentDriveFilesView({
   student,
@@ -97,16 +98,20 @@ export default function StudentDriveFilesView({
           </Button>
 
           {/* Student Avatar Tile */}
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-xs shrink-0 border select-none"
-            style={{
+          <ProfileAvatar
+            id={student.studentNo}
+            avatarFilename={student.avatar_filename || student.avatarFilename}
+            name={displayName}
+            initials={initials}
+            className="size-11 rounded-2xl shadow-xs border select-none"
+            imageClassName="rounded-2xl"
+            fallbackClassName="rounded-2xl font-bold text-sm"
+            fallbackStyle={{
               backgroundColor: authUser?.accent_color ? `${authUser.accent_color}15` : "rgba(128, 0, 0, 0.08)",
               color: authUser?.accent_color || "#800000",
               borderColor: authUser?.accent_color ? `${authUser.accent_color}30` : "rgba(128, 0, 0, 0.2)",
             }}
-          >
-            {initials}
-          </div>
+          />
 
           {/* Student Info */}
           <div className="min-w-0 flex-1">
@@ -135,7 +140,7 @@ export default function StudentDriveFilesView({
           </div>
         </div>
 
-        {/* Right Section: Physical Storage Pill + Locate in Archive Button + Dossier + View Mode Toggle */}
+        {/* Right Section: Physical Storage, Archive Location, Student Details, and View Controls */}
         <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto justify-between lg:justify-end pt-2 lg:pt-0 border-t lg:border-t-0 border-border/60">
           {/* Physical Storage Coordinates Badge */}
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-100/90 dark:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 text-xs font-semibold text-gray-800 dark:text-zinc-200 select-none">
@@ -191,12 +196,12 @@ export default function StudentDriveFilesView({
                       ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-2xs font-bold"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
                   )}
-                  aria-label="Grid view"
+                  aria-label="Show files as cards"
                 >
                   <HugeIcon className="ph-bold ph-squares-four text-sm" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Grid view</TooltipContent>
+              <TooltipContent>Show files as cards</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -210,12 +215,12 @@ export default function StudentDriveFilesView({
                       ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-2xs font-bold"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
                   )}
-                  aria-label="List view"
+                  aria-label="Show files as separate rows"
                 >
                   <HugeIcon className="ph-bold ph-list-dashes text-sm" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>List view</TooltipContent>
+              <TooltipContent>Show files as separate rows</TooltipContent>
             </Tooltip>
           </div>
         </div>

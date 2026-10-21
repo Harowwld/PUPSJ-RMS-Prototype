@@ -364,7 +364,7 @@ export default function BulkImportOrganizationsModal({
 
         {/* Content Body */}
         {!csvFile ? (
-          <div className="flex-1 min-h-0 p-8 flex flex-col items-center justify-center overflow-y-auto">
+          <div className="flex-1 min-h-0 p-6 flex flex-col items-center justify-center overflow-y-auto">
             <div
               className={cn(
                 "w-full max-w-3xl border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all cursor-pointer",
@@ -738,45 +738,39 @@ export default function BulkImportOrganizationsModal({
         )}
 
         {/* Footer */}
-        <DialogFooter className="m-0 px-6 py-5 border-t border-border bg-white dark:bg-card flex items-center justify-between shrink-0">
-          <div>
-            {hasInvalidSelected && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-                <HugeIcon className="ph-bold ph-warning text-sm shrink-0" />
-                <span>One or more selected rows have missing storage locations.</span>
-              </p>
-            )}
-          </div>
+        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0">
+          {hasInvalidSelected && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5 mr-auto">
+              <HugeIcon className="ph-bold ph-warning text-sm shrink-0" />
+              <span>One or more selected rows have missing storage locations.</span>
+            </p>
+          )}
 
-          <div className="flex items-center gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={csvLoading}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Cancel
-            </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={csvLoading}
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+          >
+            Cancel
+          </Button>
 
-            {csvFile && (
-              <Button
-                type="button"
-                onClick={handleImportOrganizations}
-                disabled={csvLoading || selectedCount === 0 || hasInvalidSelected}
-                className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-              >
-                {csvLoading ? (
-                  <span className="flex items-center gap-2">
-                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
-                    <span>Importing...</span>
-                  </span>
-                ) : (
-                  `Import ${selectedCount > 0 ? selectedCount : ""} Organizations`
-                )}
-              </Button>
+          <Button
+            type="button"
+            onClick={handleImportOrganizations}
+            disabled={csvLoading || !csvFile || selectedCount === 0 || hasInvalidSelected}
+            className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+          >
+            {csvLoading ? (
+              <span className="flex items-center gap-2">
+                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                <span>Importing...</span>
+              </span>
+            ) : (
+              `Import ${selectedCount > 0 ? selectedCount : ""} Organizations`
             )}
-          </div>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

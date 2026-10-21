@@ -114,7 +114,6 @@ export async function POST(req) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[POST /api/audit-logs] Error:", err);
-    return NextResponse.json({ ok: false, error: "Failed to record audit log" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to save activity history." }, { status: 500 });
   }
 }
-

@@ -15,6 +15,7 @@ import {
   isDirectoryWritable,
   setSimulationMode,
   isSimulationMode,
+  isAuthorizedDriveLabel,
 } from "../src/lib/externalDriveDetector.js";
 
 test("externalDriveDetector unit & cross-platform suite", async (t) => {
@@ -105,6 +106,34 @@ test("externalDriveDetector unit & cross-platform suite", async (t) => {
 
       const winDrives = detectWindowsDrives();
       assert.ok(Array.isArray(winDrives));
+    });
+
+    await t.test("isAuthorizedDriveLabel validates institutional volume naming standards", () => {
+      // Default approved institutional patterns
+      assert.equal(isAuthorizedDriveLabel("PUPSJ_BACKUP"), true);
+      assert.equal(isAuthorizedDriveLabel("pupsj_backup"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ-BACKUP"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ BACKUP"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ_ARCHIVE"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ_RMS"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ_REGISTRAR_01"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ-OSAS-2026"), true);
+
+      // Unapproved / personal / phone labels
+      assert.equal(isAuthorizedDriveLabel("SANDISK"), false);
+      assert.equal(isAuthorizedDriveLabel("KINGSTON"), false);
+      assert.equal(isAuthorizedDriveLabel("Android"), false);
+      assert.equal(isAuthorizedDriveLabel("iPhone"), false);
+      assert.equal(isAuthorizedDriveLabel("NO_NAME"), false);
+      assert.equal(isAuthorizedDriveLabel("USB Drive"), false);
+      assert.equal(isAuthorizedDriveLabel(""), false);
+      assert.equal(isAuthorizedDriveLabel(null), false);
+      assert.equal(isAuthorizedDriveLabel(undefined), false);
+
+      // Custom configured label override
+      assert.equal(isAuthorizedDriveLabel("CAMPUS_OFFICIAL_DRIVE", "CAMPUS_OFFICIAL_DRIVE"), true);
+      assert.equal(isAuthorizedDriveLabel("campus-official-drive", "CAMPUS_OFFICIAL_DRIVE"), true);
+      assert.equal(isAuthorizedDriveLabel("PUPSJ_BACKUP", "CAMPUS_OFFICIAL_DRIVE"), false);
     });
   } finally {
     for (const key of Object.keys(process.env)) {

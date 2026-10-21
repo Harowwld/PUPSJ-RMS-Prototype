@@ -19,12 +19,12 @@ export async function DELETE(req, ctx) {
     return NextResponse.json({ ok: false, error: "Officer record not found." }, { status: 404 });
   }
 
-  await writeGlobalAuditLog(req, "Removed officer from whitelist", {
+  await writeGlobalAuditLog(req, "Removed organization officer authorization", {
     officeId: "osas",
-    details: `Revoked officer whitelist ID #${officerId} for ${org.name}.`,
+    details: `Revoked authorization for officer #${officerId} from ${org.name}.`,
     entity_type: "organization_officer",
     entity_id: String(officerId),
   });
 
-  return NextResponse.json({ ok: true, message: "Officer removed from whitelist." });
+  return NextResponse.json({ ok: true, message: "Officer authorization removed." });
 }

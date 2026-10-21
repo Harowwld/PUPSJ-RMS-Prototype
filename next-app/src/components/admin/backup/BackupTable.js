@@ -7,6 +7,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
@@ -91,144 +92,144 @@ export default function BackupTable({
 }) {
   return (
     <>
-      <div
-        className={cn(
-          "w-full overflow-x-auto select-none isolate"
-        )}
-      >
-        <table className={cn("w-full text-sm table-fixed min-w-[850px]", sortedAndPaginatedBackups.length === 0 && "h-full")}>
-          <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 p-4 text-center align-middle">
-                <input
-                  type="checkbox"
-                  className={cn(
-                    "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                    backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
-                  )}
-                  checked={
-                    backups.length > 0 &&
-                    backups.every((b) => selectedBackupIds.includes(b.id))
-                  }
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  disabled={backups.length === 0}
-                />
-              </th>
-              <th className="p-4 w-[36%]">
-                <button
-                  onClick={() => handleSort("filename")}
-                  className={cn(
-                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "filename" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                  )}
+      {sortedAndPaginatedBackups.length === 0 ? (
+        <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+          <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+            <EmptyHeader className="flex flex-col items-center gap-0">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                  <HugeIcon className={cn("ph-duotone text-3xl text-gray-400 dark:text-zinc-500", isFilterActive ? "ph-magnifying-glass" : "ph-database")} />
+                </EmptyMedia>
+              </div>
+              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                {isFilterActive ? "No matches found" : "No backups detected"}
+              </EmptyTitle>
+              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                {isFilterActive 
+                  ? "Adjust your search parameters or date range to locate specific historical records." 
+                  : "There are no local database backups in the history log yet."}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              {isFilterActive ? (
+                <Button
+                  variant="outline"
+                  onClick={onClearFilters}
+                  title="Reset Filters"
+                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
-                  Backup Archive{" "}
-                  <SortIndicator
-                    column="filename"
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                  />
-                </button>
-              </th>
-              <th className="p-4 w-[14%] text-center">
-                <button
-                  onClick={() => handleSort("size_bytes")}
-                  className={cn(
-                    "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "size_bytes" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                  )}
-                >
-                  Size{" "}
-                  <SortIndicator
-                    column="size_bytes"
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                  />
-                </button>
-              </th>
-              <th className="p-4 w-[18%]">
-                <button
-                  onClick={() => handleSort("created_at")}
-                  className={cn(
-                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                    sortBy === "created_at" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                  )}
-                >
-                  Creation Date{" "}
-                  <SortIndicator
-                    column="created_at"
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                  />
-                </button>
-              </th>
-              {scope === "office" ? (
-                <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                  <div className="inline-flex items-center justify-center gap-1.5">
-                    <span>Backup Copies</span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HugeIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs text-xs font-normal">
-                        Shows where this backup is safely stored: on Internal Storage and an External Drive.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </th>
+                  Reset Filters
+                </Button>
               ) : (
-                <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                  Status
-                </th>
+                <Button
+                  onClick={handleGenerateBackup}
+                  className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Create Backup
+                </Button>
               )}
-              <th className="p-4 pr-6 w-28 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className={cn("divide-y divide-border dark:divide-border", sortedAndPaginatedBackups.length === 0 && "h-full")}>
-            {sortedAndPaginatedBackups.length === 0 ? (
-              <tr className="border-0 hover:bg-transparent h-full">
-                <td colSpan={6} className="border-0 p-0 h-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon  className={cn("ph-duotone text-xl text-gray-300 dark:text-zinc-650", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></HugeIcon>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                        {isFilterActive ? "No matches found" : "No backups detected"}
-                      </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                        {isFilterActive 
-                          ? "Adjust your search parameters or date range to locate specific historical records." 
-                          : "There are no local database backups in the history log yet."}
-                      </EmptyDescription>
-                      {isFilterActive ? (
-                        <Button
-                          variant="outline"
-                          onClick={onClearFilters}
-                          title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                        >
-                    Reset Filters
-                  </Button>
-                      ) : (
-                        <Button
-                          onClick={handleGenerateBackup}
-                          className="mt-6 h-10 rounded-xl btn-brand-red px-6 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
-                        >
-                          Create Backup
-                        </Button>
-                      )}
-                    </EmptyHeader>
-                  </Empty>
-                </td>
+            </EmptyContent>
+          </Empty>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "w-full overflow-x-auto select-none isolate"
+          )}
+        >
+          <table className="w-full text-sm table-fixed min-w-[850px]">
+            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
+                <th className="w-12 p-4 text-center align-middle">
+                  <input
+                    type="checkbox"
+                    className={cn(
+                      "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                      backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
+                    )}
+                    checked={
+                      backups.length > 0 &&
+                      backups.every((b) => selectedBackupIds.includes(b.id))
+                    }
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    disabled={backups.length === 0}
+                  />
+                </th>
+                <th className="p-4 w-[36%]">
+                  <button
+                    onClick={() => handleSort("filename")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "filename" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                    )}
+                  >
+                    Backup Archive{" "}
+                    <SortIndicator
+                      column="filename"
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                    />
+                  </button>
+                </th>
+                <th className="p-4 w-[14%] text-center">
+                  <button
+                    onClick={() => handleSort("size_bytes")}
+                    className={cn(
+                      "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "size_bytes" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                    )}
+                  >
+                    Size{" "}
+                    <SortIndicator
+                      column="size_bytes"
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                    />
+                  </button>
+                </th>
+                <th className="p-4 w-[18%]">
+                  <button
+                    onClick={() => handleSort("created_at")}
+                    className={cn(
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      sortBy === "created_at" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                    )}
+                  >
+                    Creation Date{" "}
+                    <SortIndicator
+                      column="created_at"
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                    />
+                  </button>
+                </th>
+                {scope === "office" ? (
+                  <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    <div className="inline-flex items-center justify-center gap-1.5">
+                      <span>Backup Copies</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HugeIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs font-normal">
+                          Shows where this backup is safely stored: on Internal Storage and an External Drive.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </th>
+                ) : (
+                  <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    Status
+                  </th>
+                )}
+                <th className="p-4 pr-6 w-28 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Actions
+                </th>
               </tr>
-            ) : (
-              sortedAndPaginatedBackups.map((b) => {
+            </thead>
+            <tbody className="divide-y divide-border dark:divide-border">
+              {sortedAndPaginatedBackups.map((b) => {
                 if (!b) return null;
                 const isSelected = selectedBackupIds.includes(b.id);
                 return (
@@ -412,11 +413,11 @@ export default function BackupTable({
                     </td>
                   </tr>
                 );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {backups.length > 0 && (
         <BackupPagination

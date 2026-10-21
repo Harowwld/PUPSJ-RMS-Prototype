@@ -522,7 +522,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         }
                         className="h-9 rounded-xl border border-border dark:border-border text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
                         menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                        optionClassName="rounded-lg text-xs font-normal py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <option value="gentle">Gentle Arc (Default)</option>
                         <option value="pronounced">Pronounced Arc</option>

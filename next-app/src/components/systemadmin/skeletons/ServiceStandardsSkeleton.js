@@ -11,7 +11,7 @@ export default function ServiceStandardsSkeleton() {
         {/* Page Header */}
         <PageHeader
           icon="ph-clock-countdown"
-          title="Service Standards & SLA"
+          title="Processing Time Standards"
           description="Configure turnaround time standards and compliance rules for document processing."
           showBorder={false}
           className="p-6"

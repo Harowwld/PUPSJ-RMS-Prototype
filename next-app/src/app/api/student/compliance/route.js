@@ -15,10 +15,7 @@ function getRequirementCategory(name) {
   if (n.includes("137") || n.includes("report card") || n.includes("grade 10") || n.includes("grade 11") || n.includes("grade 12")) {
     return "Academic Records";
   }
-  if (n.includes("transcript") || n.includes("diploma") || n.includes("graduation")) {
-    return "Graduation & Exit Records";
-  }
-  if (n.includes("good moral") || n.includes("enrollment") || n.includes("health") || n.includes("clearance")) {
+  if (n.includes("good moral") || n.includes("health") || n.includes("clearance") || n.includes("medical")) {
     return "Certificates & Clearances";
   }
   return "General Requirements";
@@ -44,10 +41,7 @@ function getRequirementDescription(name) {
   if (n.includes("good moral")) {
     return "Original certificate of good moral character issued by your previous school principal or guidance counselor.";
   }
-  if (n.includes("enrollment")) {
-    return "Validated Certificate of Enrollment (COE) / Registration Slip confirming active semester status.";
-  }
-  if (n.includes("health")) {
+  if (n.includes("health") || n.includes("medical")) {
     return "Medical clearance certificate and health profile stamped by the University Medical Clinic.";
   }
   if (n.includes("waiver") || n.includes("undertaking")) {
@@ -55,15 +49,6 @@ function getRequirementDescription(name) {
   }
   if (n.includes("sar form")) {
     return "Student Admission Record (SAR) copy officially issued during campus enrollment.";
-  }
-  if (n.includes("transcript")) {
-    return "Official Transcript of Records (TOR) with complete collegiate marks and seal.";
-  }
-  if (n.includes("diploma")) {
-    return "Conferred University Diploma issued upon Board of Regents approval.";
-  }
-  if (n.includes("graduation")) {
-    return "Official certificate verifying full completion of all degree curricular requirements.";
   }
   return "Official document required for institutional archives and academic verification.";
 }
@@ -89,10 +74,9 @@ function getNormalizedGroupKey(name) {
   if (n.includes("good moral")) return "good_moral";
   if (n.includes("137")) return "form_137";
   if (n.includes("grade 12")) return "grade_12_card";
-  if (n.includes("enrollment")) return "coe";
-  if (n.includes("transcript")) return "tor";
-  if (n.includes("diploma")) return "diploma";
-  if (n.includes("health")) return "health_sheet";
+  if (n.includes("grade 11")) return "grade_11_card";
+  if (n.includes("grade 10")) return "grade_10_card";
+  if (n.includes("health") || n.includes("medical")) return "health_sheet";
   if (n.includes("waiver") || n.includes("undertaking")) return "waiver";
   if (n.includes("sar form")) return "sar_form";
   if (n.includes("caepup")) return "caepup";
@@ -170,7 +154,7 @@ export async function GET(req) {
   const docTypes = await query(
     `SELECT id, name, name_norm, office_id, compliance_category
        FROM document_types
-      WHERE office_id = 'registrar' AND status = 'Active' AND is_compliance = TRUE
+      WHERE office_id = 'registrar' AND status = 'Active' AND is_compliance = TRUE AND is_requestable = FALSE
       ORDER BY LOWER(name) ASC`
   );
 
@@ -242,7 +226,9 @@ export async function GET(req) {
 
     return {
       id: dt.id,
+      name: dt.name,
       docType: dt.name,
+      documentType: dt.name,
       groupKey: gKey,
       category: dt.compliance_category || getRequirementCategory(dt.name),
       description: getRequirementDescription(dt.name),

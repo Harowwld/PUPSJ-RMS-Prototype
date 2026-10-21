@@ -215,8 +215,13 @@ export default function HealthSidebar({
                 </div>
               </div>
             ) : (
-              <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-2 leading-relaxed">
-                Connect an external USB drive to copy backups for safekeeping.
+              <p className={cn(
+                "text-[11px] mt-2 leading-relaxed",
+                externalDrive?.unauthorizedDrives?.length > 0
+                  ? "text-amber-800 dark:text-amber-300 font-medium"
+                  : "text-gray-900 dark:text-zinc-300"
+              )}>
+                {externalDrive?.message || "Connect an authorized external drive (labeled PUPSJ_BACKUP) to copy backups for safekeeping."}
               </p>
             )}
 

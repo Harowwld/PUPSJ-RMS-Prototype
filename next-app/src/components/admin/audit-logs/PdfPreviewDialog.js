@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -21,9 +22,28 @@ export default function PdfPreviewDialog({
   previewFrameReady,
   setPreviewFrameReady,
   handleDownloadFromPreview,
+  showToast,
   isFullscreenPreview,
   setIsFullscreenPreview,
 }) {
+  const pdfPreviewFrameRef = useRef(null)
+
+  const handlePrint = () => {
+    const printWindow = pdfPreviewFrameRef.current?.contentWindow
+    if (!printWindow || !previewFrameReady) {
+      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true)
+      return
+    }
+
+    try {
+      printWindow.focus()
+      printWindow.print()
+    } catch (err) {
+      console.error("Activity history report printing failed:", err)
+      showToast?.({ title: "Print Failed", description: "Unable to open the print dialog for this report." }, true)
+    }
+  }
+
   return (
     <Dialog
       open={pdfPreviewOpen}
@@ -55,10 +75,10 @@ export default function PdfPreviewDialog({
         >
           <div className="min-w-0">
             <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
-              Audit Logs Report Preview
+              Activity History Report Preview
             </DialogTitle>
             <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
-              Review the generated document before downloading. Ensure all events and severity levels are correctly captured.
+              Review the report before downloading. Check the recorded actions and details.
             </p>
           </div>
           
@@ -103,6 +123,7 @@ export default function PdfPreviewDialog({
                 </div>
               )}
               <iframe
+                ref={pdfPreviewFrameRef}
                 src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
                 className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
                 title="PDF Report Preview"
@@ -147,6 +168,14 @@ export default function PdfPreviewDialog({
               Close
             </Button>
             <Button
+              variant="outline"
+              onClick={handlePrint}
+              disabled={!pdfBlobUrl || !previewFrameReady}
+              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50"
+            >
+              Print Report
+            </Button>
+            <Button
               onClick={handleDownloadFromPreview}
               disabled={!pdfBlobUrl}
               className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none h-10 px-5 rounded-xl! text-xs font-semibold shadow-xs cursor-pointer"
@@ -159,5 +188,3 @@ export default function PdfPreviewDialog({
     </Dialog>
   )
 }
-
-

@@ -45,9 +45,9 @@ export async function POST(req, ctx) {
       studentNo,
     });
 
-    await writeGlobalAuditLog(req, "Added officer to whitelist", {
+    await writeGlobalAuditLog(req, "Authorized organization officer", {
       officeId: "osas",
-      details: `Whitelisted ${email} as ${position} for ${org.name}.`,
+      details: `Authorized ${email} as ${position} for ${org.name}.`,
       entity_type: "organization_officer",
       entity_id: String(officer.id),
     });

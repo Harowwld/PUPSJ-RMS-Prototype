@@ -1080,7 +1080,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         ? "bg-pup-maroon text-white shadow-xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
-                    title="Table List View"
+                    title="Show each item in its own row"
                   >
                     <HugeIcon className="ph-bold ph-list-dashes text-sm" />
                     <span>List</span>
@@ -1094,10 +1094,10 @@ export default function OsasMonitoringTab({ showToast }) {
                         ? "bg-pup-maroon text-white shadow-xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
-                    title="Kanban Pipeline Board"
+                    title="Show items grouped by their current stage"
                   >
                     <HugeIcon className="ph-bold ph-kanban text-sm" />
-                    <span>Kanban</span>
+                    <span>By Stage</span>
                   </button>
                 </div>
               )}

@@ -71,7 +71,7 @@ async function synthesizeFallbackBylawsPdf(org) {
     page.drawText("accredited under the guidelines of the Office of Student Affairs and Services (OSAS).", { x: 50, y: 458, size: 8.5, font: fontRegular, color: darkGray });
 
     page.drawText("Article II: Officer Governance and Accountability", { x: 50, y: 425, size: 10, font: fontBold, color: maroon });
-    page.drawText("Student officers whitelisted in the PUPSJ Records Management System are authorized to", { x: 50, y: 407, size: 8.5, font: fontRegular, color: darkGray });
+    page.drawText("Student officers approved by OSAS are authorized to", { x: 50, y: 407, size: 8.5, font: fontRegular, color: darkGray });
     page.drawText("submit official activity proposals and administer organizational correspondence.", { x: 50, y: 393, size: 8.5, font: fontRegular, color: darkGray });
 
     page.drawText("Verified Archival Record: PUPSJ Records Keeping System", { x: 50, y: 80, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });

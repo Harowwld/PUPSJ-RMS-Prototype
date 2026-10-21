@@ -22,6 +22,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty";
 import {
   Dialog,
@@ -777,12 +778,6 @@ export default function StudentComplianceTab({ authUser }) {
                     )}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <HugeIcon
-                        className={cn(
-                          "ph-bold text-xs shrink-0",
-                          activeFilterCount > 0 ? "ph-funnel-simple text-pup-maroon dark:text-red-400" : "ph-funnel text-gray-400 dark:text-zinc-500"
-                        )}
-                      />
                       <span className="truncate">
                         {activeFilterCount === 0
                           ? "Filter Requirements"
@@ -806,12 +801,9 @@ export default function StudentComplianceTab({ authUser }) {
                 >
                   {/* Popover Header */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-faders text-sm text-gray-900 dark:text-zinc-300" />
-                      <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                        Combine Filter Criteria
-                      </span>
-                    </div>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                      Combine Filter Criteria
+                    </span>
                     {activeFilterCount > 0 && (
                       <button
                         type="button"
@@ -864,7 +856,7 @@ export default function StudentComplianceTab({ authUser }) {
                               </span>
                             </div>
                           </div>
-                          <span className="text-xs font-semibold text-gray-400 dark:text-zinc-500 tabular-nums">
+                          <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
                             {summary.missingCount}
                           </span>
                         </div>
@@ -894,7 +886,7 @@ export default function StudentComplianceTab({ authUser }) {
                               </span>
                             </div>
                           </div>
-                          <span className="text-xs font-semibold text-gray-400 dark:text-zinc-500 tabular-nums">
+                          <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
                             {summary.submittedCount || summary.approvedCount}
                           </span>
                         </div>
@@ -941,7 +933,7 @@ export default function StudentComplianceTab({ authUser }) {
                                     {cat}
                                   </span>
                                 </div>
-                                <span className="text-xs font-semibold text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
+                                <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
                                   {count}
                                 </span>
                               </div>
@@ -952,17 +944,6 @@ export default function StudentComplianceTab({ authUser }) {
                     )}
                   </div>
 
-                  {/* Popover Footer */}
-                  <div className="px-4 py-2.5 border-t border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-sm">
-                    <span className="text-gray-900 dark:text-zinc-300 text-xs">
-                      Matching: <strong className="text-gray-900 dark:text-zinc-100">{filteredRequirements.length}</strong> of {data?.requirements?.length || 0}
-                    </span>
-                    {activeFilterCount > 0 && (
-                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                        Combined active
-                      </span>
-                    )}
-                  </div>
                 </PopoverContent>
               </Popover>
             </div>
@@ -972,7 +953,8 @@ export default function StudentComplianceTab({ authUser }) {
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
-                title="Table View"
+                title="Show requirements in columns"
+                aria-label="Show requirements in columns"
                 className={cn(
                   "p-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
                   viewMode === "table"
@@ -985,7 +967,8 @@ export default function StudentComplianceTab({ authUser }) {
               <button
                 type="button"
                 onClick={() => setViewMode("cards")}
-                title="Card View"
+                title="Show each requirement as a card"
+                aria-label="Show each requirement as a card"
                 className={cn(
                   "p-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
                   viewMode === "cards"
@@ -1017,22 +1000,23 @@ export default function StudentComplianceTab({ authUser }) {
         {/* E. Requirements Content (Cards or Table) */}
         <div className="p-6 border-t border-border dark:border-border">
           {sortedRequirements.length === 0 ? (
-            <div className="p-12 text-center">
-              <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon
-                        className={
+                        className={cn(
+                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
                           searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
-                            ? "ph-magnifying-glass text-2xl text-pup-maroon dark:text-primary"
-                            : "ph-clipboard-check text-2xl text-pup-maroon dark:text-primary"
-                        }
+                            ? "ph-magnifying-glass"
+                            : "ph-clipboard-check"
+                        )}
                       />
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     {searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
                       ? "No Matches Found"
                       : "No Document Requirements Assigned"}
@@ -1042,17 +1026,19 @@ export default function StudentComplianceTab({ authUser }) {
                       ? "Try adjusting your search query or clearing some of the combined filters."
                       : "There are currently no document requirements assigned for your degree program."}
                   </EmptyDescription>
-                  {(searchQuery || statusFilters.length > 0 || categoryFilters.length > 0) && (
+                </EmptyHeader>
+                {(searchQuery || statusFilters.length > 0 || categoryFilters.length > 0) && (
+                  <EmptyContent>
                     <Button
                       variant="outline"
                       onClick={clearAllFilters}
                       title="Reset Filters"
                       className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                    Reset Filters
-                  </Button>
-                  )}
-                </EmptyHeader>
+                      Reset Filters
+                    </Button>
+                  </EmptyContent>
+                )}
               </Empty>
             </div>
           ) : viewMode === "table" ? (
@@ -1169,12 +1155,9 @@ export default function StudentComplianceTab({ authUser }) {
                             >
                               {/* 1. Header Zone */}
                               <div className="flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-                                <div className="flex items-center gap-1.5">
-                                  <HugeIcon className="ph-bold ph-file-text text-xs text-pup-maroon dark:text-red-400" />
-                                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                                    {item.category}
-                                  </span>
-                                </div>
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                                  {item.category}
+                                </span>
                                 <span
                                   className={cn(
                                     "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
@@ -1418,12 +1401,9 @@ export default function StudentComplianceTab({ authUser }) {
                           >
                             {/* 1. Header Zone */}
                             <div className="flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-                              <div className="flex items-center gap-1.5">
-                                <HugeIcon className="ph-bold ph-file-text text-xs text-pup-maroon dark:text-red-400" />
-                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                                  {item.category}
-                                </span>
-                              </div>
+                              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                                {item.category}
+                              </span>
                               <span
                                 className={cn(
                                   "text-[10px] font-semibold px-2 py-0.5 rounded-full border",

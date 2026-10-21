@@ -729,7 +729,28 @@
   background: #8E8E93;
 }
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *):not([data-light-only], [data-light-only] *));
+
+[data-light-only] {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
 
 @theme {
   --color-background: var(--background);
@@ -2664,7 +2685,6 @@ html {
   scrollbar-color: rgba(0, 0, 0, 0.4) transparent;
 }
 /* Hide main window scrollbar to prevent layout shift, replace with custom indicator */
-/* Hide native scrollbars globally to prevent layout shift, replaced with custom indicator */
 ::-webkit-scrollbar {
   display: none;
 }
@@ -2672,3 +2692,36 @@ html {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+/* Explicit class to show modern thin horizontal/vertical scrollbars on wide tables */
+.show-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent !important;
+  -ms-overflow-style: auto !important;
+}
+.show-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  height: 8px !important;
+  width: 8px !important;
+}
+.show-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-radius: 9999px !important;
+}
+.show-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5) !important;
+  border-radius: 9999px !important;
+}
+.show-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8) !important;
+}
+.dark .show-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+.dark .show-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.4) !important;
+}
+.dark .show-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 212, 216, 0.7) !important;
+}
+

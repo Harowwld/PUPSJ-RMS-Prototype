@@ -114,10 +114,10 @@ function PDFFrame({ docId, url, preview, onFileReplaced, onLoadStateChange }) {
             <HugeIcon className="ph-duotone ph-file-dashed text-2xl" />
           </div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-            Archived Record: Digital File Displaced or Missing
+            Digital File Missing
           </h3>
           <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">
-            The metadata record remains permanently archived and protected in the system registry, but the physical PDF file is currently unavailable or missing from server storage.
+            The record details are still available, but the PDF file is missing from digital storage.
           </p>
 
           {(preview?.room || preview?.cabinet || preview?.drawer) && (
@@ -298,7 +298,7 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
                   No digital file attached
                 </p>
                 <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
-                  This record is metadata-only or the file was removed.
+                  This record has no attached digital file or its file was removed.
                 </p>
               </div>
             </div>
@@ -334,4 +334,3 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
     </Dialog>
   )
 }
-

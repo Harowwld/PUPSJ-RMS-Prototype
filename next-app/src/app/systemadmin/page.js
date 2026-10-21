@@ -278,7 +278,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
 
     { type: "header", label: "Campus Operations" },
-    { key: "standards", label: "Service Standards & SLA", iconClass: "ph-bold ph-clock-countdown" },
+    { key: "standards", label: "Processing Time Standards", iconClass: "ph-bold ph-clock-countdown" },
     { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
 
     { type: "header", label: "Public Portal & Identity" },
@@ -290,7 +290,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     { key: "security", label: "Security Questions", iconClass: "ph-bold ph-shield-check" },
 
     { type: "header", label: "System & Security" },
-    { key: "logs", label: "Platform Audit Trail", iconClass: "ph-bold ph-history" },
+    { key: "logs", label: "Platform Activity History", iconClass: "ph-bold ph-history" },
     { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
   ]
 

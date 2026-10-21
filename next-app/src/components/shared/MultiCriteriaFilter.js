@@ -21,9 +21,6 @@ export default function MultiCriteriaFilter({
   selected,
   selectedValues,
   onChange,
-  totalCount,
-  matchingCount,
-  filteredCount,
   onReset,
   onClearAll,
   align = "end",
@@ -31,7 +28,6 @@ export default function MultiCriteriaFilter({
   triggerClassName,
 }) {
   const displayTitle = buttonLabel || title || "Filter Records";
-  const effectiveMatching = filteredCount !== undefined ? filteredCount : matchingCount;
 
   // Resolve current selection map across both object-based and per-group APIs
   const effectiveSelected = useMemo(() => {
@@ -146,14 +142,6 @@ export default function MultiCriteriaFilter({
             )}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <HugeIcon
-                className={cn(
-                  "ph-bold text-xs shrink-0",
-                  activeCount > 0
-                    ? "ph-funnel-simple text-pup-maroon dark:text-red-400"
-                    : "ph-funnel text-gray-400 dark:text-zinc-500"
-                )}
-              />
               <span className="truncate">{triggerLabel}</span>
               {activeCount > 0 && (
                 <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-semibold text-white dark:bg-red-500">
@@ -172,12 +160,9 @@ export default function MultiCriteriaFilter({
         >
           {/* Popover Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-            <div className="flex items-center gap-2">
-              <HugeIcon className="ph-bold ph-faders text-sm text-gray-900 dark:text-zinc-300" />
-              <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                Combine Filter Criteria
-              </span>
-            </div>
+            <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              Combine Filter Criteria
+            </span>
             {activeCount > 0 && (
               <button
                 type="button"
@@ -248,7 +233,7 @@ export default function MultiCriteriaFilter({
                           </div>
 
                           {opt.count !== undefined && (
-                            <span className="text-xs font-semibold text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
+                            <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
                               {opt.count}
                             </span>
                           )}
@@ -261,23 +246,6 @@ export default function MultiCriteriaFilter({
             })}
           </div>
 
-          {/* Popover Footer */}
-          <div className="px-4 py-2.5 border-t border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-sm">
-            <span className="text-gray-900 dark:text-zinc-300 text-xs">
-              {effectiveMatching !== undefined && totalCount !== undefined ? (
-                <>
-                  Matching: <strong className="text-gray-900 dark:text-zinc-100">{effectiveMatching}</strong> of {totalCount}
-                </>
-              ) : (
-                "Combined criteria"
-              )}
-            </span>
-            {activeCount > 0 && (
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                Combined active
-              </span>
-            )}
-          </div>
         </PopoverContent>
       </Popover>
     </div>

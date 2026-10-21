@@ -28,20 +28,20 @@ const PRESETS = [
   {
     id: "FAST_TRACK",
     name: "Fast-Track (1-3-5)",
-    fullName: "Fast-Track Digital SLA (1-3-5)",
-    frameworkName: "Fast-Track Digital Records SLA",
+    fullName: "Fast-Track Digital Processing Time (1-3-5)",
+    frameworkName: "Fast-Track Digital Processing Time",
     simpleDays: 1,
     complexDays: 3,
     highlyTechnicalDays: 5,
     workingDaysOnly: true,
-    description: "Accelerated SLA designed for digital-first workflows and indexed archives.",
+    description: "Shorter processing times for digital records and organized archives.",
     badge: "Fast-Track",
   },
   {
     id: "STANDARD_UNIV",
     name: "Standard University (2-5-10)",
-    fullName: "Standard University SLA (2-5-10)",
-    frameworkName: "University Academic Records SLA",
+    fullName: "Standard University Processing Time (2-5-10)",
+    frameworkName: "University Academic Records Processing Time",
     simpleDays: 2,
     complexDays: 5,
     highlyTechnicalDays: 10,
@@ -92,7 +92,7 @@ export default function ServiceStandardsTab({ showToast }) {
         setStandards(json.data);
         setOriginalStandards(json.data);
       } else {
-        showToast?.({ title: "Failed to load standards", description: json?.error || "Could not retrieve SLA settings." }, true);
+        showToast?.({ title: "Failed to load standards", description: json?.error || "Could not retrieve processing time settings." }, true);
       }
     } catch {
       showToast?.({ title: "Network Error", description: "Could not connect to service standards API." }, true);
@@ -223,7 +223,7 @@ export default function ServiceStandardsTab({ showToast }) {
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-clock-countdown"
-          title="Service Standards & SLA"
+          title="Processing Time Standards"
           description="Configure turnaround time standards and compliance rules for document processing."
           showBorder={false}
           className="p-6"
@@ -310,7 +310,7 @@ export default function ServiceStandardsTab({ showToast }) {
               {/* Framework Title */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                  Framework Name
+                  Name of Standard
                 </label>
                 <Input
                   value={standards.frameworkName}
@@ -321,7 +321,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       frameworkType: "CUSTOM",
                     }))
                   }
-                  placeholder="Citizen's Charter (ARTA RA 11032) or University SLA"
+                  placeholder="Citizen's Charter (ARTA RA 11032) or University processing-time standard"
                   className="h-10 text-xs rounded-xl border-border dark:border-border focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                 />
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500">

@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useCallback } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -68,6 +68,13 @@ export default function ScanUploadTab({
   sysSections = [],
   students = [],
   organizations = [],
+  staffDocs = [],
+  rescanContext = null,
+  isReplaceMode = false,
+  setIsReplaceMode = () => {},
+  onCancelRescan = () => {},
+  checkDuplicate = () => {},
+  onPreviewDocument = null,
   showToast = () => {},
   onIngestPromoted,
   onSelectExistingStudent,
@@ -83,6 +90,28 @@ export default function ScanUploadTab({
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
+
+  const existingDocOnRecord = useMemo(() => {
+    const cleanId = String(
+      isOsas
+        ? (newRec.organizationId || newRec.acronym || newRec.name || "")
+        : (newRec.studentNo || "")
+    ).trim().toUpperCase();
+    const cleanType = String(newRec.docType || "").trim().toUpperCase();
+    if (!cleanId || !cleanType) return null;
+
+    return (
+      staffDocs.find((d) => {
+        const matchTarget = isOsas
+          ? String(d.organization_id || "").trim().toUpperCase() === cleanId ||
+            String(d.student_no || "").trim().toUpperCase() === cleanId
+          : String(d.student_no || "").trim().toUpperCase() === cleanId;
+        const matchType = String(d.doc_type || "").trim().toUpperCase() === cleanType;
+        const notDeclined = String(d.approval_status || "").toLowerCase() !== "declined";
+        return matchTarget && matchType && notDeclined;
+      }) || null
+    );
+  }, [staffDocs, isOsas, newRec.organizationId, newRec.acronym, newRec.name, newRec.studentNo, newRec.docType]);
 
   const [showStudentNoSuggestions, setShowStudentNoSuggestions] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
@@ -113,48 +142,6 @@ export default function ScanUploadTab({
     setShowNameSuggestions(false);
   };
 
-  useEffect(() => {
-    const handleWindowPaste = (e) => {
-      const target = e.target
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
-        return
-      }
-
-      const items = e.clipboardData?.items
-      if (!items) return
-
-      const files = []
-      for (const item of items) {
-        if (item.kind === "file") {
-          const file = item.getAsFile()
-          if (file) {
-            const isPdf =
-              file.type === "application/pdf" ||
-              file.name.toLowerCase().endsWith(".pdf")
-            const isImg = file.type.startsWith("image/")
-            if (isPdf || isImg) {
-              files.push(file)
-            }
-          }
-        }
-      }
-
-      if (files.length > 0) {
-        e.preventDefault()
-        handlePdfFileSelect(files)
-        showToast({ title: "File Pasted", description: "Document pasted from clipboard." })
-      }
-    }
-
-    window.addEventListener("paste", handleWindowPaste)
-    return () => {
-      window.removeEventListener("paste", handleWindowPaste)
-    }
-  }, [showToast])
 
   const fe = uploadFieldErrors || {}
   const ring = (key) =>
@@ -422,16 +409,59 @@ export default function ScanUploadTab({
     }
   }, [uploadedFile, hf.selectedRow, hf.previewUrl, hf.previewMime])
 
-  const handlePdfFileSelect = (files) => {
+  const handlePdfFileSelect = useCallback((files) => {
     if (!files) return
     hf.clearIngestSelection()
     onFileSelect(files)
-  }
+  }, [hf, onFileSelect])
 
-  const handleClearPdf = () => {
+  const handleClearPdf = useCallback(() => {
     hf.clearIngestSelection()
     onClearFile()
-  }
+  }, [hf, onClearFile])
+
+  useEffect(() => {
+    const handleWindowPaste = (e) => {
+      const target = e.target
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      const files = []
+      for (const item of items) {
+        if (item.kind === "file") {
+          const file = item.getAsFile()
+          if (file) {
+            const isPdf =
+              file.type === "application/pdf" ||
+              file.name.toLowerCase().endsWith(".pdf")
+            const isImg = file.type.startsWith("image/")
+            if (isPdf || isImg) {
+              files.push(file)
+            }
+          }
+        }
+      }
+
+      if (files.length > 0) {
+        e.preventDefault()
+        handlePdfFileSelect(files)
+        showToast({ title: "File Pasted", description: "Document pasted from clipboard." })
+      }
+    }
+
+    window.addEventListener("paste", handleWindowPaste)
+    return () => {
+      window.removeEventListener("paste", handleWindowPaste)
+    }
+  }, [handlePdfFileSelect, showToast])
 
   const onPdfDrop = (e) => {
     e.preventDefault()
@@ -662,6 +692,17 @@ export default function ScanUploadTab({
                                  {showPagesSidebar ? "Hide" : "Show"}
                                </Button>
                              )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 flex items-center gap-1.5"
+                              title="Choose or drop a different file"
+                            >
+                              <HugeIcon className="ph-bold ph-upload-simple text-xs" />
+                              <span>Replace File</span>
+                            </Button>
                             <button
                               type="button"
                               className="flex h-8 w-8 items-center justify-center rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
@@ -842,9 +883,9 @@ export default function ScanUploadTab({
                           })()}
                           </div>
 
-                          {windowDragActive && (
+                          {(windowDragActive || dropActive) && (
                             <div
-                              className="absolute inset-0 z-30 flex items-center justify-center bg-gray-500/10 backdrop-blur-md border border-border rounded-2xl animate-fade-up dark:bg-white/5"
+                              className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-xs border-2 border-dashed border-white/80 rounded-2xl animate-fade-up"
                               onDragOver={(e) => {
                                 e.preventDefault()
                                 setDropActive(true)
@@ -860,14 +901,14 @@ export default function ScanUploadTab({
                               }}
                             >
                               <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-border shadow-xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card dark:border-border">
-                                <div className="w-14 h-14 rounded-full bg-gray-50 border border-border flex items-center justify-center mb-3 dark:bg-muted">
-                                  <HugeIcon  className="ph-bold ph-upload-simple text-xl text-gray-400 animate-bounce"></HugeIcon>
+                                <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mb-3 dark:bg-red-950/40 dark:border-red-900">
+                                  <HugeIcon className="ph-bold ph-upload-simple text-2xl text-pup-maroon dark:text-red-400 animate-bounce" />
                                 </div>
                                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                                   Drop file here to replace preview
                                 </p>
                                 <p className="text-xs font-normal text-gray-500 mt-1.5 dark:text-zinc-400">
-                                  Requires Confirmation
+                                  Accepts PDF, JPG, PNG
                                 </p>
                               </div>
                             </div>
@@ -886,17 +927,18 @@ export default function ScanUploadTab({
                               onChange={(e) => handlePdfFileSelect(e.target.files)}
                             />
                             <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                              <HugeIcon  className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")}></HugeIcon>
+                              <HugeIcon className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
                               <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
-                                Drop Document Or Image Here
+                                {isReplaceMode || rescanContext
+                                  ? "Drop Replacement Document Or Image Here"
+                                  : "Drop Document Or Image Here"}
                               </p>
                               <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 m-0">
                                 or click to <span className="text-pup-maroon dark:text-red-400 font-medium cursor-pointer hover:underline">browse</span> local files (PDF, JPG, PNG)
                               </p>
                               {hf.rows.length > 0 ? (
                                 <p className="mx-auto mt-4 max-w-xs text-[11px] font-medium text-gray-900 dark:text-zinc-300">
-                                  This area still accepts manual drops and clicks even
-                                  while the scanner inbox is shown above.
+                                  This area accepts manual drops and clicks in addition to the scanner queue.
                                 </p>
                               ) : null}
                             </div>
@@ -957,6 +999,72 @@ export default function ScanUploadTab({
 
                   <div className="p-5 bg-white dark:bg-transparent">
                       <div className="space-y-5">
+                        {/* Rescan / Replacement Mode Banner */}
+                        {(isReplaceMode || rescanContext || existingDocOnRecord) && (
+                          <div className="rounded-xl border border-amber-300/80 bg-amber-50/90 dark:border-amber-500/30 dark:bg-amber-950/25 p-4 text-xs space-y-2 select-none shadow-xs">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-2.5">
+                                <div className="h-7 w-7 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                                  <HugeIcon className={isReplaceMode || rescanContext ? "ph-bold ph-arrows-counter-clockwise text-sm" : "ph-bold ph-warning text-sm"} />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-amber-950 dark:text-amber-200">
+                                      {isReplaceMode || rescanContext
+                                        ? "Rescan / Replacement Mode Active"
+                                        : "Existing Document On Record"}
+                                    </span>
+                                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300">
+                                      {existingDocOnRecord?.approval_status || rescanContext?.originalStatus || "On File"}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 mt-1 leading-relaxed">
+                                    {isReplaceMode || rescanContext
+                                      ? `Submitting will update the on-file digital record for ${newRec.docType || "this document"} in-place and queue the new scan for administrative review.`
+                                      : `A digital copy of ${newRec.docType || "this document"} already exists for this ${isOsas ? "organization" : "student"}. Enable replacement mode to rescan and overwrite the copy on file.`}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="shrink-0 flex items-center gap-2">
+                                {rescanContext?.docId && onPreviewDocument && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onPreviewDocument(rescanContext.docType, newRec.name, rescanContext.targetId, rescanContext.docId)}
+                                    className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer flex items-center gap-1"
+                                    title="View current on-file version in modal"
+                                  >
+                                    <HugeIcon className="ph-bold ph-eye text-xs" />
+                                    <span>View On-File Copy</span>
+                                  </Button>
+                                )}
+                                {isReplaceMode || rescanContext ? (
+                                  onCancelRescan && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={onCancelRescan}
+                                      className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer"
+                                    >
+                                      Cancel Rescan
+                                    </Button>
+                                  )
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => setIsReplaceMode(true)}
+                                    className="h-7 px-3 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500 cursor-pointer shadow-2xs active:scale-95 transition-all"
+                                  >
+                                    Replace Document
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {isOsas ? (
                           <div className="space-y-4">
@@ -1659,7 +1767,16 @@ export default function ScanUploadTab({
                             value={newRec.docType}
                             onChange={(e) => {
                               clearUploadFieldError?.("docType")
-                              setNewRec((p) => ({ ...p, docType: e.target.value }))
+                              const selectedDocType = e.target.value
+                              setNewRec((p) => ({ ...p, docType: selectedDocType }))
+                              const cleanId = String(
+                                isOsas
+                                  ? (newRec.organizationId || newRec.acronym || newRec.name || "")
+                                  : (newRec.studentNo || "")
+                              ).trim().toUpperCase()
+                              if (cleanId && selectedDocType) {
+                                checkDuplicate?.(cleanId, selectedDocType)
+                              }
                             }}
                           >
                             {docTypes.map((t) => (
@@ -1702,10 +1819,15 @@ export default function ScanUploadTab({
                               },
                             })
                           }
-                          className="w-full h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                          className={cn(
+                            "w-full h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs",
+                            isReplaceMode || rescanContext
+                              ? "bg-amber-600 hover:bg-amber-700 text-white!"
+                              : "btn-brand-red text-white!"
+                          )}
                           style={{ color: "#ffffff" }}
                         >
-                          Upload Document
+                          {isReplaceMode || rescanContext ? "Replace Existing Document" : "Upload Document"}
                         </Button>
                       </div>
                   </div>

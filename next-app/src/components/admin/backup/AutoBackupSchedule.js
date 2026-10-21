@@ -127,10 +127,18 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
     async (updates) => {
       setIsSaving(true)
       try {
+        const payload = {
+          scope,
+          ...(updates.enabled !== undefined ? { enabled: updates.enabled } : {}),
+          ...(updates.frequency !== undefined ? { frequency: updates.frequency } : {}),
+          ...(updates.time !== undefined ? { time: updates.time } : {}),
+          ...(updates.dayOfWeek !== undefined ? { dayOfWeek: updates.dayOfWeek } : {}),
+          ...(updates.retention !== undefined ? { retention: updates.retention } : {}),
+        }
         const res = await fetch("/api/system/backup/schedule", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...updates, scope }),
+          body: JSON.stringify(payload),
         })
         const json = await res.json().catch(() => null)
         if (!res.ok || !json?.ok) {
@@ -138,14 +146,15 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         }
         setSchedule(json.data)
         showToast?.({
-          title: updates.enabled === false
+          title: payload.enabled === false
             ? "Auto Backup Disabled"
             : "Schedule Updated",
-          description: updates.enabled === false
+          description: payload.enabled === false
             ? "Automatic scheduled backups have been turned off."
             : "Your backup schedule settings have been saved.",
         })
       } catch (err) {
+        fetchSchedule()
         showToast?.(
           formatErrorMessage(err, {
             defaultTitle: "Failed to Update Schedule",
@@ -156,35 +165,35 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         setIsSaving(false)
       }
     },
-    [showToast, scope]
+    [showToast, scope, fetchSchedule]
   )
 
   const handleToggle = () => {
     const newEnabled = !schedule.enabled
     const updated = { ...schedule, enabled: newEnabled }
     setSchedule(updated)
-    saveSchedule({ ...updated })
+    saveSchedule({ enabled: newEnabled })
   }
 
   const handleFrequencySelect = (newFreq) => {
     if (schedule.frequency === newFreq) return
     const updated = { ...schedule, frequency: newFreq }
     setSchedule(updated)
-    saveSchedule({ ...updated })
+    saveSchedule({ frequency: newFreq })
   }
 
   const handleTimeChange = (e) => {
     const newTime = e.target.value
     const updated = { ...schedule, time: newTime }
     setSchedule(updated)
-    saveSchedule({ ...updated })
+    saveSchedule({ time: newTime })
   }
 
   const handleDayChange = (e) => {
     const newDay = Number(e.target.value)
     const updated = { ...schedule, dayOfWeek: newDay }
     setSchedule(updated)
-    saveSchedule({ ...updated })
+    saveSchedule({ dayOfWeek: newDay })
   }
 
   const handleRetentionToggle = () => {
@@ -192,7 +201,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
     const updatedRetention = { ...currentRetention, enabled: !currentRetention.enabled }
     const updated = { ...schedule, retention: updatedRetention }
     setSchedule(updated)
-    saveSchedule({ ...updated })
+    saveSchedule({ retention: updatedRetention })
   }
 
   // Loading skeleton matching Apple card proportions
@@ -361,7 +370,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                   disabled={isSaving}
                   className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
                   menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   {DAY_LABELS.map((day, idx) => (
                     <option key={idx} value={idx}>
@@ -392,7 +401,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 disabled={isSaving}
                 className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
                 menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 {HOUR_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

@@ -369,7 +369,7 @@ export default function ForgotPasswordPage() {
                           onChange={(e) => { setForgotQuestionId(String(e.target.value)); setForgotAnswer(""); setForgotError(""); }}
                           className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none"
                           menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                          optionClassName="rounded-lg text-xs font-normal py-1.5 px-2.5"
+                          optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5"
                         >
                           {forgotQuestions.map((question) => <option key={question.id} value={String(question.id)}>{question.question}</option>)}
                         </Select>

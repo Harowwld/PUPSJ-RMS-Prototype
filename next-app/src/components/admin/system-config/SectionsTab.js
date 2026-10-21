@@ -10,6 +10,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
@@ -362,10 +363,60 @@ export default function SectionsTab({
 
         {/* Main Table Container (Seamless inside single card) */}
         <div className={cn("w-full border-t border-border dark:border-border bg-white dark:bg-card", filteredSections.length === 0 && "rounded-b-2xl overflow-hidden")}>
-          <div className="w-full overflow-x-auto select-none">
-            {loading && sections.length === 0 ? (
+          {loading && sections.length === 0 ? (
+            <div className="w-full overflow-x-auto select-none">
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
-            ) : (
+            </div>
+          ) : filteredSections.length === 0 ? (
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                      <HugeIcon className={cn("text-3xl text-gray-400 dark:text-zinc-500", showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass")} />
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                    {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Course Blocks Found" : "No Course Blocks Found")}
+                  </EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    {totalInView > 0
+                      ? "Try adjusting your search filters or course selection to find what you're looking for."
+                      : showArchived
+                        ? "There are currently no archived course blocks in the system."
+                        : "Add Course Block to organize students within degree programs."}
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  {totalInView > 0 ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSectionSearch("")
+                        setLocalSearch("")
+                        setSelectedCourseFilter("")
+                      }}
+                      title="Reset Filters"
+                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    >
+                      Reset Filters
+                    </Button>
+                  ) : (
+                    !showArchived && (
+                      <Button
+                        onClick={() => setIsAddSectionOpen(true)}
+                        className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      >
+                        Add Block
+                      </Button>
+                    )
+                  )}
+                </EmptyContent>
+              </Empty>
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto select-none">
               <table className="w-full text-sm table-fixed min-w-[720px]">
                 <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
                     <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
@@ -626,60 +677,13 @@ export default function SectionsTab({
                               </Tooltip>
                             )}
                           </div>
-                          </td>
-                        </tr>
-                      )})}
-                      {filteredSections.length === 0 && (
-                        <tr className="border-0 hover:bg-transparent">
-                          <td colSpan={5} className="border-0 p-0">
-                            <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon  className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></HugeIcon>
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                                  {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Course Blocks Found" : "No Course Blocks Found")}
-                                </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                                  {totalInView > 0
-                                    ? "Try adjusting your search filters or course selection to find what you're looking for."
-                                    : showArchived
-                                      ? "There are currently no archived course blocks in the system."
-                                      : "Add Course Block to organize students within degree programs."}
-                                </EmptyDescription>
-                                {totalInView > 0 ? (
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setSectionSearch("")
-                                      setLocalSearch("")
-                                      setSelectedCourseFilter("")
-                                    }}
-                                    title="Reset Filters"
-                                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                                  >
-                    Reset Filters
-                  </Button>
-                                ) : !showArchived && (
-                                  <Button
-                                    onClick={() => setIsAddSectionOpen(true)}
-                                    className="mt-4 h-10 rounded-xl btn-brand-red px-5 text-xs font-semibold text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
-                                  >
-                                    Add
-                                  </Button>
-                                )}
-                              </EmptyHeader>
-                            </Empty>
-                          </td>
-                        </tr>
-                      )}
+                        </td>
+                      </tr>
+                    )})}
                   </tbody>
                 </table>
-              )}
-            </div>
+              </div>
+            )}
 
         {filteredSectionsFull.length > 0 && (
           <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none">

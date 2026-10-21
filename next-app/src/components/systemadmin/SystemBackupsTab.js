@@ -129,8 +129,8 @@ export default function SystemBackupsTab({ showToast }) {
           })
         } else {
           showToast?.({
-            title: "No External Storage Detected",
-            description: "No physical USB storage drive was found. Connect a drive or activate demo simulation.",
+            title: json.data.unauthorizedDrives?.length ? "Unauthorized External Drive" : "No External Storage Detected",
+            description: json.data.message || "No physical USB storage drive was found. Connect an authorized drive (PUPSJ_BACKUP) or activate demo simulation.",
             variant: "warning",
           })
         }
@@ -934,7 +934,7 @@ export default function SystemBackupsTab({ showToast }) {
                   "Department Stations",
                   "Department Features",
                   "Global Directory",
-                  "Platform Audit Trail",
+                  "Platform Activity History",
                   "System Settings",
                 ],
               }}

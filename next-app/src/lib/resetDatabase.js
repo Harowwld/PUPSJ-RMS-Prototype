@@ -111,18 +111,27 @@ export async function resetDatabase() {
     );
   }
   const registrarDocTypes = [
+    { name: "PSA Birth Certificate", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
     { name: "Birth Certificate", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
+    { name: "CAEPUP Application Form", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
+    { name: "SAR Form", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
+    { name: "Undertaking and Waiver of Right", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
     { name: "Form 137", isCompliance: true, isRequestable: false, category: "Academic Records" },
     { name: "Grade 11 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
     { name: "Grade 12 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
+    { name: "CTC Grade 10 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
     { name: "Health Information Sheet", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
+    { name: "Certificate of Good Moral Character", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
     { name: "Certified True Copy of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
     { name: "Certificate of Transfer Credentials (Honorable Dismissal)", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
     { name: "Certificate of Enrollment", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+    { name: "Certificate of Registration", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
     { name: "Certification of Grades (Cross-Enrollee)", isCompliance: false, isRequestable: true, category: "Academic Records" },
     { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
     { name: "Diploma", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
     { name: "Certificate of Graduation", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
+    { name: "Certificate of Good Moral", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
+    { name: "Clearance Form", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
   ];
   for (const dt of registrarDocTypes) {
     await query(

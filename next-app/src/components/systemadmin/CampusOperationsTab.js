@@ -17,6 +17,7 @@ import {
   EmptyMedia,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
 } from "@/components/ui/empty"
 import {
   Sheet,
@@ -644,34 +645,36 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             {loading ? (
               <TransactionsTableSkeleton rowCount={8} />
             ) : paginatedTransactions.length === 0 ? (
-              <div className="flex h-[360px] flex-col items-center justify-center p-6 text-center rounded-b-2xl">
-                <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
+              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card">
-                        <HugeIcon className="ph-bold ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                        <HugeIcon className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
                       </EmptyMedia>
                     </div>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       No Records Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "No student requests or proposals match your search or filter settings."
                         : "There are currently no active document requests or event proposals recorded."}
                     </EmptyDescription>
-                    {hasActiveFilters && (
+                  </EmptyHeader>
+                  {hasActiveFilters && (
+                    <EmptyContent>
                       <Button
                         variant="outline"
                         onClick={handleClearFilters}
                         title="Reset Filters"
                         className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                    Reset Filters
-                  </Button>
-                    )}
-                  </EmptyHeader>
+                        Reset Filters
+                      </Button>
+                    </EmptyContent>
+                  )}
                 </Empty>
               </div>
             ) : (

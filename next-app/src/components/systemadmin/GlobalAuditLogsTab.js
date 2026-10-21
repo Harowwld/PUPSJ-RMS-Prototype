@@ -14,6 +14,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty"
 import {
   Tooltip,
@@ -355,12 +356,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
             return
           }
         } else {
-          setError(json.error || "Failed to fetch audit logs")
-          showToast?.(json.error || "Failed to fetch audit logs", true)
+          setError(json.error || "Unable to load activity history.")
+          showToast?.(json.error || "Unable to load activity history.", true)
         }
       } catch {
-        setError("Network error fetching audit logs")
-        showToast?.("Network error fetching audit logs", true)
+        setError("A network problem prevented the activity history from loading.")
+        showToast?.("A network problem prevented the activity history from loading.", true)
       } finally {
         setLoading(false)
         setIsManualLoading(false)
@@ -525,7 +526,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const fileName = generateExportFilename("PLATFORM-AUDIT-LOGS", "DATA", "csv")
+      const fileName = generateExportFilename("PLATFORM-ACTIVITY-HISTORY", "DATA", "csv")
       const link = document.createElement("a")
       const url = URL.createObjectURL(blob)
       link.setAttribute("href", url)
@@ -535,11 +536,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
       document.body.removeChild(link)
       showToast?.({
         title: "Export Success",
-        description: "Platform audit logs have been exported to CSV successfully.",
+        description: "Platform activity history has been exported to CSV successfully.",
       })
     } catch (err) {
       console.error("[Export Error]", err)
-      showToast?.({ title: "Export Failed", description: err.message || "Unable to export audit logs to CSV." }, true)
+      showToast?.({ title: "Export Failed", description: err.message || "Unable to export activity history to CSV." }, true)
     } finally {
       setIsExporting(false)
     }
@@ -589,7 +590,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const handleDownloadFromPreview = () => {
     if (!pdfBlobUrl) return
     try {
-      const fileName = generateExportFilename("PLATFORM-AUDIT-LOGS", "REPORT", "pdf")
+      const fileName = generateExportFilename("PLATFORM-ACTIVITY-HISTORY", "REPORT", "pdf")
       const link = document.createElement("a")
       link.href = pdfBlobUrl
       link.setAttribute("download", fileName)
@@ -598,7 +599,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       document.body.removeChild(link)
       showToast?.({
         title: "Download Success",
-        description: "Platform audit logs report has been downloaded successfully.",
+        description: "Platform activity history report has been downloaded successfully.",
       })
     } catch (err) {
       console.error("[PDF Download Error]", err)
@@ -670,8 +671,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader
             icon="ph-shield-check"
-            title="Platform Audit Trail"
-            description="Inspect administrative actions, office configuration updates, and security logs across all database environments."
+            title="Platform Activity History"
+            description="Review administrative actions, office changes, and security-related activity across the platform."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -684,7 +685,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     fetchStats()
                   }}
                   isLoading={isManualLoading}
-                  title="Refresh Audit Logs"
+                  title="Refresh Activity History"
                 />
 
                 
@@ -915,7 +916,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
+                      <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -925,6 +926,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     {error}
                   </EmptyDescription>
                 </EmptyHeader>
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    onClick={() => fetchLogs(true)}
+                    title="Retry Loading"
+                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  >
+                    Retry Loading
+                  </Button>
+                </EmptyContent>
               </Empty>
             </div>
           ) : logs.length === 0 ? (
@@ -934,7 +945,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon  className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
+                      <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
                     </EmptyMedia>
                   </div>
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -943,17 +954,19 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                     Try adjusting your search filters to find what you&apos;re looking for.
                   </EmptyDescription>
-                  {hasActiveFilters && (
+                </EmptyHeader>
+                {hasActiveFilters && (
+                  <EmptyContent>
                     <Button
                       variant="outline"
                       onClick={handleClearFilters}
                       title="Reset Filters"
                       className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                    Reset Filters
-                  </Button>
-                  )}
-                </EmptyHeader>
+                      Reset Filters
+                    </Button>
+                  </EmptyContent>
+                )}
               </Empty>
             </div>
           ) : (

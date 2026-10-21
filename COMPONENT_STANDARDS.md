@@ -455,7 +455,7 @@ All popovers (filter drawers, contextual utility popups, color pickers, and deta
 
 - **The Three-Zone Architecture**:
   1. **Header Zone (`PopoverHeader`)**: Inset top bar with `px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between text-sm`.
-     - **Left**: Contextual icon + title/category (`text-sm font-semibold text-gray-900 dark:text-zinc-100` or `text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500`).
+     - **Left**: Clean title/category (`text-sm font-semibold text-gray-900 dark:text-zinc-100` or `text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500`).
      - **Right**: Action link (`Reset Filters`, `text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline`), or active status pill badge.
   2. **Body Zone (`PopoverBody`)**: Main content area with snug `p-3` or `p-3.5 space-y-3` (`bg-white dark:bg-zinc-900`). Holds scrollable criteria groups, color swatch grids, or guideline callouts.
   3. **Footer Zone (`PopoverFooter`)**: Inset bottom bar with `px-4 py-2 border-t border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40 text-[11px] text-gray-500 dark:text-zinc-400`.
@@ -468,12 +468,9 @@ All popovers (filter drawers, contextual utility popups, color pickers, and deta
 <PopoverContent className="w-80 p-0 rounded-2xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta">
   {/* 1. Header Zone */}
   <PopoverHeader>
-    <div className="flex items-center gap-2">
-      <HugeIcon className="ph-bold ph-faders text-sm text-gray-900 dark:text-zinc-300" />
-      <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-        Combine Filter Criteria
-      </span>
-    </div>
+    <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+      Combine Filter Criteria
+    </span>
     {hasActiveFilters && (
       <button type="button" onClick={handleReset} className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer">
         Reset Filters

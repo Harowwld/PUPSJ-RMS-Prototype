@@ -3,6 +3,7 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/DocumentRequestsTableSkeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -35,9 +36,9 @@ import {
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import { Select } from "@/components/ui/select";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import {
@@ -94,6 +95,38 @@ function statusBadgeClass(status) {
   return "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300";
 }
 
+function formatAttachmentSize(bytes) {
+  if (!bytes || bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
+function getAttachmentIconConfig(filename = "", mimeType = "") {
+  const ext = String(filename || "").split(".").pop()?.toLowerCase();
+  const mime = String(mimeType || "").toLowerCase();
+  if (ext === "pdf" || mime.includes("pdf")) {
+    return {
+      icon: "ph-bold ph-file-pdf",
+      color: "text-red-600 dark:text-red-400",
+      badgeBg: "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300 border-red-200/60 dark:border-red-900/40",
+    };
+  }
+  if (["png", "jpg", "jpeg", "webp"].includes(ext) || mime.includes("image")) {
+    return {
+      icon: "ph-bold ph-file-image",
+      color: "text-blue-600 dark:text-blue-400",
+      badgeBg: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40",
+    };
+  }
+  return {
+    icon: "ph-bold ph-file",
+    color: "text-gray-600 dark:text-zinc-400",
+    badgeBg: "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border-gray-200 dark:border-zinc-700",
+  };
+}
+
 export default function DocumentRequestsTab({
   students = [],
   courses = [],
@@ -128,6 +161,7 @@ export default function DocumentRequestsTab({
   const [createRequesterRelationship, setCreateRequesterRelationship] = useState("Mother");
   const [createRequesterContact, setCreateRequesterContact] = useState("");
   const [createAttachments, setCreateAttachments] = useState([]);
+  const [isDraggingAttachment, setIsDraggingAttachment] = useState(false);
   const [createDocType, setCreateDocType] = useState("");
   const [createNotes, setCreateNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -185,6 +219,7 @@ export default function DocumentRequestsTab({
     setCreateRequesterRelationship("Mother");
     setCreateRequesterContact("");
     setCreateAttachments([]);
+    setIsDraggingAttachment(false);
     setCreateDocType("");
     setCreateNotes("");
     setStudentSearch("");
@@ -566,8 +601,9 @@ export default function DocumentRequestsTab({
     }
   };
 
-  const handleAddAttachments = (event) => {
-    const files = Array.from(event.target.files || []);
+  const processAttachmentFiles = (filesList) => {
+    const files = Array.from(filesList || []);
+    if (!files.length) return;
     const allowedTypes = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
     const validFiles = files.filter((file) => {
       if (file.size > 10 * 1024 * 1024) return false;
@@ -578,6 +614,10 @@ export default function DocumentRequestsTab({
       showToast?.({ title: "Unsupported Attachment", description: "Choose PDF, PNG, JPG, or WEBP files up to 10 MB each." }, true);
     }
     const remaining = 5 - createAttachments.length;
+    if (remaining <= 0) {
+      showToast?.({ title: "Attachment Limit", description: "Maximum of 5 files allowed." }, true);
+      return;
+    }
     const accepted = validFiles.slice(0, remaining).map((file) => {
       const lowerName = file.name.toLowerCase();
       const attachmentType = createClientType === "Parent"
@@ -593,78 +633,126 @@ export default function DocumentRequestsTab({
       showToast?.({ title: "Attachment Limit", description: "You can add up to 5 files." }, true);
     }
     setCreateAttachments((current) => [...current, ...accepted]);
+  };
+
+  const handleAddAttachments = (event) => {
+    processAttachmentFiles(event.target.files);
     event.target.value = "";
   };
 
-  const renderAttachmentPicker = (required = false) => (
-    <div className="space-y-2">
-      <input
-        ref={attachmentInputRef}
-        type="file"
-        accept="application/pdf,image/png,image/jpeg,image/webp"
-        multiple
-        className="hidden"
-        onChange={handleAddAttachments}
-      />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-          {required ? "Authorization files" : "Supporting Documents & Attachments"}
-          {required && <span className="ml-1 text-red-500">*</span>}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={createAttachments.length >= 5}
-          onClick={() => attachmentInputRef.current?.click()}
-          className="h-9 rounded-xl px-4 text-xs"
-        >
-          Add File ({createAttachments.length}/5)
-        </Button>
-      </div>
-      <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-        {required
-          ? "Attach both an SPA / authorization letter and a valid government ID."
-          : "Optional: PDF, PNG, JPG, or WEBP files up to 10 MB each (maximum 5)."}
-      </p>
-      {createAttachments.length > 0 && (
-        <div className="space-y-2">
-          {createAttachments.map(({ id, file, attachmentType }) => (
-            <div key={id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-white p-2 dark:bg-zinc-900">
-              <span className="min-w-0 flex-1 truncate text-xs">{file.name}</span>
-              <Select
-                value={attachmentType}
-                aria-label={`Attachment category for ${file.name}`}
-                onChange={(event) => setCreateAttachments((items) => items.map((item) => item.id === id ? { ...item, attachmentType: event.target.value } : item))}
-                className="h-8 w-48 rounded-lg border border-border bg-white px-2 text-[11px] dark:bg-zinc-800"
-              >
-                {createClientType === "Parent" ? (
-                  <>
-                    <option value="spa">SPA / Authorization</option>
-                    <option value="valid_id">Valid Government ID</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="evidence">Supporting Evidence</option>
-                    <option value="receipt">Proof of Payment / Receipt</option>
-                    <option value="clearance">Clearance Slip</option>
-                    <option value="other">Other Document</option>
-                  </>
+  const handleAttachmentDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (createAttachments.length < 5) {
+      setIsDraggingAttachment(true);
+    }
+  };
+
+  const handleAttachmentDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDraggingAttachment(false);
+  };
+
+  const handleAttachmentDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingAttachment(false);
+    if (createAttachments.length >= 5) {
+      showToast?.({ title: "Attachment Limit", description: "You already have 5 files attached." }, true);
+      return;
+    }
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      processAttachmentFiles(droppedFiles);
+    }
+  };
+
+  const renderAttachmentPicker = (required = false) => {
+    const hasSpa = createAttachments.some((item) => item.attachmentType === "spa");
+    const hasValidId = createAttachments.some((item) => item.attachmentType === "valid_id");
+
+    const categories =
+      createClientType === "Parent"
+        ? [
+            { value: "spa", label: "Special Power of Attorney (SPA)" },
+            { value: "valid_id", label: "Valid Government ID" },
+            { value: "evidence", label: "Supporting Evidence" },
+            { value: "receipt", label: "Proof of Payment" },
+            { value: "other", label: "Other Document" },
+          ]
+        : [
+            { value: "evidence", label: "Supporting Evidence" },
+            { value: "receipt", label: "Proof of Payment / Receipt" },
+            { value: "clearance", label: "Clearance Slip" },
+            { value: "other", label: "Other Document" },
+          ];
+
+    return (
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+              {required ? "Authorization Files (SPA & Valid ID)" : "Supporting Documents & Attachments"}
+              {required && <span className="ml-1 text-red-500">*</span>}
+            </label>
+            <span className="text-[11px] font-semibold text-pup-maroon dark:text-red-400">
+              {createAttachments.length}/5 files
+            </span>
+          </div>
+
+          {required && (
+            <div className="flex items-center gap-2 text-[11px] font-medium">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]",
+                  hasSpa
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
                 )}
-              </Select>
-              <button
-                type="button"
-                onClick={() => setCreateAttachments((items) => items.filter((item) => item.id !== id))}
-                className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-zinc-800"
-                aria-label={`Remove ${file.name}`}
               >
-                <HugeIcon className="ph-bold ph-x text-xs" />
-              </button>
+                <HugeIcon className={cn("text-[10px]", hasSpa ? "ph-bold ph-check" : "ph-bold ph-circle-dashed")} />
+                SPA Letter
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]",
+                  hasValidId
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                )}
+              >
+                <HugeIcon className={cn("text-[10px]", hasValidId ? "ph-bold ph-check" : "ph-bold ph-circle-dashed")} />
+                Government ID
+              </span>
             </div>
-          ))}
+          )}
         </div>
-      )}
-    </div>
-  );
+
+        <FileAttachmentDropzone
+          value={createAttachments}
+          onChange={(val) => {
+            if (typeof val === "function") {
+              setCreateAttachments((prev) => val(prev));
+            } else {
+              setCreateAttachments(val || []);
+            }
+          }}
+          mode="multiple"
+          maxFiles={5}
+          categories={categories}
+          title={
+            required
+              ? "Drag and drop SPA letter & government ID here, or browse"
+              : "Drag and drop supporting files here, or browse"
+          }
+          subtitle="Supports PDF, PNG, JPG, or WEBP up to 10 MB each (maximum 5 files)."
+          accept="application/pdf,image/png,image/jpeg,image/webp"
+        />
+      </div>
+    );
+  };
 
   const selectCreateClientType = (clientType) => {
     setCreateClientType(clientType);
@@ -716,12 +804,12 @@ export default function DocumentRequestsTab({
     },
     {
       id: "charter",
-      label: "Service Standard (SLA)",
+      label: "Processing Time",
       options: [
         { value: "OnTrack", label: "On Schedule", indicatorColor: "bg-emerald-500" },
         { value: "DueSoon", label: "Due Today", indicatorColor: "bg-amber-500" },
-        { value: "Overdue", label: "Overdue (SLA)", indicatorColor: "bg-rose-500" },
-        { value: "Compliant", label: "Met SLA", indicatorColor: "bg-emerald-600" },
+        { value: "Overdue", label: "Past Due", indicatorColor: "bg-rose-500" },
+        { value: "Compliant", label: "On Time", indicatorColor: "bg-emerald-600" },
         { value: "Delayed", label: "Delayed", indicatorColor: "bg-rose-400" },
       ],
     },
@@ -782,10 +870,10 @@ export default function DocumentRequestsTab({
       });
     });
     charterFilters.forEach((cf) => {
-      const label = cf === "OnTrack" ? "On Schedule" : cf === "DueSoon" ? "Due Today" : cf === "Overdue" ? "Overdue" : cf === "Compliant" ? "Met SLA" : cf;
+      const label = cf === "OnTrack" ? "On Schedule" : cf === "DueSoon" ? "Due Today" : cf === "Overdue" ? "Past Due" : cf === "Compliant" ? "On Time" : cf;
       chips.push({
         id: `charter-${cf}`,
-        label: `SLA: ${label}`,
+        label: `Processing Time: ${label}`,
         onRemove: () => { setCharterFilters((prev) => prev.filter((c) => c !== cf)); setPage(1); },
       });
     });
@@ -1034,7 +1122,7 @@ export default function DocumentRequestsTab({
                       </th>
                       <th className="p-4 w-[22%]">
                         <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                          Service Standard (SLA)
+                          Processing Time
                         </span>
                       </th>
                       <th className="p-4 w-[11%]">
@@ -1055,32 +1143,8 @@ export default function DocumentRequestsTab({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={cn("divide-y divide-border dark:divide-border", displayedRows.length === 0 && "h-full flex-1 flex flex-col")}>
-                    {displayedRows.length === 0 ? (
-                      <tr className="border-0 hover:bg-transparent flex-1 flex">
-                        <td colSpan={7} className="p-0 border-0 flex-1 flex flex-col">
-                          <Empty className="flex flex-1 h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <div className="relative mb-6">
-                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                  <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                                </EmptyMedia>
-                              </div>
-                              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
-                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                                {clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
-                                  ? "No document requests found matching your filters."
-                                  : clientTypeFilters.includes("Student") && !clientTypeFilters.includes("Alumni")
-                                  ? "No student requests found matching your filters."
-                                  : "No document requests match your active filters."}
-                              </EmptyDescription>
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    ) : (
-                      displayedRows.map((r) => {
+                  <tbody className="divide-y divide-border dark:divide-border">
+                    {displayedRows.map((r) => {
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
                         const charter = getRequestCharterStatus(r, slaStandards);
@@ -1192,8 +1256,7 @@ export default function DocumentRequestsTab({
                             </td>
                           </tr>
                         );
-                      })
-                    )}
+                      })}
                   </tbody>
                 </table>
               </div>
@@ -1316,67 +1379,70 @@ export default function DocumentRequestsTab({
 
         {/* 7. Dialog: Create Request */}
         <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
-          <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card flex flex-col gap-0">
-            <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+          <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card flex flex-col gap-0 max-h-[92vh]">
+            <DialogHeader className="bg-white p-6 pb-4 dark:bg-card border-b border-border/70 text-left shrink-0">
               <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20 dark:text-red-400">
+                  <HugeIcon className="ph-bold ph-file-plus text-xl" />
+                </div>
                 <div className="min-w-0 pr-8">
-                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  <DialogTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                     New Document Request
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
-                    Create a request for a student, alumnus, or parent/guardian.
+                  <DialogDescription className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                    Initiate an official document issuance request for a current student, alumnus, or parent/guardian.
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
-            <form onSubmit={handleCreate}>
-              <div className="p-6 space-y-4">
+
+            <form onSubmit={handleCreate} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(92vh-140px)]">
                 {/* Client Type Selector */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
+                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-2">
                     Client Type
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        selectCreateClientType("Student");
-                      }}
+                      onClick={() => selectCreateClientType("Student")}
                       className={cn(
-                        "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
+                        "h-11 px-4 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
                         createClientType === "Student"
                           ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
                           : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                       )}
                     >
-                      Current Student
+                      <HugeIcon className="ph-bold ph-student text-base" />
+                      <span>Current Student</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        selectCreateClientType("Alumni");
-                      }}
+                      onClick={() => selectCreateClientType("Alumni")}
                       className={cn(
-                        "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
+                        "h-11 px-4 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
                         createClientType === "Alumni"
                           ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
                           : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                       )}
                     >
-                      Alumni / Former Student
+                      <HugeIcon className="ph-bold ph-graduation-cap text-base" />
+                      <span>Alumni / Former Student</span>
                     </button>
                     {String(officeId).toLowerCase() === "registrar" && (
                       <button
                         type="button"
                         onClick={() => selectCreateClientType("Parent")}
                         className={cn(
-                          "flex-1 h-10 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center",
+                          "h-11 px-4 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
                           createClientType === "Parent"
                             ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
                             : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                         )}
                       >
-                        Parent / Guardian
+                        <HugeIcon className="ph-bold ph-users text-base" />
+                        <span>Parent / Guardian</span>
                       </button>
                     )}
                   </div>
@@ -1388,46 +1454,47 @@ export default function DocumentRequestsTab({
                     <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-border dark:bg-red-950/20">
                       <button
                         type="button"
-                        className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-border rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-border dark:text-zinc-300"
+                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-border rounded-full w-6 h-6 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-border dark:text-zinc-300 cursor-pointer"
                         onClick={() => {
                           setSelectedStudent(null);
                           setCreateStudentNo("");
                         }}
+                        title="Change student"
                       >
-                        <HugeIcon  className="ph-bold ph-x text-[10px]"></HugeIcon>
+                        <HugeIcon className="ph-bold ph-x text-xs" />
                       </button>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
-                          <HugeIcon  className="ph-bold ph-user-focus text-lg"></HugeIcon>
+                      <div className="flex items-start gap-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
+                          <HugeIcon className="ph-bold ph-user-focus text-xl" />
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 pr-6">
                           <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
-                          <div className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
-                          <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
+                          <div className="text-xs text-gray-500 font-mono mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
+                          <div className="text-xs text-gray-600 mt-1.5 flex flex-wrap gap-x-4 gap-y-1 dark:text-zinc-300">
                             <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "N/A"}</strong></span>
                             <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "N/A"}</strong></span>
                             <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "N/A"}</strong></span>
                           </div>
-                          <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
-                            <HugeIcon  className="ph-bold ph-archive-tray text-xs"></HugeIcon>
+                          <div className="text-xs text-pup-maroon dark:text-red-400 font-semibold mt-2 flex items-center gap-1.5">
+                            <HugeIcon className="ph-bold ph-archive-tray text-sm" />
                             <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="relative">
-                        <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                           Search Student (Name or Number)
                         </label>
-                        <div className="relative mt-1.5 group">
-                          <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></HugeIcon>
+                        <div className="relative group">
+                          <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
                           <Input
                             className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={studentSearch}
                             onChange={(e) => setStudentSearch(e.target.value)}
-                            placeholder="Type to search by student name or number..."
+                            placeholder="Type to search by name or number..."
                           />
                         </div>
                         {studentSuggestions.length > 0 && (
@@ -1438,7 +1505,7 @@ export default function DocumentRequestsTab({
                                 <button
                                   key={sn}
                                   type="button"
-                                  className="w-full text-left px-3 py-2 border-b last:border-b-0 border-border hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-border dark:hover:bg-zinc-800/50"
+                                  className="w-full text-left px-3.5 py-2.5 border-b last:border-b-0 border-border hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-border dark:hover:bg-zinc-800/50 cursor-pointer"
                                   onClick={() => {
                                     setSelectedStudent(s);
                                     setCreateStudentNo(sn);
@@ -1448,8 +1515,8 @@ export default function DocumentRequestsTab({
                                   <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                     {s?.name}
                                   </div>
-                                  <div className="text-[10px] text-gray-900 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span>{sn}</span>
+                                  <div className="text-[11px] text-gray-600 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span className="font-mono">{sn}</span>
                                     <span className="text-gray-300 dark:text-zinc-700">•</span>
                                     <span>{s?.courseCode || s?.course_code || "N/A"} - {s?.section || "N/A"}</span>
                                   </div>
@@ -1461,14 +1528,14 @@ export default function DocumentRequestsTab({
                       </div>
 
                       <div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mb-1.5">
                           <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                             {createClientType === "Parent" ? "Student Number" : "Or Enter Student Number"}
                           </label>
                           <span className="text-[10px] text-gray-400 font-medium">Use a registered student number</span>
                         </div>
                         <Input
-                          className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                          className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                           value={createStudentNo}
                           onChange={(e) => setCreateStudentNo(e.target.value)}
                           placeholder="202X-XXXXX-MN-0"
@@ -1478,13 +1545,13 @@ export default function DocumentRequestsTab({
                   )
                 ) : (
                   /* Alumni Fields */
-                  <div className="space-y-4 animate-fade-up">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-up">
                     <div>
-                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                         Alumni Full Name <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={createRequesterName}
                         onChange={(e) => setCreateRequesterName(e.target.value)}
                         placeholder="e.g. Maria Santos"
@@ -1493,11 +1560,11 @@ export default function DocumentRequestsTab({
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                         Academic Program / Degree {!createStudentNo.trim() && <span className="text-red-500">*</span>}
                       </label>
                       <Select
-                        className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
                         value={createCourseCode}
                         onChange={(e) => setCreateCourseCode(e.target.value)}
                         required={!createStudentNo.trim()}
@@ -1509,20 +1576,20 @@ export default function DocumentRequestsTab({
                           </option>
                         ))}
                       </Select>
-                      <span className="text-[11px] text-gray-900 dark:text-zinc-300 mt-1 block">
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 block">
                         Required when the student number is unavailable.
                       </span>
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                           Student Number {createCourseCode ? "(Optional)" : ""}
                         </label>
                         <span className="text-[10px] text-gray-400 font-medium">If remembered</span>
                       </div>
                       <Input
-                        className="mt-1.5 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                        className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={createStudentNo}
                         onChange={(e) => setCreateStudentNo(e.target.value)}
                         placeholder="e.g. 2018-01234-SJ-0"
@@ -1531,38 +1598,23 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
 
-                <div>
-                  <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                    Document Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
-                    value={createDocType}
-                    onChange={(e) => setCreateDocType(e.target.value)}
-                    required
-                  >
-                    <option value="">Select document type…</option>
-                    {docTypes.map((dt) => (
-                      <option key={dt} value={dt}>
-                        {dt}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
+                {/* Parent Notice & Information */}
                 {createClientType === "Parent" && String(officeId).toLowerCase() === "registrar" && (
-                  <div className="space-y-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
-                    <p className="text-xs leading-relaxed text-amber-900 dark:text-amber-200">
-                      Parent or guardian requests require the requester&apos;s full name, relationship to the student, and both an SPA / authorization letter and a valid government ID.
-                    </p>
+                  <div className="space-y-3.5 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-shield-warning text-amber-700 dark:text-amber-400 text-base" />
+                      <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+                        Parent or guardian requests require the requester&apos;s details and both an SPA / authorization letter and a valid government ID.
+                      </p>
+                    </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                       <div>
-                        <label htmlFor="staff-requester-name" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        <label htmlFor="staff-requester-name" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                           Parent / Guardian Full Name <span className="text-red-500">*</span>
                         </label>
                         <Input
                           id="staff-requester-name"
-                          className="mt-1.5 h-10 rounded-xl"
+                          className="h-10 rounded-xl bg-white dark:bg-zinc-800 border border-border"
                           value={createRequesterName}
                           onChange={(event) => setCreateRequesterName(event.target.value)}
                           placeholder="e.g. Maria Santos"
@@ -1570,12 +1622,12 @@ export default function DocumentRequestsTab({
                         />
                       </div>
                       <div>
-                        <label htmlFor="staff-requester-relationship" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        <label htmlFor="staff-requester-relationship" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                           Relationship to Student <span className="text-red-500">*</span>
                         </label>
                         <Select
                           id="staff-requester-relationship"
-                          className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:bg-zinc-800"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:bg-zinc-800"
                           value={createRequesterRelationship}
                           onChange={(event) => setCreateRequesterRelationship(event.target.value)}
                           required
@@ -1587,12 +1639,12 @@ export default function DocumentRequestsTab({
                         </Select>
                       </div>
                       <div>
-                        <label htmlFor="staff-requester-contact" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        <label htmlFor="staff-requester-contact" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                           Contact / Mobile Number
                         </label>
                         <Input
                           id="staff-requester-contact"
-                          className="mt-1.5 h-10 rounded-xl"
+                          className="h-10 rounded-xl bg-white dark:bg-zinc-800 border border-border"
                           value={createRequesterContact}
                           onChange={(event) => setCreateRequesterContact(event.target.value)}
                           placeholder="09171234567"
@@ -1603,45 +1655,68 @@ export default function DocumentRequestsTab({
                   </div>
                 )}
 
-                {String(officeId).toLowerCase() === "registrar" && renderAttachmentPicker(createClientType === "Parent")}
+                {/* Document Type & Purpose */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
+                      Document Type <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
+                      value={createDocType}
+                      onChange={(e) => setCreateDocType(e.target.value)}
+                      required
+                    >
+                      <option value="">Select document type…</option>
+                      {docTypes.map((dt) => (
+                        <option key={dt} value={dt}>
+                          {dt}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
 
-                <div>
-                  <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                    Description / Purpose <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="staff-request-description"
-                    className="mt-1.5 w-full min-h-[72px] rounded-xl border border-border p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
-                    value={createNotes}
-                    onChange={(e) => setCreateNotes(e.target.value)}
-                    placeholder="Provide the purpose of this request (at least 5 characters)…"
-                    minLength={5}
-                    maxLength={1000}
-                    required
-                  />
-                  <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">Explain how the requested document will be used.</p>
+                  <div className="md:col-span-2">
+                    <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
+                      Description / Purpose <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="staff-request-description"
+                      className="w-full h-10 min-h-[40px] max-h-[100px] rounded-xl border border-border p-2.5 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
+                      value={createNotes}
+                      onChange={(e) => setCreateNotes(e.target.value)}
+                      placeholder="Provide the purpose of this request (at least 5 characters)…"
+                      minLength={5}
+                      maxLength={1000}
+                      required
+                    />
+                    <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">Explain how the requested document will be used.</p>
+                  </div>
                 </div>
+
+                {/* Supporting Documents & Attachments (Drag & Drop) */}
+                {String(officeId).toLowerCase() === "registrar" && renderAttachmentPicker(createClientType === "Parent")}
               </div>
 
               {/* Dialog Actions */}
-              <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+              <DialogFooter className="p-5 md:px-8 bg-gray-50/70 dark:bg-zinc-900/60 border-t border-border/70 flex items-center justify-end gap-3 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   onClick={() => handleCreateOpenChange(false)}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="px-5 h-10 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center dark:shadow-none active:scale-95 cursor-pointer"
+                  className="px-6 h-10 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center dark:shadow-none active:scale-95 cursor-pointer"
                   style={{ color: "#ffffff" }}
                   disabled={submitting}
                 >
                   {submitting ? (
                     <>
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></HugeIcon>
+                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm text-white!" />
                       Saving...
                     </>
                   ) : (
@@ -1782,7 +1857,7 @@ export default function DocumentRequestsTab({
               <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">
                 <HugeIcon className="ph-fill ph-info text-sm shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                 <span>
-                  Reopening records an immutable entry in the audit logs and posts a milestone update visible on the student portal.
+                  Reopening adds an activity-history entry and posts an update on the student portal.
                 </span>
               </div>
             </div>

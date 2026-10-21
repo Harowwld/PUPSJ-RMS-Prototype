@@ -128,10 +128,19 @@ const formatDocTypeName = (value) => {
 
 const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all" }) {
   const isDark = false
+  const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [timeGrain, setTimeGrain] = useState("monthly") // "monthly", "weekly", "daily"
   const [activeBarName, setActiveBarName] = useState(null)
   const [activePieIndex, setActivePieIndex] = useState(null)
   const [hoveredTrendPoint, setHoveredTrendPoint] = useState(null)
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 639px)")
+    const updateScreenSize = () => setIsSmallScreen(mediaQuery.matches)
+    updateScreenSize()
+    mediaQuery.addEventListener("change", updateScreenSize)
+    return () => mediaQuery.removeEventListener("change", updateScreenSize)
+  }, [])
 
   const totalSlaRequests = pieData.reduce((acc, curr) => acc + curr.value, 0)
 
@@ -147,7 +156,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
 
   return (
     <div className="flex flex-col gap-6">
-      {/* SLA Operational Charts Grid */}
+      {/* Processing Time Charts */}
       {showSlaSection && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
@@ -326,7 +335,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                   <YAxis
                     type="category"
                     dataKey="name"
-                    width={210}
+                    width={isSmallScreen ? 120 : 210}
                     tick={{ fontSize: 12, fill: isDark ? "#374151" : "#1f2937", fontWeight: 500 }}
                     axisLine={false}
                     tickLine={false}
@@ -461,12 +470,16 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 const color = APPLE_STATUS_COLORS[d.name] || "#ccc"
                 const isHovered = activePieIndex === index
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={d.name}
                     onMouseEnter={() => setActivePieIndex(index)}
                     onMouseLeave={() => setActivePieIndex(null)}
+                    onFocus={() => setActivePieIndex(index)}
+                    onBlur={() => setActivePieIndex(null)}
+                    aria-label={`${displayName}: ${d.value} requests, ${percent}%`}
                     className={cn(
-                      "flex items-center justify-between h-[36px] border-b-[0.5px] border-border dark:border-border px-2 rounded-md transition-colors cursor-pointer",
+                      "flex min-h-11 w-full items-center justify-between border-b-[0.5px] border-border px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:border-border",
                       isHovered && "bg-gray-50 dark:bg-zinc-800/40",
                       index === pieData.length - 1 && "border-b-0"
                     )}
@@ -493,7 +506,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                         {percent}%
                       </span>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
@@ -515,12 +528,16 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
             {data?.topDocTypes?.length > 0 ? (
               <div className="flex flex-col w-full">
                 {data.topDocTypes.map((dt, i) => (
-                  <div
+                  <button
+                    type="button"
                     key={dt.name}
                     onMouseEnter={() => setActiveBarName(dt.name)}
                     onMouseLeave={() => setActiveBarName(null)}
+                    onFocus={() => setActiveBarName(dt.name)}
+                    onBlur={() => setActiveBarName(null)}
+                    aria-label={`${dt.name}: ${dt.count} ${dt.count === 1 ? "request" : "requests"}`}
                     className={cn(
-                      "flex items-center justify-between h-[44px] border-b-[0.5px] border-border dark:border-border px-2 rounded-lg transition-all cursor-pointer",
+                      "flex min-h-11 w-full items-center justify-between border-b-[0.5px] border-border bg-transparent px-2 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:border-border",
                       activeBarName === dt.name 
                         ? "bg-orange-50/50 dark:bg-orange-950/20 font-bold" 
                         : "hover:bg-gray-50/50 dark:hover:bg-zinc-800/20",
@@ -538,7 +555,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                     <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-400">
                       {dt.count} {dt.count === 1 ? "request" : "requests"}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -569,12 +586,9 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
         <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col gap-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <HugeIcon className="ph-fill ph-star text-amber-500 text-[18px]" />
-                <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
-                  Client Satisfaction Measurement (CSM)
-                </h3>
-              </div>
+              <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
+                Client Satisfaction Measurement (CSM)
+              </h3>
               <p className="text-[13px] font-normal text-gray-900 dark:text-zinc-300">
                 Student feedback ratings, satisfaction rate, and public service quality evaluations.
               </p>

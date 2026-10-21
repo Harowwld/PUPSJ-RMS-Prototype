@@ -21,12 +21,14 @@ import { Reorder } from "framer-motion";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { formatPHDateTime } from "@/lib/timeFormat";
 import {
   Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty";
 
 import {
@@ -65,6 +67,34 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   );
 }
 
+/**
+ * Standard Information Row (label : value)
+ * Clean metadata layout aligned with colons and icons.
+ */
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          <span className="text-gray-400 dark:text-zinc-500 text-sm shrink-0 flex items-center">
+            {icon}
+          </span>
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  );
+}
+
 export default function DigitizationComplianceTab({
   showToast,
   onLogAction,
@@ -75,6 +105,7 @@ export default function DigitizationComplianceTab({
   const searchParams = useSearchParams();
 
   const isOsas = (officeId || authUser?.office_id || "").toLowerCase() === "osas";
+  const pdfPreviewFrameRef = useRef(null);
 
   if (isOsas) {
     return (
@@ -137,6 +168,15 @@ export default function DigitizationComplianceTab({
   const [sortBy, setSortBy] = useState("courseCode");
   const [sortOrder, setSortOrder] = useState("asc");
   const [tableSearch, setTableSearch] = useState("");
+
+  const toggleCourseFilter = useCallback((courseCode) => {
+    setCourseFilter((previous) => {
+      const current = Array.isArray(previous) ? previous : [];
+      return current.includes(courseCode)
+        ? current.filter((code) => code !== courseCode)
+        : [...current, courseCode];
+    });
+  }, []);
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -249,6 +289,35 @@ export default function DigitizationComplianceTab({
     setMissingStudentsData(null);
     loadMissingStudents(documentType);
   }, [loadMissingStudents]);
+
+  const docTypeItems = useMemo(() => {
+    return [...(data?.missingByDocumentType || [])].sort(
+      (a, b) => b.missingStudents - a.missingStudents || a.documentType.localeCompare(b.documentType),
+    );
+  }, [data?.missingByDocumentType]);
+
+  const currentDocIndex = useMemo(() => {
+    if (!missingDialog) return -1;
+    return docTypeItems.findIndex(
+      (item) => item.documentTypeId === missingDialog.documentTypeId || item.documentType === missingDialog.documentType
+    );
+  }, [docTypeItems, missingDialog]);
+
+  const totalDocCount = docTypeItems.length;
+
+  const handleNavigatePrevDoc = useCallback(() => {
+    if (currentDocIndex > 0) {
+      const prevDoc = docTypeItems[currentDocIndex - 1];
+      openMissingStudents(prevDoc);
+    }
+  }, [currentDocIndex, docTypeItems, openMissingStudents]);
+
+  const handleNavigateNextDoc = useCallback(() => {
+    if (currentDocIndex < totalDocCount - 1) {
+      const nextDoc = docTypeItems[currentDocIndex + 1];
+      openMissingStudents(nextDoc);
+    }
+  }, [currentDocIndex, totalDocCount, docTypeItems, openMissingStudents]);
 
   const firstLoadRef = useRef(true);
   useEffect(() => {
@@ -393,6 +462,27 @@ export default function DigitizationComplianceTab({
     });
 
     showToast?.({ title: "Report Downloaded", description: "The Compliance report has been successfully downloaded." });
+  };
+
+  const handlePrintReport = () => {
+    const printWindow = pdfPreviewFrameRef.current?.contentWindow;
+    if (!printWindow || !previewFrameReady) {
+      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true);
+      return;
+    }
+
+    try {
+      printWindow.focus();
+      printWindow.print();
+      onLogAction?.({
+        action: "Print Report",
+        details: "opened print dialog for the physical record compliance report",
+        entityType: "Report",
+      });
+    } catch (e) {
+      console.error("Compliance report printing failed:", e);
+      showToast?.(formatErrorMessage(e, { defaultTitle: "Report Printing Failed" }), true);
+    }
   };
 
   const downloadCsv = useCallback(async () => {
@@ -608,7 +698,7 @@ export default function DigitizationComplianceTab({
                     <div className="flex justify-between items-start p-4 pb-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                          Completeness
+                          Document Coverage
                         </span>
                         <TooltipProvider delayDuration={200}>
                           <Tooltip>
@@ -640,6 +730,9 @@ export default function DigitizationComplianceTab({
                         <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                           {summary?.percentDigitized ?? 0}%
                         </span>
+                        <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                          {(summary?.totalDigitizedDocsCount ?? 0).toLocaleString()} / {(summary?.totalExpectedDocsCount ?? 0).toLocaleString()} slots
+                        </span>
                       </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
@@ -655,7 +748,7 @@ export default function DigitizationComplianceTab({
                         <>
                           <div className="grid grid-cols-2 gap-2">
                             <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Completeness</span>
+                              <span className="block text-[9px] font-bold text-gray-600 dark:text-zinc-300 uppercase tracking-wider">Document Coverage</span>
                               <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.percentDigitized ?? 0}%</span>
                             </div>
                             <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
@@ -671,7 +764,7 @@ export default function DigitizationComplianceTab({
 
                           {byCourse && byCourse.length > 0 && (
                             <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Course Completeness</h4>
+                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Course Document Coverage</h4>
                               <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
                                 {byCourse.map((c) => (
                                   <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
@@ -740,7 +833,7 @@ export default function DigitizationComplianceTab({
                           </div>
 
                           <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Remaining Partially Digitized</span>
+                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Students not fully digitized</span>
                             <span className="font-bold text-amber-600 dark:text-amber-400">{summary.notDigitizedStudents?.toLocaleString()}</span>
                           </div>
                         </>
@@ -766,7 +859,7 @@ export default function DigitizationComplianceTab({
                   >
                     <div className="flex justify-between items-start p-4 pb-0">
                       <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                        Complete
+                        Students Fully Digitized
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
                         <HugeIcon className="ph-bold text-[15px] ph-check-circle" />
@@ -775,11 +868,11 @@ export default function DigitizationComplianceTab({
                     
                     <div className="flex justify-between items-end p-4 pt-1">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {summary?.fullyDigitizedRate ?? 0}%
+                        <span className="text-[25px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                          {(summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0).toLocaleString()} / {(summary?.totalStudents ?? 0).toLocaleString()}
                         </span>
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                          {(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()} Done
+                        <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                          {summary?.fullyDigitizedRate ?? 0}% complete
                         </span>
                       </div>
                       <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
@@ -878,6 +971,11 @@ export default function DigitizationComplianceTab({
               </button>
             </div>
           </div>
+          <p className="basis-full text-[11px] leading-relaxed text-gray-500 dark:text-zinc-400">
+            {requireApproved
+              ? "Counts include approved documents only."
+              : "Counts include pending and approved uploads; declined documents are excluded."}
+          </p>
         </div>
 
         {/* Active Filter Chips Row */}
@@ -957,6 +1055,11 @@ export default function DigitizationComplianceTab({
                         <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 max-w-xl mt-[6px] mb-0">
                           {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
                         </p>
+                        {meta?.generatedAt && (
+                          <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
+                            Last updated {formatPHDateTime(meta.generatedAt)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1020,7 +1123,7 @@ export default function DigitizationComplianceTab({
                     </p>
                   ) : Array.isArray(data.missingByDocumentType) && data.missingByDocumentType.length > 0 ? (
                     <div className="divide-y divide-border rounded-xl border border-border dark:divide-border dark:border-border">
-                      {data.missingByDocumentType.map((item) => (
+                      {docTypeItems.map((item) => (
                         <div
                           key={item.documentTypeId}
                           className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
@@ -1068,28 +1171,30 @@ export default function DigitizationComplianceTab({
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[380px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                    <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
                 </div>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {error}
                 </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => load(true)}
                   className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer" 
                 >
-                  Retry
+                  Retry Loading
                 </Button>
-              </EmptyHeader>
+              </EmptyContent>
             </Empty>
           </div>
         ) : data ? (
@@ -1108,7 +1213,7 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="w-full overflow-x-auto rounded-b-2xl">
+            <div className="hidden w-full overflow-x-auto rounded-b-2xl sm:block">
               {sortedByCourse.length > 0 ? (
                 <table className="w-full text-sm table-fixed min-w-[760px]">
                   <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
@@ -1116,7 +1221,7 @@ export default function DigitizationComplianceTab({
                       <th className="p-4 px-6 w-[32%]">
                         <button
                           onClick={() => handleSort("courseCode")}
-                          className="group flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                          className="group flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
                         >
                           Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
@@ -1124,7 +1229,7 @@ export default function DigitizationComplianceTab({
                       <th className="p-4 px-6 w-[22%] text-center">
                         <button
                           onClick={() => handleSort("total")}
-                          className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                          className="group mx-auto flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
                         >
                           Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
@@ -1132,7 +1237,7 @@ export default function DigitizationComplianceTab({
                       <th className="p-4 px-6 w-[22%] text-center">
                         <button
                           onClick={() => handleSort("digitized")}
-                          className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                          className="group mx-auto flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
                         >
                           Fully Digitized <SortIndicator column="digitized" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
@@ -1140,9 +1245,9 @@ export default function DigitizationComplianceTab({
                       <th className="p-4 px-6 w-[24%] text-right">
                         <button
                           onClick={() => handleSort("percent")}
-                          className="group ml-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none cursor-pointer"
+                          className="group ml-auto flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
                         >
-                          Completeness <SortIndicator column="percent" sortBy={sortBy} sortOrder={sortOrder} />
+                          Document Coverage <SortIndicator column="percent" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                     </tr>
@@ -1153,36 +1258,34 @@ export default function DigitizationComplianceTab({
                       return (
                         <tr
                           key={row.courseCode}
-                          onClick={() => {
-                            setCourseFilter((prev) => {
-                              const current = Array.isArray(prev) ? prev : []
-                              if (current.includes(row.courseCode)) {
-                                return current.filter((c) => c !== row.courseCode)
-                              }
-                              return [...current, row.courseCode]
-                            })
-                          }}
                           className={cn(
-                            "h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02] cursor-pointer select-none",
+                            "h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
-                          title={`Click to ${isSelected ? "clear" : "filter by"} ${row.courseCode}`}
                         >
                         <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
-                          {row.courseCode || "N/A"}
+                          <button
+                            type="button"
+                            onClick={() => toggleCourseFilter(row.courseCode)}
+                            aria-pressed={isSelected}
+                            className="rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500"
+                            title={`${isSelected ? "Remove" : "Add"} ${row.courseCode} ${isSelected ? "from" : "as"} program filter`}
+                          >
+                            {row.courseCode || "N/A"}
+                          </button>
                         </td>
                         <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
                           {row.total?.toLocaleString?.() ?? row.total}
                         </td>
                         <td className="p-4 px-6 text-center text-[13px] font-normal">
                           <span className={cn(
-                            row.digitized === 0 
-                              ? "text-gray-400 dark:text-zinc-500" 
+                            row.digitized === 0
+                              ? "text-gray-400 dark:text-zinc-500"
                               : "text-gray-900 dark:text-zinc-50"
                           )}>
-                            {row.digitized?.toLocaleString?.() ?? row.digitized}
+                            {row.digitized?.toLocaleString?.() ?? row.digitized} / {row.total?.toLocaleString?.() ?? row.total}
                           </span>
-                          <span className="text-[10px] text-gray-400 font-semibold ml-1.5 opacity-0 group-hover:opacity-100 dark:text-zinc-500">
+                          <span className="text-[10px] text-gray-500 font-medium ml-1.5 dark:text-zinc-400">
                             ({row.fullyDigitizedRate}%)
                           </span>
                         </td>
@@ -1205,38 +1308,86 @@ export default function DigitizationComplianceTab({
                   </tbody>
                 </table>
               ) : (
-                <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                      {tableSearch 
-                        ? `No results found for "${tableSearch}".` 
-                        : "No student records available to analyze."}
-                    </EmptyDescription>
+                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                          <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        {tableSearch 
+                          ? `No results found for "${tableSearch}".` 
+                          : "No student records available to analyze."}
+                      </EmptyDescription>
+                    </EmptyHeader>
                     {hasActiveFilters && (
-                      <Button 
-                        variant="outline" 
-                        onClick={handleClearAll}
-                        title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                      >
-                    Reset Filters
-                  </Button>
+                      <EmptyContent>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleClearAll}
+                          title="Reset Filters"
+                          className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        >
+                          Reset Filters
+                        </Button>
+                      </EmptyContent>
                     )}
-                  </EmptyHeader>
-                </Empty>
+                  </Empty>
+                </div>
               )}
             </div>
+            {sortedByCourse.length > 0 && (
+              <div className="space-y-3 p-4 sm:hidden">
+                {paginatedByCourse.map((row) => {
+                  const isSelected = Array.isArray(courseFilter) && courseFilter.includes(row.courseCode);
+                  return (
+                    <article
+                      key={row.courseCode}
+                      className={cn(
+                        "rounded-xl border border-border bg-white p-4 dark:border-border dark:bg-zinc-900",
+                        isSelected && "border-blue-300 bg-blue-50/60 dark:border-blue-900 dark:bg-blue-950/20",
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleCourseFilter(row.courseCode)}
+                        aria-pressed={isSelected}
+                        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500"
+                      >
+                        <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{row.courseCode || "N/A"}</span>
+                        <span className="text-[11px] font-medium text-pup-maroon dark:text-red-400">
+                          {isSelected ? "Filtered" : "Filter"}
+                        </span>
+                      </button>
+                      <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3 dark:border-border">
+                        <div>
+                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">Students</div>
+                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">{row.total?.toLocaleString?.() ?? row.total}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">Fully digitized</div>
+                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                            {row.digitized?.toLocaleString?.() ?? row.digitized} <span className="font-normal text-gray-500">({row.fullyDigitizedRate}%)</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">Coverage</div>
+                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">{row.percent ?? 0}%</div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Standard Table Pagination Footer */}
             {sortedByCourse.length > 0 && (
-              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
+              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
                 <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedByCourse.length} of {sortedByCourse.length.toLocaleString()}
@@ -1252,10 +1403,10 @@ export default function DigitizationComplianceTab({
                           setPage(1);
                         }}
                         className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
                           pageSize === size
                             ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
                         )}
                       >
                         {size}
@@ -1309,118 +1460,267 @@ export default function DigitizationComplianceTab({
           side="right"
           size="default"
           showCloseButton={false}
-          className="h-full w-full overflow-hidden border-l border-border bg-white p-0 dark:border-border dark:bg-card sm:max-w-lg md:max-w-xl lg:max-w-2xl"
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl p-0 flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border"
         >
-          <SheetHeader className="shrink-0 border-b border-border bg-white p-0 dark:border-border dark:bg-card">
-            <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6">
-              <div className="min-w-0">
-                <SheetTitle className="truncate text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                  Students Missing {missingDialog?.documentType || "Document"}
+          {/* Reference Header */}
+          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div>
+                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                  Missing Students
                 </SheetTitle>
-                <SheetDescription className="mt-1 text-[13px] text-gray-600 dark:text-zinc-300">
-                  Students matching the current status, program, and approval filters.
+                <SheetDescription className="sr-only">
+                  List of students missing {missingDialog?.documentType || "this document"}
                 </SheetDescription>
               </div>
-              <SheetClose
-                type="button"
-                aria-label="Close missing students"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-gray-50 text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-              >
-                <HugeIcon className="ph-bold ph-x text-sm" />
-              </SheetClose>
+              <div className="flex items-center gap-2">
+                {totalDocCount > 1 && currentDocIndex !== -1 && (
+                  <div className="flex items-center gap-1.5 mr-1">
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        disabled={currentDocIndex <= 0}
+                        onClick={handleNavigatePrevDoc}
+                        aria-label="Previous document type"
+                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={currentDocIndex >= totalDocCount - 1}
+                        onClick={handleNavigateNextDoc}
+                        aria-label="Next document type"
+                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                      </button>
+                    </div>
+                    <span className="font-mono text-[11px] font-medium text-gray-500 dark:text-zinc-400 select-none px-1">
+                      {String(currentDocIndex + 1).padStart(2, "0")} of {String(totalDocCount).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMissingDialog(null);
+                    setMissingStudentsData(null);
+                    setMissingStudentsError("");
+                  }}
+                  aria-label="Close"
+                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                >
+                  <HugeIcon className="ph-bold ph-x text-xs" />
+                  <span className="sr-only">Close</span>
+                </button>
+              </div>
             </div>
           </SheetHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
-            {missingStudentsLoading ? (
-              <div className="space-y-3" aria-label="Loading students missing this document">
-                <Skeleton className="h-12 w-full rounded-lg" />
-                <Skeleton className="h-12 w-full rounded-lg" />
-                <Skeleton className="h-12 w-full rounded-lg" />
+          {/* Unboxed Single-Column Body */}
+          <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-border/60 dark:divide-white/5">
+            {/* Summary Strip */}
+            <div className="p-6 bg-gradient-to-b from-gray-50/50 to-transparent dark:from-zinc-900/20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                  <HugeIcon className="ph-duotone ph-file-dashed text-2xl" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100 tracking-tight truncate">
+                      {missingDialog?.documentType || "Document Type"}
+                    </h2>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60">
+                      {(missingDialog?.missingStudents ?? 0).toLocaleString()} Missing
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                    {(missingDialog?.digitizedStudents ?? 0).toLocaleString()} of {(missingDialog?.totalStudents ?? 0).toLocaleString()} students digitized ({Math.round(((missingDialog?.digitizedStudents || 0) / (missingDialog?.totalStudents || 1)) * 100)}% compliance)
+                  </p>
+                </div>
               </div>
-            ) : missingStudentsError ? (
-              <div className="space-y-3" role="alert">
-                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
-                  {missingStudentsError}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => loadMissingStudents(missingDialog)}
-                  className="h-11 rounded-xl px-5 text-xs font-semibold"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : missingStudentsData?.students?.length ? (
-              <div className="overflow-x-auto rounded-xl border border-border dark:border-border">
-                <table className="w-full min-w-[440px] text-left text-[12px]">
-                  <thead className="bg-gray-50 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 font-semibold">Student</th>
-                      <th scope="col" className="px-4 py-3 font-semibold">Student No.</th>
-                      <th scope="col" className="px-4 py-3 font-semibold">Program</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border dark:divide-border">
-                    {missingStudentsData.students.map((student) => (
-                      <tr key={student.student_no} className="text-gray-900 dark:text-zinc-100">
-                        <td className="px-4 py-3 font-medium">{student.name || "Student"}</td>
-                        <td className="px-4 py-3">{student.student_no}</td>
-                        <td className="px-4 py-3">{student.course_code || "N/A"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="rounded-xl border border-border bg-gray-50 px-4 py-6 text-center text-[13px] text-gray-700 dark:border-border dark:bg-zinc-800 dark:text-zinc-300">
-                No students are missing this document for the current filters.
-              </p>
-            )}
-          </div>
+            </div>
 
-          <SheetFooter className="mt-0 flex shrink-0 flex-col gap-3 border-t border-border bg-gray-50/70 px-5 py-4 dark:border-border dark:bg-zinc-900/40 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <span className="text-[12px] text-gray-600 dark:text-zinc-300" aria-live="polite">
-              {missingStudentsData?.total > 0
-                ? `Showing ${missingStudentsData.offset + 1}-${Math.min(missingStudentsData.offset + missingStudentsData.students.length, missingStudentsData.total)} of ${missingStudentsData.total.toLocaleString()} students`
-                : `${(missingStudentsData?.total || 0).toLocaleString()} students missing this document`}
-            </span>
-            <div className="flex items-center justify-end gap-2">
-              {missingStudentsData?.total > missingStudentsData?.limit && (
-                <>
+            {/* Document Specification (Standard InfoRow list) */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-wider uppercase">
+                <HugeIcon className="ph-bold ph-info text-pup-maroon text-sm" />
+                Compliance Specification
+              </div>
+              <div className="space-y-2.5">
+                <InfoRow
+                  icon={<HugeIcon className="ph-bold ph-file-text text-gray-400 dark:text-zinc-500" />}
+                  label="Document Name"
+                  value={<span className="font-medium text-gray-900 dark:text-zinc-100">{missingDialog?.documentType}</span>}
+                />
+                <InfoRow
+                  icon={<HugeIcon className="ph-bold ph-users text-gray-400 dark:text-zinc-500" />}
+                  label="Total Enrolled"
+                  value={<span className="font-semibold text-gray-900 dark:text-zinc-100">{(missingDialog?.totalStudents || 0).toLocaleString()} students</span>}
+                />
+                <InfoRow
+                  icon={<HugeIcon className="ph-bold ph-check-circle text-gray-400 dark:text-zinc-500" />}
+                  label="Digitized Records"
+                  value={<span className="font-semibold text-emerald-600 dark:text-emerald-400">{(missingDialog?.digitizedStudents || 0).toLocaleString()} archived</span>}
+                />
+                <InfoRow
+                  icon={<HugeIcon className="ph-bold ph-warning-circle text-gray-400 dark:text-zinc-500" />}
+                  label="Deficiency Gap"
+                  value={<span className="font-semibold text-amber-600 dark:text-amber-400">{(missingDialog?.missingStudents || 0).toLocaleString()} missing</span>}
+                />
+                <InfoRow
+                  icon={<HugeIcon className="ph-bold ph-chart-pie text-gray-400 dark:text-zinc-500" />}
+                  label="Institutional Rate"
+                  value={
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900 dark:text-zinc-100">
+                        {Math.round(((missingDialog?.digitizedStudents || 0) / (missingDialog?.totalStudents || 1)) * 100)}%
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        (Target: 100%)
+                      </span>
+                    </div>
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Non-Compliant Students Roster */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-wider uppercase">
+                  <HugeIcon className="ph-bold ph-user-list text-pup-maroon text-sm" />
+                  Non-Compliant Students
+                </div>
+                {missingStudentsData?.total > 0 && (
+                  <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+                    {missingStudentsData.total.toLocaleString()} total
+                  </span>
+                )}
+              </div>
+
+              {missingStudentsLoading ? (
+                <div className="space-y-3" aria-label="Loading students missing this document">
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                </div>
+              ) : missingStudentsError ? (
+                <div className="p-4 rounded-xl border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30 space-y-3" role="alert">
+                  <p className="text-xs text-red-800 dark:text-red-200">
+                    {missingStudentsError}
+                  </p>
                   <Button
                     type="button"
                     variant="outline"
+                    onClick={() => loadMissingStudents(missingDialog)}
+                    className="h-9 px-4 rounded-xl text-xs font-semibold cursor-pointer"
+                  >
+                    Retry Loading
+                  </Button>
+                </div>
+              ) : missingStudentsData?.students?.length ? (
+                <div className="space-y-2">
+                  {missingStudentsData.students.map((student) => (
+                    <div
+                      key={student.student_no}
+                      className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/60 dark:bg-zinc-800/40 hover:bg-gray-100/70 dark:hover:bg-zinc-800/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-xs text-gray-700 dark:text-zinc-200 shrink-0">
+                          {student.name ? student.name.split(" ").map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() : "ST"}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                            {student.name || "Student"}
+                          </div>
+                          <div className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                            {student.course_code || "N/A"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                        <span className="font-mono text-xs font-medium text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-lg border border-gray-200/60 dark:border-white/10">
+                          {student.student_no}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof navigator !== "undefined" && navigator.clipboard) {
+                              navigator.clipboard.writeText(student.student_no);
+                              showToast?.("Copied student number", "success");
+                            }
+                          }}
+                          title="Copy student number"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-200/50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer"
+                        >
+                          <HugeIcon className="ph-bold ph-copy text-xs" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-800/20">
+                  <HugeIcon className="ph-duotone ph-check-circle text-3xl text-emerald-500 mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                    All Students Compliant
+                  </p>
+                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                    Zero missing documents found for this criteria.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+            <div>
+              {missingStudentsData?.total > missingStudentsData?.limit ? (
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     disabled={missingStudentsLoading || missingStudentsData.offset <= 0}
                     onClick={() => loadMissingStudents(
                       missingDialog,
-                      Math.max(0, missingStudentsData.offset - missingStudentsData.limit),
+                      Math.max(0, missingStudentsData.offset - missingStudentsData.limit)
                     )}
-                    className="h-11 rounded-xl px-4 text-xs font-semibold"
+                    className="h-8 px-3 text-xs font-semibold rounded-xl cursor-pointer"
                   >
                     Previous
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     disabled={missingStudentsLoading || missingStudentsData.offset + missingStudentsData.limit >= missingStudentsData.total}
                     onClick={() => loadMissingStudents(
                       missingDialog,
-                      missingStudentsData.offset + missingStudentsData.limit,
+                      missingStudentsData.offset + missingStudentsData.limit
                     )}
-                    className="h-11 rounded-xl px-4 text-xs font-semibold"
+                    className="h-8 px-3 text-xs font-semibold rounded-xl cursor-pointer"
                   >
                     Next
                   </Button>
-                </>
-              )}
-              <SheetClose asChild>
-                <Button type="button" variant="outline" className="h-11 rounded-xl px-5 text-xs font-semibold">
-                  Close
-                </Button>
-              </SheetClose>
+                </div>
+              ) : null}
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setMissingDialog(null);
+                setMissingStudentsData(null);
+                setMissingStudentsError("");
+              }}
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              Close
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -1504,6 +1804,7 @@ export default function DigitizationComplianceTab({
                   </div>
                 )}
                 <iframe
+                  ref={pdfPreviewFrameRef}
                   src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
                   className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
                   title="PDF Report Preview"
@@ -1545,8 +1846,16 @@ export default function DigitizationComplianceTab({
                 Close
               </Button>
               <Button
+                variant="outline"
+                onClick={handlePrintReport}
+                disabled={!pdfBlobUrl || !previewFrameReady || isGeneratingPdf}
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+              >
+                Print Report
+              </Button>
+              <Button
                 onClick={handlePrint}
-                disabled={!pdfBlobUrl}
+                disabled={!pdfBlobUrl || isGeneratingPdf}
                 className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
                 Download Report

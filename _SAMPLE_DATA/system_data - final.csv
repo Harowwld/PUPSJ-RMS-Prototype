@@ -26,7 +26,7 @@ DocumentType,Financial Liquidation Report,,true,false,Student Governance & Activ
 DocumentType,Good Moral Certificate,,false,true,Certificates & Clearances
 DocumentType,Student Disciplinary Clearance,,false,true,Certificates & Clearances
 DocumentType,Organization Registration Certificate,,false,true,Certificates & Clearances
-DocumentType,Clearance Form,,true,true,Certificates & Clearances
+DocumentType,Clearance Form,,false,true,Certificates & Clearances
 Course,Bachelor of Science in Business Administration major in Financial Management,BSBA-FM,,,
 Course,Bachelor of Science in Entrepreneurship,BSENT,,,
 Course,Bachelor of Science in Information Technology,BSIT,,,

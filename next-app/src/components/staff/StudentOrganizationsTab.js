@@ -33,12 +33,14 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import BulkImportOrganizationsModal from "./BulkImportOrganizationsModal";
+import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
 import {
   Empty,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
 } from "@/components/ui/empty";
 import {
   Tooltip,
@@ -520,7 +522,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     if (!officerForm.email.trim() || !officerForm.position.trim()) {
       showToast({
         title: "Missing Officer Details",
-        description: "Officer email and position are required to whitelist access.",
+        description: "Enter the officer's account email and position to give them access.",
       }, true);
       return;
     }
@@ -537,11 +539,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       );
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to whitelist officer.");
+        throw new Error(json.error || "Could not authorize the officer.");
       }
 
       showToast({
-        title: "Officer Whitelisted",
+        title: "Officer Authorized",
         description: `${officerForm.email} has been authorized as ${officerForm.position}.`,
       });
       setOfficerForm({
@@ -555,8 +557,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     } catch (err) {
       showToast(
         formatErrorMessage(err, {
-          title: "Whitelist Failed",
-          actionContext: `Whitelisting officer ${officerForm.email} for organization ${selectedOrgForOfficers?.name}`,
+          title: "Could Not Authorize Officer",
+          actionContext: `Authorizing officer ${officerForm.email} for organization ${selectedOrgForOfficers?.name}`,
         }),
         true
       );
@@ -984,7 +986,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           <PageHeader
             icon="ph-buildings"
             title="Student Organizations"
-            description="Manage recognized campus student organizations, Constitution & By-Laws (CBL), and officer whitelists."
+            description="Manage recognized campus student organizations, their Constitution and By-Laws, and authorized officers."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -1002,10 +1004,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         ? "bg-pup-maroon text-white shadow-xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
-                    title="Grid View"
+                    title="Show each organization as a card"
                   >
                     <HugeIcon className="ph-bold ph-squares-four text-sm" />
-                    <span>Grid</span>
+                    <span>Cards</span>
                   </button>
                   <button
                     type="button"
@@ -1016,7 +1018,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         ? "bg-pup-maroon text-white shadow-xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
-                    title="Table View"
+                    title="Show organization details in columns"
                   >
                     <HugeIcon className="ph-bold ph-list-dashes text-sm" />
                     <span>Table</span>
@@ -1222,7 +1224,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="flex justify-between items-start p-4 pb-0">
                             <div className="flex flex-col gap-1">
                               <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Officer Whitelist
+                                Authorized Officers
                               </span>
                             </div>
                             <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
@@ -1633,33 +1635,46 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
               )
             ) : filteredOrganizations.length === 0 ? (
-              <div className="p-12 text-center">
-                <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card">
-                        <HugeIcon className="ph-bold ph-buildings text-2xl text-pup-maroon dark:text-red-400" />
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                        <HugeIcon className="ph-duotone ph-buildings text-3xl text-gray-400 dark:text-zinc-500" />
                       </EmptyMedia>
                     </div>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       No Student Organizations Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "Try adjusting your search criteria or resetting category filters."
-                        : "Register recognized student organizations to start managing Constitution & By-Laws and whitelisted officers."}
+                        : "Register recognized student organizations to manage their Constitution and By-Laws and authorized officers."}
                     </EmptyDescription>
-                    <Button
-                      type="button"
-                      onClick={openCreateModal}
-                      title="Register Organization"
-                      className="mt-5 h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs"
-                      style={{ color: "#ffffff" }}
-                    >
-                      Register Organization
-                    </Button>
                   </EmptyHeader>
+                  <EmptyContent>
+                    {hasActiveFilters ? (
+                      <Button
+                        variant="outline"
+                        onClick={handleResetFilters}
+                        title="Reset Filters"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      >
+                        Reset Filters
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={openCreateModal}
+                        title="Register Organization"
+                        className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 transition-all cursor-pointer shadow-xs border-0"
+                        style={{ color: "#ffffff" }}
+                      >
+                        Register Organization
+                      </Button>
+                    )}
+                  </EmptyContent>
                 </Empty>
               </div>
             ) : viewMode === "table" ? (
@@ -1740,13 +1755,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             )}
                           </td>
 
-                          {/* Whitelisted Officers */}
+                          {/* Authorized Officers */}
                           <td className="py-4 px-4 text-center whitespace-nowrap">
                             <button
                               type="button"
                               onClick={() => openManageOrgSheet(org, "officers")}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
-                              title="Manage Whitelisted Officers"
+                              title="Manage authorized officers"
                             >
                               <HugeIcon className="ph-bold ph-shield-check text-xs" />
                               <span>
@@ -1867,7 +1882,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   <button
                                     type="button"
                                     onClick={() => openManageOrgSheet(org, "officers")}
-                                    aria-label="Manage Whitelisted Officers"
+                                    aria-label="Manage authorized officers"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                   >
                                     <HugeIcon className="ph-bold ph-users text-[16px]" />
@@ -2130,7 +2145,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               {organizations.length === 1 ? "organization" : "organizations"}
             </span>
             <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-              Only whitelisted student officers can submit campus event proposals for their organization.
+              Only authorized student officers can submit campus event proposals for their organization.
             </span>
           </div>
         </Card>
@@ -2497,11 +2512,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </form>
               ) : sheetSubTab === "officers" ? (
                 <>
-                  {/* Add Officer Whitelist Box */}
+                  {/* Add Authorized Officer Box */}
                   <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-800/40 p-4 space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
                       <HugeIcon className="ph-bold ph-user-plus text-pup-maroon dark:text-red-400 text-sm" />
-                      Add Student Officer to Whitelist
+                      Authorize Student Officer
                     </h4>
                     <form onSubmit={handleAddOfficer} className="space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2600,7 +2615,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       </div>
                     ) : officersList.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-border dark:border-border p-6 text-center text-xs text-gray-500 dark:text-zinc-400">
-                        No officers have been whitelisted for this organization yet. Add a student account email above.
+                        No student officers are authorized for this organization yet. Add an officer&apos;s account email above.
                       </div>
                     ) : (
                       <div className="rounded-2xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border dark:divide-border bg-white dark:bg-zinc-900 shadow-2xs">
@@ -3086,16 +3101,15 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                     CBL Document (PDF) <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    type="file"
+                  <FileAttachmentDropzone
+                    value={cblFile ? { file: cblFile, original_filename: cblFile.name, size_bytes: cblFile.size } : null}
+                    onChange={(item) => setCblFile(item?.file || null)}
+                    mode="single"
                     accept="application/pdf"
-                    required
-                    onChange={(e) => setCblFile(e.target.files?.[0] || null)}
-                    className="h-10 rounded-xl text-xs file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-semibold file:text-pup-maroon"
+                    title="Drop constitution & by-laws PDF here, or browse"
+                    subtitle="Official PDF document (up to 25 MB)"
+                    maxSizeBytes={25 * 1024 * 1024}
                   />
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 mt-1.5 block">
-                    Must be an official PDF file (max 25MB).
-                  </span>
                 </div>
               </div>
 
@@ -3218,7 +3232,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           title="Revoke Officer Authorization?"
           description={`Are you sure you want to remove ${
             officerToRemove?.student_name || officerToRemove?.email
-          } (${officerToRemove?.position}) from the officer whitelist? They will no longer be able to submit event proposals on behalf of this organization.`}
+          } (${officerToRemove?.position}) from the list of authorized officers? They will no longer be able to submit event proposals on behalf of this organization.`}
           confirmText="Revoke Access"
           variant="destructive"
           onConfirm={handleRemoveOfficer}

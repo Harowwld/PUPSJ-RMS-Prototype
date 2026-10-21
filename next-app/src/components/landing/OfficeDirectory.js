@@ -282,7 +282,7 @@ export default function OfficeDirectory() {
                     </p>
                   </div>
                   <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-mono text-zinc-400">
-                    SLA: 1 – 3 Working Days
+                    Processing time: 1 – 3 working days
                   </div>
                 </div>
 
@@ -306,7 +306,7 @@ export default function OfficeDirectory() {
                     </p>
                   </div>
                   <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-mono text-zinc-400">
-                    SLA: 7 – 20 Working Days
+                    Processing time: 7 – 20 working days
                   </div>
                 </div>
               </div>
@@ -489,5 +489,4 @@ export default function OfficeDirectory() {
     </section>
   );
 }
-
 

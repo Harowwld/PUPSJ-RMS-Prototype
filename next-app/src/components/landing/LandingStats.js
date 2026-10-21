@@ -10,13 +10,13 @@ export default function LandingStats() {
           <div className="relative z-10">
             <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/95">
               <HugeIcon  className="ph-bold ph-database text-white text-[16px]" />
-              <span>Digitized Academic Archives</span>
+              <span>Academic Records Archive</span>
             </div>
             <div className="text-[42px] font-semibold text-white tracking-tight leading-none mt-2">
               100%
             </div>
             <div className="mt-2 text-[13px] font-normal text-white/90">
-              All student & alumni archive records indexed in the eManage repository
+              Student and alumni archive records are organized and searchable in eManage
             </div>
           </div>
         </div>
@@ -26,7 +26,7 @@ export default function LandingStats() {
           <div className="relative z-10">
             <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/95">
               <HugeIcon  className="ph-bold ph-timer text-white text-[16px]" />
-              <span>Fast Turnaround SLA</span>
+              <span>Fast Processing Time</span>
             </div>
             <div className="text-[42px] font-semibold text-white tracking-tight leading-none mt-2">
               3–5 Days

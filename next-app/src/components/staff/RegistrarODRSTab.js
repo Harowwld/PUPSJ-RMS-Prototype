@@ -624,7 +624,7 @@ export default function RegistrarODRSTab({ showToast }) {
             <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">
               <HugeIcon className="ph-fill ph-info text-sm shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
               <span>
-                Reopening records an immutable entry in the audit logs and posts a milestone update visible on the student portal.
+                Reopening adds an activity-history entry and posts an update on the student portal.
               </span>
             </div>
           </div>

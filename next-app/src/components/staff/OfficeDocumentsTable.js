@@ -26,6 +26,7 @@ export default function OfficeDocumentsTable({
   officeLabel = "Office",
   breadcrumbs,
   onPreviewDocument,
+  onRescan,
   embedded = true,
 }) {
   const [query, setQuery] = useState("")
@@ -123,7 +124,7 @@ export default function OfficeDocumentsTable({
                   <th className="w-[28%] p-4 font-medium">Document</th>
                   <th className="w-[10%] p-4 font-medium">Year</th>
                   <th className="w-[12%] p-4 font-medium">Status</th>
-                  <th className="w-20 p-4 pr-6 text-right font-medium">Action</th>
+                  <th className="w-24 p-4 pr-6 text-right font-medium">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-transparent">
@@ -164,7 +165,30 @@ export default function OfficeDocumentsTable({
                       )}>{document.approval_status || "Pending"}</Badge>
                     </td>
                     <td className="p-4 pr-6 align-middle text-right">
-                      <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        {onRescan && !document.source_type && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onRescan?.(
+                                    document.student_no,
+                                    document.doc_type,
+                                    document.id,
+                                    document.original_filename,
+                                    document.mime_type
+                                  )
+                                }
+                                aria-label="Re-scan Document"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                              >
+                                <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-[15px]" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Re-scan Document</TooltipContent>
+                          </Tooltip>
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button

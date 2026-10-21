@@ -316,7 +316,7 @@ export async function GET(req) {
 
     const overallComplianceRate = totalCompleted > 0
       ? Math.round((compliantCompleted / totalCompleted) * 100)
-      : 100;
+      : null;
 
     const averageRating = feedbackTotal > 0 ? Number((feedbackSum / feedbackTotal).toFixed(1)) : 0;
     const positiveReviews = (ratingBreakdown[4] || 0) + (ratingBreakdown[5] || 0);

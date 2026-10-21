@@ -150,7 +150,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                     </div>
 
                     <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                      Cumulative record count of all CRUD operations, metadata alterations, and developer boots.
+                      Total count of records created, updated, or deleted, changes to record details, and system start events.
                     </div>
                   </>
                 )}

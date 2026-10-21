@@ -252,7 +252,7 @@ export default function StudentComplianceKpiCards({ summary }) {
                     </div>
 
                     <p className="text-xs text-gray-900 dark:text-zinc-300 leading-relaxed">
-                      All submitted documents are cataloged in physical storage cabinets and digitally indexed in repository vaults.
+                      Submitted documents are organized by student and can be found in the system.
                     </p>
                   </>
                 )}

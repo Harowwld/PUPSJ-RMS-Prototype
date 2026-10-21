@@ -21,6 +21,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -1088,24 +1089,36 @@ export default function StudentDirectoryTab({
                 ))}
               </div>
             ) : paginatedStudents.length === 0 ? (
-              <div className="py-10 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-0">
-                <Empty className="flex flex-1 h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
+              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className="ph-duotone ph-student text-2xl text-gray-300 dark:text-zinc-600"></HugeIcon>
+                        <HugeIcon  className="ph-duotone ph-student text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
                       </EmptyMedia>
                     </div>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       No Student Records Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                       {hasActiveFilters
                         ? "Try clearing some filter options or changing your search criteria."
                         : "There are currently no student records in this view. Enroll a student to get started."}
                     </EmptyDescription>
                   </EmptyHeader>
+                  {hasActiveFilters && (
+                    <EmptyContent>
+                      <Button
+                        variant="outline"
+                        onClick={handleResetFilters}
+                        title="Reset Filters"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      >
+                        Reset Filters
+                      </Button>
+                    </EmptyContent>
+                  )}
                 </Empty>
               </div>
             ) : (
@@ -1492,7 +1505,7 @@ export default function StudentDirectoryTab({
           authUser={authUser}
         />
 
-        {/* Student Profile / Dossier Sheet */}
+        {/* Student Profile Sheet */}
         {(() => {
           const selectedIndex = activeStudent
             ? paginatedStudents.findIndex((s) => s.studentNo === activeStudent.studentNo)

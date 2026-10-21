@@ -75,7 +75,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
 
-                {/* Service Standard (SLA) */}
+                {/* Processing Time */}
                 <td className="p-4 align-middle">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">

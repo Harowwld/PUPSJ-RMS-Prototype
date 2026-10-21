@@ -30,6 +30,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty";
 
 import {
@@ -54,6 +55,7 @@ import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedb
 import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -1081,7 +1083,7 @@ function StudentDashboard() {
     try {
       const selectedOrg = myOrganizations.find((o) => o.organization_id === selectedCblOrgId) || myOrganizations[0];
       if (!selectedOrg) {
-        throw new Error("You must be an authorized officer in the OSAS whitelist to submit Constitution & By-Laws documents.");
+        throw new Error("You must be an officer authorized by OSAS to submit Constitution and By-Laws documents.");
       }
       if (!cblForm.file) {
         throw new Error("Please upload the Constitution & By-Laws PDF document.");
@@ -1507,105 +1509,46 @@ function StudentDashboard() {
                                   <span className="text-[10px] text-gray-400 font-normal">(Optional proof of payment, clearance, etc.)</span>
                                 )}
                               </label>
-                              <button
-                                type="button"
-                                onClick={() => attachmentInputRef.current?.click()}
-                                disabled={requestForm.attachments.length >= 5}
-                                className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                + Add File ({requestForm.attachments.length}/5)
-                              </button>
+                              <span className="text-[11px] font-semibold text-pup-maroon dark:text-red-400">
+                                {requestForm.attachments.length}/5 files
+                              </span>
                             </div>
 
-                            <input
-                              type="file"
-                              ref={attachmentInputRef}
-                              onChange={handleAddFiles}
-                              multiple
+                            <FileAttachmentDropzone
+                              value={requestForm.attachments}
+                              onChange={(val) => {
+                                if (typeof val === "function") {
+                                  setRequestForm((prev) => ({ ...prev, attachments: val(prev.attachments) }));
+                                } else {
+                                  setRequestForm((prev) => ({ ...prev, attachments: val || [] }));
+                                }
+                              }}
+                              mode="multiple"
+                              maxFiles={5}
+                              categories={
+                                requestForm.clientType === "Parent"
+                                  ? [
+                                      { value: "spa", label: "Special Power of Attorney (SPA)" },
+                                      { value: "valid_id", label: "Valid Government ID" },
+                                      { value: "evidence", label: "Supporting Evidence" },
+                                      { value: "receipt", label: "Proof of Payment" },
+                                      { value: "other", label: "Other Document" },
+                                    ]
+                                  : [
+                                      { value: "evidence", label: "Supporting Evidence" },
+                                      { value: "receipt", label: "Proof of Payment / Receipt" },
+                                      { value: "clearance", label: "Clearance Slip" },
+                                      { value: "other", label: "Other Document" },
+                                    ]
+                              }
+                              title={
+                                requestForm.clientType === "Parent"
+                                  ? "Drop SPA letter & government ID here, or browse"
+                                  : "Drop supporting documents or receipts here, or browse"
+                              }
+                              subtitle="PDF, PNG, JPG, or WEBP up to 10MB each (max 5 files)"
                               accept=".pdf,.png,.jpg,.jpeg,.webp"
-                              className="hidden"
                             />
-
-                            {requestForm.attachments.length === 0 ? (
-                              <div
-                                onClick={() => attachmentInputRef.current?.click()}
-                                className="flex flex-col items-center justify-center p-4 border border-dashed border-border dark:border-border rounded-xl bg-white dark:bg-zinc-800/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/70 transition-colors cursor-pointer text-center group"
-                              >
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-500 dark:text-zinc-300 group-hover:scale-105 transition-transform mb-1.5">
-                                  <HugeIcon className="ph-bold ph-paperclip text-sm" />
-                                </div>
-                                <p className="text-xs font-medium text-gray-700 dark:text-zinc-200">
-                                  {requestForm.clientType === "Parent"
-                                    ? "Upload signed SPA / Authorization Letter & Valid ID"
-                                    : "Click to upload supporting documents or receipts"}
-                                </p>
-                                <p className="text-[11px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                                  PDF, PNG, JPG up to 10MB each (max 5 files)
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                {requestForm.attachments.map((att) => (
-                                  <div
-                                    key={att.id}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800/70 shadow-xs"
-                                  >
-                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
-                                        <HugeIcon
-                                          className={
-                                            att.file?.name?.toLowerCase().endsWith(".pdf")
-                                              ? "ph-fill ph-file-pdf text-red-500 text-base"
-                                              : "ph-fill ph-file-image text-blue-500 text-base"
-                                          }
-                                        />
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">
-                                          {att.file?.name}
-                                        </p>
-                                        <p className="text-[11px] text-gray-400 dark:text-zinc-500">
-                                          {(att.file?.size / 1024).toFixed(1)} KB
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 shrink-0">
-                                      <Select
-                                        value={att.attachmentType}
-                                        onChange={(e) => handleUpdateFileType(att.id, e.target.value)}
-                                        className="h-8 rounded-lg text-[11px] font-medium border border-border dark:border-border bg-gray-50 dark:bg-zinc-900 w-48 shadow-none"
-                                      >
-                                        {requestForm.clientType === "Parent" ? (
-                                          <>
-                                            <option value="spa">Special Power of Attorney (SPA)</option>
-                                            <option value="valid_id">Valid Government ID</option>
-                                            <option value="evidence">Supporting Evidence</option>
-                                            <option value="receipt">Proof of Payment</option>
-                                            <option value="other">Other Document</option>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <option value="evidence">Supporting Evidence</option>
-                                            <option value="receipt">Proof of Payment / Receipt</option>
-                                            <option value="clearance">Clearance Slip</option>
-                                            <option value="other">Other Document</option>
-                                          </>
-                                        )}
-                                      </Select>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRemoveFile(att.id)}
-                                        className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
-                                        title="Remove file"
-                                      >
-                                        <HugeIcon className="ph-bold ph-x text-xs" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
                           </div>
 
                           {/* Form Actions */}
@@ -1728,123 +1671,124 @@ function StudentDashboard() {
                       className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
                     />
 
-                    {/* 5. Request History Table */}
-                    <div className="w-full overflow-x-auto border-t border-border dark:border-border select-none">
-                      <table className="w-full text-sm table-fixed min-w-[900px]">
-                        <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                          <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                            <th className="p-4 w-[12%] whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleSort("id")}
-                                className={cn(
-                                  "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                  sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                                )}
+                    {/* 5. Request History Table / Empty State */}
+                    {!loading && sortedRequests.length === 0 ? (
+                      <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+                        <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <div className="relative mb-6">
+                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                                <HugeIcon className={cn("ph-duotone text-3xl text-gray-400 dark:text-zinc-500", hasActiveFilters ? "ph-magnifying-glass" : "ph-tray")} />
+                              </EmptyMedia>
+                            </div>
+                            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                              {hasActiveFilters ? "No Matches Found" : "No Document Requests Yet"}
+                            </EmptyTitle>
+                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                              {hasActiveFilters
+                                ? "Try adjusting your search query or status filter."
+                                : "You haven't submitted any document requests yet. Click the button below to submit your first request."}
+                            </EmptyDescription>
+                          </EmptyHeader>
+                          <EmptyContent>
+                            {hasActiveFilters ? (
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setRequestSearch("");
+                                  setRequestFilters({ status: [], doc_type: [] });
+                                  setCurrentPage(1);
+                                }}
+                                title="Reset Filters"
+                                className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
-                                Ticket #
-                                <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                              </button>
-                            </th>
-                            <th className="p-4 w-[24%] whitespace-nowrap">
-                              <button
+                                Reset Filters
+                              </Button>
+                            ) : (
+                              <Button
                                 type="button"
-                                onClick={() => handleSort("doc_type")}
-                                className={cn(
-                                  "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                  sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                                )}
+                                onClick={() => setIsFormOpen(true)}
+                                title="Submit Request"
+                                className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+                                style={{ color: "#ffffff" }}
                               >
-                                Document Type
-                                <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
-                              </button>
-                            </th>
-                            <th className="p-4 w-[32%] whitespace-nowrap">
-                              <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                                Purpose / Description
-                              </span>
-                            </th>
-                            <th className="p-4 w-[14%] whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleSort("status")}
-                                className={cn(
-                                  "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                  sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                                )}
-                              >
-                                Status
-                                <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
-                              </button>
-                            </th>
-                            <th className="p-4 w-[18%] whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleSort("created_at")}
-                                className={cn(
-                                  "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                  sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                                )}
-                              >
-                                Date Requested
-                                <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
-                              </button>
-                            </th>
-                            <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-transparent">
-                          {loading ? (
-                            <StudentRequestsTableRowsSkeleton rowCount={itemsPerPage || 6} />
-                          ) : sortedRequests.length === 0 ? (
-                            <tr className="border-0 hover:bg-transparent">
-                              <td colSpan={6} className="p-12 text-center">
-                                <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                                  <EmptyHeader className="flex flex-col items-center gap-0">
-                                    <div className="relative mb-6">
-                                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                        <HugeIcon  className={hasActiveFilters ? "ph-magnifying-glass text-2xl text-pup-maroon" : "ph-tray text-2xl text-pup-maroon"}></HugeIcon>
-                                      </EmptyMedia>
-                                    </div>
-                                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
-                                      {hasActiveFilters ? "No Matches Found" : "No Document Requests Yet"}
-                                    </EmptyTitle>
-                                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                      {hasActiveFilters
-                                        ? "Try adjusting your search query or status filter."
-                                        : "You haven't submitted any document requests yet. Click the button below to submit your first request."}
-                                    </EmptyDescription>
-                                    {hasActiveFilters ? (
-                                      <Button
-                                        variant="outline"
-                                        onClick={() => {
-                                          setRequestSearch("");
-                                          setRequestFilters({ status: [], doc_type: [] });
-                                          setCurrentPage(1);
-                                        }}
-                                        title="Reset Filters"
-                                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                                      >
-                    Reset Filters
-                  </Button>
-                                    ) : (
-                                      <Button
-                                        type="button"
-                                        onClick={() => setIsFormOpen(true)}
-                                        title="New Document Request"
-                                        className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-                                        style={{ color: "#ffffff" }}
-                                      >
-                                        Request
-                                      </Button>
-                                    )}
-                                  </EmptyHeader>
-                                </Empty>
-                              </td>
+                                Submit Request
+                              </Button>
+                            )}
+                          </EmptyContent>
+                        </Empty>
+                      </div>
+                    ) : (
+                      <div className="w-full overflow-x-auto border-t border-border dark:border-border select-none">
+                        <table className="w-full text-sm table-fixed min-w-[900px]">
+                          <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
+                            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                              <th className="p-4 w-[12%] whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort("id")}
+                                  className={cn(
+                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                                    sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                  )}
+                                >
+                                  Ticket #
+                                  <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                                </button>
+                              </th>
+                              <th className="p-4 w-[24%] whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort("doc_type")}
+                                  className={cn(
+                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                                    sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                  )}
+                                >
+                                  Document Type
+                                  <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
+                                </button>
+                              </th>
+                              <th className="p-4 w-[32%] whitespace-nowrap">
+                                <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                                  Purpose / Description
+                                </span>
+                              </th>
+                              <th className="p-4 w-[14%] whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort("status")}
+                                  className={cn(
+                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                                    sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                  )}
+                                >
+                                  Status
+                                  <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                                </button>
+                              </th>
+                              <th className="p-4 w-[18%] whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort("created_at")}
+                                  className={cn(
+                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                                    sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                  )}
+                                >
+                                  Date Requested
+                                  <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
+                                </button>
+                              </th>
+                              <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Action</th>
                             </tr>
-                          ) : (
-                            paginatedRequests.map((item) => (
+                          </thead>
+                          <tbody className="bg-transparent">
+                            {loading ? (
+                              <StudentRequestsTableRowsSkeleton rowCount={itemsPerPage || 6} />
+                            ) : (
+                              paginatedRequests.map((item) => (
                               <tr
                                 key={item.id}
                                 onClick={() => setSelectedRequestForDetail(item)}
@@ -1951,6 +1895,7 @@ function StudentDashboard() {
                         </tbody>
                       </table>
                     </div>
+                  )}
 
                     {/* 6. Pagination Bar */}
                     {loading ? (
@@ -2052,7 +1997,7 @@ function StudentDashboard() {
                             type="button"
                             onClick={() => setIsFormOpen(true)}
                             disabled={myOrganizations.length === 0}
-                            title={myOrganizations.length === 0 ? "You must be an authorized officer in the OSAS whitelist to submit proposals" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
+                            title={myOrganizations.length === 0 ? "You must be an officer authorized by OSAS to submit proposals" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
                             className={cn(
                               "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white! border-0",
                               myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
@@ -2092,8 +2037,8 @@ function StudentDashboard() {
                         <HugeIcon className="ph-bold ph-info text-base" />
                       </div>
                       <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-                        <div className="font-bold mb-0.5">Officer Whitelist Notice</div>
-                        Event proposals and CBL submissions may only be submitted by recognized student organization officers whitelisted by OSAS. If you represent an accredited organization, please contact OSAS to whitelist your student account (<strong>{me?.email}</strong>).
+                        <div className="font-bold mb-0.5">Authorized Officers</div>
+                        Event proposals and Constitution and By-Laws submissions may only be submitted by officers authorized by OSAS. If you represent a recognized organization, please contact OSAS to authorize your student account (<strong>{me?.email}</strong>).
                       </div>
                     </div>
                   )}
@@ -2251,16 +2196,17 @@ function StudentDashboard() {
                             </div>
 
                             <div>
-                              <label htmlFor="osas-proposal-file" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                              <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                 Proposal PDF <span className="text-red-500">*</span>
                               </label>
-                              <Input
-                                id="osas-proposal-file"
-                                type="file"
+                              <FileAttachmentDropzone
+                                value={proposalForm.file ? { file: proposalForm.file, original_filename: proposalForm.file.name, size_bytes: proposalForm.file.size } : null}
+                                onChange={(item) => setProposalForm({ ...proposalForm, file: item?.file || null })}
+                                mode="single"
                                 accept="application/pdf"
-                                onChange={(e) => setProposalForm({ ...proposalForm, file: e.target.files?.[0] || null })}
-                                required
-                                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                title="Drop activity proposal PDF here, or browse"
+                                subtitle="Must be an official PDF document (up to 25 MB)"
+                                maxSizeBytes={25 * 1024 * 1024}
                               />
                             </div>
 
@@ -2370,51 +2316,55 @@ function StudentDashboard() {
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
                         ) : data.proposals.length === 0 ? (
-                          <div className="p-12 text-center">
-                            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-file-text text-2xl text-pup-maroon dark:text-primary" />
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-duotone ph-file-text text-3xl text-gray-400 dark:text-zinc-500" />
                                   </EmptyMedia>
                                 </div>
-                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                   No Event Proposals Yet
                                 </EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                                   You haven&apos;t submitted any event proposals yet. Use the form above to submit your first proposal.
                                 </EmptyDescription>
-                                {myOrganizations.length > 0 && (
+                              </EmptyHeader>
+                              {myOrganizations.length > 0 && (
+                                <EmptyContent>
                                   <Button
                                     type="button"
                                     onClick={() => setIsFormOpen(true)}
-                                    title="New Event Proposal"
-                                    className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                    title="Submit Proposal"
+                                    className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
                                     style={{ color: "#ffffff" }}
                                   >
-                                    Submit
+                                    Submit Proposal
                                   </Button>
-                                )}
-                              </EmptyHeader>
+                                </EmptyContent>
+                              )}
                             </Empty>
                           </div>
                         ) : filteredProposals.length === 0 ? (
-                          <div className="p-12 text-center">
-                            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-magnifying-glass text-2xl text-pup-maroon dark:text-primary" />
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
                                   </EmptyMedia>
                                 </div>
-                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                   No Matches Found
                                 </EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                                   Try adjusting your search query or filter criteria.
                                 </EmptyDescription>
+                              </EmptyHeader>
+                              <EmptyContent>
                                 <Button
                                   variant="outline"
                                   onClick={() => {
@@ -2424,9 +2374,9 @@ function StudentDashboard() {
                                   title="Reset Filters"
                                   className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
-                    Reset Filters
-                  </Button>
-                              </EmptyHeader>
+                                  Reset Filters
+                                </Button>
+                              </EmptyContent>
                             </Empty>
                           </div>
                         ) : (
@@ -2607,12 +2557,14 @@ function StudentDashboard() {
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                   Narrative Accomplishment Report (PDF) <span className="text-red-500">*</span>
                                 </label>
-                                <Input
-                                  type="file"
+                                <FileAttachmentDropzone
+                                  value={postEventForm.narrativeFile ? { file: postEventForm.narrativeFile, original_filename: postEventForm.narrativeFile.name, size_bytes: postEventForm.narrativeFile.size } : null}
+                                  onChange={(item) => setPostEventForm({ ...postEventForm, narrativeFile: item?.file || null })}
+                                  mode="single"
                                   accept="application/pdf"
-                                  onChange={(e) => setPostEventForm({ ...postEventForm, narrativeFile: e.target.files?.[0] || null })}
-                                  required
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  title="Drop narrative report PDF here, or browse"
+                                  subtitle="Official narrative report (PDF up to 25 MB)"
+                                  maxSizeBytes={25 * 1024 * 1024}
                                 />
                               </div>
 
@@ -2620,11 +2572,14 @@ function StudentDashboard() {
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                   Financial Liquidation & Receipts (PDF)
                                 </label>
-                                <Input
-                                  type="file"
+                                <FileAttachmentDropzone
+                                  value={postEventForm.liquidationFile ? { file: postEventForm.liquidationFile, original_filename: postEventForm.liquidationFile.name, size_bytes: postEventForm.liquidationFile.size } : null}
+                                  onChange={(item) => setPostEventForm({ ...postEventForm, liquidationFile: item?.file || null })}
+                                  mode="single"
                                   accept="application/pdf"
-                                  onChange={(e) => setPostEventForm({ ...postEventForm, liquidationFile: e.target.files?.[0] || null })}
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-gray-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  title="Drop liquidation receipts PDF here, or browse"
+                                  subtitle="Optional liquidation statement (PDF up to 25 MB)"
+                                  maxSizeBytes={25 * 1024 * 1024}
                                 />
                               </div>
                             </div>
@@ -2670,33 +2625,35 @@ function StudentDashboard() {
 
                       <div className="border-t border-border dark:border-border flex-1 p-5 space-y-3">
                         {postEventReports.length === 0 ? (
-                          <div className="p-12 text-center">
-                            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-clipboard-text text-2xl text-pup-maroon dark:text-primary" />
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-gray-400 dark:text-zinc-500" />
                                   </EmptyMedia>
                                 </div>
-                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                   No Post-Event Reports Yet
                                 </EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                                   You haven&apos;t submitted any accomplishment or liquidation reports yet. Use the form above to submit your report.
                                 </EmptyDescription>
-                                {myOrganizations.length > 0 && !isFormOpen && (
+                              </EmptyHeader>
+                              {myOrganizations.length > 0 && !isFormOpen && (
+                                <EmptyContent>
                                   <Button
                                     type="button"
                                     onClick={() => setIsFormOpen(true)}
-                                    title="New Post-Event Report"
-                                    className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                    title="Submit Post-Event Report"
+                                    className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
                                     style={{ color: "#ffffff" }}
                                   >
-                                    Submit
+                                    Submit Post-Event Report
                                   </Button>
-                                )}
-                              </EmptyHeader>
+                                </EmptyContent>
+                              )}
                             </Empty>
                           </div>
                         ) : (
@@ -2806,34 +2763,21 @@ function StudentDashboard() {
                           </div>
 
                           <form onSubmit={submitCbl} className="flex flex-col gap-4 mt-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="min-w-0">
-                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Version Title / Tag <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                  placeholder="e.g. 2026 Ratified Charter, CBL Amendment 2"
-                                  value={cblForm.versionTag}
-                                  onChange={(e) => setCblForm({ ...cblForm, versionTag: e.target.value })}
-                                  required
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
-                                />
-                              </div>
-
-                              <div className="min-w-0">
-                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Official PDF Document <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                  type="file"
-                                  accept="application/pdf"
-                                  required
-                                  onChange={(e) => setCblForm({ ...cblForm, file: e.target.files?.[0] || null })}
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-gray-700 dark:text-zinc-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-red-50 file:text-pup-maroon hover:file:bg-red-100 cursor-pointer"
-                                />
-                              </div>
+                            {/* 1. Version Title / Tag */}
+                            <div className="min-w-0">
+                              <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                Version Title / Tag <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                placeholder="e.g. 2026 Ratified Charter, CBL Amendment 2"
+                                value={cblForm.versionTag}
+                                onChange={(e) => setCblForm({ ...cblForm, versionTag: e.target.value })}
+                                required
+                                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                              />
                             </div>
 
+                            {/* 2. Summary of Amendments / Notes for OSAS */}
                             <div className="min-w-0">
                               <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                 Summary of Amendments / Notes for OSAS
@@ -2843,7 +2787,23 @@ function StudentDashboard() {
                                 value={cblForm.amendmentSummary}
                                 onChange={(e) => setCblForm({ ...cblForm, amendmentSummary: e.target.value })}
                                 rows={3}
-                                className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                                className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon resize-y"
+                              />
+                            </div>
+
+                            {/* 3. Official PDF Document Attachment */}
+                            <div className="min-w-0">
+                              <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                Official PDF Document <span className="text-red-500">*</span>
+                              </label>
+                              <FileAttachmentDropzone
+                                value={cblForm.file ? { file: cblForm.file, original_filename: cblForm.file.name, size_bytes: cblForm.file.size } : null}
+                                onChange={(item) => setCblForm({ ...cblForm, file: item?.file || null })}
+                                mode="single"
+                                accept="application/pdf"
+                                title="Drop official charter PDF here, or browse"
+                                subtitle="Must be an official ratified PDF document (up to 25 MB)"
+                                maxSizeBytes={25 * 1024 * 1024}
                               />
                             </div>
 
@@ -2860,7 +2820,7 @@ function StudentDashboard() {
                                 type="submit"
                                 disabled={cblSubmitting}
                                 title="Submit to OSAS"
-                                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-2"
+                                className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
                               >
                                 {cblSubmitting ? (
                                   <>
@@ -2877,7 +2837,7 @@ function StudentDashboard() {
                       )}
 
                       {/* Active Charter Status Card */}
-                      <div className="border-t border-border dark:border-border p-5 bg-gray-50/40 dark:bg-zinc-900/30">
+                      <div className="border-t border-border dark:border-border p-5 bg-gray-50/40 dark:bg-zinc-900/30 space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center gap-2">
@@ -2900,12 +2860,18 @@ function StudentDashboard() {
                                 : `No ratified Constitution & By-Laws on file for ${cblOrgData?.name || "this organization"}. Click "Submit CBL" above to submit the baseline charter.`}
                             </p>
                           </div>
+                        </div>
 
-                          {cblOrgData?.hasBylaws && selectedCblOrgId && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => handleOpenPdfPreview(null, {
+                        {cblOrgData?.hasBylaws && selectedCblOrgId && (
+                          <div className="pt-1">
+                            <AttachedFileCard
+                              item={{
+                                original_filename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
+                                url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1`,
+                                mime_type: "application/pdf",
+                              }}
+                              readOnly={true}
+                              onPreview={() => handleOpenPdfPreview(null, {
                                 url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1`,
                                 title: `${cblOrgData.name}: Constitution & By-Laws`,
                                 subtitle: `Official ratified charter on file with OSAS.`,
@@ -2913,13 +2879,9 @@ function StudentDashboard() {
                                 docType: "Constitution & By-Laws",
                                 originalFilename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
                               })}
-                              title="Preview Active CBL"
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center shrink-0"
-                            >
-                              Preview
-                            </Button>
-                          )}
-                        </div>
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Submissions & Versions History */}
@@ -2939,33 +2901,35 @@ function StudentDashboard() {
                             <Skeleton className="h-20 w-full rounded-2xl" />
                           </div>
                         ) : cblVersions.length === 0 ? (
-                          <div className="p-8 text-center">
-                            <Empty className="flex h-[280px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-book-open text-2xl text-pup-maroon dark:text-primary" />
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-duotone ph-book-open text-3xl text-gray-400 dark:text-zinc-500" />
                                   </EmptyMedia>
                                 </div>
-                                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                   No CBL Submissions Yet
                                 </EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
                                   Click the button below to submit your organization&apos;s Constitution & By-Laws or proposed amendments.
                                 </EmptyDescription>
-                                {myOrganizations.length > 0 && !isFormOpen && (
+                              </EmptyHeader>
+                              {myOrganizations.length > 0 && !isFormOpen && (
+                                <EmptyContent>
                                   <Button
                                     type="button"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit CBL Document"
-                                    className="mt-5 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
+                                    className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
                                     style={{ color: "#ffffff" }}
                                   >
-                                    Submit
+                                    Submit CBL Document
                                   </Button>
-                                )}
-                              </EmptyHeader>
+                                </EmptyContent>
+                              )}
                             </Empty>
                           </div>
                         ) : (
@@ -2975,30 +2939,49 @@ function StudentDashboard() {
                                 key={ver.id}
                                 className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
                               >
+                                {/* 1. Version / Tag Header */}
                                 <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="px-2 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-                                        {ver.version_tag || `v${ver.version_number || "1.0"}`}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="px-2.5 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                      {ver.version_tag || `v${ver.version_number || "1.0"}`}
+                                    </span>
+                                    <StatusBadge status={ver.status} />
+                                    {ver.effective_date && (
+                                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                        Effective: <strong className="text-gray-700 dark:text-zinc-300">{ver.effective_date}</strong>
                                       </span>
-                                      <StatusBadge status={ver.status} />
-                                      {ver.effective_date && (
-                                        <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                          Effective: <strong className="text-gray-700 dark:text-zinc-300">{ver.effective_date}</strong>
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p className="text-xs font-medium text-gray-800 dark:text-zinc-200 mt-2">
-                                      {ver.amendment_summary || "Constitution & By-Laws official document"}
-                                    </p>
+                                    )}
                                   </div>
 
-                                  {selectedCblOrgId && (
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() =>
+                                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">
+                                    {ver.created_at
+                                      ? new Date(ver.created_at).toLocaleDateString(undefined, {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        })
+                                      : ""}
+                                  </span>
+                                </div>
+
+                                {/* 2. Summary */}
+                                <div className="text-xs text-gray-700 dark:text-zinc-300 bg-gray-50/70 dark:bg-zinc-800/40 rounded-xl p-3 border border-border/60">
+                                  <p className="font-medium">
+                                    {ver.amendment_summary || "Constitution & By-Laws official document"}
+                                  </p>
+                                </div>
+
+                                {/* 3. Attachment */}
+                                {selectedCblOrgId && (
+                                  <div className="pt-1">
+                                    <AttachedFileCard
+                                      item={{
+                                        original_filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
+                                        url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1&versionId=${ver.id}`,
+                                        mime_type: "application/pdf",
+                                      }}
+                                      readOnly={true}
+                                      onPreview={() =>
                                         handleOpenPdfPreview(null, {
                                           url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1&versionId=${ver.id}`,
                                           title: `${cblOrgData?.name || "Organization"}: ${ver.version_tag || "CBL"}`,
@@ -3008,13 +2991,9 @@ function StudentDashboard() {
                                           originalFilename: ver.original_filename || "Constitution-and-By-Laws.pdf",
                                         })
                                       }
-                                      title="Preview PDF Document"
-                                      className="h-8 px-3 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg shrink-0 cursor-pointer active:scale-95 transition-all"
-                                    >
-                                      Preview
-                                    </Button>
-                                  )}
-                                </div>
+                                    />
+                                  </div>
+                                )}
 
                                 <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
                                   <span>
@@ -3313,41 +3292,29 @@ function StudentDashboard() {
             )}
 
             {selectedRequestForDetail?.status === "PendingPayment" && (
-              <div
-                onDragOver={(event) => { event.preventDefault(); event.stopPropagation(); }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  const file = event.dataTransfer.files?.[0];
-                  if (file) handlePaymentProofUpload(selectedRequestForDetail.id, file);
-                }}
-                className="rounded-2xl border border-dashed border-amber-400 bg-amber-50/70 p-4 dark:border-amber-700 dark:bg-amber-950/20"
-              >
-                <div className="flex flex-col items-center justify-center gap-2 text-center">
-                  <HugeIcon className="ph-bold ph-receipt text-xl text-amber-700 dark:text-amber-300" />
-                  <div>
-                    <h4 className="text-sm font-semibold text-amber-950 dark:text-amber-100">Payment proof required</h4>
-                    <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">Drop your receipt here or browse for a PDF, PNG, JPG, or WEBP file (up to 10 MB).</p>
-                  </div>
-                  <label
-                    htmlFor={`payment-proof-${selectedRequestForDetail.id}`}
-                    className="cursor-pointer rounded-lg bg-amber-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800"
-                  >
-                    {paymentUploadRequestId === selectedRequestForDetail.id ? "Uploading receipt…" : "Choose receipt"}
-                  </label>
-                  <input
-                    id={`payment-proof-${selectedRequestForDetail.id}`}
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp"
-                    className="hidden"
-                    disabled={paymentUploadRequestId === selectedRequestForDetail.id}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) handlePaymentProofUpload(selectedRequestForDetail.id, file);
-                      event.target.value = "";
-                    }}
-                  />
+              <div className="rounded-2xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <HugeIcon className="ph-bold ph-receipt text-amber-700 dark:text-amber-400 text-base" />
+                  <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-100">
+                    Payment proof required
+                  </h4>
                 </div>
+                <p className="text-xs text-amber-800 dark:text-amber-300">
+                  Drop your receipt or payment confirmation slip here or browse to upload (PDF, PNG, JPG, or WEBP up to 10 MB).
+                </p>
+                <FileAttachmentDropzone
+                  mode="single"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  title="Drop receipt or payment slip here, or browse"
+                  subtitle="PDF, PNG, JPG, or WEBP up to 10 MB"
+                  isUploading={paymentUploadRequestId === selectedRequestForDetail.id}
+                  uploadProgress={paymentUploadRequestId === selectedRequestForDetail.id ? 65 : null}
+                  onChange={(item) => {
+                    if (item?.file) {
+                      handlePaymentProofUpload(selectedRequestForDetail.id, item.file);
+                    }
+                  }}
+                />
               </div>
             )}
 
@@ -3362,80 +3329,31 @@ function StudentDashboard() {
                     </h4>
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="flex flex-wrap items-start gap-3">
                   {selectedRequestForDetail.attachments.map((att) => {
                     const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
                     const fileUrl = att.url || `/api/document-requests/${selectedRequestForDetail.id}/attachments/${att.id}`;
-                    const typeLabel =
-                      att.attachment_type === "spa"
-                        ? "Special Power of Attorney (SPA)"
-                        : att.attachment_type === "valid_id"
-                        ? "Valid Government ID"
-                        : att.attachment_type === "receipt"
-                        ? "Proof of Payment"
-                        : att.attachment_type === "clearance"
-                        ? "Clearance Slip"
-                        : "Supporting Evidence";
-
                     return (
-                      <div
+                      <AttachedFileCard
                         key={att.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-800/80 shadow-xs"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300">
-                            <HugeIcon className={isPdf ? "ph-fill ph-file-pdf text-red-500 text-base" : "ph-fill ph-file-image text-blue-500 text-base"} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">
-                              {att.original_filename}
-                            </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300">
-                                {typeLabel}
-                              </span>
-                              {att.size_bytes && (
-                                <span className="text-[10px] text-gray-400 dark:text-zinc-500">
-                                  {(att.size_bytes / 1024).toFixed(1)} KB
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
-                          {isPdf && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setPdfPreviewData({
-                                  url: fileUrl,
-                                  title: att.original_filename,
-                                  subtitle: `${typeLabel} for Request #${selectedRequestForDetail.id}`,
-                                  studentName: selectedRequestForDetail.student_name || "Requester",
-                                  docType: typeLabel,
-                                  originalFilename: att.original_filename,
-                                });
-                                setPdfPreviewOpen(true);
-                              }}
-                              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
-                            >
-                              Preview
-                            </Button>
-                          )}
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={att.original_filename}
-                            className="inline-flex items-center justify-center h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all cursor-pointer"
-                          >
-                            Download
-                          </a>
-                        </div>
-                      </div>
+                        item={{ ...att, url: fileUrl }}
+                        readOnly={true}
+                        onPreview={() => {
+                          if (isPdf) {
+                            setPdfPreviewData({
+                              url: fileUrl,
+                              title: att.original_filename,
+                              subtitle: `Attached file for Request #${selectedRequestForDetail.id}`,
+                              studentName: selectedRequestForDetail.student_name || "Requester",
+                              docType: "Supporting Document",
+                              originalFilename: att.original_filename,
+                            });
+                            setPdfPreviewOpen(true);
+                          } else if (fileUrl) {
+                            window.open(fileUrl, "_blank");
+                          }
+                        }}
+                      />
                     );
                   })}
                 </div>

@@ -20,7 +20,7 @@ export async function listDocTypes({ includeArchived = false, officeId, scope } 
   if (scope === "requestable") {
     scopeFilter = " AND is_requestable = TRUE AND is_compliance = FALSE";
   } else if (scope === "compliance") {
-    scopeFilter = " AND is_compliance = TRUE";
+    scopeFilter = " AND is_compliance = TRUE AND is_requestable = FALSE";
   }
 
   const rows = await dbAll(
@@ -39,7 +39,7 @@ export async function listAllDocTypes({ includeArchived = false, officeId, scope
   if (scope === "requestable") {
     scopeFilter = " AND is_requestable = TRUE AND is_compliance = FALSE";
   } else if (scope === "compliance") {
-    scopeFilter = " AND is_compliance = TRUE";
+    scopeFilter = " AND is_compliance = TRUE AND is_requestable = FALSE";
   }
 
   return await dbAll(

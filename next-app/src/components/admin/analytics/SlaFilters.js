@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import HugeIcon from "@/components/shared/HugeIcon"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -36,11 +35,10 @@ export default function SlaFilters({
   endDate,
   setEndDate,
   isLoading,
-  activeView = "all",
-  setActiveView,
 }) {
   const [startOpen, setStartOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
+
   const activeShortcut = (() => {
     if (!startDate || !endDate) return null
     const todayStr = format(new Date(), "yyyy-MM-dd")
@@ -99,56 +97,11 @@ export default function SlaFilters({
   }
 
   return (
-    <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
-      {/* Overview / View Mode Tab Group (Left side) */}
-      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 overflow-x-auto">
-        <button
-          type="button"
-          onClick={() => setActiveView?.("all")}
-          disabled={isLoading}
-          className={cn(
-            "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-            activeView === "all"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-          )}
-        >
-          Overview
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveView?.("sla")}
-          disabled={isLoading}
-          className={cn(
-            "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
-            activeView === "sla"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-          )}
-        >
-          <HugeIcon className="ph-bold ph-timer text-[13px] text-pup-maroon dark:text-red-400" />
-          <span>Turnaround & SLA</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveView?.("csm")}
-          disabled={isLoading}
-          className={cn(
-            "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
-            activeView === "csm"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-          )}
-        >
-          <HugeIcon className="ph-fill ph-star text-[13px] text-amber-500" />
-          <span>Client Satisfaction (CSM)</span>
-        </button>
-      </div>
-
-      {/* Date Range & Time Shortcuts (Right side) */}
-      <div className="flex flex-wrap items-center md:justify-end gap-3 shrink-0">
+    <div data-light-only className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+      {/* Date Range & Time Shortcuts */}
+      <div className="ml-auto flex flex-wrap items-center gap-3 shrink-0">
         {/* Time Shortcuts */}
-        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
+        <div className="flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
           {[
             { key: "today", label: "Today" },
             { key: "yesterday", label: "Yest." },
@@ -162,8 +115,9 @@ export default function SlaFilters({
                 type="button"
                 onClick={() => handleQuickRange(range.key)}
                 disabled={isLoading}
+                aria-pressed={isActive}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
                   isActive
                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -191,10 +145,11 @@ export default function SlaFilters({
                   {formatButtonDate(startDate, "Start")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+              <PopoverContent data-light-only className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={startDate ? parseDateLocal(startDate) : undefined}
+                  disabled={endDate ? { after: parseDateLocal(endDate) } : undefined}
                   onSelect={(date) => {
                     setStartDate(date ? format(date, "yyyy-MM-dd") : "")
                     setStartOpen(false)
@@ -219,10 +174,11 @@ export default function SlaFilters({
                   {formatButtonDate(endDate, "End")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+              <PopoverContent data-light-only className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={endDate ? parseDateLocal(endDate) : undefined}
+                  disabled={startDate ? { before: parseDateLocal(startDate) } : undefined}
                   onSelect={(date) => {
                     setEndDate(date ? format(date, "yyyy-MM-dd") : "")
                     setEndOpen(false)
@@ -237,4 +193,3 @@ export default function SlaFilters({
     </div>
   )
 }
-

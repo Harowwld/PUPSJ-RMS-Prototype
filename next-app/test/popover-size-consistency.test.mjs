@@ -119,7 +119,7 @@ test('RecordsArchiveTab Arrange Records Dropdown Follows Three-Zone Architecture
   )
 })
 
-test('Header.js User Profile Dropdown Follows Three-Zone Architecture with Stacked Footer', () => {
+test('Header.js User Profile Dropdown Follows Three-Zone Architecture with Clean Sign Out Footer', () => {
   const headerPath = path.join(ROOT_DIR, 'src/components/layout/Header.js')
   assert.ok(fs.existsSync(headerPath))
   const code = fs.readFileSync(headerPath, 'utf8')
@@ -129,16 +129,12 @@ test('Header.js User Profile Dropdown Follows Three-Zone Architecture with Stack
     'Header.js User Profile must use w-80 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
-    code.includes('Active Session'),
-    'Header.js User Profile must include Zone 3 Footer with session indicator'
+    !code.includes('Active Session</span>'),
+    'Header.js User Profile must not include redundant Active Session text in footer'
   )
   assert.ok(
     code.includes('Sign Out'),
     'Header.js User Profile must include Sign Out button in footer'
-  )
-  assert.ok(
-    code.includes('flex flex-col gap-1.5'),
-    'Header.js User Profile footer must stack Active Session and Sign Out on new lines'
   )
 })
 
@@ -320,3 +316,23 @@ test('Datepicker Popovers Hug Content with w-auto without sm:w-auto Workaround',
   }
 })
 
+test('Popovers and Dropdown Headers Have Clean Icon-Free Typography', () => {
+  // 1. MultiCriteriaFilter
+  const filterCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/shared/MultiCriteriaFilter.js'), 'utf8')
+  assert.ok(!filterCode.includes('ph-faders'), 'MultiCriteriaFilter popover header must not include decorative icon')
+  assert.ok(!filterCode.includes('ph-funnel'), 'MultiCriteriaFilter trigger button must not include leading icon')
+
+  // 2. RecordsArchiveTab
+  const archiveCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/staff/RecordsArchiveTab.js'), 'utf8')
+  assert.ok(!archiveCode.includes('ph-arrows-down-up text-xs'), 'Arrange Records header must not include decorative icon')
+
+  // 3. StudentComplianceTab
+  const complianceCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/student/StudentComplianceTab.js'), 'utf8')
+  assert.ok(!complianceCode.includes('ph-faders'), 'StudentComplianceTab filter popover header must not include decorative icon')
+  assert.ok(!complianceCode.includes('ph-file-text text-sm'), 'StudentComplianceTab details popover headers must not include decorative icon')
+
+  // 4. SLAAnalyticsTab
+  const slaCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/admin/SLAAnalyticsTab.js'), 'utf8')
+  assert.ok(!slaCode.includes('ph-file-csv'), 'Export Dataset dropdown header must not include decorative icon')
+  assert.ok(!slaCode.includes('ph-file-pdf text-xs'), 'Official Report dropdown header must not include decorative icon')
+})

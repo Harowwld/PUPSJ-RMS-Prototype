@@ -122,7 +122,7 @@ export default function ResilientPDFViewer({
             Archived Record: Digital File Displaced or Missing
           </h3>
           <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">
-            The metadata record remains permanently archived and protected in the system registry, but the physical PDF file is currently unavailable or missing from server storage.
+            The record details are still available, but the PDF file is missing from digital storage.
           </p>
 
           {(preview?.room || preview?.cabinet || preview?.drawer) && (

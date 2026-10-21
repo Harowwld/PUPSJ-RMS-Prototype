@@ -1471,7 +1471,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           <Select
             className="h-full w-auto min-w-[140px] flex-1 cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 gap-1 text-xs font-medium text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none!"
             menuClassName="bg-white! border border-border! rounded-xl! shadow-xl! dark:border-border dark:bg-card min-w-[200px] w-max z-50"
-            optionClassName="text-xs! font-normal! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
+            optionClassName="text-xs! font-medium! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
             disabled={!activeRoom || templates.length === 0}
@@ -1503,12 +1503,9 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             >
               {/* Zone 1: Header */}
               <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <HugeIcon className="ph-bold ph-layout text-xs text-pup-maroon dark:text-red-400 shrink-0" />
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                    Template Actions
-                  </span>
-                </div>
+                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                  Template Actions
+                </span>
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400">
                   Presets
                 </span>
@@ -1763,5 +1760,4 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     </div>
   )
 }
-
 

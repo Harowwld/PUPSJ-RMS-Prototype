@@ -458,6 +458,36 @@ export function detectWindowsDrives() {
 }
 
 /**
+ * Checks if a drive label or name matches the institutional backup volume naming policy.
+ * By default, accepts labels matching or starting with PUPSJ (e.g., PUPSJ_BACKUP, PUPSJ_ARCHIVE, PUPSJ_RMS),
+ * or strictly matching the configured EXTERNAL_BACKUP_LABEL (case-insensitive, ignoring delimiters).
+ *
+ * @param {string} label
+ * @param {string} [configuredLabel=process.env.EXTERNAL_BACKUP_LABEL]
+ * @returns {boolean}
+ */
+export function isAuthorizedDriveLabel(label, configuredLabel = process.env.EXTERNAL_BACKUP_LABEL) {
+  if (!label || typeof label !== "string") return false;
+  const normalized = label.trim().toUpperCase().replace(/[\s\-_]+/g, "_");
+  if (!normalized) return false;
+
+  if (configuredLabel && configuredLabel.trim()) {
+    const target = configuredLabel.trim().toUpperCase().replace(/[\s\-_]+/g, "_");
+    return normalized === target || normalized.startsWith(`${target}_`);
+  }
+
+  // Default accepted institutional drive naming patterns:
+  return (
+    normalized === "PUPSJ_BACKUP" ||
+    normalized === "PUPSJ_BACKUPS" ||
+    normalized === "PUPSJ_ARCHIVE" ||
+    normalized === "PUPSJ_RMS" ||
+    normalized === "PUPSJ" ||
+    normalized.startsWith("PUPSJ_")
+  );
+}
+
+/**
  * Main External Drive Detection Function
  * Detects whether an actual external drive is attached.
  */
@@ -594,9 +624,14 @@ export function detectExternalDrive(options = {}) {
     detectedDrives = detectWindowsDrives();
   }
 
-  // If physical drives are found
-  if (detectedDrives.length > 0) {
-    const primary = detectedDrives.find((drive) => drive.isWritable) || detectedDrives[0];
+  const enforceLabel = process.env.EXTERNAL_BACKUP_ENFORCE_LABEL !== "false";
+  const authorizedDrives = enforceLabel
+    ? detectedDrives.filter((drive) => isAuthorizedDriveLabel(drive.label || drive.name))
+    : detectedDrives;
+
+  // If authorized physical drives are found
+  if (authorizedDrives.length > 0) {
+    const primary = authorizedDrives.find((drive) => drive.isWritable) || authorizedDrives[0];
     return {
       configured: isConfigured,
       connected: true,
@@ -610,14 +645,37 @@ export function detectExternalDrive(options = {}) {
       totalFormatted: primary.totalFormatted,
       isRemovable: true,
       isEmulated: false,
-      drives: detectedDrives,
+      drives: authorizedDrives,
+    };
+  }
+
+  // If physical drives were detected but NONE match the authorized institutional label
+  if (detectedDrives.length > 0 && enforceLabel) {
+    const expectedLabel = process.env.EXTERNAL_BACKUP_LABEL || "PUPSJ_BACKUP";
+    const detectedNames = detectedDrives.map((d) => `"${d.label || d.name}"`).join(", ");
+    return {
+      configured: isConfigured,
+      connected: false,
+      path: null,
+      mountPoint: null,
+      label: null,
+      isWritable: false,
+      isRemovable: false,
+      isEmulated: false,
+      freeBytes: null,
+      totalBytes: null,
+      freeFormatted: null,
+      totalFormatted: null,
+      drives: [],
+      unauthorizedDrives: detectedDrives,
+      message: `Unauthorized external storage detected (${detectedNames}). To prevent unauthorized copies, external backup drives must be labeled "${expectedLabel}" (or configured in EXTERNAL_BACKUP_LABEL).`,
     };
   }
 
   // 4. Physical detection found NO drives and simulation is OFF
   const message = isConfigured
     ? `Configured external backup volume ("${rawConfiguredPath}") is unavailable or not mounted, and no physical USB drive was detected.`
-    : "No external volume detected. Attach a physical USB storage drive or configure EXTERNAL_BACKUP_PATH.";
+    : "No external volume detected. Attach an authorized USB drive labeled \"PUPSJ_BACKUP\" or configure EXTERNAL_BACKUP_PATH.";
 
   return {
     configured: isConfigured,

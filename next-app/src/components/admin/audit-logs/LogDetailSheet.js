@@ -439,10 +439,10 @@ export default function LogDetailSheet({
                 variant="outline"
                 onClick={() => handleCopy?.(JSON.stringify(selectedLog, null, 2), "Log JSON")}
                 className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
-                title="Copy raw audit log JSON"
+                title="Copy activity record data"
               >
                 <HugeIcon className="ph-bold ph-copy text-sm" />
-                <span>Copy JSON</span>
+                <span>Copy Record Data</span>
               </Button>
             )}
           </div>

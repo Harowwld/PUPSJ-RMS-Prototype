@@ -285,12 +285,9 @@ export default function GoogleDrivePdfCard({
               >
                 {/* Zone 1: Header */}
                 <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <HugeIcon className="ph-bold ph-file-pdf text-xs text-pup-maroon dark:text-red-400 shrink-0" />
-                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                      Document Actions
-                    </span>
-                  </div>
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                    Document Actions
+                  </span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
                     PDF
                   </span>
@@ -376,12 +373,9 @@ export default function GoogleDrivePdfCard({
             >
               {/* Zone 1: Header */}
               <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <HugeIcon className="ph-bold ph-file-pdf text-xs text-pup-maroon dark:text-red-400 shrink-0" />
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                    Document Actions
-                  </span>
-                </div>
+                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                  Document Actions
+                </span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
                   PDF
                 </span>

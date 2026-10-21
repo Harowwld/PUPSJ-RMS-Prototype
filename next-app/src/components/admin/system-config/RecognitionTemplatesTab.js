@@ -11,6 +11,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyContent,
 } from "@/components/ui/empty"
 import {
   Tooltip,
@@ -22,6 +23,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import RecognitionTemplateSkeleton from "@/components/admin/skeletons/RecognitionTemplateSkeleton"
+import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone"
 import { detectDocType } from "@/lib/ocrClient"
 import { cn } from "@/lib/utils"
 import { formatErrorMessage } from "@/lib/errorUtils"
@@ -544,38 +546,15 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                 Calibration Document
               </label>
-              <input
-                ref={sampleInputRef}
-                type="file"
+              <FileAttachmentDropzone
+                value={sampleFile ? { file: sampleFile, original_filename: sampleFile.name, size_bytes: sampleFile.size } : null}
+                onChange={(item) => handleSample(item?.file || null)}
+                mode="single"
                 accept="application/pdf,image/*"
-                onChange={(event) => handleSample(event.target.files?.[0])}
-                className="sr-only"
+                title="Drop calibration document here, or browse"
+                subtitle="Representative PDF or image (up to 25 MB)"
+                maxSizeBytes={25 * 1024 * 1024}
               />
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
-                onClick={chooseSampleFile}
-              >
-                {sampleFile ? "Replace Sample" : "Upload Sample"}
-              </Button>
-              {sampleFile ? (
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-800/50">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <HugeIcon  className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400 flex-shrink-0" />
-                    <span className="truncate text-xs font-medium text-gray-700 dark:text-zinc-300">
-                      {sampleFile.name}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-gray-400 dark:text-zinc-500 flex-shrink-0">
-                    {(sampleFile.size / 1024).toFixed(0)} KB
-                  </span>
-                </div>
-              ) : (
-                <p className="text-[11px] text-gray-400 dark:text-zinc-500">
-                  Upload a representative PDF or image before highlighting fields.
-                </p>
-              )}
             </div>
 
             <div className="pt-2 border-t border-border dark:border-border space-y-2">
@@ -795,7 +774,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Empty className="flex h-[520px] flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-5">
-                    <div className="absolute inset-0 rounded-3xl bg-linear-to-tr from-pup-maroon/20 to-amber-500/20 blur-xl dark:from-pup-maroon/30 dark:to-amber-500/30" />
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
                       <HugeIcon  className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-red-400" />
                     </EmptyMedia>
@@ -806,21 +785,21 @@ export default function RecognitionTemplatesTab({ showToast }) {
                   <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-900 dark:text-zinc-300">
                     Load a representative PSA PDF or image to visualize text boundaries and calibrate coordinate extraction boxes.
                   </EmptyDescription>
-                  <div className="mt-5 flex flex-col items-center gap-2">
-                    <Button
-                      type="button"
-                      className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
-                      onClick={chooseSampleFile}
-                    >
-                      Upload Sample
-                    </Button>
-                    {!documentTypeId && (
-                      <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                        Tip: Select the target document type in the sidebar before saving.
-                      </span>
-                    )}
-                  </div>
                 </EmptyHeader>
+                <EmptyContent className="mt-5 flex flex-col items-center gap-2">
+                  <Button
+                    type="button"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+                    onClick={chooseSampleFile}
+                  >
+                    Upload Sample Document
+                  </Button>
+                  {!documentTypeId && (
+                    <span className="text-[11px] text-gray-400 dark:text-zinc-500">
+                      Tip: Select the target document type in the sidebar before saving.
+                    </span>
+                  )}
+                </EmptyContent>
               </Empty>
             )}
 

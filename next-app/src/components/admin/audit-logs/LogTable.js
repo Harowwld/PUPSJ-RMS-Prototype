@@ -8,6 +8,7 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
@@ -265,133 +266,133 @@ export default function LogTable({
           ? "border-t border-border dark:border-border rounded-b-2xl"
           : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}>
-        <div className="w-full overflow-x-auto select-none">
-          <table className={cn("w-full text-sm table-fixed min-w-[1000px]", displayLogs.length === 0 && "h-full")}>
-            <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                <th className="w-12 p-4 text-center"></th>
-                <th className="p-4 w-[15%]">
-                  <button
-                    onClick={() => handleSort("created_at")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      logSortBy === "created_at"
-                        ? "text-gray-900 dark:text-white font-semibold"
-                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
+        {displayLogs.length === 0 ? (
+          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  No Activity Found
+                </EmptyTitle>
+                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  Try adjusting your search filters to find what you&apos;re looking for.
+                </EmptyDescription>
+              </EmptyHeader>
+              {(localSearch !== "" ||
+                logRoleFilter !== "All" ||
+                logSeverityFilter !== "All" ||
+                logStartDate !== "" ||
+                logEndDate !== "") && (
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setLocalSearch("")
+                      setLogSearch("")
+                      setLogRoleFilter("All")
+                      setLogSeverityFilter("All")
+                      setLogStartDate("")
+                      setLogEndDate("")
+                      setLogPage(1)
+                    }}
+                    title="Reset Filters"
+                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
-                    Timestamp{" "}
-                    <SortIndicator
-                      column="created_at"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="p-4 w-[10%]">
-                  <button
-                    onClick={() => handleSort("severity")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      logSortBy === "severity"
-                        ? "text-gray-900 dark:text-white font-semibold"
-                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Level{" "}
-                    <SortIndicator
-                      column="severity"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="p-4 w-[17%]">
-                  <button
-                    onClick={() => handleSort("actor")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      logSortBy === "actor"
-                        ? "text-gray-900 dark:text-white font-semibold"
-                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Actor{" "}
-                    <SortIndicator
-                      column="actor"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="p-4 w-[16%]">
-                  <button
-                    onClick={() => handleSort("action")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      logSortBy === "action"
-                        ? "text-gray-900 dark:text-white font-semibold"
-                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Action{" "}
-                    <SortIndicator
-                      column="action"
-                      logSortBy={logSortBy}
-                      logSortOrder={logSortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="p-4 w-[36%] text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Description</th>
-                <th className="p-4 pr-6 w-20 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className={cn("bg-transparent", displayLogs.length === 0 && "h-full")}>
-              {displayLogs.length === 0 ? (
-                <tr className="border-0 hover:bg-transparent h-full">
-                  <td colSpan={7} className="border-0 p-0 h-full">
-                    <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                          No Activity Found
-                        </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
-                          Try adjusting your search filters to find what you&apos;re looking for.
-                        </EmptyDescription>
-                        {(localSearch !== "" ||
-                          logRoleFilter !== "All" ||
-                          logSeverityFilter !== "All" ||
-                          logStartDate !== "" ||
-                          logEndDate !== "") && (
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setLocalSearch("")
-                              setLogSearch("")
-                              setLogRoleFilter("All")
-                              setLogSeverityFilter("All")
-                              setLogStartDate("")
-                              setLogEndDate("")
-                              setLogPage(1)
-                            }}
-                            title="Reset Filters"
-                            className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                          >
                     Reset Filters
                   </Button>
-                        )}
-                      </EmptyHeader>
-                    </Empty>
-                  </td>
+                </EmptyContent>
+              )}
+            </Empty>
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto select-none">
+            <table className="w-full text-sm table-fixed min-w-[1000px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
+                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <th className="w-12 p-4 text-center"></th>
+                  <th className="p-4 w-[15%]">
+                    <button
+                      onClick={() => handleSort("created_at")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        logSortBy === "created_at"
+                          ? "text-gray-900 dark:text-white font-semibold"
+                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Timestamp{" "}
+                      <SortIndicator
+                        column="created_at"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="p-4 w-[10%]">
+                    <button
+                      onClick={() => handleSort("severity")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        logSortBy === "severity"
+                          ? "text-gray-900 dark:text-white font-semibold"
+                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Level{" "}
+                      <SortIndicator
+                        column="severity"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="p-4 w-[17%]">
+                    <button
+                      onClick={() => handleSort("actor")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        logSortBy === "actor"
+                          ? "text-gray-900 dark:text-white font-semibold"
+                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Actor{" "}
+                      <SortIndicator
+                        column="actor"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="p-4 w-[16%]">
+                    <button
+                      onClick={() => handleSort("action")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        logSortBy === "action"
+                          ? "text-gray-900 dark:text-white font-semibold"
+                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Action{" "}
+                      <SortIndicator
+                        column="action"
+                        logSortBy={logSortBy}
+                        logSortOrder={logSortOrder}
+                      />
+                    </button>
+                  </th>
+                  <th className="p-4 w-[36%] text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Description</th>
+                  <th className="p-4 pr-6 w-20 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
                 </tr>
-              ) : (
-                displayLogs.map((log) => (
+              </thead>
+              <tbody className="bg-transparent">
+                {displayLogs.map((log) => (
                   <LogRow
                     key={log.id}
                     log={log}
@@ -401,11 +402,11 @@ export default function LogTable({
                     setSelectedLog={setSelectedLog}
                     handleCopy={handleCopy}
                   />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {logTotal > 0 && (
           <LogPagination
