@@ -346,9 +346,14 @@ export default function ScanUploadTab({
           selectedRow?.original_filename?.toLowerCase()?.endsWith(".pdf")))
 
     if (!isPdf) {
-      setPdfPreviewDataUrl(null)
-      setPdfRendering(false)
-      return
+      const timer = setTimeout(() => {
+        setPdfPreviewDataUrl(null)
+        setPdfRendering(false)
+      }, 0)
+      return () => {
+        active = false
+        clearTimeout(timer)
+      }
     }
 
     const renderPdfToImage = async () => {
@@ -518,7 +523,7 @@ export default function ScanUploadTab({
         id="view-upload"
         className="font-jakarta w-full flex flex-col h-auto focus:outline-none animate-fade-up"
       >
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader
             icon="ph-scan"
             title="Scan & Upload"

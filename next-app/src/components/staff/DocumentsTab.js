@@ -1,5 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Reorder } from "framer-motion";
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -133,7 +134,7 @@ export default function DocumentsTab({
   const [matrixMissingDocFilters, setMatrixMissingDocFilters] = useState([]);
   const [matrixSortBy, setMatrixSortBy] = useState("student_no");
   const [matrixSortOrder, setMatrixSortOrder] = useState("ASC");
-  const [matrixPage, setMatrixPage] = useState(1);
+  const [matrixPage, setMatrixPage] = useUrlPage();
   const [matrixItemsPerPage, setMatrixItemsPerPage] = useState(10);
 
   // Horizontal scroll container ref & scroll helper
@@ -467,7 +468,7 @@ export default function DocumentsTab({
       setMatrixMissingDocFilters(values);
       setMatrixPage(1);
     }
-  }, []);
+  }, [setMatrixPage]);
 
   const handleClearMatrixFilters = () => {
     setMatrixStatusFilter("all");
@@ -510,7 +511,7 @@ export default function DocumentsTab({
       });
     });
     return chips;
-  }, [matrixSearch, matrixCourseFilters, matrixMissingDocFilters]);
+  }, [matrixSearch, matrixCourseFilters, matrixMissingDocFilters, setMatrixPage]);
 
 
 

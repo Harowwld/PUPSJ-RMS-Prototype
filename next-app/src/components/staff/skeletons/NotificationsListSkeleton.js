@@ -3,9 +3,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export default function NotificationsListSkeleton({ groupCount = 2, itemsPerGroup = 3 }) {
+export default function NotificationsListSkeleton({ groupCount = 2, itemsPerGroup = 3, className }) {
   return (
-    <div className="flex-1 flex flex-col gap-6 p-6 font-jakarta select-none animate-fade-up">
+    <div className={cn("flex-1 flex flex-col gap-6 p-6 font-jakarta select-none animate-fade-up", className)}>
       {Array.from({ length: groupCount }).map((_, gIdx) => (
         <div key={gIdx} className="space-y-2.5">
           {/* Section Header */}

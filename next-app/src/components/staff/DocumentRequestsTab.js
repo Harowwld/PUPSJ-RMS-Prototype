@@ -1,5 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,7 +149,7 @@ export default function DocumentRequestsTab({
   const [docTypeFilters, setDocTypeFilters] = useState([]);
   const [charterFilters, setCharterFilters] = useState([]);
   const [slaStandards, setSlaStandards] = useState(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlPage();
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
@@ -265,7 +266,7 @@ export default function DocumentRequestsTab({
       return;
     }
     setPage(1);
-  }, [debouncedQ]);
+  }, [debouncedQ, setPage]);
 
   const loadList = useCallback(
     async (opts = { showLoading: true }) => {
@@ -342,7 +343,8 @@ export default function DocumentRequestsTab({
   };
 
   useEffect(() => {
-    loadList({ showLoading: true });
+    const timer = setTimeout(() => loadList({ showLoading: true }), 0);
+    return () => clearTimeout(timer);
   }, [loadList]);
 
   useEffect(() => {
@@ -488,10 +490,11 @@ export default function DocumentRequestsTab({
     detail?.status && TERMINAL_REQUEST_STATUSES.includes(detail.status)
   );
 
+  const detailStatus = detail?.status;
   const availableStatuses = useMemo(() => {
-    if (!detail?.status) return STATUS_OPTIONS;
-    return ALLOWED_STATUS_TRANSITIONS[detail.status] || [detail.status];
-  }, [detail?.status]);
+    if (!detailStatus) return STATUS_OPTIONS;
+    return ALLOWED_STATUS_TRANSITIONS[detailStatus] || [detailStatus];
+  }, [detailStatus]);
 
   const handleManualSave = () => {
     patchDetail({
@@ -828,7 +831,7 @@ export default function DocumentRequestsTab({
     else if (groupId === "docType") setDocTypeFilters(values);
     else if (groupId === "charter") setCharterFilters(values);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const handleClearFilters = useCallback(() => {
     setQ("");
@@ -837,7 +840,7 @@ export default function DocumentRequestsTab({
     setDocTypeFilters([]);
     setCharterFilters([]);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -878,7 +881,7 @@ export default function DocumentRequestsTab({
       });
     });
     return chips;
-  }, [q, statusFilters, clientTypeFilters, docTypeFilters, charterFilters]);
+  }, [q, statusFilters, clientTypeFilters, docTypeFilters, charterFilters, setPage]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -1055,7 +1058,7 @@ export default function DocumentRequestsTab({
                         type="button"
                         onClick={() => setCreateOpen(true)}
                         title="Create Document Request"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white px-5 text-xs font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
                       >
                         Create Request
                       </Button>

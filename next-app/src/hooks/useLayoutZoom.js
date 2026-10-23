@@ -88,6 +88,7 @@ export function useLayoutZoom(authUser = null) {
         try {
           localStorage.setItem(storageKey, String(clamped));
           localStorage.setItem("pup_zoom_node", String(clamped));
+          window.dispatchEvent(new CustomEvent("zoom-preference-changed", { detail: { node: clamped } }));
         } catch {
           // ignore localStorage errors (e.g. storage quota)
         }
@@ -136,7 +137,7 @@ export function useLayoutZoom(authUser = null) {
     return () => window.removeEventListener("change-zoom", handleZoomChange);
   }, [updateZoomNode]);
 
-  // Listen for storage events (sync across tabs)
+  // Listen for storage events (sync across tabs) and same-tab preference updates
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === storageKey || e.key === "pup_zoom_node") {
@@ -147,8 +148,19 @@ export function useLayoutZoom(authUser = null) {
       }
     };
 
+    const handleZoomPreferenceChanged = (e) => {
+      const val = Number(e?.detail?.node);
+      if (Number.isInteger(val) && val >= 0 && val <= 6 && val !== zoomNodeRef.current) {
+        setZoomNodeState(val);
+      }
+    };
+
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    window.addEventListener("zoom-preference-changed", handleZoomPreferenceChanged);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("zoom-preference-changed", handleZoomPreferenceChanged);
+    };
   }, [storageKey]);
 
   // Handle drag on the slider track

@@ -323,7 +323,7 @@ function LogFilters({
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
                   isActive
-                    ? "bg-slate-900 text-zinc-100 dark:bg-zinc-700 dark:text-zinc-100 shadow-xs"
+                    ? "bg-pup-maroon text-white dark:bg-red-600 dark:text-white shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
@@ -1025,8 +1025,11 @@ export default function AccountActivityPage() {
 
   useEffect(() => {
     if (loadingUser || !authUser) return;
-    refresh();
-    refreshStats();
+    const handler = setTimeout(() => {
+      refresh();
+      refreshStats();
+    }, 0);
+    return () => clearTimeout(handler);
   }, [loadingUser, authUser, refresh, refreshStats]);
 
   const handleRefresh = useCallback(async () => {

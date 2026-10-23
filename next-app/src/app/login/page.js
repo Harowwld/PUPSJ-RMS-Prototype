@@ -1354,7 +1354,7 @@ export default function Home() {
                     setTwoFactorCode("");
                     setTwoFactorError("");
                   }}
-                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>

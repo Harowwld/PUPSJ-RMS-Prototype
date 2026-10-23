@@ -1,5 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -53,6 +54,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -95,7 +97,23 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
-export default function DigitizationComplianceTab({
+export default function DigitizationComplianceTab(props) {
+  const isOsas = (props.officeId || props.authUser?.office_id || "").toLowerCase() === "osas";
+
+  if (isOsas) {
+    return (
+      <OSASOrganizationComplianceView
+        showToast={props.showToast}
+        onLogAction={props.onLogAction}
+        officeId={props.officeId || props.authUser?.office_id || "osas"}
+      />
+    );
+  }
+
+  return <DigitizationComplianceContent {...props} />;
+}
+
+function DigitizationComplianceContent({
   showToast,
   onLogAction,
   officeId,
@@ -103,19 +121,8 @@ export default function DigitizationComplianceTab({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const isOsas = (officeId || authUser?.office_id || "").toLowerCase() === "osas";
   const pdfPreviewFrameRef = useRef(null);
-
-  if (isOsas) {
-    return (
-      <OSASOrganizationComplianceView
-        showToast={showToast}
-        onLogAction={onLogAction}
-        officeId={officeId || authUser?.office_id || "osas"}
-      />
-    );
-  }
+  const [page, setPage] = useUrlPage({ enabled: true });
 
   const [kpiOrder, setKpiOrder] = useState(["completeness","students","complete"]);
   const [statusFilter, setStatusFilter] = useState(() => {
@@ -357,10 +364,7 @@ export default function DigitizationComplianceTab({
 
   const summary = data?.summary;
   const meta = data?.meta;
-  const byCourse = useMemo(
-    () => (Array.isArray(data?.byCourse) ? data.byCourse : []),
-    [data?.byCourse]
-  );
+  const byCourse = Array.isArray(data?.byCourse) ? data.byCourse : [];
   
   const sortedByCourse = useMemo(() => {
     let filtered = [...byCourse];
@@ -386,12 +390,11 @@ export default function DigitizationComplianceTab({
     });
   }, [byCourse, sortBy, sortOrder, tableSearch]);
 
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     setPage(1);
-  }, [tableSearch, statusFilter, courseFilter, requireApproved, sortBy, sortOrder, pageSize]);
+  }, [tableSearch, statusFilter, courseFilter, requireApproved, sortBy, sortOrder, pageSize, setPage]);
 
   const totalPages = Math.max(1, Math.ceil(sortedByCourse.length / pageSize));
   const paginatedByCourse = useMemo(() => {
@@ -557,7 +560,7 @@ export default function DigitizationComplianceTab({
     } finally {
       setIsExportingCsv(false);
     }
-  }, [summary, meta, byCourse, onLogAction, showToast]);
+  }, [summary, meta, byCourse, courseFilter, onLogAction, showToast]);
 
   const handleClearAll = useCallback(() => {
     setStatusFilter("Active");
@@ -614,7 +617,7 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col min-h-full w-full gap-6 animate-fade-up font-jakarta">
+    <div className="flex flex-col min-h-full w-full gap-6 animate-fade-up font-jakarta pb-6">
       {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
@@ -1628,9 +1631,15 @@ export default function DigitizationComplianceTab({
                       className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/60 dark:bg-zinc-800/40 hover:bg-gray-100/70 dark:hover:bg-zinc-800/70 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-xs text-gray-700 dark:text-zinc-200 shrink-0">
-                          {student.name ? student.name.split(" ").map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() : "ST"}
-                        </div>
+                        <ProfileAvatar
+                          id={student.student_no}
+                          name={student.name}
+                          initials={student.name
+                            ? student.name.split(" ").map((part) => part[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+                            : "ST"}
+                          className="size-8 border border-border"
+                          fallbackClassName="text-[10px] font-semibold"
+                        />
                         <div className="min-w-0">
                           <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                             {student.name || "Student"}

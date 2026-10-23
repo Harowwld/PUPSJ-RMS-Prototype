@@ -103,7 +103,8 @@ export default function ServiceStandardsTab({ showToast }) {
   }, [showToast]);
 
   useEffect(() => {
-    loadStandards();
+    const timer = setTimeout(() => loadStandards(), 0);
+    return () => clearTimeout(timer);
   }, [loadStandards]);
 
   const handleApplyPreset = (preset) => {
@@ -220,7 +221,7 @@ export default function ServiceStandardsTab({ showToast }) {
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
           icon="ph-clock-countdown"
           title="Processing Time Standards"
@@ -251,7 +252,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 type="button"
                 onClick={() => setConfirmSaveOpen(true)}
                 disabled={!isModified || saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 transition-all"
               >
                 {saving ? "Saving..." : "Save Standards"}
               </Button>

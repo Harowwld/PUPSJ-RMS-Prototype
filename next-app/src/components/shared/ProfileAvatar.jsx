@@ -12,11 +12,30 @@ export default function ProfileAvatar({
   fallbackClassName,
   fallbackStyle,
   imageClassName,
+  studentNo,
+  accountId,
+  account_id,
+  studentAccountId,
+  student_account_id,
+  staffId,
+  staff_id,
 }) {
-  const avatarSrc = id || avatarFilename
+  const lookupId = [
+    id,
+    studentNo,
+    accountId,
+    account_id,
+    studentAccountId,
+    student_account_id,
+    staffId,
+    staff_id,
+  ].find((value) => value !== null && value !== undefined && String(value).trim() !== "");
+
+  const avatarSrc = lookupId || avatarFilename
     ? `/api/account/avatar?${new URLSearchParams({
-        ...(id ? { id: String(id) } : {}),
-        ...(avatarFilename ? { t: avatarFilename } : {}),
+        ...(lookupId ? { id: String(lookupId) } : {}),
+        ...(avatarFilename ? { t: String(avatarFilename) } : {}),
+        ...(avatarFilename ? { filename: String(avatarFilename) } : {}),
       })}`
     : null;
 

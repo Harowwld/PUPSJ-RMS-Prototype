@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
 
-import Header from "@/components/layout/Header"
 import Sidebar from "@/components/shared/Sidebar"
+import MyActivityPanel from "@/components/shared/MyActivityPanel"
+import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,6 +17,30 @@ import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfi
 import ServiceStandardsSkeleton from "@/components/systemadmin/skeletons/ServiceStandardsSkeleton"
 import { getClientSession } from "@/lib/clientAuth"
 import { formatErrorMessage } from "@/lib/errorUtils"
+
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
+
+const SYSTEMADMIN_NAV_ITEMS = [
+  { type: "header", label: "Institutional Governance" },
+  { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
+  { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
+
+  { type: "header", label: "Campus Operations" },
+  { key: "standards", label: "Processing Time Standards", iconClass: "ph-bold ph-clock-countdown" },
+  { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
+
+  { type: "header", label: "Public Portal & Identity" },
+  { key: "branding", label: "Institutional Identity", iconClass: "ph-bold ph-certificate" },
+  { key: "landing", label: "Landing Page CMS", iconClass: "ph-bold ph-layout" },
+
+  { type: "header", label: "Personnel & Access" },
+  { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
+  { key: "security", label: "Security Questions", iconClass: "ph-bold ph-shield-check" },
+
+  { type: "header", label: "System & Security" },
+  { key: "logs", label: "Platform Activity History", iconClass: "ph-bold ph-history" },
+  { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
+]
 
 function TabLoadingSkeleton() {
   return (
@@ -97,7 +122,15 @@ const ServiceStandardsTab = dynamic(() => import("@/components/systemadmin/Servi
   loading: () => <ServiceStandardsSkeleton />,
 })
 
-const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing"]
+const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing", "activity", "settings"]
+
+function SystemAdminLoadingSkeleton() {
+  return (
+    <DashboardShellSkeleton items={SYSTEMADMIN_NAV_ITEMS}>
+      <TabLoadingSkeleton />
+    </DashboardShellSkeleton>
+  )
+}
 
 function SystemAdminPageContent({ authUser: propAuthUser }) {
   const contextUser = useAuthUser()
@@ -272,38 +305,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
   }, [router])
 
-  const sidebarItems = [
-    { type: "header", label: "Institutional Governance" },
-    { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
-    { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
-
-    { type: "header", label: "Campus Operations" },
-    { key: "standards", label: "Processing Time Standards", iconClass: "ph-bold ph-clock-countdown" },
-    { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
-
-    { type: "header", label: "Public Portal & Identity" },
-    { key: "branding", label: "Institutional Identity", iconClass: "ph-bold ph-certificate" },
-    { key: "landing", label: "Landing Page CMS", iconClass: "ph-bold ph-layout" },
-
-    { type: "header", label: "Personnel & Access" },
-    { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
-    { key: "security", label: "Security Questions", iconClass: "ph-bold ph-shield-check" },
-
-    { type: "header", label: "System & Security" },
-    { key: "logs", label: "Platform Activity History", iconClass: "ph-bold ph-history" },
-    { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
-  ]
+  const sidebarItems = SYSTEMADMIN_NAV_ITEMS
 
   if (loading) {
-    return (
-      <div className="font-jakarta flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
-        <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
-        <div className="flex flex-1 gap-4">
-          <Skeleton className="h-full w-[275px] rounded-brand" />
-          <Skeleton className="h-full flex-1 rounded-brand" />
-        </div>
-      </div>
-    )
+    return <SystemAdminLoadingSkeleton />
   }
 
   return (
@@ -315,7 +320,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         <div className="liquid-blob liquid-blob-3 bg-purple-400/20 dark:bg-purple-600/10"></div>
       </div>
 
-      <Header authUser={authUser} onLogout={handleLogout} />
+
 
       <div className="flex w-full flex-1 min-h-0 overflow-hidden flex-row">
         <Sidebar
@@ -332,7 +337,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
           <div 
-            className="p-4 flex flex-col min-h-full w-full"
+            className="pt-4 pr-4 pb-4 flex flex-1 flex-col min-h-full w-full [&>*]:flex-1"
             style={zoomStyle}
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
@@ -345,6 +350,8 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
             {view === "health" && <CampusOperationsTab showToast={showToast} />}
             {view === "backups" && <SystemBackupsTab showToast={showToast} />}
             {view === "landing" && <LandingPageCmsTab showToast={showToast} />}
+            {view === "activity" && <MyActivityPanel />}
+            {view === "settings" && <AccountSettingsPanel />}
           </div>
         </main>
       </div>
@@ -354,16 +361,8 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
 export default function SystemAdminPage() {
   return (
-    <SystemAdminGuard>
-      <Suspense fallback={
-        <div className="font-jakarta flex min-h-screen flex-col gap-4 bg-gray-50 p-4 dark:bg-background">
-          <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
-          <div className="flex flex-1 gap-4">
-            <Skeleton className="h-full w-[275px] rounded-brand" />
-            <Skeleton className="h-full flex-1 rounded-brand" />
-          </div>
-        </div>
-      }>
+    <SystemAdminGuard fallback={<SystemAdminLoadingSkeleton />}>
+      <Suspense fallback={<SystemAdminLoadingSkeleton />}>
         <SystemAdminPageContent />
       </Suspense>
     </SystemAdminGuard>

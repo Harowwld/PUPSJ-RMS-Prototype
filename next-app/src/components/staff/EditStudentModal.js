@@ -36,15 +36,18 @@ export default function EditStudentModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (student && open) {
-      setName(student.name && !student.name.startsWith("enc:v1:") ? student.name : "");
-      setCourseCode(student.courseCode || student.course_code || "");
-      setYearLevel(String(student.yearLevel || student.year_level || ""));
-      setSection(student.section || "");
-      setRoom(String(student.room || "1"));
-      setCabinet(canonicalizeCabinetId(student.cabinet || "A"));
-      setDrawer(String(student.drawer || "1"));
-    }
+    const timer = setTimeout(() => {
+      if (student && open) {
+        setName(student.name && !student.name.startsWith("enc:v1:") ? student.name : "");
+        setCourseCode(student.courseCode || student.course_code || "");
+        setYearLevel(String(student.yearLevel || student.year_level || ""));
+        setSection(student.section || "");
+        setRoom(String(student.room || "1"));
+        setCabinet(canonicalizeCabinetId(student.cabinet || "A"));
+        setDrawer(String(student.drawer || "1"));
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [student, open]);
 
   const currentRoomDef = storageLayout?.rooms?.find(

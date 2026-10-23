@@ -317,7 +317,7 @@ export default function LandingPageCmsTab({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta">
+    <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta pb-6">
       {/* Top Section Switcher Pill */}
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none">
         <button
@@ -398,7 +398,7 @@ export default function LandingPageCmsTab({ showToast }) {
       {currentSection === "hero" && (
         <>
           {/* Main Card with Header, Underline Tabs & Form Content */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
         <PageHeader
           icon="ph-bold ph-layout"
           title={

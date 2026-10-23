@@ -55,6 +55,7 @@ export default function StudentFeedbackModal({
 
   // Initialize or prefill feedback when request changes
   useEffect(() => {
+    const timer = setTimeout(() => {
     if (request?.feedback) {
       setRating(request.feedback.rating || 0);
       setSelectedAspects(Array.isArray(request.feedback.aspect_tags) ? request.feedback.aspect_tags : []);
@@ -65,6 +66,8 @@ export default function StudentFeedbackModal({
       setComments("");
     }
     setHoverRating(0);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [request, initialRating]);
 
   const toggleAspect = (aspect) => {

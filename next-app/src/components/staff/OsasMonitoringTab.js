@@ -1,5 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -162,8 +163,11 @@ export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, su
     let observer = null;
 
     if (!previewUrl) {
-      setLoading(false);
-      return;
+      const timer = setTimeout(() => setLoading(false), 0);
+      return () => {
+        active = false;
+        clearTimeout(timer);
+      };
     }
 
     const renderPage = async () => {
@@ -323,7 +327,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlPage();
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
@@ -341,10 +345,13 @@ export default function OsasMonitoringTab({ showToast }) {
   const isDraggingPostEventRef = useRef(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
     try {
       const saved = localStorage.getItem("pup_osas_view_mode");
       if (saved === "list" || saved === "kanban") setViewMode(saved);
     } catch {}
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleViewModeChange = (mode) => {
@@ -385,7 +392,8 @@ export default function OsasMonitoringTab({ showToast }) {
   }, [showToast]);
 
   useEffect(() => {
-    load();
+    const timer = setTimeout(() => load(), 0);
+    return () => clearTimeout(timer);
   }, [load]);
 
   const select = async (item) => {
@@ -848,14 +856,14 @@ export default function OsasMonitoringTab({ showToast }) {
     if (groupId === "status") setStatusFilters(values);
     else if (groupId === "org") setOrgFilters(values);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const handleClearFilters = useCallback(() => {
     setSearchQuery("");
     setStatusFilters([]);
     setOrgFilters([]);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -881,7 +889,7 @@ export default function OsasMonitoringTab({ showToast }) {
       });
     });
     return chips;
-  }, [searchQuery, statusFilters, orgFilters]);
+  }, [searchQuery, statusFilters, orgFilters, setPage]);
 
   const hasActiveFilters = Boolean(
     searchQuery.trim() || statusFilters.length > 0 || orgFilters.length > 0

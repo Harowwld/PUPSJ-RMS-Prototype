@@ -690,8 +690,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     const validPage = Math.max(1, Math.min(totalPages, newPage))
     setPage(validPage)
     const params = new URLSearchParams(window.location.search)
-    params.set("page", String(validPage))
-    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+    if (validPage > 1) {
+      params.set("page", String(validPage))
+    } else {
+      params.delete("page")
+    }
+    const queryString = params.toString()
+    const nextUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname
+    router.push(nextUrl, { scroll: false })
   }, [totalPages, router])
 
   const statCardsData = [
@@ -725,7 +731,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   }, [availableModules, form.selectedModules])
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader

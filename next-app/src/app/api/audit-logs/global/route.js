@@ -7,6 +7,7 @@ import {
 } from "@/lib/authHelpers";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { decryptPII } from "@/lib/piiEncryption";
+import { addAuditActorIds } from "@/lib/auditActor";
 
 export const runtime = "nodejs";
 
@@ -51,11 +52,11 @@ export async function GET(req) {
       countGlobalAuditLogs({ ...queryOpts, limit: undefined, offset: undefined }),
     ]);
 
-    const readableRows = rows.map((row) => ({
+    const readableRows = await addAuditActorIds(rows.map((row) => ({
       ...row,
       actor: decryptPII(row.actor),
       details: decryptPII(row.details),
-    }));
+    })));
 
     return NextResponse.json({ ok: true, data: readableRows, total });
   } catch {

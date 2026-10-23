@@ -297,7 +297,7 @@ export default function LandingFooterCmsView({ showToast }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
         <PageHeader
           icon="ph-bold ph-panel-bottom"
           title={

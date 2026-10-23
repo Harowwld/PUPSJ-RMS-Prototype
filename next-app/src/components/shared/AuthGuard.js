@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { getClientSession } from "@/lib/clientAuth"
 
@@ -19,9 +20,10 @@ export const useAuthUser = () => useContext(AuthUserContext)
  * Higher-order component that protects routes requiring authentication
  * @param {object} props
  * @param {React.ReactNode} props.children - Child components to render if authorized
- * @param {string} props.redirectTo - Path to redirect to if unauthorized (default: "/")
+ * @param {React.ReactNode} props.fallback - Loading skeleton matching the page layout (optional)
+ * @param {string} props.redirectTo - Path to redirect to if unauthorized (default: "/login")
  */
-export function AuthGuard({ children, redirectTo = "/login" }) {
+export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(null)
@@ -111,16 +113,60 @@ export function AuthGuard({ children, redirectTo = "/login" }) {
     };
   }, []);
 
-  // Show loading skeleton while checking authentication
+  // Show loading skeleton while checking authentication — mirrors the actual
+  // dashboard layout (sidebar + workspace, no page header). Pages pass their
+  // own page-matched skeleton via the `fallback` prop.
   if (isLoading) {
+    if (fallback) {
+      return fallback
+    }
     return (
-      <div className="font-jakarta flex min-h-screen flex-col gap-4 bg-gray-50 p-4 dark:bg-card">
-        <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
-        <div className="flex flex-1 gap-4">
-          <Skeleton className="h-full w-[30%] rounded-brand" />
-          <Skeleton className="h-full w-[70%] rounded-brand" />
+      <DashboardShellSkeleton
+        items={[
+          { key: "overview", label: "Overview" },
+          { type: "header", label: "Records" },
+          { key: "records", label: "Records" },
+          { key: "requests", label: "Requests" },
+          { type: "header", label: "System" },
+          { key: "settings", label: "Settings" },
+        ]}
+      >
+        <div className="flex flex-1 flex-col min-h-full w-full gap-6 animate-fade-up">
+          <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
+            {/* Header */}
+            <div className="p-6 flex items-center justify-between">
+              <div className="space-y-1.5">
+                <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
+                <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
+              </div>
+              <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
+            </div>
+
+            {/* Toolbar Row */}
+            <div className="h-14 border-t border-border dark:border-border p-4 px-6 flex items-center justify-between bg-gray-50/40 dark:bg-zinc-900/30">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
+                <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+              </div>
+              <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
+            </div>
+
+            {/* Table Body Rows */}
+            <div className="p-6 space-y-4 flex-1 rounded-b-2xl">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-12 border-b border-border dark:border-border flex items-center justify-between last:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
+                    <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
+                  </div>
+                  <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
+                  <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      </DashboardShellSkeleton>
     )
   }
 
@@ -137,26 +183,26 @@ export function AuthGuard({ children, redirectTo = "/login" }) {
 /**
  * Specific guard for systemadmin-only routes
  */
-export function SystemAdminGuard({ children }) {
-  return <AuthGuard>{children}</AuthGuard>
+export function SystemAdminGuard({ children, fallback }) {
+  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
 }
 
-export function SuperAdminGuard({ children }) {
-  return <AuthGuard>{children}</AuthGuard>
+export function SuperAdminGuard({ children, fallback }) {
+  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
 }
 
 /**
  * Specific guard for admin-only routes
  */
-export function AdminGuard({ children }) {
-  return <AuthGuard>{children}</AuthGuard>
+export function AdminGuard({ children, fallback }) {
+  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
 }
 
 /**
  * Specific guard for staff routes (any authenticated user)
  */
-export function StaffGuard({ children }) {
-  return <AuthGuard>{children}</AuthGuard>
+export function StaffGuard({ children, fallback }) {
+  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
 }
 
 /**

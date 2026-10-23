@@ -54,18 +54,18 @@ export default function StudentSidebarFeedbackCard({
     return null;
   }
 
-  // Collapsed Sidebar State (68px wide)
+  // Collapsed Sidebar State (60px wide)
   if (!open) {
     return (
-      <div className="flex flex-col items-center justify-center w-full px-1 py-2">
+      <div className="flex flex-col items-center justify-center w-full px-1 py-1">
         <button
           type="button"
           onClick={() => onRateRequest?.(targetRequest, 0)}
           title={`Rate Request #${targetRequest.id} (${targetRequest.doc_type || "Document"})`}
           aria-label={`Rate Request #${targetRequest.id}`}
-          className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition-all cursor-pointer shadow-2xs group"
+          className="relative flex h-[38px] w-[38px] mx-auto items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition-all cursor-pointer shadow-2xs group"
         >
-          <HugeIcon className="ph-fill ph-star text-[20px] text-amber-500 transition-transform group-hover:scale-110" />
+          <HugeIcon className="ph-fill ph-star text-[19px] text-amber-500 transition-transform group-hover:scale-110" />
           <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 ring-2 ring-white dark:ring-zinc-950" />
@@ -77,7 +77,7 @@ export default function StudentSidebarFeedbackCard({
 
   // Expanded Sidebar State
   return (
-    <div className="relative mx-1 mb-2 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 shadow-xs backdrop-blur-xs transition-all dark:border-border dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
+    <div className="relative mx-1 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 shadow-xs backdrop-blur-xs transition-all dark:border-border dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
       {/* Decorative background watermark */}
       <HugeIcon
         className="ph-fill ph-star pointer-events-none absolute -bottom-4 -right-3 text-7xl text-amber-500/10 dark:text-amber-400/5 select-none"

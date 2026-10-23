@@ -59,29 +59,37 @@ export default function GoogleDrivePdfCard({
 
   useEffect(() => {
     if (isImage) {
-      setThumbnailUrl(resolvedSrc);
-      setIsPdfLoading(false);
-      setHasPdfError(false);
-      return;
+      const timer = setTimeout(() => {
+        setThumbnailUrl(resolvedSrc);
+        setIsPdfLoading(false);
+        setHasPdfError(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     if (!resolvedSrc) {
-      setThumbnailUrl(null);
-      setIsPdfLoading(false);
-      setHasPdfError(false);
-      return;
+      const timer = setTimeout(() => {
+        setThumbnailUrl(null);
+        setIsPdfLoading(false);
+        setHasPdfError(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     if (thumbnailCache.has(resolvedSrc)) {
-      setThumbnailUrl(thumbnailCache.get(resolvedSrc));
-      setIsPdfLoading(false);
-      setHasPdfError(false);
-      return;
+      const timer = setTimeout(() => {
+        setThumbnailUrl(thumbnailCache.get(resolvedSrc));
+        setIsPdfLoading(false);
+        setHasPdfError(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     let active = true;
-    setIsPdfLoading(true);
-    setHasPdfError(false);
+    const loadingTimer = setTimeout(() => {
+      setIsPdfLoading(true);
+      setHasPdfError(false);
+    }, 0);
 
     async function generateThumbnail() {
       let loadingTask = null;
@@ -148,6 +156,7 @@ export default function GoogleDrivePdfCard({
 
     return () => {
       active = false;
+      clearTimeout(loadingTimer);
     };
   }, [resolvedSrc, isImage]);
 

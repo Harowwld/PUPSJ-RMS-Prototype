@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ export default function ResilientPDFViewer({
       : `${resolvedSrc}#toolbar=0&navpanes=0`
     : "";
 
-  const checkAvailability = () => {
+  const checkAvailability = useCallback(() => {
     if (!resolvedSrc) {
       setLoadState("missing");
       onStatusChange?.("missing");
@@ -62,12 +62,12 @@ export default function ResilientPDFViewer({
     return () => {
       isMounted = false;
     };
-  };
+  }, [resolvedSrc, onStatusChange]);
 
   useEffect(() => {
-    const cleanup = checkAvailability();
-    return cleanup;
-  }, [resolvedSrc]);
+    const timer = setTimeout(() => checkAvailability(), 0);
+    return () => clearTimeout(timer);
+  }, [checkAvailability]);
 
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -145,7 +145,7 @@ export default function ResilientPDFViewer({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isReuploading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 {isReuploading ? (
                   <span className="flex items-center gap-1.5">

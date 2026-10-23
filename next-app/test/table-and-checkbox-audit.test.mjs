@@ -78,8 +78,8 @@ test('Table Clickable Rows in Components', () => {
   assert.ok(fs.existsSync(studentCompPath))
   const studentCompCode = fs.readFileSync(studentCompPath, 'utf8')
   assert.ok(
-    studentCompCode.includes('PopoverTrigger') && studentCompCode.includes('Details'),
-    'StudentComplianceTab table view must provide Details popover'
+    studentCompCode.includes('viewMode === "table"') && studentCompCode.includes('viewMode === "cards"'),
+    'StudentComplianceTab must support clean table and cards views'
   )
 
   // 5. OfficeManagementTab

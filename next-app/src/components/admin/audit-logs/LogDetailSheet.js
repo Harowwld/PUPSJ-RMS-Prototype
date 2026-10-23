@@ -11,6 +11,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 
 /**
  * Standard Information Row (label : value)
@@ -107,15 +108,6 @@ export default function LogDetailSheet({
 }) {
   const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
   const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
-  const initials = selectedLog
-    ? (selectedLog.user || "")
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "AU";
-
   const formattedDescription = (() => {
     if (!selectedLog) return "";
     const text = selectedLog.details || "No known description";
@@ -205,9 +197,11 @@ export default function LogDetailSheet({
             {/* Identity / Actor Summary Strip */}
             <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border border-pup-maroon/20 bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                  {initials || "AU"}
-                </div>
+                <AuditActorAvatar
+                  log={selectedLog}
+                  className="size-11 border border-pup-maroon/20"
+                  fallbackClassName="font-bold text-sm bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
+                />
                 <div className="min-w-0">
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
                     {hideActor ? "Account Activity" : (selectedLog.user || "System")}

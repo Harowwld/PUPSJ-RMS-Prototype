@@ -9,6 +9,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { formatPHDateTime } from "@/lib/timeFormat";
@@ -192,23 +198,6 @@ export default function StudentComplianceTab({ authUser }) {
     }
     return groups;
   }, [availableCategories]);
-
-  const sortChip = useMemo(() => {
-    if (sortConfig.column === "priority") return [];
-    const sortLabel =
-      sortConfig.column === "docType"
-        ? "Requirement"
-        : sortConfig.column === "category"
-        ? "Category"
-        : "Status";
-    return [
-      {
-        groupLabel: "Sort",
-        label: `${sortLabel} (${sortConfig.direction === "asc" ? "Asc" : "Desc"})`,
-        onClear: () => setSortConfig({ column: "priority", direction: "asc" }),
-      },
-    ];
-  }, [sortConfig]);
 
   const activeFilterCount = statusFilters.length + categoryFilters.length;
 
@@ -655,10 +644,10 @@ export default function StudentComplianceTab({ authUser }) {
   };
 
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 space-y-4">
+    <div className="flex flex-col w-full flex-1 min-h-0 space-y-4 pb-6">
       {/* 1. Main Unified Container Card */}
       <Card
-        className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
+        className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta min-h-0 flex-1 focus:outline-none mb-4"
         tabIndex={0}
       >
         {/* A. Header */}
@@ -948,35 +937,152 @@ export default function StudentComplianceTab({ authUser }) {
               </Popover>
             </div>
 
-            {/* View Mode Toggle */}
+            {/* Standardized Arrange Requirements Dropdown matching Records Archive */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 transition-all shrink-0"
+                  title="Arrange Requirements"
+                >
+                  <span>
+                    {sortConfig.column === "priority" && "Sort: Default"}
+                    {sortConfig.column === "docType" && sortConfig.direction === "asc" && "Sort: Name (A-Z)"}
+                    {sortConfig.column === "docType" && sortConfig.direction === "desc" && "Sort: Name (Z-A)"}
+                    {sortConfig.column === "status" && sortConfig.direction === "asc" && "Sort: Completed First"}
+                    {sortConfig.column === "status" && sortConfig.direction === "desc" && "Sort: Pending First"}
+                    {sortConfig.column === "category" && sortConfig.direction === "asc" && "Sort: Category (A-Z)"}
+                    {sortConfig.column === "category" && sortConfig.direction === "desc" && "Sort: Category (Z-A)"}
+                  </span>
+                  <HugeIcon className="ph-bold ph-caret-down text-[10px] text-gray-400 ml-0.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={6}
+                className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
+              >
+                {/* Zone 1: Header */}
+                <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                    Arrange Requirements
+                  </span>
+                  {sortConfig.column !== "priority" && (
+                    <button
+                      type="button"
+                      onClick={() => setSortConfig({ column: "priority", direction: "asc" })}
+                      className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Zone 2: Body */}
+                <div className="p-1.5 space-y-0.5">
+                  <DropdownMenuItem
+                    onClick={() => setSortConfig({ column: "docType", direction: "asc" })}
+                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-sort-ascending text-sm text-pup-maroon dark:text-red-400" />
+                      <span>Name (A to Z)</span>
+                    </div>
+                    {sortConfig.column === "docType" && sortConfig.direction === "asc" && (
+                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                    )}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => setSortConfig({ column: "docType", direction: "desc" })}
+                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-sort-descending text-sm text-pup-maroon dark:text-red-400" />
+                      <span>Name (Z to A)</span>
+                    </div>
+                    {sortConfig.column === "docType" && sortConfig.direction === "desc" && (
+                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                    )}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => setSortConfig({ column: "status", direction: "asc" })}
+                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-check-circle text-sm text-pup-maroon dark:text-red-400" />
+                      <span>Completed First</span>
+                    </div>
+                    {sortConfig.column === "status" && sortConfig.direction === "asc" && (
+                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                    )}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => setSortConfig({ column: "status", direction: "desc" })}
+                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-clock text-sm text-pup-maroon dark:text-red-400" />
+                      <span>Pending First</span>
+                    </div>
+                    {sortConfig.column === "status" && sortConfig.direction === "desc" && (
+                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                    )}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => setSortConfig({ column: "category", direction: "asc" })}
+                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-folders text-sm text-pup-maroon dark:text-red-400" />
+                      <span>Category (A to Z)</span>
+                    </div>
+                    {sortConfig.column === "category" && sortConfig.direction === "asc" && (
+                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                    )}
+                  </DropdownMenuItem>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* View Mode Toggle: Table vs Cards */}
             <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
-                title="Show requirements in columns"
-                aria-label="Show requirements in columns"
+                title="Show requirements in table format"
+                aria-label="Show requirements in table format"
+                aria-pressed={viewMode === "table"}
                 className={cn(
-                  "p-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  "h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
                   viewMode === "table"
                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <HugeIcon className="ph-bold ph-table text-sm block" />
+                <HugeIcon className="ph-bold ph-table text-sm" />
+                <span>Table</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("cards")}
                 title="Show each requirement as a card"
                 aria-label="Show each requirement as a card"
+                aria-pressed={viewMode === "cards"}
                 className={cn(
-                  "p-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                  "h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
                   viewMode === "cards"
                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <HugeIcon className="ph-bold ph-squares-four text-sm block" />
+                <HugeIcon className="ph-bold ph-squares-four text-sm" />
+                <span>Cards</span>
               </button>
             </div>
           </div>
@@ -992,13 +1098,17 @@ export default function StudentComplianceTab({ authUser }) {
           }}
           searchQuery={searchQuery}
           onClearSearch={() => setSearchQuery("")}
-          extraChips={sortChip}
           onClearAll={clearAllFilters}
           className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* E. Requirements Content (Cards or Table) */}
-        <div className="p-6 border-t border-border dark:border-border">
+        <div
+          className={cn(
+            "border-t border-border dark:border-border",
+            sortedRequirements.length > 0 && viewMode === "table" ? "min-w-0" : "p-6"
+          )}
+        >
           {sortedRequirements.length === 0 ? (
             <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
@@ -1043,16 +1153,16 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           ) : viewMode === "table" ? (
             /* Table View */
-            <div className="w-full overflow-x-auto border border-border dark:border-border rounded-xl overflow-hidden select-none">
+            <div className="w-full overflow-x-auto select-none">
               <table className="w-full text-sm table-fixed min-w-[700px]">
-                <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 select-none">
+                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
+                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
                     <th
-                      className="p-4 w-[42%] cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
-                      onClick={() => handleSort("docType")}
+                      className="p-4 w-[50%]"
+                      aria-sort={sortConfig.column === "docType" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <div className="flex items-center gap-1.5">
-                        <span>Requirement</span>
+                      <button type="button" onClick={() => handleSort("docType")} className={cn("group flex items-center transition-colors cursor-pointer text-[12px] font-medium tracking-[0.04em]", sortConfig.column === "docType" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                        Requirement
                         {sortConfig.column === "docType" ? (
                           <HugeIcon
                             className={cn(
@@ -1063,14 +1173,14 @@ export default function StudentComplianceTab({ authUser }) {
                         ) : (
                           <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
                         )}
-                      </div>
+                      </button>
                     </th>
                     <th
-                      className="p-4 w-[24%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
-                      onClick={() => handleSort("category")}
+                      className="p-4 w-[25%] whitespace-nowrap"
+                      aria-sort={sortConfig.column === "category" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <div className="flex items-center gap-1.5">
-                        <span>Category</span>
+                      <button type="button" onClick={() => handleSort("category")} className={cn("group flex items-center transition-colors cursor-pointer text-[12px] font-medium tracking-[0.04em]", sortConfig.column === "category" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                        Category
                         {sortConfig.column === "category" ? (
                           <HugeIcon
                             className={cn(
@@ -1081,14 +1191,14 @@ export default function StudentComplianceTab({ authUser }) {
                         ) : (
                           <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
                         )}
-                      </div>
+                      </button>
                     </th>
                     <th
-                      className="p-4 w-[22%] whitespace-nowrap cursor-pointer hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
-                      onClick={() => handleSort("status")}
+                      className="p-4 pr-6 w-[25%] whitespace-nowrap"
+                      aria-sort={sortConfig.column === "status" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <div className="flex items-center gap-1.5">
-                        <span>Status</span>
+                      <button type="button" onClick={() => handleSort("status")} className={cn("group flex items-center transition-colors cursor-pointer text-[12px] font-medium tracking-[0.04em]", sortConfig.column === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                        Status
                         {sortConfig.column === "status" ? (
                           <HugeIcon
                             className={cn(
@@ -1099,14 +1209,11 @@ export default function StudentComplianceTab({ authUser }) {
                         ) : (
                           <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
                         )}
-                      </div>
-                    </th>
-                    <th className="p-4 pr-6 w-[12%] text-right whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                      Action
+                      </button>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border dark:divide-border">
+                <tbody className="divide-y divide-border dark:border-border">
                   {sortedRequirements.map((item) => {
                     const isSubmitted = item.status === "Submitted";
 
@@ -1126,100 +1233,23 @@ export default function StudentComplianceTab({ authUser }) {
                         <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap">
                           {item.category}
                         </td>
-                        <td className="p-4 whitespace-nowrap">
+                        <td className="p-4 pr-6 whitespace-nowrap">
                           {isSubmitted ? (
-                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
-                              Completed
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
+                                Completed
+                              </span>
+                              {item.document?.createdAt && (
+                                <span className="text-[10.5px] font-mono text-gray-400 dark:text-zinc-500">
+                                  {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
                               Pending Submission
                             </span>
                           )}
-                        </td>
-                        <td className="p-4 pr-6 text-right whitespace-nowrap">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button
-                                type="button"
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer shrink-0"
-                              >
-                                <span>Details</span>
-                                <HugeIcon className="ph-bold ph-caret-right text-[10px]" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              side="top"
-                              align="end"
-                              className="w-80 rounded-2xl p-0 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta"
-                            >
-                              {/* 1. Header Zone */}
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                                  {item.category}
-                                </span>
-                                <span
-                                  className={cn(
-                                    "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                                    isSubmitted
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                      : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
-                                  )}
-                                >
-                                  {isSubmitted ? "Submitted" : "Pending Submission"}
-                                </span>
-                              </div>
-
-                              {/* 2. Body Zone */}
-                              <div className="p-3.5 space-y-2.5">
-                                <div>
-                                  <h5 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                                    {item.docType}
-                                  </h5>
-                                  <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                                    {item.description}
-                                  </p>
-                                </div>
-
-                                <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
-                                  <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
-                                    Submission Guidelines
-                                  </div>
-                                  <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
-                                    {item.instructions || "Please submit original physical copies directly to Room 102."}
-                                  </p>
-                                </div>
-
-                                {item.document && (
-                                  <div className="space-y-1 text-xs pt-1 border-t border-border/50">
-                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                      <span>Archival Status:</span>
-                                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                        {item.document.approvalStatus || "Approved"}
-                                      </span>
-                                    </div>
-                                    {item.document.createdAt && (
-                                      <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                        <span>Archived On:</span>
-                                        <span className="font-mono text-gray-900 dark:text-zinc-200">
-                                          {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {item.document.originalFilename && (
-                                      <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
-                                        <span>File:</span>
-                                        <span className="font-mono text-gray-900 dark:text-zinc-200 truncate max-w-[180px]" title={item.document.originalFilename}>
-                                          {item.document.originalFilename}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </PopoverContent>
-                          </Popover>
                         </td>
                       </tr>
                     );
@@ -1230,242 +1260,97 @@ export default function StudentComplianceTab({ authUser }) {
           ) : (
             /* Cards View */
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500 px-1 select-none">
+              <div className="flex items-center justify-between gap-2 text-xs text-gray-500 px-1 select-none">
                 <span className="text-xs text-gray-900 dark:text-zinc-300">
-                  Showing <strong className="text-gray-900 dark:text-zinc-200">{sortedRequirements.length}</strong> requirements
+                  Showing <strong className="text-gray-900 dark:text-zinc-200">{sortedRequirements.length}</strong> {sortedRequirements.length === 1 ? "requirement" : "requirements"}
                 </span>
-                <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">Sort by:</span>
-                  <button
-                    type="button"
-                    onClick={() => handleSort("docType")}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border flex items-center gap-1.5 shadow-none",
-                      sortConfig.column === "docType"
-                        ? "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/30 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 font-semibold"
-                        : "bg-gray-50 dark:bg-zinc-800/80 border-border dark:border-border text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    )}
-                  >
-                    <span>Name</span>
-                    {sortConfig.column === "docType" && (
-                      <HugeIcon
-                        className={cn(
-                          "text-[10px] ph-bold",
-                          sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
-                        )}
-                      />
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSort("status")}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border flex items-center gap-1.5 shadow-none",
-                      sortConfig.column === "status"
-                        ? "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/30 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30 font-semibold"
-                        : "bg-gray-50 dark:bg-zinc-800/80 border-border dark:border-border text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    )}
-                  >
-                    <span>Status</span>
-                    {sortConfig.column === "status" && (
-                      <HugeIcon
-                        className={cn(
-                          "text-[10px] ph-bold",
-                          sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
-                        )}
-                      />
-                    )}
-                  </button>
-                </div>
               </div>
 
-              {/* 3-Column Responsive Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4.5 items-stretch">
+              {/* 3-Column Responsive Grid matching Document Catalog Aesthetics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
                 {sortedRequirements.map((item) => {
                   const isSubmitted = item.status === "Submitted";
-                  const categoryIcon = getRequirementCategoryIcon(item.category, isSubmitted);
 
                   return (
                     <div
                       key={item.id}
-                      className={cn(
-                        "group relative flex flex-col justify-between rounded-[18px] border bg-white dark:bg-zinc-900/60 p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
-                        isSubmitted
-                          ? "border-border/80 hover:border-emerald-500/40 dark:border-border dark:hover:border-emerald-500/40"
-                          : "border-border/80 hover:border-amber-500/40 dark:border-border dark:hover:border-amber-500/40"
-                      )}
+                      className="group flex flex-col justify-between rounded-3xl bg-[#f5f5f7] dark:bg-zinc-850/60 p-6 sm:p-7 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xs border border-transparent dark:border-white/5"
                     >
-                      <div>
-                        {/* Top Metadata Row: Category & Status */}
+                      <div className="flex flex-col flex-grow">
+                        {/* 1. Top Metadata Row: Category Pill & Dot Status (No Colored Backgrounds) */}
                         <div className="flex items-center justify-between gap-2">
-                          <span className="inline-flex items-center text-[10px] font-medium text-gray-600 dark:text-zinc-400 bg-gray-100/90 dark:bg-zinc-800/80 px-2.5 py-0.5 rounded-full border border-border/50 dark:border-border truncate max-w-[170px]">
+                          <span className="text-[10px] font-mono font-medium text-gray-600 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-gray-200/80 dark:border-white/10 shadow-2xs truncate max-w-[180px]">
                             {item.category}
                           </span>
 
-                          {/* Status Badge */}
-                          {isSubmitted ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:border-emerald-800/60 dark:text-emerald-300 shrink-0">
-                              Completed
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300 shrink-0">
-                              Pending
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Title & Category Icon Tile */}
-                        <div className="mt-3.5 flex items-start gap-3">
-                          <div
-                            className={cn(
-                              "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105",
-                              isSubmitted
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60"
-                                : "bg-amber-50 text-amber-600 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60"
-                            )}
-                          >
-                            <HugeIcon className={cn("text-base ph-bold", categoryIcon)} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4
-                              className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-100 tracking-tight leading-snug line-clamp-1 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors"
-                              title={item.docType}
-                            >
-                              {item.docType}
-                            </h4>
-                            <p className="mt-1 text-[11.5px] text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed min-h-[34px]">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Info Callout / Micro-Banner */}
-                        {isSubmitted ? (
-                          <div className="mt-3.5 flex items-center gap-2 rounded-xl bg-gray-50/90 dark:bg-zinc-800/50 p-2.5 border border-border dark:border-border text-[11px]">
-                            <HugeIcon className="ph-bold ph-shield-check text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
-                            <div className="min-w-0 flex-1 truncate text-gray-600 dark:text-zinc-300">
-                              {item.document?.originalFilename ? (
-                                <span className="font-mono text-[10.5px] truncate block" title={item.document.originalFilename}>
-                                  {item.document.originalFilename}
-                                </span>
-                              ) : (
-                                <span className="truncate block font-medium">Physical archive registered</span>
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-zinc-300 shrink-0">
+                            <span
+                              className={cn(
+                                "w-2 h-2 rounded-full",
+                                isSubmitted ? "bg-emerald-500 shadow-2xs" : "bg-amber-500 shadow-2xs"
                               )}
+                            />
+                            <span>{isSubmitted ? "Completed" : "Pending Submission"}</span>
+                          </div>
+                        </div>
+
+                        {/* 2. Bold Title matching Document Catalog on Landing */}
+                        <h3
+                          className="text-lg font-bold text-gray-950 dark:text-zinc-50 tracking-tight leading-snug mt-5 mb-2 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors"
+                          title={item.docType}
+                        >
+                          {item.docType}
+                        </h3>
+
+                        {/* 3. Description Body */}
+                        <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed font-normal flex-grow line-clamp-3 mb-6">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* 4. Bottom Divider Section matching Catalog "Filing Requirements" */}
+                      <div className="pt-4 border-t border-black/5 dark:border-white/10 mt-auto">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 font-mono mb-2.5 flex items-center gap-1.5">
+                          <HugeIcon className="ph-bold ph-shield-check text-xs" />
+                          <span>{isSubmitted ? "Archival Verification" : "Submission Guideline"}</span>
+                        </div>
+
+                        {isSubmitted ? (
+                          <div className="space-y-1.5 text-xs text-gray-600 dark:text-zinc-300">
+                            <div className="flex items-center gap-2">
+                              <span className="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[9px] shrink-0">
+                                <HugeIcon className="ph-bold ph-check" />
+                              </span>
+                              <span className="font-medium text-[11.5px] truncate">
+                                {item.document?.originalFilename || "Physical archive registered"}
+                              </span>
                             </div>
                             {item.document?.createdAt && (
-                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono shrink-0">
-                                {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
-                              </span>
+                              <div className="text-[10.5px] text-gray-400 dark:text-zinc-500 font-mono pl-6">
+                                Archived {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                              </div>
                             )}
                           </div>
                         ) : (
-                          <div className="mt-3.5 flex items-start gap-2 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 p-2.5 border border-amber-200/50 dark:border-amber-900/30 text-[11px]">
-                            <HugeIcon className="ph-bold ph-info text-amber-600 dark:text-amber-400 text-xs shrink-0 mt-0.5" />
-                            <span className="text-amber-800 dark:text-amber-300/90 leading-snug line-clamp-2">
-                              {item.instructions || "Must be submitted in person at Room 102."}
+                          <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-zinc-400">
+                            <span className="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 text-gray-500 dark:text-zinc-400 flex items-center justify-center text-[9px] shrink-0 mt-0.5">
+                              <HugeIcon className="ph-bold ph-arrow-right" />
+                            </span>
+                            <span className="text-[11.5px] leading-relaxed line-clamp-2">
+                              {item.instructions || "Submit original physical copy directly to Room 102."}
                             </span>
                           </div>
                         )}
-                      </div>
 
-                      {/* Bottom Metadata Footer & Details Popover */}
-                      <div className="mt-4 pt-3 border-t border-border dark:border-border flex items-center justify-between gap-2 text-[11px]">
-                        <div className="flex items-center gap-1.5 text-gray-900 dark:text-zinc-300 min-w-0">
-                          {isSubmitted ? (
-                            <>
-                              <HugeIcon className="ph-bold ph-archive text-gray-400 dark:text-zinc-500 text-xs shrink-0" />
-                              <span className="truncate">Registrar Vault (Rm 102)</span>
-                            </>
-                          ) : (
-                            <>
-                              <HugeIcon className="ph-bold ph-map-pin text-amber-500 text-xs shrink-0" />
-                              <span className="truncate">Window Counter (Rm 102)</span>
-                            </>
-                          )}
+                        <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pt-3 mt-3 border-t border-black/5 dark:border-white/10 font-mono">
+                          <div className="flex items-center gap-1.5">
+                            <HugeIcon className="ph-bold ph-map-pin text-xs text-gray-400 dark:text-zinc-500" />
+                            <span>{isSubmitted ? "Registrar Vault (Rm 102)" : "Window Counter (Rm 102)"}</span>
+                          </div>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold">
+                            {isSubmitted ? "Verified" : "Window 2"}
+                          </span>
                         </div>
-
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer shrink-0"
-                            >
-                              <span>Details</span>
-                              <HugeIcon className="ph-bold ph-caret-right text-[10px]" />
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            side="top"
-                            align="end"
-                            className="w-80 rounded-2xl p-0 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta"
-                          >
-                            {/* 1. Header Zone */}
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-                              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                                {item.category}
-                              </span>
-                              <span
-                                className={cn(
-                                  "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                                  isSubmitted
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                    : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
-                                )}
-                              >
-                                {isSubmitted ? "Submitted" : "Pending Submission"}
-                              </span>
-                            </div>
-
-                            {/* 2. Body Zone */}
-                            <div className="p-3.5 space-y-2.5">
-                              <div>
-                                <h5 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                                  {item.docType}
-                                </h5>
-                                <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                                  {item.description}
-                                </p>
-                              </div>
-
-                              <div className="rounded-xl p-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border space-y-1 text-xs">
-                                <div className="font-semibold text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                  <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
-                                  Submission Guidelines
-                                </div>
-                                <p className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
-                                  {item.instructions || "Please submit original physical copies directly to Room 102."}
-                                </p>
-                              </div>
-
-                              {item.document && (
-                                <div className="space-y-1 text-xs pt-1">
-                                  <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                    <span>Archival Status:</span>
-                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                      {item.document.approvalStatus || "Approved"}
-                                    </span>
-                                  </div>
-                                  {item.document.createdAt && (
-                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300">
-                                      <span>Archived On:</span>
-                                      <span className="font-mono text-gray-900 dark:text-zinc-200">
-                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {item.document.originalFilename && (
-                                    <div className="flex justify-between text-gray-900 dark:text-zinc-300 gap-2">
-                                      <span className="shrink-0">Digital Copy:</span>
-                                      <span className="font-mono text-[10px] text-gray-900 dark:text-zinc-200 truncate">
-                                        {item.document.originalFilename}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
                       </div>
                     </div>
                   );

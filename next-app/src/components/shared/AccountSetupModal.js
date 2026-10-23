@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Dialog,
   DialogContent,
@@ -49,21 +49,7 @@ export default function AccountSetupModal({ authUser }) {
   })
   const [avatarLoading, setAvatarLoading] = useState(false)
 
-  useEffect(() => {
-    if (needsPassword || needsSecurity) {
-      setOpen(true)
-      if (needsPassword) {
-        setStep(1)
-      } else {
-        setStep(2)
-        fetchQuestions()
-      }
-    } else {
-      setOpen(false)
-    }
-  }, [needsPassword, needsSecurity])
-
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
     setSecLoading(true)
     try {
       const res = await fetch("/api/staff/security")
@@ -80,7 +66,24 @@ export default function AccountSetupModal({ authUser }) {
       console.error(e)
     }
     setSecLoading(false)
-  }
+  }, [needsSecurity])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (needsPassword || needsSecurity) {
+        setOpen(true)
+        if (needsPassword) {
+          setStep(1)
+        } else {
+          setStep(2)
+          fetchQuestions()
+        }
+      } else {
+        setOpen(false)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [needsPassword, needsSecurity, fetchQuestions])
 
   const submitPassword = async (e) => {
     e.preventDefault()

@@ -214,7 +214,9 @@ export default function DocTypesTab({
   }, [localSearch, setDocSearch])
 
   useEffect(() => {
-    if (docSearch === "") setLocalSearch("")
+    if (docSearch !== "") return
+    const handler = setTimeout(() => setLocalSearch(""), 0)
+    return () => clearTimeout(handler)
   }, [docSearch])
 
   const handleItemsPerPageChange = (e) => {
@@ -444,7 +446,7 @@ export default function DocTypesTab({
                     !showArchived && (
                       <Button
                         onClick={() => setIsAddDocTypeOpen(true)}
-                        className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
                         Add Document Type
                       </Button>

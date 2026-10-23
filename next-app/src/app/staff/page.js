@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "rea
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
-import Header from "@/components/layout/Header";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
@@ -16,13 +15,40 @@ import {
   Tabs,
   TabsContent,
 } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
 import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
+import MyActivityPanel from "@/components/shared/MyActivityPanel";
+import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
 import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
+
+const STAFF_NAV_ITEMS = [
+  { key: "requests", label: "Document Requests" },
+  { key: "osas_monitoring", label: "OSAS Monitoring" },
+  { type: "header", label: "Scanning & Document Upload" },
+  { key: "upload", label: "Scan & Upload" },
+  { key: "batch_review", label: "Batch Review" },
+  { type: "header", label: "Student & Organization Roster" },
+  { key: "students", label: "Student Directory" },
+  { key: "organizations", label: "Student Organizations" },
+  { type: "header", label: "Archive & Storage" },
+  { key: "search", label: "Records & Archive" },
+  { key: "storage", label: "Storage Explorer" },
+  { type: "header", label: "Records & Communications" },
+  { key: "documents", label: "Student Documents" },
+  { key: "notifications", label: "Notifications" },
+];
+
+function StaffDashboardLoadingSkeleton() {
+  return (
+    <DashboardShellSkeleton items={STAFF_NAV_ITEMS}>
+      <StaffTabSkeleton />
+    </DashboardShellSkeleton>
+  );
+}
 
 const StaffTabLoading = () => <StaffTabSkeleton />;
 const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: StaffTabLoading });
@@ -77,7 +103,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
 
-  const validViews = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"];
+  const validViews = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"];
   const initialView = (() => {
     const req = searchParams?.get("view");
     const enabledSet = new Set(initialAuthUser?.enabled_modules || []);
@@ -130,7 +156,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage"])
+    const allowedTabs = new Set(["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"])
     const targetTab = allowedTabs.has(tab) ? tab : "requests"
     if (authUser?.enabled_modules) {
       const enabledSet = new Set(authUser.enabled_modules);
@@ -2072,15 +2098,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col font-jakarta p-4 gap-4 transition-colors duration-300 dark:bg-background">
-        <Skeleton className="h-16 w-full rounded-brand shrink-0" />
-        <div className="flex-1 flex gap-4">
-          <Skeleton className="w-[30%] h-full rounded-brand" />
-          <Skeleton className="w-[70%] h-full rounded-brand" />
-        </div>
-      </div>
-    );
+    return <StaffDashboardLoadingSkeleton />;
   }
 
   return (
@@ -2091,7 +2109,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         <div className="liquid-blob liquid-blob-2"></div>
         <div className="liquid-blob liquid-blob-3"></div>
       </div>
-      <Header authUser={authUser} onLogout={handleLogout} />
+
 
       <Tabs
         value={view}
@@ -2156,7 +2174,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         )}
         <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
-            className={cn("p-4 flex flex-col w-full", view === "batch_review" ? "flex-1 h-full min-h-0" : "min-h-full", view !== "batch_review" && "min-w-0")}
+            className={cn("pt-4 pr-4 pb-4 flex flex-col w-full [&>*]:flex-1", view === "batch_review" ? "flex-1 h-full min-h-0" : "flex-1 min-h-full", view !== "batch_review" && "min-w-0")}
             style={zoomStyle}
           >
             <TabsContent value="students" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
@@ -2496,6 +2514,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onNavigateTab={switchView}
             />
           </TabsContent>
+
+          <TabsContent value="activity" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+            <MyActivityPanel />
+          </TabsContent>
+
+          <TabsContent value="settings" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+            <AccountSettingsPanel />
+          </TabsContent>
           </div>
         </main>
       </Tabs>
@@ -2557,17 +2583,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
 export default function StaffPage() {
   return (
-    <StaffGuard>
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-jakarta p-4">
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border dark:border-t-primary"></div>
-              <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>
-            </div>
-          </div>
-        }
-      >
+    <StaffGuard fallback={<StaffDashboardLoadingSkeleton />}>
+      <Suspense fallback={<StaffDashboardLoadingSkeleton />}>
         <StaffPageContent />
       </Suspense>
     </StaffGuard>

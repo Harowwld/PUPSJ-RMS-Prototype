@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn, formatTitleCase } from "@/lib/utils"
+import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"
@@ -135,13 +136,20 @@ const LogRow = React.memo(function LogRow({
           </span>
         </td>
         <td className="p-4 align-middle overflow-hidden">
-          <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.user || log.actor)}>
-              {formatTitleCase(log.user || log.actor)}
-            </span>
-            <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
-              {log.role}
-            </span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <AuditActorAvatar
+              log={log}
+              className="size-8 border border-border"
+              fallbackClassName="text-[10px] font-semibold"
+            />
+            <div className="flex flex-col overflow-hidden min-w-0">
+              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.user || log.actor)}>
+                {formatTitleCase(log.user || log.actor)}
+              </span>
+              <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
+                {log.role}
+              </span>
+            </div>
           </div>
         </td>
         <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">

@@ -296,7 +296,9 @@ export default function StudentProfileSheet({
           <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3.5 min-w-0">
               <ProfileAvatar
-                id={student.studentNo}
+                id={student.id || student.account_id || student.accountId || student.studentNo}
+                studentNo={student.studentNo}
+                accountId={student.account_id || student.accountId}
                 avatarFilename={student.avatar_filename || student.avatarFilename}
                 name={displayName}
                 initials={initials}

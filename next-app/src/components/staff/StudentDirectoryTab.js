@@ -1,5 +1,6 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +97,7 @@ export default function StudentDirectoryTab({
   const [sortOrder, setSortOrder] = useState("ASC");
 
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlPage();
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Modals
@@ -123,29 +124,35 @@ export default function StudentDirectoryTab({
 
   // Reset selection when switching directory tabs (active / archived)
   useEffect(() => {
-    setSelectedIds(new Set());
-    setPage(1);
-  }, [activeTab]);
+    const timer = setTimeout(() => {
+      setSelectedIds(new Set());
+      setPage(1);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [activeTab, setPage]);
 
   // Prune any stale selected IDs when available students update
   useEffect(() => {
-    setSelectedIds((prev) => {
-      if (prev.size === 0) return prev;
-      const validIds = new Set(allAvailableStudents.map((s) => s.studentNo));
-      let needsPruning = false;
-      for (const id of prev) {
-        if (!validIds.has(id)) {
-          needsPruning = true;
-          break;
+    const timer = setTimeout(() => {
+      setSelectedIds((prev) => {
+        if (prev.size === 0) return prev;
+        const validIds = new Set(allAvailableStudents.map((s) => s.studentNo));
+        let needsPruning = false;
+        for (const id of prev) {
+          if (!validIds.has(id)) {
+            needsPruning = true;
+            break;
+          }
         }
-      }
-      if (!needsPruning) return prev;
-      const next = new Set();
-      for (const id of prev) {
-        if (validIds.has(id)) next.add(id);
-      }
-      return next;
-    });
+        if (!needsPruning) return prev;
+        const next = new Set();
+        for (const id of prev) {
+          if (validIds.has(id)) next.add(id);
+        }
+        return next;
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [allAvailableStudents]);
 
   // Unique years for filter
@@ -347,7 +354,7 @@ export default function StudentDirectoryTab({
       setSectionFilters(values);
       setPage(1);
     }
-  }, []);
+  }, [setPage]);
 
   const handleResetFilters = useCallback(() => {
     setSearchQuery("");
@@ -355,7 +362,7 @@ export default function StudentDirectoryTab({
     setYearFilters([]);
     setSectionFilters([]);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -388,7 +395,7 @@ export default function StudentDirectoryTab({
       });
     });
     return chips;
-  }, [searchQuery, courseFilters, yearFilters, sectionFilters]);
+  }, [searchQuery, courseFilters, yearFilters, sectionFilters, setPage]);
 
   // Pagination slice
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / itemsPerPage));
@@ -638,7 +645,7 @@ export default function StudentDirectoryTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-student-directory"
-        className="animate-fade-up font-jakarta flex h-auto w-full flex-col"
+        className="animate-fade-up font-jakarta flex h-auto w-full flex-col pb-6"
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
         <Card

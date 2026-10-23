@@ -35,18 +35,21 @@ export default function EditOrganizationModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (organization && open) {
-      const org = organization.rawOrg || organization;
-      setName(org.name || "");
-      setAcronym(org.acronym || "");
-      setCategory(org.category || "Academic");
-      setStatus(org.status || "Active");
-      setAdviserName(org.adviser_name || org.adviserName || org.adviser || "");
-      setAdviserEmail(org.adviser_email || org.adviserEmail || "");
-      setRoom(String(org.storage_room || org.room || "1"));
-      setCabinet(String(org.storage_cabinet || org.cabinet || (org.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS")));
-      setDrawer(String(org.storage_drawer || org.drawer || "1"));
-    }
+    const timer = setTimeout(() => {
+      if (organization && open) {
+        const org = organization.rawOrg || organization;
+        setName(org.name || "");
+        setAcronym(org.acronym || "");
+        setCategory(org.category || "Academic");
+        setStatus(org.status || "Active");
+        setAdviserName(org.adviser_name || org.adviserName || org.adviser || "");
+        setAdviserEmail(org.adviser_email || org.adviserEmail || "");
+        setRoom(String(org.storage_room || org.room || "1"));
+        setCabinet(String(org.storage_cabinet || org.cabinet || (org.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS")));
+        setDrawer(String(org.storage_drawer || org.drawer || "1"));
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [organization, open]);
 
   const handleSubmit = async (e) => {
@@ -272,7 +275,7 @@ export default function EditOrganizationModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               {isSubmitting ? "Saving Changes..." : "Save Changes"}
             </Button>

@@ -16,56 +16,103 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
         <div className="liquid-blob liquid-blob-3" />
       </div>
 
-      {/* Header Bar Skeleton */}
-      <header className="relative z-20 flex h-16 w-full shrink-0 items-center justify-between border-b border-border/80 bg-white/80 px-4 sm:px-6 backdrop-blur-md dark:border-border dark:bg-zinc-950/80">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
-          <Skeleton className="h-5 w-24 rounded dark:bg-muted" />
-          <span className="hidden sm:inline-block h-4 w-[1px] bg-gray-200 dark:bg-zinc-800" />
-          <Skeleton className="hidden sm:inline-block h-6 w-32 rounded-full dark:bg-muted" />
+      {/* Mobile Top Bar Skeleton (< md) — shared Sidebar renders this in place of a page header */}
+      <div className="md:hidden flex h-[52px] w-full shrink-0 items-center justify-between border-b border-gray-200/80 bg-white/80 px-3 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/80">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
+          <Skeleton className="h-[22px] w-[22px] rounded dark:bg-muted" />
+          <Skeleton className="h-4 w-[88px] rounded dark:bg-muted" />
         </div>
-
-        <div className="flex items-center gap-3">
-          <Skeleton className="hidden md:block h-9 w-52 rounded-brand dark:bg-muted" />
-          <Skeleton className="h-9 w-9 rounded-full dark:bg-muted" />
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
+          <Skeleton className="h-8 w-8 rounded-full dark:bg-muted" />
         </div>
-      </header>
+      </div>
 
-      {/* Main Body with Sidebar + Main Workspace */}
+      {/* Main Body with Sidebar + Main Workspace (no page header in this layout) */}
       <div className="flex min-h-0 flex-1">
-        {/* Sidebar Skeleton */}
-        <aside className="hidden md:flex w-64 shrink-0 flex-col justify-between border-r border-border/80 bg-white/60 p-4 backdrop-blur-md dark:border-border dark:bg-zinc-950/60">
-          <div className="space-y-4">
-            {/* Header label */}
-            <div className="px-2 pt-2">
-              <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
+        {/* Sidebar Skeleton — mirrors shared Sidebar: logo row, command palette, nav, profile */}
+        <aside className="hidden md:flex sticky top-0 h-screen w-[275px] shrink-0 flex-col overflow-hidden border-r border-gray-200/80 bg-white/40 px-2.5 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/40">
+          {/* 1. Top Row: Logo + Collapse Button */}
+          <div className="mb-4 flex h-[40px] w-full shrink-0 items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-[22px] w-[22px] shrink-0 rounded dark:bg-muted" />
+              <Skeleton className="h-4 w-[88px] rounded dark:bg-muted" />
+            </div>
+            <Skeleton className="h-[34px] w-[34px] shrink-0 rounded-lg dark:bg-muted" />
+          </div>
+
+          {/* 2. Command Palette Trigger */}
+          <div className="mb-2 w-full shrink-0">
+            <Skeleton className="h-[36px] w-full rounded-xl dark:bg-muted" />
+          </div>
+
+          {/* 3. Navigation Items */}
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-[2px] pt-1">
+            {/* Overview item */}
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+              <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
+              <Skeleton className="h-3.5 w-[110px] rounded dark:bg-muted" />
             </div>
 
-            {/* Navigation Items */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-3 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 p-2.5">
-                <Skeleton className="h-5 w-5 rounded dark:bg-muted" />
-                <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
-              </div>
-              <div className="flex items-center gap-3 rounded-xl p-2.5">
-                <Skeleton className="h-5 w-5 rounded dark:bg-muted" />
-                <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
-              </div>
+            {/* Section header */}
+            <div className="mb-1 mt-3 h-[22px] shrink-0 px-2">
+              <Skeleton className="h-2.5 w-[124px] rounded dark:bg-muted" />
+            </div>
+
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+              <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
+              <Skeleton className="h-3.5 w-[150px] rounded dark:bg-muted" />
+            </div>
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+              <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
+              <Skeleton className="h-3.5 w-[140px] rounded dark:bg-muted" />
+            </div>
+
+            {/* Section header */}
+            <div className="mb-1 mt-3 h-[22px] shrink-0 px-2">
+              <Skeleton className="h-2.5 w-[118px] rounded dark:bg-muted" />
+            </div>
+
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+              <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
+              <Skeleton className="h-3.5 w-[130px] rounded dark:bg-muted" />
             </div>
           </div>
 
-          {/* Bottom logout area */}
-          <div className="border-t border-border dark:border-border pt-3">
-            <div className="flex items-center gap-3 p-2">
-              <Skeleton className="h-5 w-5 rounded dark:bg-muted" />
-              <Skeleton className="h-4 w-20 rounded dark:bg-muted" />
+          {/* 4. Bottom: Feedback Card + Profile Menu */}
+          <div className="mt-auto flex w-full shrink-0 flex-col">
+            <div className="w-full shrink-0 pb-2">
+              <div className="mx-1 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 backdrop-blur-xs dark:border-border dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
+                <div className="mb-2 flex items-center justify-between">
+                  <Skeleton className="h-[18px] w-[72px] rounded-full bg-red-200/60 dark:bg-red-900/40" />
+                  <Skeleton className="h-6 w-6 rounded-lg dark:bg-muted" />
+                </div>
+                <div className="mb-2.5 space-y-1.5">
+                  <Skeleton className="h-3.5 w-[120px] rounded dark:bg-muted" />
+                  <Skeleton className="h-3 w-full rounded dark:bg-muted" />
+                  <Skeleton className="h-3 w-3/4 rounded dark:bg-muted" />
+                </div>
+                <Skeleton className="h-7 w-full rounded-lg dark:bg-muted" />
+              </div>
+            </div>
+
+            <div className="flex w-full shrink-0 justify-center border-t border-gray-200/80 pt-2 dark:border-white/10">
+              <div className="flex w-full items-center gap-2.5 rounded-xl p-1.5">
+                <Skeleton className="h-9 w-9 shrink-0 rounded-full dark:bg-muted" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1 leading-tight">
+                  <Skeleton className="h-3 w-[104px] rounded dark:bg-muted" />
+                  <Skeleton className="h-2.5 w-[76px] rounded dark:bg-muted" />
+                </div>
+                <Skeleton className="h-3 w-3 shrink-0 rounded dark:bg-muted" />
+              </div>
             </div>
           </div>
         </aside>
 
         {/* Main Content Skeleton Area */}
         <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
-          <div className="flex min-h-0 w-full flex-1 flex-col p-4">
+          <div className="flex min-h-full w-full flex-1 flex-col pt-4 pr-4 pb-4">
             {view === "overview" ? (
               <StudentOverviewSkeleton />
             ) : view === "osas" ? (

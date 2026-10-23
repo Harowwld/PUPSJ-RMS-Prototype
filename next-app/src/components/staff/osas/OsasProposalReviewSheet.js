@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import HugeIcon from "@/components/shared/HugeIcon";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import {
@@ -205,10 +206,24 @@ export default function OsasProposalReviewSheet({
               <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                 {selected.title}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Proponent: <strong className="text-gray-900 dark:text-zinc-200">{selected.student_name}</strong>
-                {selected.officer_position && ` · ${selected.officer_position}`}
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <ProfileAvatar
+                  id={selected.student_no || selected.student_account_id}
+                  name={selected.student_name}
+                  initials={String(selected.student_name || "Student")
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((part) => part[0]?.toUpperCase())
+                    .join("") || "ST"}
+                  className="size-7 border border-pup-maroon/20"
+                  fallbackClassName="text-[10px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
+                />
+                <p className="text-xs text-gray-500 dark:text-zinc-400 min-w-0 truncate">
+                  Proponent: <strong className="text-gray-900 dark:text-zinc-200">{selected.student_name}</strong>
+                  {selected.officer_position && ` · ${selected.officer_position}`}
+                </p>
+              </div>
             </div>
           </div>
 

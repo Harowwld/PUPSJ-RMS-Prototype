@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useRef, useState, useEffect } from "react"
 import {
   Card,
@@ -148,7 +149,7 @@ export default function BackupTab({
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("DESC")
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const [localSearch, setLocalSearch] = useState(backupSearch)
@@ -162,7 +163,7 @@ export default function BackupTab({
       setPage(1)
     }, 500)
     return () => clearTimeout(timer)
-  }, [localSearch, setBackupSearch])
+  }, [localSearch, setBackupSearch, setPage])
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -297,11 +298,11 @@ export default function BackupTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
+      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6 pb-6">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col">
-            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Office Partition Backup & Archive"

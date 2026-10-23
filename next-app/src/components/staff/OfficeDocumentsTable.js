@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +31,7 @@ export default function OfficeDocumentsTable({
   embedded = true,
 }) {
   const [query, setQuery] = useState("")
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useUrlPage()
   const [pageSize, setPageSize] = useState(10)
   const selectedYear = getSelectedYear(breadcrumbs)
 

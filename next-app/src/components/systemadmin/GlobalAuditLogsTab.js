@@ -33,6 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
+import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 
 import StatCards from "../admin/audit-logs/StatCards"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
@@ -130,7 +131,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     search: initialSearchFromUrl,
   })
 
-  const updateUrl = useCallback((newPage, newSearch) => {
+  const updateUrl = useCallback((newPage, newSearch, historyMethod = "replace") => {
     if (typeof window === "undefined") return
     const params = new URLSearchParams(window.location.search)
 
@@ -158,7 +159,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       ? `${window.location.pathname}?${queryString}`
       : window.location.pathname
 
-    router.replace(nextUrl, { scroll: false })
+    router[historyMethod](nextUrl, { scroll: false })
   }, [router])
 
   useEffect(() => {
@@ -327,6 +328,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               time: formatPHDateTime(r.created_at),
               user: r.actor,
               actor: r.actor,
+              actor_id: r.actor_id,
               role: r.role,
               office_id: r.office_id,
               officeName,
@@ -655,7 +657,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const updatePage = useCallback((newPage) => {
     const validPage = Math.max(1, Math.min(totalPages, newPage))
     setPage(validPage)
-    updateUrl(validPage, search)
+    updateUrl(validPage, search, "push")
   }, [totalPages, search, updateUrl])
   const hasActiveFilters =
     localSearch !== "" ||
@@ -666,7 +668,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
+      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader
@@ -1107,13 +1109,20 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
                           {/* Actor */}
                           <td className="p-4 align-middle overflow-hidden">
-                            <div className="flex flex-col overflow-hidden">
-                              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
-                                {formatTitleCase(log.actor)}
-                              </span>
-                              <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
-                                {log.role}
-                              </span>
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <AuditActorAvatar
+                                log={log}
+                                className="size-8 border border-border"
+                                fallbackClassName="text-[10px] font-semibold"
+                              />
+                              <div className="flex flex-col overflow-hidden min-w-0">
+                                <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
+                                  {formatTitleCase(log.actor)}
+                                </span>
+                                <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
+                                  {log.role}
+                                </span>
+                              </div>
                             </div>
                           </td>
 

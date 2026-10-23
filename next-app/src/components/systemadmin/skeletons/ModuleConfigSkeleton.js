@@ -8,7 +8,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
   return (
     <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, & Content */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title="Department Features & Permissions"

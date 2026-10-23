@@ -56,6 +56,7 @@ export default function BulkImportStudentsModal({
 
   // Reset modal state on open/close
   useEffect(() => {
+    const timer = setTimeout(() => {
     if (!open) {
       setCsvFile(null);
       setCsvRows([]);
@@ -82,6 +83,8 @@ export default function BulkImportStudentsModal({
         }
       }
     }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [open, storageLayout]);
 
   // Helper functions for storage layout validation

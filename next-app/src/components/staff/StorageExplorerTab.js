@@ -1,3 +1,4 @@
+import useUrlPage from "@/hooks/useUrlPage"
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useMemo, useEffect } from "react"
 import RoomMap2D from "@/components/staff/RoomMap2D"
@@ -71,7 +72,7 @@ export default function StorageExplorerTab({
 
   const activeTheme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
 
-  const [roomsPage, setRoomsPage] = useState(1)
+  const [roomsPage, setRoomsPage] = useUrlPage()
   const [roomsPerPage, setRoomsPerPage] = useState(10)
   const [expandedDrawer, setExpandedDrawer] = useState(null)
 
@@ -132,7 +133,7 @@ export default function StorageExplorerTab({
       setRoomsPage(1)
     }, 0)
     return () => clearTimeout(timer)
-  }, [locatorModel, activeStudent, roomsPerPage])
+  }, [locatorModel, activeStudent, roomsPerPage, setRoomsPage])
 
 
 
@@ -144,7 +145,7 @@ export default function StorageExplorerTab({
       className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
     >
       {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta min-h-0 flex-1 mb-4">
         <PageHeader
           icon="ph-folder-open"
           title="Storage Explorer"

@@ -266,9 +266,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const pageDescription = "Monitor request metrics, turnaround times, and constituent feedback."
 
   return (
-    <div data-light-only className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6">
+    <div data-light-only className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 flex-1">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-1 mb-4">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
@@ -430,7 +430,6 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 total={total}
                 completionRate={completionRate}
                 completed={completed}
-                completionRate={completionRate}
                 sla={data?.sla}
                 feedback={data?.feedback}
                 statusCounts={data?.statusCounts}

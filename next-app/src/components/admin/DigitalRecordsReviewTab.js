@@ -1,6 +1,7 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
+import HugeIcon from "@/components/shared/HugeIcon"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { Reorder } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -106,7 +107,7 @@ export default function DigitalRecordsReviewTab({
 }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [localSearch, setLocalSearch] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [docTypeFilters, setDocTypeFilters] = useState([])
   const [statusFilters, setStatusFilters] = useState(() => {
@@ -121,17 +122,26 @@ export default function DigitalRecordsReviewTab({
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
   const [selectedKpi, setSelectedKpi] = useState(null)
+  const [currentTime, setCurrentTime] = useState(0)
   const statCardsRef = useRef(null)
   const [kpiOrder, setKpiOrder] = useState(["pending", "approved", "declined"])
 
+  useEffect(() => {
+    const timer = setTimeout(() => setCurrentTime(Date.now()), 0)
+    return () => clearTimeout(timer)
+  }, [])
+
   // Synchronize statusFilters when external statusFilter prop changes
   useEffect(() => {
-    if (!statusFilter || statusFilter === "All") {
-      setStatusFilters([])
-    } else {
-      const list = statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
-      setStatusFilters(list)
-    }
+    const timer = setTimeout(() => {
+      if (!statusFilter || statusFilter === "All") {
+        setStatusFilters([])
+      } else {
+        const list = statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
+        setStatusFilters(list)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
   }, [statusFilter])
 
 
@@ -169,7 +179,7 @@ export default function DigitalRecordsReviewTab({
         const timestamps = pending.map((r) => new Date(r.created_at).getTime()).filter(t => !isNaN(t))
         if (timestamps.length > 0) {
           const oldestTime = Math.min(...timestamps)
-          oldestPendingAge = Math.round((Date.now() - oldestTime) / (3600 * 1000))
+          oldestPendingAge = Math.round((currentTime - oldestTime) / (3600 * 1000))
         }
       }
 
@@ -205,14 +215,9 @@ export default function DigitalRecordsReviewTab({
     }
 
     return null
-  }, [selectedKpi, records])
+  }, [selectedKpi, records, currentTime])
 
-  const [activeKpiDetails, setActiveKpiDetails] = useState(null)
-  useEffect(() => {
-    if (cardDetailsData) {
-      setActiveKpiDetails(cardDetailsData)
-    }
-  }, [cardDetailsData])
+  const activeKpiDetails = cardDetailsData
 
   const filterCriteriaGroups = useMemo(() => {
     const recs = records || []
@@ -253,7 +258,7 @@ export default function DigitalRecordsReviewTab({
         }
       }
     ]
-  }, [records, statusFilters, docTypeFilters, activeDocTypes, setStatusFilter])
+  }, [records, statusFilters, docTypeFilters, activeDocTypes, setStatusFilter, setCurrentPage])
 
 
   const extraChips = useMemo(() => {
@@ -269,7 +274,7 @@ export default function DigitalRecordsReviewTab({
       }]
     }
     return []
-  }, [dateFrom, dateTo])
+  }, [dateFrom, dateTo, setCurrentPage])
 
   const hasActiveFilters = localSearch !== "" || statusFilters.length > 0 || docTypeFilters.length > 0 || !!dateFrom || !!dateTo;
 
@@ -279,38 +284,46 @@ export default function DigitalRecordsReviewTab({
       setCurrentPage(1)
     }, 300)
     return () => clearTimeout(handler)
-  }, [localSearch])
+  }, [localSearch, setCurrentPage])
 
   useEffect(() => {
-    if (searchQuery === "") setLocalSearch("")
+    if (searchQuery !== "") return
+    const timer = setTimeout(() => setLocalSearch(""), 0)
+    return () => clearTimeout(timer)
   }, [searchQuery])
 
   // Clear selection when changing pages or status filter
   useEffect(() => {
-    setSelectedIds(new Set())
-    setLastSelectedId(null)
+    const timer = setTimeout(() => {
+      setSelectedIds(new Set())
+      setLastSelectedId(null)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [currentPage, statusFilters, docTypeFilters, searchQuery, dateFrom, dateTo])
 
   // Prune stale selections when records dataset updates
   useEffect(() => {
     if (!records) return
-    setSelectedIds((prev) => {
-      if (prev.size === 0) return prev
-      const validIds = new Set(records.map((r) => r.id))
-      let needsPruning = false
-      for (const id of prev) {
-        if (!validIds.has(id)) {
-          needsPruning = true
-          break
+    const timer = setTimeout(() => {
+      setSelectedIds((prev) => {
+        if (prev.size === 0) return prev
+        const validIds = new Set(records.map((r) => r.id))
+        let needsPruning = false
+        for (const id of prev) {
+          if (!validIds.has(id)) {
+            needsPruning = true
+            break
+          }
         }
-      }
-      if (!needsPruning) return prev
-      const next = new Set()
-      for (const id of prev) {
-        if (validIds.has(id)) next.add(id)
-      }
-      return next
-    })
+        if (!needsPruning) return prev
+        const next = new Set()
+        for (const id of prev) {
+          if (validIds.has(id)) next.add(id)
+        }
+        return next
+      })
+    }, 0)
+    return () => clearTimeout(timer)
   }, [records])
 
   useEffect(() => {
@@ -686,7 +699,7 @@ export default function DigitalRecordsReviewTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
+      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           <PageHeader

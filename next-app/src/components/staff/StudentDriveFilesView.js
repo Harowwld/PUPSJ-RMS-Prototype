@@ -99,7 +99,9 @@ export default function StudentDriveFilesView({
 
           {/* Student Avatar Tile */}
           <ProfileAvatar
-            id={student.studentNo}
+            id={student.id || student.account_id || student.accountId || student.studentNo}
+            studentNo={student.studentNo}
+            accountId={student.account_id || student.accountId}
             avatarFilename={student.avatar_filename || student.avatarFilename}
             name={displayName}
             initials={initials}

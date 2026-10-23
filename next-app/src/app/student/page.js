@@ -1,13 +1,16 @@
 "use client";
+
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useState, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
-import Header from "@/components/layout/Header";
 import Sidebar from "@/components/shared/Sidebar";
+import MyActivityPanel from "@/components/shared/MyActivityPanel";
+import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Card } from "@/components/ui/card";
@@ -204,11 +207,38 @@ function StudentDashboard() {
   });
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useUrlPage({ enabled: view === "odrs" });
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedRequestForDetail, setSelectedRequestForDetail] = useState(null);
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(true);
+  const [isDuplicateAlertDismissed, setIsDuplicateAlertDismissed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("pupsj_student_duplicate_ticket_alert_dismissed") === "true";
+    }
+    return false;
+  });
+
+  const handleDismissDuplicateAlert = () => {
+    setIsDuplicateAlertDismissed(true);
+    try {
+      sessionStorage.setItem("pupsj_student_duplicate_ticket_alert_dismissed", "true");
+    } catch {}
+  };
+
+  const [isOfficerAlertDismissed, setIsOfficerAlertDismissed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("pupsj_student_officer_alert_dismissed") === "true";
+    }
+    return false;
+  });
+
+  const handleDismissOfficerAlert = () => {
+    setIsOfficerAlertDismissed(true);
+    try {
+      sessionStorage.setItem("pupsj_student_officer_alert_dismissed", "true");
+    } catch {}
+  };
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewData, setPdfPreviewData] = useState(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -504,7 +534,7 @@ function StudentDashboard() {
         setCurrentPage((p) => Math.min(totalPages, p + 1));
       }
     },
-    [totalPages]
+    [totalPages, setCurrentPage]
   );
 
   const currentRequestDetailIndex = selectedRequestForDetail
@@ -593,11 +623,7 @@ function StudentDashboard() {
   }, []);
 
   const switchView = useCallback((nextView) => {
-    if (nextView === "activity") {
-      router.push("/account/activity");
-      return;
-    }
-    const allowed = new Set(["overview", "odrs", "osas", "compliance"]);
+    const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
     const target = allowed.has(nextView) ? nextView : "overview";
     setView(target);
     const params = new URLSearchParams();
@@ -620,11 +646,7 @@ function StudentDashboard() {
   // Synchronize view from URL parameter
   useEffect(() => {
     const tab = searchParams?.get("view");
-    if (tab === "activity") {
-      router.replace("/account/activity");
-      return;
-    }
-    const allowed = new Set(["overview", "odrs", "osas", "compliance"]);
+    const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
     setView(allowed.has(tab) ? tab : "overview");
   }, [searchParams, router]);
 
@@ -1183,7 +1205,6 @@ function StudentDashboard() {
           <div className="liquid-blob liquid-blob-2" />
           <div className="liquid-blob liquid-blob-3" />
         </div>
-        <Header authUser={me} onLogout={handleLogout} />
         <div className="flex min-h-0 flex-1">
         <Sidebar
           open={sidebarOpen}
@@ -1196,6 +1217,7 @@ function StudentDashboard() {
           handleZoomMouseDown={handleZoomMouseDown}
           accentColor="#800000"
           officeName="Student Portal"
+          authUser={me}
           bottomContent={
             <StudentSidebarFeedbackCard
               open={sidebarOpen}
@@ -1210,10 +1232,10 @@ function StudentDashboard() {
         />
           <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col">
             <div
-              className="flex min-h-full w-full flex-col p-4"
+              className="pt-4 pr-4 pb-4 flex flex-1 flex-col min-h-full w-full"
               style={zoomStyle}
             >
-              <div className="w-full flex flex-col">
+              <div className="w-full flex flex-1 flex-col [&>*]:flex-1">
 
               {view === "overview" ? (
                 <StudentOverviewTab
@@ -1224,6 +1246,8 @@ function StudentDashboard() {
                   pendingPostEvents={pendingPostEvents}
                   postEventReports={postEventReports}
                   onNavigate={(targetView) => switchView(targetView)}
+                  onSelectRequest={(req) => setSelectedRequestForDetail(req)}
+                  onSelectProposal={(prop) => setSelectedProposalForDetail(prop)}
                   onNewRequest={() => {
                     switchView("odrs");
                     setIsFormOpen(true);
@@ -1241,6 +1265,10 @@ function StudentDashboard() {
                 />
               ) : view === "compliance" ? (
                 <StudentComplianceTab authUser={me} onLogout={handleLogout} />
+              ) : view === "activity" ? (
+                <MyActivityPanel />
+              ) : view === "settings" ? (
+                <AccountSettingsPanel />
               ) : view === "odrs" ? (
                 <div className="flex flex-col w-full">
                   {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Active Filters, Table & Pagination */}
@@ -1295,26 +1323,40 @@ function StudentDashboard() {
 
                     {/* 2. Inline Non-Modal Request Form Section */}
                     {isFormOpen && (
-                      <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                              <HugeIcon  className="ph-bold ph-plus-circle text-xl" />
+                      <div className="border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                        {/* Dismissable duplicate ticket reminder alert attached to the line */}
+                        {!isDuplicateAlertDismissed && (
+                          <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <HugeIcon className="ph-bold ph-info text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                                Please avoid creating duplicate tickets for the same concern to help us process your request promptly.
+                              </span>
                             </div>
-                            <div>
-                              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Document Request</h2>
-                              <p className="text-xs text-gray-500 dark:text-zinc-400">Request an academic document from the Registrar.</p>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={handleDismissDuplicateAlert}
+                              className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                              aria-label="Dismiss notice"
+                              title="Dismiss notice"
+                            >
+                              <HugeIcon className="ph-bold ph-x text-sm" />
+                            </button>
                           </div>
+                        )}
 
-                          {/* Duplicate ticket reminder notice banner */}
-                          <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
-                            <HugeIcon  className="ph-bold ph-info text-[15px] shrink-0 text-amber-600 dark:text-amber-400"></HugeIcon>
-                            <span className="font-medium text-[11px] leading-relaxed">
-                              Please avoid creating duplicate tickets for the same concern to help us process your request promptly.
-                            </span>
+                        <div className="p-5 sm:p-6">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                                <HugeIcon className="ph-bold ph-plus-circle text-xl" />
+                              </div>
+                              <div>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Document Request</h2>
+                                <p className="text-xs text-gray-500 dark:text-zinc-400">Request an academic document from the Registrar.</p>
+                              </div>
+                            </div>
                           </div>
-                        </div>
 
                         <form onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
                           {/* Parent / Legal Guardian Compliance Notice */}
@@ -1584,6 +1626,7 @@ function StudentDashboard() {
                             </div>
                           </div>
                         </form>
+                        </div>
                       </div>
                     )}
 
@@ -1968,7 +2011,7 @@ function StudentDashboard() {
                     icon="ph-file-text"
                     title="OSAS Submissions"
                     description="Submit organization event proposals and follow evaluation progress."
-                    showBorder={false}
+                    showBorder={true}
                     className="p-6"
                     titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                     descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -2004,47 +2047,47 @@ function StudentDashboard() {
                             )}
                             style={myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
                           >
-                            Submit
+                            {osasSubView === "proposals" ? "Submit Proposal" : osasSubView === "post_event" ? "Submit Report" : "Submit CBL"}
                           </Button>
                         )}
                       </div>
                     }
                   />
 
-                  {/* Verified Officer Affiliation Banner */}
+                  {/* Verified Officer Status Alert (Attached edge-to-edge dismissable alert) */}
                   {myOrganizations.length > 0 ? (
-                    <div className="mx-6 mb-2 p-4 rounded-xl border border-blue-200/70 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0">
-                          <HugeIcon className="ph-bold ph-shield-check text-base" />
+                    !isOfficerAlertDismissed && (
+                      <div className="flex items-center justify-between gap-3 border-b border-emerald-200/90 bg-emerald-50/90 dark:border-emerald-900/40 dark:bg-emerald-950/25 px-5 sm:px-6 py-2.5 text-xs text-emerald-950 dark:text-emerald-200 animate-in fade-in transition-all">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <HugeIcon className="ph-bold ph-shield-check text-[16px] shrink-0 text-emerald-600 dark:text-emerald-400" />
+                          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                            You are signed in as a verified student officer authorized to submit OSAS proposals and reports.
+                          </span>
                         </div>
-                        <div>
-                          <div className="text-xs font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
-                            <span>Verified Student Officer</span>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                              Authorized Submitter
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5">
-                            {myOrganizations.map((o) => `${o.organization_name} (${o.officer_position})`).join(" · ")}
-                          </div>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={handleDismissOfficerAlert}
+                          className="shrink-0 p-1 rounded-lg text-emerald-700 hover:text-emerald-950 hover:bg-emerald-100/80 dark:text-emerald-400 dark:hover:text-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                          aria-label="Dismiss notice"
+                          title="Dismiss notice"
+                        >
+                          <HugeIcon className="ph-bold ph-x text-sm" />
+                        </button>
                       </div>
-                    </div>
+                    )
                   ) : (
-                    <div className="mx-6 mb-2 p-4 rounded-xl border border-amber-200 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                        <HugeIcon className="ph-bold ph-info text-base" />
-                      </div>
-                      <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-                        <div className="font-bold mb-0.5">Authorized Officers</div>
-                        Event proposals and Constitution and By-Laws submissions may only be submitted by officers authorized by OSAS. If you represent a recognized organization, please contact OSAS to authorize your student account (<strong>{me?.email}</strong>).
+                    <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in transition-all">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <HugeIcon className="ph-bold ph-info text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                        <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                          Officer authorization required: Only recognized student officers may submit proposals and reports. Contact OSAS to authorize your account.
+                        </span>
                       </div>
                     </div>
                   )}
 
                   {/* OSAS Stream Switcher */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 dark:border-border mx-6 mb-4">
+                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 dark:border-border mx-6 my-4">
                     <button
                       type="button"
                       onClick={() => setOsasSubView("proposals")}

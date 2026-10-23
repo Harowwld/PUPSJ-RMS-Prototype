@@ -41,11 +41,15 @@ export default function BulkImportTab({
   onAddRow,
   courses = [],
   isOsas = false,
+  currentPage: currentPageProp,
+  setCurrentPage: setCurrentPageProp,
 }) {
   const [editingRowIndex, setEditingRowIndex] = useState(null)
   const [editData, setEditData] = useState({ category: "", name: "", code: "" })
   const [showInstructions, setShowInstructions] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [localCurrentPage, setLocalCurrentPage] = useState(1)
+  const currentPage = currentPageProp ?? localCurrentPage
+  const setCurrentPage = setCurrentPageProp ?? setLocalCurrentPage
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -69,7 +73,7 @@ export default function BulkImportTab({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchTerm("")
     setCurrentPage(1)
-  }, [importFile])
+  }, [importFile, setCurrentPage])
 
   const [quickAdd, setQuickAdd] = useState({
     category: "DOCUMENT TYPE",
@@ -933,6 +937,4 @@ export default function BulkImportTab({
     </div>
   )
 }
-
-
 

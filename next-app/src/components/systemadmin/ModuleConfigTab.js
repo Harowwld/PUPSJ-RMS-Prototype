@@ -171,12 +171,15 @@ export default function ModuleConfigTab({ showToast }) {
   }, [fetchMatrix])
 
   useEffect(() => {
-    fetchMatrix()
+    const timer = setTimeout(() => fetchMatrix(), 0)
+    return () => clearTimeout(timer)
   }, [fetchMatrix])
 
   useEffect(() => {
-    const urlOffice = new URLSearchParams(window.location.search).get("office")
-    if (urlOffice) setSelectedOfficeId(urlOffice)
+    const timer = setTimeout(() => {
+      const urlOffice = new URLSearchParams(window.location.search).get("office")
+      if (urlOffice) setSelectedOfficeId(urlOffice)
+    }, 0)
 
     const handleSwitch = (e) => {
       if (e.detail?.officeId) {
@@ -184,7 +187,10 @@ export default function ModuleConfigTab({ showToast }) {
       }
     }
     window.addEventListener("switch-view", handleSwitch)
-    return () => window.removeEventListener("switch-view", handleSwitch)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener("switch-view", handleSwitch)
+    }
   }, [])
 
   // Optimistic Toggle with Rollback on Error
@@ -367,7 +373,8 @@ export default function ModuleConfigTab({ showToast }) {
 
   useEffect(() => {
     if (filteredOffices.length > 0 && !filteredOffices.some((o) => o.id === selectedOfficeId)) {
-      setSelectedOfficeId(filteredOffices[0].id)
+      const timer = setTimeout(() => setSelectedOfficeId(filteredOffices[0].id), 0)
+      return () => clearTimeout(timer)
     }
   }, [filteredOffices, selectedOfficeId])
 
@@ -541,9 +548,9 @@ export default function ModuleConfigTab({ showToast }) {
   const { modules } = matrix
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
+    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta pb-6">
       {/* Main Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={

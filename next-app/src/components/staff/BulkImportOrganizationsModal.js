@@ -50,6 +50,7 @@ export default function BulkImportOrganizationsModal({
   }, [localCsvSearch]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
     if (!open) {
       setCsvFile(null);
       setCsvRows([]);
@@ -63,6 +64,8 @@ export default function BulkImportOrganizationsModal({
       setCsvBulkDrawer("1");
       if (csvInputRef.current) csvInputRef.current.value = "";
     }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [open]);
 
   const OSAS_CABINETS = ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"];

@@ -17,10 +17,7 @@ export async function GET(req) {
   try {
     const access = await requireAuth(req);
     if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
-    if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
-    const userId = access.user.id;
 
-    const staff = await getStaffById(userId);
     const defaultPreferences = {
       theme: "light",
       navigation_layout: "sidebar",
@@ -29,6 +26,12 @@ export async function GET(req) {
       zoom_node: 3,
     };
 
+    if (access.user.principalType !== "staff") {
+      return NextResponse.json({ ok: true, data: defaultPreferences });
+    }
+
+    const userId = access.user.id;
+    const staff = await getStaffById(userId);
     const preferences = {
       ...defaultPreferences,
       ...parseStaffPreferences(staff?.preferences),
@@ -44,8 +47,6 @@ export async function POST(req) {
   try {
     const access = await requireAuth(req);
     if (access.error || !access.user) return createAuthErrorResponse(access.error || "Authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
-    if (access.user.principalType !== "staff") return createAuthErrorResponse("Access denied", 403);
-    const userId = access.user.id;
 
     const body = await req.json().catch(() => null) || {};
     const { preferences } = body;
@@ -62,6 +63,25 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: `Invalid value for preference '${invalidKey[0]}'.` }, { status: 400 });
     }
 
+    const defaultPreferences = {
+      theme: "light",
+      navigation_layout: "sidebar",
+      skip_registration_confirmation: false,
+      high_contrast: false,
+      zoom_node: 3,
+    };
+
+    if (access.user.principalType !== "staff") {
+      const updatedPrefs = { ...defaultPreferences, ...preferences };
+      await writeAuditLog(req, "Updated Account Preferences", {
+        details: "Updated personal dashboard preferences.",
+        entity_type: "student_preferences",
+        entity_id: String(access.user.id),
+      });
+      return NextResponse.json({ ok: true, data: updatedPrefs });
+    }
+
+    const userId = access.user.id;
     const updatedPrefs = await updateStaffPreferences(userId, preferences);
     await writeAuditLog(req, "Updated Account Preferences", {
       details: "Updated personal dashboard preferences.",

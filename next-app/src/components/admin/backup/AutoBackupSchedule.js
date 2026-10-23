@@ -119,7 +119,8 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
   }, [scope])
 
   useEffect(() => {
-    fetchSchedule()
+    const timer = setTimeout(() => fetchSchedule(), 0)
+    return () => clearTimeout(timer)
   }, [fetchSchedule])
 
   // Save schedule to API

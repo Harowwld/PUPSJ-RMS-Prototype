@@ -1,7 +1,7 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +40,7 @@ import {
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -58,8 +59,11 @@ export default function Header({ authUser, onLogout, children }) {
   const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now());
 
   useEffect(() => {
-    setCurrentAvatarFilename(authUser?.avatar_filename || null);
-    setAvatarTimestamp(Date.now());
+    const timer = setTimeout(() => {
+      setCurrentAvatarFilename(authUser?.avatar_filename || null);
+      setAvatarTimestamp(Date.now());
+    }, 0);
+    return () => clearTimeout(timer);
   }, [authUser?.avatar_filename, authUser?.updated_at]);
 
   useEffect(() => {
@@ -219,7 +223,9 @@ export default function Header({ authUser, onLogout, children }) {
   };
 
   useEffect(() => {
-    setIsHighContrast(getHighContrastPreference(authUser?.id));
+    const timer = setTimeout(() => {
+      setIsHighContrast(getHighContrastPreference(authUser?.id));
+    }, 0);
 
     const handleStorageChange = (e) => {
       if (e.key === "pup-logout") {
@@ -242,6 +248,7 @@ export default function Header({ authUser, onLogout, children }) {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener(HIGH_CONTRAST_EVENT, handleCustomChange);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(HIGH_CONTRAST_EVENT, handleCustomChange);
     };
@@ -274,8 +281,58 @@ export default function Header({ authUser, onLogout, children }) {
     window.location.href = "/login";
   };
 
-  const isSettingsActive = pathname === "/account";
-  const isActivityActive = pathname === "/account/activity";
+  const isSettingsActive =
+    (searchParams?.get("view") === "settings" &&
+      ["/student", "/staff", "/admin", "/systemadmin"].some((p) => pathname?.startsWith(p))) ||
+    pathname === "/account";
+  const isActivityActive =
+    (searchParams?.get("view") === "activity" &&
+      ["/student", "/staff", "/admin", "/systemadmin"].some((p) => pathname?.startsWith(p))) ||
+    (pathname === "/account" && searchParams?.get("tab") === "activity");
+
+  const openMyActivity = () => {
+    const onDashboard = ["/student", "/staff", "/admin", "/systemadmin"].some(
+      (p) => pathname?.startsWith(p)
+    );
+    if (onDashboard) {
+      window.dispatchEvent(
+        new CustomEvent("switch-view", {
+          detail: { view: "activity" },
+        })
+      );
+      return;
+    }
+    const dashboardBase = isStudent
+      ? "/student"
+      : activeView === "systemadmin"
+        ? "/systemadmin"
+        : activeView === "admin"
+          ? "/admin"
+          : "/staff";
+    router.push(`${dashboardBase}?view=activity`, { scroll: false });
+  };
+
+  const openAccountSettings = () => {
+    const onDashboard = ["/student", "/staff", "/admin", "/systemadmin"].some(
+      (p) => pathname?.startsWith(p)
+    );
+    if (onDashboard) {
+      window.dispatchEvent(
+        new CustomEvent("switch-view", {
+          detail: { view: "settings" },
+        })
+      );
+      return;
+    }
+    const dashboardBase = isStudent
+      ? "/student"
+      : activeView === "systemadmin"
+        ? "/systemadmin"
+        : activeView === "admin"
+          ? "/admin"
+          : "/staff";
+    router.push(`${dashboardBase}?view=settings`, { scroll: false });
+  };
 
   // Dynamically reflect the current view role & accent color based on activeView
   const currentViewRole = (() => {
@@ -832,7 +889,7 @@ export default function Header({ authUser, onLogout, children }) {
             keywords: "switch to admin view administrator management toggle role governance",
           }
         ] : []),
-        ...((pathname === "/account" || pathname === "/account/activity") ? [
+          ...((pathname === "/account") ? [
           {
             label: "Return to Dashboard",
             action: "return-dashboard",
@@ -852,14 +909,14 @@ export default function Header({ authUser, onLogout, children }) {
       items: [
         {
           label: "Account Settings",
-          url: "/account",
+          view: "settings",
           icon: "ph-bold ph-gear",
           breadcrumb: "Preferences • Settings",
           keywords: "account settings my profile password credentials preferences security 2fa totp edit profile",
         },
         {
           label: "My Activity",
-          url: "/account/activity",
+          view: "activity",
           icon: "ph-bold ph-clock-counter-clockwise",
           breadcrumb: "Activity History • Personal",
           keywords: "my activity history personal audit logs login sessions timeline recent actions",
@@ -964,7 +1021,7 @@ export default function Header({ authUser, onLogout, children }) {
         }
       } else if (isSystemAdmin && !onSystemAdminPage) {
         router.push(`/systemadmin?${params.toString()}`);
-      } else if (pathname === "/account" || pathname === "/account/activity") {
+      } else if (pathname === "/account") {
         const targetPath = isStudent ? "/student" : (isSystemAdmin ? "/systemadmin" : (activeView === "admin" ? "/admin" : "/staff"));
         router.push(`${targetPath}?${params.toString()}`);
       } else {
@@ -1120,16 +1177,6 @@ export default function Header({ authUser, onLogout, children }) {
 
               {/* 2. Body Zone */}
               <DropdownMenuGroup className="p-1.5 flex flex-col gap-0.5">
-                {(isSettingsActive || isActivityActive) && (
-                  <DropdownMenuItem
-                    className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
-                    onClick={handleMainDashboardClick}
-                  >
-                    <HugeIcon className="ph-bold ph-layout text-sm text-pup-maroon dark:text-red-400 shrink-0" />
-                    <span>Return to Dashboard</span>
-                  </DropdownMenuItem>
-                )}
-
                 <DropdownMenuItem
                   className={cn(
                     "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
@@ -1137,7 +1184,7 @@ export default function Header({ authUser, onLogout, children }) {
                       ? "text-gray-900 bg-gray-100 dark:text-zinc-50 dark:bg-zinc-800"
                       : "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                   )}
-                  onClick={() => router.push("/account")}
+                    onClick={openAccountSettings}
                 >
                   <HugeIcon className="ph-bold ph-gear text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
                   <span>Account Settings</span>
@@ -1149,10 +1196,10 @@ export default function Header({ authUser, onLogout, children }) {
                       "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
                       "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                     )}
-                    onClick={() => router.push("/account/activity")}
-                  >
-                    <HugeIcon className="ph-bold ph-clock-counter-clockwise text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
-                    <span>My Activity</span>
+                    onClick={openMyActivity}
+                    >
+                     <HugeIcon className="ph-bold ph-clock-counter-clockwise text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                     <span>My Activity</span>
                   </DropdownMenuItem>
                 )}
 
@@ -1478,7 +1525,7 @@ export default function Header({ authUser, onLogout, children }) {
           <DialogFooter className="mt-4">
             <Button
               onClick={handleSessionExpiredRedirect}
-              className="w-full h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="w-full h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Sign In Again
             </Button>

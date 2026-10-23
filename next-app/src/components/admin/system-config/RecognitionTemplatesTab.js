@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
@@ -78,7 +78,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const sampleInputRef = useRef(null)
   const importInputRef = useRef(null)
 
-  const load = async (showNotification = false) => {
+  const load = useCallback(async (showNotification = false) => {
     setLoading(true)
     try {
       const [typesResponse, templatesResponse] = await Promise.all([
@@ -97,9 +97,12 @@ export default function RecognitionTemplatesTab({ showToast }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    const timer = setTimeout(() => load(), 0)
+    return () => clearTimeout(timer)
+  }, [load])
   useEffect(() => () => { if (sampleUrl) URL.revokeObjectURL(sampleUrl) }, [sampleUrl])
 
   const docTypeOptions = useMemo(() => [

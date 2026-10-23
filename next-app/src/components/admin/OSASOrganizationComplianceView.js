@@ -1,5 +1,6 @@
 "use client";
 
+import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
 import HugeIcon from "@/components/shared/HugeIcon";
@@ -169,7 +170,7 @@ export default function OSASOrganizationComplianceView({
   const statCardsRef = useRef(null);
 
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlPage();
   const [pageSize, setPageSize] = useState(10);
 
   // Click outside to close selected KPI popover
@@ -337,7 +338,7 @@ export default function OSASOrganizationComplianceView({
     else if (groupId === "cbl") setCblFilters(values);
     else if (groupId === "officers") setOfficerFilters(values);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const handleResetFilters = useCallback(() => {
     setSearch("");
@@ -347,7 +348,7 @@ export default function OSASOrganizationComplianceView({
     setCblFilters([]);
     setOfficerFilters([]);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   // Filter Organizations
   const filteredOrganizations = useMemo(() => {
@@ -671,7 +672,7 @@ export default function OSASOrganizationComplianceView({
       });
     });
     return chips;
-  }, [search, categoryFilter, complianceFilters, standingFilters, cblFilters, officerFilters]);
+  }, [search, categoryFilter, complianceFilters, standingFilters, cblFilters, officerFilters, setPage]);
 
   // PDF Generation
   const handleOpenPdfReport = async () => {
@@ -778,7 +779,7 @@ export default function OSASOrganizationComplianceView({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
+      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up pb-6">
         {/* Unified Single Card Container: Header, Stats, Toolbar, Table & Footer */}
         <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}

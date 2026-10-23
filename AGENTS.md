@@ -373,16 +373,16 @@ export async function GET(req) {
   const cookieStore = await cookies();
   const token = cookieStore.get(getSessionCookieName())?.value;
   if (!token) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  
+
   const payload = await verifySessionToken(token);
   const userId = payload.sub;
   const user = await getStaffById(userId);
-  
+
   // Role check for admin-only routes
   if (user.role !== "Admin") {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
-  
+
   // ... proceed with handler
 }
 ```
@@ -642,10 +642,10 @@ In SuperAdmin dashboards, views consolidate the Page Header, Tabs/Segmented cont
 <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none isolate">
   {/* 1. Header with icon, title, description, and action toolbar */}
   <PageHeader title="Campus Operations" actions={<RefreshButton ... />} showBorder={false} />
-  
+
   {/* 2. Embedded Segmented Controls / Frequency Switchers */}
   <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 ...">...</div>
-  
+
   {/* 3. Search & Filter Toolbar */}
   <div className="px-6 py-3 border-t border-gray-100 dark:border-white/10 ...">...</div>
 
@@ -666,7 +666,7 @@ When building custom modals with `Dialog` (`@/components/ui/dialog`):
 <Dialog open={isOpen} onOpenChange={setIsOpen}>
   {/* 1. Always pass flex flex-col gap-0 to override default grid gap-4 */}
   <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-gray-200 dark:bg-zinc-900 dark:border-white/10 p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
-    
+
     {/* 2. Header with generous 24px padding and bottom border */}
     <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-gray-100 dark:border-white/10 text-left">
       <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em]">Modal Title</DialogTitle>
@@ -723,7 +723,7 @@ Use `Skeleton` from `@/components/ui/skeleton`:
   <tr className="border-0 hover:bg-transparent">
     <td colSpan={5} className="p-0 border-0">
       <div className="h-[400px] flex flex-col items-center justify-center text-gray-500">
-        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 
+        <div className="w-16 h-16 rounded-full bg-white border border-gray-200
                         flex items-center justify-center mb-4 shadow-sm">
           <i className="ph-duotone ph-icon-name text-3xl text-pup-maroon"></i>
         </div>
@@ -747,11 +747,11 @@ Use `Skeleton` from `@/components/ui/skeleton`:
     Showing {start}-{end} of <strong>{total.toLocaleString()}</strong> entries
   </div>
   <div className="flex items-center gap-2">
-    <Button variant="outline" size="sm" disabled={page <= 1} 
+    <Button variant="outline" size="sm" disabled={page <= 1}
             onClick={() => setPage(p => p - 1)}>
       <i className="ph-bold ph-caret-left"></i> Previous
     </Button>
-    <div className="px-3 text-xs font-bold text-gray-700 bg-white border 
+    <div className="px-3 text-xs font-bold text-gray-700 bg-white border
                     border-gray-200 rounded-md h-8 flex items-center justify-center">
       {page} / {totalPages}
     </div>
@@ -906,6 +906,14 @@ When making changes to this codebase:
 - [ ] **API response format** — Return `{ ok: true, data }` or `{ ok: false, error }`
 - [ ] **Storage layout safety** — Validate student usage before deleting rooms/cabinets
 - [ ] **Client fetch caching** — Use `cache: "no-store"` for real-time data
+
+---
+
+## 15. Important Note to Consider
+
+Cut taglines, helper text and secondary labels. If a screen needs them to make sense, fix the layout.
+
+Make the best decision that will elevate all three: the user experience (UX), developr experience (DX), and agent experience (AX) always, without breaking anything.
 
 ---
 

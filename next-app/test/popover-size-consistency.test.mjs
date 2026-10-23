@@ -253,8 +253,8 @@ test('Popover Typographic Font-Weight Consistency', () => {
   const tabPath = path.join(ROOT_DIR, 'src/components/student/StudentComplianceTab.js')
   const tabCode = fs.readFileSync(tabPath, 'utf8')
   assert.ok(
-    tabCode.includes('text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500'),
-    'StudentComplianceTab popover category labels must use font-semibold'
+    tabCode.includes('text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider'),
+    'StudentComplianceTab popover filter labels must use font-semibold'
   )
   assert.ok(
     tabCode.includes('text-sm font-semibold text-gray-900 dark:text-zinc-100'),
@@ -268,12 +268,12 @@ test('StudentComplianceTab Popovers Architecture Consistency', () => {
   const tabCode = fs.readFileSync(tabPath, 'utf8')
 
   assert.ok(
-    tabCode.includes('className="w-80 rounded-2xl p-0 border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden font-jakarta"'),
-    'StudentComplianceTab details popovers must use p-0 overflow-hidden'
+    tabCode.includes('className="w-80 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"'),
+    'StudentComplianceTab filter popovers must use p-0 overflow-hidden'
   )
   assert.ok(
-    tabCode.includes('{/* 1. Header Zone */}'),
-    'StudentComplianceTab details popovers must include Header zone'
+    tabCode.includes('{/* Popover Header */}'),
+    'StudentComplianceTab filter popovers must include Header zone'
   )
   assert.ok(
     !tabCode.includes('Room 102 Archive</span>'),

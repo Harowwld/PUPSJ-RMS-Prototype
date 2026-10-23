@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -90,7 +91,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   }
 
   // Pagination
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useUrlPage()
   const [pageSize, setPageSize] = useState(20)
 
   // Multi-Selection State & Batch Actions
@@ -103,10 +104,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   // Reset page and selection when search or filters change
   useEffect(() => {
-    setPage(1)
-    setSelectedIds(new Set())
-    setLastSelectedId(null)
-  }, [search, staffFilters, statusFilter])
+    const timer = setTimeout(() => {
+      setPage(1)
+      setSelectedIds(new Set())
+      setLastSelectedId(null)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [search, staffFilters, statusFilter, setPage])
 
   // Dialogs
   const [formOpen, setFormOpen] = useState(false)
@@ -218,10 +222,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         fetch("/api/staff?limit=500"),
         fetch("/api/offices")
       ])
-      
-      const jsonStaff = await resStaff.json()
-      const jsonOffices = await resOffices.json()
-      
+      const [jsonStaff, jsonOffices] = await Promise.all([
+        resStaff.json(),
+        resOffices.json()
+      ])
       if (resStaff.ok && jsonStaff.ok && Array.isArray(jsonStaff.data)) {
         setStaff(jsonStaff.data)
         setCachedData("systemadmin_staff", jsonStaff.data, 60000)
@@ -250,7 +254,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   }, [fetchData])
 
   useEffect(() => {
-    fetchData()
+    const timer = setTimeout(() => fetchData(), 0)
+    return () => clearTimeout(timer)
   }, [fetchData])
 
   useEffect(() => {
@@ -560,29 +565,35 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   // Clear selection when changing tabs, page, or filters
   useEffect(() => {
-    setSelectedIds(new Set())
-    setLastSelectedId(null)
+    const timer = setTimeout(() => {
+      setSelectedIds(new Set())
+      setLastSelectedId(null)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [statusFilter, page, pageSize, search, staffFilters])
 
   // Prune stale selected IDs when filtered staff updates
   useEffect(() => {
-    setSelectedIds((prev) => {
-      if (prev.size === 0) return prev
-      const validIds = new Set(filteredStaff.map((s) => s.id))
-      let needsPruning = false
-      for (const id of prev) {
-        if (!validIds.has(id)) {
-          needsPruning = true
-          break
+    const timer = setTimeout(() => {
+      setSelectedIds((prev) => {
+        if (prev.size === 0) return prev
+        const validIds = new Set(filteredStaff.map((s) => s.id))
+        let needsPruning = false
+        for (const id of prev) {
+          if (!validIds.has(id)) {
+            needsPruning = true
+            break
+          }
         }
-      }
-      if (!needsPruning) return prev
-      const next = new Set()
-      for (const id of prev) {
-        if (validIds.has(id)) next.add(id)
-      }
-      return next
-    })
+        if (!needsPruning) return prev
+        const next = new Set()
+        for (const id of prev) {
+          if (validIds.has(id)) next.add(id)
+        }
+        return next
+      })
+    }, 0)
+    return () => clearTimeout(timer)
   }, [filteredStaff])
 
   const toggleSelectAll = (checked) => {
@@ -796,7 +807,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   ]
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         <PageHeader
@@ -1252,7 +1263,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => router.push("/account")}
+                                onClick={() =>
+                                  window.dispatchEvent(
+                                    new CustomEvent("switch-view", {
+                                      detail: { view: "settings" },
+                                    })
+                                  )
+                                }
                                 aria-label="My Account Settings"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >

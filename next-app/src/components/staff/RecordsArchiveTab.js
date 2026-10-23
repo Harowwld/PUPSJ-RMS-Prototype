@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect, useMemo } from "react"
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion"
 
@@ -287,7 +288,7 @@ export default function RecordsArchiveTab({
 }) {
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(9) // 9 fits nicely in 3-column card grid, 10 or more in table
   const [folderSortBy, setFolderSortBy] = useState("default") // "default", "year-desc", "year-asc", "name-asc", "name-desc", "count-desc"
 
@@ -399,10 +400,11 @@ export default function RecordsArchiveTab({
 
   // Clear selected student whenever folder navigation level or archived mode changes
   useEffect(() => {
-    setSelectedStudent(null)
+    const timer = setTimeout(() => setSelectedStudent(null), 0)
+    return () => clearTimeout(timer)
   }, [currentLevel, showArchived])
 
-  const effectiveBreadcrumbs = useMemo(() => {
+  const effectiveBreadcrumbs = (() => {
     const list = [...(breadcrumbs || [])]
     if (selectedStudent) {
       list.push({
@@ -411,7 +413,7 @@ export default function RecordsArchiveTab({
       })
     }
     return list
-  }, [breadcrumbs, selectedStudent])
+  })()
 
   const currentEffectiveLevel = selectedStudent ? "student-files" : currentLevel
 
@@ -441,11 +443,11 @@ export default function RecordsArchiveTab({
     ? currentLevel === "organizations" || currentLevel === "students"
     : currentLevel === "students"
 
-  const selectedCategory = useMemo(() => {
+  const selectedCategory = (() => {
     if (!isOsas) return null
     const catBreadcrumb = breadcrumbs.find((b) => b.level === "organizations")
     return catBreadcrumb?.label.replace(/ Organizations$/, "") || null
-  }, [isOsas, breadcrumbs])
+  })()
 
   // Derived filtered results
   const filteredQuickResults = useMemo(() => {
@@ -464,7 +466,7 @@ export default function RecordsArchiveTab({
     return quickResults
   }, [showArchived, quickResults, archivedStudents, quickQuery])
 
-  const filteredExplorerItems = useMemo(() => {
+  const filteredExplorerItems = (() => {
     let items = []
 
     if (!isLeafLevel) {
@@ -576,7 +578,7 @@ export default function RecordsArchiveTab({
     }
 
     return sortedLeaf
-  }, [showArchived, explorerItems, archivedStudents, students, isLeafLevel, isOsas, selectedCategory, breadcrumbs, folderSortBy])
+  })()
 
   const paginatedExplorerItems = useMemo(() => {
     if (!isLeafLevel) return filteredExplorerItems
@@ -587,7 +589,7 @@ export default function RecordsArchiveTab({
   const totalItems = isLeafLevel ? filteredExplorerItems.length : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
-  const activeTabCount = useMemo(() => {
+  const activeTabCount = (() => {
     if (isLeafLevel) {
       if (isOsas) {
         if (selectedCategory) {
@@ -604,9 +606,9 @@ export default function RecordsArchiveTab({
       }
     }
     return students.length
-  }, [isLeafLevel, isOsas, selectedCategory, breadcrumbs, students])
+  })()
 
-  const archivedTabCount = useMemo(() => {
+  const archivedTabCount = (() => {
     if (isLeafLevel) {
       if (isOsas) {
         if (selectedCategory) {
@@ -623,7 +625,7 @@ export default function RecordsArchiveTab({
       }
     }
     return archivedStudents.length
-  }, [isLeafLevel, isOsas, selectedCategory, breadcrumbs, archivedStudents])
+  })()
 
   const quickMatchCount = useMemo(() => {
     if (!quickQuery.trim()) {
@@ -682,7 +684,7 @@ export default function RecordsArchiveTab({
   return (
     <div
       id="view-search"
-      className="flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
+      className="flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta pb-6"
       tabIndex={0}
     >
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
@@ -1116,7 +1118,7 @@ export default function RecordsArchiveTab({
                         type="button"
                         onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
                         title={isOsas ? "Go to Student Organizations" : "Go to Upload"}
-                        className="mt-4 h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="mt-4 h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
                         {isOsas ? "Register Organization" : "Upload Records"}
                       </Button>

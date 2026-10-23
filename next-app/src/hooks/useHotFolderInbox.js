@@ -135,7 +135,8 @@ export function useHotFolderInbox({
 
   useEffect(() => {
     if (!enabled) return;
-    loadList({ showLoading: true });
+    const timer = setTimeout(() => loadList({ showLoading: true }), 0);
+    return () => clearTimeout(timer);
   }, [enabled, loadList]);
 
   useEffect(() => {
@@ -183,7 +184,8 @@ export function useHotFolderInbox({
   useEffect(() => {
     if (selected == null) return;
     if (!rows.some((r) => Number(r.id) === Number(selected))) {
-      clearIngestSelection();
+      const timer = setTimeout(() => clearIngestSelection(), 0);
+      return () => clearTimeout(timer);
     }
   }, [rows, selected, clearIngestSelection]);
 

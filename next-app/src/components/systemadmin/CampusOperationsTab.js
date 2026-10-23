@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Reorder } from "framer-motion"
 import { Card } from "@/components/ui/card"
@@ -113,7 +114,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   })
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortOrder, setSortOrder] = useState("DESC")
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useUrlPage()
   const [pageSize, setPageSize] = useState(10)
 
   // Stat Cards dropdown state
@@ -407,13 +408,13 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1)
-  }, [search, operationFilters, pageSize])
+  }, [search, operationFilters, pageSize, setPage])
 
   const handleClearFilters = useCallback(() => {
     setSearch("")
     setOperationFilters({ department: [], status: [] })
     setPage(1)
-  }, [])
+  }, [setPage])
 
   const hasActiveFilters =
     Boolean(search?.trim()) ||
@@ -439,7 +440,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   ], [health])
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6">
+    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
         {/* Header */}

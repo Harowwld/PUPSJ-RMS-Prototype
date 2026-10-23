@@ -214,7 +214,9 @@ export default function CoursesTab({
   }, [localSearch, setCourseSearch])
 
   useEffect(() => {
-    if (courseSearch === "") setLocalSearch("")
+    if (courseSearch !== "") return
+    const handler = setTimeout(() => setLocalSearch(""), 0)
+    return () => clearTimeout(handler)
   }, [courseSearch])
 
   const handleItemsPerPageChange = (e) => {
@@ -393,7 +395,7 @@ export default function CoursesTab({
                     !showArchived && (
                       <Button
                         onClick={() => setIsAddCourseOpen(true)}
-                        className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
                         Add Program
                       </Button>

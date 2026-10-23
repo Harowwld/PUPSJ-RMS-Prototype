@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 
@@ -179,7 +180,13 @@ const StaffTableRow = React.memo(({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => router.push("/account")}
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("switch-view", {
+                        detail: { view: "settings" },
+                      })
+                    )
+                  }
                   aria-label="My Account Settings"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
@@ -285,7 +292,7 @@ export default function StaffDirectoryTab({
     return ""
   })
 
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
@@ -366,7 +373,7 @@ export default function StaffDirectoryTab({
         }
       }
     ]
-  }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter, officePrefix])
+  }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter, officePrefix, setCurrentPage])
 
 
   const hasActiveFilters = localSearch !== "" || roleFilters.length > 0 || statusFilters.length > 0 || twoFactorFilters.length > 0;
@@ -378,7 +385,7 @@ export default function StaffDirectoryTab({
     setTwoFactorFilters([])
     setRoleFilter?.("All")
     setCurrentPage(1)
-  }, [setSearch, setRoleFilter])
+  }, [setSearch, setRoleFilter, setCurrentPage])
 
   // Debounce search update
   useEffect(() => {
@@ -387,7 +394,7 @@ export default function StaffDirectoryTab({
       setCurrentPage(1)
     }, 300)
     return () => clearTimeout(handler)
-  }, [localSearch, setSearch])
+  }, [localSearch, setSearch, setCurrentPage])
 
   // Persist search when it changes
   useEffect(() => {
@@ -481,7 +488,7 @@ export default function StaffDirectoryTab({
     setCurrentPage(newPage)
     onSelectionChange(new Set())
     setLastSelectedId(null)
-  }, [onSelectionChange])
+  }, [onSelectionChange, setCurrentPage])
 
   // Prune stale selected IDs when filtered staff updates
   useEffect(() => {
@@ -585,7 +592,7 @@ export default function StaffDirectoryTab({
   return (
     <TooltipProvider delayDuration={200}>
       <div
-        className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up"
+        className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up pb-6"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
@@ -781,7 +788,7 @@ export default function StaffDirectoryTab({
                   activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                     <Button
                       onClick={() => onSwitchView("create")}
-                      className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       Register Staff
                     </Button>
@@ -999,7 +1006,5 @@ export default function StaffDirectoryTab({
     </TooltipProvider>
   )
 }
-
-
 
 

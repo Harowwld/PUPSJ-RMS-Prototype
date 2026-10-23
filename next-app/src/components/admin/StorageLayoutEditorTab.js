@@ -1601,7 +1601,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   )
 
   return (
-    <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
+    <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6 pb-6">
       <ConflictResolutionModals 
         applyReportOpen={applyReportOpen}
         setApplyReportOpen={setApplyReportOpen}
@@ -1624,7 +1624,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="rounded-2xl border border-border bg-white shadow-sm p-0 gap-0 dark:border-border dark:bg-card dark:shadow-none w-full overflow-hidden">
+      <Card className="rounded-2xl border border-border bg-white shadow-sm p-0 gap-0 dark:border-border dark:bg-card dark:shadow-none w-full overflow-hidden mb-4">
         {renderEditorContent()}
       </Card>
 

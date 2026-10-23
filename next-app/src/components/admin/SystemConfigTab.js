@@ -1,7 +1,9 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { generateExportFilename } from "@/lib/exportHelpers"
@@ -24,6 +26,8 @@ import BulkImportTab from "./system-config/BulkImportTab"
 import RecognitionTemplatesTab from "./system-config/RecognitionTemplatesTab"
 import { formatErrorMessage } from "@/lib/errorUtils"
 
+const SYSTEM_CONFIG_SUB_TABS = ["document-types", "degree-programs", "course-blocks", "bulk-import", "recognition-templates"]
+
 export default function SystemConfigTab({
   showToast,
   logAdminAction,
@@ -31,7 +35,32 @@ export default function SystemConfigTab({
   authUser = null,
 }) {
   const isOsas = (authUser?.office_id || "").toLowerCase() === "osas";
-  const [activeSubTab, setActiveSubTab] = useState("document-types")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [activeSubTab, setActiveSubTabState] = useState(() => {
+    const requested = searchParams?.get("subtab")
+    return SYSTEM_CONFIG_SUB_TABS.includes(requested) && !(isOsas && requested === "course-blocks")
+      ? requested
+      : "document-types"
+  })
+  const setActiveSubTab = (nextTab) => {
+    const tab = SYSTEM_CONFIG_SUB_TABS.includes(nextTab) && !(isOsas && nextTab === "course-blocks")
+      ? nextTab
+      : "document-types"
+    setActiveSubTabState(tab)
+    const params = new URLSearchParams(window.location.search)
+    params.set("subtab", tab)
+    params.delete("page")
+    const queryString = params.toString()
+    router.push(queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname, { scroll: false })
+  }
+  useEffect(() => {
+    const requested = searchParams?.get("subtab")
+    if (SYSTEM_CONFIG_SUB_TABS.includes(requested) && !(isOsas && requested === "course-blocks")) {
+      const timer = setTimeout(() => setActiveSubTabState(requested), 0)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams, isOsas])
   const [showArchived, setShowArchived] = useState(false)
 
   // Search States
@@ -43,6 +72,12 @@ export default function SystemConfigTab({
   const [debouncedCourseSearch, setDebouncedCourseSearch] = useState("")
   const [debouncedSectionSearch, setDebouncedSectionSearch] = useState("")
 
+  // Pagination States
+  const [pageDoc, setPageDoc] = useUrlPage({ enabled: activeSubTab === "document-types" })
+  const [pageCourse, setPageCourse] = useUrlPage({ enabled: activeSubTab === "degree-programs" })
+  const [pageSection, setPageSection] = useUrlPage({ enabled: activeSubTab === "course-blocks" })
+  const [pageImport, setPageImport] = useUrlPage({ enabled: activeSubTab === "bulk-import" })
+
   // Debounce effects
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,7 +85,7 @@ export default function SystemConfigTab({
       setPageDoc(1)
     }, 300)
     return () => clearTimeout(timer)
-  }, [docSearch])
+  }, [docSearch, setPageDoc])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,7 +93,7 @@ export default function SystemConfigTab({
       setPageCourse(1)
     }, 300)
     return () => clearTimeout(timer)
-  }, [courseSearch])
+  }, [courseSearch, setPageCourse])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -66,7 +101,7 @@ export default function SystemConfigTab({
       setPageSection(1)
     }, 300)
     return () => clearTimeout(timer)
-  }, [sectionSearch])
+  }, [sectionSearch, setPageSection])
 
   // Document Types State
   const [docTypes, setDocTypes] = useState([])
@@ -89,11 +124,6 @@ export default function SystemConfigTab({
   const [lastSelectedCourseId, setLastSelectedCourseId] = useState(null)
   const [lastSelectedSectionId, setLastSelectedSectionId] = useState(null)
 
-  // Pagination States
-  const [pageDoc, setPageDoc] = useState(1)
-  const [pageCourse, setPageCourse] = useState(1)
-  const [pageSection, setPageSection] = useState(1)
-
   // Sorting States
   const [sortDoc, setSortDoc] = useState({ key: "name", direction: "asc" })
   const [sortCourse, setSortCourse] = useState({
@@ -115,10 +145,11 @@ export default function SystemConfigTab({
     message: "",
     confirmLabel: "",
     variant: "danger",
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   useEffect(() => {
+    const timer = setTimeout(() => {
     // Reset selection states when view mode or sub-tab changes to avoid persisting
     // batch actions between unrelated records or categories
     const docCount = Object.values(selectedDocTypes).filter(Boolean).length;
@@ -126,10 +157,10 @@ export default function SystemConfigTab({
     const sectionCount = Object.values(selectedSections).filter(Boolean).length;
 
     if ((docCount > 0 || courseCount > 0 || sectionCount > 0) && showToast) {
-       showToast({
-         title: "Selections Reset",
-         description: "Category selections cleared to prevent accidental batch actions.",
-       });
+      showToast({
+        title: "Selections Reset",
+        description: "Category selections cleared to prevent accidental batch actions.",
+      });
     }
 
     setSelectedDocTypes({})
@@ -140,7 +171,9 @@ export default function SystemConfigTab({
     setPageSection(1)
 
     loadAll()
-  }, [showArchived, activeSubTab])
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [showArchived, activeSubTab, setPageCourse, setPageDoc, setPageSection])
 
   // --- Transform Helpers ---
   const applySortAndPagination = (data, sort, page, perPage) => {
@@ -194,8 +227,8 @@ export default function SystemConfigTab({
       docPurposeFilter === "requestable"
         ? Boolean(dt.is_requestable && !dt.is_compliance)
         : docPurposeFilter === "compliance"
-        ? Boolean(dt.is_compliance)
-        : true
+          ? Boolean(dt.is_compliance)
+          : true
     return matchesSearch && matchesStatus && matchesPurpose
   })
   const filteredDocTypes = applySortAndPagination(
@@ -243,21 +276,21 @@ export default function SystemConfigTab({
   useEffect(() => {
     const totalPages = Math.ceil(filteredDocTypesFull.length / itemsPerPage) || 1
     if (pageDoc > totalPages) setPageDoc(totalPages)
-  }, [filteredDocTypesFull.length, itemsPerPage, pageDoc])
+  }, [filteredDocTypesFull.length, itemsPerPage, pageDoc, setPageDoc])
 
   useEffect(() => {
     const totalPages = Math.ceil(filteredCoursesFull.length / itemsPerPage) || 1
     if (pageCourse > totalPages) setPageCourse(totalPages)
-  }, [filteredCoursesFull.length, itemsPerPage, pageCourse])
+  }, [filteredCoursesFull.length, itemsPerPage, pageCourse, setPageCourse])
 
   useEffect(() => {
     const totalPages = Math.ceil(filteredSectionsFull.length / itemsPerPage) || 1
     if (pageSection > totalPages) setPageSection(totalPages)
-  }, [filteredSectionsFull.length, itemsPerPage, pageSection])
+  }, [filteredSectionsFull.length, itemsPerPage, pageSection, setPageSection])
 
   // Automatically prune stale selections when filtered datasets update
   useEffect(() => {
-    setSelectedDocTypes((prev) => {
+    const timer = setTimeout(() => setSelectedDocTypes((prev) => {
       const selectedKeys = Object.keys(prev).filter((k) => prev[k])
       if (selectedKeys.length === 0) return prev
       const validIds = new Set(filteredDocTypesFull.map((d) => String(d.id)))
@@ -274,11 +307,12 @@ export default function SystemConfigTab({
         if (v && validIds.has(String(k))) next[k] = true
       }
       return next
-    })
+    }), 0)
+    return () => clearTimeout(timer)
   }, [filteredDocTypesFull])
 
   useEffect(() => {
-    setSelectedCourses((prev) => {
+    const timer = setTimeout(() => setSelectedCourses((prev) => {
       const selectedKeys = Object.keys(prev).filter((k) => prev[k])
       if (selectedKeys.length === 0) return prev
       const validIds = new Set(filteredCoursesFull.map((c) => String(c.id)))
@@ -295,11 +329,12 @@ export default function SystemConfigTab({
         if (v && validIds.has(String(k))) next[k] = true
       }
       return next
-    })
+    }), 0)
+    return () => clearTimeout(timer)
   }, [filteredCoursesFull])
 
   useEffect(() => {
-    setSelectedSections((prev) => {
+    const timer = setTimeout(() => setSelectedSections((prev) => {
       const selectedKeys = Object.keys(prev).filter((k) => prev[k])
       if (selectedKeys.length === 0) return prev
       const validIds = new Set(filteredSectionsFull.map((s) => String(s.id)))
@@ -316,7 +351,8 @@ export default function SystemConfigTab({
         if (v && validIds.has(String(k))) next[k] = true
       }
       return next
-    })
+    }), 0)
+    return () => clearTimeout(timer)
   }, [filteredSectionsFull])
 
   // Selection Handlers
@@ -952,12 +988,12 @@ export default function SystemConfigTab({
   if (activeError) {
     return (
       <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
-        <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-border">
+        <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-border mb-4">
           <CardContent className="flex flex-col p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
+                  <HugeIcon className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Could not load configuration
@@ -975,7 +1011,7 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-4">
+      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-4 pb-6">
         <Tabs
           defaultValue="document-types"
           value={activeSubTab}
@@ -994,7 +1030,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <HugeIcon  className="ph-bold ph-files text-sm" />
+              <HugeIcon className="ph-bold ph-files text-sm" />
               <span>Document Types</span>
             </button>
 
@@ -1008,7 +1044,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <HugeIcon  className="ph-bold ph-graduation-cap text-sm" />
+              <HugeIcon className="ph-bold ph-graduation-cap text-sm" />
               <span>Degree Programs</span>
             </button>
 
@@ -1023,7 +1059,7 @@ export default function SystemConfigTab({
                     : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
                 )}
               >
-                <HugeIcon  className="ph-bold ph-users-three text-sm" />
+                <HugeIcon className="ph-bold ph-users-three text-sm" />
                 <span>Course Blocks</span>
               </button>
             )}
@@ -1040,7 +1076,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <HugeIcon  className="ph-bold ph-file-arrow-up text-sm" />
+              <HugeIcon className="ph-bold ph-file-arrow-up text-sm" />
               <span>Imports</span>
             </button>
 
@@ -1054,7 +1090,7 @@ export default function SystemConfigTab({
                   : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
               )}
             >
-              <HugeIcon  className="ph-bold ph-scan text-sm" />
+              <HugeIcon className="ph-bold ph-scan text-sm" />
               <span>OCR Configuration</span>
             </button>
           </div>
@@ -1065,140 +1101,142 @@ export default function SystemConfigTab({
                 value="document-types"
                 className="m-0 flex flex-col border-0 focus-visible:ring-0"
               >
-              <DocTypesTab
-                loading={loading}
-                docTypes={docTypes}
-                docSearch={docSearch}
-                setDocSearch={setDocSearch}
-                docPurposeFilter={docPurposeFilter}
-                setDocPurposeFilter={setDocPurposeFilter}
-                showArchived={showArchived}
-                setShowArchived={setShowArchived}
-                pageDoc={pageDoc}
-                setPageDoc={setPageDoc}
-                itemsPerPage={itemsPerPage}
-                setItemsPerPage={setItemsPerPage}
-                filteredDocTypes={filteredDocTypes}
-                filteredDocTypesFull={filteredDocTypesFull}
-                selectedDocTypes={selectedDocTypes}
-                setSelectedDocTypes={setSelectedDocTypes}
-                toggleDocTypeSelected={toggleDocTypeSelected}
-                toggleAllDocTypes={toggleAllDocTypes}
-                executeBulkTaxonomyAction={executeBulkTaxonomyAction}
-                setConfirmPayload={setConfirmPayload}
-                setConfirmOpen={setConfirmOpen}
-                onSort={(key, dir) => handleSort("doc", key, dir)}
-                sortDoc={sortDoc}
-                showToast={showToast}
-                loadAll={loadAll}
-              />
+                <DocTypesTab
+                  loading={loading}
+                  docTypes={docTypes}
+                  docSearch={docSearch}
+                  setDocSearch={setDocSearch}
+                  docPurposeFilter={docPurposeFilter}
+                  setDocPurposeFilter={setDocPurposeFilter}
+                  showArchived={showArchived}
+                  setShowArchived={setShowArchived}
+                  pageDoc={pageDoc}
+                  setPageDoc={setPageDoc}
+                  itemsPerPage={itemsPerPage}
+                  setItemsPerPage={setItemsPerPage}
+                  filteredDocTypes={filteredDocTypes}
+                  filteredDocTypesFull={filteredDocTypesFull}
+                  selectedDocTypes={selectedDocTypes}
+                  setSelectedDocTypes={setSelectedDocTypes}
+                  toggleDocTypeSelected={toggleDocTypeSelected}
+                  toggleAllDocTypes={toggleAllDocTypes}
+                  executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                  setConfirmPayload={setConfirmPayload}
+                  setConfirmOpen={setConfirmOpen}
+                  onSort={(key, dir) => handleSort("doc", key, dir)}
+                  sortDoc={sortDoc}
+                  showToast={showToast}
+                  loadAll={loadAll}
+                />
 
-            </TabsContent>
+              </TabsContent>
 
-            <TabsContent value="recognition-templates" className="m-0 flex flex-col border-0 focus-visible:ring-0">
-              <RecognitionTemplatesTab showToast={showToast} />
-            </TabsContent>
+              <TabsContent value="recognition-templates" className="m-0 flex flex-col border-0 focus-visible:ring-0">
+                <RecognitionTemplatesTab showToast={showToast} />
+              </TabsContent>
 
-            <TabsContent
-              value="degree-programs"
-              className="m-0 flex flex-col border-0 focus-visible:ring-0"
-            >
-              <CoursesTab
-                loading={loading}
-                courses={courses}
-                sections={sections}
-                courseSearch={courseSearch}
-                setCourseSearch={setCourseSearch}
-                showArchived={showArchived}
-                setShowArchived={setShowArchived}
-                pageCourse={pageCourse}
-                setPageCourse={setPageCourse}
-                itemsPerPage={itemsPerPage}
-                setItemsPerPage={setItemsPerPage}
-                filteredCourses={filteredCourses}
-                filteredCoursesFull={filteredCoursesFull}
-                selectedCourses={selectedCourses}
-                setSelectedCourses={setSelectedCourses}
-                toggleCourseSelected={toggleCourseSelected}
-                toggleAllCourses={toggleAllCourses}
-                executeBulkTaxonomyAction={executeBulkTaxonomyAction}
-                setConfirmPayload={setConfirmPayload}
-                setConfirmOpen={setConfirmOpen}
-                onSort={(key, dir) => handleSort("course", key, dir)}
-                sortCourse={sortCourse}
-                showToast={showToast}
-                loadAll={loadAll}
-              />
-            </TabsContent>
+              <TabsContent
+                value="degree-programs"
+                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+              >
+                <CoursesTab
+                  loading={loading}
+                  courses={courses}
+                  sections={sections}
+                  courseSearch={courseSearch}
+                  setCourseSearch={setCourseSearch}
+                  showArchived={showArchived}
+                  setShowArchived={setShowArchived}
+                  pageCourse={pageCourse}
+                  setPageCourse={setPageCourse}
+                  itemsPerPage={itemsPerPage}
+                  setItemsPerPage={setItemsPerPage}
+                  filteredCourses={filteredCourses}
+                  filteredCoursesFull={filteredCoursesFull}
+                  selectedCourses={selectedCourses}
+                  setSelectedCourses={setSelectedCourses}
+                  toggleCourseSelected={toggleCourseSelected}
+                  toggleAllCourses={toggleAllCourses}
+                  executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                  setConfirmPayload={setConfirmPayload}
+                  setConfirmOpen={setConfirmOpen}
+                  onSort={(key, dir) => handleSort("course", key, dir)}
+                  sortCourse={sortCourse}
+                  showToast={showToast}
+                  loadAll={loadAll}
+                />
+              </TabsContent>
 
-            <TabsContent
-              value="course-blocks"
-              className="m-0 flex flex-col border-0 focus-visible:ring-0"
-            >
-              <SectionsTab
-                loading={loading}
-                courses={courses}
-                sections={sections}
-                sectionSearch={sectionSearch}
-                setSectionSearch={setSectionSearch}
-                selectedCourseFilter={selectedCourseFilter}
-                setSelectedCourseFilter={setSelectedCourseFilter}
-                showArchived={showArchived}
-                setShowArchived={setShowArchived}
-                pageSection={pageSection}
-                setPageSection={setPageSection}
-                itemsPerPage={itemsPerPage}
-                setItemsPerPage={setItemsPerPage}
-                filteredSections={filteredSections}
-                filteredSectionsFull={filteredSectionsFull}
-                selectedSections={selectedSections}
-                toggleSectionSelected={toggleSectionSelected}
-                toggleAllSections={toggleAllSections}
-                executeBulkTaxonomyAction={executeBulkTaxonomyAction}
-                setSelectedSections={setSelectedSections}
-                setConfirmPayload={setConfirmPayload}
-                setConfirmOpen={setConfirmOpen}
-                onSort={(key, dir) => handleSort("section", key, dir)}
-                sortSection={sortSection}
-                showToast={showToast}
-                loadAll={loadAll}
-              />
-            </TabsContent>
+              <TabsContent
+                value="course-blocks"
+                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+              >
+                <SectionsTab
+                  loading={loading}
+                  courses={courses}
+                  sections={sections}
+                  sectionSearch={sectionSearch}
+                  setSectionSearch={setSectionSearch}
+                  selectedCourseFilter={selectedCourseFilter}
+                  setSelectedCourseFilter={setSelectedCourseFilter}
+                  showArchived={showArchived}
+                  setShowArchived={setShowArchived}
+                  pageSection={pageSection}
+                  setPageSection={setPageSection}
+                  itemsPerPage={itemsPerPage}
+                  setItemsPerPage={setItemsPerPage}
+                  filteredSections={filteredSections}
+                  filteredSectionsFull={filteredSectionsFull}
+                  selectedSections={selectedSections}
+                  toggleSectionSelected={toggleSectionSelected}
+                  toggleAllSections={toggleAllSections}
+                  executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                  setSelectedSections={setSelectedSections}
+                  setConfirmPayload={setConfirmPayload}
+                  setConfirmOpen={setConfirmOpen}
+                  onSort={(key, dir) => handleSort("section", key, dir)}
+                  sortSection={sortSection}
+                  showToast={showToast}
+                  loadAll={loadAll}
+                />
+              </TabsContent>
 
 
 
-            <TabsContent
-              value="bulk-import"
-              className="m-0 flex flex-col border-0 focus-visible:ring-0"
-            >
-              <BulkImportTab
-                importStatus={importStatus}
-                importDropActive={importDropActive}
-                setImportDropActive={setImportDropActive}
-                handleCsvSelect={handleCsvSelect}
-                handleCopySample={handleCopySample}
-                resetImport={resetImport}
-                importFile={importFile}
-                importRows={importRows}
-                importSelected={importSelected}
-                setImportSelected={setImportSelected}
-                toggleImportRowSelected={toggleImportRowSelected}
-                toggleImportSelectAll={toggleImportSelectAll}
-                executeBulkImport={executeBulkImport}
-                importResults={importResults}
-                setActiveSubTab={setActiveSubTab}
-                onUpdateRow={handleUpdateImportRow}
-                onAddRow={handleManualAddRow}
-                courses={courses}
-                isOsas={isOsas}
-                authUser={authUser}
-              />
-            </TabsContent>
-          </div>
-        </Card>
-      </Tabs>
+              <TabsContent
+                value="bulk-import"
+                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+              >
+                <BulkImportTab
+                  importStatus={importStatus}
+                  importDropActive={importDropActive}
+                  setImportDropActive={setImportDropActive}
+                  handleCsvSelect={handleCsvSelect}
+                  handleCopySample={handleCopySample}
+                  resetImport={resetImport}
+                  importFile={importFile}
+                  importRows={importRows}
+                  importSelected={importSelected}
+                  setImportSelected={setImportSelected}
+                  toggleImportRowSelected={toggleImportRowSelected}
+                  toggleImportSelectAll={toggleImportSelectAll}
+                  executeBulkImport={executeBulkImport}
+                  importResults={importResults}
+                  setActiveSubTab={setActiveSubTab}
+                  onUpdateRow={handleUpdateImportRow}
+                  onAddRow={handleManualAddRow}
+                  courses={courses}
+                  isOsas={isOsas}
+                  currentPage={pageImport}
+                  setCurrentPage={setPageImport}
+                  authUser={authUser}
+                />
+              </TabsContent>
+            </div>
+          </Card>
+        </Tabs>
 
-      {/* MODALS */}
+        {/* MODALS */}
 
         <ConfirmModal
           open={confirmOpen}

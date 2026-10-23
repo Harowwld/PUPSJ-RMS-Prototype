@@ -39,6 +39,7 @@ export default function RegisterStudentModal({
 
   // Default room and cabinet when layout is loaded
   useEffect(() => {
+    const timer = setTimeout(() => {
     if (open) {
       const firstRoom = storageLayout?.rooms?.[0];
       if (firstRoom) {
@@ -54,6 +55,8 @@ export default function RegisterStudentModal({
         setCourseCode(courses[0].code);
       }
     }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [open, storageLayout, courses, courseCode]);
 
   // Update cabinet options when room changes

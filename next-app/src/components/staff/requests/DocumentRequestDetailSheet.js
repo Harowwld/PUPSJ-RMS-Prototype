@@ -221,7 +221,9 @@ export default function DocumentRequestDetailSheet({
               <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <ProfileAvatar
-                    id={studentForRequest?.studentNo || detail.student_no}
+                    id={studentForRequest?.id || studentForRequest?.account_id || studentForRequest?.accountId || studentForRequest?.studentNo || detail.student_no}
+                    studentNo={studentForRequest?.studentNo || detail.student_no}
+                    accountId={studentForRequest?.account_id || studentForRequest?.accountId}
                     avatarFilename={studentForRequest?.avatar_filename || studentForRequest?.avatarFilename}
                     name={displayName}
                     initials={initials}

@@ -124,7 +124,7 @@ Run these checks for every modal/sheet in the modal inventory.
 - [ ] TOTP enrollment displays QR/secret only to the account owner, verifies a valid code, rejects invalid code, cancels safely, disables only after confirmation, and invalidates/updates recovery-code state correctly.
 - [ ] Recovery-code dialog copy/download/close controls work; generated codes are one-time and are not shown again after reload unless the workflow explicitly permits it.
 - [ ] Preferences controls save and restore correctly.
-- [ ] My Activity: KPI cards, search, severity tabs, date shortcuts, clear filters, sort, row expand, details sheet, copy actions, pagination, CSV download, PDF preview/fullscreen/download, and refresh work.
+- [ ] My Activity (Activity tab in Account Settings, `?tab=activity`): KPI cards, search, severity filter, date shortcuts, date pickers, active filter chips, time-grouped feed (Today/Yesterday/This Week/Earlier), details sheet, copy actions, pagination, CSV download, PDF preview/fullscreen/download, and refresh work; `/account/activity` returns 404.
 
 ## Registrar Staff workspace, `/staff`
 

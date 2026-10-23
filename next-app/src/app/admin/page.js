@@ -1,5 +1,6 @@
 "use client"
 
+import useUrlPage from "@/hooks/useUrlPage";
 import HugeIcon from "@/components/shared/HugeIcon";
 import {
   useEffect,
@@ -15,7 +16,6 @@ import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/errorUtils"
 
 
-import Header from "@/components/layout/Header"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import RestoreModal from "@/components/shared/RestoreModal"
@@ -25,11 +25,12 @@ import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import { AdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { StaffRegistrationSchema, PersonNameSchema } from "@/lib/validationSchemas"
 import { getRoleBranding } from "@/lib/roleBranding"
+import MyActivityPanel from "@/components/shared/MyActivityPanel";
+import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import { evaluateDriveStateTransition } from "@/lib/driveEventDetector"
 
 import { formatPHDateTime } from "@/lib/timeFormat"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,29 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import AdminTabSkeleton from "@/components/admin/skeletons/AdminTabSkeleton"
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
+
+const ADMIN_NAV_ITEMS = [
+  { key: "review", label: "Records Review" },
+  { key: "digitization", label: "Compliance Analytics" },
+  { type: "header", label: "Operations & Fulfillment" },
+  { key: "request_analytics", label: "SLA Analytics" },
+  { key: "storage_layout", label: "Storage Room Layout" },
+  { type: "header", label: "Personnel & Governance" },
+  { key: "directory", label: "Staff Directory" },
+  { key: "logs", label: "Activity History" },
+  { type: "header", label: "System & Maintenance" },
+  { key: "system_data", label: "System Configuration" },
+  { key: "system", label: "Backup & Recovery" },
+]
+
+function AdminDashboardLoadingSkeleton() {
+  return (
+    <DashboardShellSkeleton items={ADMIN_NAV_ITEMS}>
+      <AdminTabSkeleton />
+    </DashboardShellSkeleton>
+  )
+}
 import { registerOffices } from "@/lib/roleUtils"
 
 const AdminTabLoading = () => <AdminTabSkeleton />
@@ -82,6 +106,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     "system_data",
     "system",
     "logs",
+    "activity",
+    "settings",
   ]
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
@@ -145,7 +171,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [auditLogs, setAuditLogs] = useState(null)
   const [logStats, setLogStats] = useState(null)
   const [logsLoading, setLogsLoading] = useState(false)
-  const [logPage, setLogPage] = useState(1)
+  const [logPage, setLogPage] = useUrlPage({ enabled: view === "logs" })
   const [logTotal, setLogTotal] = useState(0)
   const [logsPerPage, setLogsPerPage] = useState(20)
   const [logSearch, setLogSearch] = useState("")
@@ -536,6 +562,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           id: r.id,
           time: formatPHDateTime(r.created_at),
           user: r.actor,
+          actor_id: r.actor_id,
           role: r.role,
           action: r.action,
           details: r.details || "N/A",
@@ -861,6 +888,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       "system",
       "backup",
       "storage_layout",
+      "activity",
+      "settings",
     ])
     if (allowedTabs.has(tab)) {
       setView(tab)
@@ -869,7 +898,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     }
     setLogsMineOnly(mine)
     if (mine) setLogPage(1)
-  }, [searchParams])
+  }, [searchParams, setLogPage])
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -1823,15 +1852,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const sidebarActiveKey = view === "backup" ? "system" : view
 
   if (loading) {
-    return (
-      <div className="font-jakarta flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
-        <Skeleton className="h-16 w-full shrink-0 rounded-2xl" />
-        <div className="flex flex-1 gap-4">
-          <Skeleton className="h-full w-[30%] rounded-2xl" />
-          <Skeleton className="h-full w-[70%] rounded-2xl" />
-        </div>
-      </div>
-    )
+    return <AdminDashboardLoadingSkeleton />
   }
 
   return (
@@ -1848,7 +1869,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         <div className="liquid-blob liquid-blob-2"></div>
         <div className="liquid-blob liquid-blob-3"></div>
       </div>
-      <Header authUser={authUser} onLogout={handleLogout} />
+
 
       {authUser?.preferences?.navigation_layout === "topbar" && (
         <div className="w-full bg-white dark:bg-zinc-900 border-b border-border dark:border-border py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
@@ -1910,7 +1931,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         )}
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
           <div 
-            className="p-4 flex flex-col min-h-full w-full"
+            className="pt-4 pr-4 pb-4 flex flex-1 flex-col min-h-full w-full [&>*]:flex-1"
             style={zoomStyle}
           >          {view === "directory" && (
             <StaffDirectoryTab
@@ -2053,6 +2074,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               onSwitchView={switchView}
             />
           )}
+
+          {view === "activity" && <MyActivityPanel />}
+
+          {view === "settings" && <AccountSettingsPanel />}
 
           {(view === "system" || view === "backup") && (
             <BackupTab
@@ -2434,17 +2459,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
 export default function AdminPage() {
   return (
-    <AdminGuard>
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-jakarta p-4">
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border dark:border-t-primary"></div>
-              <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>
-            </div>
-          </div>
-        }
-      >
+    <AdminGuard fallback={<AdminDashboardLoadingSkeleton />}>
+      <Suspense fallback={<AdminDashboardLoadingSkeleton />}>
         <AdminPageContent />
       </Suspense>
     </AdminGuard>

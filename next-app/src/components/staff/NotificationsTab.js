@@ -1,5 +1,6 @@
 "use client";
 
+import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -177,7 +178,7 @@ export default function NotificationsTab({
   const [decisionFilters, setDecisionFilters] = useState([]);
 
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlPage();
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // Side Sheet Details state
@@ -198,7 +199,7 @@ export default function NotificationsTab({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
-  }, [debouncedSearch, typeFilters, decisionFilters, activeTab]);
+  }, [debouncedSearch, typeFilters, decisionFilters, activeTab, setPage]);
 
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage) || 1);
   const displayPage = Math.min(page, totalPages);
@@ -463,14 +464,14 @@ export default function NotificationsTab({
     if (groupId === "type") setTypeFilters(values);
     else if (groupId === "decision") setDecisionFilters(values);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const handleClearFilters = useCallback(() => {
     setSearchQuery("");
     setTypeFilters([]);
     setDecisionFilters([]);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
   const activeChips = useMemo(() => {
     const chips = [];
@@ -506,7 +507,7 @@ export default function NotificationsTab({
       });
     });
     return chips;
-  }, [searchQuery, typeFilters, decisionFilters, filterGroups]);
+  }, [searchQuery, typeFilters, decisionFilters, filterGroups, setPage]);
 
   const hasActiveFilters = Boolean(
     searchQuery.trim() || typeFilters.length > 0 || decisionFilters.length > 0
@@ -516,7 +517,7 @@ export default function NotificationsTab({
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* Main Card Container encapsulating Header, Toolbar, Feed & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-bell"

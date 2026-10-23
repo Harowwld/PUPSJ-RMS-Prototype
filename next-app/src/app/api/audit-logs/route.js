@@ -3,6 +3,7 @@ import { listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
 import { decryptPII } from "../../../lib/piiEncryption";
 import { getPrincipalOfficeId, isAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
+import { addAuditActorIds } from "../../../lib/auditActor";
 
 export const runtime = "nodejs";
 
@@ -79,11 +80,11 @@ export async function GET(req) {
 
   return NextResponse.json({
     ok: true,
-    data: rows.map(r => ({
+    data: await addAuditActorIds(rows.map(r => ({
       ...r,
       actor: decryptPII(r.actor),
       details: decryptPII(r.details),
-    })),
+    }))),
     total,
   });
 }

@@ -4,7 +4,7 @@ import { Reorder } from "framer-motion"
 import { cn } from "@/lib/utils"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 
-export default function StatCards({ isLoading, logStats }) {
+export default function StatCards({ isLoading, logStats, sublabelOverrides }) {
 const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
 
     const [selectedKpi, setSelectedKpi] = useState(null);
@@ -35,7 +35,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       key: "total",
       label: "Total Events",
       value: Number(logStats?.totalLogs ?? logStats?.totallogs ?? 0),
-      sublabel: `${activeActors.toLocaleString()} active ${activeActors === 1 ? "actor" : "actors"}`,
+      sublabel: sublabelOverrides?.total ?? `${activeActors.toLocaleString()} active ${activeActors === 1 ? "actor" : "actors"}`,
       color: "blue",
       trendData: trends.map(t => Number(t.total ?? t.count ?? 0)),
       iconClass: "ph-database"
@@ -44,7 +44,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       key: "today",
       label: "Activity Today",
       value: Number(logStats?.logsToday ?? logStats?.logstoday ?? 0),
-      sublabel: `${systemChanges.toLocaleString()} system updates`,
+      sublabel: sublabelOverrides?.today ?? `${systemChanges.toLocaleString()} system updates`,
       color: "emerald",
       trendData: trends.map(t => Number(t.total ?? t.count ?? 0)),
       iconClass: "ph-calendar-check"
@@ -53,7 +53,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       key: "auth",
       label: "Auth Attempts",
       value: Number(logStats?.authEvents ?? logStats?.authevents ?? 0),
-      sublabel: `${criticalEvents.toLocaleString()} critical ${criticalEvents === 1 ? "flag" : "flags"}`,
+      sublabel: sublabelOverrides?.auth ?? `${criticalEvents.toLocaleString()} critical ${criticalEvents === 1 ? "flag" : "flags"}`,
       color: "amber",
       trendData: trends.map(t => Number(t.auth ?? t.authCount ?? t.authcount ?? 0)),
       iconClass: "ph-fingerprint"

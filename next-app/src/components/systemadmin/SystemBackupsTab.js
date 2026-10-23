@@ -1,6 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import {
   Card,
@@ -72,7 +73,7 @@ export default function SystemBackupsTab({ showToast }) {
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("DESC")
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [jumpPage, setJumpPage] = useState("1")
 
@@ -230,7 +231,8 @@ export default function SystemBackupsTab({ showToast }) {
 
   // Sync jumpPage with page
   useEffect(() => {
-    setJumpPage(String(page))
+    const timer = setTimeout(() => setJumpPage(String(page)), 0)
+    return () => clearTimeout(timer)
   }, [page])
 
   // Debounced search
@@ -240,7 +242,7 @@ export default function SystemBackupsTab({ showToast }) {
       setPage(1)
     }, 400)
     return () => clearTimeout(timer)
-  }, [localSearch])
+  }, [localSearch, setPage])
 
   // Fetch backups and system telemetry
   const fetchData = useCallback(async (isManual = false) => {
@@ -304,18 +306,22 @@ export default function SystemBackupsTab({ showToast }) {
   }, [backupSearch, backupStartDate, backupEndDate])
 
   useEffect(() => {
-    fetchData()
+    const timer = setTimeout(() => fetchData(), 0)
+    return () => clearTimeout(timer)
   }, [fetchData])
 
   // Prune stale selected backup IDs when backups update
   useEffect(() => {
     if (!backups) return
-    setSelectedBackupIds((prev) => {
-      if (prev.length === 0) return prev
-      const validIds = new Set(backups.map((b) => b?.id).filter(Boolean))
-      const pruned = prev.filter((id) => validIds.has(id))
-      return pruned.length !== prev.length ? pruned : prev
-    })
+    const timer = setTimeout(() => {
+      setSelectedBackupIds((prev) => {
+        if (prev.length === 0) return prev
+        const validIds = new Set(backups.map((b) => b?.id).filter(Boolean))
+        const pruned = prev.filter((id) => validIds.has(id))
+        return pruned.length !== prev.length ? pruned : prev
+      })
+    }, 0)
+    return () => clearTimeout(timer)
   }, [backups])
 
   const handleSort = (column) => {
@@ -735,12 +741,12 @@ export default function SystemBackupsTab({ showToast }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="rms-brand-scope animate-fade-up font-jakarta flex w-full flex-col gap-6" data-brand-accent="#000000" data-brand-foreground="#FFFFFF" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
+      <div className="rms-brand-scope animate-fade-up font-jakarta flex w-full flex-col gap-6 pb-6" data-brand-accent="#000000" data-brand-foreground="#FFFFFF" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col">
-            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Platform Governance Backups"
