@@ -44,6 +44,14 @@ import { cn } from "@/lib/utils"
 
 import AdminTabSkeleton from "@/components/admin/skeletons/AdminTabSkeleton"
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
+import DigitalRecordsReviewSkeleton from "@/components/admin/skeletons/DigitalRecordsReviewSkeleton"
+import DigitizationComplianceSkeleton from "@/components/admin/skeletons/DigitizationComplianceSkeleton"
+import SLAAnalyticsSkeleton from "@/components/admin/skeletons/SLAAnalyticsSkeleton"
+import StorageLayoutSkeleton from "@/components/admin/skeletons/StorageLayoutSkeleton"
+import StaffDirectorySkeleton from "@/components/admin/skeletons/StaffDirectorySkeleton"
+import AuditLogsSkeleton from "@/components/admin/skeletons/AuditLogsSkeleton"
+import SystemConfigSkeleton from "@/components/admin/skeletons/SystemConfigSkeleton"
+import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
 
 const ADMIN_NAV_ITEMS = [
   { key: "review", label: "Records Review" },
@@ -69,14 +77,14 @@ function AdminDashboardLoadingSkeleton() {
 import { registerOffices } from "@/lib/roleUtils"
 
 const AdminTabLoading = () => <AdminTabSkeleton />
-const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: AdminTabLoading })
-const AuditLogsTab = dynamic(() => import("@/components/admin/AuditLogsTab"), { loading: AdminTabLoading })
-const SystemConfigTab = dynamic(() => import("@/components/admin/SystemConfigTab"), { loading: AdminTabLoading })
-const StorageLayoutEditorTab = dynamic(() => import("@/components/admin/StorageLayoutEditorTab"), { loading: AdminTabLoading })
-const DigitalRecordsReviewTab = dynamic(() => import("@/components/admin/DigitalRecordsReviewTab"), { loading: AdminTabLoading })
-const DigitizationComplianceTab = dynamic(() => import("@/components/admin/DigitizationComplianceTab"), { loading: AdminTabLoading })
-const SLAAnalyticsTab = dynamic(() => import("@/components/admin/SLAAnalyticsTab"), { loading: AdminTabLoading })
-const BackupTab = dynamic(() => import("@/components/admin/BackupTab"), { loading: AdminTabLoading })
+const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: () => <StaffDirectorySkeleton /> })
+const AuditLogsTab = dynamic(() => import("@/components/admin/AuditLogsTab"), { loading: () => <AuditLogsSkeleton /> })
+const SystemConfigTab = dynamic(() => import("@/components/admin/SystemConfigTab"), { loading: () => <SystemConfigSkeleton /> })
+const StorageLayoutEditorTab = dynamic(() => import("@/components/admin/StorageLayoutEditorTab"), { loading: () => <StorageLayoutSkeleton /> })
+const DigitalRecordsReviewTab = dynamic(() => import("@/components/admin/DigitalRecordsReviewTab"), { loading: () => <DigitalRecordsReviewSkeleton /> })
+const DigitizationComplianceTab = dynamic(() => import("@/components/admin/DigitizationComplianceTab"), { loading: () => <DigitizationComplianceSkeleton /> })
+const SLAAnalyticsTab = dynamic(() => import("@/components/admin/SLAAnalyticsTab"), { loading: () => <SLAAnalyticsSkeleton /> })
+const BackupTab = dynamic(() => import("@/components/admin/BackupTab"), { loading: () => <SystemBackupsSkeleton /> })
 const RegisterAccountTab = dynamic(() => import("@/components/admin/RegisterAccountTab"), { loading: () => null })
 const EditUserModal = dynamic(() => import("@/components/admin/EditUserModal"), { loading: () => null })
 
@@ -1263,11 +1271,15 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     const defaultSection = office === "osas" ? "Student Affairs" : office === "registrar" ? "Records" : "General"
     const section = createForm.section || (createForm.role === "Admin" ? "Administrative" : defaultSection)
 
+    const role = createForm.role || "Staff"
+    const cleanLname = String(createForm.lname || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+    const resolvedEmail = (createForm.email || (cleanLname ? `${role.toLowerCase()}.${cleanLname}@pup.local` : "")).trim()
+
     const staffCheck = StaffRegistrationSchema.safeParse({
       fname: createForm.fname,
       lname: createForm.lname,
-      email: createForm.email,
-      role: createForm.role || "Staff",
+      email: resolvedEmail,
+      role,
       section,
       officeId: office,
     })
@@ -1285,7 +1297,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       const res = await fetch("/api/staff", {
         method: "POST",
         headers,
-        body: JSON.stringify({ ...createForm, section, officeId: authUser?.office_id || "registrar" }),
+        body: JSON.stringify({ ...createForm, role, email: resolvedEmail, section, officeId: authUser?.office_id || "registrar" }),
       })
       const json = await res.json()
 
@@ -1871,50 +1883,54 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       </div>
 
 
-      {authUser?.preferences?.navigation_layout === "topbar" && (
-        <div className="w-full bg-white dark:bg-zinc-900 border-b border-border dark:border-border py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
-          {sidebarItems.map((item, idx) => {
-            if (item.type === "header") {
+      <div
+        className={cn(
+          "flex min-h-0 overflow-hidden",
+          authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-col md:flex-row"
+        )}
+        style={zoomStyle}
+      >
+        {authUser?.preferences?.navigation_layout === "topbar" ? (
+          <div className="w-full bg-white dark:bg-zinc-900 border-b border-border dark:border-border py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
+            {sidebarItems.map((item, idx) => {
+              if (item.type === "header") {
+                return (
+                  <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-border dark:border-border pl-4 first:border-0 first:pl-0">
+                    {item.label}
+                  </div>
+                );
+              }
+              const active = sidebarActiveKey === item.key;
               return (
-                <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-border dark:border-border pl-4 first:border-0 first:pl-0">
+                <button
+                  key={item.key}
+                  onClick={() => switchView(item.key)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
+                    active
+                      ? "shadow-xs"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  )}
+                  style={active ? { 
+                    backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)",
+                    color: "var(--brand-accent)"
+                  } : undefined}
+                >
+                  <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
                   {item.label}
-                </div>
+                  {item.badge > 0 && (
+                    <span 
+                      className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold"
+                      style={{ backgroundColor: "var(--brand-accent)", color: "var(--brand-foreground)" }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
               );
-            }
-            const active = sidebarActiveKey === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => switchView(item.key)}
-                className={cn(
-                  "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
-                  active
-                    ? "shadow-xs"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
-                )}
-                style={active ? { 
-                  backgroundColor: "color-mix(in srgb, var(--brand-accent) 12%, transparent)",
-                  color: "var(--brand-accent)"
-                } : undefined}
-              >
-                <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
-                {item.label}
-                {item.badge > 0 && (
-                  <span 
-                    className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold"
-                    style={{ backgroundColor: "var(--brand-accent)", color: "var(--brand-foreground)" }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <div className={cn("flex w-full flex-1 min-h-0 overflow-hidden", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
-        {authUser?.preferences?.navigation_layout !== "topbar" && (
+            })}
+          </div>
+        ) : (
           <Sidebar
             open={sidebarOpen}
             items={sidebarItems}
@@ -1931,8 +1947,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         )}
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
           <div 
-            className="pt-4 pr-4 pb-4 flex flex-1 flex-col min-h-full w-full [&>*]:flex-1"
-            style={zoomStyle}
+            className={cn(
+              "p-2 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]",
+              authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1"
+            )}
           >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
@@ -2186,7 +2204,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={deleteOpen}
         title="Archive Personnel Account"
         message="This account will be restricted immediately but can be restored later."
-        confirmLabel="Archive"
+        confirmLabel="Archive Personnel"
         variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
@@ -2204,7 +2222,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={restoreOpen}
         title="Restore Personnel Account"
         message="This account will be reactivated and the personnel will be able to log in again."
-        confirmLabel="Restore"
+        confirmLabel="Restore Personnel"
         variant="success"
         selectedItems={[
           restoreTarget ? `${restoreTarget.fname} ${restoreTarget.lname}` : "",
@@ -2229,7 +2247,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
-        confirmLabel="Delete"
+        confirmLabel={backupDeleteTargets.length > 1 ? "Delete Backups" : "Delete Backup"}
         isLoading={backupDeleteLoading}
         variant="danger"
         verificationTarget={backupDeleteVerificationTarget}
@@ -2268,7 +2286,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           setDeclineReason("")
         }}
         variant="danger"
-        confirmLabel="Decline"
+        confirmLabel="Decline Record"
         buttonIcon="ph-bold ph-x"
         inputLabel="Reason"
         placeholder="e.g., Image is too blurry, incorrect document type..."
@@ -2292,7 +2310,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         inputLabel="Common Rejection Reason"
         placeholder="Reason for bulk rejection (applied to all selected)..."
         onConfirm={submitBulkDecline}
-        confirmLabel="Decline"
+        confirmLabel="Decline Selected Records"
         multiline
       />
 
@@ -2300,7 +2318,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={bulkArchiveOpen}
         title="Batch Archive Personnel"
         message={`${selectedStaffIds.size} personnel profiles will be archived and their system access revoked immediately.`}
-        confirmLabel="Archive"
+        confirmLabel="Archive Selected Personnel"
         variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
@@ -2331,7 +2349,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={bulkRestoreOpen}
         title="Batch Restore Personnel"
         message={`${selectedStaffIds.size} personnel profiles will be reactivated and able to log in again.`}
-        confirmLabel="Restore"
+        confirmLabel="Restore Selected Personnel"
         variant="success"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
           const s = staffData.find((x) => x.id === id)

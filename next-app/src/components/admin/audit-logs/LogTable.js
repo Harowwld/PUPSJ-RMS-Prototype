@@ -1,8 +1,10 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import useTableScroll from "@/hooks/useTableScroll"
 import {
   Empty,
   EmptyHeader,
@@ -80,7 +82,8 @@ const LogRow = React.memo(function LogRow({
   isExpanded,
   toggleRow,
   setSelectedLog,
-  handleCopy
+  handleCopy,
+  isScrolledX,
 }) {
   const severityInfo = getSeverityInfo(log.severity)
   
@@ -105,7 +108,7 @@ const LogRow = React.memo(function LogRow({
     <React.Fragment>
       <tr
         className={cn(
-          "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          "group transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
@@ -113,7 +116,18 @@ const LogRow = React.memo(function LogRow({
           toggleRow(log.id);
         }}
       >
-        <td className="p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+        <td
+          className={cn(
+            "p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 transition-colors",
+            isSelected
+              ? "bg-blue-50 dark:bg-blue-950"
+              : isExpanded
+                ? "bg-gray-50 dark:bg-zinc-800"
+                : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             onClick={() => toggleRow(log.id)}
             title={isExpanded ? "Collapse Details" : "Expand Details"}
@@ -122,10 +136,10 @@ const LogRow = React.memo(function LogRow({
             <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
           </button>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
           {formattedTimestamp}
         </td>
-        <td className="p-4 align-middle whitespace-nowrap">
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
           <span
             className={cn(
               "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
@@ -135,7 +149,7 @@ const LogRow = React.memo(function LogRow({
             {severityInfo.label}
           </span>
         </td>
-        <td className="p-4 align-middle overflow-hidden">
+        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
           <div className="flex items-center gap-2.5 min-w-0">
             <AuditActorAvatar
               log={log}
@@ -152,13 +166,13 @@ const LogRow = React.memo(function LogRow({
             </div>
           </div>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
+        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
           {formatActionLabel(log.action)}
         </td>
-        <td className="p-4 align-middle overflow-hidden">
+        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[280px]">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
+              <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
                 {log.details || "No known description"}
               </span>
             </TooltipTrigger>
@@ -230,6 +244,18 @@ export default function LogTable({
 }) {
   const [expandedRows, setExpandedRows] = useState({})
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([displayLogs.length])
+
+  useEffect(() => {
+    resetScroll()
+  }, [logPage, logSortBy, logSortOrder, logRoleFilter, logSeverityFilter, localSearch, resetScroll])
+
   const toggleRow = useCallback((id) => {
     setExpandedRows(prev => ({
       ...prev,
@@ -267,9 +293,9 @@ export default function LogTable({
   }
 
   return (
-    <div className={cn("flex flex-col", !embedded && "gap-6")}>
+    <div className={cn("flex flex-[1_0_auto] flex-col", !embedded && "gap-6")}>
       <div className={cn(
-        "flex flex-col isolate",
+        "flex flex-[1_0_auto] flex-col isolate",
         embedded
           ? "border-t border-border dark:border-border rounded-b-2xl"
           : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
@@ -318,101 +344,142 @@ export default function LogTable({
             </Empty>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto select-none">
-            <table className="w-full text-sm table-fixed min-w-[1000px]">
-              <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                  <th className="w-12 p-4 text-center"></th>
-                  <th className="p-4 w-[15%]">
-                    <button
-                      onClick={() => handleSort("created_at")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        logSortBy === "created_at"
-                          ? "text-gray-900 dark:text-white font-semibold"
-                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+          <div className="w-full flex-[1_0_auto] flex flex-col">
+            <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
+              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                Showing {displayLogs.length.toLocaleString()} of {logTotal.toLocaleString()} {logTotal === 1 ? "event" : "events"}
+              </span>
+              <TableScrollControls
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetScroll}
+                isScrolled={isScrolledX}
+              />
+            </div>
+
+            <div
+              ref={tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            >
+              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className={cn(
+                      "w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                      isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                    )}>
+                      {isScrolledX && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={resetScroll}
+                              aria-label="Reset scroll to start"
+                              className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                            >
+                              <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Reset scroll to start</TooltipContent>
+                        </Tooltip>
                       )}
-                    >
-                      Timestamp{" "}
-                      <SortIndicator
-                        column="created_at"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[10%]">
-                    <button
-                      onClick={() => handleSort("severity")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        logSortBy === "severity"
-                          ? "text-gray-900 dark:text-white font-semibold"
-                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Level{" "}
-                      <SortIndicator
-                        column="severity"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[17%]">
-                    <button
-                      onClick={() => handleSort("actor")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        logSortBy === "actor"
-                          ? "text-gray-900 dark:text-white font-semibold"
-                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Actor{" "}
-                      <SortIndicator
-                        column="actor"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[16%]">
-                    <button
-                      onClick={() => handleSort("action")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        logSortBy === "action"
-                          ? "text-gray-900 dark:text-white font-semibold"
-                          : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Action{" "}
-                      <SortIndicator
-                        column="action"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[36%] text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Description</th>
-                  <th className="p-4 pr-6 w-20 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-transparent">
-                {displayLogs.map((log) => (
-                  <LogRow
-                    key={log.id}
-                    log={log}
-                    isSelected={selectedLog?.id === log.id}
-                    isExpanded={!!expandedRows[log.id]}
-                    toggleRow={toggleRow}
-                    setSelectedLog={setSelectedLog}
-                    handleCopy={handleCopy}
-                  />
-                ))}
-              </tbody>
-            </table>
+                    </th>
+                    <th className="p-4 w-[16%] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("created_at")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          logSortBy === "created_at"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Timestamp{" "}
+                        <SortIndicator
+                          column="created_at"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 w-[10%] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("severity")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          logSortBy === "severity"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Level{" "}
+                        <SortIndicator
+                          column="severity"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 w-[20%] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("actor")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          logSortBy === "actor"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Actor{" "}
+                        <SortIndicator
+                          column="actor"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 w-[18%] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("action")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          logSortBy === "action"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Action{" "}
+                        <SortIndicator
+                          column="action"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 w-[24%] max-w-[280px] text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400 border-r border-border/80 dark:border-border">
+                      Description
+                    </th>
+                    <th className="p-4 pr-6 w-20 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-transparent divide-y divide-border dark:divide-border">
+                  {displayLogs.map((log) => (
+                    <LogRow
+                      key={log.id}
+                      log={log}
+                      isSelected={selectedLog?.id === log.id}
+                      isExpanded={!!expandedRows[log.id]}
+                      toggleRow={toggleRow}
+                      setSelectedLog={setSelectedLog}
+                      handleCopy={handleCopy}
+                      isScrolledX={isScrolledX}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

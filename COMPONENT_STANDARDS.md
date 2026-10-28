@@ -498,7 +498,7 @@ All popovers (filter drawers, contextual utility popups, color pickers, and deta
 - **Geometry & Hierarchy**:
   - **Multi-Criteria Filter Drawers & Persona Dialogs**: `w-80` (`320px` width) with `rounded-2xl border border-border dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden p-0`.
   - **Contextual Utility Popups & Swatch Pickers**: `w-60` (`240px` width) with `p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 shadow-2xl overflow-hidden` and tactile `h-8 rounded-lg` swatches.
-  - **Action & Sort Dropdown Menus**: `w-56 rounded-xl p-1 bg-white dark:bg-zinc-900 border border-border shadow-xl` with `py-1.5 px-2 rounded-lg text-xs font-medium` item padding and `px-2 py-1` header labels.
+  - **Action & Sort Dropdown Menus**: Standardized `w-60` (`240px` width) with `rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none`, `px-4 py-2.5` header zone with `text-xs font-semibold` title, `p-1.5 space-y-0.5` body zone, and `py-1.5 px-2 rounded-lg text-xs font-medium` item padding.
   - **Calendar Pickers**: `w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card`.
 - **Snug Padding Principle**:
   - The primitive `<PopoverContent />` must use `gap-0` so child dividers (`border-b`) and containers sit flush without artificial flex gaps.
@@ -515,7 +515,72 @@ All popovers (filter drawers, contextual utility popups, color pickers, and deta
 
 ---
 
-## 6. Color Tokens & Brand Styles
+## 6. Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
+
+Alert and warning banners must never float as disconnected island cards (`mx-5 my-3.5 rounded-xl border`) inside cards or forms. Instead, all context notices, warnings, and status reminders must be **attached edge-to-edge directly to container divider lines** (`border-b` underneath card/section headers, or `border-t border-b` between layout tiers), taking up the exact line/space where they are located.
+
+### 6.1 Core Architectural Principles
+1. **Edge-to-Edge Line Attachment**: Zero outer margin (`mx-0 my-0`) and zero border radius (`rounded-none`). The banner attaches directly to the header divider line (`border-b`) or content separator, spanning the full 100% width of the card.
+2. **Snug Line Padding**: Use `px-5 sm:px-6 py-2.5` to maintain snug vertical rhythm without artificial layout blowout.
+3. **Typography & Strong Lead**: Always lead with a bold category label (e.g., `Archived Department Notice:`, `Rescan / Replacement Mode Active:`, `Pending Post-Event Compliance:`) in high-contrast text (`text-amber-950 dark:text-amber-100 font-semibold`), followed by concise message copy (`text-[11.5px] sm:text-xs leading-normal`).
+4. **Leading Status Icon**: 16px solid Phosphor icon (`text-[16px] shrink-0`) matching the banner theme.
+5. **Direct Micro-Actions**: When an immediate remedy is available (e.g. `Restore`, `Replace Document`, `View Copy`), provide a compact micro-button (`h-7 px-2.5 text-[11px] font-semibold rounded-lg shadow-2xs active:scale-95`).
+6. **Dismissable Interaction**: Dismissable alerts must render an accessible squircle dismiss button (`p-1 rounded-lg text-sm ph-x cursor-pointer`) with session persistence (`sessionStorage`) so dismissed notices stay dismissed for that entity during the user's active session.
+
+### 6.2 Color Palette Variants
+
+| Variant | Container Classes | Icon & Accent | Usage |
+|---|---|---|---|
+| **Warning / Amber** | `border-b border-amber-200/90 bg-amber-50/90 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200` | `ph-warning-circle text-amber-600 dark:text-amber-400` | Archived department notice, rescan replacement mode, ticket duplicates, missing compliance |
+| **Success / Emerald** | `border-b border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200` | `ph-shield-check text-emerald-600 dark:text-emerald-400` | Verified officer authorization, active system synchronization, verified credential status |
+| **Information / Blue** | `border-b border-blue-200/90 bg-blue-50/90 text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200` | `ph-info text-blue-600 dark:text-blue-400` | Operational advisories, maintenance schedules, read-only mode alerts |
+| **Destructive / Rose** | `border-b border-rose-200/90 bg-rose-50/90 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200` | `ph-warning-circle text-rose-600 dark:text-rose-400` | Rejection reasons, revoked credentials, severe security restriction warnings |
+
+### 6.3 Canonical Code Blueprint (Dismissable Line-Attached Alert)
+
+```jsx
+{/* Attached edge-to-edge dismissable alert taking the line */}
+{isNoticeActive && !isNoticeDismissed && (
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
+    {/* Left: Icon & Typographic Notice */}
+    <div className="flex items-center gap-2.5 min-w-0">
+      <HugeIcon className="ph-bold ph-warning-circle text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+      <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+        <strong className="font-semibold text-amber-950 dark:text-amber-100">
+          Archived Department Notice:
+        </strong>{" "}
+        This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold text-amber-950 dark:text-amber-100">Departments & Stations</strong> to change feature access.
+      </span>
+    </div>
+
+    {/* Right: Quick Action & Dismiss Button */}
+    <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+      {onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-[11px] font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center justify-center active:scale-95"
+        >
+          Restore
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={handleDismissNotice}
+        className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+        aria-label="Dismiss notice"
+        title="Dismiss notice"
+      >
+        <HugeIcon className="ph-bold ph-x text-sm" />
+      </button>
+    </div>
+  </div>
+)}
+```
+
+---
+
+## 7. Color Tokens & Brand Styles
 
 | Token / Class | Hex / Equivalent | Purpose |
 |---|---|---|
@@ -529,7 +594,7 @@ All popovers (filter drawers, contextual utility popups, color pickers, and deta
 
 ---
 
-## 7. Pre-Commit Component Checklist for Agents
+## 8. Pre-Commit Component Checklist for Agents
 
 Before finalizing any new page, tab, or modal, verify the following:
 
@@ -540,4 +605,5 @@ Before finalizing any new page, tab, or modal, verify the following:
 - [ ] **Secondary Button Outlines**: Dismissal buttons use `variant="outline"` with a crisp border, not borderless ghost.
 - [ ] **Universal Refresh Squircle**: Is data refresh handled via `<RefreshButton />` instead of a text "Refresh" button?
 - [ ] **Standard Search Input with Live Count**: Does the search bar include a leading magnifying glass with focus color transition, generous padding (`pl-8 pr-16`), a trailing live mono count badge (`text-[11px] font-mono pointer-events-none`), and an inline clear button (`ph-x-circle`)?
+- [ ] **Edge-to-Edge Line-Attached Alerts**: Are alert/warning banners attached directly to container divider lines (`border-b` / `border-t`, zero outer margins `mx-0`, no floating `rounded-xl` island cards) taking up the line space edge-to-edge?
 - [ ] **Dark Mode Parity**: Are dark variants (`dark:border-white/10`, `dark:bg-card`, `dark:text-zinc-50`) present on all containers?

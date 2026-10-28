@@ -232,9 +232,9 @@ export default function AuditLogsTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-1 mb-4">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
           <PageHeader
             icon="ph-shield-check"
             title="Activity History"
@@ -270,12 +270,12 @@ export default function AuditLogsTab({
                     type="button"
                     onClick={handlePreviewPDF}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
+                    className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
                   >
                     {isGeneratingPdf ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
+                      <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                     ) : (
-                      "Official Report (PDF)"
+                      "Export PDF Report"
                     )}
                   </Button>
                 </div>

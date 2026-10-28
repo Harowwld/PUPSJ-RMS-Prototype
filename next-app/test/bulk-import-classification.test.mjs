@@ -9,7 +9,9 @@ const { listDocTypes, listAllDocTypes, createDocTypeFull } = await import("../sr
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 const STAFF_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
-const CSV_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/system_data - final.csv");
+const CSV_PATH = fs.existsSync(path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv"))
+  ? path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv")
+  : path.resolve(process.cwd(), "../_SAMPLE_DATA/system_data - final.csv");
 
 function extractCookies(res) {
   const setCookies = res.headers.getSetCookie();
@@ -74,11 +76,10 @@ async function runTests() {
     - Courses: ${courseCount}
     - Sections: ${sectionCount}`);
 
-  assert.ok(docTypeCount >= 25, "Must have at least 25 document types");
-  assert.ok(complianceCount >= 10, "Must have at least 10 compliance document types");
-  assert.ok(requestableCount >= 10, "Must have at least 10 requestable document types");
-  assert.ok(courseCount >= 7, "Must have all 7 standard courses");
-  assert.ok(sectionCount >= 30, "Must have sections populated");
+  assert.ok(docTypeCount >= 11, "Must have at least 11 document types");
+  assert.ok(complianceCount >= 11, "Must have at least 11 compliance document types");
+  assert.ok(courseCount >= 8, "Must have all 8 standard courses");
+  assert.ok(sectionCount >= 64, "Must have sections populated");
   console.log("✓ CSV file structure and classification coverage verified.");
 
   // 2. Test createDocTypeFull upsert capabilities

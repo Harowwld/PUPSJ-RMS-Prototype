@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StorageLayoutSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[700px] select-none animate-fade-up mb-4">
+    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] min-h-[700px] select-none animate-fade-up">
       {/* Header Area */}
       <div className="flex items-center justify-between p-6 border-b border-border dark:border-border">
         <div className="flex items-center gap-3">

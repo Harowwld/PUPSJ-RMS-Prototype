@@ -31,6 +31,8 @@ import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import useTableScroll from "@/hooks/useTableScroll"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
 import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils"
@@ -88,7 +90,8 @@ const StaffTableRow = React.memo(({
   onEditUser, 
   onRestoreUser, 
   onDeleteUser, 
-  activeTab 
+  activeTab,
+  isScrolledX,
 }) => {
   const router = useRouter()
   return (
@@ -100,7 +103,12 @@ const StaffTableRow = React.memo(({
         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
       )}
     >
-      <td className="w-12 p-4 align-middle text-center">
+      <td className={cn(
+        "w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 transition-colors",
+        isSelected
+          ? "bg-blue-50 dark:bg-blue-950"
+          : "bg-white group-hover:bg-gray-50/40 dark:bg-card dark:group-hover:bg-zinc-800/80"
+      )}>
         {!isCurrentUser && (
           <input
             type="checkbox"
@@ -113,12 +121,18 @@ const StaffTableRow = React.memo(({
           />
         )}
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className={cn(
+        "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
+        isSelected
+          ? "bg-blue-50 dark:bg-blue-950"
+          : "bg-white group-hover:bg-gray-50/40 dark:bg-card dark:group-hover:bg-zinc-800/80",
+        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+      )}>
         <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
           {s.id}
         </span>
       </td>
-      <td className="p-4 align-middle overflow-hidden">
+      <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 min-w-0 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
             <span className="truncate" title={getStaffCleanName(s)}>
@@ -130,7 +144,7 @@ const StaffTableRow = React.memo(({
           </div>
         </div>
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
         <div className={cn(
           "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
@@ -142,7 +156,7 @@ const StaffTableRow = React.memo(({
           {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
         </div>
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
         {s.totp_enabled ? (
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             2FA Enabled
@@ -153,7 +167,7 @@ const StaffTableRow = React.memo(({
           </span>
         )}
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
         {(!active.relative && (!active.date || active.date === "N/A")) ? (
           <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
             Never active
@@ -477,6 +491,18 @@ export default function StaffDirectoryTab({
     return sortedStaff.slice(start, start + itemsPerPage)
   }, [sortedStaff, displayPage, itemsPerPage])
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedStaff.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [displayPage, activeTab, search, roleFilters, twoFactorFilters, resetScroll]);
+
   const handleTabChange = (tab) => {
     setActiveTab(tab)
     setCurrentPage(1)
@@ -592,12 +618,12 @@ export default function StaffDirectoryTab({
   return (
     <TooltipProvider delayDuration={200}>
       <div
-        className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up pb-6"
+        className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
       {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-users"
           title={
@@ -623,7 +649,7 @@ export default function StaffDirectoryTab({
               <Button
                 onClick={() => onSwitchView("create")}
                 disabled={activeTab === "archived" || isLoading}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
+                className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
               >
                 Register Staff
               </Button>
@@ -684,6 +710,13 @@ export default function StaffDirectoryTab({
               align="end"
               buttonLabel="Filter Personnel"
             />
+
+            <TableScrollControls
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetScroll}
+              isScrolled={isScrolledX}
+            />
           </div>
         </div>
 
@@ -736,11 +769,11 @@ export default function StaffDirectoryTab({
 
         {/* Content Area: Loading / Error / Table */}
         {isLoading ? (
-          <div className="w-full border-t border-border dark:border-border">
+          <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
             <DirectoryTableSkeleton rowCount={8} />
           </div>
         ) : error ? (
-          <div className="p-6 border-t border-border dark:border-border rounded-b-2xl">
+          <div className="p-6 flex-[1_0_auto] flex flex-col justify-center border-t border-border dark:border-border rounded-b-2xl">
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
@@ -788,7 +821,7 @@ export default function StaffDirectoryTab({
                   activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                     <Button
                       onClick={() => onSwitchView("create")}
-                      className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       Register Staff
                     </Button>
@@ -798,12 +831,15 @@ export default function StaffDirectoryTab({
             </Empty>
           </div>
         ) : (
-          <div className="w-full border-t border-border dark:border-border">
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-sm table-fixed min-w-[960px]">
-                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                    <th className="w-12 p-4 text-center">
+          <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+            <div
+              ref={tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+            >
+              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                       <input
                         type="checkbox"
                         className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -824,27 +860,46 @@ export default function StaffDirectoryTab({
                         }
                       />
                     </th>
-                    <th className="p-4 w-[18%]">
-                      <button
-                        onClick={() => handleSort("id")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                          sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                    <th className={cn(
+                      "p-4 w-[18%] min-w-[160px] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                      isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={() => handleSort("id")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                            sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Staff ID{" "}
+                          <SortIndicator
+                            column="id"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                        {isScrolledX && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resetScroll();
+                            }}
+                            title="Reset scroll to start"
+                            aria-label="Reset scroll to start"
+                            className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
+                          >
+                            <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                          </button>
                         )}
-                      >
-                        Staff ID{" "}
-                        <SortIndicator
-                          column="id"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
+                      </div>
                     </th>
-                    <th className="p-4 w-[26%]">
+                    <th className="p-4 w-[26%] border-r border-border/80 dark:border-border">
                       <button
                         onClick={() => handleSort("fname")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                           sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -856,11 +911,11 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[16%]">
+                    <th className="p-4 w-[16%] border-r border-border/80 dark:border-border">
                       <button
                         onClick={() => handleSort("role")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                           sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -872,11 +927,11 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[14%]">
+                    <th className="p-4 w-[14%] border-r border-border/80 dark:border-border">
                       <button
                         onClick={() => handleSort("totp_enabled")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                           sortBy === "totp_enabled" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -888,11 +943,11 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[18%]">
+                    <th className="p-4 w-[18%] border-r border-border/80 dark:border-border">
                       <button
                         onClick={() => handleSort("last_active")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                           sortBy === "last_active" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -904,12 +959,12 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-24 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    <th className="w-24 p-4 pr-6 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-transparent">
+                <tbody className="bg-transparent divide-y divide-border dark:divide-border">
                   {paginatedStaff.map((s) => (
                     <StaffTableRow
                       key={s.id}
@@ -923,6 +978,7 @@ export default function StaffDirectoryTab({
                       onRestoreUser={onRestoreUser}
                       onDeleteUser={onDeleteUser}
                       activeTab={activeTab}
+                      isScrolledX={isScrolledX}
                     />
                   ))}
                 </tbody>

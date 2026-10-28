@@ -207,6 +207,63 @@ export default function DocumentRequestDetailSheet({
           </div>
         </SheetHeader>
 
+        {/* Line-Attached Edge-to-Edge Status Notice */}
+        {detail && (
+          <div
+            className={cn(
+              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+              detail.status === "Ready"
+                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                : detail.status === "PendingPayment" || detail.status === "Deficient"
+                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                : detail.status === "Completed"
+                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                : detail.status === "Cancelled" || detail.status === "Declined"
+                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+            )}
+          >
+            <HugeIcon
+              className={cn(
+                "ph-bold text-[15px] shrink-0",
+                detail.status === "Ready" || detail.status === "Completed"
+                  ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  : detail.status === "PendingPayment" || detail.status === "Deficient"
+                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  : detail.status === "Cancelled" || detail.status === "Declined"
+                  ? "ph-x-circle text-rose-600 dark:text-rose-400"
+                  : "ph-clock text-blue-600 dark:text-blue-400"
+              )}
+            />
+            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+              <strong className="font-semibold">
+                {detail.status === "Ready"
+                  ? "Ready for Claiming:"
+                  : detail.status === "PendingPayment"
+                  ? "Payment Required:"
+                  : detail.status === "Deficient"
+                  ? "Deficiency Notice:"
+                  : detail.status === "Completed"
+                  ? "Request Completed:"
+                  : detail.status === "InProgress"
+                  ? "Fulfillment In Progress:"
+                  : "Pending Review:"}
+              </strong>{" "}
+              {detail.status === "Ready"
+                ? "Document printed, certified, and ready for release at Registrar Window 1."
+                : detail.status === "PendingPayment"
+                ? "Awaiting proof of payment receipt upload from the student/client."
+                : detail.status === "Deficient"
+                ? "Additional credentials or clarification required before document issuance."
+                : detail.status === "Completed"
+                ? "Document claimed and transaction finalized in university archives."
+                : detail.status === "InProgress"
+                ? "Staff is actively retrieving records and compiling requested credentials."
+                : "Awaiting staff evaluation and task assignment in ODRS queue."}
+            </span>
+          </div>
+        )}
+
         {/* Scrollable Single-Column Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {detailLoading ? (
@@ -217,8 +274,8 @@ export default function DocumentRequestDetailSheet({
             </div>
           ) : detail ? (
             <div className="space-y-6">
-              {/* Profile Card Summary Strip */}
-              <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
+              {/* Profile Identity Summary Strip (Unboxed) */}
+              <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <ProfileAvatar
                     id={studentForRequest?.id || studentForRequest?.account_id || studentForRequest?.accountId || studentForRequest?.studentNo || detail.student_no}
@@ -227,16 +284,16 @@ export default function DocumentRequestDetailSheet({
                     avatarFilename={studentForRequest?.avatar_filename || studentForRequest?.avatarFilename}
                     name={displayName}
                     initials={initials}
-                    className="size-11 rounded-full border border-pup-maroon/20"
+                    className="size-11 rounded-full border border-pup-maroon/20 shadow-2xs"
                     fallbackClassName="bg-pup-maroon/10 font-bold text-sm text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
+                      <span className="text-base font-bold text-gray-900 dark:text-zinc-100 truncate">
                         {displayName}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
                       {detail.student_no ? `Student No: ${detail.student_no}` : `Client: ${detail.client_type || "Requester"}`}
                     </p>
                   </div>
@@ -247,13 +304,12 @@ export default function DocumentRequestDetailSheet({
                     <Button
                       type="button"
                       size="sm"
+                      variant="outline"
                       onClick={handleLocateCoordinates}
-                      className="h-8 px-3 text-xs font-semibold rounded-xl btn-brand-red text-white! cursor-pointer shadow-xs active:scale-95"
-                      style={{ color: "#ffffff" }}
+                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                       title="Locate filing location on archive map"
                     >
-                      <HugeIcon className="ph-bold ph-warehouse text-xs mr-1.5" />
-                      Locate
+                      Locate Drawer
                     </Button>
                   )}
                   <span
@@ -719,8 +775,7 @@ export default function DocumentRequestDetailSheet({
             {hasEdits && (
               <Button
                 type="button"
-                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-                style={{ color: "#ffffff" }}
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                 onClick={handleManualSave}
                 disabled={saving}
               >

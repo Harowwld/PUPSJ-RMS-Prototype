@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import RecoveryCodesModal from "@/components/shared/RecoveryCodesModal";
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
@@ -662,7 +669,7 @@ export default function AccountSettingsPanel() {
 
   if (loading) {
     return (
-            <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none min-h-[600px]">
+            <Card className="flex flex-[1_0_auto] flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none min-h-[600px] isolate font-jakarta">
               <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
                 <div className="space-y-2">
                   <Skeleton className="w-48 h-6" />
@@ -703,7 +710,7 @@ export default function AccountSettingsPanel() {
 
   return (
     <div
-      className="animate-in fade-in duration-normal flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4"
+      className="animate-in fade-in duration-normal flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
     >
             {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
             <PageHeader
@@ -932,10 +939,10 @@ export default function AccountSettingsPanel() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {profileLoading && (
-                          <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
                         )}
                         {profileLoading ? "Saving..." : "Save Changes"}
                       </Button>
@@ -1037,10 +1044,10 @@ export default function AccountSettingsPanel() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {pwLoading && (
-                            <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                            <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
                           )}
                           {pwLoading ? "Updating..." : "Update Password"}
                         </Button>
@@ -1069,9 +1076,23 @@ export default function AccountSettingsPanel() {
                     <form onSubmit={submitSecurity} className="space-y-6">
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
-                          <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-border text-gray-400 font-medium text-sm dark:bg-card dark:border-border dark:text-zinc-500">
-                            <HugeIcon  className="ph-duotone ph-mask-sad text-xl mb-3 block opacity-40"></HugeIcon>
-                            No recovery questions configured.
+                          <div className="py-10 px-4 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/30 flex flex-col items-center justify-center text-center">
+                            <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-4">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-100/60 opacity-50 dark:bg-zinc-800/40"></div>
+                                  <EmptyMedia className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+                                    <HugeIcon className="ph-duotone ph-question text-2xl text-gray-400 dark:text-zinc-500" />
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                                  No Recovery Questions Configured
+                                </EmptyTitle>
+                                <EmptyDescription className="mt-1 max-w-xs text-xs font-normal text-gray-600 dark:text-zinc-400">
+                                  Institutional security questions have not been configured yet. Contact your system administrator to enable question-based account recovery.
+                                </EmptyDescription>
+                              </EmptyHeader>
+                            </Empty>
                           </div>
                         ) : (
                           globalQuestions.map((q) => {
@@ -1131,18 +1152,20 @@ export default function AccountSettingsPanel() {
                         )}
                       </div>
 
-                      <div className="flex justify-end pt-4">
-                        <Button
-                          type="submit"
-                          disabled={secLoading || globalQuestions.length === 0}
-                          className="h-12 px-6 text-[15px] font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                          {secLoading && (
-                            <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
-                          )}
-                          {secLoading ? "Saving..." : "Save Security Questions"}
-                        </Button>
-                      </div>
+                      {globalQuestions.length > 0 && (
+                        <div className="flex justify-end pt-4">
+                          <Button
+                            type="submit"
+                            disabled={secLoading}
+                            className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            {secLoading && (
+                              <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                            )}
+                            {secLoading ? "Saving..." : "Save Security Questions"}
+                          </Button>
+                        </div>
+                      )}
                     </form>
                   </div>
                 </div>

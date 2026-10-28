@@ -82,8 +82,8 @@ const DEMO_ACCOUNTS = [
     badgeColor: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
   },
   {
-    role: "Test Student",
-    title: "Second seeded student record",
+    role: "Maria Clara Santos",
+    title: "Undergraduate Student (BSIT)",
     department: "ODRS Online Document Requests",
     email: "test.student@pup.local",
     password: "student123",
@@ -948,8 +948,6 @@ export default function Home() {
                           disabled={forgotLoading}
                           onChange={(e) => { setForgotQuestionId(String(e.target.value)); setForgotAnswer(""); setForgotError(""); }}
                           className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none"
-                          menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                          optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5"
                         >
                           {forgotQuestions.map((question) => <option key={question.id} value={String(question.id)}>{question.question}</option>)}
                         </Select>
@@ -1222,10 +1220,10 @@ export default function Home() {
                 side="top"
                 sideOffset={10}
                 align="center"
-                className="w-80 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
+                className="w-80 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border-[0.5px] border-border dark:border-white/10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
               >
                 {/* Header */}
-                <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
+                <div className="px-4 py-3 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
                   <div className="flex items-center gap-2">
                     
                     <div>
@@ -1273,7 +1271,7 @@ export default function Home() {
                 </div>
 
                 {/* Footer info tip */}
-                <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t border-border dark:border-border/60 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
+                <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t-[0.5px] border-border dark:border-white/10 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
                   <span className="flex items-center gap-1">
                     <HugeIcon  className="ph-bold ph-info text-xs"></HugeIcon>
                     1-click instant fill & sign in

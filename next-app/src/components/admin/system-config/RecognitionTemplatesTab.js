@@ -481,7 +481,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex flex-col w-full select-none animate-fade-up">
+      <div className="flex flex-[1_0_auto] flex-col w-full select-none animate-fade-up">
         <PageHeader
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -679,7 +679,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
 
             <div className="pt-2 border-t border-border dark:border-border">
               <Button
-                className="w-full h-10 rounded-xl btn-brand-red text-white text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="w-full h-10 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0"
                 onClick={saveTemplate}
                 disabled={saving || loading}
               >
@@ -792,7 +792,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <EmptyContent className="mt-5 flex flex-col items-center gap-2">
                   <Button
                     type="button"
-                    className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all cursor-pointer border-0"
                     onClick={chooseSampleFile}
                   >
                     Upload Sample Document

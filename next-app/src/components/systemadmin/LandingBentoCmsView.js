@@ -164,8 +164,8 @@ export default function LandingBentoCmsView({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
@@ -262,12 +262,12 @@ export default function LandingBentoCmsView({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: Bento Cards (5) */}
           {activeTab === "cards" && (
             <div className="space-y-4">
               {/* ACCORDION CARD 1 */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 1 ? null : 1)}
@@ -302,7 +302,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 1 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
@@ -355,7 +355,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     {/* Simulation Flow Steps */}
-                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-4">
+                    <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-4">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Interactive Simulation Flow Labels
                       </div>
@@ -415,7 +415,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 2 */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 2 ? null : 2)}
@@ -450,7 +450,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 2 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
@@ -485,12 +485,12 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     {/* Milestones */}
-                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-4">
+                    <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-4">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Schedule Milestones (3 Steps)
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border/60 dark:border-border">
+                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border dark:border-border">
                           <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 1: Schedule</span>
                           <Input
                             value={bentoData.card2?.step1Title || ""}
@@ -516,7 +516,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
 
-                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border/60 dark:border-border">
+                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border dark:border-border">
                           <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 2: Notification</span>
                           <Input
                             value={bentoData.card2?.step2Title || ""}
@@ -542,7 +542,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
 
-                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border/60 dark:border-border">
+                        <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border dark:border-border">
                           <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 3: Counter</span>
                           <Input
                             value={bentoData.card2?.step3Title || ""}
@@ -574,7 +574,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 3 */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 3 ? null : 3)}
@@ -609,7 +609,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 3 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
@@ -643,7 +643,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       />
                     </div>
 
-                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-3">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Flow Diagram Node Labels
                       </div>
@@ -703,7 +703,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 4 */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 4 ? null : 4)}
@@ -738,7 +738,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 4 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
@@ -772,7 +772,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       />
                     </div>
 
-                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-3">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Preparation Checklist Items
                       </div>
@@ -832,7 +832,7 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 5 */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 5 ? null : 5)}
@@ -867,7 +867,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </button>
 
                 {activeCardTab === 5 && (
-                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border/60 dark:border-border">
+                  <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
@@ -919,7 +919,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       />
                     </div>
 
-                    <div className="p-4 rounded-xl border border-border/70 dark:border-border bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-3">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
                         Anti-Red Tape &amp; Efficiency Guarantees
                       </div>
@@ -984,7 +984,7 @@ export default function LandingBentoCmsView({ showToast }) {
           {activeTab === "header" && (
             <div className="w-full space-y-6">
               <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-5">
-                <div className="border-b border-border/80 dark:border-border pb-3">
+                <div className="border-b border-border dark:border-border pb-3">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                     Editorial Header &amp; Subtitle
                   </h3>
@@ -1044,7 +1044,7 @@ export default function LandingBentoCmsView({ showToast }) {
           {/* TAB 3: Interactive Bento Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Bento Grid (5-Card Layout)

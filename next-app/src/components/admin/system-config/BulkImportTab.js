@@ -20,6 +20,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 
 export default function BulkImportTab({
   loading = false,
@@ -74,6 +76,19 @@ export default function BulkImportTab({
     setSearchTerm("")
     setCurrentPage(1)
   }, [importFile, setCurrentPage])
+
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolledX,
+    scrollTable,
+    resetScroll,
+  } = useTableScroll([filteredImportRows?.length, currentPage]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [currentPage, searchTerm, resetScroll]);
 
   const [quickAdd, setQuickAdd] = useState({
     category: "DOCUMENT TYPE",
@@ -267,6 +282,12 @@ export default function BulkImportTab({
                     </span>
                   </div>
                 </div>
+                <TableScrollControls
+                  canScrollLeft={canScrollLeft}
+                  canScrollRight={canScrollRight}
+                  onScrollLeft={() => scrollTable("left")}
+                  onScrollRight={() => scrollTable("right")}
+                />
               </div>
             </div>
           </div>
@@ -279,39 +300,42 @@ export default function BulkImportTab({
                   const paginatedRows = filteredRows.slice((displayPage - 1) * itemsPerPage, displayPage * itemsPerPage)
                   return (
                     <>
-                      <div className="w-full overflow-x-auto bg-white dark:bg-card rounded-[inherit]">
-                        <table className="w-full text-sm table-fixed min-w-[800px]">
-                  <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border"
-                          checked={
-                            importRows.length > 0 &&
-                            importRows.filter((r) => !r.error).every((r) => !!importSelected[r.index])
-                          }
-                          onChange={(e) => toggleImportSelectAll(e.target.checked)}
-                        />
-                      </th>
-                      <th className="w-[8%] p-4 text-center font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Row</th>
-                      <th className="w-[20%] p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Category</th>
-                      <th className="w-[36%] p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Name / Label</th>
-                      <th className="w-[20%] p-4 font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Identifier</th>
-                      <th className="w-[16%] p-4 pr-6 text-right font-medium text-[12px] tracking-[0.04em] text-gray-500 dark:text-zinc-400">Validation</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border dark:divide-border">
-                  <tr className="bg-gray-50/50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5">
-                    <td className="p-4 text-center">
-                      <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-border dark:border-border">
-                        <HugeIcon  className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center text-[11px] text-gray-500 font-medium dark:text-zinc-400">
-                      NEW
-                    </td>
-                    <td className="p-4">
+                      <div
+                        ref={tableContainerRef}
+                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                      >
+                        <table className="w-full text-sm border-collapse min-w-[850px]">
+                          <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                              <th className="w-12 min-w-[48px] p-4 text-center border-r border-border/80 dark:border-border">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:border-border"
+                                  checked={
+                                    importRows.length > 0 &&
+                                    importRows.filter((r) => !r.error).every((r) => !!importSelected[r.index])
+                                  }
+                                  onChange={(e) => toggleImportSelectAll(e.target.checked)}
+                                />
+                              </th>
+                              <th className="w-[8%] min-w-[60px] p-4 text-center border-r border-border/80 dark:border-border">Row</th>
+                              <th className="w-[20%] min-w-[160px] p-4 border-r border-border/80 dark:border-border">Category</th>
+                              <th className="w-[36%] min-w-[240px] p-4 border-r border-border/80 dark:border-border">Name / Label</th>
+                              <th className="w-[20%] min-w-[160px] p-4 border-r border-border/80 dark:border-border">Identifier</th>
+                              <th className="w-[16%] min-w-[130px] p-4 pr-6 text-right">Validation</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border dark:border-border">
+                            <tr className="bg-gray-50/60 dark:bg-zinc-900/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60 border-b border-border dark:border-border transition-colors">
+                              <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                                <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-border dark:border-border">
+                                  <HugeIcon className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
+                                </div>
+                              </td>
+                              <td className="p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
+                                NEW
+                              </td>
+                              <td className="p-4 border-r border-border/70 dark:border-border/70">
                       <Select
                         className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                         value={quickAdd.category}
@@ -329,7 +353,7 @@ export default function BulkImportTab({
                         {!isOsas && <option value="Section">Section</option>}
                       </Select>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 border-r border-border/70 dark:border-border/70">
                       <Input
                         className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={quickAdd.name}
@@ -345,7 +369,7 @@ export default function BulkImportTab({
                         placeholder="Quick add name/label..."
                       />
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 border-r border-border/70 dark:border-border/70">
                       {quickAdd.category.toLowerCase() === "section" ? (
                         <Select
                           className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
@@ -395,7 +419,7 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-9 px-4 text-xs font-semibold rounded-xl btn-brand-orange text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                        className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
                       >
                         Add Item
                       </Button>
@@ -414,14 +438,14 @@ export default function BulkImportTab({
                           }
                         }}
                         className={cn(
-                          "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                          "group border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none",
                           isSelectable && "cursor-pointer",
                           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                           row.error && "bg-red-50/40 dark:bg-red-500/5 hover:bg-red-50/60 dark:hover:bg-red-500/10"
                         )}
                       >
                         <td
-                          className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}
+                          className={cn("p-4 text-center border-r border-border/70 dark:border-border/70", row.error && "border-l-4 border-l-red-500")}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <input
@@ -435,10 +459,10 @@ export default function BulkImportTab({
                             disabled={!isSelectable}
                           />
                         </td>
-                        <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                        <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {row.index}
                         </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             <Select
                               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -457,7 +481,7 @@ export default function BulkImportTab({
                           ) : (
                             <div
                               className={cn(
-                                "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap",
+                                "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap",
                                 row.category.toLowerCase() === "documenttype"
                                   ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400"
                                   : row.category.toLowerCase() === "course"
@@ -469,7 +493,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 align-middle overflow-hidden">
+                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             <Input
                               className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -510,7 +534,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
                               <Select
@@ -716,9 +740,9 @@ export default function BulkImportTab({
                 <Button
                   onClick={executeBulkImport}
                   disabled={importRows.filter((r) => !r.error && importSelected[r.index]).length === 0}
-                  className="flex h-10 items-center justify-center rounded-xl btn-brand-red text-white font-semibold text-xs px-6 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+                  className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-6 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
                 >
-                  Confirm
+                  Confirm Import
                 </Button>
               </div>
             </div>
@@ -779,7 +803,7 @@ export default function BulkImportTab({
             <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button
                 onClick={resetImport}
-                className="flex h-10 w-full items-center justify-center rounded-xl btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs border-0"
+                className="flex h-10 w-full items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs border-0"
               >
                 Done
               </Button>
@@ -927,7 +951,7 @@ export default function BulkImportTab({
             <Button
               type="button"
               onClick={() => setShowInstructions(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
             >
               Done
             </Button>

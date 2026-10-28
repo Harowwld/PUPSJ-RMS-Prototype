@@ -23,6 +23,7 @@ export default function StudentDriveFilesView({
   allDocs = [],
   onLocateStudent,
   onPreviewDocument,
+  onRescan,
   onBack,
   authUser = null,
   onOpenDossier,
@@ -276,6 +277,7 @@ export default function StudentDriveFilesView({
               viewMode="grid"
               onPreview={onPreviewDocument}
               onLocate={onLocateStudent}
+              onRescan={onRescan}
             />
           ))}
         </motion.div>
@@ -295,6 +297,7 @@ export default function StudentDriveFilesView({
               viewMode="list"
               onPreview={onPreviewDocument}
               onLocate={onLocateStudent}
+              onRescan={onRescan}
             />
           ))}
         </motion.div>

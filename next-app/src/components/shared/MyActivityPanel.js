@@ -296,7 +296,7 @@ export default function MyActivityPanel({ embedded = false }) {
         className={cn(
           "animate-in fade-in duration-normal",
           !embedded &&
-            "flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4"
+            "flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
         )}
       >
         {/* 1. Page Header */}
@@ -413,7 +413,7 @@ export default function MyActivityPanel({ embedded = false }) {
                       {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -440,7 +440,7 @@ export default function MyActivityPanel({ embedded = false }) {
                       {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={endDate ? parseDateLocal(endDate) : undefined}
@@ -493,9 +493,9 @@ export default function MyActivityPanel({ embedded = false }) {
 
         {/* 5. Grouped Activity Feed / Skeleton / States */}
         {loading && !rows.length ? (
-          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="border-t border-border dark:border-border" />
+          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="flex-[1_0_auto] border-t border-border dark:border-border" />
         ) : error ? (
-          <div className="min-h-[320px] flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400 border-t border-border dark:border-border rounded-b-2xl">
+          <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400 border-t border-border dark:border-border rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
@@ -523,7 +523,7 @@ export default function MyActivityPanel({ embedded = false }) {
             </Empty>
           </div>
         ) : rows.length === 0 ? (
-          <div className="min-h-[320px] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
+          <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-800">
@@ -560,7 +560,7 @@ export default function MyActivityPanel({ embedded = false }) {
         ) : (
           <div
             className={cn(
-              "flex flex-col gap-6 px-6 py-5 border-t border-border dark:border-border transition-all duration-slow",
+              "flex flex-[1_0_auto] flex-col gap-6 px-6 py-5 border-t border-border dark:border-border transition-all duration-slow",
               loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}
           >

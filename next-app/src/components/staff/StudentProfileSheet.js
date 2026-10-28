@@ -56,6 +56,7 @@ export default function StudentProfileSheet({
   allDocs = [],
   onLocateStudent,
   onPreviewDocument,
+  onRescan,
   onEditStudent,
   onArchiveStudent,
   onRestoreStudent,
@@ -290,10 +291,35 @@ export default function StudentProfileSheet({
           </div>
         </SheetHeader>
 
+        {/* Line-Attached Edge-to-Edge Status Notice */}
+        <div
+          className={cn(
+            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+            isArchived
+              ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+              : "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+          )}
+        >
+          <HugeIcon
+            className={cn(
+              "ph-bold text-[15px] shrink-0",
+              isArchived ? "ph-archive text-amber-600 dark:text-amber-400" : "ph-check-circle text-emerald-600 dark:text-emerald-400"
+            )}
+          />
+          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+            <strong className="font-semibold">
+              {isArchived ? "Archived Record:" : "Active Archive Profile:"}
+            </strong>{" "}
+            {isArchived
+              ? `This record is archived. Located in Room ${student.room}, Cabinet ${student.cabinet}, Drawer ${student.drawer}.`
+              : `Institutional record active in Room ${student.room}, Cabinet ${student.cabinet}, Drawer ${student.drawer}.`}
+          </span>
+        </div>
+
         {/* Scrollable Single-Column Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Profile Card Summary Strip */}
-          <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
+          {/* Profile Identity Summary Strip (Unboxed) */}
+          <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
             <div className="flex items-center gap-3.5 min-w-0">
               <ProfileAvatar
                 id={student.id || student.account_id || student.accountId || student.studentNo}
@@ -302,7 +328,7 @@ export default function StudentProfileSheet({
                 avatarFilename={student.avatar_filename || student.avatarFilename}
                 name={displayName}
                 initials={initials}
-                className="size-11 rounded-full border"
+                className="size-11 rounded-full border shadow-2xs"
                 fallbackClassName="font-bold text-sm"
                 fallbackStyle={{
                   backgroundColor: authUser?.accent_color ? `${authUser.accent_color}15` : "rgba(128, 0, 0, 0.08)",
@@ -311,10 +337,10 @@ export default function StudentProfileSheet({
                 }}
               />
               <div className="min-w-0">
-                <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                <span className="text-base font-bold text-gray-900 dark:text-zinc-100 truncate block">
                   {displayName}
                 </span>
-                <p className="text-[11px] text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
                   {student.acronym || student.studentNo}
                 </p>
               </div>
@@ -330,7 +356,7 @@ export default function StudentProfileSheet({
                   onEditStudent?.(student);
                 }}
                 title={student?.category || student?.rawOrg ? "Edit Organization Information" : "Edit Student Information"}
-                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 {student?.category || student?.rawOrg ? "Edit Organization" : "Edit Student"}
               </Button>
@@ -342,23 +368,10 @@ export default function StudentProfileSheet({
                   onLocateStudent?.(student);
                 }}
                 title="Locate in Physical Archive"
-                className="h-8 px-3 text-xs font-semibold rounded-xl btn-brand-red text-white! cursor-pointer shadow-2xs active:scale-95 transition-all"
-                style={{ color: "#ffffff" }}
+                className="h-8 px-3 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 cursor-pointer shadow-xs active:scale-95 transition-all"
               >
                 Locate Drawer
               </Button>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                  isArchived
-                    ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                    : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                )}
-              >
-                <span className={cn("w-1.5 h-1.5 rounded-full mr-1", isArchived ? "bg-amber-500" : "bg-emerald-500")} />
-                {student.status || "Active"}
-              </Badge>
             </div>
           </div>
 
@@ -490,27 +503,21 @@ export default function StudentProfileSheet({
             <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
               <HugeIcon className="ph-bold ph-warehouse text-pup-maroon dark:text-red-400 text-sm" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                Physical Archive Filing Location
+                Physical Archive Location
               </h3>
             </div>
 
-            <div className="divide-y-0">
+            <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow
                 icon="ph-bold ph-door"
-                label="Archive Room"
+                label="Archive Vault"
                 value={`Room ${student.room}`}
               />
 
               <InfoRow
                 icon="ph-bold ph-archive"
-                label="Filing Cabinet"
-                value={`Cabinet ${student.cabinet}`}
-              />
-
-              <InfoRow
-                icon="ph-bold ph-tray"
-                label="Drawer Number"
-                value={`Drawer ${student.drawer}`}
+                label="Cabinet & Drawer"
+                value={`Cabinet ${student.cabinet} · Drawer ${student.drawer}`}
               />
 
               <InfoRow
@@ -657,6 +664,31 @@ export default function StudentProfileSheet({
                           {req.status === "Missing" ? "Not Submitted" : req.status}
                         </span>
 
+                        {req.doc && onRescan && !req.doc.source_type && !String(req.doc.id || "").startsWith("cbl-") && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onOpenChange(false);
+                                  onRescan(
+                                    req.doc.organization_id || req.doc.student_no || student.rawOrg?.id || student.studentNo,
+                                    req.name,
+                                    req.doc.id,
+                                    req.doc.original_filename,
+                                    req.doc.mime_type
+                                  );
+                                }}
+                                aria-label="Re-scan Document"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
+                              >
+                                <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-xs" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Re-scan Document</TooltipContent>
+                          </Tooltip>
+                        )}
+
                         {req.doc && (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -724,6 +756,31 @@ export default function StudentProfileSheet({
                       >
                         {doc.approval_status || "Pending"}
                       </span>
+
+                      {onRescan && !doc.source_type && !String(doc.id || "").startsWith("cbl-") && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenChange(false);
+                                onRescan(
+                                  doc.organization_id || doc.student_no || student.rawOrg?.id || student.studentNo,
+                                  doc.doc_type,
+                                  doc.id,
+                                  doc.original_filename,
+                                  doc.mime_type
+                                );
+                              }}
+                              aria-label="Re-scan Document"
+                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
+                            >
+                              <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-xs" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Re-scan Document</TooltipContent>
+                        </Tooltip>
+                      )}
 
                       <Tooltip>
                         <TooltipTrigger asChild>

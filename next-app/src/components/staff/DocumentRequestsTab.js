@@ -39,6 +39,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import useTableScroll from "@/hooks/useTableScroll";
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { matchesSearchQuery } from "@/lib/searchUtils";
@@ -778,6 +780,18 @@ export default function DocumentRequestsTab({
     });
   }, [rows, charterFilters, slaStandards]);
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([displayedRows.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, q, statusFilters, docTypeFilters, clientTypeFilters, charterFilters, resetScroll]);
+
   const filterGroups = useMemo(() => [
     {
       id: "status",
@@ -885,9 +899,9 @@ export default function DocumentRequestsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
+      <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-tray"
@@ -913,8 +927,7 @@ export default function DocumentRequestsTab({
                       type="button"
                       onClick={() => setCreateOpen(true)}
                       title="Create Document Request"
-                      className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                      style={{ color: "#ffffff" }}
+                      className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                     >
                       Create Request
                     </Button>
@@ -994,17 +1007,27 @@ export default function DocumentRequestsTab({
             </div>
           )}
 
-          {/* 3. Active Filter Chips Row */}
+          {/* 3. Active Filter Chips & Scroll Controls Row */}
           {!loading && !error && (
-            <ActiveFilterChips
-              chips={activeChips}
-              onClearAll={handleClearFilters}
-              className="border-t border-border dark:border-border px-6 py-2.5"
-            />
+            <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+              <div className="flex-1 min-w-0">
+                <ActiveFilterChips
+                  chips={activeChips}
+                  onClearAll={handleClearFilters}
+                  className="p-0 border-0"
+                />
+              </div>
+              <TableScrollControls
+                isScrolledX={isScrolledX}
+                onResetScroll={resetScroll}
+                onScrollLeft={() => scrollLeft(400)}
+                onScrollRight={() => scrollRight(400)}
+              />
+            </div>
           )}
 
           {/* 4. Full-Width Table Body */}
-          <div className={cn("w-full flex flex-col flex-1 min-h-0 border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")}>
+          <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")}>
             {(loading && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
@@ -1058,7 +1081,7 @@ export default function DocumentRequestsTab({
                         type="button"
                         onClick={() => setCreateOpen(true)}
                         title="Create Document Request"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white px-5 text-xs font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
+                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
                       >
                         Create Request
                       </Button>
@@ -1067,86 +1090,94 @@ export default function DocumentRequestsTab({
                 </Empty>
               </div>
             ) : (
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-sm table-fixed min-w-[1000px]">
-                  <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                      <th className="p-4 w-[8%]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("id")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              <div
+                ref={tableContainerRef}
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+              >
+                <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      <th
+                        className={cn(
+                          "p-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                          isScrolledX
+                            ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                            : "border-r border-border/80 dark:border-border"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("id")}
+                            className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>ID</span>
+                            <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                          {isScrolledX && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                resetScroll();
+                              }}
+                              title="Reset table scroll"
+                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                            >
+                              <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                            </button>
                           )}
-                        >
-                          ID
-                          <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
+                        </div>
                       </th>
-                      <th className="p-4 w-[22%]">
+                      <th className="p-4 w-[240px] min-w-[240px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("student")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "student" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
                         >
-                          Requester
+                          <span>Requester</span>
                           <SortIndicator column="student" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-[18%]">
+                      <th className="p-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("doc_type")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
                         >
-                          Document Type
+                          <span>Document Type</span>
                           <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-[12%]">
+                      <th className="p-4 w-[140px] min-w-[140px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("status")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
                         >
-                          Status
+                          <span>Status</span>
                           <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-[22%]">
-                        <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                          Processing Time
-                        </span>
+                      <th className="p-4 w-[220px] min-w-[220px] border-r border-border/80 dark:border-border">
+                        <span>Processing Time</span>
                       </th>
-                      <th className="p-4 w-[11%]">
+                      <th className="p-4 w-[160px] min-w-[160px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("created_at")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
                         >
-                          Created At
+                          <span>Created At</span>
                           <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 pr-6 text-right w-[7%] text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        Action
+                      <th className="p-4 pr-6 text-right w-[80px] min-w-[80px]">
+                        <span>Action</span>
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border dark:divide-border">
+                  <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {displayedRows.map((r) => {
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
@@ -1161,10 +1192,18 @@ export default function DocumentRequestsTab({
                             )}
                             onClick={() => openDetail(r.id)}
                           >
-                            <td className="p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                            <td
+                              className={cn(
+                                "p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
+                                selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
+                                isScrolledX
+                                  ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                                  : "border-r border-border/70 dark:border-border/70"
+                              )}
+                            >
                               #{r.id}
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex items-center gap-2">
                                 <span
                                   className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
@@ -1209,19 +1248,19 @@ export default function DocumentRequestsTab({
                                 )}
                               </div>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
                                 <span className="truncate" title={r.doc_type}>
                                   {r.doc_type}
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                               </div>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex flex-col gap-1 min-w-0">
                                 <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
                                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass)}>
@@ -1237,7 +1276,7 @@ export default function DocumentRequestsTab({
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle text-xs font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
+                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {formatPHDateTime(r.created_at)}
                             </td>
                             <td className="p-4 pr-6 align-middle text-right">
@@ -1541,7 +1580,7 @@ export default function DocumentRequestsTab({
                           className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                           value={createStudentNo}
                           onChange={(e) => setCreateStudentNo(e.target.value)}
-                          placeholder="202X-XXXXX-MN-0"
+                          placeholder="202X-XXXXX-SJ-0"
                         />
                       </div>
                     </div>
@@ -1713,13 +1752,12 @@ export default function DocumentRequestsTab({
                 </Button>
                 <Button
                   type="submit"
-                  className="px-6 h-10 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center dark:shadow-none active:scale-95 cursor-pointer"
-                  style={{ color: "#ffffff" }}
+                  className="px-6 h-10 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 gap-2 flex items-center"
                   disabled={submitting}
                 >
                   {submitting ? (
                     <>
-                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm text-white!" />
+                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
                       Saving...
                     </>
                   ) : (
@@ -1781,8 +1819,7 @@ export default function DocumentRequestsTab({
               {studentForRequest || detail?.room ? (
                 <Button
                   type="button"
-                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-xs font-semibold text-white! shadow-xs border-none py-0 px-5 cursor-pointer active:scale-95"
-                  style={{ color: "#ffffff" }}
+                  className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold shadow-xs py-0 px-5 cursor-pointer active:scale-95 transition-all"
                   onClick={() => {
                     setFileWarningOpen(false);
                     const target = studentForRequest || (detail?.room ? {
@@ -1828,7 +1865,6 @@ export default function DocumentRequestsTab({
                 </label>
                 <Select
                   className="w-full h-10 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border rounded-xl cursor-pointer"
-                  menuClassName="rounded-xl border border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                   value={reopenTargetStatus}
                   onChange={(e) => setReopenTargetStatus(e.target.value)}
                 >
@@ -1877,7 +1913,7 @@ export default function DocumentRequestsTab({
               </Button>
               <Button
                 type="button"
-                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                 onClick={handleConfirmReopen}
                 disabled={reopenSubmitting || reopenReason.trim().length < 5}
               >

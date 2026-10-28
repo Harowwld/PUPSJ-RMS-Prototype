@@ -10,15 +10,15 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
       {Array.from({ length: rowCount }).map((_, i) => (
         <tr
           key={i}
-          className="h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0"
+          className="h-[52px] border-b border-border dark:border-border last:border-b-0"
         >
           {/* Ticket # */}
-          <td className="py-0 px-4 align-middle">
+          <td className="p-4 pl-6 align-middle border-r border-border/70 dark:border-border/70">
             <Skeleton className="h-4 w-12 rounded dark:bg-muted font-mono" />
           </td>
 
           {/* Document Type */}
-          <td className="py-0 px-4 align-middle overflow-hidden">
+          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -28,7 +28,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Purpose / Description */}
-          <td className="py-0 px-4 align-middle overflow-hidden">
+          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -38,18 +38,18 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Status */}
-          <td className="py-0 px-4 align-middle whitespace-nowrap">
+          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
             <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
           </td>
 
           {/* Date Requested */}
-          <td className="py-0 px-4 align-middle whitespace-nowrap">
+          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
             <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
           </td>
 
           {/* Action */}
-          <td className="py-0 px-4 pr-6 align-middle text-right">
-            <Skeleton className="h-7 w-7 rounded-[6px] dark:bg-muted ml-auto" />
+          <td className="p-4 pr-6 align-middle text-right">
+            <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted ml-auto" />
           </td>
         </tr>
       ))}
@@ -84,9 +84,9 @@ export function StudentRequestsPaginationSkeleton() {
 
 export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = true }) {
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 animate-in fade-in duration-200 select-none font-jakarta">
+    <div className="flex flex-col w-full flex-[1_0_auto] animate-in fade-in duration-200 select-none font-jakarta">
       {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate min-h-0 flex-1 mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* 1. Page Header Skeleton */}
         <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -162,26 +162,26 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         </div>
 
         {/* 4. Main Table Skeleton */}
-        <div className="w-full overflow-x-auto select-none">
-          <table className="w-full text-sm table-fixed min-w-[900px]">
-            <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11">
-                <th className="p-4 w-[12%] whitespace-nowrap">
+        <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none">
+          <table className="w-full text-sm border-collapse min-w-[900px]">
+            <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap border-r border-border/80 dark:border-border">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[24%] whitespace-nowrap">
+                <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap border-r border-border/80 dark:border-border">
                   <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[32%] whitespace-nowrap">
+                <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap border-r border-border/80 dark:border-border">
                   <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[14%] whitespace-nowrap">
+                <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap border-r border-border/80 dark:border-border">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[18%] whitespace-nowrap">
+                <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 pr-6 text-right w-20 whitespace-nowrap">
+                <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-12 rounded dark:bg-muted ml-auto" />
                 </th>
               </tr>

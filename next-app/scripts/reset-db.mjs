@@ -29,10 +29,11 @@ async function main() {
 
   const { resetDatabase } = await import("../src/lib/resetDatabase.js");
   const { pool } = await import("../src/lib/postgres.js");
+  const demoAccountsOnly = process.argv.includes("--demo-accounts-only");
   try {
-    console.log("[reset-db] Resetting local PostgreSQL data and seeding demo accounts.");
-    await resetDatabase();
-    console.log("[reset-db] Reset completed. Restart the Next.js server if needed, then run: pnpm populate-sample-data");
+    console.log(`[reset-db] Resetting local PostgreSQL data and seeding the 7 default demo accounts.`);
+    await resetDatabase({ demoAccountsOnly });
+    console.log(`[reset-db] Reset completed. All tables cleared; only the 7 default demo accounts seeded.`);
   } finally {
     await pool.end();
   }

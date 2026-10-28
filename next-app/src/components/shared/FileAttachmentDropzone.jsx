@@ -258,8 +258,6 @@ export function AttachedFileCard({
               value={item?.attachmentType || categories[0]?.value || ""}
               onChange={(e) => onCategoryChange && onCategoryChange(item, e.target.value)}
               className="h-7 w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/80 hover:bg-gray-100/70 dark:bg-zinc-800 text-[11px] font-medium text-gray-700 dark:text-zinc-200 px-2 py-0 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
-              menuClassName="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-xl p-1 min-w-[200px]"
-              optionClassName="rounded-lg text-xs font-normal py-1.5 px-2 hover:bg-gray-100 dark:hover:bg-zinc-800"
               usePortal={true}
               aria-label={`Category for ${filename}`}
             >

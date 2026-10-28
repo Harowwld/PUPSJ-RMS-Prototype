@@ -29,10 +29,7 @@ export default function RegisterAccountTab({
   onResetForm,
   onCreateAccount,
 }) {
-  const [lastAutoFilled, setLastAutoFilled] = useState({ email: false })
   const fnameRef = useRef(null)
-
-  const [isEmailManual, setIsEmailManual] = useState(false)
   const [nextIdPreview, setNextIdPreview] = useState("")
 
   const officePrefix = getOfficePrefix(officeShortName || officeId || authUser?.office_short_name || authUser?.office_id || "registrar", offices)
@@ -67,26 +64,19 @@ export default function RegisterAccountTab({
 
   // Auto-fill Email
   useEffect(() => {
-    if (!isEmailManual && suggestedEmail && createForm.email !== suggestedEmail) {
+    if (suggestedEmail && createForm.email !== suggestedEmail) {
       const timer = setTimeout(() => {
         setCreateForm(f => ({ ...f, email: suggestedEmail }))
-        setLastAutoFilled(prev => ({ ...prev, email: true }))
       }, 0)
-      const resetTimer = setTimeout(() => {
-        setLastAutoFilled(prev => ({ ...prev, email: false }))
-      }, 1000)
-      return () => {
-        clearTimeout(timer)
-        clearTimeout(resetTimer)
-      }
+      return () => clearTimeout(timer)
     }
-    if (!isEmailManual && !suggestedEmail && createForm.email !== "") {
+    if (!suggestedEmail && createForm.email !== "") {
       const timer = setTimeout(() => {
         setCreateForm(f => ({ ...f, email: "" }))
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [suggestedEmail, isEmailManual, createForm.email, setCreateForm])
+  }, [suggestedEmail, createForm.email, setCreateForm])
 
   useEffect(() => {
     if (open) {
@@ -116,18 +106,18 @@ export default function RegisterAccountTab({
 
           <form onSubmit={onCreateAccount}>
             <div className="space-y-5 p-6 pb-4">
-              {/* Part 1: Full name */}
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {/* Row 1: Editable Full Name */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    First Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                    First Name *
                   </label>
                   <Input
                     type="text"
                     required
                     ref={fnameRef}
                     disabled={isLoading}
-                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                    className="h-10 rounded-xl border border-border bg-white text-xs font-normal text-gray-900 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs dark:border-border dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-500"
                     placeholder="Juan"
                     value={createForm.fname}
                     onChange={(e) =>
@@ -139,14 +129,14 @@ export default function RegisterAccountTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Last Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                    Last Name *
                   </label>
                   <Input
                     type="text"
                     required
                     disabled={isLoading}
-                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+                    className="h-10 rounded-xl border border-border bg-white text-xs font-normal text-gray-900 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs dark:border-border dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-500"
                     placeholder="Dela Cruz"
                     value={createForm.lname}
                     onChange={(e) =>
@@ -159,10 +149,10 @@ export default function RegisterAccountTab({
                 </div>
               </div>
 
-              {/* Part 2: Role Selection */}
+              {/* Row 2: Role Selection */}
               <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  Privilege Level *
                 </label>
                 <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                   <button
@@ -194,50 +184,39 @@ export default function RegisterAccountTab({
                 </div>
               </div>
 
-              {/* Part 3: System Identifiers */}
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                      Employee ID
-                    </label>
-                    <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
-                      System generated
-                    </span>
-                  </div>
-                  <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-gray-50/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-300 shadow-xs select-none">
-                    <span className="font-mono text-xs font-semibold tracking-wide">
-                      {nextIdPreview || `PUP${officePrefix.toUpperCase()}-[AUTO]`}
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
-                      Auto-assigned
-                    </span>
-                  </div>
+              {/* Row 3: System-Generated Identifiers (Grouped Read-Only Section) */}
+              <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                    System-Generated Credentials
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                    Auto-assigned
+                  </span>
                 </div>
 
-                <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Email Address <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
-                  </label>
-                  <Input
-                    type="email"
-                    required
-                    disabled={isLoading}
-                    className={cn(
-                      "h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs",
-                      lastAutoFilled.email && "border-emerald-500 dark:border-emerald-500"
-                    )}
-                    placeholder={suggestedEmail || "[role].[name]@pup.local"}
-                    value={createForm.email}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setIsEmailManual(val !== "")
-                      setCreateForm((f) => ({
-                        ...f,
-                        email: val,
-                      }))
-                    }}
-                  />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold text-gray-500 dark:text-zinc-400">
+                      Employee ID
+                    </label>
+                    <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                        {nextIdPreview || `PUP${officePrefix.toUpperCase()}-[AUTO]`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold text-gray-500 dark:text-zinc-400">
+                      Official Email Address
+                    </label>
+                    <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                        {createForm.email || suggestedEmail || `${(createForm.role || "staff").toLowerCase()}.[lastname]@pup.local`}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -255,7 +234,7 @@ export default function RegisterAccountTab({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
               >
                 {isLoading ? "Registering..." : "Register Staff"}
               </Button>

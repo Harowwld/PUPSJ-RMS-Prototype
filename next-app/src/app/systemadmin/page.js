@@ -15,6 +15,12 @@ import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCard
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import ServiceStandardsSkeleton from "@/components/systemadmin/skeletons/ServiceStandardsSkeleton"
+import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
+import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
+import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
+import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
+import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
+import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
 import { getClientSession } from "@/lib/clientAuth"
 import { formatErrorMessage } from "@/lib/errorUtils"
 
@@ -44,9 +50,9 @@ const SYSTEMADMIN_NAV_ITEMS = [
 
 function TabLoadingSkeleton() {
   return (
-    <div className="flex flex-1 flex-col min-h-full w-full gap-6 animate-fade-up font-jakarta">
+    <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up font-jakarta">
       {/* ONE Single Container Card */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
+      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] min-h-[500px] isolate">
         {/* Header */}
         <div className="p-6 flex items-center justify-between">
           <div className="space-y-1.5">
@@ -101,22 +107,22 @@ const ModuleConfigTab = dynamic(() => import("@/components/systemadmin/ModuleCon
   loading: () => <ModuleConfigSkeleton />,
 })
 const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaffTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <GlobalStaffSkeleton />,
 })
 const GlobalAuditLogsTab = dynamic(() => import("@/components/systemadmin/GlobalAuditLogsTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <GlobalAuditLogsSkeleton />,
 })
 const CampusOperationsTab = dynamic(() => import("@/components/systemadmin/CampusOperationsTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <CampusOperationsSkeleton />,
 })
 const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <SystemBackupsSkeleton />,
 })
 const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/LandingPageCmsTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <LandingHeroSkeleton />,
 })
 const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <SecurityQuestionsSkeleton />,
 })
 const ServiceStandardsTab = dynamic(() => import("@/components/systemadmin/ServiceStandardsTab"), {
   loading: () => <ServiceStandardsSkeleton />,
@@ -322,7 +328,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
 
 
-      <div className="flex w-full flex-1 min-h-0 overflow-hidden flex-row">
+      <div
+        className="flex min-h-0 overflow-hidden flex-col md:flex-row"
+        style={zoomStyle}
+      >
         <Sidebar
           open={sidebarOpen}
           items={sidebarItems}
@@ -335,10 +344,9 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           authUser={authUser}
         />
         
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xl flex flex-col">
           <div 
-            className="pt-4 pr-4 pb-4 flex flex-1 flex-col min-h-full w-full [&>*]:flex-1"
-            style={zoomStyle}
+            className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]"
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
             {view === "branding" && <InstitutionalBrandingTab showToast={showToast} />}

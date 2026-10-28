@@ -302,8 +302,8 @@ export default function LandingFaqCmsView({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Page Header */}
         <PageHeader
           icon="ph-bold ph-question"
@@ -325,34 +325,28 @@ export default function LandingFaqCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#faq", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Preview
+                Preview Portal
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                disabled={saving}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Reset
+                Restore Defaults
               </Button>
 
               <Button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {saving ? (
-                  <>
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save FAQ Content"
-                )}
+                {saving ? "Saving Changes..." : "Save FAQ Content"}
               </Button>
             </div>
           }
@@ -388,12 +382,12 @@ export default function LandingFaqCmsView({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: FAQ Content Management */}
           {activeTab === "content" && (
             <div className="space-y-5">
               {/* Section Header & Subtitle Card */}
-              <div className="w-full rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
+              <div className="w-full rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Header &amp; Description
@@ -453,7 +447,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 </div>
               </div>
               {/* Header Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Questions &amp; Answers List</span>
@@ -471,10 +465,10 @@ export default function LandingFaqCmsView({ showToast }) {
                   type="button"
                   disabled={faqData.faqs.length >= MAX_FAQ_ITEMS}
                   onClick={addNewFaq}
-                  className="flex h-9 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs disabled:opacity-40"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 transition-all"
                   title={faqData.faqs.length >= MAX_FAQ_ITEMS ? `Maximum limit of ${MAX_FAQ_ITEMS} questions reached` : "Add question"}
                 >
-                  Add
+                  Add Question
                 </Button>
               </div>
 
@@ -487,9 +481,9 @@ export default function LandingFaqCmsView({ showToast }) {
                   type="button"
                   onClick={() => setCategoryFilter("all")}
                   className={cn(
-                    "px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border-0",
+                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
                     categoryFilter === "all"
-                      ? "bg-gray-900 text-white dark:bg-white dark:text-zinc-950"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs border border-border dark:border-border"
                       : "bg-gray-100 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
                   )}
                 >
@@ -505,9 +499,9 @@ export default function LandingFaqCmsView({ showToast }) {
                       type="button"
                       onClick={() => setCategoryFilter(cat)}
                       className={cn(
-                        "px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border-0",
+                        "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
                         categoryFilter.toLowerCase() === cat.toLowerCase()
-                          ? "bg-gray-900 text-white dark:bg-white dark:text-zinc-950"
+                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs border border-border dark:border-border"
                           : "bg-gray-100 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
                       )}
                     >
@@ -528,7 +522,7 @@ export default function LandingFaqCmsView({ showToast }) {
                         "rounded-xl border transition-all overflow-hidden",
                         isExpanded
                           ? "border-pup-maroon/30 dark:border-red-500/30 bg-white dark:bg-zinc-900/60 shadow-xs"
-                          : "border-border/80 dark:border-border bg-white dark:bg-zinc-900/30 hover:border-border dark:hover:border-white/20"
+                          : "border-border dark:border-border bg-white dark:bg-zinc-900/30 hover:border-border dark:hover:border-white/20"
                       )}
                     >
                       {/* Accordion Bar / Header */}
@@ -676,8 +670,6 @@ export default function LandingFaqCmsView({ showToast }) {
                                       }
                                     }}
                                     className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-normal text-gray-800 dark:text-zinc-200 cursor-pointer shadow-none px-3"
-                                    menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                                    optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                                   >
                                     {STANDARD_CATEGORIES.map((cat) => (
                                       <option key={cat} value={cat}>
@@ -744,7 +736,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   Add Question
                 </button>
               ) : (
-                <div className="w-full py-3 px-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">
+                <div className="w-full py-3 px-3.5 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">
                   <HugeIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_FAQ_ITEMS} of {MAX_FAQ_ITEMS} questions). FAQ section is capped at {MAX_FAQ_ITEMS} questions for layout stability and concise reading.</span>
                 </div>
@@ -755,7 +747,7 @@ export default function LandingFaqCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Public FAQ Section
@@ -894,7 +886,8 @@ export default function LandingFaqCmsView({ showToast }) {
         isLoading={saving}
         title="Reset FAQ Section to Defaults"
         message="Are you sure you want to revert the Frequently Asked Questions to PUP institutional defaults? All custom questions and section narrative copy will be replaced."
-        confirmLabel="Reset"
+        confirmLabel="Restore Defaults"
+        cancelLabel="Cancel"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         selectedItems={[
@@ -914,7 +907,8 @@ export default function LandingFaqCmsView({ showToast }) {
         onConfirm={handleDeleteConfirm}
         title="Remove Question"
         message="Are you sure you want to remove this question from the public landing page FAQ list?"
-        confirmLabel="Remove"
+        confirmLabel="Remove Question"
+        cancelLabel="Cancel"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
         selectedItems={

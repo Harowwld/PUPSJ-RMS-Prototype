@@ -29,6 +29,7 @@ export default function GoogleDrivePdfCard({
   viewMode = "grid", // "grid" | "list"
   onPreview,
   onLocate,
+  onRescan,
   onDownload,
   className,
 }) {
@@ -180,6 +181,26 @@ export default function GoogleDrivePdfCard({
     }
   };
 
+  const canRescan = Boolean(
+    onRescan &&
+      !doc?.source_type &&
+      !String(doc?.id || "").startsWith("cbl-") &&
+      !String(doc?.id || "").startsWith("event-proposal-")
+  );
+
+  const handleRescanClick = (e) => {
+    e?.stopPropagation?.();
+    if (canRescan) {
+      onRescan(
+        doc?.organization_id || doc?.student_no || student?.rawOrg?.id || student?.studentNo || student?.id,
+        doc?.doc_type,
+        doc?.id,
+        doc?.original_filename,
+        doc?.mime_type
+      );
+    }
+  };
+
   const handleDownloadClick = (e) => {
     e?.stopPropagation?.();
     if (onDownload) {
@@ -247,6 +268,23 @@ export default function GoogleDrivePdfCard({
 
           {/* Quick Actions */}
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            {canRescan && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleRescanClick}
+                    className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Re-scan Document"
+                    aria-label="Re-scan Document"
+                  >
+                    <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-sm" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Re-scan Document</TooltipContent>
+              </Tooltip>
+            )}
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -290,14 +328,14 @@ export default function GoogleDrivePdfCard({
               <DropdownMenuContent
                 align="end"
                 sideOffset={6}
-                className="w-52 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+                className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
               >
                 {/* Zone 1: Header */}
-                <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                     Document Actions
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
                     PDF
                   </span>
                 </div>
@@ -311,6 +349,15 @@ export default function GoogleDrivePdfCard({
                     <HugeIcon className="ph-bold ph-eye text-sm text-gray-500" />
                     <span>Preview Document</span>
                   </DropdownMenuItem>
+                  {canRescan && (
+                    <DropdownMenuItem
+                      onClick={handleRescanClick}
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    >
+                      <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-sm text-amber-600 dark:text-amber-400" />
+                      <span>Re-scan Document</span>
+                    </DropdownMenuItem>
+                  )}
                   {student && onLocate && (
                     <DropdownMenuItem
                       onClick={handleLocateClick}
@@ -320,7 +367,7 @@ export default function GoogleDrivePdfCard({
                       <span>Locate Archive Drawer</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                  <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
                   <DropdownMenuItem
                     onClick={handleDownloadClick}
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
@@ -378,14 +425,14 @@ export default function GoogleDrivePdfCard({
             <DropdownMenuContent
               align="end"
               sideOffset={6}
-              className="w-52 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+              className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
             >
               {/* Zone 1: Header */}
-              <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+              <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                   Document Actions
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
                   PDF
                 </span>
               </div>
@@ -399,6 +446,15 @@ export default function GoogleDrivePdfCard({
                   <HugeIcon className="ph-bold ph-eye text-sm text-gray-500" />
                   <span>Preview Document</span>
                 </DropdownMenuItem>
+                {canRescan && (
+                  <DropdownMenuItem
+                    onClick={handleRescanClick}
+                    className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  >
+                    <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-sm text-amber-600 dark:text-amber-400" />
+                    <span>Re-scan Document</span>
+                  </DropdownMenuItem>
+                )}
                 {student && onLocate && (
                   <DropdownMenuItem
                     onClick={handleLocateClick}
@@ -408,7 +464,7 @@ export default function GoogleDrivePdfCard({
                     <span>Locate Archive Drawer</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
                 <DropdownMenuItem
                   onClick={handleDownloadClick}
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"

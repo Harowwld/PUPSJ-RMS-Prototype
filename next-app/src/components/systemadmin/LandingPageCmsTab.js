@@ -1,12 +1,13 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+import HugeIcon from "@/components/shared/HugeIcon"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
@@ -18,32 +19,7 @@ import { cn } from "@/lib/utils"
 export default function LandingPageCmsTab({ showToast }) {
   const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'workflow' | 'catalog' | 'faq' | 'footer'
   const [loading, setLoading] = useState(true)
-
-  // Synchronize section from URL or switch-view events (Command Palette & deep linking)
-  useEffect(() => {
-    const urlSection = new URLSearchParams(window.location.search).get("section")
-    if (urlSection && ["hero", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
-      queueMicrotask(() => {
-        setCurrentSection(urlSection)
-      })
-    }
-
-    const handleSwitch = (e) => {
-      const targetSec = e.detail?.section
-      if (targetSec && ["hero", "workflow", "catalog", "faq", "footer"].includes(targetSec)) {
-        setCurrentSection(targetSec)
-      }
-    }
-    window.addEventListener("switch-view", handleSwitch)
-    return () => window.removeEventListener("switch-view", handleSwitch)
-  }, [])
-
-  const handleSelectSection = (sec) => {
-    setCurrentSection(sec)
-    const params = new URLSearchParams(window.location.search)
-    params.set("section", sec)
-    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
-  }
+  const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
@@ -79,33 +55,56 @@ export default function LandingPageCmsTab({ showToast }) {
     [showToast]
   )
 
-
-
+  // Synchronize section from URL or switch-view events (Command Palette & deep linking)
   useEffect(() => {
-    let ignore = false
-    async function init() {
-      try {
-        const res = await fetch("/api/landing/hero", { cache: "no-store" })
-        const json = await res.json()
-        if (ignore) return
-        if (res.ok && json.ok && json.data) {
-          setHeroData(json.data)
-        } else {
-          notify(json.error || "Failed to load hero configuration", true)
-        }
-      } catch (err) {
-        if (ignore) return
-        console.error("[LandingPageCmsTab] Fetch error:", err)
-        notify("Network error fetching hero settings", true)
-      } finally {
-        if (!ignore) setLoading(false)
+    const urlSection = new URLSearchParams(window.location.search).get("section")
+    if (urlSection && ["hero", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
+      queueMicrotask(() => {
+        setCurrentSection(urlSection)
+      })
+    }
+
+    const handleSwitch = (e) => {
+      const targetSec = e.detail?.section
+      if (targetSec && ["hero", "workflow", "catalog", "faq", "footer"].includes(targetSec)) {
+        setCurrentSection(targetSec)
       }
     }
-    init()
-    return () => {
-      ignore = true
+    window.addEventListener("switch-view", handleSwitch)
+    return () => window.removeEventListener("switch-view", handleSwitch)
+  }, [])
+
+  const handleSelectSection = (sec) => {
+    setCurrentSection(sec)
+    const params = new URLSearchParams(window.location.search)
+    params.set("section", sec)
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
+  }
+
+  const fetchHero = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true)
+    else setLoading(true)
+    try {
+      const res = await fetch("/api/landing/hero", { cache: "no-store" })
+      const json = await res.json()
+      if (res.ok && json.ok && json.data) {
+        setHeroData(json.data)
+      } else {
+        notify(json.error || "Failed to load hero configuration", true)
+      }
+    } catch (err) {
+      console.error("[LandingPageCmsTab] Fetch error:", err)
+      notify("Network error fetching hero settings", true)
+    } finally {
+      setLoading(false)
+      if (isRefresh) setRefreshing(false)
     }
   }, [notify])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHero()
+  }, [fetchHero])
 
   // Handle Save
   const handleSave = async () => {
@@ -317,20 +316,20 @@ export default function LandingPageCmsTab({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta pb-6">
-      {/* Top Section Switcher Pill */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none">
+    <div className="flex flex-[1_0_auto] flex-col gap-5 w-full animate-fade-up font-jakarta select-none">
+      {/* Top Section Switcher (Apple Segmented Control) */}
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 w-fit select-none overflow-x-auto max-w-full">
         <button
           type="button"
           onClick={() => handleSelectSection("hero")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
             currentSection === "hero"
-              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon  className="ph-bold ph-image text-sm" />
+          <HugeIcon className="ph-bold ph-image text-sm" />
           <span>Hero Section</span>
         </button>
 
@@ -338,13 +337,13 @@ export default function LandingPageCmsTab({ showToast }) {
           type="button"
           onClick={() => handleSelectSection("workflow")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
             currentSection === "workflow"
-              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon  className="ph-bold ph-git-merge text-sm" />
+          <HugeIcon className="ph-bold ph-git-merge text-sm" />
           <span>Workflow &amp; Steps</span>
         </button>
 
@@ -352,13 +351,13 @@ export default function LandingPageCmsTab({ showToast }) {
           type="button"
           onClick={() => handleSelectSection("catalog")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
             currentSection === "catalog"
-              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon  className="ph-bold ph-books text-sm" />
+          <HugeIcon className="ph-bold ph-books text-sm" />
           <span>Academic Catalog</span>
         </button>
 
@@ -366,13 +365,13 @@ export default function LandingPageCmsTab({ showToast }) {
           type="button"
           onClick={() => handleSelectSection("faq")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
             currentSection === "faq"
-              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon  className="ph-bold ph-question text-sm" />
+          <HugeIcon className="ph-bold ph-question text-sm" />
           <span>FAQ Section</span>
         </button>
 
@@ -380,13 +379,13 @@ export default function LandingPageCmsTab({ showToast }) {
           type="button"
           onClick={() => handleSelectSection("footer")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
             currentSection === "footer"
-              ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-              : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon  className="ph-bold ph-panel-bottom text-sm" />
+          <HugeIcon className="ph-bold ph-panel-bottom text-sm" />
           <span>Footer Section</span>
         </button>
       </div>
@@ -396,473 +395,464 @@ export default function LandingPageCmsTab({ showToast }) {
       {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} />}
       {currentSection === "footer" && <LandingFooterCmsView showToast={showToast} />}
       {currentSection === "hero" && (
-        <>
-          {/* Main Card with Header, Underline Tabs & Form Content */}
-          <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
-        <PageHeader
-          icon="ph-bold ph-layout"
-          title={
-            <div className="flex items-center gap-[6px]">
-              <span>Landing Page CMS</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · Hero Section
-              </span>
-            </div>
-          }
-          description="Manage public portal headlines, descriptive messaging, campus background photography, and operational details."
-          showBorder={false}
-          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => window.open("/", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-              >
-                Preview
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setResetModalOpen(true)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
-              >
-                Reset
-              </Button>
-
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
-              >
-                {saving ? (
-                  <>
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Landing Content"
-                )}
-              </Button>
-            </div>
-          }
-        />
-
-        {/* Standardized SuperAdmin Underline Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
-          <button
-            type="button"
-            onClick={() => setActiveTab("slides")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "slides"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Hero Content
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("preview")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "preview"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Interactive Live Preview
-          </button>
-        </div>
-
-        {/* Content Body */}
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6 rounded-b-2xl">
-          {/* TAB 1: Hero Content (Messaging + Carousel Combined) */}
-          {activeTab === "slides" && (
-            <div className="space-y-6">
-              {/* Hero Headlines & Institutional Philosophy */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Hero Headlines &amp; Institutional Philosophy
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
-                    Primary large display typography rendered over campus background photography.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Headline fields in a two-column row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Headline Line 1 (Upper)
-                        </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {heroData.headlineLine1.length}/45
-                        </span>
-                      </div>
-                      <Input
-                        value={heroData.headlineLine1}
-                        onChange={(e) =>
-                          setHeroData((prev) => ({
-                            ...prev,
-                            headlineLine1: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g. Tanglaw ng Bayan,"
-                        maxLength={45}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Headline Line 2 (Lower Accent)
-                        </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {heroData.headlineLine2.length}/45
-                        </span>
-                      </div>
-                      <Input
-                        value={heroData.headlineLine2}
-                        onChange={(e) =>
-                          setHeroData((prev) => ({
-                            ...prev,
-                            headlineLine2: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g. Dambana ng Kagitingan."
-                        maxLength={45}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Hero Subtitle & Institutional Description
-                      </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
-                        {heroData.description.length}/280
-                      </span>
-                    </div>
-                    <textarea
-                      value={heroData.description}
-                      onChange={(e) =>
-                        setHeroData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      rows={3}
-                      maxLength={280}
-                      placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
-                      className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
-                    />
-                  </div>
-                </div>
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+          <PageHeader
+            icon="ph-bold ph-layout"
+            title={
+              <div className="flex items-center gap-[6px]">
+                <span>Landing Page CMS</span>
+                <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
+                  · Hero Section
+                </span>
               </div>
+            }
+            description="Manage public portal headlines, descriptive messaging, campus background photography, and operational details."
+            showBorder={false}
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            actions={
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <RefreshButton
+                  onRefresh={() => fetchHero(true)}
+                  isLoading={refreshing}
+                  title="Refresh Hero Settings"
+                />
 
-              {/* Campus Background Photos Controls Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Campus Background Photos ({heroData.slides.length})
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Upload campus photos for the landing page carousel. Drag cards to reorder, or click any image to replace it.
-                  </p>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.open("/", "_blank")}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Preview Portal
+                </Button>
 
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* Rotation pace selector */}
-                  <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                    <HugeIcon  className="ph-bold ph-timer text-gray-400" />
-                    <span>Slide Pace:</span>
-                    <div className="w-[145px]">
-                      <Select
-                        value={heroData.autoRotateInterval}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setResetModalOpen(true)}
+                  disabled={saving}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Restore Defaults
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  {saving ? "Saving Changes..." : "Save Landing Content"}
+                </Button>
+              </div>
+            }
+          />
+
+          {/* SuperAdmin Underline Navigation Tabs */}
+          <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
+            <button
+              type="button"
+              onClick={() => setActiveTab("slides")}
+              className={cn(
+                "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                activeTab === "slides"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Hero Content
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("preview")}
+              className={cn(
+                "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                activeTab === "preview"
+                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+              )}
+            >
+              Interactive Live Preview
+            </button>
+          </div>
+
+          {/* Content Body */}
+          <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
+            {/* TAB 1: Hero Content (Messaging + Carousel Combined) */}
+            {activeTab === "slides" && (
+              <div className="space-y-6">
+                {/* Hero Headlines & Institutional Philosophy */}
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                      Hero Headlines &amp; Institutional Philosophy
+                    </h3>
+                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Primary large display typography rendered over campus background photography.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Headline fields in a two-column row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                            Headline Line 1 (Upper)
+                          </label>
+                          <span className="text-[11px] text-gray-400 font-mono">
+                            {heroData.headlineLine1.length}/45
+                          </span>
+                        </div>
+                        <Input
+                          value={heroData.headlineLine1}
+                          onChange={(e) =>
+                            setHeroData((prev) => ({
+                              ...prev,
+                              headlineLine1: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. Tanglaw ng Bayan,"
+                          maxLength={45}
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                            Headline Line 2 (Lower Accent)
+                          </label>
+                          <span className="text-[11px] text-gray-400 font-mono">
+                            {heroData.headlineLine2.length}/45
+                          </span>
+                        </div>
+                        <Input
+                          value={heroData.headlineLine2}
+                          onChange={(e) =>
+                            setHeroData((prev) => ({
+                              ...prev,
+                              headlineLine2: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. Dambana ng Kagitingan."
+                          maxLength={45}
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          Hero Subtitle &amp; Institutional Description
+                        </label>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          {heroData.description.length}/280
+                        </span>
+                      </div>
+                      <textarea
+                        value={heroData.description}
                         onChange={(e) =>
                           setHeroData((prev) => ({
                             ...prev,
-                            autoRotateInterval: Number(e.target.value),
+                            description: e.target.value,
                           }))
                         }
-                        className="h-9 rounded-xl border border-border dark:border-border text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
-                        menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                        optionClassName="rounded-lg text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <option value={3500}>Fast (3.5s)</option>
-                        <option value={5500}>Balanced (5.5s)</option>
-                        <option value={7500}>Relaxed (7.5s)</option>
-                        <option value={10000}>Slow (10s)</option>
-                      </Select>
+                        rows={3}
+                        maxLength={280}
+                        placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
+                        className="w-full rounded-xl border border-border bg-white p-3.5 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                      />
                     </div>
                   </div>
+                </div>
 
-                  {/* Hidden file input for adding a new photo */}
-                  <input
-                    type="file"
-                    ref={newPhotoInputRef}
-                    accept="image/jpeg,image/png,image/webp,image/avif"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleUploadNewSlide(e.target.files[0])
-                        e.target.value = ""
+                {/* Campus Background Photos Controls Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                      Campus Background Photos ({heroData.slides.length})
+                    </h3>
+                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Upload campus photos for the landing page carousel. Drag cards to reorder, or click any image to replace it.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Rotation pace selector */}
+                    <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
+                      <HugeIcon className="ph-bold ph-timer text-gray-400 text-sm" />
+                      <span>Slide Pace:</span>
+                      <div className="w-[145px]">
+                        <Select
+                          value={heroData.autoRotateInterval}
+                          onChange={(e) =>
+                            setHeroData((prev) => ({
+                              ...prev,
+                              autoRotateInterval: Number(e.target.value),
+                            }))
+                          }
+                          className="h-9 rounded-xl border border-border dark:border-border text-xs font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-2xs px-3"
+                        >
+                          <option value={3500}>Fast (3.5s)</option>
+                          <option value={5500}>Balanced (5.5s)</option>
+                          <option value={7500}>Relaxed (7.5s)</option>
+                          <option value={10000}>Slow (10s)</option>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Hidden file input for adding a new photo */}
+                    <input
+                      type="file"
+                      ref={newPhotoInputRef}
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleUploadNewSlide(e.target.files[0])
+                          e.target.value = ""
+                        }
+                      }}
+                    />
+
+                    <Button
+                      type="button"
+                      onClick={() => newPhotoInputRef.current?.click()}
+                      disabled={isAddingPhoto}
+                      className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    >
+                      {isAddingPhoto ? "Uploading Photo..." : "Upload Photo"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Photo Cards Grid with Add Card */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {heroData.slides.map((slide, idx) => (
+                    <SlideCard
+                      key={`${slide.src || "slide"}-${idx}`}
+                      index={idx}
+                      total={heroData.slides.length}
+                      slide={slide}
+                      isUploading={uploadingIndex === idx}
+                      isDragging={draggedSlideIdx === idx}
+                      isDragTarget={
+                        dragOverSlideIdx === idx &&
+                        draggedSlideIdx !== null &&
+                        draggedSlideIdx !== idx
                       }
-                    }}
-                  />
+                      onUploadFile={(file) => handleFileUpload(file, idx)}
+                      onMoveUp={() => moveSlide(idx, -1)}
+                      onMoveDown={() => moveSlide(idx, 1)}
+                      onDelete={() => setDeleteSlideIndex(idx)}
+                      onDragStartCard={(i) => setDraggedSlideIdx(i)}
+                      onDragOverCard={(i) => {
+                        if (draggedSlideIdx !== null && draggedSlideIdx !== i) {
+                          setDragOverSlideIdx(i)
+                        }
+                      }}
+                      onDragLeaveCard={(i) => {
+                        if (dragOverSlideIdx === i) {
+                          setDragOverSlideIdx(null)
+                        }
+                      }}
+                      onDropCard={(fromIdx, toIdx) => {
+                        reorderSlide(fromIdx, toIdx)
+                        setDraggedSlideIdx(null)
+                        setDragOverSlideIdx(null)
+                      }}
+                      onDragEndCard={() => {
+                        setDraggedSlideIdx(null)
+                        setDragOverSlideIdx(null)
+                      }}
+                    />
+                  ))}
 
-                  <Button
+                  {/* Add Photo Dashed Tile */}
+                  <button
                     type="button"
                     onClick={() => newPhotoInputRef.current?.click()}
                     disabled={isAddingPhoto}
-                    className="flex h-9 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs"
-                  >
-                    {isAddingPhoto ? (
-                      <>
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[13px]" />
-                        Uploading...
-                      </>
-                    ) : (
-                      "Upload Photo"
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Photo Cards Grid with Add Card */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {heroData.slides.map((slide, idx) => (
-                  <SlideCard
-                    key={`${slide.src || "slide"}-${idx}`}
-                    index={idx}
-                    total={heroData.slides.length}
-                    slide={slide}
-                    isUploading={uploadingIndex === idx}
-                    isDragging={draggedSlideIdx === idx}
-                    isDragTarget={
-                      dragOverSlideIdx === idx &&
-                      draggedSlideIdx !== null &&
-                      draggedSlideIdx !== idx
-                    }
-                    onUploadFile={(file) => handleFileUpload(file, idx)}
-                    onMoveUp={() => moveSlide(idx, -1)}
-                    onMoveDown={() => moveSlide(idx, 1)}
-                    onDelete={() => setDeleteSlideIndex(idx)}
-                    onDragStartCard={(i) => setDraggedSlideIdx(i)}
-                    onDragOverCard={(i) => {
-                      if (draggedSlideIdx !== null && draggedSlideIdx !== i) {
-                        setDragOverSlideIdx(i)
+                    onDragOver={(e) => {
+                      if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = "move"
                       }
                     }}
-                    onDragLeaveCard={(i) => {
-                      if (dragOverSlideIdx === i) {
+                    onDrop={(e) => {
+                      if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        const fromIdx = Number(e.dataTransfer.getData("application/x-pup-slide-card"))
+                        if (!isNaN(fromIdx) && fromIdx !== heroData.slides.length - 1) {
+                          reorderSlide(fromIdx, heroData.slides.length - 1)
+                        }
+                        setDraggedSlideIdx(null)
                         setDragOverSlideIdx(null)
                       }
                     }}
-                    onDropCard={(fromIdx, toIdx) => {
-                      reorderSlide(fromIdx, toIdx)
-                      setDraggedSlideIdx(null)
-                      setDragOverSlideIdx(null)
-                    }}
-                    onDragEndCard={() => {
-                      setDraggedSlideIdx(null)
-                      setDragOverSlideIdx(null)
-                    }}
-                  />
-                ))}
-
-                {/* Add Photo Dashed Tile */}
-                <button
-                  type="button"
-                  onClick={() => newPhotoInputRef.current?.click()}
-                  disabled={isAddingPhoto}
-                  onDragOver={(e) => {
-                    if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
-                      e.preventDefault()
-                      e.dataTransfer.dropEffect = "move"
-                    }
-                  }}
-                  onDrop={(e) => {
-                    if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      const fromIdx = Number(e.dataTransfer.getData("application/x-pup-slide-card"))
-                      if (!isNaN(fromIdx) && fromIdx !== heroData.slides.length - 1) {
-                        reorderSlide(fromIdx, heroData.slides.length - 1)
-                      }
-                      setDraggedSlideIdx(null)
-                      setDragOverSlideIdx(null)
-                    }
-                  }}
-                  className="rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none"
-                >
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                    <HugeIcon  className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      {isAddingPhoto ? "Uploading..." : "Add Photo"}
-                    </span>
-                    <span className="block text-[11px] text-gray-400 mt-0.5">
-                      Click to choose an image from your computer
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: Interactive Live Hero Preview */}
-          {activeTab === "preview" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Simulated Hero Portal Preview
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Live interactive preview showing exact layout, typography, atmospheric gradients, and slide transitions.
-                  </p>
-                </div>
-
-                {/* Slide cycler in preview */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
-                    Slide {previewSlideIdx + 1} of {heroData.slides.length}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPreviewSlideIdx((prev) =>
-                          prev === 0 ? heroData.slides.length - 1 : prev - 1
-                        )
-                      }
-                      className="h-8 w-8 p-0 rounded-xl!"
-                    >
-                      <HugeIcon  className="ph-bold ph-caret-left text-xs" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPreviewSlideIdx((prev) =>
-                          (prev + 1) % heroData.slides.length
-                        )
-                      }
-                      className="h-8 w-8 p-0 rounded-xl!"
-                    >
-                      <HugeIcon  className="ph-bold ph-caret-right text-xs" />
-                    </Button>
-                  </div>
+                    className="rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none shadow-2xs"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-2xs">
+                      <HugeIcon className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                        {isAddingPhoto ? "Uploading..." : "Add Photo"}
+                      </span>
+                      <span className="block text-[11px] text-gray-400 mt-0.5">
+                        Click to choose an image from your computer
+                      </span>
+                    </div>
+                  </button>
                 </div>
               </div>
+            )}
 
-              {/* Miniature Hero Simulator Matching LandingHero.js */}
-              <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-[#ffffff] dark:bg-zinc-900/50 shadow-sm flex flex-col select-none font-jakarta">
-                {/* Hero Image & Content Frame */}
-                <div className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16">
-                  {/* Background Images */}
-                  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none bg-[#ffffff]">
-                    {heroData.slides.map((s, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className={cn(
-                          "absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out",
-                          sIdx === previewSlideIdx ? "opacity-100" : "opacity-0"
-                        )}
-                      >
-                        <img
-                          src={s.src}
-                          alt={s.alt || "Campus Photo"}
-                          className="w-full h-full object-cover object-center"
-                          onError={(e) => {
-                            e.currentTarget.src = "/assets/pup/landing-1.jpg"
-                          }}
-                        />
-                      </div>
-                    ))}
-                    {/* Atmospheric Gradient Scrims matching LandingHero.js */}
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
-                    <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
+            {/* TAB 2: Interactive Live Hero Preview */}
+            {activeTab === "preview" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                      Simulated Hero Portal Preview
+                    </h3>
+                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Live interactive preview showing exact layout, typography, atmospheric gradients, and slide transitions.
+                    </p>
                   </div>
 
-                  {/* Centered Hero Content Matching LandingHero.js */}
-                  <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
-                    <div className="w-full max-w-4xl flex flex-col items-center">
-                      <h1
-                        style={{
-                          fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
-                          lineHeight: 1.04,
-                        }}
-                        className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
+                  {/* Slide cycler in preview */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
+                      Slide {previewSlideIdx + 1} of {heroData.slides.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setPreviewSlideIdx((prev) =>
+                            prev === 0 ? heroData.slides.length - 1 : prev - 1
+                          )
+                        }
+                        className="h-8 w-8 p-0 rounded-xl border border-border dark:border-border shadow-2xs cursor-pointer active:scale-95"
                       >
-                        <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
-                        <span className="block">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
-                      </h1>
-
-                      <p className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal">
-                        {heroData.description ||
-                          "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
-                      </p>
-
-                      {/* Action Cluster: centered */}
-                      <div className="flex flex-wrap items-center justify-center gap-4">
-                        <Button
-                          type="button"
-                          className="h-11 px-8 rounded-full btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md pointer-events-none"
-                        >
-                          <span>{(!heroData.ctaText || heroData.ctaText === "Request Document") ? "Request" : heroData.ctaText}</span>
-                        </Button>
-                      </div>
+                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setPreviewSlideIdx((prev) =>
+                            (prev + 1) % heroData.slides.length
+                          )
+                        }
+                        className="h-8 w-8 p-0 rounded-xl border border-border dark:border-border shadow-2xs cursor-pointer active:scale-95"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                      </Button>
                     </div>
                   </div>
                 </div>
 
-                {/* Apple-Style Pagination Dots Outside Image Panel Matching LandingHero.js */}
-                <div className="w-full flex justify-center py-5 bg-[#ffffff] dark:bg-zinc-950">
-                  <div className="flex items-center gap-2 px-3 py-1">
-                    {heroData.slides.map((_, dotIdx) => {
-                      const isActive = dotIdx === previewSlideIdx
-                      return (
-                        <button
-                          key={dotIdx}
-                          type="button"
-                          onClick={() => setPreviewSlideIdx(dotIdx)}
-                          aria-label={`View photo ${dotIdx + 1}`}
+                {/* Miniature Hero Simulator Matching LandingHero.js */}
+                <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-white dark:bg-zinc-900/50 shadow-sm flex flex-col select-none font-jakarta">
+                  {/* Hero Image & Content Frame */}
+                  <div className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16">
+                    {/* Background Images */}
+                    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none bg-white">
+                      {heroData.slides.map((s, sIdx) => (
+                        <div
+                          key={sIdx}
                           className={cn(
-                            "h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer",
-                            isActive
-                              ? "w-6 bg-gray-800 dark:bg-zinc-100"
-                              : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
+                            "absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out",
+                            sIdx === previewSlideIdx ? "opacity-100" : "opacity-0"
                           )}
-                        />
-                      )
-                    })}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={s.src}
+                            alt={s.alt || "Campus Photo"}
+                            className="w-full h-full object-cover object-center"
+                            onError={(e) => {
+                              e.currentTarget.src = "/assets/pup/landing-1.jpg"
+                            }}
+                          />
+                        </div>
+                      ))}
+                      {/* Atmospheric Gradient Scrims matching LandingHero.js */}
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
+                      <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
+                    </div>
+
+                    {/* Centered Hero Content Matching LandingHero.js */}
+                    <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
+                      <div className="w-full max-w-4xl flex flex-col items-center">
+                        <h1
+                          style={{
+                            fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
+                            lineHeight: 1.04,
+                          }}
+                          className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
+                        >
+                          <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
+                          <span className="block">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
+                        </h1>
+
+                        <p className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal">
+                          {heroData.description ||
+                            "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
+                        </p>
+
+                        {/* Action Cluster: centered */}
+                        <div className="flex flex-wrap items-center justify-center gap-4">
+                          <Button
+                            type="button"
+                            className="h-11 px-8 rounded-full bg-slate-900 hover:bg-slate-800 text-[13px] font-semibold text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md pointer-events-none"
+                          >
+                            <span>{(!heroData.ctaText || heroData.ctaText === "Request Document") ? "Request Document" : heroData.ctaText}</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Apple-Style Pagination Dots Outside Image Panel Matching LandingHero.js */}
+                  <div className="w-full flex justify-center py-5 bg-white dark:bg-zinc-950">
+                    <div className="flex items-center gap-2 px-3 py-1">
+                      {heroData.slides.map((_, dotIdx) => {
+                        const isActive = dotIdx === previewSlideIdx
+                        return (
+                          <button
+                            key={dotIdx}
+                            type="button"
+                            onClick={() => setPreviewSlideIdx(dotIdx)}
+                            aria-label={`View photo ${dotIdx + 1}`}
+                            className={cn(
+                              "h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer",
+                              isActive
+                                ? "w-6 bg-gray-800 dark:bg-zinc-100"
+                                : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
+                            )}
+                          />
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Reset Confirmation Modal */}
       <ConfirmModal
@@ -870,19 +860,14 @@ export default function LandingPageCmsTab({ showToast }) {
         onCancel={() => setResetModalOpen(false)}
         onConfirm={handleReset}
         isLoading={saving}
-        title="Reset Hero Section to Defaults"
-        message="Are you sure you want to reset all landing page hero content and slides to default PUP institutional branding? Custom text and custom slide sequences will be reverted."
-        confirmLabel="Reset"
-        icon="ph-duotone ph-arrow-counter-clockwise"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
-        selectedItems={[
-          "Reset hero heading, subheadline, and badge chip",
-          "Restore default PUP San Juan campus background photo slides",
-          "Restore default institutional campus information",
-        ]}
-        isPersonnelModal={true}
         isAppleStyled={true}
-        isArchiveModal={true}
+        isRestoreModal={true}
+        title="Restore Default Hero Content"
+        message="Are you sure you want to reset all landing page hero content and background photo slides to default PUP institutional branding? Any custom headlines, subheadings, and photo sequences will be restored to defaults."
+        confirmLabel="Restore Defaults"
+        cancelLabel="Cancel"
+        variant="warning"
+        buttonIcon="ph-bold ph-arrow-counter-clockwise"
       />
 
       {/* Delete Slide Confirmation Modal */}
@@ -894,26 +879,13 @@ export default function LandingPageCmsTab({ showToast }) {
             removeSlide(deleteSlideIndex)
           }
         }}
+        isAppleStyled={true}
         title="Remove Background Photo"
         message="Are you sure you want to remove this background photo from the hero carousel?"
-        confirmLabel="Remove"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
-        selectedItems={
-          deleteSlideIndex !== null && heroData?.slides?.[deleteSlideIndex]
-            ? [
-                `Slide ${deleteSlideIndex + 1}: ${heroData.slides[deleteSlideIndex].title || "Untitled Slide"}`,
-                `Image URL: ${heroData.slides[deleteSlideIndex].url?.slice(0, 60) || "No URL"}`,
-              ]
-            : []
-        }
-        isPersonnelModal={true}
-        isAppleStyled={true}
+        confirmLabel="Remove Photo"
+        cancelLabel="Cancel"
         variant="danger"
-        isDeleteModal={true}
       />
-        </>
-      )}
     </div>
   )
 }
@@ -955,7 +927,6 @@ function SlideCard({
     <div
       draggable={!isUploading}
       onDragStart={(e) => {
-        // Prevent drag initiation if clicking buttons, inputs, or other interactive elements
         if (e.target.closest("button, input, label")) {
           e.preventDefault()
           return
@@ -991,18 +962,18 @@ function SlideCard({
         }
       }}
       className={cn(
-        "group rounded-xl border bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between select-none relative",
+        "group rounded-2xl border bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between select-none relative",
         isDragging
           ? "opacity-35 scale-[0.98] border-dashed border-pup-maroon/60 bg-pup-maroon/5 ring-2 ring-pup-maroon/20 cursor-grabbing"
           : isDragTarget
           ? "ring-2 ring-pup-maroon ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-[1.01] border-pup-maroon shadow-md"
-          : "border-border/80 dark:border-border"
+          : "border-border dark:border-border"
       )}
     >
       {/* Drop Target Position Notice */}
       {isDragTarget && (
         <div className="bg-pup-maroon text-white text-[11px] font-semibold py-1.5 px-3 text-center flex items-center justify-center gap-1.5 animate-pulse shadow-inner">
-          <HugeIcon  className="ph-bold ph-arrows-left-right text-xs" />
+          <HugeIcon className="ph-bold ph-arrows-left-right text-xs" />
           <span>Drop to move photo to Position #{index + 1}</span>
         </div>
       )}
@@ -1013,8 +984,8 @@ function SlideCard({
           className="flex items-center gap-2 cursor-grab active:cursor-grabbing group/drag"
           title="Drag card to reorder photos"
         >
-          <HugeIcon  className="ph-bold ph-dots-six-vertical text-gray-900 group-hover/drag:text-pup-maroon dark:text-zinc-300 dark:group-hover/drag:text-red-400 text-lg transition-colors" />
-          <span className="w-5 h-5 rounded-full bg-pup-maroon text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
+          <HugeIcon className="ph-bold ph-dots-six-vertical text-gray-500 group-hover/drag:text-pup-maroon dark:text-zinc-400 dark:group-hover/drag:text-red-400 text-lg transition-colors" />
+          <span className="w-5 h-5 rounded-full bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-bold flex items-center justify-center shadow-2xs">
             {index + 1}
           </span>
           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate max-w-[140px]">
@@ -1030,9 +1001,9 @@ function SlideCard({
             onClick={onMoveUp}
             onMouseDown={(e) => e.stopPropagation()}
             title="Move earlier"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
           >
-            <HugeIcon  className="ph-bold ph-caret-left text-xs" />
+            <HugeIcon className="ph-bold ph-caret-left text-xs" />
           </button>
 
           <button
@@ -1041,9 +1012,9 @@ function SlideCard({
             onClick={onMoveDown}
             onMouseDown={(e) => e.stopPropagation()}
             title="Move later"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
           >
-            <HugeIcon  className="ph-bold ph-caret-right text-xs" />
+            <HugeIcon className="ph-bold ph-caret-right text-xs" />
           </button>
 
           <button
@@ -1051,9 +1022,9 @@ function SlideCard({
             onClick={onDelete}
             onMouseDown={(e) => e.stopPropagation()}
             title="Remove photo"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1 shadow-2xs"
           >
-            <HugeIcon  className="ph-bold ph-trash text-xs" />
+            <HugeIcon className="ph-bold ph-trash text-xs" />
           </button>
         </div>
       </div>
@@ -1061,11 +1032,9 @@ function SlideCard({
       {/* Interactive Image Preview Box (External file dropzone only) */}
       <div
         onDragOver={(e) => {
-          // If an internal slide is being dragged to reorder, ignore here so card drop works
           if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
             return
           }
-          // Only allow external files from user's OS file manager
           if (e.dataTransfer.types.includes("Files")) {
             e.preventDefault()
             e.stopPropagation()
@@ -1078,11 +1047,9 @@ function SlideCard({
           }
         }}
         onDrop={(e) => {
-          // If internal slide drag, do not treat it as a file upload!
           if (e.dataTransfer.types.includes("application/x-pup-slide-card")) {
             return
           }
-          // Only upload if it's an external file
           if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             e.preventDefault()
             e.stopPropagation()
@@ -1099,15 +1066,16 @@ function SlideCard({
       >
         {isUploading ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 text-white gap-2 z-20">
-            <HugeIcon  className="ph-bold ph-spinner animate-spin text-2xl text-pup-maroon" />
+            <HugeIcon className="ph-bold ph-spinner animate-spin text-2xl text-pup-maroon" />
             <span className="text-xs font-semibold">Uploading photo...</span>
           </div>
         ) : imageError ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-rose-400 p-4 text-center z-10">
-            <HugeIcon  className="ph-bold ph-warning-circle text-2xl mb-1" />
+            <HugeIcon className="ph-bold ph-warning-circle text-2xl mb-1" />
             <span className="text-xs font-semibold">Photo unavailable</span>
           </div>
         ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={slide.src}
             alt={slide.alt || "Campus Photo"}
@@ -1141,7 +1109,7 @@ function SlideCard({
         {/* Hover overlay hint */}
         <div className="absolute inset-0 bg-zinc-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10 pointer-events-none select-none">
           <span className="h-8 px-3 rounded-lg bg-white text-gray-900 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-            <HugeIcon  className="ph-bold ph-camera text-xs" />
+            <HugeIcon className="ph-bold ph-camera text-xs" />
             Click to Change Photo
           </span>
         </div>
@@ -1168,9 +1136,9 @@ function SlideCard({
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           onMouseDown={(e) => e.stopPropagation()}
-          className="w-full flex items-center justify-center h-9 rounded-xl! border-border dark:border-border text-gray-700 dark:text-zinc-300 font-semibold text-xs hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer shadow-2xs"
+          className="w-full h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold cursor-pointer shadow-2xs active:scale-95 transition-all"
         >
-          Change
+          Change Photo
         </Button>
       </div>
     </div>

@@ -33,6 +33,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 
 function SortIndicator({ sortState, column }) {
   if (sortState?.key !== column) {
@@ -74,6 +76,20 @@ export default function SectionsTab({
   loadAll,
 }) {
   const [localSearch, setLocalSearch] = useState(sectionSearch)
+
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolled,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([filteredSections?.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [pageSection, localSearch, showArchived, selectedCourseFilter, sortSection, resetScroll]);
 
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false)
   const [newSectionName, setNewSectionName] = useState("")
@@ -238,7 +254,7 @@ export default function SectionsTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="font-jakarta flex w-full flex-col animate-fade-up">
+      <div className="font-jakarta flex flex-[1_0_auto] w-full flex-col animate-fade-up">
         <PageHeader
           icon="ph-list-numbers"
           showBorder={false}
@@ -327,10 +343,19 @@ export default function SectionsTab({
               </div>
             </div>
 
+            <TableScrollControls
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              isScrolled={isScrolled}
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetScroll}
+            />
+
             <Button
               onClick={() => setIsAddSectionOpen(true)}
               disabled={showArchived}
-              className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
             >
               Add Block
             </Button>
@@ -364,9 +389,9 @@ export default function SectionsTab({
         />
 
         {/* Main Table Container (Seamless inside single card) */}
-        <div className={cn("w-full border-t border-border dark:border-border bg-white dark:bg-card", filteredSections.length === 0 && "rounded-b-2xl overflow-hidden")}>
+        <div className={cn("w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border bg-white dark:bg-card", filteredSections.length === 0 && "rounded-b-2xl overflow-hidden")}>
           {loading && sections.length === 0 ? (
-            <div className="w-full overflow-x-auto select-none">
+            <div className="w-full flex-[1_0_auto] overflow-x-auto select-none">
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
             </div>
           ) : filteredSections.length === 0 ? (
@@ -418,11 +443,14 @@ export default function SectionsTab({
               </Empty>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto select-none">
-              <table className="w-full text-sm table-fixed min-w-[720px]">
-                <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center">
+            <div
+              ref={tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            >
+              <table className="w-full text-sm border-separate border-spacing-0 min-w-[950px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
@@ -434,40 +462,62 @@ export default function SectionsTab({
                           disabled={filteredSections.length === 0}
                         />
                       </th>
-                      <th className="w-[24%] p-4">
-                        <button
-                          onClick={() => onSort("course_code")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortSection.key === "course_code" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      <th className={cn(
+                        "w-[24%] p-4 border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                      )}>
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={() => onSort("course_code")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                              sortSection.key === "course_code" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Degree Program <SortIndicator sortState={sortSection} column="course_code" />
+                          </button>
+                          {isScrolledX && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                resetScroll();
+                              }}
+                              title="Reset scroll to start"
+                              aria-label="Reset scroll to start"
+                              className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
+                            >
+                              <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                            </button>
                           )}
-                        >
-                          Degree Program <SortIndicator sortState={sortSection} column="course_code" />
-                        </button>
+                        </div>
                       </th>
-                      <th className="w-[48%] p-4">
+                      <th className="w-[48%] p-4 border-r border-border/80 dark:border-border">
                         <button
                           onClick={() => onSort("name")}
                           className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                             sortSection.key === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
                           Block Name <SortIndicator sortState={sortSection} column="name" />
                         </button>
                       </th>
-                      <th className="w-[14%] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Status</th>
-                      <th className="w-28 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">Actions</th>
+                      <th className="w-[14%] p-4 text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400 border-r border-border/80 dark:border-border">Status</th>
+                      <th className="w-28 p-4 pr-6 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border dark:divide-border">
+                  <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {!showArchived && (
                       <tr className={cn(
-                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
                         (secCourseCode || newSectionName.trim()) && "bg-amber-50/50 dark:bg-amber-950/10"
                       )}>
-                        <td className="p-4 align-middle text-center"></td>
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40"></td>
+                        <td className={cn(
+                          "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow duration-200",
+                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                        )}>
                           <Select
                             className={cn(
                               "h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 transition-all shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80",
@@ -484,7 +534,7 @@ export default function SectionsTab({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-4 align-middle overflow-hidden">
+                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                           <div className="flex items-center gap-2">
                             <Input
                               placeholder="Quick add block name (e.g. Block 1)..."
@@ -516,7 +566,7 @@ export default function SectionsTab({
                             </Button>
                           </div>
                         </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {(secCourseCode || newSectionName.trim()) ? (
                             <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                               Draft
@@ -543,13 +593,18 @@ export default function SectionsTab({
                             if (!isDisabled) toggleSectionSelected(sec.id, e);
                           }}
                           className={cn(
-                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
                             sec.status === "Archived" && "opacity-75",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"
                           )}
                         >
-                          <td className="p-4 align-middle text-center">
+                          <td className={cn(
+                            "w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 transition-colors",
+                            isSelected
+                              ? "bg-blue-50 dark:bg-blue-950"
+                              : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40"
+                          )}>
                               <input
                               type="checkbox"
                               className={cn(
@@ -569,17 +624,23 @@ export default function SectionsTab({
                               disabled={isDisabled}
                             />
                           </td>
-                          <td className="p-4 align-middle whitespace-nowrap">
+                          <td className={cn(
+                            "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
+                            isSelected
+                              ? "bg-blue-50 dark:bg-blue-950"
+                              : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                          )}>
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                               {sec.course_code || "N/A"}
                             </span>
                           </td>
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100" title={sec.name}>
                               {sec.name}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left whitespace-nowrap">
+                          <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {sec.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived
@@ -824,7 +885,7 @@ export default function SectionsTab({
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Create Block
               </Button>
@@ -910,7 +971,7 @@ export default function SectionsTab({
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
               >
                 Save Changes
               </Button>

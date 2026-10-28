@@ -1250,7 +1250,7 @@ export default function Sidebar({
   const renderProfileMenuContent = () => (
     <>
       {/* 1. Header Zone */}
-      <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b border-border dark:border-white/10 flex items-center text-left">
+      <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b-[0.5px] border-border dark:border-white/10 flex items-center text-left">
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
             {currentAvatarFilename && !imageError ? (
@@ -1328,13 +1328,13 @@ export default function Sidebar({
       </DropdownMenuGroup>
 
       {/* 3. Footer Zone */}
-      <div className="p-1.5 border-t border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/50">
+      <div className="p-1.5 border-t-[0.5px] border-border dark:border-white/10">
         <button
           type="button"
           onClick={handleLogoutAction}
-          className="w-full flex items-center justify-start gap-2.5 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-900/40"
+          className="w-full flex items-center justify-start gap-2.5 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none"
         >
-          <HugeIcon className="ph-bold ph-sign-out text-sm shrink-0" />
+          <HugeIcon className="ph-bold ph-sign-out text-sm" />
           <span>Sign Out</span>
         </button>
       </div>
@@ -1415,7 +1415,7 @@ export default function Sidebar({
               side="bottom"
               align="end"
               sideOffset={8}
-              className="w-72 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50"
+              className="w-64 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50"
             >
               {renderProfileMenuContent()}
             </DropdownMenuContent>
@@ -1427,8 +1427,8 @@ export default function Sidebar({
       <aside
         ref={sidebarRef}
         className={cn(
-          "rms-sidebar z-10 flex-col bg-white/40 backdrop-blur-xl dark:bg-zinc-950/40 select-none sticky top-0 h-screen overflow-hidden hidden md:flex shrink-0 will-change-[width] border-r border-gray-200/80 dark:border-white/10 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-          open ? "w-[275px] py-3 px-2.5" : "w-[60px] py-3 px-1.5"
+          "rms-sidebar z-10 flex-col bg-white/25 backdrop-blur-xl dark:bg-zinc-950/25 select-none sticky top-0 h-full overflow-hidden hidden md:flex shrink-0 will-change-[width] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          open ? "w-[275px] py-3 px-3" : "w-[60px] py-3 px-2"
         )}
       >
         {/* 1. TOP ROW: Logo and Collapse Button */}
@@ -1950,7 +1950,7 @@ export default function Sidebar({
                 side="top"
                 sideOffset={8}
                 align={open ? "start" : "start"}
-                className="w-72 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 mb-1"
+                className="w-64 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 mb-1"
               >
                 {renderProfileMenuContent()}
               </DropdownMenuContent>

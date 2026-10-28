@@ -15,6 +15,7 @@ const Select = React.forwardRef(({
   onChange,
   onValueChange,
   placeholder,
+  title,
   menuClassName,
   optionClassName,
   usePortal = true,
@@ -150,18 +151,23 @@ const Select = React.forwardRef(({
         zIndex: 9999,
       } : undefined}
       className={cn(
-        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-xl border border-border bg-white p-1 shadow-2xl dark:border-border dark:bg-card",
+        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card",
         usePortal ? "" : "absolute z-50 top-[calc(100%+4px)] left-0 min-w-[200px] w-full",
         menuClassName
       )}
     >
-      <div className="max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
+      {title && (
+        <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 text-xs font-semibold text-gray-900 dark:text-zinc-100 select-none">
+          {title}
+        </div>
+      )}
+      <div className="p-1.5 space-y-0.5 max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
         {options.map((option, idx) => {
           if (option.isHeader) {
             return (
               <div
                 key={option.key || `header-${idx}`}
-                className="px-3 pt-2.5 pb-1 text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider select-none border-t first:border-t-0 border-border dark:border-border first:pt-1.5"
+                className="px-2 pt-2 pb-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider select-none border-t-[0.5px] first:border-t-0 border-border dark:border-white/10 first:pt-1.5"
               >
                 {option.label}
               </div>
@@ -176,17 +182,17 @@ const Select = React.forwardRef(({
               disabled={option.disabled}
               onClick={() => handleSelect(option.value)}
               className={cn(
-                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors min-w-0 cursor-pointer",
+                "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs font-medium transition-colors min-w-0 cursor-pointer",
                 isSelected
-                  ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
-                  : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
+                  ? "bg-gray-200/70 text-gray-900 dark:bg-white/15 dark:text-zinc-50"
+                  : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/10",
                 option.disabled && "opacity-50 cursor-not-allowed",
                 optionClassName
               )}
             >
               <span className="truncate flex-1 min-w-0">{option.label}</span>
               {isSelected && (
-                <Tick01Icon size={14} className="ml-2 text-pup-maroon dark:text-red-400 shrink-0" />
+                <Tick01Icon size={14} className="ml-2 text-gray-900 dark:text-zinc-100 shrink-0" />
               )}
             </button>
           )

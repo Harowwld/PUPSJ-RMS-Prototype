@@ -4,11 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -42,12 +38,15 @@ import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
 import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
 import {
   getInstitutionalBranding,
   DEFAULT_BRANDING_LOGO,
   OFFICIAL_FALLBACK_LOGO,
   generateStudentComplianceSlipPdf,
 } from "@/lib/pdfGenerator";
+import useTableScroll from "@/hooks/useTableScroll";
+import TableScrollControls from "@/components/shared/TableScrollControls";
 
 
 
@@ -78,6 +77,7 @@ export default function StudentComplianceTab({ authUser }) {
   const [categoryFilters, setCategoryFilters] = useState([]); // Array of category names e.g. ["Admission", "Identity"]
   const [viewMode, setViewMode] = useState("table"); // "table" | "cards"
   const [sortConfig, setSortConfig] = useState({ column: "priority", direction: "asc" }); // column: "priority" | "docType" | "category" | "status"
+  const [selectedRequirement, setSelectedRequirement] = useState(null);
 
   // Modals & Print Branding
   const [printModalOpen, setPrintModalOpen] = useState(false);
@@ -140,6 +140,25 @@ export default function StudentComplianceTab({ authUser }) {
 
   const requirements = data?.requirements;
 
+  const rawSummary = data?.summary || {};
+  const safeSubmittedCount = Number(rawSummary.submittedCount ?? rawSummary.approvedCount ?? 0);
+  const safeTotalRequired = Number(rawSummary.totalRequired ?? (Array.isArray(requirements) ? requirements.length : 0));
+  const safeMissingCount = Number(rawSummary.missingCount ?? Math.max(0, safeTotalRequired - safeSubmittedCount));
+  const safeComplianceRate = Number(
+    rawSummary.complianceRate ??
+      (safeTotalRequired > 0 ? Math.round((safeSubmittedCount / safeTotalRequired) * 100) : 0)
+  );
+
+  const summary = useMemo(() => ({
+    totalRequired: safeTotalRequired,
+    submittedCount: safeSubmittedCount,
+    approvedCount: Number(rawSummary.approvedCount ?? safeSubmittedCount),
+    missingCount: safeMissingCount,
+    complianceRate: safeComplianceRate,
+    overallStatus: rawSummary.overallStatus || (safeComplianceRate === 100 ? "Complete" : "Incomplete"),
+    isCompliant: rawSummary.isCompliant ?? (safeComplianceRate === 100),
+  }), [safeTotalRequired, safeSubmittedCount, rawSummary.approvedCount, safeMissingCount, safeComplianceRate, rawSummary.overallStatus, rawSummary.isCompliant]);
+
   // Category counts and list
   const availableCategories = useMemo(() => {
     if (!requirements) return [];
@@ -182,41 +201,36 @@ export default function StudentComplianceTab({ authUser }) {
     const groups = [
       {
         id: "status",
-        label: "Status",
+        label: "Status Criteria",
         options: [
-          { value: "missing", label: "Pending Submission" },
-          { value: "submitted", label: "Completed" },
+          {
+            value: "missing",
+            label: "Pending Submission",
+            count: summary.missingCount,
+            dotColor: "bg-amber-500",
+          },
+          {
+            value: "submitted",
+            label: "Completed / Archived",
+            count: summary.submittedCount || summary.approvedCount,
+            dotColor: "bg-emerald-500",
+          },
         ],
       },
     ];
     if (availableCategories.length > 0) {
       groups.push({
         id: "category",
-        label: "Category",
-        options: availableCategories.map((cat) => ({ value: cat, label: cat })),
+        label: "Categories",
+        options: availableCategories.map((cat) => ({
+          value: cat,
+          label: cat,
+          count: categoryCounts[cat] || 0,
+        })),
       });
     }
     return groups;
-  }, [availableCategories]);
-
-  const activeFilterCount = statusFilters.length + categoryFilters.length;
-
-  const activeFilterSummary = useMemo(() => {
-    if (activeFilterCount === 0) return "Filter Requirements";
-    if (statusFilters.length > 0 && categoryFilters.length === 0) {
-      if (statusFilters.length === 2) return "Pending & Completed";
-      return statusFilters[0] === "missing" ? "Pending Only" : "Completed Only";
-    }
-    if (categoryFilters.length > 0 && statusFilters.length === 0) {
-      if (categoryFilters.length === 1) return categoryFilters[0];
-      return `${categoryFilters.length} Categories`;
-    }
-    if (statusFilters.length === 1) {
-      const statusLabel = statusFilters[0] === "missing" ? "Pending" : "Completed";
-      return `${statusLabel} + ${categoryFilters.length} ${categoryFilters.length === 1 ? "Cat" : "Cats"}`;
-    }
-    return `Filters (${activeFilterCount})`;
-  }, [activeFilterCount, statusFilters, categoryFilters]);
+  }, [availableCategories, summary, categoryCounts]);
 
   // Filtered Requirements (Combined Criteria)
   const filteredRequirements = useMemo(() => {
@@ -286,28 +300,22 @@ export default function StudentComplianceTab({ authUser }) {
     });
   };
 
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolledX,
+    scrollTable,
+    resetScroll,
+  } = useTableScroll([sortedRequirements?.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [searchQuery, statusFilters, categoryFilters, viewMode, resetScroll]);
+
   if (loading && !data) {
     return <StudentComplianceSkeleton />;
   }
-
-  const rawSummary = data?.summary || {};
-  const safeSubmittedCount = Number(rawSummary.submittedCount ?? rawSummary.approvedCount ?? 0);
-  const safeTotalRequired = Number(rawSummary.totalRequired ?? (Array.isArray(requirements) ? requirements.length : 0));
-  const safeMissingCount = Number(rawSummary.missingCount ?? Math.max(0, safeTotalRequired - safeSubmittedCount));
-  const safeComplianceRate = Number(
-    rawSummary.complianceRate ??
-      (safeTotalRequired > 0 ? Math.round((safeSubmittedCount / safeTotalRequired) * 100) : 0)
-  );
-
-  const summary = {
-    totalRequired: safeTotalRequired,
-    submittedCount: safeSubmittedCount,
-    approvedCount: Number(rawSummary.approvedCount ?? safeSubmittedCount),
-    missingCount: safeMissingCount,
-    complianceRate: safeComplianceRate,
-    overallStatus: rawSummary.overallStatus || (safeComplianceRate === 100 ? "Complete" : "Incomplete"),
-    isCompliant: rawSummary.isCompliant ?? (safeComplianceRate === 100),
-  };
 
   const student = data?.student || {
     studentNo: authUser?.student_no || "Unassigned",
@@ -644,10 +652,10 @@ export default function StudentComplianceTab({ authUser }) {
   };
 
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 space-y-4 pb-6">
+    <div className="flex flex-col w-full flex-[1_0_auto]">
       {/* 1. Main Unified Container Card */}
       <Card
-        className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta min-h-0 flex-1 focus:outline-none mb-4"
+        className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta focus:outline-none"
         tabIndex={0}
       >
         {/* A. Header */}
@@ -753,189 +761,22 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
 
             {/* Multi-Criteria Checkbox Filter Dropdown */}
-            <div className="w-full sm:w-auto">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className={cn(
-                      "h-9 px-3 text-xs rounded-xl border flex items-center justify-between gap-2 shadow-none cursor-pointer transition-all active:scale-95 w-full sm:w-auto min-w-[180px]",
-                      activeFilterCount > 0
-                        ? "border-pup-maroon/40 bg-pup-maroon/5 text-pup-maroon font-medium hover:bg-pup-maroon/10 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                        : "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="truncate">
-                        {activeFilterCount === 0
-                          ? "Filter Requirements"
-                          : activeFilterCount === 1
-                            ? activeFilterSummary
-                            : `Filters (${activeFilterCount})`}
-                      </span>
-                      {activeFilterCount > 0 && (
-                        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-bold text-white dark:bg-red-500">
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </div>
-                    <HugeIcon className="ph-bold ph-caret-down text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-1" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  sideOffset={6}
-                  className="w-80 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"
-                >
-                  {/* Popover Header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                      Combine Filter Criteria
-                    </span>
-                    {activeFilterCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={clearAllFilters}
-                        title="Reset all filters"
-                        className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
-                      >
-                    Reset Filters
-                  </button>
-                    )}
-                  </div>
-
-                  {/* Filter Options List */}
-                  <div className="max-h-72 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
-                    {/* Status Group */}
-                    <div>
-                      <div className="flex items-center justify-between px-1 mb-1.5">
-                        <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                          Status Criteria
-                        </span>
-                        {statusFilters.length > 0 && (
-                          <span className="text-xs font-semibold text-pup-maroon dark:text-red-400">
-                            {statusFilters.length} selected
-                          </span>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        {/* Option: Pending Submission */}
-                        <div
-                          onClick={() => toggleStatusFilter("missing")}
-                          className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div
-                              className={cn(
-                                "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
-                                statusFilters.includes("missing")
-                                  ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
-                                  : "border-border dark:border-border bg-white dark:bg-zinc-800 group-hover:border-gray-400"
-                              )}
-                            >
-                              {statusFilters.includes("missing") && (
-                                <HugeIcon className="ph-bold ph-check text-xs" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                              <span className="text-sm font-medium text-gray-800 dark:text-zinc-200">
-                                Pending Submission
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
-                            {summary.missingCount}
-                          </span>
-                        </div>
-
-                        {/* Option: Completed */}
-                        <div
-                          onClick={() => toggleStatusFilter("submitted")}
-                          className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div
-                              className={cn(
-                                "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
-                                statusFilters.includes("submitted")
-                                  ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
-                                  : "border-border dark:border-border bg-white dark:bg-zinc-800 group-hover:border-gray-400"
-                              )}
-                            >
-                              {statusFilters.includes("submitted") && (
-                                <HugeIcon className="ph-bold ph-check text-xs" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                              <span className="text-sm font-medium text-gray-800 dark:text-zinc-200">
-                                Completed / Archived
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
-                            {summary.submittedCount || summary.approvedCount}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Category Group */}
-                    {availableCategories.length > 0 && (
-                      <div className="pt-2 border-t border-border dark:border-border">
-                        <div className="flex items-center justify-between px-1 mb-1.5">
-                          <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                            Categories
-                          </span>
-                          {categoryFilters.length > 0 && (
-                            <span className="text-xs font-semibold text-pup-maroon dark:text-red-400">
-                              {categoryFilters.length} selected
-                            </span>
-                          )}
-                        </div>
-                        <div className="space-y-1">
-                          {availableCategories.map((cat) => {
-                            const isChecked = categoryFilters.includes(cat);
-                            const count = categoryCounts[cat] || 0;
-                            return (
-                              <div
-                                key={cat}
-                                onClick={() => toggleCategoryFilter(cat)}
-                                className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group"
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div
-                                    className={cn(
-                                      "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
-                                      isChecked
-                                        ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
-                                        : "border-border dark:border-border bg-white dark:bg-zinc-800 group-hover:border-gray-400"
-                                    )}
-                                  >
-                                    {isChecked && (
-                                      <HugeIcon className="ph-bold ph-check text-xs" />
-                                    )}
-                                  </div>
-                                  <span className="text-sm font-medium text-gray-800 dark:text-zinc-200 truncate">
-                                    {cat}
-                                  </span>
-                                </div>
-                                <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
-                                  {count}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                </PopoverContent>
-              </Popover>
-            </div>
+            <MultiCriteriaFilter
+              title="Filter Requirements"
+              groups={complianceFilterGroups}
+              selectedValues={{
+                status: statusFilters,
+                category: categoryFilters,
+              }}
+              onChange={(groupId, updatedList) => {
+                if (groupId === "status") setStatusFilters(updatedList);
+                if (groupId === "category") setCategoryFilters(updatedList);
+              }}
+              onClearAll={() => {
+                setStatusFilters([]);
+                setCategoryFilters([]);
+              }}
+            />
 
             {/* Standardized Arrange Requirements Dropdown matching Records Archive */}
             <DropdownMenu>
@@ -962,10 +803,10 @@ export default function StudentComplianceTab({ authUser }) {
               <DropdownMenuContent
                 align="end"
                 sideOffset={6}
-                className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
+                className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
               >
                 {/* Zone 1: Header */}
-                <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     Arrange Requirements
                   </span>
@@ -1085,6 +926,15 @@ export default function StudentComplianceTab({ authUser }) {
                 <span>Cards</span>
               </button>
             </div>
+
+            {viewMode === "table" && (
+              <TableScrollControls
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                onScrollLeft={() => scrollTable("left")}
+                onScrollRight={() => scrollTable("right")}
+              />
+            )}
           </div>
         </div>
 
@@ -1105,7 +955,7 @@ export default function StudentComplianceTab({ authUser }) {
         {/* E. Requirements Content (Cards or Table) */}
         <div
           className={cn(
-            "border-t border-border dark:border-border",
+            "flex flex-[1_0_auto] flex-col border-t border-border dark:border-border",
             sortedRequirements.length > 0 && viewMode === "table" ? "min-w-0" : "p-6"
           )}
         >
@@ -1153,15 +1003,18 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           ) : viewMode === "table" ? (
             /* Table View */
-            <div className="w-full overflow-x-auto select-none">
-              <table className="w-full text-sm table-fixed min-w-[700px]">
-                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
+            <div
+              ref={tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            >
+              <table className="w-full text-sm border-collapse table-fixed min-w-[750px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
                     <th
-                      className="p-4 w-[50%]"
+                      className="p-4 pl-6 w-[44%] border-r border-border/80 dark:border-border"
                       aria-sort={sortConfig.column === "docType" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <button type="button" onClick={() => handleSort("docType")} className={cn("group flex items-center transition-colors cursor-pointer text-[12px] font-medium tracking-[0.04em]", sortConfig.column === "docType" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                      <button type="button" onClick={() => handleSort("docType")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold tracking-wider uppercase", sortConfig.column === "docType" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Requirement
                         {sortConfig.column === "docType" ? (
                           <HugeIcon
@@ -1176,10 +1029,10 @@ export default function StudentComplianceTab({ authUser }) {
                       </button>
                     </th>
                     <th
-                      className="p-4 w-[25%] whitespace-nowrap"
+                      className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border"
                       aria-sort={sortConfig.column === "category" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <button type="button" onClick={() => handleSort("category")} className={cn("group flex items-center transition-colors cursor-pointer text-[12px] font-medium tracking-[0.04em]", sortConfig.column === "category" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                      <button type="button" onClick={() => handleSort("category")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold tracking-wider uppercase", sortConfig.column === "category" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Category
                         {sortConfig.column === "category" ? (
                           <HugeIcon
@@ -1194,10 +1047,10 @@ export default function StudentComplianceTab({ authUser }) {
                       </button>
                     </th>
                     <th
-                      className="p-4 pr-6 w-[25%] whitespace-nowrap"
+                      className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border"
                       aria-sort={sortConfig.column === "status" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <button type="button" onClick={() => handleSort("status")} className={cn("group flex items-center transition-colors cursor-pointer text-[12px] font-medium tracking-[0.04em]", sortConfig.column === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                      <button type="button" onClick={() => handleSort("status")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold tracking-wider uppercase", sortConfig.column === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Status
                         {sortConfig.column === "status" ? (
                           <HugeIcon
@@ -1211,6 +1064,9 @@ export default function StudentComplianceTab({ authUser }) {
                         )}
                       </button>
                     </th>
+                    <th className="p-4 pr-6 w-[12%] text-right whitespace-nowrap">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:border-border">
@@ -1220,20 +1076,21 @@ export default function StudentComplianceTab({ authUser }) {
                     return (
                       <tr
                         key={item.id}
-                        className="group border-b-[0.5px] border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none"
+                        onClick={() => setSelectedRequirement(item)}
+                        className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none group"
                       >
-                        <td className="p-4 overflow-hidden">
-                          <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate" title={item.docType}>
+                        <td className="p-4 pl-6 overflow-hidden border-r border-border/70 dark:border-border/70">
+                          <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors" title={item.docType}>
                             {item.docType}
                           </div>
                           <div className="text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5" title={item.description}>
                             {item.description}
                           </div>
                         </td>
-                        <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap">
+                        <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {item.category}
                         </td>
-                        <td className="p-4 pr-6 whitespace-nowrap">
+                        <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isSubmitted ? (
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
@@ -1250,6 +1107,20 @@ export default function StudentComplianceTab({ authUser }) {
                               Pending Submission
                             </span>
                           )}
+                        </td>
+                        <td className="p-4 pr-6 text-right whitespace-nowrap">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedRequirement(item);
+                            }}
+                            className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                          >
+                            View Details
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -1274,7 +1145,8 @@ export default function StudentComplianceTab({ authUser }) {
                   return (
                     <div
                       key={item.id}
-                      className="group flex flex-col justify-between rounded-3xl bg-[#f5f5f7] dark:bg-zinc-850/60 p-6 sm:p-7 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xs border border-transparent dark:border-white/5"
+                      onClick={() => setSelectedRequirement(item)}
+                      className="group flex flex-col justify-between rounded-3xl bg-[#f5f5f7] dark:bg-zinc-850/60 p-6 sm:p-7 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xs border border-transparent dark:border-white/5 cursor-pointer"
                     >
                       <div className="flex flex-col flex-grow">
                         {/* 1. Top Metadata Row: Category Pill & Dot Status (No Colored Backgrounds) */}
@@ -1347,9 +1219,18 @@ export default function StudentComplianceTab({ authUser }) {
                             <HugeIcon className="ph-bold ph-map-pin text-xs text-gray-400 dark:text-zinc-500" />
                             <span>{isSubmitted ? "Registrar Vault (Rm 102)" : "Window Counter (Rm 102)"}</span>
                           </div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold">
-                            {isSubmitted ? "Verified" : "Window 2"}
-                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedRequirement(item);
+                            }}
+                            className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-2xs"
+                          >
+                            View Details
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -1360,6 +1241,32 @@ export default function StudentComplianceTab({ authUser }) {
           )}
         </div>
       </Card>
+
+      {/* 1. Standardized Permanent Admission Record Details Sheet */}
+      <PermanentAdmissionRecordSheet
+        open={Boolean(selectedRequirement)}
+        onOpenChange={(open) => !open && setSelectedRequirement(null)}
+        item={selectedRequirement}
+        items={sortedRequirements}
+        currentIndex={
+          selectedRequirement
+            ? sortedRequirements.findIndex((r) => r.id === selectedRequirement.id)
+            : -1
+        }
+        onNavigatePrev={() => {
+          const idx = sortedRequirements.findIndex((r) => r.id === selectedRequirement?.id);
+          if (idx > 0) {
+            setSelectedRequirement(sortedRequirements[idx - 1]);
+          }
+        }}
+        onNavigateNext={() => {
+          const idx = sortedRequirements.findIndex((r) => r.id === selectedRequirement?.id);
+          if (idx >= 0 && idx < sortedRequirements.length - 1) {
+            setSelectedRequirement(sortedRequirements[idx + 1]);
+          }
+        }}
+        student={student}
+      />
 
       {/* 2. Official Compliance Slip Print Modal */}
       <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
@@ -1447,21 +1354,21 @@ export default function StudentComplianceTab({ authUser }) {
 
             {/* Requirements Checklist Table */}
             <div className="rounded-2xl border border-border dark:border-border overflow-hidden shadow-xs print:border-border">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-gray-100/80 dark:bg-zinc-800/70 font-bold text-[11px] uppercase tracking-wider text-gray-600 dark:text-zinc-400 border-b border-border dark:border-border print:bg-gray-100">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs font-semibold text-[11px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 border-b border-border select-none print:bg-gray-100">
                   <tr>
-                    <th className="py-3 px-3 text-center w-9">#</th>
-                    <th className="py-3 px-4">Requirement / Credential</th>
-                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-3 text-center w-9 border-r border-border/80 dark:border-border">#</th>
+                    <th className="py-3 px-4 border-r border-border/80 dark:border-border">Requirement / Credential</th>
+                    <th className="py-3 px-4 border-r border-border/80 dark:border-border">Category</th>
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border print:divide-border">
                   {sortedRequirements.map((r, idx) => (
-                    <tr key={r.id} className="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30 transition-colors print:border-b print:border-border">
-                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px]">{idx + 1}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r?.docType || r?.name || "N/A"}</td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap">{r?.category || "N/A"}</td>
+                    <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none print:border-b print:border-border">
+                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px] border-r border-border/70 dark:border-border/70">{idx + 1}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal border-r border-border/70 dark:border-border/70">{r?.docType || r?.name || "N/A"}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">{r?.category || "N/A"}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={cn(

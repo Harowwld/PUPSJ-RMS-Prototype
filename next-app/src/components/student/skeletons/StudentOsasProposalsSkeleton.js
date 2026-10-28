@@ -50,9 +50,9 @@ export function StudentOsasProposalsListSkeleton({ count = 3 }) {
 
 export default function StudentOsasProposalsSkeleton({ count = 3, showForm = true }) {
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 animate-in fade-in duration-200 select-none font-jakarta">
+    <div className="flex flex-col w-full flex-[1_0_auto] animate-in fade-in duration-200 select-none font-jakarta">
       {/* ONE Single Card Container encapsulating Header, Inline Proposal Form, Toolbar & Proposals List */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate min-h-0 flex-1 mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* 1. Page Header Skeleton */}
         <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">

@@ -247,9 +247,9 @@ export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, su
             size="sm"
             onClick={onOpenPreview || (() => previewUrl && window.open(previewUrl, "_blank"))}
             title="Preview PDF Document"
-            className="h-8 px-3.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-gray-50 shadow-2xs cursor-pointer active:scale-95 transition-all"
+            className="h-8 px-3.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all"
           >
-            Preview
+            Preview Document
           </Button>
         </div>
       </div>
@@ -332,6 +332,23 @@ export default function OsasMonitoringTab({ showToast }) {
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
   const isDraggingRef = useRef(false);
+
+  // Horizontal scroll container ref & scroll helper for list/table view
+  const tableContainerRef = useRef(null);
+  const [isScrolledX, setIsScrolledX] = useState(false);
+
+  const scrollTable = useCallback((direction) => {
+    if (tableContainerRef.current) {
+      const amount = direction === "left" ? -400 : 400;
+      tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  }, []);
+
+  const resetTableScroll = useCallback(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+  }, []);
 
   // Post-Event Reports Stream state
   const [postEventReports, setPostEventReports] = useState([]);
@@ -958,6 +975,25 @@ export default function OsasMonitoringTab({ showToast }) {
     return filteredPostEvents.slice(start, start + itemsPerPage);
   }, [filteredPostEvents, safePage, itemsPerPage]);
 
+  // Track horizontal scroll state on the table container
+  useEffect(() => {
+    const el = tableContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      setIsScrolledX(el.scrollLeft > 20);
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [loading, viewMode, activeStream, page, paginatedRows.length, paginatedPostEvents.length]);
+
+  // Auto reset scroll to start when stream, view, page, search, or filters change
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+  }, [activeStream, viewMode, page, searchQuery, statusFilters, orgFilters]);
+
   const getProposalsForColumn = (columnKey) => {
     const normCol = normalizeProposalStatus(columnKey);
     return rows.filter((item) => {
@@ -1062,9 +1098,9 @@ export default function OsasMonitoringTab({ showToast }) {
   }
 
   return (
-    <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
+    <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Kanban */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Page Header */}
         <PageHeader
           icon="ph-calendar-check"
@@ -1270,12 +1306,65 @@ export default function OsasMonitoringTab({ showToast }) {
           </div>
         </div>
 
-        {/* 4. Active Filter Chips */}
-        <ActiveFilterChips
-          chips={activeChips}
-          onClearAll={handleClearFilters}
-          className="border-t border-border dark:border-border px-6 py-2.5"
-        />
+        {/* 4. Active Filter Chips & Horizontal Scroll Controls */}
+        <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+          <div className="flex-1 min-w-0">
+            <ActiveFilterChips
+              chips={activeChips}
+              onClearAll={handleClearFilters}
+              className="p-0 border-0"
+            />
+          </div>
+          {viewMode === "list" && (
+            <div className="flex items-center gap-2 shrink-0 select-none">
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-zinc-500 mr-1">
+                <HugeIcon className="ph-bold ph-arrows-left-right text-xs text-pup-maroon dark:text-red-400" />
+                <span>Scroll columns:</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={resetTableScroll}
+                disabled={!isScrolledX}
+                className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Reset horizontal scroll to default"
+              >
+                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                <span>Reset Scroll</span>
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => scrollTable("left")}
+                    className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
+                    aria-label="Scroll table left"
+                  >
+                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Scroll Left</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => scrollTable("right")}
+                    className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
+                    aria-label="Scroll table right"
+                  >
+                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Scroll Right</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+        </div>
 
         {/* 5. Stream Content */}
         {/* STREAM 1: Pre-Event Proposals */}
@@ -1318,16 +1407,38 @@ export default function OsasMonitoringTab({ showToast }) {
                   </Empty>
                 </div>
               ) : (
-                <div className="w-full flex flex-col border-t border-border dark:border-border">
-                  <div className="overflow-x-auto w-full select-none">
-                  <table className="w-full text-left text-xs table-fixed min-w-[960px]">
-                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        <th className="py-3.5 px-6 w-[11%] whitespace-nowrap">Proposal ID</th>
-                        <th className="py-3.5 px-6 w-[36%] whitespace-nowrap">Event Proposal & Organization</th>
-                        <th className="py-3.5 px-6 w-[21%] whitespace-nowrap">Proponent</th>
-                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap">Status</th>
-                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+                  <div
+                    ref={tableContainerRef}
+                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                  >
+                  <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
+                    <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                      <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 border-r border-border/80 dark:border-border shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                          <div className="flex items-center justify-between gap-1">
+                            <span>Proposal ID</span>
+                            {isScrolledX && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={resetTableScroll}
+                                    className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                    aria-label="Reset scroll to start"
+                                  >
+                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </th>
+                        <th className="py-3.5 px-6 w-[36%] whitespace-nowrap border-r border-border/80 dark:border-border">Event Proposal & Organization</th>
+                        <th className="py-3.5 px-6 w-[21%] whitespace-nowrap border-r border-border/80 dark:border-border">Proponent</th>
+                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap border-r border-border/80 dark:border-border">Status</th>
+                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell border-r border-border/80 dark:border-border">Submitted</th>
                         <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Action</th>
                       </tr>
                     </thead>
@@ -1338,12 +1449,12 @@ export default function OsasMonitoringTab({ showToast }) {
                           onClick={() => select(item)}
                           className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                         >
-                          <td className="py-3.5 px-6 whitespace-nowrap">
+                          <td className="py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[140px] min-w-[140px] max-w-[140px]">
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               #{item.id}
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 overflow-hidden">
+                          <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
                               {item.title}
                             </div>
@@ -1373,7 +1484,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               )}
                             </div>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden">
+                          <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5 min-w-0 overflow-hidden">
                               <span className="truncate" title={item.student_name}>{item.student_name}</span>
                               {item.officer_position && (
@@ -1386,7 +1497,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {item.submitted_by_email || item.student_no}
                             </div>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap">
+                          <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <span
                               className={cn(
                                 "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
@@ -1397,7 +1508,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {item.status}
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px]">
+                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
                             {item.created_at
                               ? new Date(item.created_at).toLocaleDateString(undefined, {
                                   month: "short",
@@ -1527,17 +1638,39 @@ export default function OsasMonitoringTab({ showToast }) {
                   </Empty>
                 </div>
               ) : (
-                <div className="w-full flex flex-col border-t border-border dark:border-border">
-                  <div className="overflow-x-auto w-full select-none">
-                  <table className="w-full text-left text-xs table-fixed min-w-[1040px]">
-                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        <th className="py-3.5 px-6 w-[9%] whitespace-nowrap">Report ID</th>
-                        <th className="py-3.5 px-6 w-[31%] whitespace-nowrap">Event Proposal & Organization</th>
-                        <th className="py-3.5 px-6 w-[19%] whitespace-nowrap">Proponent</th>
-                        <th className="py-3.5 px-6 w-[17%] whitespace-nowrap">Attendance & Spend</th>
-                        <th className="py-3.5 px-6 w-[13%] whitespace-nowrap">Clearance Status</th>
-                        <th className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+                  <div
+                    ref={tableContainerRef}
+                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                  >
+                  <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
+                    <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                      <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 border-r border-border/80 dark:border-border shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                          <div className="flex items-center justify-between gap-1">
+                            <span>Report ID</span>
+                            {isScrolledX && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={resetTableScroll}
+                                    className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                    aria-label="Reset scroll to start"
+                                  >
+                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </th>
+                        <th className="py-3.5 px-6 w-[31%] whitespace-nowrap border-r border-border/80 dark:border-border">Event Proposal & Organization</th>
+                        <th className="py-3.5 px-6 w-[19%] whitespace-nowrap border-r border-border/80 dark:border-border">Proponent</th>
+                        <th className="py-3.5 px-6 w-[17%] whitespace-nowrap border-r border-border/80 dark:border-border">Attendance & Spend</th>
+                        <th className="py-3.5 px-6 w-[13%] whitespace-nowrap border-r border-border/80 dark:border-border">Clearance Status</th>
+                        <th className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell border-r border-border/80 dark:border-border">Submitted</th>
                         <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Action</th>
                       </tr>
                     </thead>
@@ -1551,12 +1684,12 @@ export default function OsasMonitoringTab({ showToast }) {
                             onClick={() => selectPostEvent(item)}
                             className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                           >
-                            <td className="py-3.5 px-6 whitespace-nowrap">
+                            <td className="py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[140px] min-w-[140px] max-w-[140px]">
                               <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 #{item.id}
                               </span>
                             </td>
-                            <td className="py-3.5 px-6 overflow-hidden">
+                            <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.event_title}>
                                 {item.event_title}
                               </div>
@@ -1569,7 +1702,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 <span className="truncate" title={item.organization_name}>{item.organization_name}</span>
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden">
+                            <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
                                 {item.student_name}
                               </div>
@@ -1577,7 +1710,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {item.submitted_by_email || item.student_no}
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap">
+                            <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <div className="font-semibold text-gray-900 dark:text-zinc-100">
                                 {attendees != null ? `${Number(attendees).toLocaleString()} attendees` : "N/A"}
                               </div>
@@ -1585,7 +1718,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap">
+                            <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <span
                                 className={cn(
                                   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
@@ -1596,7 +1729,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {item.status}
                               </span>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px]">
+                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
                               {item.created_at
                                 ? new Date(item.created_at).toLocaleDateString(undefined, {
                                     month: "short",
@@ -1631,7 +1764,7 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
             )) : (
               /* KANBAN BOARD VIEW FOR POST-EVENTS */
-              <div className="w-full flex-1 min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
+              <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
                 {filteredPostEvents.length === 0 ? (
                   <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                     <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">

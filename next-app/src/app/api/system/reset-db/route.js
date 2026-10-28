@@ -28,7 +28,7 @@ async function handleResetDb(req) {
 
     return NextResponse.json({
       ok: true,
-      message: "PostgreSQL data reset successfully. Demo accounts seeded for local development.",
+      message: "PostgreSQL data reset successfully. Cleared all tables and seeded the 7 default demo accounts.",
     });
   } catch (error) {
     console.error("[reset-db] Reset failed:", error);

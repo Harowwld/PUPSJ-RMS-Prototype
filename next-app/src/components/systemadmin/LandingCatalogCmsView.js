@@ -334,8 +334,8 @@ export default function LandingCatalogCmsView({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-books"
           title={
@@ -356,34 +356,28 @@ export default function LandingCatalogCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#catalog", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Preview
+                Preview Portal
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                disabled={saving}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Reset
+                Restore Defaults
               </Button>
 
               <Button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {saving ? (
-                  <>
-                    <HugeIcon className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Catalog Content"
-                )}
+                {saving ? "Saving Changes..." : "Save Catalog Content"}
               </Button>
             </div>
           }
@@ -419,12 +413,12 @@ export default function LandingCatalogCmsView({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="p-6">
+        <CardContent className="p-6 flex flex-[1_0_auto] flex-col rounded-b-2xl">
           {/* TAB 1: Catalog Content (Section Header + Document Cards) */}
           {activeTab === "content" && (
             <div className="space-y-6">
               {/* Section Header & Subtitle */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Header &amp; Description
@@ -503,9 +497,9 @@ export default function LandingCatalogCmsView({ showToast }) {
                       onClick={handleAddCard}
                       disabled={currentItems.length >= MAX_CATALOG_ITEMS}
                       title="Add Card to Catalog"
-                      className="h-8 rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white text-xs font-semibold px-3 cursor-pointer shadow-xs disabled:opacity-50"
+                      className="h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold px-3 cursor-pointer shadow-xs disabled:opacity-50 active:scale-95 transition-all"
                     >
-                      Add
+                      Add Document
                     </Button>
                   </div>
 
@@ -585,7 +579,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 {/* RIGHT COLUMN: ACTIVE CARD EDITOR & LIVE CARD MINI-PREVIEW */}
                 <div className="lg:col-span-7 flex flex-col gap-6">
                   <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
-                    <div className="flex items-center justify-between pb-3 border-b border-border/80 dark:border-border">
+                    <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                       <div className="space-y-0.5">
                         <span className="text-[10px] font-mono uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                           Document Card Editor
@@ -778,7 +772,7 @@ export default function LandingCatalogCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Carousel Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Apple-Style Document Carousel
@@ -913,7 +907,8 @@ export default function LandingCatalogCmsView({ showToast }) {
         isLoading={saving}
         title="Reset Catalog to Institutional Defaults"
         message="Are you sure you want to revert all catalog headlines, credential descriptions, and filing requirements back to the official PUP San Juan institutional template?"
-        confirmLabel="Reset"
+        confirmLabel="Restore Defaults"
+        cancelLabel="Cancel"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         selectedItems={[
@@ -934,7 +929,8 @@ export default function LandingCatalogCmsView({ showToast }) {
         isLoading={saving}
         title="Remove Document Credential"
         message={`Are you sure you want to delete "${currentItems[deleteCardIdx]?.title || "this credential"}" from the public academic catalog?`}
-        confirmLabel="Delete"
+        confirmLabel="Delete Document"
+        cancelLabel="Cancel"
         buttonIcon="ph-bold ph-trash"
         isDeleteModal={true}
         isAppleStyled={true}

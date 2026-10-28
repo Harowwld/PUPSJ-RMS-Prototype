@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 export default function MultiCriteriaFilter({
   title,
   buttonLabel,
+  headerTitle,
   groups = [],
   selected,
   selectedValues,
@@ -26,6 +27,7 @@ export default function MultiCriteriaFilter({
   align = "end",
   className,
   triggerClassName,
+  contentClassName,
 }) {
   const displayTitle = buttonLabel || title || "Filter Records";
 
@@ -39,6 +41,20 @@ export default function MultiCriteriaFilter({
     });
     return map;
   }, [selected, selectedValues, groups]);
+
+  // Size the popover to its longest option label (text-xs ~6.6px/char plus row chrome),
+  // clamped between the compact 208px minimum and a 384px maximum.
+  const popoverWidth = useMemo(() => {
+    let longest = 0;
+    groups.forEach((g) => {
+      longest = Math.max(longest, String(g.label || "").length * 0.9);
+      g.options?.forEach((o) => {
+        const len = String(o.label ?? "").length + (o.count !== undefined ? String(o.count).length + 2 : 0);
+        if (len > longest) longest = len;
+      });
+    });
+    return Math.min(384, Math.max(208, Math.ceil(longest * 6.6 + 96)));
+  }, [groups]);
 
   // Count total active criteria
   const activeCount = useMemo(() => {
@@ -156,47 +172,51 @@ export default function MultiCriteriaFilter({
         <PopoverContent
           align={align}
           sideOffset={6}
-          className="w-80 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"
+          style={{ width: popoverWidth, maxWidth: "calc(100vw - 1.5rem)" }}
+          className={cn(
+            "rounded-2xl border-[0.5px] border-border dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-0 overflow-hidden font-jakarta select-none z-50",
+            contentClassName
+          )}
         >
           {/* Popover Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
-            <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-              Combine Filter Criteria
+          <div className="flex items-center justify-between px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
+            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+              {headerTitle || title || "Filter Records"}
             </span>
             {activeCount > 0 && (
               <button
                 type="button"
                 onClick={handleResetAll}
                 title="Reset all filter criteria"
-                className="text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
+                className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
               >
-                    Reset Filters
-                  </button>
+                Reset
+              </button>
             )}
           </div>
 
           {/* Filter Groups List */}
-          <div className="max-h-72 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
+          <div className="max-h-64 overflow-y-auto p-1.5 space-y-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
             {groups.map((group, groupIdx) => {
               const selectedInGroup = effectiveSelected[group.id] || [];
 
               return (
                 <div
                   key={group.id}
-                  className={cn(groupIdx > 0 && "pt-3 border-t border-border dark:border-border")}
+                  className={cn(groupIdx > 0 && "pt-2 border-t-[0.5px] border-border/70 dark:border-white/10")}
                 >
-                  <div className="flex items-center justify-between px-1 mb-1.5">
+                  <div className="flex items-center justify-between px-1.5 mb-1">
                     <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                       {group.label}
                     </span>
                     {selectedInGroup.length > 0 && (
-                      <span className="text-xs font-semibold text-pup-maroon dark:text-red-400">
+                      <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400">
                         {selectedInGroup.length} selected
                       </span>
                     )}
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {group.options?.map((opt) => {
                       const optValue = opt.value ?? opt.id;
                       const isChecked = selectedInGroup.includes(optValue);
@@ -206,19 +226,24 @@ export default function MultiCriteriaFilter({
                         <div
                           key={String(optValue)}
                           onClick={() => toggleOption(group, optValue)}
-                          className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-white/5 cursor-pointer select-none transition-colors group/item"
+                          className={cn(
+                            "flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer select-none transition-colors group/item",
+                            isChecked
+                              ? "bg-pup-maroon/5 text-pup-maroon dark:bg-red-500/10 dark:text-red-400 font-medium"
+                              : "text-gray-700 dark:text-zinc-200 hover:bg-gray-100/80 dark:hover:bg-zinc-800"
+                          )}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <div
                               className={cn(
-                                "w-4 h-4 rounded-[5px] border flex items-center justify-center transition-all shrink-0",
+                                "w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center transition-all shrink-0",
                                 isChecked
                                   ? "bg-pup-maroon border-pup-maroon text-white dark:bg-red-600 dark:border-red-600"
                                   : "border-border dark:border-border bg-white dark:bg-zinc-800 group-hover/item:border-gray-400"
                               )}
                             >
                               {isChecked && (
-                                <HugeIcon className="ph-bold ph-check text-[10px]" />
+                                <HugeIcon className="ph-bold ph-check text-[9px]" />
                               )}
                             </div>
 
@@ -226,14 +251,14 @@ export default function MultiCriteriaFilter({
                               {dot && (
                                 <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", dot)} />
                               )}
-                              <span className="text-sm font-medium text-gray-800 dark:text-zinc-200 truncate">
+                              <span className="text-xs font-medium truncate">
                                 {opt.label}
                               </span>
                             </div>
                           </div>
 
                           {opt.count !== undefined && (
-                            <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
+                            <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-1.5">
                               {opt.count}
                             </span>
                           )}

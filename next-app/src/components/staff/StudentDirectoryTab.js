@@ -33,6 +33,8 @@ import EditStudentModal from "./EditStudentModal";
 import StudentProfileSheet from "./StudentProfileSheet";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import useTableScroll from "@/hooks/useTableScroll";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { hasAdminPrivileges } from "@/lib/roleUtils";
@@ -62,6 +64,7 @@ export default function StudentDirectoryTab({
   allDocs = [],
   onLocateStudent,
   onPreviewDocument,
+  onRescan,
   fetchData,
   showToast,
 }) {
@@ -404,6 +407,18 @@ export default function StudentDirectoryTab({
     return filteredStudents.slice(start, start + itemsPerPage);
   }, [filteredStudents, page, itemsPerPage]);
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedStudents.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, activeTab, searchQuery, courseFilters, yearFilters, sectionFilters, resetScroll]);
+
   const hasActiveFilters =
     searchQuery.trim() !== "" ||
     courseFilters.length > 0 ||
@@ -645,11 +660,11 @@ export default function StudentDirectoryTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-student-directory"
-        className="animate-fade-up font-jakarta flex h-auto w-full flex-col pb-6"
+        className="animate-fade-up font-jakarta flex flex-[1_0_auto] h-auto w-full flex-col"
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
         <Card
-          className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4"
+          className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
         >
           {/* 1. Page Header */}
           <PageHeader
@@ -695,7 +710,7 @@ export default function StudentDirectoryTab({
                   <Button
                     type="button"
                     onClick={() => setRegisterOpen(true)}
-                    className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                    className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                   >
                     Register Student
                   </Button>
@@ -1080,15 +1095,25 @@ export default function StudentDirectoryTab({
             </div>
           </div>
 
-          {/* Active Filter Chips */}
-          <ActiveFilterChips
-            chips={activeChips}
-            onClearAll={handleResetFilters}
-            className="border-t border-border dark:border-border px-6 py-2.5"
-          />
+          {/* Active Filter Chips & Scroll Controls */}
+          <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+            <div className="flex-1 min-w-0">
+              <ActiveFilterChips
+                chips={activeChips}
+                onClearAll={handleResetFilters}
+                className="p-0 border-0"
+              />
+            </div>
+            <TableScrollControls
+              isScrolledX={isScrolledX}
+              onResetScroll={resetScroll}
+              onScrollLeft={() => scrollLeft(400)}
+              onScrollRight={() => scrollRight(400)}
+            />
+          </div>
 
           {/* 4. Main Data Table */}
-          <div className={cn("w-full border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredStudents.length === 0 && "rounded-b-2xl")}>
+          <div className={cn("w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredStudents.length === 0 && "rounded-b-2xl")}>
             {loading ? (
               <div className="p-6 space-y-3 rounded-b-2xl">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -1129,11 +1154,14 @@ export default function StudentDirectoryTab({
                 </Empty>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed min-w-[1080px]">
-                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center">
+              <div
+                ref={tableContainerRef}
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+              >
+                <table className="w-full text-sm border-separate border-spacing-0 min-w-[1320px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1142,70 +1170,98 @@ export default function StudentDirectoryTab({
                         />
                       </th>
 
-                      <th className="p-4 w-[14%]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("studentNo")}
-                          className="group flex items-center focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
-                        >
-                          Student No.
-                          <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
+                      <th
+                        className={cn(
+                          "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                          isScrolledX
+                            ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                            : "border-r border-border/80 dark:border-border"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("studentNo")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Student No.</span>
+                            <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                          {isScrolledX && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                resetScroll();
+                              }}
+                              title="Reset table scroll"
+                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                            >
+                              <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                            </button>
+                          )}
+                        </div>
                       </th>
 
-                      <th className="p-4 w-[22%]">
+                      <th className="p-4 w-[240px] min-w-[240px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("name")}
-                          className="group flex items-center focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
-                          Full Name
+                          <span>Full Name</span>
                           <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
 
-                      <th className="p-4 w-[16%]">
+                      <th className="p-4 w-[190px] min-w-[190px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("courseCode")}
-                          className="group flex items-center focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
-                          Program & Section
+                          <span>Program & Section</span>
                           <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
 
-                      <th className="p-4 w-[10%]">
+                      <th className="p-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("yearLevel")}
-                          className="group flex items-center focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
-                          Year / Batch
+                          <span>Year / Batch</span>
                           <SortIndicator column="yearLevel" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
 
-                      <th className="p-4 w-[16%]">Physical Archive</th>
+                      <th className="p-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">
+                        <span>Physical Archive</span>
+                      </th>
 
-                      <th className="p-4 w-[7%] text-center">
+                      <th className="p-4 w-[100px] min-w-[100px] text-center border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("documents")}
-                          className="group inline-flex items-center focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                          className="group inline-flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
-                          Files
+                          <span>Files</span>
                           <SortIndicator column="documents" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
 
-                      <th className="p-4 w-[8%] text-center">Status</th>
+                      <th className="p-4 w-[120px] min-w-[120px] text-center border-r border-border/80 dark:border-border">
+                        <span>Status</span>
+                      </th>
 
-                      <th className="w-28 p-4 pr-6 text-right">Actions</th>
+                      <th className="w-28 min-w-[112px] p-4 pr-6 text-right">
+                        <span>Actions</span>
+                      </th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-border dark:divide-border">
+                  <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {paginatedStudents.map((s) => {
                       const isSelected = selectedIds.has(s.studentNo);
                       const isStudentArchived = String(s.status || "").toLowerCase() === "archived";
@@ -1224,7 +1280,10 @@ export default function StudentDirectoryTab({
                           )}
                         >
                           <td
-                            className="w-12 p-4 text-center align-middle"
+                            className={cn(
+                              "w-12 p-4 text-center align-middle border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+                              isSelected && "bg-blue-50/50 dark:bg-blue-950/20"
+                            )}
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleSelect(s.studentNo);
@@ -1238,19 +1297,27 @@ export default function StudentDirectoryTab({
                             />
                           </td>
 
-                          <td className="p-4 whitespace-nowrap align-middle">
+                          <td
+                            className={cn(
+                              "p-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
+                              isSelected && "bg-blue-50/50 dark:bg-blue-950/20",
+                              isScrolledX
+                                ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                                : "border-r border-border/70 dark:border-border/70"
+                            )}
+                          >
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {s.studentNo}
                             </span>
                           </td>
 
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
                               {formatTitleCase(s.name)}
                             </div>
                           </td>
 
-                          <td className="p-4 align-middle overflow-hidden whitespace-nowrap">
+                          <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <Badge
                                 variant="outline"
@@ -1264,11 +1331,11 @@ export default function StudentDirectoryTab({
                             </div>
                           </td>
 
-                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle">
+                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
                             {s.yearLevel || "N/A"}
                           </td>
 
-                          <td className="p-4 align-middle whitespace-nowrap">
+                          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                               <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs shrink-0"></HugeIcon>
                               <span>
@@ -1277,7 +1344,7 @@ export default function StudentDirectoryTab({
                             </div>
                           </td>
 
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                             <Badge
                               variant="outline"
                               className={cn(
@@ -1291,7 +1358,7 @@ export default function StudentDirectoryTab({
                             </Badge>
                           </td>
 
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                             <Badge
                               variant="outline"
                               className={cn(
@@ -1538,6 +1605,7 @@ export default function StudentDirectoryTab({
               allDocs={allDocs}
               onLocateStudent={onLocateStudent}
               onPreviewDocument={onPreviewDocument}
+              onRescan={onRescan}
               onEditStudent={(s) => {
                 setActiveStudent(s);
                 setEditOpen(true);

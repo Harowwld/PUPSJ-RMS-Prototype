@@ -26,6 +26,22 @@ test('Popover Primitive Standard Geometry in popover.jsx', () => {
     !code.includes('rounded-lg'),
     'popover.jsx must not use rounded-lg'
   )
+  assert.ok(
+    code.includes('border-[0.5px] border-border dark:border-white/10'),
+    'popover.jsx must define hairline border-[0.5px] border-border dark:border-white/10'
+  )
+})
+
+test('Dropdown and Dialog Primitives Border Weight and Ring Elimination', () => {
+  const ddPath = path.join(ROOT_DIR, 'src/components/ui/dropdown-menu.jsx')
+  const ddCode = fs.readFileSync(ddPath, 'utf8')
+  assert.ok(!ddCode.includes('ring-1'), 'dropdown-menu.jsx must not contain thick ring-1')
+  assert.ok(ddCode.includes('border-[0.5px] border-border dark:border-white/10'), 'dropdown-menu.jsx must use hairline border-[0.5px]')
+
+  const dialogPath = path.join(ROOT_DIR, 'src/components/ui/dialog.jsx')
+  const dialogCode = fs.readFileSync(dialogPath, 'utf8')
+  assert.ok(!dialogCode.includes('ring-1'), 'dialog.jsx must not contain thick ring-1')
+  assert.ok(dialogCode.includes('border-[0.5px] border-border dark:border-white/10'), 'dialog.jsx must use hairline border-[0.5px]')
 })
 
 test('MultiCriteriaFilter Popover Size Consistency', () => {
@@ -34,8 +50,8 @@ test('MultiCriteriaFilter Popover Size Consistency', () => {
   const code = fs.readFileSync(filterPath, 'utf8')
 
   assert.ok(
-    code.includes('className="w-80 rounded-2xl'),
-    'MultiCriteriaFilter must use standard w-80 rounded-2xl'
+    code.includes('popoverWidth') && code.includes('rounded-2xl'),
+    'MultiCriteriaFilter must size its width from its option labels and use rounded-2xl'
   )
   assert.ok(
     !code.includes('sm:w-96'),
@@ -102,7 +118,7 @@ test('RecordsArchiveTab Arrange Records Dropdown Follows Three-Zone Architecture
   const code = fs.readFileSync(archivePath, 'utf8')
 
   assert.ok(
-    code.includes('className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
+    code.includes('className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
     'RecordsArchiveTab Arrange Records must use w-60 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
@@ -125,7 +141,7 @@ test('Header.js User Profile Dropdown Follows Three-Zone Architecture with Clean
   const code = fs.readFileSync(headerPath, 'utf8')
 
   assert.ok(
-    code.includes('className="w-80 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
+    code.includes('className="w-80 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
     'Header.js User Profile must use w-80 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
@@ -144,7 +160,7 @@ test('SLAAnalyticsTab Export CSV and PDF Report Dropdowns Avoid Unnecessary Foot
   const code = fs.readFileSync(slaPath, 'utf8')
 
   assert.ok(
-    code.includes('className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
+    code.includes('className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
     'SLAAnalyticsTab Export CSV must use w-60 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
@@ -157,8 +173,8 @@ test('SLAAnalyticsTab Export CSV and PDF Report Dropdowns Avoid Unnecessary Foot
   )
 
   assert.ok(
-    code.includes('className="w-64 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
-    'SLAAnalyticsTab Official Report PDF must use w-64 rounded-2xl p-0 overflow-hidden'
+    code.includes('className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
+    'SLAAnalyticsTab Official Report PDF must use standard w-60 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
     code.includes('Official Report'),
@@ -176,8 +192,8 @@ test('GoogleDrivePdfCard Document Actions Dropdowns Avoid Unnecessary Footers', 
   const code = fs.readFileSync(cardPath, 'utf8')
 
   assert.ok(
-    code.includes('className="w-52 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"'),
-    'GoogleDrivePdfCard must use w-52 rounded-2xl p-0 overflow-hidden'
+    code.includes('w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none'),
+    'GoogleDrivePdfCard must use standard w-60 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
     code.includes('Document Actions'),
@@ -195,8 +211,8 @@ test('StorageLayoutEditorTab Template Actions Dropdown Avoids Unnecessary Footer
   const code = fs.readFileSync(editorPath, 'utf8')
 
   assert.ok(
-    code.includes('className="w-56 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50"'),
-    'StorageLayoutEditorTab Template Actions must use w-56 rounded-2xl p-0 overflow-hidden'
+    code.includes('w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50'),
+    'StorageLayoutEditorTab Template Actions must use standard w-60 rounded-2xl p-0 overflow-hidden'
   )
   assert.ok(
     code.includes('Template Actions'),
@@ -253,12 +269,12 @@ test('Popover Typographic Font-Weight Consistency', () => {
   const tabPath = path.join(ROOT_DIR, 'src/components/student/StudentComplianceTab.js')
   const tabCode = fs.readFileSync(tabPath, 'utf8')
   assert.ok(
-    tabCode.includes('text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider'),
-    'StudentComplianceTab popover filter labels must use font-semibold'
+    tabCode.includes('Arrange Requirements'),
+    'StudentComplianceTab must include Arrange Requirements dropdown'
   )
   assert.ok(
-    tabCode.includes('text-sm font-semibold text-gray-900 dark:text-zinc-100'),
-    'StudentComplianceTab popover item titles must use font-semibold'
+    tabCode.includes('text-xs font-semibold text-gray-900 dark:text-zinc-100'),
+    'StudentComplianceTab arrange dropdown header must use font-semibold'
   )
 })
 
@@ -268,16 +284,38 @@ test('StudentComplianceTab Popovers Architecture Consistency', () => {
   const tabCode = fs.readFileSync(tabPath, 'utf8')
 
   assert.ok(
-    tabCode.includes('className="w-80 rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-zinc-900 overflow-hidden font-jakarta"'),
-    'StudentComplianceTab filter popovers must use p-0 overflow-hidden'
+    tabCode.includes('MultiCriteriaFilter'),
+    'StudentComplianceTab must delegate to standardized MultiCriteriaFilter'
   )
   assert.ok(
-    tabCode.includes('{/* Popover Header */}'),
-    'StudentComplianceTab filter popovers must include Header zone'
+    tabCode.includes('className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"'),
+    'StudentComplianceTab arrange dropdown must use standard w-60 rounded-2xl'
   )
   assert.ok(
-    !tabCode.includes('Room 102 Archive</span>'),
-    'StudentComplianceTab details popovers must not include redundant Room 102 Archive footer'
+    tabCode.includes('Arrange Requirements'),
+    'StudentComplianceTab arrange dropdown must include Header zone'
+  )
+})
+
+test('OfficeManagementTab and Sidebar Popover Menus Follow Standards', () => {
+  const officePath = path.join(ROOT_DIR, 'src/components/systemadmin/OfficeManagementTab.js')
+  assert.ok(fs.existsSync(officePath))
+  const officeCode = fs.readFileSync(officePath, 'utf8')
+  assert.ok(
+    officeCode.includes('w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 font-jakarta'),
+    'OfficeManagementTab Department Actions must use standard w-60 rounded-2xl'
+  )
+
+  const sidebarPath = path.join(ROOT_DIR, 'src/components/shared/Sidebar.js')
+  assert.ok(fs.existsSync(sidebarPath))
+  const sidebarCode = fs.readFileSync(sidebarPath, 'utf8')
+  assert.ok(
+    sidebarCode.includes('className="w-64 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50"'),
+    'Sidebar User Profile popup must use compact w-64 rounded-2xl'
+  )
+  assert.ok(
+    sidebarCode.includes('Sign Out'),
+    'Sidebar User Profile must include Sign Out button in footer'
   )
 })
 
@@ -335,4 +373,48 @@ test('Popovers and Dropdown Headers Have Clean Icon-Free Typography', () => {
   const slaCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/admin/SLAAnalyticsTab.js'), 'utf8')
   assert.ok(!slaCode.includes('ph-file-csv'), 'Export Dataset dropdown header must not include decorative icon')
   assert.ok(!slaCode.includes('ph-file-pdf text-xs'), 'Official Report dropdown header must not include decorative icon')
+})
+
+test('Destructive Actions Borderless Styling and Hover Consistency', () => {
+  // 1. Sign Out in Header.js
+  const headerCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/layout/Header.js'), 'utf8')
+  assert.ok(
+    headerCode.includes('text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none'),
+    'Header.js Sign Out must use borderless soft destructive background on hover without lines'
+  )
+  assert.ok(!headerCode.includes('hover:border-red-200'), 'Header.js Sign Out must not have hover border line')
+
+  // 2. Sign Out in Sidebar.js
+  const sidebarCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/shared/Sidebar.js'), 'utf8')
+  assert.ok(
+    sidebarCode.includes('text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none'),
+    'Sidebar.js Sign Out must use borderless soft destructive background on hover without lines'
+  )
+  assert.ok(!sidebarCode.includes('hover:border-red-200'), 'Sidebar.js Sign Out must not have hover border line')
+
+  // 3. OfficeManagementTab.js Archive Department
+  const officeCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/systemadmin/OfficeManagementTab.js'), 'utf8')
+  assert.ok(
+    officeCode.includes('variant="destructive"'),
+    'OfficeManagementTab.js Archive Department must declare variant="destructive"'
+  )
+  assert.ok(
+    officeCode.includes('hover:text-red-600 dark:hover:text-red-400') &&
+    officeCode.includes('group-hover/dropdown-menu-item:text-red-600') &&
+    officeCode.includes('Archive Department'),
+    'OfficeManagementTab.js Archive Department must maintain red text on hover and highlight'
+  )
+
+  // 4. StorageLayoutEditorTab.js Delete Template
+  const storageCode = fs.readFileSync(path.join(ROOT_DIR, 'src/components/admin/StorageLayoutEditorTab.js'), 'utf8')
+  assert.ok(
+    storageCode.includes('variant="destructive"'),
+    'StorageLayoutEditorTab.js Delete Template must declare variant="destructive"'
+  )
+  assert.ok(
+    storageCode.includes('hover:text-red-600 dark:hover:text-red-400') &&
+    storageCode.includes('group-hover/dropdown-menu-item:text-red-600') &&
+    storageCode.includes('Delete Template'),
+    'StorageLayoutEditorTab.js Delete Template must maintain red text on hover and highlight'
+  )
 })

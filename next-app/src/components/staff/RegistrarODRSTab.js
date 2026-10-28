@@ -211,9 +211,9 @@ export default function RegistrarODRSTab({ showToast }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-col min-h-full w-full flex-1 gap-4 animate-fade-up font-jakarta">
-        {/* Card Header aligned with other pages */}
-        <Card className="rounded-brand border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none overflow-hidden mb-4">
+      <div className="flex flex-col flex-[1_0_auto] w-full animate-fade-up font-jakarta">
+        {/* ONE Single Card Container */}
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="ph-tray"
             title="Student Document Requests"
@@ -236,10 +236,9 @@ export default function RegistrarODRSTab({ showToast }) {
               />
             }
           />
-        </Card>
 
-        <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_360px]">
-          <section className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card">
+          <div className="grid flex-[1_0_auto] grid-cols-1 lg:grid-cols-[1fr_360px] border-t border-border dark:border-border divide-y lg:divide-y-0 lg:divide-x divide-border dark:divide-border">
+            <section className="flex flex-col bg-white p-6 dark:bg-card">
             <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border mb-4">
               <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Request Queue</h2>
               <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
@@ -327,7 +326,7 @@ export default function RegistrarODRSTab({ showToast }) {
             </div>
           </section>
 
-          <aside className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card">
+          <aside className="flex flex-col bg-white p-6 dark:bg-card">
             {selected ? (
               <div className="flex flex-col h-full">
                 <div className="pb-3 border-b border-border dark:border-border mb-4">
@@ -563,7 +562,8 @@ export default function RegistrarODRSTab({ showToast }) {
               </div>
             )}
           </aside>
-        </div>
+          </div>
+        </Card>
       </div>
 
       {/* Reopen Request Dialog Modal */}
@@ -592,7 +592,6 @@ export default function RegistrarODRSTab({ showToast }) {
               </label>
               <Select
                 className="w-full h-10 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border rounded-xl cursor-pointer"
-                menuClassName="rounded-xl border border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
                 value={reopenTargetStatus}
                 onChange={(e) => setReopenTargetStatus(e.target.value)}
               >

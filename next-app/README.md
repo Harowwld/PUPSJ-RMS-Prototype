@@ -267,7 +267,7 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 | **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
 | **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (OSAS records review, student organization event proposals) |
 | **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Student organization operations and OSAS workflows) |
-| **Student** | Student Portal | `2022-10001-MN-1` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-MN-1`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
+| **Student** | Student Portal | `2022-10001-SJ-0` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-SJ-0`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
 
 </div>
 
@@ -322,13 +322,13 @@ pnpm test:recognition           # coordinate/name recognition tests
 pnpm db:verify                  # PostgreSQL health and row-count checks
 pnpm db:backup                  # create a local encrypted backup
 pnpm populate-sample-data       # seed mock data (students, requests, documents)
-node scripts/seed-real-data.mjs # seed actual curriculum & student records from CSV
-node scripts/clear-lockouts.mjs # clear active rate-limit hits & temporary lockouts
+node scripts/seed-real-data.mjs # seed actual curriculum & student records from CSV (or pnpm db:seed:real)
+pnpm reset-rate-limit           # clear active rate-limit hits & temporary lockouts
 ```
 
 - **`pnpm populate-sample-data`**: Populates the database with mock records across Registrar and OSAS offices (including sample students, document types, courses, sections, and document requests).
-- **`node scripts/seed-real-data.mjs`**: Seeds actual institutional taxonomy and curriculum from `_SAMPLE_DATA/system_data - final.csv` and student records from `_SAMPLE_DATA/cleaned_student_data.csv`.
-- **`node scripts/clear-lockouts.mjs`** (or `pnpm reset-rate-limit`): Immediately resets all rate-limit hits and unblocks locked-out accounts/IP addresses in `system.db`.
+- **`node scripts/seed-real-data.mjs`** (or `pnpm db:seed:real`): Seeds actual institutional taxonomy and curriculum from `_SAMPLE_DATA/registrar_system_data - final.csv` and student records from `_SAMPLE_DATA/cleaned_student_data.csv`.
+- **`pnpm reset-rate-limit`**: Immediately resets all rate-limit hits and unblocks locked-out accounts/IP addresses in the database.
 
 To inspect request counts without deleting anything, run this from `next-app/`:
 
@@ -344,7 +344,7 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. Running the command starts the reset without prompts and seeds the demo staff accounts using `DEFAULT_STAFF_PASSWORD` (or `pupstaff` if unset):
+Resetting the database is destructive. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. `pnpm reset-db` clears application data, then restores the demo baseline, including demo staff and student accounts, lookup data, and default storage layouts:
 
 ```bash
 pnpm reset-db
@@ -352,11 +352,18 @@ pnpm reset-db
 
 The package command supplies the required `--confirm` flag. Direct invocation also requires confirmation: `node scripts/reset-db.mjs --confirm`. After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` or `node scripts/seed-real-data.mjs` to restore sample records.
 
+To clear application data and recreate only the five demo staff accounts (without demo students, lookup data, or storage layouts), run:
+
+```bash
+pnpm reset-db:demo-accounts
+```
+
+The equivalent system-admin-only API is `POST /api/system/reset-db/demo-accounts` with `{ "confirmation": "RESET_LOCAL_DATABASE" }`.
+
 To clear current rate-limit hits and lockouts without changing the configured protections, run:
 
 ```bash
 pnpm reset-rate-limit
-# or: node scripts/clear-lockouts.mjs
 ```
 
 ## Project Structure

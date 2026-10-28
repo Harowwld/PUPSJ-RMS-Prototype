@@ -5,9 +5,9 @@ import { Card } from "@/components/ui/card";
 
 export default function StudentOverviewSkeleton() {
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 select-none font-jakarta animate-fade-up">
+    <div className="flex flex-col w-full flex-[1_0_auto] select-none font-jakarta animate-fade-up">
       {/* ONE Single Card Container */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta min-h-0 flex-1 mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Header / Greeting Skeleton */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 border-b border-border w-full">
           <div className="flex items-center gap-4">
@@ -27,24 +27,33 @@ export default function StudentOverviewSkeleton() {
         </div>
 
         {/* 2. Unified Content Body Skeleton */}
-        <div className="p-6 flex flex-col gap-6">
+        <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
           {/* Urgent Attention Inline Alerts Skeleton */}
-          <div className="flex flex-col w-full divide-y divide-gray-100 dark:divide-white/5 rounded-xl overflow-hidden border border-gray-200/80 dark:border-white/10">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between gap-3 px-4 py-3 border-l-[3px] border-l-amber-400 bg-amber-50/40 dark:bg-amber-950/10"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <Skeleton className="h-4 w-4 rounded dark:bg-muted shrink-0" />
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-3.5 w-44 rounded dark:bg-muted" />
-                    <Skeleton className="h-3 w-72 rounded dark:bg-muted" />
+          <div className="flex flex-col gap-2.5 w-full">
+            <div className="flex items-center gap-2 px-1">
+              <Skeleton className="h-2 w-2 rounded-full dark:bg-muted" />
+              <Skeleton className="h-3 w-32 rounded dark:bg-muted" />
+            </div>
+            <div className="flex flex-col gap-2.5 w-full">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-4 px-4 sm:px-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfd] dark:bg-zinc-900/60"
+                >
+                  <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                    <Skeleton className="h-9.5 w-9.5 rounded-xl dark:bg-muted shrink-0" />
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-3.5 w-44 rounded dark:bg-muted" />
+                        <Skeleton className="h-4 w-20 rounded-full dark:bg-muted" />
+                      </div>
+                      <Skeleton className="h-3 w-64 sm:w-80 rounded dark:bg-muted" />
+                    </div>
                   </div>
+                  <Skeleton className="h-8 w-28 rounded-xl dark:bg-muted shrink-0 self-start sm:self-center" />
                 </div>
-                <Skeleton className="h-3.5 w-20 rounded dark:bg-muted shrink-0" />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Top Row: Active Tracker (Full Width) */}
@@ -92,7 +101,7 @@ export default function StudentOverviewSkeleton() {
           </div>
 
           {/* Recent Activities Skeleton (100% Width) */}
-          <div className="flex flex-col gap-2.5 w-full">
+          <div className="flex flex-[1_0_auto] flex-col gap-2.5 w-full">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
@@ -101,8 +110,8 @@ export default function StudentOverviewSkeleton() {
               <Skeleton className="h-8 w-64 rounded-xl dark:bg-muted" />
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-gray-50/30 dark:bg-zinc-900/20 w-full">
-              <div className="divide-y divide-border">
+            <div className="flex flex-[1_0_auto] flex-col overflow-hidden rounded-2xl border border-border bg-gray-50/30 dark:bg-zinc-900/20 w-full">
+              <div className="divide-y divide-border flex-[1_0_auto]">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5">
                     <div className="flex items-start gap-4 flex-1">
@@ -126,7 +135,7 @@ export default function StudentOverviewSkeleton() {
               </div>
 
               {/* Standard Table Pagination Footer Skeleton */}
-              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+              <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
                 <div className="flex items-center gap-6">
                   <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
                   <div className="flex items-center gap-2">

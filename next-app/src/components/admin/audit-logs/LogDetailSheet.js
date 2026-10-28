@@ -192,10 +192,45 @@ export default function LogDetailSheet({
           </div>
         </SheetHeader>
 
+        {/* Line-Attached Edge-to-Edge Severity & Integrity Notice */}
+        {selectedLog && (
+          <div
+            className={cn(
+              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+              severityInfo?.label === "Critical" || severityInfo?.label === "Security"
+                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                : severityInfo?.label === "Warning"
+                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                : "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+            )}
+          >
+            <HugeIcon
+              className={cn(
+                "ph-bold text-[15px] shrink-0",
+                severityInfo?.label === "Critical" || severityInfo?.label === "Security"
+                  ? "ph-shield-warning text-rose-600 dark:text-rose-400"
+                  : severityInfo?.label === "Warning"
+                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  : "ph-shield-check text-emerald-600 dark:text-emerald-400"
+              )}
+            />
+            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+              <strong className="font-semibold">
+                {severityInfo?.label ? `${severityInfo.label} Audit Event:` : "Forensic Audit Log:"}
+              </strong>{" "}
+              {severityInfo?.label === "Critical" || severityInfo?.label === "Security"
+                ? "High-priority security or administrative event recorded to immutable audit ledger."
+                : severityInfo?.label === "Warning"
+                ? "Precautionary system event flagged for operational review."
+                : "Verified ledger entry recorded with cryptographic timestamp and actor attribution."}
+            </span>
+          </div>
+        )}
+
         {selectedLog && (
           <div className="flex-1 space-y-6 overflow-y-auto p-6">
-            {/* Identity / Actor Summary Strip */}
-            <div className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-3 shadow-2xs">
+            {/* Identity / Actor Summary Strip (Unboxed) */}
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
               <div className="flex items-center gap-3.5 min-w-0">
                 <AuditActorAvatar
                   log={selectedLog}

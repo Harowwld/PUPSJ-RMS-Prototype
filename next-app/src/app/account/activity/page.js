@@ -28,6 +28,8 @@ import { generateExportFilename } from "@/lib/exportHelpers";
 import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import LogPagination from "@/components/admin/audit-logs/LogPagination";
+import useTableScroll from "@/hooks/useTableScroll";
+import TableScrollControls from "@/components/shared/TableScrollControls";
 import { PageTransition } from "@/components/ui/motion";
 import {
   Empty,
@@ -348,7 +350,7 @@ function LogFilters({
                   {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+              <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -375,7 +377,7 @@ function LogFilters({
                   {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+              <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={endDate ? parseDateLocal(endDate) : undefined}
@@ -533,64 +535,64 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
     <>
       <tr
         className={cn(
-          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          "group h-[52px] border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
-          isExpanded && "bg-gray-50 dark:bg-white/8"
+          isExpanded && "bg-gray-50/80 dark:bg-zinc-800/60"
         )}
         onClick={() => {
           toggleRow(log.id);
         }}
       >
-        <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-colors duration-fast"
+            className="mx-auto flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer transition-colors active:scale-95"
           >
             {isExpanded ? (
-              <HugeIcon className="ph-bold ph-minus text-[14px]" />
+              <HugeIcon className="ph-bold ph-minus text-xs" />
             ) : (
-              <HugeIcon className="ph-bold ph-plus text-[14px]" />
+              <HugeIcon className="ph-bold ph-plus text-xs" />
             )}
           </button>
         </td>
-        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-normal text-gray-700 dark:text-zinc-300 border-r border-border/70 dark:border-border/70">
           {formattedTimestamp}
         </td>
-        <td className="py-0 px-4 align-middle whitespace-nowrap">
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
           <span
             className={cn(
-              "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+              "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shadow-none transition-all",
               severityInfo.classes
             )}
           >
             {severityInfo.label}
           </span>
         </td>
-        <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
           {log.action === "Rotate Password" ? "Password Rotated" : log.action}
         </td>
-        <td className="py-0 px-4 align-middle overflow-hidden">
+        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[280px]">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block truncate text-[13px] font-normal text-[#8E8E93]">
+              <span className="block truncate max-w-[260px] text-xs font-normal text-gray-600 dark:text-zinc-400">
                 {log.details || "No known description"}
               </span>
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              className="max-w-[400px] rounded-xl border-gray-200 bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-card/95 dark:text-zinc-200"
+              className="max-w-[400px] rounded-xl border border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
             >
               {log.details || "No known description"}
             </TooltipContent>
           </Tooltip>
         </td>
-        <td className="py-0 px-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end gap-[12px]">
+        <td className="p-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => setSelectedLog(log)}
-              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-pup-maroon dark:hover:text-red-400 cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
             >
-              <HugeIcon  className="ti ti-eye text-[16px]"></HugeIcon>
+              <HugeIcon  className="ti ti-eye text-base"></HugeIcon>
             </button>
           </div>
         </td>
@@ -652,51 +654,66 @@ function LogTable({
     }));
   }, []);
 
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolledX,
+    scrollTable,
+    resetScroll,
+  } = useTableScroll([displayLogs?.length, logPage]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [logPage, logSortBy, logSortOrder, localSearch, logSeverityFilter, logStartDate, logEndDate, resetScroll]);
+
   if (isLoading && !displayLogs.length) {
     return (
       <div className={cn("space-y-0", embedded ? "flex flex-1 flex-col min-h-0" : "")}>
         <div className={cn(
           "overflow-visible bg-white dark:bg-card",
           embedded
-            ? "flex-1 min-h-0 flex flex-col border-t border-gray-100 dark:border-white/10 rounded-b-2xl"
-            : "rounded-2xl border border-gray-100 dark:border-white/10"
+            ? "flex-1 min-h-0 flex flex-col border-t border-border dark:border-border rounded-b-2xl"
+            : "rounded-2xl border border-border dark:border-border"
         )}>
-          <table className="w-full text-sm table-fixed min-w-[900px]">
-            <thead className="bg-transparent dark:bg-transparent">
-              <tr>
-                <th className="w-12 p-4 text-center">
-                  <Skeleton className="h-3 w-3 rounded mx-auto dark:bg-muted" />
-                </th>
-                <th className="w-[18%] p-4">
-                  <Skeleton className="h-3 w-20 dark:bg-muted" />
-                </th>
-                <th className="w-[12%] p-4">
-                  <Skeleton className="h-3 w-14 dark:bg-muted" />
-                </th>
-                <th className="w-[22%] p-4">
-                  <Skeleton className="h-3 w-24 dark:bg-muted" />
-                </th>
-                <th className="w-[48%] p-4">
-                  <Skeleton className="h-3 w-32 dark:bg-muted" />
-                </th>
-                <th className="w-20 p-4 pr-6 text-right">
-                  <Skeleton className="h-3 w-10 ml-auto dark:bg-muted" />
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-              {[1, 2, 3, 4, 5, 6].map((row) => (
-                <tr key={row}>
-                  <td className="p-4 align-middle text-center"><Skeleton className="h-4 w-4 mx-auto rounded dark:bg-muted" /></td>
-                  <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-3.5 w-24 dark:bg-muted" /></td>
-                  <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-5 w-16 rounded-full dark:bg-muted" /></td>
-                  <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
-                  <td className="p-4 align-middle overflow-hidden"><Skeleton className="h-3.5 w-full dark:bg-muted" /></td>
-                  <td className="p-4 pr-6 align-middle text-right whitespace-nowrap"><Skeleton className="h-7 w-7 ml-auto rounded-[6px] dark:bg-muted" /></td>
+          <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none">
+            <table className="w-full text-sm border-collapse min-w-[900px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                  <th className="w-12 min-w-[48px] p-4 text-center border-r border-border/80 dark:border-border">
+                    <Skeleton className="h-3 w-3 rounded mx-auto dark:bg-muted" />
+                  </th>
+                  <th className="w-[18%] min-w-[170px] p-4 border-r border-border/80 dark:border-border">
+                    <Skeleton className="h-3 w-20 dark:bg-muted" />
+                  </th>
+                  <th className="w-[12%] min-w-[110px] p-4 border-r border-border/80 dark:border-border">
+                    <Skeleton className="h-3 w-14 dark:bg-muted" />
+                  </th>
+                  <th className="w-[22%] min-w-[180px] p-4 border-r border-border/80 dark:border-border">
+                    <Skeleton className="h-3 w-24 dark:bg-muted" />
+                  </th>
+                  <th className="w-[40%] min-w-[280px] p-4 border-r border-border/80 dark:border-border">
+                    <Skeleton className="h-3 w-32 dark:bg-muted" />
+                  </th>
+                  <th className="w-20 min-w-[80px] p-4 pr-6 text-right">
+                    <Skeleton className="h-3 w-10 ml-auto dark:bg-muted" />
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border dark:border-border">
+                {[1, 2, 3, 4, 5, 6].map((row) => (
+                  <tr key={row} className="h-[52px] border-b border-border dark:border-border last:border-b-0">
+                    <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70"><Skeleton className="h-4 w-4 mx-auto rounded dark:bg-muted" /></td>
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"><Skeleton className="h-3.5 w-24 dark:bg-muted" /></td>
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"><Skeleton className="h-5 w-16 rounded-full dark:bg-muted" /></td>
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
+                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70"><Skeleton className="h-3.5 w-full dark:bg-muted" /></td>
+                    <td className="p-4 pr-6 align-middle text-right whitespace-nowrap"><Skeleton className="h-7 w-7 ml-auto rounded-lg dark:bg-muted" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -795,68 +812,104 @@ function LogTable({
             </Empty>
           </div>
         ) : (
-          <div className="overflow-visible rounded-[inherit]">
-            <table className="w-full text-sm table-fixed min-w-[900px]">
-              <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10 select-none">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                  <th className="w-12 p-4 text-center"></th>
-                  <th className="w-[18%] p-4">
-                    <button
-                      onClick={() => handleSort("created_at")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
-                    >
-                      Timestamp{" "}
-                      <SortIndicator
-                        column="created_at"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="w-[12%] p-4">
-                    <button
-                      onClick={() => handleSort("severity")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
-                    >
-                      Level{" "}
-                      <SortIndicator
-                        column="severity"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="w-[22%] p-4">
-                    <button
-                      onClick={() => handleSort("action")}
-                      className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
-                    >
-                      Event / Action{" "}
-                      <SortIndicator
-                        column="action"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </th>
-                  <th className="w-[48%] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
-                  <th className="w-20 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                {displayLogs.map((log) => (
-                  <LogRow
-                    key={log.id}
-                    log={log}
-                    isSelected={selectedLog?.id === log.id}
-                    isExpanded={!!expandedRows[log.id]}
-                    toggleRow={toggleRow}
-                    setSelectedLog={setSelectedLog}
-                    handleCopy={handleCopy}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full flex-[1_0_auto] flex flex-col">
+            <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border select-none">
+              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                Showing {displayLogs.length.toLocaleString()} of {logTotal.toLocaleString()} {logTotal === 1 ? "event" : "events"}
+              </span>
+              <TableScrollControls
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                onScrollLeft={() => scrollTable("left")}
+                onScrollRight={() => scrollTable("right")}
+              />
+            </div>
+
+            <div
+              ref={tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            >
+              <table className="w-full text-sm border-collapse min-w-[900px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                    <th className="w-12 min-w-[48px] p-4 text-center border-r border-border/80 dark:border-border"></th>
+                    <th className="w-[18%] min-w-[170px] p-4 border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("created_at")}
+                        className={cn(
+                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-[11px] font-semibold tracking-wider uppercase cursor-pointer",
+                          logSortBy === "created_at"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Timestamp{" "}
+                        <SortIndicator
+                          column="created_at"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="w-[12%] min-w-[110px] p-4 border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("severity")}
+                        className={cn(
+                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-[11px] font-semibold tracking-wider uppercase cursor-pointer",
+                          logSortBy === "severity"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Level{" "}
+                        <SortIndicator
+                          column="severity"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="w-[22%] min-w-[180px] p-4 border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("action")}
+                        className={cn(
+                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-[11px] font-semibold tracking-wider uppercase cursor-pointer",
+                          logSortBy === "action"
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Event / Action{" "}
+                        <SortIndicator
+                          column="action"
+                          logSortBy={logSortBy}
+                          logSortOrder={logSortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="w-[28%] max-w-[280px] p-4 border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      Description
+                    </th>
+                    <th className="w-20 min-w-[80px] p-4 pr-6 text-right text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border dark:border-border">
+                  {displayLogs.map((log) => (
+                    <LogRow
+                      key={log.id}
+                      log={log}
+                      isSelected={selectedLog?.id === log.id}
+                      isExpanded={!!expandedRows[log.id]}
+                      toggleRow={toggleRow}
+                      setSelectedLog={setSelectedLog}
+                      handleCopy={handleCopy}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

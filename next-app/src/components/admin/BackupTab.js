@@ -298,11 +298,11 @@ export default function BackupTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6 pb-6">
-        <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
+        <div className="relative flex flex-[1_0_auto] min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
-          <div className="flex-1 flex flex-col">
-            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
+          <div className="flex-1 min-w-0 flex flex-col">
+            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Office Partition Backup & Archive"
@@ -344,7 +344,7 @@ export default function BackupTab({
                     <Button
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
+                      className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 active:scale-95 transition-all text-xs font-semibold shadow-xs cursor-pointer border-0"
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
@@ -388,7 +388,7 @@ export default function BackupTab({
               />
 
               {isLoading && !isManualLoading ? (
-                <div className="w-full flex flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
+                <div className="w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <BackupTableSkeleton embedded={true} />
                 </div>
               ) : error ? (
@@ -444,7 +444,7 @@ export default function BackupTab({
                     />
                   )}
 
-                  <div className="w-full flex flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
+                  <div className="w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                     <BackupTable
                       backups={backups}
                       sortedAndPaginatedBackups={sortedAndPaginatedBackups}

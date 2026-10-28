@@ -175,16 +175,14 @@ function buildUShapeLayout({ reversed = false } = {}) {
 }
 
 export function buildDefaultStorageLayout() {
-  const roomIds = Array.from({ length: 10 }, (_, i) => i + 1);
-
-  const rooms = roomIds.map((roomId) => {
-    return {
-      id: roomId,
-      name: `Room ${roomId}`,
+  const rooms = [
+    {
+      id: 1,
+      name: "Room 1",
       cabinets: buildGridCabinets({ cols: 4, rows: 2 }),
       door: getDefaultDoor(),
-    };
-  });
+    },
+  ];
 
   return {
     version: 2,

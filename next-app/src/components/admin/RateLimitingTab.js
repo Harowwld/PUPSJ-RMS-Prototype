@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import HugeIcon from "@/components/shared/HugeIcon";
 import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/errorUtils"
@@ -14,6 +15,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 import {
   Tooltip,
   TooltipContent,
@@ -30,6 +33,16 @@ export default function RateLimitingTab() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("overview")
   const [suspiciousIPs, setSuspiciousIPs] = useState([])
+
+  const violationsScroll = useTableScroll([data.recentViolations?.length])
+  const configsScroll = useTableScroll([data.configs?.length])
+  const suspiciousScroll = useTableScroll([suspiciousIPs?.length])
+
+  useEffect(() => {
+    violationsScroll.resetScroll()
+    configsScroll.resetScroll()
+    suspiciousScroll.resetScroll()
+  }, [activeTab])
 
   const fetchData = async (showLoading = false) => {
     try {
@@ -191,87 +204,102 @@ export default function RateLimitingTab() {
 
       {/* Recent Violations */}
       <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-        <div className="border-b border-border bg-gray-50/75 px-5 py-3.5 dark:border-border dark:bg-white/5">
+        <div className="flex items-center justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
           <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
             Recent Rate Limit Violations
           </h3>
+          {data.recentViolations.length > 0 && (
+            <TableScrollControls
+              canScrollLeft={violationsScroll.canScrollLeft}
+              canScrollRight={violationsScroll.canScrollRight}
+              isScrolled={violationsScroll.isScrolled}
+              onScrollLeft={violationsScroll.scrollLeft}
+              onScrollRight={violationsScroll.scrollRight}
+              onResetScroll={violationsScroll.resetScroll}
+            />
+          )}
         </div>
-        <div className="overflow-x-auto">
+        <div>
           {data.recentViolations.length === 0 ? (
             <div className="p-8 text-center text-gray-900 dark:text-zinc-300">
               <PhShield className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-zinc-600" />
               <p className="text-xs font-medium">No recent violations</p>
             </div>
           ) : (
-            <table className="w-full text-sm table-fixed min-w-[700px]">
-              <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
-                <tr>
-                  <th className="w-[20%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                    Type
-                  </th>
-                  <th className="w-[24%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                    Identifier
-                  </th>
-                  <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                    IP Address
-                  </th>
-                  <th className="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                    Violations
-                  </th>
-                  <th className="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                    Lockout Until
-                  </th>
-                  <th className="w-20 px-4 py-3 pr-6 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border dark:divide-border">
-                {data.recentViolations.map((violation) => (
-                  <tr key={violation.id} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
-                    <td className="px-4 py-3 text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">{violation.endpoint_type}</td>
-                    <td className="px-4 py-3 text-xs font-mono text-gray-600 dark:text-zinc-400 truncate">
-                      {violation.identifier}
-                    </td>
-                    <td className="px-4 py-3 text-xs font-mono text-gray-600 dark:text-zinc-400 whitespace-nowrap">
-                      {violation.ip_address}
-                    </td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300">
-                        {violation.violation_count}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">
-                      {violation.lockout_until
-                        ? formatTime(violation.lockout_until)
-                        : "None"}
-                    </td>
-                    <td className="px-4 py-3 pr-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                clearViolation(
-                                  violation.endpoint_type,
-                                  violation.identifier
-                                )
-                              }
-                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-primary transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
-                              aria-label="Clear violation"
-                            >
-                              <PhUnlock className="h-4 w-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Clear</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </td>
+            <div
+              ref={violationsScroll.tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            >
+              <table className="w-full text-sm border-collapse min-w-[700px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="w-[20%] p-4 border-r border-border/80 dark:border-border">
+                      Type
+                    </th>
+                    <th className="w-[24%] p-4 border-r border-border/80 dark:border-border">
+                      Identifier
+                    </th>
+                    <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                      IP Address
+                    </th>
+                    <th className="w-[14%] p-4 border-r border-border/80 dark:border-border">
+                      Violations
+                    </th>
+                    <th className="w-[14%] p-4 border-r border-border/80 dark:border-border">
+                      Lockout Until
+                    </th>
+                    <th className="w-20 p-4 pr-6 text-right">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                  {data.recentViolations.map((violation) => (
+                    <tr key={violation.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
+                      <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{violation.endpoint_type}</td>
+                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70">
+                        {violation.identifier}
+                      </td>
+                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        {violation.ip_address}
+                      </td>
+                      <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300">
+                          {violation.violation_count}
+                        </span>
+                      </td>
+                      <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        {violation.lockout_until
+                          ? formatTime(violation.lockout_until)
+                          : "None"}
+                      </td>
+                      <td className="p-4 pr-6 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  clearViolation(
+                                    violation.endpoint_type,
+                                    violation.identifier
+                                  )
+                                }
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-primary transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                aria-label="Clear violation"
+                              >
+                                <PhUnlock className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Clear</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
@@ -280,36 +308,49 @@ export default function RateLimitingTab() {
 
   const renderConfigurations = () => (
     <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-      <div className="border-b border-border bg-gray-50/75 px-5 py-3.5 dark:border-border dark:bg-white/5">
+      <div className="flex items-center justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Rate Limit Configurations</h3>
+        {data.configs.length > 0 && (
+          <TableScrollControls
+            canScrollLeft={configsScroll.canScrollLeft}
+            canScrollRight={configsScroll.canScrollRight}
+            isScrolled={configsScroll.isScrolled}
+            onScrollLeft={configsScroll.scrollLeft}
+            onScrollRight={configsScroll.scrollRight}
+            onResetScroll={configsScroll.resetScroll}
+          />
+        )}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm table-fixed min-w-[550px]">
-          <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
-            <tr>
-              <th className="w-[42%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+      <div
+        ref={configsScroll.tableContainerRef}
+        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+      >
+        <table className="w-full text-sm border-collapse min-w-[550px]">
+          <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+              <th className="w-[42%] p-4 border-r border-border/80 dark:border-border">
                 Endpoint Type
               </th>
-              <th className="w-[25%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-[25%] p-4 border-r border-border/80 dark:border-border">
                 Window (seconds)
               </th>
-              <th className="w-[25%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-[25%] p-4 border-r border-border/80 dark:border-border">
                 Max Requests
               </th>
-              <th className="w-20 px-4 py-3 pr-6 text-right text-xs font-semibold text-gray-600 dark:text-zinc-300">
+              <th className="w-20 p-4 pr-6 text-right">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border dark:divide-border">
+          <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
             {data.configs.map((config) => (
-              <tr key={config.id} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
-                <td className="px-4 py-3 text-xs font-semibold text-gray-900 dark:text-zinc-100 whitespace-nowrap">
+              <tr key={config.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
+                <td className="p-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   {config.endpoint_type}
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{config.window_seconds}s</td>
-                <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{config.max_requests} req</td>
-                <td className="px-4 py-3 pr-6 text-right whitespace-nowrap">
+                <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{config.window_seconds}s</td>
+                <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{config.max_requests} req</td>
+                <td className="p-4 pr-6 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end">
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -318,7 +359,7 @@ export default function RateLimitingTab() {
                           className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                           aria-label="Edit configuration"
                         >
-                          <HugeIcon  className="ph-bold ph-pencil-simple text-sm" />
+                          <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>Edit</TooltipContent>
@@ -335,54 +376,69 @@ export default function RateLimitingTab() {
 
   const renderSuspiciousIPs = () => (
     <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-      <div className="border-b border-border bg-gray-50/75 px-5 py-3.5 dark:border-border dark:bg-white/5">
+      <div className="flex items-center justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Suspicious IP Addresses</h3>
+        {suspiciousIPs.length > 0 && (
+          <TableScrollControls
+            canScrollLeft={suspiciousScroll.canScrollLeft}
+            canScrollRight={suspiciousScroll.canScrollRight}
+            isScrolled={suspiciousScroll.isScrolled}
+            onScrollLeft={suspiciousScroll.scrollLeft}
+            onScrollRight={suspiciousScroll.scrollRight}
+            onResetScroll={suspiciousScroll.resetScroll}
+          />
+        )}
       </div>
-      <div className="overflow-x-auto">
+      <div>
         {suspiciousIPs.length === 0 ? (
           <div className="p-8 text-center text-gray-900 dark:text-zinc-300">
             <PhShield className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-zinc-600" />
             <p className="text-xs font-medium">No suspicious activity detected</p>
           </div>
         ) : (
-          <table className="w-full text-sm table-fixed min-w-[650px]">
-            <thead className="border-b border-border bg-gray-50/50 dark:border-border dark:bg-muted/40">
-              <tr>
-                <th className="w-[24%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                  IP Address
-                </th>
-                <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                  Risk Level
-                </th>
-                <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                  Failed Logins
-                </th>
-                <th className="w-[18%] px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                  Unique Users
-                </th>
-                <th className="w-[22%] px-4 py-3 pr-6 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                  Last Seen
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border dark:divide-border">
-              {suspiciousIPs.map((ip, index) => (
-                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card">
-                  <td className="px-4 py-3 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">{ip.ip}</td>
-                  <td className="px-4 py-3 text-xs whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`}
-                    >
-                      {ip.riskLevel}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{ip.failed_logins}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{ip.unique_users}</td>
-                  <td className="px-4 py-3 pr-6 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{formatTime(ip.last_seen)}</td>
+          <div
+            ref={suspiciousScroll.tableContainerRef}
+            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+          >
+            <table className="w-full text-sm border-collapse min-w-[650px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                  <th className="w-[24%] p-4 border-r border-border/80 dark:border-border">
+                    IP Address
+                  </th>
+                  <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                    Risk Level
+                  </th>
+                  <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                    Failed Logins
+                  </th>
+                  <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                    Unique Users
+                  </th>
+                  <th className="w-[22%] p-4 pr-6 text-left">
+                    Last Seen
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                {suspiciousIPs.map((ip, index) => (
+                  <tr key={index} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
+                    <td className="p-4 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.ip}</td>
+                    <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`}
+                      >
+                        {ip.riskLevel}
+                      </span>
+                    </td>
+                    <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.failed_logins}</td>
+                    <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.unique_users}</td>
+                    <td className="p-4 pr-6 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{formatTime(ip.last_seen)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

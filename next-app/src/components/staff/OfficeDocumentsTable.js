@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia, EmptyContent } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import useTableScroll from "@/hooks/useTableScroll"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
 
@@ -50,9 +52,17 @@ export default function OfficeDocumentsTable({
   const totalPages = Math.max(1, Math.ceil(rows.length / pageSize))
   const visibleRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([visibleRows.length]);
+
   const containerClasses = embedded
-    ? "border-t border-border dark:border-border w-full bg-white dark:bg-card flex flex-col rounded-b-2xl overflow-hidden"
-    : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none overflow-hidden"
+    ? "border-t border-border dark:border-border w-full bg-white dark:bg-card flex flex-[1_0_auto] flex-col rounded-b-2xl overflow-hidden"
+    : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-[1_0_auto] flex-col overflow-hidden"
 
   return (
     <div className={containerClasses}>
@@ -63,19 +73,29 @@ export default function OfficeDocumentsTable({
             {rows.length} document{rows.length === 1 ? "" : "s"} in the current archive scope
           </p>
         </div>
-        <div className="relative w-full max-w-xs group">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <HugeIcon className="ph-bold ph-magnifying-glass text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+        <div className="flex items-center gap-3">
+          <div className="relative w-full max-w-xs group">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <HugeIcon className="ph-bold ph-magnifying-glass text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+            </div>
+            <Input
+              value={query}
+              onChange={(event) => { setQuery(event.target.value); setPage(1); resetScroll(); }}
+              placeholder="Search this office's documents"
+              className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              {rows.length.toLocaleString()}
+            </div>
           </div>
-          <Input
-            value={query}
-            onChange={(event) => { setQuery(event.target.value); setPage(1) }}
-            placeholder="Search this office's documents"
-            className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-          />
-          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
-            {rows.length.toLocaleString()}
-          </div>
+          {visibleRows.length > 0 && (
+            <TableScrollControls
+              isScrolledX={isScrolledX}
+              onResetScroll={resetScroll}
+              onScrollLeft={() => scrollLeft(400)}
+              onScrollRight={() => scrollRight(400)}
+            />
+          )}
         </div>
       </div>
 
@@ -116,22 +136,25 @@ export default function OfficeDocumentsTable({
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed min-w-[960px]">
-              <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                  <th className="w-[16%] p-4 font-medium">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
-                  <th className="w-[26%] p-4 font-medium">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
-                  <th className="w-[28%] p-4 font-medium">Document</th>
-                  <th className="w-[10%] p-4 font-medium">Year</th>
-                  <th className="w-[12%] p-4 font-medium">Status</th>
-                  <th className="w-24 p-4 pr-6 text-right font-medium">Action</th>
+          <div
+            ref={tableContainerRef}
+            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+          >
+            <table className="w-full text-sm border-collapse min-w-[960px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                  <th className="w-[16%] min-w-[150px] p-4 border-r border-border/80 dark:border-border">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
+                  <th className="w-[26%] min-w-[200px] p-4 border-r border-border/80 dark:border-border">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
+                  <th className="w-[28%] min-w-[220px] p-4 border-r border-border/80 dark:border-border">Document</th>
+                  <th className="w-[10%] min-w-[100px] p-4 border-r border-border/80 dark:border-border">Year</th>
+                  <th className="w-[12%] min-w-[120px] p-4 border-r border-border/80 dark:border-border">Status</th>
+                  <th className="w-24 min-w-[96px] p-4 pr-6 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border dark:divide-border bg-transparent">
+              <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {visibleRows.map((document) => (
                   <tr key={document.id} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
-                    <td className="p-4 align-middle overflow-hidden whitespace-nowrap">
+                    <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       {officeLabel === "OSAS" ? (
                         <span
                           className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full"
@@ -145,19 +168,19 @@ export default function OfficeDocumentsTable({
                         </span>
                       )}
                     </td>
-                    <td className="p-4 align-middle overflow-hidden">
+                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                       <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(document.student_name)}>
                         {formatTitleCase(document.student_name) || "N/A"}
                       </div>
                     </td>
-                    <td className="p-4 align-middle overflow-hidden">
+                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                       <div className="font-semibold text-xs text-gray-900 dark:text-zinc-100 truncate" title={document.doc_type}>{document.doc_type}</div>
                       <div className="truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.original_filename}>{document.original_filename}</div>
                     </td>
-                    <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                    <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       {getYear(document) || "N/A"}
                     </td>
-                    <td className="p-4 align-middle whitespace-nowrap">
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       <Badge variant="outline" className={cn(
                         "rounded-full text-[10px] font-medium px-2.5 py-0.5",
                         document.approval_status === "Approved"
@@ -174,7 +197,7 @@ export default function OfficeDocumentsTable({
                                 type="button"
                                 onClick={() =>
                                   onRescan?.(
-                                    document.student_no,
+                                    document.organization_id || document.student_no,
                                     document.doc_type,
                                     document.id,
                                     document.original_filename,

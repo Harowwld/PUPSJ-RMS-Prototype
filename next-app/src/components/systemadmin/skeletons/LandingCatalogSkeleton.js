@@ -6,8 +6,8 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingCatalogSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-books"
           title={
@@ -41,10 +41,10 @@ export default function LandingCatalogSkeleton() {
           </div>
         </div>
 
-        <CardContent className="p-6">
+        <CardContent className="p-6 flex flex-[1_0_auto] flex-col rounded-b-2xl">
           <div className="space-y-6">
             {/* Section Header & Subtitle Skeleton */}
-            <div className="p-5 sm:p-6 rounded-2xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
+            <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
               <div className="space-y-1">
                 <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -132,7 +132,7 @@ export default function LandingCatalogSkeleton() {
               {/* RIGHT COLUMN: ACTIVE CARD EDITOR */}
               <div className="lg:col-span-7 flex flex-col gap-6">
                 <div className="p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
-                  <div className="flex items-center justify-between pb-3 border-b border-border/80 dark:border-border">
+                  <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                     <div className="space-y-1">
                       <span className="text-[10px] font-mono uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                         Document Card Editor

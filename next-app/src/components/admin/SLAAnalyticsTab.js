@@ -1,7 +1,7 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
-import React, { useEffect, useState, useMemo, useRef } from "react"
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import {
   Card,
 } from "@/components/ui/card"
@@ -69,7 +69,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const [endDate, setEndDate] = useState("")
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
 
-  const loadData = async (isManual = false) => {
+  const loadData = useCallback(async (isManual = false) => {
     if (isManual) {
       setManualLoading(true)
     } else {
@@ -96,11 +96,11 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       setLoading(false)
       setManualLoading(false)
     }
-  }
+  }, [startDate, endDate, showToast])
 
   useEffect(() => {
     loadData()
-  }, [startDate, endDate])
+  }, [loadData])
 
   const handleRefresh = () => {
     loadData(true)
@@ -266,9 +266,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const pageDescription = "Monitor request metrics, turnaround times, and constituent feedback."
 
   return (
-    <div data-light-only className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6">
+    <div data-light-only className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-1 mb-4">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
@@ -293,7 +293,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                       type="button"
                       variant="outline"
                       disabled={loading || !data || isExportingCsv}
-                      className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 gap-1.5"
+                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
                     >
                       {isExportingCsv ? (
                         <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
@@ -309,10 +309,10 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     data-light-only
                     align="end"
                     sideOffset={6}
-                    className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+                    className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
                   >
                     {/* Zone 1: Header */}
-                    <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                    <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Export Dataset
                       </span>
@@ -337,7 +337,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
                         <span>CSM Ratings Data</span>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                      <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
                       <DropdownMenuItem 
                         onClick={() => handleCsvExport("comprehensive")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
@@ -355,14 +355,14 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     <Button
                       type="button"
                       disabled={loading || !data || isGeneratingPdf}
-                      className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs gap-1.5"
+                      className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
                     >
                       {isGeneratingPdf ? (
                         <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
                       ) : (
                         <>
-                          <span>Official Report (PDF)</span>
-                          <HugeIcon className="ph-bold ph-caret-down text-[10px] text-white/80" />
+                          <span>Export PDF Report</span>
+                          <HugeIcon className="ph-bold ph-caret-down text-[10px] text-white/80 dark:text-zinc-900/80" />
                         </>
                       )}
                     </Button>
@@ -371,10 +371,10 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     data-light-only
                     align="end"
                     sideOffset={6}
-                    className="w-64 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+                    className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
                   >
                     {/* Zone 1: Header */}
-                    <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                    <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Official Report
                       </span>
@@ -399,7 +399,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
                         <span>Client Satisfaction (CSM) Report</span>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                      <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
                       <DropdownMenuItem 
                         onClick={() => handlePreview("comprehensive")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
@@ -491,7 +491,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           )
         })()}
 
-        <div className="bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
+        <div className="flex flex-[1_0_auto] flex-col bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (

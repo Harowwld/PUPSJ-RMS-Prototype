@@ -1,12 +1,15 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import StudentRequestsTableSkeleton from "./StudentRequestsTableSkeleton"
 import StudentOsasProposalsSkeleton from "./StudentOsasProposalsSkeleton"
 import StudentComplianceSkeleton from "./StudentComplianceSkeleton"
 import StudentOverviewSkeleton from "./StudentOverviewSkeleton"
 
 export default function StudentDashboardSkeleton({ view = "overview" }) {
+  const { zoomStyle } = useLayoutZoom()
+
   return (
     <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30 select-none">
       {/* Shared dashboard liquid-gradient background */}
@@ -16,23 +19,26 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
         <div className="liquid-blob liquid-blob-3" />
       </div>
 
-      {/* Mobile Top Bar Skeleton (< md) — shared Sidebar renders this in place of a page header */}
-      <div className="md:hidden flex h-[52px] w-full shrink-0 items-center justify-between border-b border-gray-200/80 bg-white/80 px-3 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/80">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
-          <Skeleton className="h-[22px] w-[22px] rounded dark:bg-muted" />
-          <Skeleton className="h-4 w-[88px] rounded dark:bg-muted" />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
-          <Skeleton className="h-8 w-8 rounded-full dark:bg-muted" />
-        </div>
-      </div>
-
       {/* Main Body with Sidebar + Main Workspace (no page header in this layout) */}
-      <div className="flex min-h-0 flex-1">
+      <div
+        className="flex min-h-0 overflow-hidden flex-col md:flex-row"
+        style={zoomStyle}
+      >
+        {/* Mobile Top Bar Skeleton (< md) — shared Sidebar renders this in place of a page header */}
+        <div className="md:hidden flex h-[52px] w-full shrink-0 items-center justify-between border-b border-gray-200/80 bg-white/80 px-3 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/80">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
+            <Skeleton className="h-[22px] w-[22px] rounded dark:bg-muted" />
+            <Skeleton className="h-4 w-[88px] rounded dark:bg-muted" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-9 w-9 rounded-lg dark:bg-muted" />
+            <Skeleton className="h-8 w-8 rounded-full dark:bg-muted" />
+          </div>
+        </div>
+
         {/* Sidebar Skeleton — mirrors shared Sidebar: logo row, command palette, nav, profile */}
-        <aside className="hidden md:flex sticky top-0 h-screen w-[275px] shrink-0 flex-col overflow-hidden border-r border-gray-200/80 bg-white/40 px-2.5 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/40">
+        <aside className="hidden md:flex sticky top-0 h-full w-[275px] shrink-0 flex-col overflow-hidden bg-white/25 px-3 py-3 backdrop-blur-xl dark:bg-zinc-950/25">
           {/* 1. Top Row: Logo + Collapse Button */}
           <div className="mb-4 flex h-[40px] w-full shrink-0 items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -111,8 +117,8 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
         </aside>
 
         {/* Main Content Skeleton Area */}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs">
-          <div className="flex min-h-full w-full flex-1 flex-col pt-4 pr-4 pb-4">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col">
+          <div className="flex w-full flex-[1_0_auto] flex-col p-4 md:pl-0 [&>*]:flex-[1_0_auto]">
             {view === "overview" ? (
               <StudentOverviewSkeleton />
             ) : view === "osas" ? (

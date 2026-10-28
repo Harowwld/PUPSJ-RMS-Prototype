@@ -112,6 +112,7 @@ export async function createDocument({
   uploadedBy,
   sourceIngestId = null,
   allowOverwrite = false,
+  replaceDocumentId = null,
 }) {
   await ensureReviewColumns();
   if (!officeId) throw new Error("Document office scope is required.");
@@ -190,12 +191,19 @@ export async function createDocument({
     }
   }
 
-  const existingActiveDoc = await findDuplicateActiveDocument({
+  let existingActiveDoc = await findDuplicateActiveDocument({
     officeId,
     studentNo: verifiedStudentNo || effectiveStudentNo,
     organizationId: effectiveOrgId,
     docType,
   });
+
+  if (!existingActiveDoc && allowOverwrite && replaceDocumentId) {
+    const candidate = await getDocumentById(replaceDocumentId, { officeId });
+    if (candidate) {
+      existingActiveDoc = candidate;
+    }
+  }
 
   if (existingActiveDoc) {
     if (allowOverwrite) {

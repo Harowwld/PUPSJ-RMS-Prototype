@@ -42,6 +42,8 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import useTableScroll from "@/hooks/useTableScroll"
 import StudentProfileSheet from "./StudentProfileSheet"
 import StudentDriveFilesView from "./StudentDriveFilesView"
 import EditStudentModal from "./EditStudentModal"
@@ -126,13 +128,13 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-60 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 shadow-2xl overflow-hidden select-none" 
+            className="w-60 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-[0.5px] border-border dark:border-white/10 shadow-2xl overflow-hidden select-none" 
             side="top" 
             align="end"
             sideOffset={8}
           >
             {/* 1. Header Zone */}
-            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border dark:border-border bg-gray-50/60 dark:bg-zinc-800/40">
+            <div className="flex items-center justify-between px-3.5 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
               <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Folder Color
               </span>
@@ -586,6 +588,18 @@ export default function RecordsArchiveTab({
     return filteredExplorerItems.slice(start, start + itemsPerPage)
   }, [filteredExplorerItems, isLeafLevel, page, itemsPerPage])
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedExplorerItems.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, currentEffectiveLevel, showArchived, resetScroll]);
+
   const totalItems = isLeafLevel ? filteredExplorerItems.length : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
@@ -684,11 +698,11 @@ export default function RecordsArchiveTab({
   return (
     <div
       id="view-search"
-      className="flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta pb-6"
+      className="flex flex-[1_0_auto] flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
       tabIndex={0}
     >
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-archive"
           title="Records & Archive"
@@ -888,10 +902,10 @@ export default function RecordsArchiveTab({
               <DropdownMenuContent
                 align="end"
                 sideOffset={6}
-                className="w-60 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+                className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
               >
                 {/* Zone 1: Header */}
-                <div className="px-4 py-2.5 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     Arrange Records
                   </span>
@@ -1035,9 +1049,9 @@ export default function RecordsArchiveTab({
         </div>
       </div>
 
-        {/* 3. Breadcrumb Sub-Header */}
-        <div className="flex h-[46px] items-center justify-between gap-2 border-t border-border dark:border-border bg-white px-6 text-sm dark:bg-card select-none">
-          <div className="flex items-center gap-3">
+        {/* 3. Breadcrumb Sub-Header & Table Scroll Controls */}
+        <div className="flex min-h-[46px] py-1.5 items-center justify-between gap-4 border-t border-border dark:border-border bg-white px-6 text-sm dark:bg-card select-none">
+          <div className="flex items-center gap-3 min-w-0">
             <Breadcrumb className="flex items-center select-none">
               <BreadcrumbList className="flex items-center font-medium text-[14px] text-[#8E8E93] gap-0 dark:text-zinc-400">
                 {effectiveBreadcrumbs.map((b, idx) => (
@@ -1068,9 +1082,17 @@ export default function RecordsArchiveTab({
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          {isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 && (
+            <TableScrollControls
+              isScrolledX={isScrolledX}
+              onResetScroll={resetScroll}
+              onScrollLeft={() => scrollLeft(400)}
+              onScrollRight={() => scrollRight(400)}
+            />
+          )}
         </div>
 
-            <div className={cn("w-full bg-white dark:bg-card", isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6", selectedStudent && "rounded-b-2xl")}>
+            <div className={cn("w-full flex-[1_0_auto] flex flex-col bg-white dark:bg-card", isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6", selectedStudent && "rounded-b-2xl")}>
               {selectedStudent ? (
                 <StudentDriveFilesView
                   student={selectedStudent}
@@ -1078,6 +1100,7 @@ export default function RecordsArchiveTab({
                   courses={courses}
                   onLocateStudent={onLocateStudent}
                   onPreviewDocument={onPreviewDocument}
+                  onRescan={onRescan}
                   onBack={() => setSelectedStudent(null)}
                   authUser={authUser}
                   onOpenDetails={(st) => {
@@ -1316,7 +1339,7 @@ export default function RecordsArchiveTab({
                                       }}
                                       className="h-7 rounded-lg border-white/30 bg-white/15 px-2 text-[10px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
                                     >
-                                      Restore
+                                      Restore Student
                                     </Button>
                                   )}
                                   <Tooltip>
@@ -1331,7 +1354,7 @@ export default function RecordsArchiveTab({
                                         className="h-7 px-2.5 rounded-lg border-white/30 bg-white/15 text-[10px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
                                         title="Locate Archive Drawer"
                                       >
-                                        Locate
+                                        Locate Drawer
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Locate Drawer</TooltipContent>
@@ -1384,7 +1407,7 @@ export default function RecordsArchiveTab({
                                       }}
                                       className="h-8 rounded-xl border-white/30 bg-white/10 px-2.5 text-[9px] font-semibold text-white shadow-xs hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
                                     >
-                                      Restore
+                                      Restore Student
                                     </Button>
                                   )}
                                   <Tooltip>
@@ -1399,7 +1422,7 @@ export default function RecordsArchiveTab({
                                         className="h-8 rounded-xl border-white/30 bg-white/15 px-3 text-[11px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
                                         title="Locate in Storage Map"
                                       >
-                                        Locate
+                                        Locate Drawer
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Locate Drawer</TooltipContent>
@@ -1415,13 +1438,14 @@ export default function RecordsArchiveTab({
                 </div>
               ) : (
                 <div 
+                  ref={tableContainerRef}
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="w-full overflow-x-auto animate-fade-up"
+                  className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
                 >
-                  <table className="w-full text-sm table-fixed min-w-[850px]">
-                    <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                        <th className="w-12 p-4 text-center font-medium">
+                  <table className="w-full text-sm border-collapse min-w-[850px]">
+                    <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                      <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                        <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border">
                            <input
                              type="checkbox"
                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1429,14 +1453,14 @@ export default function RecordsArchiveTab({
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
                         </th>
-                        <th className={cn("p-4 font-medium", isOsas ? "w-[18%]" : "w-[22%]")}>{isOsas ? "Acronym" : "Student No."}</th>
-                        <th className={cn("p-4 font-medium", isOsas ? "w-[32%]" : "w-[42%]")}>{isOsas ? "Organization Name" : "Full Name"}</th>
-                        {isOsas && <th className="w-[16%] p-4 font-medium">Category</th>}
-                        <th className={cn("p-4 font-medium", isOsas ? "w-[24%]" : "w-[28%]")}>Physical Location</th>
-                        <th className="w-24 p-4 pr-6 text-right font-medium">{isOsas ? "Actions" : "Actions"}</th>
+                        <th className={cn("p-4 border-r border-border/80 dark:border-border", isOsas ? "w-[18%]" : "w-[22%]")}>{isOsas ? "Acronym" : "Student No."}</th>
+                        <th className={cn("p-4 border-r border-border/80 dark:border-border", isOsas ? "w-[32%]" : "w-[42%]")}>{isOsas ? "Organization Name" : "Full Name"}</th>
+                        {isOsas && <th className="w-[16%] p-4 border-r border-border/80 dark:border-border">Category</th>}
+                        <th className={cn("p-4 border-r border-border/80 dark:border-border", isOsas ? "w-[24%]" : "w-[28%]")}>Physical Location</th>
+                        <th className="w-24 p-4 pr-6 text-right">{isOsas ? "Actions" : "Actions"}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border dark:divide-border bg-transparent">
+                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                       {paginatedExplorerItems.map((row) => {
                         const isSelected = selectedIds.has(row.student.studentNo)
                         return (
@@ -1448,7 +1472,7 @@ export default function RecordsArchiveTab({
                             )}
                             onClick={() => handleStudentSelect(row.student)}
                           >
-                            <td className="w-12 p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                            <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                                <input
                                  type="checkbox"
                                  className={cn(
@@ -1459,12 +1483,12 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 {row.student.acronym || row.student.studentNo}
                               </span>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-2 min-w-0 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                   <span className="truncate" title={formatTitleCase(row.student.name)}>
@@ -1489,13 +1513,13 @@ export default function RecordsArchiveTab({
                               </div>
                             </td>
                             {isOsas && (
-                              <td className="p-4 align-middle whitespace-nowrap">
+                              <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
                                   {row.student.category || "Academic"}
                                 </span>
                               </td>
                             )}
-                            <td className="p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
@@ -1724,6 +1748,7 @@ export default function RecordsArchiveTab({
         allDocs={allDocs}
         onLocateStudent={onLocateStudent}
         onPreviewDocument={onPreviewDocument}
+        onRescan={onRescan}
         onEditStudent={handleEditRecord}
         onArchiveStudent={handleArchiveRecord}
         onRestoreStudent={async (sn) => {

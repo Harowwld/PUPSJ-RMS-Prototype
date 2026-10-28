@@ -998,8 +998,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             !selected.staff_selected_student_no ||
                             !selected.proposed_doc_type
                           }
-                          className="h-8 px-3 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs sm:h-10 sm:px-5"
-                          style={{ color: "#ffffff" }}
+                          className="h-8 px-3 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs sm:h-10 sm:px-5"
                         >
                           {saving ? "Confirming..." : "Confirm Document"}
                         </Button>

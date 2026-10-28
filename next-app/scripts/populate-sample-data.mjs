@@ -16,7 +16,8 @@ import { encryptPII } from "../src/lib/piiEncryption.js";
 dotenv.config({ path: ".env" });
 
 const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
-const { buildDefaultStorageLayout } = await import("../src/lib/storageLayoutDefaults.js");
+const { buildDefaultStorageLayout, buildDefaultOsasStorageLayout } = await import("../src/lib/storageLayoutDefaults.js");
+const { generateDocumentPdfByType } = await import("../src/lib/pdfDocumentGenerators.js");
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required. Start PostgreSQL and check next-app/.env.");
@@ -35,8 +36,8 @@ const officialStaff = [
 ];
 
 const demoStudentAccounts = [
-  ["2023-00001-IT-1", "test.student@pup.local"],
-  ["2022-10001-MN-1", "student@pup.local"],
+  ["2023-00001-SJ-0", "test.student@pup.local"],
+  ["2022-10001-SJ-0", "student@pup.local"],
 ];
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -50,7 +51,8 @@ const rosterStudents = studentRosterRows.map((line, index) => {
   if (name.includes(",")) {
     throw new Error(`Student name must be First Middle Last on roster row ${index + 2}`);
   }
-  return [studentNo.trim(), name.trim(), courseCode.trim().toUpperCase(), Number(academicYear), section.trim(), Number(room), cabinet.trim(), Number(drawer)];
+  const cleanNo = studentNo.trim().replace(/-(MN|IT)-/g, "-SJ-").replace(/-SJ-[12]$/, "-SJ-0");
+  return [cleanNo, name.trim(), courseCode.trim().toUpperCase(), Number(academicYear), section.trim(), 1, cabinet.trim(), Number(drawer)];
 });
 if (rosterStudents.length !== 85) {
   throw new Error(`Expected 85 certificate-backed students; found ${rosterStudents.length}`);
@@ -61,29 +63,40 @@ if (new Set(rosterStudents.map(([studentNo]) => studentNo)).size !== rosterStude
 const students = rosterStudents;
 const rosterCourses = [
   ["BSA", "Bachelor of Science in Accountancy"],
-  ["BSBA-FM", "Bachelor of Science in Business Administration major in Financial Management"],
+  ["BSEDEN", "Bachelor in Secondary Education major in English"],
   ["BSENT", "Bachelor of Science in Entrepreneurship"],
+  ["BSBA-FM", "Bachelor of Science in Business Education major in Financial Management"],
   ["BSIT", "Bachelor of Science in Information Technology"],
-  ["BSPSYCH", "Bachelor of Science in Psychology"],
-  ["BSEDUC", "Bachelor in Secondary Education major in English"],
-  ["DIT", "Diploma in Information Technology"],
+  ["BSHM", "Bachelor of Science in Hospitality Management"],
+  ["BS Psy", "Bachelor of Science in Psychology"],
+  ["DICT", "Diploma in Information and Communications Technology"],
 ];
 const rosterSections = [...new Set(rosterStudents.map(([, , courseCode, , section]) => `${courseCode}\t${section}`))]
   .map((entry) => entry.split("\t"));
 
 const documents = [
-  [1, "2022-10001-MN-1", "DELA CRUZ, JUAN A.", "Transcript of Records", "sample-tor-juan.pdf"],
-  [2, "2022-10001-MN-1", "DELA CRUZ, JUAN A.", "Certificate of Enrollment", "sample-coe-juan.pdf"],
-  [3, "2022-10002-MN-2", "SANTOS, MARIA B.", "Form 137", "sample-form137-maria.pdf"],
-  [4, "2021-30004-MN-1", "GARCIA, ANA D.", "Diploma", "sample-diploma-ana.pdf"],
+  [1, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "PSA Birth Certificate (circled)", "sample-psa-juan.pdf", "Approved"],
+  [2, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "Health and Information Sheet", "sample-health-juan.pdf", "Approved"],
+  [3, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "SAR Form (circled)", "sample-sar-juan.pdf", "Approved"],
+  [4, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "CAEPUP 2023 Application Form", "sample-caepup-juan.pdf", "Approved"],
+  [5, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "Undertaking and Waiver of Right", "sample-uwr-juan.pdf", "Approved"],
+  [6, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "PSA Birth Certificate (circled)", "sample-psa-clara.pdf", "Approved"],
+  [7, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "Grade 12 Report Card (1st and 2nd Semester)", "sample-g12-clara.pdf", "Approved"],
+  [8, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "Certificate of Good Moral Character", "sample-moral-clara.pdf", "Pending"],
+  [9, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "Photocopy of ID", "sample-id-clara.pdf", "Pending"],
+  [10, "2022-10002-SJ-0", "SANTOS, MARIA B.", "Grade 12 Report Card (1st and 2nd Semester)", "sample-g12-maria.pdf", "Pending"],
+  [11, "2021-30004-SJ-0", "GARCIA, ANA D.", "SAR Form (circled)", "sample-sar-ana.pdf", "Pending"],
+  [12, "2023-20003-SJ-0", "RAMIREZ, CARLOS E.", "CTC Grade 10 Report Card", "sample-g10-carlos.pdf", "Pending"],
+  [13, "2024-40005-SJ-0", "NAVARRO, PATRICIA M.", "CTC Grade 11 Report Card", "sample-g11-patricia.pdf", "Pending"],
+  [14, "2023-20003-SJ-0", "RAMIREZ, CARLOS E.", "SHS Diploma or Certificate of Graduation", "sample-diploma-carlos.pdf", "Pending"],
 ];
 
 const requests = [
-  [1, "2023-20003-MN-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-002"],
-  [2, "2024-40005-MN-2", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
-  [3, "2022-10001-MN-1", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "PUPREGISTRAR-002"],
-  [4, "2022-10002-MN-2", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
-  [5, "2020-50006-MN-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "PUPREGISTRAR-002"],
+  [1, "2023-20003-SJ-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-002"],
+  [2, "2024-40005-SJ-0", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
+  [3, "2022-10001-SJ-0", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "PUPREGISTRAR-002"],
+  [4, "2022-10002-SJ-0", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
+  [5, "2020-50006-SJ-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "PUPREGISTRAR-002"],
 ];
 
 async function generateProposalPdf({ title, orgName, eventDate, venue, desc, studentNo, studentName, status }) {
@@ -168,7 +181,7 @@ async function generateProposalPdf({ title, orgName, eventDate, venue, desc, stu
 
 const proposals = [
   [
-    "2022-10001-MN-1",
+    "2022-10001-SJ-0",
     "Annual Tech Summit & Hackathon 2026",
     "Junior Philippine Computer Society (JPCS)",
     "2026-10-15",
@@ -184,7 +197,7 @@ const proposals = [
     ],
   ],
   [
-    "2022-10002-MN-2",
+    "2022-10002-SJ-0",
     "University Leadership Congress & General Assembly",
     "Central Student Council (CSC)",
     "2026-09-28",
@@ -201,7 +214,7 @@ const proposals = [
     ],
   ],
   [
-    "2023-20003-MN-0",
+    "2023-20003-SJ-0",
     "Freshmen Orientation & Welcoming Gala",
     "Association of Computer Science Students (ACSS)",
     "2026-09-20",
@@ -216,7 +229,7 @@ const proposals = [
     ],
   ],
   [
-    "2024-40005-MN-2",
+    "2024-40005-SJ-0",
     "Financial Literacy & Investment Forum",
     "Junior Financial Executives (JFINEX)",
     "2026-11-05",
@@ -233,7 +246,7 @@ const proposals = [
     ],
   ],
   [
-    "2021-30004-MN-1",
+    "2021-30004-SJ-0",
     "Cybersecurity Defense & Ethical Hacking Workshop",
     "Association of Computer Science Students (ACSS)",
     "2026-10-22",
@@ -265,7 +278,7 @@ const proposals = [
     ],
   ],
   [
-    "2025-60007-MN-0",
+    "2025-60007-SJ-0",
     "Inter-College Debate Championship: The San Juan Cup",
     "Guild of English Majors & Orators",
     "2026-11-12",
@@ -281,7 +294,7 @@ const proposals = [
     ],
   ],
   [
-    "2025-60008-MN-1",
+    "2025-60008-SJ-0",
     "Overnight E-Sports LAN Tournament & Gaming Festival",
     "PUP San Juan Gaming Guild",
     "2026-10-30",
@@ -300,7 +313,7 @@ const proposals = [
 ];
 
 const osasDocuments = [
-  [101, "2025-90001-MN-0", "DE LA ROSA, ANGELA M.", "Organization Registration Certificate", "sample-org-cert-angela.pdf"],
+  [101, "2025-90001-SJ-0", "DE LA ROSA, ANGELA M.", "Organization Registration Certificate", "sample-org-cert-angela.pdf"],
 ];
 
 const minimalPdf = Buffer.from(
@@ -359,27 +372,37 @@ export async function seed({ force: forceOverride } = {}) {
       }
     }
 
-    for (const [code, name] of [["BSIT", "Bachelor of Science in Information Technology"], ["BSCS", "Bachelor of Science in Computer Science"]]) {
-      await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
-    }
-
-    for (const [name, code] of [["BSIT-4A", "BSIT"], ["BSIT-4B", "BSIT"], ["BSCS-3A", "BSCS"]]) {
-      await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [name, code]);
-    }
-
     for (const [code, name] of rosterCourses) {
       await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
-    }
-    for (const [courseCode, section] of rosterSections) {
-      await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [section, courseCode]);
-    }
-
-    for (const name of ["Transcript of Records", "Diploma", "Certificate of Good Moral", "Form 137", "Grade 11 Report Card", "Grade 12 Report Card", "Certificate of Enrollment", "Birth Certificate"]) {
-      await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
+      for (const sec of ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"]) {
+        await run(`INSERT INTO sections (office_id, name, course_code, status) VALUES ('registrar', $1, $2, 'Active') ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`, [sec, code]);
+      }
     }
 
-    for (const [code, name] of [["BSA", "Bachelor of Science in Accountancy"]]) {
-      await run(`INSERT INTO courses (office_id, code, name, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [code, name]);
+    await run(`DELETE FROM courses WHERE office_id = 'osas'`);
+    await run(`DELETE FROM sections WHERE office_id = 'osas'`);
+
+    // Strictly the 11 compliance document types for Registrar
+    const registrarComplianceDocTypes = [
+      ["CAEPUP 2023 Application Form", "Admission & Identity"],
+      ["SAR Form (circled)", "Admission & Identity"],
+      ["Health and Information Sheet", "Certificates & Clearances"],
+      ["Undertaking and Waiver of Right", "Admission & Identity"],
+      ["CTC Grade 10 Report Card", "Academic Records"],
+      ["CTC Grade 11 Report Card", "Academic Records"],
+      ["Grade 12 Report Card (1st and 2nd Semester)", "Academic Records"],
+      ["SHS Diploma or Certificate of Graduation", "Academic Records"],
+      ["Certificate of Good Moral Character", "Certificates & Clearances"],
+      ["PSA Birth Certificate (circled)", "Admission & Identity"],
+      ["Photocopy of ID", "Admission & Identity"],
+    ];
+    for (const [name, cat] of registrarComplianceDocTypes) {
+      await run(
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ('registrar', $1, $2, 'Active', true, false, $3)
+         ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active', is_compliance=true, is_requestable=false, compliance_category=EXCLUDED.compliance_category`,
+        [name, name.toLowerCase(), cat]
+      );
     }
 
     // Recognized OSAS student organizations from the campus list.
@@ -411,27 +434,46 @@ export async function seed({ force: forceOverride } = {}) {
     }
 
     await run(`DELETE FROM sections WHERE office_id = 'osas'`);
-    for (const name of [
-      "Event Proposal",
+    await run(`DELETE FROM courses WHERE office_id = 'osas'`);
+    const osasDocTypes = [
       "Constitution & By-Laws (CBL)",
+      "Event Proposal",
       "Activity Request",
+      "Activity Permit",
       "Financial Liquidation Report",
-      "Student Disciplinary Clearance",
+      "Post-Event Narrative Report",
+      "Post-Event Compliance Clearance Certificate",
       "Organization Registration Certificate",
-      "Good Moral Certificate",
-      "Clearance Form",
-    ]) {
-      await run(`INSERT INTO document_types (office_id, name, name_norm, status) VALUES ('osas', $1, $2, 'Active') ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active'`, [name, name.toLowerCase()]);
+    ];
+    for (const name of osasDocTypes) {
+      await run(
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ('osas', $1, $2, 'Active', true, false, 'Student Governance & Activities')
+         ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active', is_compliance=true, is_requestable=false, compliance_category=EXCLUDED.compliance_category`,
+        [name, name.toLowerCase()]
+      );
     }
+    await run(`
+      UPDATE document_types
+      SET status = 'Archived', is_compliance = FALSE, is_requestable = FALSE
+      WHERE office_id = 'osas' AND name_norm IN ('good moral certificate', 'certificate of good moral', 'clearance form', 'student disciplinary clearance')
+    `);
 
     for (const student of students) {
+      const rawCourse = student[2];
+      let normalizedCourse = rawCourse;
+      if (rawCourse === "BSEDUC") normalizedCourse = "BSEDEN";
+      if (rawCourse === "BSPSYCH") normalizedCourse = "BS Psy";
+      if (rawCourse === "DIT") normalizedCourse = "DICT";
+      if (rawCourse === "BSCS") normalizedCourse = "BSIT";
+      const studentData = [student[0], student[1], normalizedCourse, student[3], student[4], student[5], student[6], student[7]];
       await run(
         `INSERT INTO students (student_no, name, course_code, year_level, section, status, storage_room, storage_cabinet, storage_drawer)
          VALUES ($1,$2,$3,$4,$5,'Active',$6,$7,$8)
          ON CONFLICT (student_no) DO UPDATE SET name=EXCLUDED.name, course_code=EXCLUDED.course_code, year_level=EXCLUDED.year_level,
            section=EXCLUDED.section, status='Active', storage_room=EXCLUDED.storage_room, storage_cabinet=EXCLUDED.storage_cabinet,
            storage_drawer=EXCLUDED.storage_drawer, updated_at=NOW()`,
-        student,
+        studentData,
       );
       await run(
         `INSERT INTO student_office_memberships (student_no, office_id, status)
@@ -465,27 +507,57 @@ export async function seed({ force: forceOverride } = {}) {
     fs.mkdirSync(osasUploadsDir, { recursive: true });
     fs.mkdirSync(osasStorageDir, { recursive: true });
 
-    for (const [legacyId, studentNo, studentName, docType, filename] of documents) {
+    for (const [legacyId, studentNo, studentName, docType, filename, status] of documents) {
       const storageFilename = `sample-${legacyId}-${filename}`;
-      fs.writeFileSync(path.join(uploadsDir, storageFilename), minimalPdf);
+      const pdfBytes = await generateDocumentPdfByType({
+        docType,
+        studentNo,
+        studentName,
+        courseCode: "BSIT",
+        section: "1-1",
+        dateStr: "AY 2023-2024",
+      });
+      fs.writeFileSync(path.join(uploadsDir, storageFilename), pdfBytes);
+      const isApproved = status === "Approved";
       await run(
-        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
-         VALUES ('registrar',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
+        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, legacy_id)
+         VALUES ('registrar',$1,$2,$3,$4,$5,'application/pdf',$6,$7,$8,$9,$10,$11)
          ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, student_name=EXCLUDED.student_name,
-           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename, size_bytes=EXCLUDED.size_bytes`,
-        [studentNo, studentName, docType, filename, storageFilename, minimalPdf.length, legacyId],
+           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename,
+           size_bytes=EXCLUDED.size_bytes, approval_status=EXCLUDED.approval_status, reviewed_by=EXCLUDED.reviewed_by, reviewed_at=EXCLUDED.reviewed_at, review_note=EXCLUDED.review_note`,
+        [
+          studentNo,
+          studentName,
+          docType,
+          filename,
+          storageFilename,
+          pdfBytes.length,
+          status || "Pending",
+          isApproved ? "PUPREGISTRAR-003" : null,
+          isApproved ? new Date().toISOString() : null,
+          isApproved ? "Legible scan, complete details verified." : null,
+          legacyId,
+        ],
       );
     }
 
     for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
       const storageFilename = `sample-${legacyId}-${filename}`;
-      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), minimalPdf);
+      const pdfBytes = await generateDocumentPdfByType({
+        docType,
+        studentNo,
+        studentName,
+        orgName: studentName,
+        dateStr: "AY 2026-2027",
+      });
+      fs.writeFileSync(path.join(osasUploadsDir, storageFilename), pdfBytes);
+      fs.writeFileSync(path.join(osasStorageDir, storageFilename), pdfBytes);
       await run(
-        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, legacy_id)
-         VALUES ('osas',$1,$2,$3,$4,$5,'application/pdf',$6,'Pending',$7)
+        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, legacy_id)
+         VALUES ('osas',$1,$2,$3,$4,$5,'application/pdf',$6,'Approved','PUPOSAS-001',NOW(),'Official OSAS Recognition Certificate issued.',$7)
          ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, student_name=EXCLUDED.student_name,
-           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename, size_bytes=EXCLUDED.size_bytes`,
-        [studentNo, studentName, docType, filename, storageFilename, minimalPdf.length, legacyId],
+           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename, size_bytes=EXCLUDED.size_bytes, approval_status='Approved'`,
+        [studentNo, studentName, docType, filename, storageFilename, pdfBytes.length, legacyId],
       );
     }
 
@@ -565,7 +637,10 @@ export async function seed({ force: forceOverride } = {}) {
     await run(`INSERT INTO global_audit_logs (office_id, actor, role, action, ip) VALUES ('registrar', 'System Administrator', 'Admin', 'Sample data populated (PostgreSQL)', '127.0.0.1')`);
 
     if (force || !(await runOne("SELECT 1 FROM settings WHERE key = 'storage_layout'"))) {
-      await run(`INSERT INTO settings (key, value) VALUES ('storage_layout', $1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [JSON.stringify(buildDefaultStorageLayout())]);
+      const defaultLayoutJson = JSON.stringify(buildDefaultStorageLayout());
+      await run(`INSERT INTO settings (key, value) VALUES ('storage_layout', $1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [defaultLayoutJson]);
+      await run(`INSERT INTO settings (key, value) VALUES ('storage_layout:registrar', $1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [defaultLayoutJson]);
+      await run(`INSERT INTO settings (key, value) VALUES ('storage_layout:osas', $1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [JSON.stringify(buildDefaultOsasStorageLayout())]);
     }
   });
 
