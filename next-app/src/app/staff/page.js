@@ -24,6 +24,16 @@ import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
 import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
+import DocumentRequestsSkeleton from "@/components/staff/skeletons/DocumentRequestsSkeleton";
+import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
+import ScanUploadSkeleton from "@/components/staff/skeletons/ScanUploadSkeleton";
+import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
+import StudentDirectorySkeleton from "@/components/staff/skeletons/StudentDirectorySkeleton";
+import StudentOrganizationsSkeleton from "@/components/staff/skeletons/StudentOrganizationsSkeleton";
+import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton";
+import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton";
+import DocumentsTabSkeleton from "@/components/staff/skeletons/DocumentsTabSkeleton";
+import NotificationsTabSkeleton from "@/components/staff/skeletons/NotificationsTabSkeleton";
 
 const STAFF_NAV_ITEMS = [
   { key: "requests", label: "Document Requests" },
@@ -50,17 +60,16 @@ function StaffDashboardLoadingSkeleton() {
   );
 }
 
-const StaffTabLoading = () => <StaffTabSkeleton />;
-const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: StaffTabLoading });
-const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: StaffTabLoading });
-const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: StaffTabLoading });
-const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: StaffTabLoading });
-const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: StaffTabLoading });
-const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: StaffTabLoading });
-const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: StaffTabLoading });
-const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: StaffTabLoading });
-const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: StaffTabLoading });
-const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: StaffTabLoading });
+const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: () => <RecordsArchiveSkeleton /> });
+const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: () => <StorageExplorerSkeleton /> });
+const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: () => <ScanUploadSkeleton /> });
+const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: () => <BatchReviewSkeleton /> });
+const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: () => <DocumentsTabSkeleton /> });
+const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: () => <NotificationsTabSkeleton /> });
+const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: () => <DocumentRequestsSkeleton /> });
+const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: () => <OsasMonitoringSkeleton /> });
+const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: () => <StudentOrganizationsSkeleton /> });
+const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: () => <StudentDirectorySkeleton /> });
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -1335,21 +1344,31 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           docType: suggestion.docType,
           docTypesAvailable: docTypes,
         });
+        const keepExistingIdentity = Boolean(
+          rescanContext || isReplaceMode || uploadStudentIsExisting
+        );
         setNewRec((p) => ({
           ...p,
-          name: String(suggestion.name || p.name || "")
-            .trim()
-            .replace(/\s+/g, " ")
-            .toUpperCase(),
+          name: keepExistingIdentity
+            ? p.name
+            : String(suggestion.name || p.name || "")
+                .trim()
+                .replace(/\s+/g, " ")
+                .toUpperCase(),
           room: p.room || (isOsas ? "1" : ""),
           cabinet: p.cabinet || "",
           drawer: p.drawer || (isOsas ? "1" : ""),
-          docType:
-            suggestion.docType != null && String(suggestion.docType).trim() !== ""
-              ? String(suggestion.docType).trim()
-              : p.docType,
+          docType: rescanContext?.docType
+            ? rescanContext.docType
+            : keepExistingIdentity && p.docType
+              ? p.docType
+              : suggestion.docType != null && String(suggestion.docType).trim() !== ""
+                ? String(suggestion.docType).trim()
+                : p.docType,
         }));
-        setUploadStudentIsExisting(false);
+        if (!keepExistingIdentity) {
+          setUploadStudentIsExisting(false);
+        }
         clearAllUploadFieldErrors();
       } catch (err) {
         setOcrLoading(false);
@@ -1448,6 +1467,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const checkDuplicate = useCallback((targetId, docType) => {
     if (!targetId || !docType) return;
+    if (isReplaceMode || rescanContext) return;
     const cleanId = String(targetId).trim().toUpperCase();
     const cleanType = String(docType).trim().toUpperCase();
 
@@ -1463,7 +1483,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setDuplicateTargetDoc(existing);
       setDuplicateConfirmOpen(true);
     }
-  }, [staffDocs]);
+  }, [staffDocs, isReplaceMode, rescanContext]);
 
   const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
@@ -1609,6 +1629,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (isReplaceMode || rescanContext) {
       payload.append("allowOverwrite", "true");
       payload.append("replaceExisting", "true");
+      if (rescanContext?.docId) {
+        payload.append("replaceDocumentId", String(rescanContext.docId));
+      }
     }
 
     if (isOsas) {
@@ -1661,6 +1684,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         uploadError.status = res.status;
         if (res.status === 409 || data.isDuplicate) {
           uploadError.title = "Document Already on File";
+          if (data.isDuplicate) {
+            setDuplicateTargetDoc({
+              id: data.duplicateId || null,
+              doc_type: newRec.docType,
+              approval_status: data.existingStatus || "On File",
+            });
+            setDuplicateConfirmOpen(true);
+          }
         }
         throw uploadError;
       }
@@ -1948,10 +1979,37 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     ]);
   const handleRescan = useCallback(async (targetId, docType, docId, filename, mimeType) => {
     const isOsas = authUser?.office_id === "osas";
-    setRescanContext({ targetId, docType, docId, filename, mimeType });
-    setIsReplaceMode(true);
+    const cleanTargetId = String(targetId || "").trim().toUpperCase();
+    const cleanDocType = String(docType || "").trim().toUpperCase();
+    const matchedDoc = docId
+      ? allDocs.find((d) => String(d.id) === String(docId)) || null
+      : allDocs.find(
+          (d) =>
+            (String(d.student_no || "").trim().toUpperCase() === cleanTargetId ||
+             String(d.organization_id || "").trim().toUpperCase() === cleanTargetId) &&
+            String(d.doc_type || "").trim().toUpperCase() === cleanDocType &&
+            String(d.approval_status || "").toLowerCase() !== "declined"
+        ) || null;
+    const isReplacement = Boolean(docId || matchedDoc);
+
+    if (isReplacement) {
+      setRescanContext({
+        targetId,
+        docType,
+        docId: docId || matchedDoc?.id || null,
+        filename: filename || matchedDoc?.original_filename || null,
+        mimeType: mimeType || matchedDoc?.mime_type || null,
+        originalStatus: matchedDoc?.approval_status || (docId ? "Declined" : "On File"),
+      });
+      setIsReplaceMode(true);
+    } else {
+      setRescanContext(null);
+      setIsReplaceMode(false);
+    }
+
     if (isOsas) {
-      const org = organizations.find(
+      const allOrgsPool = [...organizations, ...archivedOrganizations];
+      const org = allOrgsPool.find(
         (x) =>
           String(x.id || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase() ||
           String(x.name || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase() ||
@@ -1964,13 +2022,16 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         setNewRec((p) => ({
           ...p,
           organizationId: targetId || "",
-          name: targetId || "",
+          name: matchedDoc?.organization_name || matchedDoc?.student_name || targetId || "",
           docType: docType || "",
         }));
-        setUploadStudentIsExisting(false);
+        setUploadStudentIsExisting(Boolean(targetId));
       }
     } else {
-      const s = students.find((x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === String(targetId || "").trim().toUpperCase());
+      const allStudentsPool = [...students, ...archivedStudents];
+      const s = allStudentsPool.find(
+        (x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === cleanTargetId
+      );
       if (s) {
         applyStudentToPdfForm(s, docType);
         setUploadStudentIsExisting(true);
@@ -1978,9 +2039,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         setNewRec((p) => ({
           ...p,
           studentNo: targetId || "",
+          name: matchedDoc?.student_name || p.name || "",
           docType: docType || "",
         }));
-        setUploadStudentIsExisting(false);
+        setUploadStudentIsExisting(Boolean(targetId));
       }
     }
     clearAllUploadFieldErrors();
@@ -1990,7 +2052,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     setSelectedQueuedFileIndex(0);
     setRotation(0);
     setView("upload");
-  }, [students, organizations, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors]);
+  }, [students, archivedStudents, organizations, archivedOrganizations, allDocs, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors]);
 
   const confirmBulkArchive = async () => {
     if (bulkArchiveLoading) return;
@@ -2115,7 +2177,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         value={view}
         onValueChange={switchView}
         orientation={authUser?.preferences?.navigation_layout === "topbar" ? "horizontal" : "vertical"}
-        className={cn("flex-1 w-full gap-0 relative flex min-h-0 overflow-hidden", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
+        className={cn(
+          "gap-0 relative flex min-h-0 overflow-hidden",
+          authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-col md:flex-row"
+        )}
+        style={zoomStyle}
       >
         {authUser?.preferences?.navigation_layout === "topbar" ? (
           <div className="w-full bg-white dark:bg-zinc-900 border-b border-border dark:border-border py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
@@ -2174,10 +2240,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         )}
         <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
-            className={cn("pt-4 pr-4 pb-4 flex flex-col w-full [&>*]:flex-1", view === "batch_review" ? "flex-1 h-full min-h-0" : "flex-1 min-h-full", view !== "batch_review" && "min-w-0")}
-            style={zoomStyle}
+            className={cn(
+              "p-2 flex flex-col w-full",
+              authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1",
+              view === "batch_review" ? "flex-1 h-full min-h-0 [&>*]:flex-1" : "flex-[1_0_auto] min-w-0 [&>*]:flex-[1_0_auto]"
+            )}
           >
-            <TabsContent value="students" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+            <TabsContent value="students" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StudentDirectoryTab
               authUser={authUser}
               loading={!storageLayout || loading}
@@ -2189,12 +2258,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               allDocs={allDocs}
               onLocateStudent={locateStudent}
               onPreviewDocument={handlePreviewDocument}
+              onRescan={handleRescan}
               fetchData={fetchData}
               showToast={showToast}
             />
           </TabsContent>
 
-          <TabsContent value="search" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="search" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -2301,7 +2371,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="storage" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="storage" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StorageExplorerTab
               loading={!storageLayout}
               locatorModel={locatorModel}
@@ -2320,7 +2390,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="upload" className="w-full min-w-0 min-h-full flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="upload" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <ScanUploadTab
               authUser={authUser}
               isOsas={isOsas}
@@ -2344,12 +2414,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 setUploadedFiles([]);
                 setSelectedQueuedFileIndex(0);
                 setOcrSuggestion(null);
-                setUploadStudentIsExisting(false);
-                setUploadFieldErrors({});
+                clearUploadFieldError("pdfFile");
                 setRotation(0);
-                setRescanContext(null);
-                setIsReplaceMode(false);
-                setDuplicateTargetDoc(null);
+                if (!rescanContext && !isReplaceMode && !uploadStudentIsExisting) {
+                  setUploadFieldErrors({});
+                  setDuplicateTargetDoc(null);
+                }
               }}
               ocrLoading={ocrLoading}
               ocrError={ocrError}
@@ -2399,7 +2469,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
           </TabsContent>
 
-          <TabsContent value="requests" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="requests" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <DocumentRequestsTab
               students={students}
               courses={courses}
@@ -2411,15 +2481,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="osas_monitoring" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="osas_monitoring" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <OsasMonitoringTab showToast={showToast} />
           </TabsContent>
 
-          <TabsContent value="organizations" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="organizations" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <StudentOrganizationsTab showToast={showToast} />
           </TabsContent>
 
-          <TabsContent value="documents" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="documents" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <DocumentsTab
               docsForm={docsForm}
               setDocsForm={setDocsForm}
@@ -2506,7 +2576,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="notifications" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="notifications" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <NotificationsTab
               onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
               onPreviewDocument={handlePreviewDocument}
@@ -2515,11 +2585,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             />
           </TabsContent>
 
-          <TabsContent value="activity" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="activity" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <MyActivityPanel />
           </TabsContent>
 
-          <TabsContent value="settings" className="w-full min-w-0 min-h-full flex-1 flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          <TabsContent value="settings" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
             <AccountSettingsPanel />
           </TabsContent>
           </div>

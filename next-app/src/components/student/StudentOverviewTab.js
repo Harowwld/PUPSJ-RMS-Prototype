@@ -27,6 +27,33 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
+import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
+
+/**
+ * Standard Information Row (label : value)
+ * Clean unboxed metadata layout aligned with colons and icons.
+ */
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  );
+}
 
 function normalizeStatus(status) {
   return String(status || "").toLowerCase().trim();
@@ -429,9 +456,9 @@ export default function StudentOverviewTab({
   }
 
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 font-jakarta animate-fade-up pb-6">
+    <div className="flex flex-col w-full flex-[1_0_auto] font-jakarta animate-fade-up">
       {/* ONE Single Card Container encapsulating Header, Attention, Active Tracking, Service Windows, Quick Portals & Activity */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta min-h-0 flex-1 mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Standard Page Header */}
         <PageHeader
           leftAction={
@@ -484,76 +511,87 @@ export default function StudentOverviewTab({
         />
 
         {/* 2. Unified Content Body */}
-        <div className="p-6 flex flex-1 flex-col gap-6">
+        <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
 
-      {/* 2. Urgent Attention Center — Inline Alerts (full-width, no floating) */}
+      {/* 2. Urgent Attention Center — Inline Alerts (Full Width, Non-Floating) */}
       {attentionItems.length > 0 && (
-        <div className="flex flex-col w-full divide-y divide-gray-100 dark:divide-white/5 rounded-xl overflow-hidden border border-gray-200/80 dark:border-white/10">
-          {attentionItems.map((item) => {
-            const isAmber = item.theme === "amber";
-            const isEmerald = item.theme === "emerald";
-            const isBlue = item.theme === "blue";
+        <div className="flex flex-col gap-2.5 w-full">
+          <div className="flex items-center gap-2 px-1">
+            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
+              Attention Required ({attentionItems.length})
+            </h2>
+          </div>
 
-            return (
-              <div
-                key={item.id}
-                role="alert"
-                className={cn(
-                  "flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-l-[3px]",
-                  isAmber && "bg-amber-50/60 dark:bg-amber-950/20 border-l-amber-500",
-                  isEmerald && "bg-emerald-50/60 dark:bg-emerald-950/20 border-l-emerald-500",
-                  isBlue && "bg-blue-50/60 dark:bg-blue-950/20 border-l-blue-500"
-                )}
-              >
-                <div className="flex items-start sm:items-center gap-3 min-w-0">
-                  <HugeIcon
-                    className={cn(
-                      item.icon,
-                      "shrink-0 text-base mt-0.5 sm:mt-0",
-                      isAmber && "text-amber-600 dark:text-amber-400",
-                      isEmerald && "text-emerald-600 dark:text-emerald-400",
-                      isBlue && "text-blue-600 dark:text-blue-400"
-                    )}
-                  />
-                  <div className="min-w-0">
-                    <span
-                      className={cn(
-                        "text-xs font-semibold leading-tight",
-                        isAmber && "text-amber-900 dark:text-amber-200",
-                        isEmerald && "text-emerald-900 dark:text-emerald-200",
-                        isBlue && "text-blue-900 dark:text-blue-200"
-                      )}
-                    >
-                      {item.title}
-                    </span>
-                    <p
-                      className={cn(
-                        "text-[11px] mt-0.5 leading-relaxed",
-                        isAmber && "text-amber-800/80 dark:text-amber-300/80",
-                        isEmerald && "text-emerald-800/80 dark:text-emerald-300/80",
-                        isBlue && "text-blue-800/80 dark:text-blue-300/80"
-                      )}
-                    >
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
+          <div className="flex flex-col gap-2.5 w-full">
+            {attentionItems.map((item) => {
+              const isAmber = item.theme === "amber";
+              const isEmerald = item.theme === "emerald";
+              const isBlue = item.theme === "blue";
 
-                <button
-                  type="button"
-                  onClick={item.action}
+              return (
+                <div
+                  key={item.id}
+                  role="alert"
                   className={cn(
-                    "shrink-0 self-start sm:self-center text-[11px] font-semibold underline underline-offset-2 cursor-pointer transition-opacity hover:opacity-70 active:opacity-50 whitespace-nowrap",
-                    isAmber && "text-amber-800 dark:text-amber-300",
-                    isEmerald && "text-emerald-800 dark:text-emerald-300",
-                    isBlue && "text-blue-800 dark:text-blue-300"
+                    "flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-4 px-4 sm:px-5 rounded-2xl border transition-all",
+                    isAmber && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-amber-500/20 dark:border-amber-500/30 hover:border-amber-500/35",
+                    isEmerald && "bg-emerald-500/[0.04] dark:bg-emerald-500/[0.08] border-emerald-500/20 dark:border-emerald-500/30 hover:border-emerald-500/35",
+                    isBlue && "bg-blue-500/[0.04] dark:bg-blue-500/[0.08] border-blue-500/20 dark:border-blue-500/30 hover:border-blue-500/35"
                   )}
                 >
-                  {item.actionLabel} →
-                </button>
-              </div>
-            );
-          })}
+                  <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                    <div
+                      className={cn(
+                        "flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-xl border shadow-2xs",
+                        isAmber && "bg-amber-100/80 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/40",
+                        isEmerald && "bg-emerald-100/80 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/40",
+                        isBlue && "bg-blue-100/80 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/40"
+                      )}
+                    >
+                      <HugeIcon className={cn(item.icon, "text-lg")} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-zinc-100 leading-tight truncate">
+                          {item.title}
+                        </span>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-medium border shrink-0",
+                            isAmber && "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20",
+                            isEmerald && "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20",
+                            isBlue && "bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-500/20"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full shrink-0",
+                              isAmber && "bg-amber-500",
+                              isEmerald && "bg-emerald-500",
+                              isBlue && "bg-blue-500"
+                            )}
+                          />
+                          {item.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-zinc-300 mt-1 sm:mt-0.5 leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={item.action}
+                    className="h-8 px-4 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-800 dark:hover:bg-red-700 shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0 self-start sm:self-center"
+                  >
+                    {item.actionLabel}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -785,7 +823,7 @@ export default function StudentOverviewTab({
       </div>
 
       {/* 5. FULL-SIZE Recent Activity & Institutional Updates (Spanning 100% Width) */}
-      <div className="flex flex-col gap-2.5 w-full">
+      <div className="flex flex-[1_0_auto] flex-col gap-2.5 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2.5">
             <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
@@ -822,10 +860,10 @@ export default function StudentOverviewTab({
         </div>
 
         {/* Full-Width Activity Panel */}
-        <div className="p-0 overflow-hidden rounded-2xl border border-border bg-gray-50/30 dark:bg-zinc-900/20 w-full">
+        <div className="p-0 flex flex-[1_0_auto] flex-col overflow-hidden rounded-2xl border border-border bg-gray-50/30 dark:bg-zinc-900/20 w-full">
           {filteredMilestones.length > 0 ? (
             <>
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border flex-[1_0_auto]">
                 {paginatedMilestones.map((event) => {
                   const isEmerald = event.tone === "emerald";
                   const isAmber = event.tone === "amber";
@@ -1004,109 +1042,62 @@ export default function StudentOverviewTab({
         </div>
       </Card>
 
-      {/* 1. Permanent Admission Record Details Sheet */}
-      <Sheet
+      {/* 1. Standardized Permanent Admission Record Details Sheet */}
+      <PermanentAdmissionRecordSheet
         open={Boolean(selectedComplianceDetail)}
         onOpenChange={(open) => !open && setSelectedComplianceDetail(null)}
-      >
-        <SheetContent
-          side="right"
-          size="default"
-          showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
-        >
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
-                  Permanent Admission Record
-                </SheetTitle>
-                <SheetDescription className="sr-only">
-                  Archival status and physical verification details
-                </SheetDescription>
-              </div>
+        item={selectedComplianceDetail}
+        items={complianceData?.requirements || []}
+        currentIndex={
+          complianceData?.requirements && selectedComplianceDetail
+            ? complianceData.requirements.findIndex(
+                (r) =>
+                  r.id === selectedComplianceDetail.id ||
+                  r.name === selectedComplianceDetail.name ||
+                  r.docType === selectedComplianceDetail.docType ||
+                  r.documentType === selectedComplianceDetail.documentType
+              )
+            : -1
+        }
+        onNavigatePrev={() => {
+          if (!complianceData?.requirements) return;
+          const idx = complianceData.requirements.findIndex(
+            (r) =>
+              r.id === selectedComplianceDetail?.id ||
+              r.name === selectedComplianceDetail?.name ||
+              r.docType === selectedComplianceDetail?.docType ||
+              r.documentType === selectedComplianceDetail?.documentType
+          );
+          if (idx > 0) {
+            setSelectedComplianceDetail(complianceData.requirements[idx - 1]);
+          }
+        }}
+        onNavigateNext={() => {
+          if (!complianceData?.requirements) return;
+          const idx = complianceData.requirements.findIndex(
+            (r) =>
+              r.id === selectedComplianceDetail?.id ||
+              r.name === selectedComplianceDetail?.name ||
+              r.docType === selectedComplianceDetail?.docType ||
+              r.documentType === selectedComplianceDetail?.documentType
+          );
+          if (idx >= 0 && idx < complianceData.requirements.length - 1) {
+            setSelectedComplianceDetail(complianceData.requirements[idx + 1]);
+          }
+        }}
+        student={
+          complianceData?.student || {
+            studentNo: authUser?.student_no,
+            name: authUser?.name,
+            courseCode: authUser?.course_code,
+            courseName: authUser?.course_name,
+            section: authUser?.section,
+            yearLevel: authUser?.year_level,
+          }
+        }
+      />
 
-              <button
-                type="button"
-                onClick={() => setSelectedComplianceDetail(null)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
-                aria-label="Close"
-                title="Close"
-              >
-                <HugeIcon className="ph-bold ph-x text-sm" />
-              </button>
-            </div>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
-            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0 font-bold border border-emerald-500/20 dark:border-emerald-900/40 mt-0.5">
-                <HugeIcon className="ph-bold ph-file-check" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="text-[10px] font-mono font-medium text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
-                    {selectedComplianceDetail?.category || "Permanent Record"}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    Archived & Verified
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug">
-                  {selectedComplianceDetail?.documentType || selectedComplianceDetail?.title}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                  Archived on {formatPHDateTime(selectedComplianceDetail?.document?.createdAt || selectedComplianceDetail?.date)}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border/80 dark:border-border p-4 space-y-3 bg-gray-50/50 dark:bg-zinc-900/40 text-xs">
-              <div className="flex justify-between items-center py-1 border-b border-border/60">
-                <span className="text-gray-500 dark:text-zinc-400">Verification Authority</span>
-                <span className="font-semibold text-gray-900 dark:text-zinc-100">Office of the Registrar</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border/60">
-                <span className="text-gray-500 dark:text-zinc-400">Submission Method</span>
-                <span className="font-semibold text-gray-900 dark:text-zinc-100">Physical In-Person Verification</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border/60">
-                <span className="text-gray-500 dark:text-zinc-400">Institutional Vault</span>
-                <span className="font-mono text-gray-900 dark:text-zinc-100">Permanent Records Archive</span>
-              </div>
-              {selectedComplianceDetail?.document?.originalFilename && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-gray-500 dark:text-zinc-400">Digital Archive Reference</span>
-                  <span className="font-mono text-gray-900 dark:text-zinc-100 truncate max-w-[200px]" title={selectedComplianceDetail.document.originalFilename}>
-                    {selectedComplianceDetail.document.originalFilename}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 rounded-2xl bg-pup-maroon/5 dark:bg-pup-maroon/10 border border-pup-maroon/15 dark:border-pup-maroon/20 flex items-start gap-3">
-              <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-lg shrink-0 mt-0.5" />
-              <div className="text-xs leading-relaxed text-gray-700 dark:text-zinc-300">
-                <strong className="font-semibold text-gray-900 dark:text-zinc-100 block mb-0.5">Physical Hard Copy Vaulted</strong>
-                The original authenticated hard copy of this admission credential is physically preserved in the University Registrar Vault. Your graduation and enrollment records clearance for this requirement is in good standing.
-              </div>
-            </div>
-          </div>
-
-          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setSelectedComplianceDetail(null)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Close
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      {/* 2. Post-Event Report Details Sheet */}
+      {/* 2. Standardized Post-Event Report Details Sheet */}
       <Sheet
         open={Boolean(selectedPostEventDetail)}
         onOpenChange={(open) => !open && setSelectedPostEventDetail(null)}
@@ -1140,62 +1131,107 @@ export default function StudentOverviewTab({
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
+          {/* Line-Attached Edge-to-Edge Status Notice */}
+          <div className="flex items-center gap-2.5 px-6 py-2.5 text-xs border-b border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200 transition-colors shrink-0">
+            <HugeIcon className="ph-bold ph-shield-check text-[15px] shrink-0 text-blue-600 dark:text-blue-400" />
+            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+              <strong className="font-semibold">
+                {selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
+                  ? "Liquidation Cleared:"
+                  : "Report Submitted:"}
+              </strong>{" "}
+              {selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
+                ? "Financial liquidation statement and narrative report approved by OSAS."
+                : "Documentation is logged and pending OSAS financial liquidation evaluation."}
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+            {/* Unboxed Event Identity Block */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-xl shrink-0 font-bold border border-blue-500/20 dark:border-blue-900/40 mt-0.5">
+              <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-lg shrink-0 font-bold border border-blue-500/20 dark:border-blue-900/40 mt-0.5 shadow-2xs">
                 <HugeIcon className="ph-bold ph-clipboard-text" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="text-[10px] font-mono font-medium text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
-                    {selectedPostEventDetail?.organization_name || "Student Affairs"}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                    {selectedPostEventDetail?.status || "Submitted"}
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug">
+                <span className="text-[10px] font-mono font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
+                  {selectedPostEventDetail?.organization_name || "Student Affairs"}
+                </span>
+                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                   {selectedPostEventDetail?.event_title}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                   Submitted on {formatPHDateTime(selectedPostEventDetail?.created_at || selectedPostEventDetail?.updated_at)}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/80 dark:border-border p-4 space-y-3 bg-gray-50/50 dark:bg-zinc-900/40 text-xs">
-              <div className="flex justify-between items-center py-1 border-b border-border/60">
-                <span className="text-gray-500 dark:text-zinc-400">Actual Attendance</span>
-                <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                  {selectedPostEventDetail?.actual_attendance || 0} participants
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border/60">
-                <span className="text-gray-500 dark:text-zinc-400">Total Expenses</span>
-                <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                  ₱{Number(selectedPostEventDetail?.total_expenses || 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border/60">
-                <span className="text-gray-500 dark:text-zinc-400">Narrative Report</span>
-                <span className="font-mono text-gray-900 dark:text-zinc-100 truncate max-w-[200px]" title={selectedPostEventDetail?.narrative_original_filename || "Attached"}>
-                  {selectedPostEventDetail?.narrative_original_filename || "Attached"}
-                </span>
-              </div>
-              {selectedPostEventDetail?.liquidation_original_filename && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-gray-500 dark:text-zinc-400">Financial Liquidation</span>
-                  <span className="font-mono text-gray-900 dark:text-zinc-100 truncate max-w-[200px]" title={selectedPostEventDetail.liquidation_original_filename}>
-                    {selectedPostEventDetail.liquidation_original_filename}
+            {/* Post-Event Specification (Unboxed InfoRow List) */}
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Post-Event Specification
+              </h4>
+              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                <InfoRow icon="ph-buildings" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
+                <InfoRow icon="ph-chart-pie-slice" label="Clearance Status">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                    {selectedPostEventDetail?.status || "Submitted"}
                   </span>
-                </div>
-              )}
+                </InfoRow>
+                <InfoRow icon="ph-users" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
+                <InfoRow icon="ph-currency-circle-dollar" label="Total Expenses" value={`₱${Number(selectedPostEventDetail?.total_expenses || 0).toLocaleString()}`} />
+              </div>
             </div>
+
+            {/* Attached Report Documents (Unboxed, Single Sleek Rows) */}
+            {(selectedPostEventDetail?.narrative_original_filename || selectedPostEventDetail?.liquidation_original_filename) && (
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Attached Report Documents
+                </h4>
+                <div className="space-y-2">
+                  {selectedPostEventDetail?.narrative_original_filename && (
+                    <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                          <HugeIcon className="ph-bold ph-file-text text-base" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                            {selectedPostEventDetail.narrative_original_filename}
+                          </p>
+                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                            Narrative Event Report
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {selectedPostEventDetail?.liquidation_original_filename && (
+                    <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                          <HugeIcon className="ph-bold ph-receipt text-base" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                            {selectedPostEventDetail.liquidation_original_filename}
+                          </p>
+                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                            Financial Liquidation Statement
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
             <Button
+              type="button"
               variant="outline"
               onClick={() => setSelectedPostEventDetail(null)}
               className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"

@@ -295,9 +295,9 @@ export default function LandingFooterCmsView({ showToast }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-panel-bottom"
           title={
@@ -318,34 +318,28 @@ export default function LandingFooterCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#office", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Preview
+                Preview Portal
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                disabled={saving}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Reset
+                Restore Defaults
               </Button>
 
               <Button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {saving ? (
-                  <>
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Footer Content"
-                )}
+                {saving ? "Saving Changes..." : "Save Footer Content"}
               </Button>
             </div>
           }
@@ -381,14 +375,14 @@ export default function LandingFooterCmsView({ showToast }) {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: Unified Footer Content */}
           {activeTab === "content" && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Column (lg:col-span-6): Location, Maps, Watermark & Copyright */}
               <div className="lg:col-span-6 space-y-5">
                 {/* Physical Archive Location & Mission */}
-                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Physical Archive Location &amp; Mission
@@ -475,7 +469,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Google Maps Configuration */}
-                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -525,7 +519,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Giant Brand Watermark */}
-                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -579,7 +573,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Sub-Footer & Copyright */}
-                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Sub-Footer &amp; Copyright
@@ -612,7 +606,7 @@ export default function LandingFooterCmsView({ showToast }) {
 
               {/* RIGHT COLUMN (6 cols): Registrar Schedule & Direct Contact Channels */}
               <div className="lg:col-span-6 space-y-5">
-                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -657,7 +651,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     {footerData.scheduleItems.map((item, idx) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
+                        className="p-3.5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
                       >
                         <div className="flex items-center justify-between select-none">
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-200 flex items-center gap-1.5">
@@ -736,8 +730,6 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateScheduleItem(idx, "status", e.target.value)
                               }
                               className="h-8 rounded-lg text-xs"
-                              menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1"
-                              optionClassName="rounded-lg text-xs py-1.5 px-2.5"
                             >
                               {SCHEDULE_STATUS_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -753,7 +745,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Direct Inquiry Channels Card */}
-                <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -798,7 +790,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     {footerData.contactItems.map((contact, idx) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
+                        className="p-3.5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/60 shadow-2xs space-y-3"
                       >
                         <div className="flex items-center justify-between select-none">
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-200 flex items-center gap-1.5">
@@ -877,8 +869,6 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateContactItem(idx, "type", e.target.value)
                               }
                               className="h-8 rounded-lg text-xs"
-                              menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1"
-                              optionClassName="rounded-lg text-xs py-1.5 px-2.5"
                             >
                               {CONTACT_TYPE_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -899,7 +889,7 @@ export default function LandingFooterCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Live Portal Footer Simulator
@@ -1074,7 +1064,8 @@ export default function LandingFooterCmsView({ showToast }) {
         isLoading={saving}
         title="Reset Footer Section to Defaults"
         message="Are you sure you want to reset the public landing page footer to default PUP institutional branding, schedules, and inquiry channels?"
-        confirmLabel="Reset"
+        confirmLabel="Restore Defaults"
+        cancelLabel="Cancel"
         icon="ph-duotone ph-arrow-counter-clockwise"
         buttonIcon="ph-bold ph-arrow-counter-clockwise"
         selectedItems={[
@@ -1099,7 +1090,8 @@ export default function LandingFooterCmsView({ showToast }) {
         }}
         title="Remove Schedule Row"
         message="Are you sure you want to remove this office hours schedule row from the public footer?"
-        confirmLabel="Remove"
+        confirmLabel="Remove Schedule"
+        cancelLabel="Cancel"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
         selectedItems={
@@ -1127,7 +1119,8 @@ export default function LandingFooterCmsView({ showToast }) {
         }}
         title="Remove Contact Channel"
         message="Are you sure you want to remove this inquiry channel from the public footer?"
-        confirmLabel="Remove"
+        confirmLabel="Remove Channel"
+        cancelLabel="Cancel"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
         selectedItems={

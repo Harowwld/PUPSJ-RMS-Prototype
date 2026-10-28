@@ -32,7 +32,7 @@ Use a private browser window or separate browser profiles for each role. Do not 
 | Registrar Admin | `admin.registrar@pup.local` | `/admin` |
 | Registrar Staff | `staff.registrar@pup.local` | `/staff` |
 | OSAS Admin | `admin.osas@pup.local` | `/admin` with OSAS-scoped data |
-| Student | `student@pup.local` or `2022-10001-MN-1` | `/student` |
+| Student | `student@pup.local` or `2022-10001-SJ-0` | `/student` |
 
 Prepare: one valid PDF, one valid image where the upload accepts images, one invalid extension, one oversized file where practical, a CSV with valid rows, a CSV with one invalid row, a duplicate student number, a duplicate document, and a known requester/proposal/document for preview and status changes.
 

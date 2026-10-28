@@ -7,9 +7,9 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingHeroSkeleton() {
   return (
-    <div className="flex flex-col gap-4 w-full animate-fade-up font-jakarta">
+    <div className="flex flex-[1_0_auto] flex-col gap-4 w-full animate-fade-up font-jakarta">
       {/* Top Section Switcher Pill */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm">
           <HugeIcon  className="ph-bold ph-image text-sm" />
           <span>Hero Section</span>
@@ -33,7 +33,7 @@ export default function LandingHeroSkeleton() {
       </div>
 
       {/* Main PageHeader Card */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-layout"
           title={
@@ -67,10 +67,10 @@ export default function LandingHeroSkeleton() {
           </div>
         </div>
 
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-6">
             {/* Controls Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">

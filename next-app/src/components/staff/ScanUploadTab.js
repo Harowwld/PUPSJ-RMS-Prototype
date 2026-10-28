@@ -264,6 +264,13 @@ export default function ScanUploadTab({
         suggestion.docType && String(suggestion.docType).trim()
           ? String(suggestion.docType).trim()
           : ""
+      if (rescanContext || isReplaceMode || uploadStudentIsExisting) {
+        setNewRec?.((p) => ({
+          ...p,
+          docType: rescanContext?.docType || p.docType || ocrDocType,
+        }))
+        return
+      }
       if (suggestion.matchedStudent) {
         // Existing student matched: lock the form fields to their record.
         onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType)
@@ -521,9 +528,9 @@ export default function ScanUploadTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-upload"
-        className="font-jakarta w-full flex flex-col h-auto focus:outline-none animate-fade-up"
+        className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto focus:outline-none animate-fade-up"
       >
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="ph-scan"
             title="Scan & Upload"
@@ -584,7 +591,7 @@ export default function ScanUploadTab({
 
           <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />
 
-          <CardContent className="flex flex-col p-6 pt-3 rounded-b-2xl">
+          <CardContent className="flex flex-[1_0_auto] flex-col p-6 pt-3 rounded-b-2xl">
           {loading ? (
             <ScanUploadSkeleton />
           ) : error ? (
@@ -638,7 +645,7 @@ export default function ScanUploadTab({
                 variant="warning"
               />
 
-              <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
+              <div className="flex flex-[1_0_auto] flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
                 <section className="relative flex h-auto min-h-[min(580px,50dvh)] flex-col transition-all duration-normal w-full lg:w-[48%]">
                   <div className="flex flex-col gap-4 w-full h-full">
                       <div
@@ -956,7 +963,7 @@ export default function ScanUploadTab({
                                 onClick={handlePasteButtonClick}
                                 className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               >
-                                Paste
+                                Paste from Clipboard
                               </Button>
                               <span className="text-[10px] text-gray-400 font-medium dark:text-zinc-500">
                                 Or press Ctrl+V / Cmd+V anywhere on this page
@@ -1002,74 +1009,64 @@ export default function ScanUploadTab({
                     </div>
                   </div>
 
+                  {/* Rescan / Replacement Mode Banner (Attached edge-to-edge alert) */}
+                  {(isReplaceMode || rescanContext || existingDocOnRecord) && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all select-none">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <HugeIcon className={cn(isReplaceMode || rescanContext ? "ph-bold ph-arrows-counter-clockwise text-[16px] text-amber-600 dark:text-amber-400 shrink-0" : "ph-bold ph-warning text-[16px] text-amber-600 dark:text-amber-400 shrink-0")} />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-amber-950 dark:text-amber-100 mr-1.5">
+                            {isReplaceMode || rescanContext ? "Rescan / Replacement Mode Active:" : "Existing Document On Record:"}
+                          </span>
+                          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                            {isReplaceMode || rescanContext
+                              ? `Submitting will update the on-file digital record for ${newRec.docType || "this document"} in-place and queue the new scan for administrative review.`
+                              : `A digital copy of ${newRec.docType || "this document"} already exists for this ${isOsas ? "organization" : "student"}. Enable replacement mode to rescan and overwrite the copy on file.`}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2 self-start sm:self-auto">
+                        {rescanContext?.docId && onPreviewDocument && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onPreviewDocument(rescanContext.docType, newRec.name, rescanContext.targetId, rescanContext.docId)}
+                            className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer flex items-center gap-1 shadow-2xs"
+                            title="View current on-file version in modal"
+                          >
+                            <HugeIcon className="ph-bold ph-eye text-xs" />
+                            <span>View Copy</span>
+                          </Button>
+                        )}
+                        {isReplaceMode || rescanContext ? (
+                          onCancelRescan && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={onCancelRescan}
+                              className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer shadow-2xs"
+                            >
+                              Cancel
+                            </Button>
+                          )
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setIsReplaceMode(true)}
+                            className="h-7 px-3 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500 cursor-pointer shadow-2xs active:scale-95 transition-all"
+                          >
+                            Replace Document
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="p-5 bg-white dark:bg-transparent">
                       <div className="space-y-5">
-                        {/* Rescan / Replacement Mode Banner */}
-                        {(isReplaceMode || rescanContext || existingDocOnRecord) && (
-                          <div className="rounded-xl border border-amber-300/80 bg-amber-50/90 dark:border-amber-500/30 dark:bg-amber-950/25 p-4 text-xs space-y-2 select-none shadow-xs">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-2.5">
-                                <div className="h-7 w-7 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
-                                  <HugeIcon className={isReplaceMode || rescanContext ? "ph-bold ph-arrows-counter-clockwise text-sm" : "ph-bold ph-warning text-sm"} />
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-amber-950 dark:text-amber-200">
-                                      {isReplaceMode || rescanContext
-                                        ? "Rescan / Replacement Mode Active"
-                                        : "Existing Document On Record"}
-                                    </span>
-                                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300">
-                                      {existingDocOnRecord?.approval_status || rescanContext?.originalStatus || "On File"}
-                                    </span>
-                                  </div>
-                                  <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 mt-1 leading-relaxed">
-                                    {isReplaceMode || rescanContext
-                                      ? `Submitting will update the on-file digital record for ${newRec.docType || "this document"} in-place and queue the new scan for administrative review.`
-                                      : `A digital copy of ${newRec.docType || "this document"} already exists for this ${isOsas ? "organization" : "student"}. Enable replacement mode to rescan and overwrite the copy on file.`}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="shrink-0 flex items-center gap-2">
-                                {rescanContext?.docId && onPreviewDocument && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onPreviewDocument(rescanContext.docType, newRec.name, rescanContext.targetId, rescanContext.docId)}
-                                    className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer flex items-center gap-1"
-                                    title="View current on-file version in modal"
-                                  >
-                                    <HugeIcon className="ph-bold ph-eye text-xs" />
-                                    <span>View On-File Copy</span>
-                                  </Button>
-                                )}
-                                {isReplaceMode || rescanContext ? (
-                                  onCancelRescan && (
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={onCancelRescan}
-                                      className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer"
-                                    >
-                                      Cancel Rescan
-                                    </Button>
-                                  )
-                                ) : (
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={() => setIsReplaceMode(true)}
-                                    className="h-7 px-3 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500 cursor-pointer shadow-2xs active:scale-95 transition-all"
-                                  >
-                                    Replace Document
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
 
                         {isOsas ? (
                           <div className="space-y-4">
@@ -1092,12 +1089,14 @@ export default function ScanUploadTab({
                               </button>
                               <button
                                 type="button"
+                                disabled={Boolean(rescanContext)}
                                 onClick={() => {
+                                  if (rescanContext) return
                                   setUploadStudentIsExisting(false)
                                   clearAllUploadFieldErrors?.()
                                 }}
                                 className={cn(
-                                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
                                   !uploadStudentIsExisting
                                     ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -1151,6 +1150,7 @@ export default function ScanUploadTab({
                                             adviserEmail: "",
                                           })
                                           setUploadStudentIsExisting(true)
+                                          onCancelRescan?.()
                                           clearAllUploadFieldErrors?.()
                                           if (uploadedFile || hf.selected) {
                                             handleClearPdf()
@@ -1158,16 +1158,18 @@ export default function ScanUploadTab({
                                         }}
                                         className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
                                       >
-                                        Clear
+                                        Clear Selection
                                       </Button>
                                     )}
                                   </div>
                                   <Select
                                     placeholder="Choose an organization..."
+                                    disabled={Boolean(rescanContext)}
                                     className={cn(
                                       "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
                                       ring("organization"),
-                                      ring("organizationId")
+                                      ring("organizationId"),
+                                      Boolean(rescanContext) && lockedField
                                     )}
                                     value={newRec.organizationId || ""}
                                     onChange={(e) => {
@@ -1273,7 +1275,7 @@ export default function ScanUploadTab({
                                         }}
                                         className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
                                       >
-                                        Clear
+                                        Clear Selection
                                       </Button>
                                     )}
                                   </div>
@@ -1377,17 +1379,20 @@ export default function ScanUploadTab({
                                     needed, then submit.
                                   </span>
                                 </span>
-                                <button
-                                  type="button"
-                                  title="Switch to new student"
-                                  className="shrink-0 text-left text-xs font-semibold text-pup-maroon dark:text-red-400 underline-offset-2 hover:underline cursor-pointer"
-                                  onClick={() => {
-                                    setUploadStudentIsExisting(false)
-                                    clearAllUploadFieldErrors?.()
-                                  }}
-                                >
-                                  Switch
-                                </button>
+                                {!rescanContext && (
+                                  <button
+                                    type="button"
+                                    title="Switch to new student"
+                                    className="shrink-0 text-left text-xs font-semibold text-pup-maroon dark:text-red-400 underline-offset-2 hover:underline cursor-pointer"
+                                    onClick={() => {
+                                      setUploadStudentIsExisting(false)
+                                      onCancelRescan?.()
+                                      clearAllUploadFieldErrors?.()
+                                    }}
+                                  >
+                                    Switch
+                                  </button>
+                                )}
                               </div>
                             )}
 
@@ -1429,6 +1434,7 @@ export default function ScanUploadTab({
                                           adviserEmail: "",
                                         })
                                         setUploadStudentIsExisting(false)
+                                        onCancelRescan?.()
                                         clearAllUploadFieldErrors?.()
                                         if (uploadedFile || hf.selected) {
                                           handleClearPdf()
@@ -1436,7 +1442,7 @@ export default function ScanUploadTab({
                                       }}
                                       className="h-6 rounded-lg px-2 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
                                     >
-                                      Clear
+                                      Clear Form
                                     </Button>
                                   )}
                                 </div>
@@ -1448,7 +1454,7 @@ export default function ScanUploadTab({
                                       ring("studentNo"),
                                       lockIdentity && lockedField
                                     )}
-                                    placeholder="202X-XXXXX-MN-0"
+                                    placeholder="202X-XXXXX-SJ-0"
                                     ref={newStudentNoInputRef}
                                     value={newRec.studentNo}
                                     disabled={lockIdentity}
@@ -1760,14 +1766,16 @@ export default function ScanUploadTab({
                         </div>
 
                         <div className="border-t border-border pt-5 dark:border-border">
-                          <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
+                          <label className={`mb-2 block text-xs font-medium ${rescanContext?.docType ? lockedLabel : "text-gray-900 dark:text-zinc-300"}`}>
                             Document Type
                           </label>
                           <Select
                             placeholder="Select Document type"
+                            disabled={Boolean(rescanContext?.docType)}
                             className={cn(
                               "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
-                              ring("docType")
+                              ring("docType"),
+                              Boolean(rescanContext?.docType) && lockedField
                             )}
                             value={newRec.docType}
                             onChange={(e) => {
@@ -1825,12 +1833,11 @@ export default function ScanUploadTab({
                             })
                           }
                           className={cn(
-                            "w-full h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs",
+                            "w-full h-10 px-5 text-xs font-semibold rounded-xl active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs",
                             isReplaceMode || rescanContext
-                              ? "bg-amber-600 hover:bg-amber-700 text-white!"
-                              : "btn-brand-red text-white!"
+                              ? "bg-amber-600 hover:bg-amber-700 text-white"
+                              : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900"
                           )}
-                          style={{ color: "#ffffff" }}
                         >
                           {isReplaceMode || rescanContext ? "Replace Existing Document" : "Upload Document"}
                         </Button>

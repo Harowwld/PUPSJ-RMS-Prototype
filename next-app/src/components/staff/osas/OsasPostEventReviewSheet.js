@@ -162,6 +162,51 @@ export default function OsasPostEventReviewSheet({
           </div>
         </SheetHeader>
 
+        {/* Line-Attached Edge-to-Edge Status Notice */}
+        <div
+          className={cn(
+            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+            selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
+              ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+              : selectedPostEvent.status === "RevisionRequested"
+              ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+              : selectedPostEvent.status === "Rejected"
+              ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+              : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+          )}
+        >
+          <HugeIcon
+            className={cn(
+              "ph-bold text-[15px] shrink-0",
+              selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
+                ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                : selectedPostEvent.status === "RevisionRequested"
+                ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                : selectedPostEvent.status === "Rejected"
+                ? "ph-x-circle text-rose-600 dark:text-rose-400"
+                : "ph-clock text-blue-600 dark:text-blue-400"
+            )}
+          />
+          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+            <strong className="font-semibold">
+              {selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
+                ? "Liquidation Cleared:"
+                : selectedPostEvent.status === "RevisionRequested"
+                ? "Revision Required:"
+                : selectedPostEvent.status === "Rejected"
+                ? "Liquidation Rejected:"
+                : "Under Financial Review:"}
+            </strong>{" "}
+            {selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
+              ? "Narrative report and financial liquidation statement approved by OSAS."
+              : selectedPostEvent.status === "RevisionRequested"
+              ? "Student organization must revise and resubmit receipts or report details."
+              : selectedPostEvent.status === "Rejected"
+              ? "This post-event liquidation report was declined."
+              : "Post-event documentation is logged and undergoing OSAS financial evaluation."}
+          </span>
+        </div>
+
         {/* SCROLLABLE 1-COLUMN BODY */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Summary Strip */}
@@ -278,7 +323,7 @@ export default function OsasPostEventReviewSheet({
 
             {/* Narrative summary */}
             {selectedPostEvent.narrative_summary && (
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5 space-y-1">
+              <div className="space-y-1.5 pt-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                   Accomplishment & Narrative Summary
                 </span>

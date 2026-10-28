@@ -5,11 +5,28 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
 const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
+const { generateDocumentPdfByType } = await import("../src/lib/pdfDocumentGenerators.js");
 
-const CSV_TAXONOMY_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/system_data - final.csv");
+const CSV_TAXONOMY_PATH = fs.existsSync(path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv"))
+  ? path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv")
+  : path.resolve(process.cwd(), "../_SAMPLE_DATA/system_data - final.csv");
+const CSV_OSAS_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/osas_system_data - final.csv");
 const CSV_STUDENTS_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/cleaned_student_data.csv");
 const REAL_PDF_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/sample pdf.pdf");
 const UPLOADS_DIR = path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR || ".local", "uploads");
+
+function normalizeCourseCode(raw) {
+  const c = String(raw || "").trim().toUpperCase();
+  if (c === "BSEDUC") return "BSEDEN";
+  if (c === "BSPSYCH" || c === "BS PSY" || c === "BSPSY") return "BS Psy";
+  if (c === "DIT") return "DICT";
+  if (c === "BSBA" || c === "BSBA-FM") return "BSBA-FM";
+  if (c === "BSHM") return "BSHM";
+  if (c === "BSA") return "BSA";
+  if (c === "BSENT") return "BSENT";
+  if (c === "BSIT") return "BSIT";
+  return c;
+}
 
 async function main() {
   console.log("Starting real data population...");
@@ -19,18 +36,20 @@ async function main() {
   console.log(`Read sample PDF from ${REAL_PDF_PATH} (${(realPdfBytes.length / 1024).toFixed(1)} KB)`);
 
   // 1. Load taxonomy: Courses, Sections, Document Types
-  console.log("Loading taxonomy from system_data - final.csv...");
+  console.log(`Loading registrar taxonomy from ${path.basename(CSV_TAXONOMY_PATH)}...`);
   const taxContent = fs.readFileSync(CSV_TAXONOMY_PATH, "utf8");
   const taxLines = taxContent.split(/\r?\n/).filter(Boolean);
 
+  // 8 Official Degree Programs for Registrar
   const coursesToInsert = [
-    { code: "BSIT", name: "Bachelor of Science in Information Technology" },
-    { code: "BSCS", name: "Bachelor of Science in Computer Science" },
-    { code: "BSBA-FM", name: "Bachelor of Science in Business Administration major in Financial Management" },
+    { code: "BSA", name: "Bachelor of Science in Accountancy" },
+    { code: "BSEDEN", name: "Bachelor in Secondary Education major in English" },
     { code: "BSENT", name: "Bachelor of Science in Entrepreneurship" },
-    { code: "BSPsych", name: "Bachelor of Science in Psychology" },
-    { code: "BSEDUC", name: "Bachelor in Secondary Education major in English" },
-    { code: "DIT", name: "Diploma in Information Technology" },
+    { code: "BSBA-FM", name: "Bachelor of Science in Business Education major in Financial Management" },
+    { code: "BSIT", name: "Bachelor of Science in Information Technology" },
+    { code: "BSHM", name: "Bachelor of Science in Hospitality Management" },
+    { code: "BS Psy", name: "Bachelor of Science in Psychology" },
+    { code: "DICT", name: "Diploma in Information and Communications Technology" },
   ];
 
   for (const c of coursesToInsert) {
@@ -42,18 +61,11 @@ async function main() {
     );
   }
 
-  // Dynamic Document Types from CSV
-  const OSAS_DOC_TYPES = new Set([
-    "constitution & by-laws (cbl)",
-    "event proposal",
-    "activity request",
-    "activity permit",
-    "financial liquidation report",
-    "good moral certificate",
-    "student disciplinary clearance",
-    "organization registration certificate",
-  ]);
+  // OSAS office does not handle degree programs or sections
+  await query("DELETE FROM courses WHERE office_id = 'osas'");
+  await query("DELETE FROM sections WHERE office_id = 'osas'");
 
+  // Insert Registrar document types (strictly the 11 compliance docs)
   for (const line of taxLines.slice(1)) {
     const parts = line.split(",").map(p => p.trim());
     const category = parts[0];
@@ -66,25 +78,40 @@ async function main() {
 
     if (category.toLowerCase() === "documenttype") {
       const nameNorm = name.toLowerCase();
-      const officeId = OSAS_DOC_TYPES.has(nameNorm) ? "osas" : "registrar";
-
       await query(
         `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
-         VALUES ($1, $2, $3, 'Active', $4, $5, $6)
+         VALUES ('registrar', $1, $2, 'Active', $3, $4, $5)
          ON CONFLICT (office_id, name_norm) DO UPDATE SET
            name = EXCLUDED.name,
            status = 'Active',
            is_compliance = EXCLUDED.is_compliance,
            is_requestable = EXCLUDED.is_requestable,
            compliance_category = EXCLUDED.compliance_category`,
-        [officeId, name, nameNorm, isCompliance, isRequestable, complianceCategory]
+        [name, nameNorm, isCompliance, isRequestable, complianceCategory]
       );
+    }
+  }
 
-      // Clearance Form applies to both registrar and osas
-      if (nameNorm === "clearance form") {
+  // Insert OSAS document types from OSAS CSV (strictly student organization documents)
+  if (fs.existsSync(CSV_OSAS_PATH)) {
+    console.log(`Loading OSAS taxonomy from ${path.basename(CSV_OSAS_PATH)}...`);
+    const osasContent = fs.readFileSync(CSV_OSAS_PATH, "utf8");
+    const osasLines = osasContent.split(/\r?\n/).filter(Boolean);
+    for (const line of osasLines.slice(1)) {
+      const parts = line.split(",").map(p => p.trim());
+      const category = parts[0];
+      const name = parts[1];
+      const isCompliance = parts[3] === "true";
+      const isRequestable = parts[4] === "true";
+      const complianceCategory = parts[5] || "Student Governance & Activities";
+
+      if (!category || !name) continue;
+
+      if (category.toLowerCase() === "documenttype") {
+        const nameNorm = name.toLowerCase();
         await query(
           `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
-           VALUES ('registrar', $1, $2, 'Active', $3, $4, $5)
+           VALUES ('osas', $1, $2, 'Active', $3, $4, $5)
            ON CONFLICT (office_id, name_norm) DO UPDATE SET
              name = EXCLUDED.name,
              status = 'Active',
@@ -97,18 +124,20 @@ async function main() {
     }
   }
 
-  // Sections
+  // Remove individual student requirements from OSAS
+  await query(`
+    UPDATE document_types
+    SET status = 'Archived', is_compliance = FALSE, is_requestable = FALSE
+    WHERE office_id = 'osas' AND name_norm IN ('good moral certificate', 'certificate of good moral', 'clearance form', 'student disciplinary clearance')
+  `);
+
+  // Insert 64 Registrar Sections (1-1 to 4-2 for 8 degree programs)
   const sectionsToInsert = [];
   for (const line of taxLines.slice(1)) {
     const parts = line.split(",").map(p => p.trim());
     if (parts[0] === "Section" && parts[1] && parts[2]) {
       sectionsToInsert.push({ name: parts[1], course_code: parts[2] });
     }
-  }
-  // Standard sections for IT and CS if not in csv
-  for (const s of ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"]) {
-    sectionsToInsert.push({ name: s, course_code: "BSIT" });
-    sectionsToInsert.push({ name: s, course_code: "BSCS" });
   }
 
   for (const s of sectionsToInsert) {
@@ -120,7 +149,7 @@ async function main() {
     );
   }
 
-  console.log("Taxonomy populated.");
+  console.log(`Taxonomy populated: ${coursesToInsert.length} programs, ${sectionsToInsert.length} sections.`);
 
   // 2. Load Students from cleaned_student_data.csv
   console.log("Loading students from cleaned_student_data.csv...");
@@ -133,10 +162,16 @@ async function main() {
   for (let i = 1; i < studentLines.length; i++) {
     const cols = studentLines[i].split(",").map(c => c.trim());
     if (cols.length < 8) continue;
-    const [studentNo, rawName, courseCode, academicYear, section, room, cabinet, drawer] = cols;
+    const [rawStudentNo, rawName, rawCourseCode, academicYear, section, room, cabinet, drawer] = cols;
+    let studentNo = rawStudentNo.replace(/-(MN|IT)-/gi, "-SJ-");
+    if (!studentNo.endsWith("-0") && !studentNo.endsWith("-1")) {
+      studentNo = `${studentNo}-0`;
+    }
 
     if (seenStudentNos.has(studentNo)) continue;
     seenStudentNos.add(studentNo);
+
+    const courseCode = normalizeCourseCode(rawCourseCode);
 
     // Format student name to "LASTNAME, FIRSTNAME M."
     const words = rawName.toUpperCase().split(/\s+/).filter(Boolean);
@@ -187,7 +222,7 @@ async function main() {
         courseCode,
         parseInt(academicYear, 10) || 2024,
         section,
-        parseInt(room, 10) || 1,
+        1,
         cabinet || "A",
         parseInt(drawer, 10) || 1,
       ]
@@ -210,18 +245,21 @@ async function main() {
 
   console.log(`Loaded ${studentsList.length} real students from CSV.`);
 
-  // 3. Create Documents for these students
-  console.log("Generating realistic documents for digital records review...");
+  // 3. Create Documents for these students using strictly the 11 Registrar compliance document types
+  console.log("Generating realistic compliance documents for digital records review...");
 
   const docTypeTemplates = [
-    { docType: "Transcript of Records", code: "TOR" },
-    { docType: "Form 137", code: "F137" },
-    { docType: "PSA Birth Certificate", code: "PSA" },
-    { docType: "Diploma", code: "DIPLOMA" },
+    { docType: "CAEPUP 2023 Application Form", code: "CAEPUP" },
+    { docType: "SAR Form (circled)", code: "SAR" },
+    { docType: "Health and Information Sheet", code: "HIS" },
+    { docType: "Undertaking and Waiver of Right", code: "UWR" },
+    { docType: "CTC Grade 10 Report Card", code: "G10RC" },
+    { docType: "CTC Grade 11 Report Card", code: "G11RC" },
+    { docType: "Grade 12 Report Card (1st and 2nd Semester)", code: "G12RC" },
+    { docType: "SHS Diploma or Certificate of Graduation", code: "DIP" },
     { docType: "Certificate of Good Moral Character", code: "CGMC" },
-    { docType: "Certificate of Enrollment", code: "COE" },
-    { docType: "Grade 11 Report Card", code: "G11RC" },
-    { docType: "Grade 12 Report Card", code: "G12RC" },
+    { docType: "PSA Birth Certificate (circled)", code: "PSA" },
+    { docType: "Photocopy of ID", code: "ID" },
   ];
 
   // Distribute approval statuses
@@ -255,71 +293,53 @@ async function main() {
       pendingCount++;
     }
 
-    const safeStudentNo = student.studentNo.replace(/[^A-Za-z0-9_-]/g, "_");
-    const originalFilename = `${safeStudentNo}_${template.code}.pdf`;
-    const storageFilename = `doc_${safeStudentNo}_${template.code}_${Date.now()}_${idx}.pdf`;
+    const uniqueStorageName = `real_${student.studentNo}_${template.code}_${Date.now()}.pdf`;
+    const targetFilePath = path.join(UPLOADS_DIR, uniqueStorageName);
+    const pdfBytes = await generateDocumentPdfByType({
+      docType: template.docType,
+      studentNo: student.studentNo,
+      studentName: student.name,
+      courseCode: student.courseCode,
+      section: student.section,
+      dateStr: "AY 2023-2024",
+    });
+    fs.writeFileSync(targetFilePath, pdfBytes);
 
-    // Write real PDF file to uploads
-    fs.writeFileSync(path.join(UPLOADS_DIR, storageFilename), realPdfBytes);
-
-    await query(
+    const docResult = await query(
       `INSERT INTO documents (
-         office_id, student_no, student_name, doc_type,
-         original_filename, storage_filename, mime_type, size_bytes,
-         approval_status, reviewed_by, reviewed_at, review_note, is_previewed, created_at
-       )
-       VALUES ('registrar', $1, $2, $3, $4, $5, 'application/pdf', $6, $7, $8, $9, $10, FALSE, NOW() - interval '${idx * 2} hours')`,
+        office_id, student_no, student_name, doc_type, original_filename,
+        storage_filename, mime_type, size_bytes, approval_status,
+        reviewed_by, reviewed_at, review_note, created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW() - ($13 || ' hours')::INTERVAL)
+      RETURNING id`,
       [
+        "registrar",
         student.studentNo,
         student.name,
         template.docType,
-        originalFilename,
-        storageFilename,
-        realPdfBytes.length,
+        `${student.studentNo}_${template.code}.pdf`,
+        uniqueStorageName,
+        "application/pdf",
+        pdfBytes.length,
         approvalStatus,
         reviewedBy,
         reviewedAt,
         reviewNote,
+        idx * 2,
       ]
     );
 
     docCount++;
   }
 
-  console.log(`Created ${docCount} real documents (Pending: ${pendingCount}, Approved: ${approvedCount}, Declined: ${declinedCount}).`);
-
-  // 4. Create realistic document requests
-  const requestTypes = [
-    { docType: "Transcript of Records", note: "Required for job application and background investigation" },
-    { docType: "Diploma", note: "Certified true copy for board exam registration" },
-    { docType: "Certificate of Enrollment", note: "Scholarship renewal requirement" },
-    { docType: "Certificate of Good Moral Character", note: "For transfer credentials" },
-    { docType: "Form 137", note: "Secondary school records request" },
-  ];
-
-  const reqStatuses = ["Pending", "InProgress", "Ready", "Completed", "Pending", "InProgress"];
-
-  for (let rIdx = 0; rIdx < 10; rIdx++) {
-    const student = studentsList[rIdx % studentsList.length];
-    const reqInfo = requestTypes[rIdx % requestTypes.length];
-    const status = reqStatuses[rIdx % reqStatuses.length];
-
-    await query(
-       `INSERT INTO document_requests (
-         office_id, student_no, identity_profile_id, doc_type, status, notes,
-         created_by, updated_by, created_at, updated_at
-       )
-       VALUES ('registrar', $1, (SELECT identity_profile_id FROM students WHERE student_no = $1), $2, $3, $4, 'PUPREGISTRAR-002', 'PUPREGISTRAR-003', NOW() - interval '${rIdx * 5} hours', NOW())`,
-      [student.studentNo, reqInfo.docType, status, reqInfo.note]
-    );
-  }
-
-  console.log("Document requests created.");
-  console.log("Real data seeding complete!");
-  process.exit(0);
+  console.log(`Seeded ${docCount} documents (${pendingCount} Pending, ${approvedCount} Approved, ${declinedCount} Declined).`);
+  console.log("Real data seeding completed successfully.");
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error("Failed to seed real data:", err);
   process.exit(1);
+}).finally(async () => {
+  await pool.end();
 });

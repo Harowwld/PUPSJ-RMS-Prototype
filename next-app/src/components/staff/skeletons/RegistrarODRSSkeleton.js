@@ -5,23 +5,24 @@ import { Card } from "@/components/ui/card"
 
 export default function RegistrarODRSSkeleton() {
   return (
-    <div className="flex flex-col h-full gap-4 animate-fade-up font-jakarta select-none">
-      {/* Top Header Card Skeleton */}
-      <Card className="rounded-brand border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none overflow-hidden p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
-            <Skeleton className="h-3 w-72 rounded dark:bg-muted" />
+    <div className="flex flex-col flex-[1_0_auto] w-full animate-fade-up font-jakarta select-none">
+      {/* ONE Single Container Card Skeleton */}
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
+              <Skeleton className="h-3 w-72 rounded dark:bg-muted" />
+            </div>
           </div>
+          <Skeleton className="h-9 w-24 rounded-lg dark:bg-muted" />
         </div>
-        <Skeleton className="h-9 w-24 rounded-lg dark:bg-muted" />
-      </Card>
 
-      {/* 2-Column Split: Queue & Ticket Details Inspector */}
-      <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_360px]">
-        {/* Left: Request Queue */}
-        <section className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card flex flex-col">
+        {/* 2-Column Split: Queue & Ticket Details Inspector */}
+        <div className="grid flex-[1_0_auto] grid-cols-1 lg:grid-cols-[1fr_360px] border-t border-border dark:border-border divide-y lg:divide-y-0 lg:divide-x divide-border dark:divide-border">
+          {/* Left: Request Queue */}
+          <section className="bg-white p-6 dark:bg-card flex flex-col">
           <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border mb-4">
             <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
             <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
@@ -50,34 +51,35 @@ export default function RegistrarODRSSkeleton() {
           </div>
         </section>
 
-        {/* Right: Inspector Aside */}
-        <aside className="rounded-brand border border-border bg-white p-5 shadow-sm dark:border-border dark:bg-card flex flex-col justify-between">
-          <div>
-            <div className="pb-3 border-b border-border dark:border-border mb-4 space-y-2">
-              <Skeleton className="h-2.5 w-24 rounded dark:bg-muted" />
-              <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-3 w-32 rounded dark:bg-muted" />
-                <Skeleton className="h-4 w-14 rounded-full dark:bg-muted" />
+          {/* Right: Inspector Aside */}
+          <aside className="bg-white p-6 dark:bg-card flex flex-col justify-between">
+            <div>
+              <div className="pb-3 border-b border-border dark:border-border mb-4 space-y-2">
+                <Skeleton className="h-2.5 w-24 rounded dark:bg-muted" />
+                <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-3 w-32 rounded dark:bg-muted" />
+                  <Skeleton className="h-4 w-14 rounded-full dark:bg-muted" />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3 w-24 rounded dark:bg-muted" />
+                  <Skeleton className="h-10 w-full rounded-lg dark:bg-muted" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3 w-40 rounded dark:bg-muted" />
+                  <Skeleton className="h-28 w-full rounded-lg dark:bg-muted" />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Skeleton className="h-3 w-24 rounded dark:bg-muted" />
-                <Skeleton className="h-10 w-full rounded-lg dark:bg-muted" />
-              </div>
-
-              <div className="space-y-1.5">
-                <Skeleton className="h-3 w-40 rounded dark:bg-muted" />
-                <Skeleton className="h-28 w-full rounded-lg dark:bg-muted" />
-              </div>
-            </div>
-          </div>
-
-          <Skeleton className="h-10 w-full rounded-lg dark:bg-muted mt-4" />
-        </aside>
-      </div>
+            <Skeleton className="h-10 w-full rounded-lg dark:bg-muted mt-4" />
+          </aside>
+        </div>
+      </Card>
     </div>
   )
 }

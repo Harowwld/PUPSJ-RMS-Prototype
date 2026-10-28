@@ -6,9 +6,9 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function ModuleConfigSkeleton({ viewMode = "office" }) {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, & Content */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title="Department Features & Permissions"
@@ -18,7 +18,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border dark:border-border">
                 <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
                 <Skeleton className="h-7 w-28 rounded-lg dark:bg-muted" />
               </div>
@@ -42,27 +42,27 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
         {/* Content Section inside the single Card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1 p-6">
           {viewMode === "matrix" ? (
-            <div className="overflow-x-auto rounded-xl border border-border dark:border-border">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/50">
-                  <tr className="h-12">
-                    <th className="p-4 pl-6 w-72">
+            <div className="overflow-x-auto rounded-xl border border-border dark:border-border show-scrollbar pb-2">
+              <table className="w-full border-collapse text-left min-w-max">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                    <th className="py-3 px-4 pl-6 w-72 border-r border-border/80 dark:border-border">
                       <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                     </th>
-                    <th className="p-4 w-28">
+                    <th className="py-3 px-4 w-28 border-r border-border/80 dark:border-border">
                       <Skeleton className="h-3.5 w-16 dark:bg-muted" />
                     </th>
-                    {[1, 2, 3, 4].map((j) => (
-                      <th key={j} className="p-4 w-32 text-center">
+                    {[1, 2, 3, 4].map((j, idx) => (
+                      <th key={j} className={cn("py-3 px-4 w-32 text-center", idx < 3 && "border-r border-border/80 dark:border-border")}>
                         <Skeleton className="h-3.5 w-20 mx-auto dark:bg-muted" />
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border dark:divide-border">
+                <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <tr key={i} className="h-14">
-                      <td className="p-4 pl-6">
+                    <tr key={i} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none">
+                      <td className="py-3 px-4 pl-6 border-r border-border/70 dark:border-border/70">
                         <div className="flex items-center gap-3">
                           <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                           <div className="flex flex-col gap-1">
@@ -71,11 +71,11 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="py-3 px-4 border-r border-border/70 dark:border-border/70">
                         <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                       </td>
-                      {[1, 2, 3, 4].map((j) => (
-                        <td key={j} className="p-4 text-center">
+                      {[1, 2, 3, 4].map((j, idx) => (
+                        <td key={j} className={cn("py-3 px-4 text-center", idx < 3 && "border-r border-border/70 dark:border-border/70")}>
                           <Skeleton className="h-6 w-11 mx-auto rounded-full dark:bg-muted" />
                         </td>
                       ))}
@@ -109,7 +109,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-border/80 bg-white p-5 shadow-xs dark:border-border dark:bg-zinc-900/40 flex flex-col justify-between h-36"
+                      className="rounded-xl border border-border bg-white p-5 shadow-xs dark:border-border dark:bg-zinc-900/40 flex flex-col justify-between h-36"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -137,7 +137,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-border/80 bg-white p-5 shadow-xs dark:border-border dark:bg-zinc-900/40 flex flex-col justify-between h-36"
+                      className="rounded-xl border border-border bg-white p-5 shadow-xs dark:border-border dark:bg-zinc-900/40 flex flex-col justify-between h-36"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">

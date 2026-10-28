@@ -39,6 +39,8 @@ import StatCards from "../admin/audit-logs/StatCards"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
 import PdfPreviewDialog from "../admin/audit-logs/PdfPreviewDialog"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -125,6 +127,22 @@ export default function GlobalAuditLogsTab({ showToast }) {
   })
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+
+  // Horizontal table scrolling hook
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolled,
+    scrollLeft,
+    scrollRight,
+    resetScroll: resetTableScroll,
+  } = useTableScroll([logs?.length]);
+
+  // Auto-reset scroll to start when page, limit, search, or filters change
+  useEffect(() => {
+    resetTableScroll();
+  }, [page, limit, search, logFilters, startDate, endDate, resetTableScroll]);
 
   const lastUrlStateRef = useRef({
     page: !isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1,
@@ -668,9 +686,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="ph-shield-check"
             title="Platform Activity History"
@@ -698,25 +716,30 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     variant="outline"
                     onClick={handleDownloadCSV}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     {isExporting ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                      <span className="flex items-center gap-1.5">
+                        <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                        <span>Exporting...</span>
+                      </span>
                     ) : (
                       "Export CSV"
                     )}
                   </Button>
                   <Button
                     type="button"
-                    variant="default"
                     onClick={handlePreviewPDF}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     {isGeneratingPdf ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
+                      <span className="flex items-center gap-1.5">
+                        <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                        <span>Generating...</span>
+                      </span>
                     ) : (
-                      "Official Report (PDF)"
+                      "Export PDF Report"
                     )}
                   </Button>
                 </div>
@@ -766,6 +789,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
             {/* Filter controls (Right side) */}
             <div className="flex flex-wrap items-center gap-3">
+              {/* Horizontal Scroll Controls */}
+              <TableScrollControls
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                isScrolled={isScrolled}
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetTableScroll}
+              />
+
               {/* Multi-Criteria Popover Filter */}
               <div className="w-full sm:w-auto shrink-0">
               <MultiCriteriaFilter
@@ -787,7 +820,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
 
             {/* Time Shortcuts */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border dark:border-border shrink-0">
               {[
                 { key: "today", label: "Today" },
                 { key: "yesterday", label: "Yest." },
@@ -828,7 +861,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate ? parseDateLocal(startDate) : undefined}
@@ -856,7 +889,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={endDate ? parseDateLocal(endDate) : undefined}
@@ -912,7 +945,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           {loading && (!logs || logs.length === 0) ? (
             <AuditLogsTableSkeleton rowCount={8} embedded={true} showScope={true} />
           ) : error ? (
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+            <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -941,7 +974,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : logs.length === 0 ? (
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+            <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <div className="relative mb-6">
@@ -972,17 +1005,23 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed min-w-[1040px]">
-              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
-                  <th className="w-12 p-4 text-center"></th>
-                  <th className="p-4 w-[14%]">
+            <div className="flex-[1_0_auto] overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
+              <div
+                ref={tableContainerRef}
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              >
+                <table className="w-full text-sm border-collapse min-w-[1040px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                  <th
+                    className="w-12 p-4 text-center border-r border-border/80 dark:border-border"
+                  >
+                  </th>
+                  <th className="p-4 w-[14%] border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("created_at")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                         sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -990,11 +1029,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[9%]">
+                  <th className="p-4 w-[9%] border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("severity")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                         sortBy === "severity" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1002,11 +1041,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="severity" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[14%]">
+                  <th className="p-4 w-[14%] border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("actor")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                         sortBy === "actor" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1014,11 +1053,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="actor" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[10%]">
+                  <th className="p-4 w-[10%] border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("office_id")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                         sortBy === "office_id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1026,11 +1065,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[14%]">
+                  <th className="p-4 w-[16%] border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("action")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                         sortBy === "action" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1038,15 +1077,15 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[31%] text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <th className="p-4 w-[22%] max-w-[280px] border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
                     Description
                   </th>
-                  <th className="p-4 pr-6 w-20 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  <th className="p-4 pr-6 w-20 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-transparent">
+              <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {logs.map((log) => {
                     const severityInfo = getSeverityInfo(log.severity)
                     const isExpanded = !!expandedRows[log.id]
@@ -1074,13 +1113,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         <tr
                           onClick={() => toggleRow(log.id)}
                           className={cn(
-                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isExpanded && "bg-gray-50 dark:bg-white/8"
                           )}
                         >
                           {/* Accordion Chevron */}
-                          <td className="p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                          <td
+                            className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
                               onClick={() => toggleRow(log.id)}
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
@@ -1091,12 +1133,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Timestamp */}
-                          <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                          <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {formattedTimestamp}
                           </td>
 
                           {/* Level / Severity */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                             <span
                               className={cn(
                                 "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
@@ -1108,7 +1150,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Actor */}
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-2.5 min-w-0">
                               <AuditActorAvatar
                                 log={log}
@@ -1127,7 +1169,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Scope */}
-                          <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100">
+                          <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                             {log.office_id ? (
                               <span className="font-medium text-gray-800 dark:text-zinc-300 truncate inline-block max-w-full" title={log.scope}>
                                 {log.scope}
@@ -1140,15 +1182,15 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Action */}
-                          <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
+                          <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                             {formatActionLabel(log.action)}
                           </td>
 
                           {/* Description Tooltip */}
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[280px]">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="block truncate text-xs font-normal text-gray-500 dark:text-zinc-400">
+                                <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
                                   {log.details || "N/A"}
                                 </span>
                               </TooltipTrigger>
@@ -1197,7 +1239,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
           {/* Pagination Toolbar */}
           {total > 0 && (
-            <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+            <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
               <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                 <span>Showing {logs.length} of {total.toLocaleString()}</span>
                 <div className="flex items-center gap-2">

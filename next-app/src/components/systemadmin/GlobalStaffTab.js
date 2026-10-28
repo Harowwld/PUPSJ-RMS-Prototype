@@ -17,6 +17,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -34,9 +42,12 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn, formatTitleCase } from "@/lib/utils"
+import { formatPHDateTime } from "@/lib/timeFormat"
 import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -94,6 +105,22 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [page, setPage] = useUrlPage()
   const [pageSize, setPageSize] = useState(20)
 
+  // Horizontal table scrolling hook
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolled,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedStaff?.length]);
+
+  // Auto-reset scroll to start when page, pageSize, search, or filters change
+  useEffect(() => {
+    resetScroll();
+  }, [page, pageSize, search, staffFilters, statusFilter, resetScroll]);
+
   // Multi-Selection State & Batch Actions
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
@@ -112,7 +139,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     return () => clearTimeout(timer)
   }, [search, staffFilters, statusFilter, setPage])
 
-  // Dialogs
+  // Detail Sheet & Dialogs
+  const [inspectMember, setInspectMember] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [targetIsExistingSysAdmin, setTargetIsExistingSysAdmin] = useState(false)
@@ -134,8 +162,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [pwDialogOpen, setPwDialogOpen] = useState(false)
   const [nextIdPreview, setNextIdPreview] = useState("")
 
-  const [lastAutoFilled, setLastAutoFilled] = useState({ email: false })
-  const [isEmailManual, setIsEmailManual] = useState(false)
   const fnameRef = useRef(null)
 
   const suggestedEmail = useMemo(() => {
@@ -150,26 +176,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   // Auto-fill Email based on name and role when registering
   useEffect(() => {
     if (isEditing) return
-    if (!isEmailManual && suggestedEmail && form.email !== suggestedEmail) {
+    if (suggestedEmail && form.email !== suggestedEmail) {
       const timer = setTimeout(() => {
         setForm((f) => ({ ...f, email: suggestedEmail }))
-        setLastAutoFilled((prev) => ({ ...prev, email: true }))
       }, 0)
-      const resetTimer = setTimeout(() => {
-        setLastAutoFilled((prev) => ({ ...prev, email: false }))
-      }, 1000)
-      return () => {
-        clearTimeout(timer)
-        clearTimeout(resetTimer)
-      }
+      return () => clearTimeout(timer)
     }
-    if (!isEmailManual && !suggestedEmail && form.email !== "") {
+    if (!suggestedEmail && form.email !== "") {
       const timer = setTimeout(() => {
         setForm((f) => ({ ...f, email: "" }))
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [isEditing, suggestedEmail, isEmailManual, form.email])
+  }, [isEditing, suggestedEmail, form.email])
 
   useEffect(() => {
     if (formOpen && !isEditing) {
@@ -284,8 +303,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       email: "",
       status: "Active"
     })
-    setIsEmailManual(false)
-    setLastAutoFilled({ email: false })
     setFormOpen(true)
   }
 
@@ -308,8 +325,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       email: member.email,
       status: member.status
     })
-    setIsEmailManual(false)
-    setLastAutoFilled({ email: false })
     setFormOpen(true)
   }
 
@@ -339,7 +354,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         lname: form.lname.trim(),
         role: form.role,
         section: (form.section && form.section.trim()) || "Administration",
-        email: form.email.trim(),
+        email: (form.email || suggestedEmail).trim(),
         office_id: form.role === "SystemAdmin" ? null : (form.office_id || null),
         status: form.status
       }
@@ -359,8 +374,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             : "Personnel account created, but the credential email was not sent. Check SMTP settings.",
           !isEditing && !json.credentialEmail?.sent)
         setFormOpen(false)
-        setIsEmailManual(false)
-        setLastAutoFilled({ email: false })
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")
         fetchData()
@@ -734,7 +747,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   }
 
   const [selectedKpi, setSelectedKpi] = useState(null);
-  const [kpiOrder, setKpiOrder] = useState(["total", "active", "staff"]);
+  const [kpiOrder, setKpiOrder] = useState(["total", "active", "admins"]);
   const statCardsRef = useRef(null)
 
   useEffect(() => {
@@ -807,9 +820,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   ]
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
+    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-users"
           title={
@@ -835,7 +848,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
               <Button
                 onClick={handleOpenCreate}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Register Personnel
               </Button>
@@ -859,7 +872,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === stat.key
+                      "relative overflow-hidden rounded-2xl border cursor-pointer select-none transition-all shadow-xs hover:shadow-sm flex flex-col justify-between min-h-[110px] h-full bg-gray-50/90 hover:bg-gray-50 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90",
+                      selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
                         : "border-border dark:border-border"
                     )}
@@ -956,39 +970,69 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
         {/* Navigation Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none">
+          {/* Left: Apple Segmented Control for Active vs Archived */}
+          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
             <button
               type="button"
               onClick={() => setStatusFilter("Active")}
               className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                 statusFilter === "Active"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
               )}
             >
-              Active ({stats.active})
+              <span>Active</span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  statusFilter === "Active"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                )}
+              >
+                {stats.active}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setStatusFilter("Inactive")}
               className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                 statusFilter === "Inactive"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
               )}
             >
-              Archived ({stats.inactive})
+              <span>Archived</span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  statusFilter === "Inactive"
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                )}
+              >
+                {stats.inactive}
+              </span>
             </button>
           </div>
 
-          {/* Right: Search Input & Dropdown Popovers Group */}
+          {/* Right: Scroll controls, Search Input & Dropdown Popovers Group */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
+            {/* Horizontal Scroll Controls */}
+            <TableScrollControls
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              isScrolled={isScrolled}
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetScroll}
+            />
+
+            <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
               </div>
               <Input
                 value={search}
@@ -1047,7 +1091,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         />
 
         {/* Content Section: Directory Table inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
             <DirectoryTableSkeleton rowCount={8} />
           ) : filteredStaff.length === 0 ? (
@@ -1091,8 +1135,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       <Button
                         onClick={handleOpenCreate}
                         title="Register Personnel"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white px-5 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0"
-                        style={{ color: "#ffffff" }}
+                        className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
                         Register Personnel
                       </Button>
@@ -1103,11 +1146,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed min-w-[960px]">
-            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
-                <th className="w-12 p-4 text-center align-middle">
+          <div
+            ref={tableContainerRef}
+            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+          >
+            <table className="w-full text-sm border-collapse min-w-[960px]">
+            <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                <th
+                  className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border"
+                >
                   <input
                     type="checkbox"
                     className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1124,23 +1172,25 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     }
                   />
                 </th>
-                <th className="p-4 w-[22%]">
-                  <button
-                    onClick={() => handleSort("id")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Employee ID{" "}
-                    <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                  </button>
+                <th className="p-4 w-[22%] border-r border-border/80 dark:border-border">
+                  <div className="flex items-center justify-between gap-1">
+                    <button
+                      onClick={() => handleSort("id")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Employee ID{" "}
+                      <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                    </button>
+                  </div>
                 </th>
-                <th className="p-4 w-[28%]">
+                <th className="p-4 w-[28%] border-r border-border/80 dark:border-border">
                   <button
                     onClick={() => handleSort("name")}
                     className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                       sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
@@ -1148,11 +1198,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="p-4 w-[20%]">
+                <th className="p-4 w-[20%] border-r border-border/80 dark:border-border">
                   <button
                     onClick={() => handleSort("office")}
                     className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                       sortBy === "office" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
@@ -1160,11 +1210,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <SortIndicator column="office" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="p-4 w-[20%]">
+                <th className="p-4 w-[20%] border-r border-border/80 dark:border-border">
                   <button
                     onClick={() => handleSort("role")}
                     className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
                       sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                     )}
                   >
@@ -1172,7 +1222,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <SortIndicator column="role" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </th>
-                <th className="w-28 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                <th className="w-28 p-4 pr-6 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
                   Actions
                 </th>
               </tr>
@@ -1189,12 +1239,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     key={member.id}
                     onClick={(e) => !isSelf && toggleSelect(member.id, e)}
                     className={cn(
-                      "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                      "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                       !isSelf && "cursor-pointer",
                       isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                   >
-                    <td className="w-12 p-4 align-middle text-center">
+                    <td
+                      className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70"
+                    >
                       {!isSelf && (
                         <input
                           type="checkbox"
@@ -1207,12 +1259,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         />
                       )}
                     </td>
-                    <td className="p-4 align-middle whitespace-nowrap">
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                         {member.id}
                       </span>
                     </td>
-                    <td className="p-4 align-middle overflow-hidden">
+                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                       <div className="flex flex-col min-w-0">
                         <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
                           {getStaffCleanName(member)} {isSelf && "(You)"}
@@ -1222,7 +1274,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         </span>
                       </div>
                     </td>
-                    <td className="p-4 align-middle whitespace-nowrap">
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       {office ? (
                         <span 
                           className="rms-office-accent inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide border-0 select-none"
@@ -1240,18 +1292,26 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         </span>
                       )}
                     </td>
-                    <td className="p-4 align-middle whitespace-nowrap">
+                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       <div 
                         className={cn(
-                          "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
+                          "inline-flex items-center gap-1.5 w-fit justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide border",
                           member.role === "SystemAdmin" || member.role === "SuperAdmin"
-                            ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
+                            ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
                             : member.role === "Admin"
-                              ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-                              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                              ? "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40"
+                              : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
                         )}
                       >
-                        {member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}
+                        <span className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          member.role === "SystemAdmin" || member.role === "SuperAdmin"
+                            ? "bg-purple-400 dark:bg-purple-600"
+                            : member.role === "Admin"
+                              ? "bg-red-500"
+                              : "bg-amber-500"
+                        )} />
+                        <span>{member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}</span>
                       </div>
                     </td>
                     <td className="w-28 p-4 pr-6 align-middle text-right whitespace-nowrap">
@@ -1259,6 +1319,20 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         className="flex items-center justify-end gap-1.5"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        {/* Always show View Profile inspector button */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => setInspectMember(member)}
+                              aria-label="View Personnel Profile"
+                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                            >
+                              <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>View Profile</TooltipContent>
+                        </Tooltip>
+
                         {isSelf ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1273,7 +1347,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                 aria-label="My Account Settings"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
-                                <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
+                                <HugeIcon className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>My Account Settings</TooltipContent>
@@ -1288,7 +1362,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Edit Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
+                                    <HugeIcon className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Staff</TooltipContent>
@@ -1303,7 +1377,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Restore Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
+                                    <HugeIcon className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Restore</TooltipContent>
@@ -1316,7 +1390,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Archive Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
+                                    <HugeIcon className="ph-bold ph-archive text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Archive</TooltipContent>
@@ -1334,7 +1408,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         </div>
 
         {/* Pagination Footer */}
-        <div className="flex items-center justify-between border-t border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl">
+        <div className="mt-auto flex items-center justify-between border-t border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl">
           <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
             <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
             <div className="flex items-center gap-2">
@@ -1390,13 +1464,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       {/* Register / Edit Form Dialog */}
       <Dialog
         open={formOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open)
-          if (!open) {
-            setIsEmailManual(false)
-            setLastAutoFilled({ email: false })
-          }
-        }}
+        onOpenChange={setFormOpen}
       >
         <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden">
           <form onSubmit={handleSubmit}>
@@ -1409,39 +1477,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="p-6 space-y-4">
-              {/* Employee ID */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Employee ID
-                  </label>
-                  <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
-                    {isEditing ? "Read-only" : "System generated"}
-                  </span>
-                </div>
-                {isEditing ? (
-                  <Input
-                    value={form.id}
-                    disabled
-                    className="h-10 rounded-xl bg-gray-100/80 text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-300 border border-border text-xs disabled:cursor-not-allowed"
-                  />
-                ) : (
-                  <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-gray-50/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-300 shadow-xs select-none">
-                    <span className="font-mono text-xs font-semibold tracking-wide">
-                      {nextIdPreview || "PUP-[AUTO]"}
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
-                      Auto-assigned
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {/* First Name */}
+            <div className="p-6 space-y-5">
+              {/* Row 1: Editable Full Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                     First Name *
                   </label>
                   <Input
@@ -1454,9 +1494,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   />
                 </div>
 
-                {/* Last Name */}
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                     Last Name *
                   </label>
                   <Input
@@ -1469,44 +1508,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
               </div>
 
-              {/* Email Address */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Official Email Address *
-                  </label>
-                  {isEditing ? (
-                    <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
-                      Read-only
-                    </span>
-                  ) : lastAutoFilled.email ? (
-                    <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                      Auto-detected
-                    </span>
-                  ) : null}
-                </div>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    if (!isEditing) setIsEmailManual(val !== "")
-                    setForm(prev => ({ ...prev, email: val }))
-                  }}
-                  disabled={isEditing || submitLoading}
-                  placeholder={!isEditing ? (suggestedEmail || "[role].[name]@pup.local") : "email@pup.local"}
-                  className={cn(
-                    "h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white disabled:bg-gray-100/80 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-zinc-900/80 dark:disabled:text-zinc-400 shadow-xs transition-colors",
-                    !isEditing && lastAutoFilled.email && "border-emerald-500 dark:border-emerald-500 ring-1 ring-emerald-500"
-                  )}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {/* Office Scope Selection */}
+              {/* Row 2: Editable Office Scope & Privilege Level */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                     Assigned Office / Department {form.role !== "SystemAdmin" && "*"}
                   </label>
                   <Select
@@ -1520,8 +1525,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       }))
                     }}
                     className="h-10 rounded-xl bg-white border border-border text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white shadow-none cursor-pointer"
-                    menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     disabled={isEditing && targetIsExistingSysAdmin}
                     required={form.role !== "SystemAdmin"}
                   >
@@ -1534,9 +1537,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   </Select>
                 </div>
 
-                {/* Role Level */}
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                     Privilege Level *
                   </label>
                   <Select
@@ -1550,8 +1552,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       }))
                     }}
                     className="h-10 rounded-xl bg-white border border-border text-xs font-normal focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white shadow-none cursor-pointer"
-                    menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                    optionClassName="rounded-lg text-xs font-medium py-2.5 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     disabled={isEditing && targetIsExistingSysAdmin}
                     required
                   >
@@ -1561,6 +1561,44 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <option value="Admin">{form.office_id ? `${getOfficePrefix(form.office_id, offices)} Admin` : "Administrator"}</option>
                     <option value="Staff">{form.office_id ? `${getOfficePrefix(form.office_id, offices)} Staff` : "Staff"}</option>
                   </Select>
+                </div>
+              </div>
+
+              {/* Row 3: System-Generated Identifiers (Grouped Read-Only Section) */}
+              <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                    System-Generated Credentials
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                    {isEditing ? "Read-only" : "Auto-assigned"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Employee ID */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 mb-1">
+                      Employee ID
+                    </label>
+                    <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                        {isEditing ? form.id : (nextIdPreview || "PUP-[AUTO]")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Official Email Address */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 mb-1">
+                      Official Email Address
+                    </label>
+                    <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                        {isEditing ? form.email : (form.email || suggestedEmail || `${(form.role || "staff").toLowerCase()}.[lastname]@pup.local`)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1578,9 +1616,18 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <Button
                 type="submit"
                 disabled={submitLoading}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all"
               >
-                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Register Personnel"}
+                {submitLoading ? (
+                  <span className="flex items-center gap-1.5">
+                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                    <span>Saving Changes...</span>
+                  </span>
+                ) : isEditing ? (
+                  "Save Changes"
+                ) : (
+                  "Register Personnel"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -1617,13 +1664,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               variant="outline"
               className="text-xs border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all"
             >
-              Copy
+              Copy Password
             </Button>
             <Button
               onClick={() => setPwDialogOpen(false)}
               className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all"
             >
-              Acknowledge
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1637,7 +1684,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={isArchiving}
         title="Archive Personnel Account"
         message="This account will be restricted immediately but can be restored later."
-        confirmLabel="Archive"
+        confirmLabel="Archive Personnel"
+        cancelLabel="Cancel"
         variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
@@ -1657,7 +1705,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={isRestoring}
         title="Restore Personnel Account"
         message="This account will be reactivated and the personnel will be able to log in again."
-        confirmLabel="Restore"
+        confirmLabel="Restore Personnel"
+        cancelLabel="Cancel"
         variant="success"
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
@@ -1677,7 +1726,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={bulkArchiveLoading}
         title="Batch Archive Personnel"
         message={`${selectedIds.size} personnel profiles will be archived and their system access revoked immediately.`}
-        confirmLabel="Archive"
+        confirmLabel="Archive Selected"
+        cancelLabel="Cancel"
         variant="warning"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
@@ -1698,7 +1748,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isLoading={bulkRestoreLoading}
         title="Batch Restore Personnel"
         message={`${selectedIds.size} personnel profiles will be reactivated and able to log in again.`}
-        confirmLabel="Restore"
+        confirmLabel="Restore Selected"
+        cancelLabel="Cancel"
         variant="success"
         icon="ph-duotone ph-archive-restore"
         buttonIcon="ph-bold ph-archive-restore"
@@ -1710,6 +1761,317 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         isAppleStyled={true}
         isRestoreModal={true}
       />
+
+      {/* Standardized Personnel Details Slide-Over Sheet */}
+      <Sheet open={Boolean(inspectMember)} onOpenChange={(open) => !open && setInspectMember(null)}>
+        <SheetContent
+          side="right"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden motion-safe:animate-in motion-safe:slide-in-from-right duration-300 ease-out"
+        >
+          {inspectMember && (() => {
+            const office = (Array.isArray(offices) ? offices : []).find(o => o.id === inspectMember.office_id)
+            const isSelf = inspectMember.id === authUser?.id
+            const isSysAdmin = inspectMember.role === "SystemAdmin" || inspectMember.role === "SuperAdmin"
+            const initials = `${inspectMember.fname?.charAt(0) || ""}${inspectMember.lname?.charAt(0) || ""}`.toUpperCase() || "ST"
+            const currentMemberIndex = filteredMembers.findIndex(m => m.id === inspectMember.id)
+            const hasPrevMember = currentMemberIndex > 0
+            const hasNextMember = currentMemberIndex >= 0 && currentMemberIndex < filteredMembers.length - 1
+
+            return (
+              <>
+                <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+                  <div className="flex items-center justify-between px-6 py-4">
+                    <div>
+                      <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                        Personnel Details
+                      </SheetTitle>
+                      <SheetDescription className="sr-only">
+                        Detailed account profile, office partition, and system activity for {getStaffCleanName(inspectMember)}
+                      </SheetDescription>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {filteredMembers.length > 1 && currentMemberIndex !== -1 && (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
+                          <button
+                            type="button"
+                            disabled={!hasPrevMember}
+                            onClick={() => hasPrevMember && setInspectMember(filteredMembers[currentMemberIndex - 1])}
+                            className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                            aria-label="Previous Personnel"
+                            title="Previous Personnel"
+                          >
+                            <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!hasNextMember}
+                            onClick={() => hasNextMember && setInspectMember(filteredMembers[currentMemberIndex + 1])}
+                            className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                            aria-label="Next Personnel"
+                            title="Next Personnel"
+                          >
+                            <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                          </button>
+                          <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                            {String(currentMemberIndex + 1).padStart(2, "0")} of {String(filteredMembers.length).padStart(2, "0")}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setInspectMember(null)}
+                        className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                        aria-label="Close Personnel Details"
+                        title="Close"
+                      >
+                        <HugeIcon className="ph-bold ph-x text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                </SheetHeader>
+
+                {/* Edge-to-Edge Line-Attached Status Notice */}
+                <div
+                  className={cn(
+                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                    inspectMember.status === "Active"
+                      ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                      : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                  )}
+                >
+                  <HugeIcon
+                    className={cn(
+                      "ph-bold text-[15px] shrink-0",
+                      inspectMember.status === "Active"
+                        ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                        : "ph-warning-circle text-amber-600 dark:text-amber-400"
+                    )}
+                  />
+                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                    <strong className="font-semibold">
+                      {inspectMember.status === "Active"
+                        ? "Active Personnel Account:"
+                        : "Archived Personnel Account:"}
+                    </strong>{" "}
+                    {inspectMember.status === "Active"
+                      ? "Operational access granted to university archives and department workstations."
+                      : "Account access deactivated. Historical audit logs and archive records preserved."}
+                  </span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Identity Summary Strip (Unboxed) */}
+                  <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base shadow-sm shrink-0 select-none text-white"
+                        style={{
+                          backgroundColor: office?.accent_color || (isSysAdmin ? "#1f2937" : "#800000"),
+                        }}
+                      >
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                            {getStaffCleanName(inspectMember)}
+                          </span>
+                          {isSelf && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                          {inspectMember.id} • <span className="font-sans font-medium text-gray-600 dark:text-zinc-300">{inspectMember.section || "Administration"}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0">
+                      {office ? (
+                        <span
+                          className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold border-0 select-none"
+                          style={{
+                            color: office.accent_color || "#800000",
+                            backgroundColor: `color-mix(in srgb, ${office.accent_color || "#800000"} 12%, transparent)`,
+                          }}
+                        >
+                          {office.name}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                          Platform Level
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Profile & Credentials Section (Unboxed) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                      <HugeIcon className="ph-bold ph-identification-card text-pup-maroon dark:text-red-400 text-sm" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                        Identity & Access Metadata
+                      </h4>
+                    </div>
+                    <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                      <div className="py-2.5 flex items-center justify-between text-xs">
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">Employee ID</span>
+                        <span className="font-mono font-semibold text-gray-900 dark:text-zinc-100 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800">
+                          {inspectMember.id}
+                        </span>
+                      </div>
+                      <div className="py-2.5 flex items-center justify-between text-xs gap-3">
+                        <span className="font-medium text-gray-500 dark:text-zinc-400 shrink-0">Official Email</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono text-gray-900 dark:text-zinc-100 truncate text-[11px]" title={inspectMember.email}>
+                            {getStaffCleanEmail(inspectMember)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(getStaffCleanEmail(inspectMember))
+                              showToast("Email address copied to clipboard")
+                            }}
+                            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            title="Copy Email"
+                          >
+                            <HugeIcon className="ph-bold ph-copy text-xs" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="py-2.5 flex items-center justify-between text-xs">
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">Authorization Role</span>
+                        <span className="font-medium text-gray-900 dark:text-zinc-100">
+                          {isSysAdmin ? "Platform System Administrator" : getOfficeRoleLabel(inspectMember.role, inspectMember, offices)}
+                        </span>
+                      </div>
+                      <div className="py-2.5 flex items-center justify-between text-xs">
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">Administrative Section</span>
+                        <span className="font-medium text-gray-900 dark:text-zinc-100">
+                          {inspectMember.section || "General Administration"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timestamps & Lifecycle (Unboxed) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                      <HugeIcon className="ph-bold ph-clock text-pup-maroon dark:text-red-400 text-sm" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                        System Activity & Registration
+                      </h4>
+                    </div>
+                    <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                      <div className="py-2.5 flex items-center justify-between text-xs">
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">Registered On</span>
+                        <span className="font-mono text-[11px] text-gray-700 dark:text-zinc-300">
+                          {inspectMember.created_at ? formatPHDateTime(inspectMember.created_at) : "N/A"}
+                        </span>
+                      </div>
+                      <div className="py-2.5 flex items-center justify-between text-xs">
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">Last Active Session</span>
+                        <span className="font-mono text-[11px] text-gray-700 dark:text-zinc-300">
+                          {inspectMember.last_active ? formatPHDateTime(inspectMember.last_active) : "Never logged in"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Audit Logs Jump */}
+                  <div className="p-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/20 flex items-center justify-between gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Activity History</span>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        Inspect recorded audit events logged by this personnel account.
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setInspectMember(null)
+                        window.dispatchEvent(
+                          new CustomEvent("switch-view", {
+                            detail: { view: "logs", search: inspectMember.id },
+                          })
+                        )
+                      }}
+                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs shrink-0 cursor-pointer active:scale-95 transition-all"
+                    >
+                      View History
+                    </Button>
+                  </div>
+                </div>
+
+                <SheetFooter className="p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 flex items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setInspectMember(null)}
+                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  >
+                    Close
+                  </Button>
+
+                  {!isSelf && (
+                    <div className="flex items-center gap-2">
+                      {inspectMember.status === "Active" ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const m = inspectMember
+                              setInspectMember(null)
+                              handleOpenEdit(m)
+                            }}
+                            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                          >
+                            Edit Profile
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const m = inspectMember
+                              setInspectMember(null)
+                              setArchiveTarget(m)
+                            }}
+                            className="h-10 px-4 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+                          >
+                            Archive Personnel
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const m = inspectMember
+                            setInspectMember(null)
+                            setRestoreTarget(m)
+                          }}
+                          className="h-10 px-4 text-xs font-semibold rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        >
+                          Restore Personnel
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </SheetFooter>
+              </>
+            )
+          })()}
+        </SheetContent>
+      </Sheet>
 
       {/* Floating Action Bar */}
       <FloatingActionBar

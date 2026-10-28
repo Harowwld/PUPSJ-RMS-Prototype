@@ -16,6 +16,8 @@ import { Select } from "@/components/ui/select";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import useTableScroll from "@/hooks/useTableScroll";
+import TableScrollControls from "@/components/shared/TableScrollControls";
 
 export default function BulkImportStudentsModal({
   open,
@@ -348,6 +350,19 @@ export default function BulkImportStudentsModal({
 
   const totalPages = Math.ceil(filteredCsvRows.length / csvRowsPerPage) || 1;
 
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolledX,
+    scrollTable,
+    resetScroll,
+  } = useTableScroll([filteredCsvRows?.length, csvPage]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [csvPage, csvSearch, resetScroll]);
+
   const handleImportStudents = async () => {
     const targets = csvRows.filter((r) => csvSelected[r.index]);
     if (targets.length === 0) {
@@ -501,7 +516,7 @@ export default function BulkImportStudentsModal({
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Button
                   type="button"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                   onClick={(e) => {
                     e.stopPropagation();
                     csvInputRef.current?.click();
@@ -659,15 +674,25 @@ export default function BulkImportStudentsModal({
                 >
                   Apply
                 </Button>
+
+                <TableScrollControls
+                  canScrollLeft={canScrollLeft}
+                  canScrollRight={canScrollRight}
+                  onScrollLeft={() => scrollTable("left")}
+                  onScrollRight={() => scrollTable("right")}
+                />
               </div>
             </div>
 
             {/* Interactive Staging Table */}
-            <div className="flex-1 min-h-0 overflow-auto">
-              <table className="w-full text-xs min-w-[1160px]">
-                <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card">
-                  <tr className="text-left text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                    <th className="w-12 p-3 text-center">
+            <div
+              ref={tableContainerRef}
+              className="flex-1 min-h-0 w-full overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none border-t border-border dark:border-border"
+            >
+              <table className="w-full text-xs border-collapse min-w-[1160px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider select-none">
+                    <th className="w-12 min-w-[48px] p-3 text-center border-r border-border/80 dark:border-border">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
@@ -685,18 +710,18 @@ export default function BulkImportStudentsModal({
                         }}
                       />
                     </th>
-                    <th className="p-3 w-44 min-w-[150px] whitespace-nowrap">Student No.</th>
-                    <th className="p-3 min-w-[220px] whitespace-nowrap">Full Name</th>
-                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap">Course</th>
-                    <th className="p-3 w-20 min-w-[70px] whitespace-nowrap text-center">Year</th>
-                    <th className="p-3 w-24 min-w-[80px] whitespace-nowrap text-center">Section</th>
-                    <th className="p-3 pr-4 w-32 min-w-[110px] whitespace-nowrap">Room</th>
-                    <th className="p-3 pr-6 w-40 min-w-[150px] whitespace-nowrap">Cabinet</th>
-                    <th className="p-3 pl-2 pr-4 w-36 min-w-[120px] whitespace-nowrap">Drawer</th>
+                    <th className="p-3 w-44 min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">Student No.</th>
+                    <th className="p-3 min-w-[220px] whitespace-nowrap border-r border-border/80 dark:border-border">Full Name</th>
+                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap border-r border-border/80 dark:border-border">Course</th>
+                    <th className="p-3 w-20 min-w-[70px] whitespace-nowrap text-center border-r border-border/80 dark:border-border">Year</th>
+                    <th className="p-3 w-24 min-w-[80px] whitespace-nowrap text-center border-r border-border/80 dark:border-border">Section</th>
+                    <th className="p-3 pr-4 w-32 min-w-[110px] whitespace-nowrap border-r border-border/80 dark:border-border">Room</th>
+                    <th className="p-3 pr-6 w-40 min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">Cabinet</th>
+                    <th className="p-3 pl-2 pr-4 w-36 min-w-[120px] whitespace-nowrap border-r border-border/80 dark:border-border">Drawer</th>
                     <th className="p-3 pr-5 text-right w-20 min-w-[70px] whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border dark:divide-border">
                   {paginatedCsvRows.map((r) => {
                     const room = r.student?.room;
                     const cabinet = r.student?.cabinet;
@@ -708,12 +733,12 @@ export default function BulkImportStudentsModal({
                       <tr
                         key={r.index}
                         className={cn(
-                          "hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer",
+                          "hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors cursor-pointer select-none",
                           isSelected && "bg-blue-50/40 dark:bg-blue-950/20"
                         )}
                         onClick={() => toggleCsvRowSelected(r.index)}
                       >
-                        <td className="w-12 p-3 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="w-12 p-3 text-center align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -721,24 +746,24 @@ export default function BulkImportStudentsModal({
                             className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
                           />
                         </td>
-                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100">
+                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                           {r.student.studentNo}
                         </td>
-                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate" title={formatTitleCase(r.student.name)}>
+                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate border-r border-border/70 dark:border-border/70" title={formatTitleCase(r.student.name)}>
                           {formatTitleCase(r.student.name)}
                         </td>
-                        <td className="p-3 align-middle">
+                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
                           <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                             {r.student.courseCode}
                           </span>
                         </td>
-                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400">
+                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
                           {r.student.yearLevel}
                         </td>
-                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400">
+                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
                           {r.student.section}
                         </td>
-                        <td className="p-3 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-24 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(room || "")}
@@ -753,7 +778,7 @@ export default function BulkImportStudentsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pr-6 align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-6 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-30 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(cabinet || "")}
@@ -768,7 +793,7 @@ export default function BulkImportStudentsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pl-2 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pl-2 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-24 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(drawer || "")}
@@ -873,7 +898,7 @@ export default function BulkImportStudentsModal({
             type="button"
             onClick={handleImportStudents}
             disabled={csvLoading || !csvFile || selectedCount === 0 || hasInvalidSelected}
-            className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+            className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
           >
             {csvLoading ? (
               <span className="flex items-center gap-2">

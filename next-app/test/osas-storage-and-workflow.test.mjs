@@ -4,12 +4,15 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
-const { query, queryOne } = await import("../src/lib/postgres.js");
+const { pool, query, queryOne } = await import("../src/lib/postgres.js");
 const { getStorageLayout, setStorageLayout } = await import("../src/lib/storageLayoutRepo.js");
 const { listDocTypes } = await import("../src/lib/docTypesRepo.js");
 const { DEFAULT_OFFICE_MODULES } = await import("../src/lib/systemDb.js");
 
 test("OSAS Storage Suite & Workflow Specialization", async (t) => {
+  t.after(async () => {
+    await pool.end();
+  });
   await t.test("1. DEFAULT_OFFICE_MODULES includes storage modules for OSAS", () => {
     assert.ok(Array.isArray(DEFAULT_OFFICE_MODULES.osas), "OSAS modules should be an array");
     assert.ok(DEFAULT_OFFICE_MODULES.osas.includes("storage_layout"), "storage_layout must be in OSAS modules");
@@ -65,10 +68,8 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
       "Constitution & By-Laws (CBL)",
       "Activity Request",
       "Financial Liquidation Report",
-      "Student Disciplinary Clearance",
       "Organization Registration Certificate",
-      "Good Moral Certificate",
-      "Clearance Form",
+      "Post-Event Narrative Report",
     ];
 
     for (const expected of requiredTypes) {
@@ -77,6 +78,15 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
         `OSAS document types must include '${expected}'`
       );
     }
+
+    assert.ok(
+      !osasDocTypes.some((dt) => dt.toLowerCase().includes("good moral")),
+      "OSAS document types must NOT include Good Moral Certificate"
+    );
+    assert.ok(
+      !osasDocTypes.some((dt) => dt.toLowerCase() === "clearance form"),
+      "OSAS document types must NOT include individual Clearance Form"
+    );
   });
 
   await t.test("6. Mutating OSAS storage layout does not mutate Registrar storage layout", async () => {

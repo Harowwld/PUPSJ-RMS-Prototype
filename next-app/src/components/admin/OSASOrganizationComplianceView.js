@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import useTableScroll from "@/hooks/useTableScroll";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import {
   Dialog,
@@ -593,6 +595,18 @@ export default function OSASOrganizationComplianceView({
     return sortedOrganizations.slice(startIndex, startIndex + pageSize);
   }, [sortedOrganizations, page, pageSize]);
 
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedOrganizations.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, search, categoryFilter, complianceFilters, standingFilters, cblFilters, officerFilters, sortBy, sortOrder, pageSize, resetScroll]);
+
   const currentOrgIndex = selectedOrgForOfficers
     ? sortedOrganizations.findIndex((o) => o.id === selectedOrgForOfficers.id)
     : -1;
@@ -779,9 +793,9 @@ export default function OSASOrganizationComplianceView({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up pb-6">
+      <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* Unified Single Card Container: Header, Stats, Toolbar, Table & Footer */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-chart-bar"
@@ -806,7 +820,7 @@ export default function OSASOrganizationComplianceView({
                   variant="outline"
                   onClick={handleExportCsv}
                   disabled={loading || organizations.length === 0 || isExportingCsv}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isExportingCsv ? (
                     <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
@@ -815,17 +829,17 @@ export default function OSASOrganizationComplianceView({
                   )}
                 </Button>
 
-                {/* Primary Action: Generate */}
+                {/* Primary Action: Export PDF Report */}
                 <Button
                   type="button"
                   onClick={handleOpenPdfReport}
                   disabled={loading || organizations.length === 0 || isGeneratingPdf}
-                  className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isGeneratingPdf ? (
                     <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
                   ) : (
-                    "Generate"
+                    "Export PDF Report"
                   )}
                 </Button>
               </div>
@@ -1233,6 +1247,13 @@ export default function OSASOrganizationComplianceView({
                 totalCount={organizations.length}
                 filteredCount={filteredOrganizations.length}
               />
+
+              <TableScrollControls
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetScroll}
+                isScrolled={isScrolledX}
+              />
             </div>
           </div>
 
@@ -1244,47 +1265,81 @@ export default function OSASOrganizationComplianceView({
           />
 
           {/* 5. Main Content Area: Organizations Compliance Table (5 Clean Columns) */}
-          <div className="flex flex-col border-t border-border dark:border-border bg-white dark:bg-card">
-            <div className="w-full overflow-x-auto">
+          <div className="flex flex-[1_0_auto] flex-col border-t border-border dark:border-border bg-white dark:bg-card">
+            <div
+              ref={tableContainerRef}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+            >
               {sortedOrganizations.length > 0 ? (
-                <table className="w-full text-sm table-fixed min-w-[850px]">
-                  <thead className="sticky top-0 z-10 bg-gray-50/80 backdrop-blur-sm dark:bg-zinc-900/70 border-b border-border dark:border-border">
-                    <tr className="hover:bg-transparent text-left">
+                <table className="w-full text-sm border-collapse min-w-[1050px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
                       {/* Column 1: Organization */}
-                      <th className="py-3 px-6 w-[32%]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("name")}
-                          className="group flex items-center text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer"
-                        >
-                          Organization <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
+                      <th
+                        className={cn(
+                          "py-3 px-6 w-[32%] min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200 border-r border-border/80 dark:border-border",
+                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("name")}
+                            className={cn(
+                              "group flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Organization <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                          {isScrolledX && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={resetScroll}
+                                  className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                  aria-label="Reset scroll to start"
+                                >
+                                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </th>
 
                       {/* Column 2: Faculty Adviser */}
-                      <th className="py-3 px-6 w-[22%]">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                      <th className="py-3 px-6 w-[22%] border-r border-border/80 dark:border-border">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                           Faculty Adviser
                         </span>
                       </th>
 
                       {/* Column 3: Archival CBL */}
-                      <th className="py-3 px-6 w-[14%] text-center">
+                      <th className="py-3 px-6 w-[14%] text-center border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("hasCbl")}
-                          className="group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer"
+                          className={cn(
+                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                            sortBy === "hasCbl" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
                         >
                           Archival CBL <SortIndicator column="hasCbl" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
 
                       {/* Column 4: Authorized Officers */}
-                      <th className="py-3 px-6 w-[14%] text-center">
+                      <th className="py-3 px-6 w-[14%] text-center border-r border-border/80 dark:border-border">
                         <button
                           type="button"
                           onClick={() => handleSort("activeOfficerCount")}
-                          className="group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer"
+                          className={cn(
+                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                            sortBy === "activeOfficerCount" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
                         >
                           Authorized Officers <SortIndicator column="activeOfficerCount" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
@@ -1295,7 +1350,10 @@ export default function OSASOrganizationComplianceView({
                         <button
                           type="button"
                           onClick={() => handleSort("complianceScore")}
-                          className="group ml-auto flex items-center text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer"
+                          className={cn(
+                            "group ml-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                            sortBy === "complianceScore" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
                         >
                           Compliance <SortIndicator column="complianceScore" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
@@ -1303,7 +1361,7 @@ export default function OSASOrganizationComplianceView({
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-border dark:divide-border">
+                  <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {paginatedOrganizations.map((org) => {
                       const isFullyCompliant = org.complianceScore === 100;
                       const isPartiallyCompliant = org.complianceScore >= 50 && org.complianceScore < 100;
@@ -1317,10 +1375,15 @@ export default function OSASOrganizationComplianceView({
                       return (
                         <tr
                           key={org.id}
-                          className="group hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors"
+                          className="group hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none"
                         >
                           {/* Column 1: Organization (Name, Acronym, Category, Standing) */}
-                          <td className="py-3.5 px-6">
+                          <td
+                            className={cn(
+                              "py-3.5 px-6 min-w-[260px] sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/80 transition-shadow duration-200 border-r border-border/70 dark:border-border/70",
+                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                            )}
+                          >
                             <div className="flex flex-col gap-0.5">
                               <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug tracking-[-0.01em] group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                 {org.name}
@@ -1353,7 +1416,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 2: Faculty Adviser */}
-                          <td className="py-3.5 px-6">
+                          <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
                             {org.adviserName ? (
                               <div className="min-w-0 max-w-[200px]">
                                 <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -1378,7 +1441,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 3: Archival CBL (1-Click Preview) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap">
+                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {org.hasCbl ? (
                               <button
                                 type="button"
@@ -1404,7 +1467,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 4: Authorized Officers (1-Click Roster View) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap">
+                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {org.activeOfficerCount > 0 ? (
                               <button
                                 type="button"
@@ -1652,6 +1715,45 @@ export default function OSASOrganizationComplianceView({
               </div>
             </SheetHeader>
 
+            {/* Line-Attached Edge-to-Edge Status Notice */}
+            {selectedOrgForOfficers && (
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                  selectedOrgForOfficers?.status === "Active"
+                    ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                    : selectedOrgForOfficers?.status === "Inactive"
+                    ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                    : "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                )}
+              >
+                <HugeIcon
+                  className={cn(
+                    "ph-bold text-[15px] shrink-0",
+                    selectedOrgForOfficers?.status === "Active"
+                      ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                      : selectedOrgForOfficers?.status === "Inactive"
+                      ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                      : "ph-archive text-rose-600 dark:text-rose-400"
+                  )}
+                />
+                <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                  <strong className="font-semibold">
+                    {selectedOrgForOfficers?.status === "Active"
+                      ? "Accredited Campus Organization:"
+                      : selectedOrgForOfficers?.status === "Inactive"
+                      ? "Inactive Accreditation:"
+                      : "Archived Organization:"}
+                  </strong>{" "}
+                  {selectedOrgForOfficers?.status === "Active"
+                    ? "Leadership roster authorized to sponsor campus events and execute official paperwork."
+                    : selectedOrgForOfficers?.status === "Inactive"
+                    ? "Accreditation expired or suspended. Renewal required before scheduling activities."
+                    : "Archived organizational records on file for historical reference."}
+                </span>
+              </div>
+            )}
+
             {/* SCROLLABLE 1-COLUMN BODY */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Summary Strip */}
@@ -1689,15 +1791,6 @@ export default function OSASOrganizationComplianceView({
                   Organization Standing
                 </h4>
                 <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                  <InfoRow icon="ph-buildings" label="Organization">
-                    <span>
-                      {selectedOrgForOfficers?.name}
-                      {selectedOrgForOfficers?.acronym && (
-                        <span className="text-gray-400 font-normal ml-1">({selectedOrgForOfficers.acronym})</span>
-                      )}
-                    </span>
-                  </InfoRow>
-
                   <InfoRow icon="ph-tag" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
 
                   <InfoRow icon="ph-chalkboard-teacher" label="Faculty Adviser">

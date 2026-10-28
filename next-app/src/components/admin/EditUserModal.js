@@ -154,7 +154,7 @@ export default function EditUserModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
             >
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>

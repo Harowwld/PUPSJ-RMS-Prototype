@@ -1470,8 +1470,6 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           </div>
           <Select
             className="h-full w-auto min-w-[140px] flex-1 cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 gap-1 text-xs font-medium text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none!"
-            menuClassName="bg-white! border border-border! rounded-xl! shadow-xl! dark:border-border dark:bg-card min-w-[200px] w-max z-50"
-            optionClassName="text-xs! font-medium! text-gray-900! h-9! px-3! bg-transparent! hover:bg-gray-50! dark:text-zinc-200 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
             disabled={!activeRoom || templates.length === 0}
@@ -1499,10 +1497,10 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             <DropdownMenuContent
               align="end"
               sideOffset={6}
-              className="w-56 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50"
+              className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
             >
               {/* Zone 1: Header */}
-              <div className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+              <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                   Template Actions
                 </span>
@@ -1518,23 +1516,24 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   disabled={!activeRoom || activeRoom.cabinets?.length === 0}
                 >
-                  <HugeIcon className="ph-bold ph-floppy-disk text-xs text-gray-600 dark:text-zinc-300" />
+                  <HugeIcon className="ph-bold ph-floppy-disk text-sm text-gray-500 dark:text-zinc-400" />
                   <span>Save as Template</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  variant="destructive"
                   onClick={() => setDeleteTemplateConfirmOpen(true)}
-                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
+                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 border-0 outline-none"
                   disabled={!selectedTemplateId}
                 >
-                  <HugeIcon className="ph-bold ph-trash text-xs" />
-                  <span>Delete Template</span>
+                  <HugeIcon className="ph-bold ph-trash text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
+                  <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Delete Template</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
                 <DropdownMenuItem
                   onClick={() => setRestoreTemplatesConfirmOpen(true)}
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
                 >
-                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-sm" />
                   <span>Restore Defaults</span>
                 </DropdownMenuItem>
               </div>
@@ -1546,7 +1545,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   )
 
   const renderEditorContent = () => (
-    <div className="flex w-full flex-col bg-white select-none dark:bg-card">
+    <div className="flex flex-[1_0_auto] w-full flex-col bg-white select-none dark:bg-card">
       <PageHeader
         icon="ph-layout"
         title="Storage Layout Editor"
@@ -1564,7 +1563,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             <Button
               onClick={saveLayout}
               disabled={saving || hasAnyCollisions}
-              className="flex h-10 px-5 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer border-0 shadow-xs"
+              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1579,8 +1578,8 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
 
       {renderToolbar()}
 
-      <div className="relative">
-        <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
+      <div className="relative flex flex-[1_0_auto] flex-col">
+        <div className="grid flex-[1_0_auto] grid-cols-1 gap-6 p-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CabinetCanvas 
               canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} onOpenRenameCabinet={openRenameCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={false}
@@ -1601,7 +1600,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   )
 
   return (
-    <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6 pb-6">
+    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
       <ConflictResolutionModals 
         applyReportOpen={applyReportOpen}
         setApplyReportOpen={setApplyReportOpen}
@@ -1624,11 +1623,11 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="rounded-2xl border border-border bg-white shadow-sm p-0 gap-0 dark:border-border dark:bg-card dark:shadow-none w-full overflow-hidden mb-4">
+      <Card className="flex flex-[1_0_auto] flex-col rounded-2xl border border-border bg-white shadow-sm p-0 gap-0 dark:border-border dark:bg-card dark:shadow-none w-full overflow-hidden">
         {renderEditorContent()}
       </Card>
 
-      <FloatingActionBar selectedCount={selectedDeletableCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
+      <FloatingActionBar selectedCount={selectedDeletableCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete Cabinets" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
       <ConfirmModal
         open={bulkConfirmOpen}
@@ -1646,7 +1645,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         onCancel={() => setDeleteRoomConfirmOpen(false)}
         title="Delete Storage Room"
         message={`Are you sure you want to delete ${activeRoom?.name || `Room ${activeRoom?.id}`}? This room and all cabinet configurations inside it will be permanently deleted.`}
-        confirmLabel="Delete"
+        confirmLabel="Delete Room"
         selectedItems={activeRoom ? [`${activeRoom.name || `Room ${activeRoom.id}`} (${(activeRoom.cabinets || []).length} ${activeRoom.cabinets?.length === 1 ? "cabinet" : "cabinets"})`] : []}
         variant="danger"
         onConfirm={() => {
@@ -1660,7 +1659,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         onCancel={() => setResetRoomConfirmOpen(false)}
         title="Reset Room Layout"
         message={`Are you sure you want to reset ${activeRoom?.name || `Room ${activeRoom?.id}`}? All placed cabinets will be cleared and the room layout will revert to an empty floorplan.`}
-        confirmLabel="Reset"
+        confirmLabel="Reset Room Layout"
         selectedItems={activeRoom ? [`${activeRoom.name || `Room ${activeRoom.id}`} (${(activeRoom.cabinets || []).length} ${activeRoom.cabinets?.length === 1 ? "cabinet" : "cabinets"})`] : []}
         variant="warning"
         onConfirm={() => {
@@ -1674,7 +1673,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         onCancel={() => setTemplateApplyConfirmOpen(false)}
         title="Apply Room Template"
         message={`Are you sure you want to apply the "${templates.find(t => t.id === selectedTemplateId)?.name || 'selected'}" template? This will replace the current cabinet layout in ${activeRoom?.name || `Room ${activeRoom?.id}`}.`}
-        confirmLabel="Apply"
+        confirmLabel="Apply Template"
         selectedItems={templates.find(t => t.id === selectedTemplateId) ? [templates.find(t => t.id === selectedTemplateId).name] : []}
         variant="warning"
         onConfirm={() => {
@@ -1692,7 +1691,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         }}
         title="Save as Template"
         message="Enter a name for this new custom template."
-        confirmLabel="Save"
+        confirmLabel="Save Template"
         value={newTemplateName}
         onChange={setNewTemplateName}
         onConfirm={() => saveCurrentAsTemplate(newTemplateName)}
@@ -1709,7 +1708,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         }}
         title="Rename Storage Room"
         message={`Enter a new display name for ${activeRoom?.name || `Room ${activeRoom?.id || ""}`}.`}
-        confirmLabel="Save"
+        confirmLabel="Save Room Name"
         value={newRoomName}
         onChange={setNewRoomName}
         onConfirm={handleRenameRoom}
@@ -1726,7 +1725,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         }}
         title="Rename Storage Cabinet"
         message={`Enter a new identifier or name for Cabinet ${cabinetToRename?.id || selectedCabinet?.id || ""}.`}
-        confirmLabel="Save"
+        confirmLabel="Save Cabinet Name"
         value={newCabinetName}
         onChange={setNewCabinetName}
         onConfirm={handleRenameCabinet}
@@ -1738,7 +1737,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         onCancel={() => setDeleteTemplateConfirmOpen(false)} 
         title="Delete Custom Template" 
         message={`Are you sure you want to delete the "${templates.find(t => t.id === selectedTemplateId)?.name || 'selected'}" template? This custom layout template will be permanently removed.`} 
-        confirmLabel="Delete" 
+        confirmLabel="Delete Template" 
         selectedItems={templates.find(t => t.id === selectedTemplateId) ? [templates.find(t => t.id === selectedTemplateId).name] : []}
         variant="danger" 
         onConfirm={deleteSelectedTemplate} 
@@ -1750,7 +1749,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         onCancel={() => setRestoreTemplatesConfirmOpen(false)} 
         title="Restore Default Templates" 
         message="This will delete all custom layout templates and restore the factory default room layouts. Are you sure you want to proceed?" 
-        confirmLabel="Restore" 
+        confirmLabel="Restore Defaults" 
         variant="success" 
         isRestoreModal={true}
         onConfirm={restoreDefaultTemplates} 

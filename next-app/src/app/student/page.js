@@ -59,6 +59,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
+import useTableScroll from "@/hooks/useTableScroll";
+import TableScrollControls from "@/components/shared/TableScrollControls";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -237,6 +239,20 @@ function StudentDashboard() {
     setIsOfficerAlertDismissed(true);
     try {
       sessionStorage.setItem("pupsj_student_officer_alert_dismissed", "true");
+    } catch {}
+  };
+
+  const [isPostEventAlertDismissed, setIsPostEventAlertDismissed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("pupsj_student_post_event_alert_dismissed") === "true";
+    }
+    return false;
+  });
+
+  const handleDismissPostEventAlert = () => {
+    setIsPostEventAlertDismissed(true);
+    try {
+      sessionStorage.setItem("pupsj_student_post_event_alert_dismissed", "true");
     } catch {}
   };
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
@@ -524,6 +540,19 @@ function StudentDashboard() {
     const start = (displayPage - 1) * itemsPerPage;
     return sortedRequests.slice(start, start + itemsPerPage);
   }, [sortedRequests, displayPage, itemsPerPage]);
+
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolledX,
+    scrollTable,
+    resetScroll,
+  } = useTableScroll([paginatedRequests?.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [currentPage, sortBy, sortOrder, requestSearch, requestFilters, resetScroll]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -1205,7 +1234,10 @@ function StudentDashboard() {
           <div className="liquid-blob liquid-blob-2" />
           <div className="liquid-blob liquid-blob-3" />
         </div>
-        <div className="flex min-h-0 flex-1">
+        <div
+          className="flex min-h-0 overflow-hidden flex-col md:flex-row"
+          style={zoomStyle}
+        >
         <Sidebar
           open={sidebarOpen}
           items={sidebarItems}
@@ -1232,10 +1264,9 @@ function StudentDashboard() {
         />
           <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col">
             <div
-              className="pt-4 pr-4 pb-4 flex flex-1 flex-col min-h-full w-full"
-              style={zoomStyle}
+              className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full"
             >
-              <div className="w-full flex flex-1 flex-col [&>*]:flex-1">
+              <div className="w-full flex flex-[1_0_auto] flex-col [&>*]:flex-[1_0_auto]">
 
               {view === "overview" ? (
                 <StudentOverviewTab
@@ -1270,10 +1301,10 @@ function StudentDashboard() {
               ) : view === "settings" ? (
                 <AccountSettingsPanel />
               ) : view === "odrs" ? (
-                <div className="flex flex-col w-full">
+                <div className="flex flex-[1_0_auto] flex-col w-full">
                   {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, Active Filters, Table & Pagination */}
                   <Card
-                    className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 focus:outline-none"
+                    className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta focus:outline-none"
                     onKeyDown={handleKeyDown}
                     tabIndex={0}
                   >
@@ -1687,6 +1718,13 @@ function StudentDashboard() {
                             }}
                           />
                         </div>
+
+                        <TableScrollControls
+                          canScrollLeft={canScrollLeft}
+                          canScrollRight={canScrollRight}
+                          onScrollLeft={() => scrollTable("left")}
+                          onScrollRight={() => scrollTable("right")}
+                        />
                       </div>
                     </div>
 
@@ -1763,68 +1801,71 @@ function StudentDashboard() {
                         </Empty>
                       </div>
                     ) : (
-                      <div className="w-full overflow-x-auto border-t border-border dark:border-border select-none">
-                        <table className="w-full text-sm table-fixed min-w-[900px]">
-                          <thead className="sticky top-0 z-10 border-b border-border dark:border-border bg-white dark:bg-card">
-                            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                              <th className="p-4 w-[12%] whitespace-nowrap">
+                      <div
+                        ref={tableContainerRef}
+                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none border-t border-border dark:border-border"
+                      >
+                        <table className="w-full text-sm border-collapse min-w-[900px]">
+                          <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                              <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap border-r border-border/80 dark:border-border">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("id")}
                                   className={cn(
-                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                    sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
                                   Ticket #
                                   <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 w-[24%] whitespace-nowrap">
+                              <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap border-r border-border/80 dark:border-border">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("doc_type")}
                                   className={cn(
-                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                    sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
                                   Document Type
                                   <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 w-[32%] whitespace-nowrap">
-                                <span className="flex items-center text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                              <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                                <span className="flex items-center text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
                                   Purpose / Description
                                 </span>
                               </th>
-                              <th className="p-4 w-[14%] whitespace-nowrap">
+                              <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap border-r border-border/80 dark:border-border">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("status")}
                                   className={cn(
-                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                    sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
                                   Status
                                   <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 w-[18%] whitespace-nowrap">
+                              <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("created_at")}
                                   className={cn(
-                                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                                    sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
                                   Date Requested
                                   <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Action</th>
+                              <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">Action</th>
                             </tr>
                           </thead>
                           <tbody className="bg-transparent">
@@ -1836,18 +1877,17 @@ function StudentDashboard() {
                                 key={item.id}
                                 onClick={() => setSelectedRequestForDetail(item)}
                                 className={cn(
-                                  "group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast select-none cursor-pointer",
-                                  ["Deficient", "PendingPayment"].includes(item.status)
-                                    ? "border-l-2 border-l-amber-500 bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/35"
-                                    : "hover:bg-gray-50/50 dark:bg-card dark:hover:bg-white/2"
+                                  "group h-[52px] border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
+                                  ["Deficient", "PendingPayment"].includes(item.status) &&
+                                    "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
                                 )}
                               >
-                                <td className="py-0 px-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-700 dark:text-zinc-300">
+                                <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                                   #{item.id}
                                 </td>
-                                <td className="py-2 px-4 align-middle overflow-hidden">
+                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 truncate">
+                                    <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                       {item.doc_type}
                                     </span>
                                     {item.client_type === "Parent" && (
@@ -1867,18 +1907,18 @@ function StudentDashboard() {
                                   </div>
                                 </td>
 
-                                <td className="py-0 px-4 align-middle overflow-hidden">
-                                  <div className="truncate text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400" title={item.notes}>
+                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                  <div className="truncate text-xs font-normal text-gray-600 dark:text-zinc-400" title={item.notes}>
                                     {item.notes || "N/A"}
                                   </div>
                                 </td>
-                                <td className="py-0 px-4 align-middle whitespace-nowrap">
+                                <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   <StatusBadge status={item.status} />
                                 </td>
-                                <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300 whitespace-nowrap">
+                                <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   {formatPHDateTime(item.created_at)}
                                 </td>
-                                <td className="py-0 px-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                                <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center justify-end gap-1.5">
                                     {item.feedback ? (
                                       <Tooltip>
@@ -2003,7 +2043,7 @@ function StudentDashboard() {
                 </div>
               ) : (
                 <Card
-                  className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4 min-h-0 flex-1 focus:outline-none"
+                  className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta focus:outline-none"
                   tabIndex={0}
                 >
                   {/* 1. Page Header */}
@@ -2513,14 +2553,25 @@ function StudentDashboard() {
 
                   {/* STREAM 2: POST-EVENT & LIQUIDATION REPORTS */}
                   {osasSubView === "post_event" && (
-                    <div className="flex flex-col flex-1 min-h-0">
-                      {pendingPostEvents.length > 0 && (
-                        <div className="mx-6 mt-2 mb-4 p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/70 dark:bg-amber-950/30 flex items-start gap-3">
-                          <HugeIcon className="ph-bold ph-warning-circle text-amber-600 dark:text-amber-400 text-lg mt-0.5 shrink-0" />
-                          <div className="text-xs text-amber-900 dark:text-amber-200">
-                            <span className="font-bold">Pending Post-Event Compliance:</span> You have{" "}
-                            <strong>{pendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
+                    <div className="flex flex-col flex-[1_0_auto] min-h-0">
+                      {pendingPostEvents.length > 0 && !isPostEventAlertDismissed && (
+                        <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all mb-4">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <HugeIcon className="ph-bold ph-warning-circle text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                              <strong className="font-semibold text-amber-950 dark:text-amber-100">Pending Post-Event Compliance:</strong> You have{" "}
+                              <strong>{pendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
+                            </span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={handleDismissPostEventAlert}
+                            className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                            aria-label="Dismiss notice"
+                            title="Dismiss notice"
+                          >
+                            <HugeIcon className="ph-bold ph-x text-sm" />
+                          </button>
                         </div>
                       )}
 
@@ -2666,7 +2717,7 @@ function StudentDashboard() {
                         </span>
                       </div>
 
-                      <div className="border-t border-border dark:border-border flex-1 p-5 space-y-3">
+                      <div className="border-t border-border dark:border-border flex flex-col flex-[1_0_auto] p-5 space-y-3">
                         {postEventReports.length === 0 ? (
                           <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                             <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
@@ -2763,7 +2814,7 @@ function StudentDashboard() {
 
                   {/* STREAM 3: CONSTITUTION & BY-LAWS */}
                   {osasSubView === "cbl" && (
-                    <div className="space-y-0">
+                    <div className="flex flex-col flex-[1_0_auto] space-y-0">
                       {/* Organization Selector for students in multiple organizations */}
                       {myOrganizations.length > 1 && (
                         <div className="border-t border-border dark:border-border p-4 bg-gray-50/70 dark:bg-zinc-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2928,7 +2979,7 @@ function StudentDashboard() {
                       </div>
 
                       {/* Submissions & Versions History */}
-                      <div className="border-t border-border dark:border-border p-5 bg-white dark:bg-zinc-900/50 space-y-4">
+                      <div className="border-t border-border dark:border-border flex flex-col flex-[1_0_auto] p-5 bg-white dark:bg-zinc-900/50 space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                             CBL Submission & Revision History ({cblVersions.length})
@@ -3139,65 +3190,165 @@ function StudentDashboard() {
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
-            {/* Request Summary Strip */}
+          {/* Line-Attached Edge-to-Edge Status Notice */}
+          <div
+            className={cn(
+              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+              selectedRequestForDetail?.status === "Ready"
+                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
+                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                : selectedRequestForDetail?.status === "Completed"
+                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
+                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+            )}
+          >
+            <HugeIcon
+              className={cn(
+                "ph-bold text-[15px] shrink-0",
+                selectedRequestForDetail?.status === "Ready" || selectedRequestForDetail?.status === "Completed"
+                  ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
+                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
+                  ? "ph-x-circle text-rose-600 dark:text-rose-400"
+                  : "ph-clock text-blue-600 dark:text-blue-400"
+              )}
+            />
+            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+              <strong className="font-semibold">
+                {selectedRequestForDetail?.status === "Ready"
+                  ? "Ready for Claiming:"
+                  : selectedRequestForDetail?.status === "PendingPayment"
+                  ? "Payment Slip Required:"
+                  : selectedRequestForDetail?.status === "Deficient"
+                  ? "Action Required:"
+                  : selectedRequestForDetail?.status === "Completed"
+                  ? "Request Completed:"
+                  : selectedRequestForDetail?.status === "InProgress"
+                  ? "Processing In Progress:"
+                  : "Under Review:"}
+              </strong>{" "}
+              {selectedRequestForDetail?.status === "Ready"
+                ? "Official authenticated credential is ready for pickup at Registrar Window 1."
+                : selectedRequestForDetail?.status === "PendingPayment"
+                ? "Please upload your official receipt or payment slip below to initiate document preparation."
+                : selectedRequestForDetail?.status === "Deficient"
+                ? "Please review feedback from the Registrar to resolve requirement deficiencies."
+                : selectedRequestForDetail?.status === "Completed"
+                ? "Document was successfully claimed and recorded in University Archives."
+                : selectedRequestForDetail?.status === "InProgress"
+                ? "Registrar staff is currently preparing and authenticating your document."
+                : "Your request is queued for verification by the Office of the Campus Registrar."}
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+            {/* Request Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-12 h-12 rounded-2xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
+              <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
                 <HugeIcon className="ph-bold ph-file-text" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                    #{selectedRequestForDetail?.id}
+                    Request #{selectedRequestForDetail?.id}
                   </span>
                   <StatusBadge status={selectedRequestForDetail?.status} />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                   {selectedRequestForDetail?.doc_type}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                  Submitted: {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"}
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                  Submitted on {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"}
                 </p>
               </div>
             </div>
 
-            {/* Request Specification InfoRow */}
+            {/* Essential Request Specification (Unboxed InfoRow List) */}
             <div className="space-y-2">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Request Specification
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="ph-certificate" label="Document Type" value={selectedRequestForDetail?.doc_type} />
-                <InfoRow icon="ph-user" label="Requester" value={selectedRequestForDetail?.student_name || me?.name || "Student"} />
-                <InfoRow icon="ph-tag" label="Client Type" value={selectedRequestForDetail?.client_type || "Student"} />
-                <InfoRow icon="ph-identification-badge" label="Student Number" value={selectedRequestForDetail?.student_no} />
-                {selectedRequestForDetail?.course_code && (
-                  <InfoRow icon="ph-graduation-cap" label="Program / Course" value={selectedRequestForDetail.course_code} />
-                )}
-                <InfoRow icon="ph-clock" label="Date Submitted" value={selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"} />
+                <InfoRow icon="ph-buildings" label="Verifying Office" value="Office of the Campus Registrar" />
+                <InfoRow icon="ph-tag" label="Client Classification" value={selectedRequestForDetail?.client_type || "Enrolled Student"} />
                 <InfoRow icon="ph-chart-pie-slice" label="Current Status">
                   <StatusBadge status={selectedRequestForDetail?.status} />
                 </InfoRow>
+                {selectedRequestForDetail?.status === "Ready" && (
+                  <InfoRow icon="ph-door" label="Claiming Window" value="Window 1 — Releasing (Room 102)" />
+                )}
+                {selectedRequestForDetail?.status === "Ready" && (
+                  <InfoRow icon="ph-clock" label="Window Hours" value="Mon – Fri, 8:00 AM – 5:00 PM (Bring Valid ID)" />
+                )}
+                {selectedRequestForDetail?.status === "Completed" && selectedRequestForDetail?.updated_at && (
+                  <InfoRow icon="ph-calendar-check" label="Claimed On" value={formatPHDateTime(selectedRequestForDetail.updated_at)} />
+                )}
               </div>
             </div>
-            <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1">
-                Purpose / Description
-              </h4>
-              <p className="text-gray-800 dark:text-zinc-200 text-xs leading-relaxed whitespace-pre-wrap">
-                {selectedRequestForDetail?.notes || "No additional description provided."}
-              </p>
-            </div>
 
-            {/* Experience Rating & Feedback */}
-            {selectedRequestForDetail?.feedback ? (
-              <div className="rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 p-4 border border-amber-200/70 dark:border-amber-900/40 space-y-2.5">
+            {/* Purpose / Description (Unboxed) */}
+            {selectedRequestForDetail?.notes && (
+              <div className="space-y-1.5 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Purpose / Notes
+                </h4>
+                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  {selectedRequestForDetail.notes}
+                </p>
+              </div>
+            )}
+
+            {/* Parent / Legal Guardian Information (Unboxed) */}
+            {selectedRequestForDetail?.client_type === "Parent" && (
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
-                      <HugeIcon className="ph-fill ph-star text-xs" />
-                    </div>
-                    <h4 className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Parent / Representative Authorization
+                  </h4>
+                  {selectedRequestForDetail.spa_verified ? (
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                      SPA Verified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
+                      SPA Pending
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Representative</span>
+                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
+                      {selectedRequestForDetail.requester_name || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Relationship</span>
+                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
+                      {selectedRequestForDetail.requester_relationship || "Legal Guardian"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Contact</span>
+                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
+                      {selectedRequestForDetail.requester_contact || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Experience Rating & Feedback (Unboxed) */}
+            {selectedRequestForDetail?.feedback ? (
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <HugeIcon className="ph-fill ph-star text-amber-500 text-xs" />
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                       Your Experience Rating
                     </h4>
                   </div>
@@ -3215,7 +3366,7 @@ function StudentDashboard() {
                   </button>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <svg
@@ -3246,11 +3397,11 @@ function StudentDashboard() {
                 </div>
 
                 {selectedRequestForDetail.feedback.aspect_tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
                     {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-white dark:bg-zinc-800 border border-amber-200/60 dark:border-amber-900/30 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:text-amber-300"
+                        className="rounded-md bg-gray-100 dark:bg-zinc-800 border border-border/70 dark:border-border/60 px-2 py-0.5 text-[10.5px] font-medium text-gray-700 dark:text-zinc-300"
                       >
                         {tag}
                       </span>
@@ -3259,19 +3410,19 @@ function StudentDashboard() {
                 )}
 
                 {selectedRequestForDetail.feedback.comments && (
-                  <p className="text-xs text-gray-700 dark:text-zinc-300 italic pt-1 border-t border-amber-200/40 dark:border-amber-900/30">
+                  <p className="text-xs text-gray-600 dark:text-zinc-400 italic">
                     &ldquo;{selectedRequestForDetail.feedback.comments}&rdquo;
                   </p>
                 )}
               </div>
-            ) : (
-              <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-dashed border-border dark:border-border flex items-center justify-between gap-3">
+            ) : (!selectedRequestForDetail?.feedback && (selectedRequestForDetail?.status === "Ready" || selectedRequestForDetail?.status === "Completed")) ? (
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-zinc-800">
                 <div>
                   <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                     Experience Feedback
                   </h4>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Help us improve by rating your request experience.
+                  <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                    Help improve registrar services by rating this request.
                   </p>
                 </div>
                 <Button
@@ -3289,53 +3440,11 @@ function StudentDashboard() {
                   Rate
                 </Button>
               </div>
-            )}
+            ) : null}
 
-            {/* Parent / Legal Guardian Profile Card */}
-            {selectedRequestForDetail?.client_type === "Parent" && (
-              <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-sm" />
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                      Parent / Legal Guardian Information
-                    </h4>
-                  </div>
-                  {selectedRequestForDetail.spa_verified ? (
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                      SPA Verified
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
-                      SPA Verification Pending
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
-                  <div>
-                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Requester Name</span>
-                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_name || "N/A"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Relationship</span>
-                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_relationship || "Legal Guardian"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Contact Number</span>
-                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_contact || "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            {/* Payment Proof Upload Notice (if PendingPayment) */}
             {selectedRequestForDetail?.status === "PendingPayment" && (
-              <div className="rounded-2xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
                 <div className="flex items-center gap-2 mb-1">
                   <HugeIcon className="ph-bold ph-receipt text-amber-700 dark:text-amber-400 text-base" />
                   <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-100">
@@ -3361,16 +3470,13 @@ function StudentDashboard() {
               </div>
             )}
 
-            {/* Attached Supporting Documents */}
+            {/* Attached Supporting Documents (Unboxed) */}
             {Array.isArray(selectedRequestForDetail?.attachments) && selectedRequestForDetail.attachments.length > 0 && (
-              <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border space-y-3">
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <HugeIcon className="ph-bold ph-paperclip text-gray-600 dark:text-zinc-400 text-sm" />
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                      Attached Documents ({selectedRequestForDetail.attachments.length})
-                    </h4>
-                  </div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Attached Documents ({selectedRequestForDetail.attachments.length})
+                  </h4>
                 </div>
                 <div className="flex flex-wrap items-start gap-3">
                   {selectedRequestForDetail.attachments.map((att) => {
@@ -3583,82 +3689,122 @@ function StudentDashboard() {
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
-            {/* Proposal Summary Strip */}
+          {/* Line-Attached Edge-to-Edge Status Notice */}
+          <div
+            className={cn(
+              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+              selectedProposalForDetail?.status === "Approved"
+                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                : selectedProposalForDetail?.status === "RevisionRequested"
+                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                : selectedProposalForDetail?.status === "Rejected"
+                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+            )}
+          >
+            <HugeIcon
+              className={cn(
+                "ph-bold text-[15px] shrink-0",
+                selectedProposalForDetail?.status === "Approved"
+                  ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  : selectedProposalForDetail?.status === "RevisionRequested"
+                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  : selectedProposalForDetail?.status === "Rejected"
+                  ? "ph-x-circle text-rose-600 dark:text-rose-400"
+                  : "ph-clock text-blue-600 dark:text-blue-400"
+              )}
+            />
+            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+              <strong className="font-semibold">
+                {selectedProposalForDetail?.status === "Approved"
+                  ? "Proposal Sanctioned:"
+                  : selectedProposalForDetail?.status === "RevisionRequested"
+                  ? "Revision Required:"
+                  : selectedProposalForDetail?.status === "Rejected"
+                  ? "Proposal Declined:"
+                  : "Under OSAS Evaluation:"}
+              </strong>{" "}
+              {selectedProposalForDetail?.status === "Approved"
+                ? "Official event proposal has been sanctioned and cleared by the Office of Student Affairs."
+                : selectedProposalForDetail?.status === "RevisionRequested"
+                ? "Please review the evaluator notes in the timeline and re-upload an updated event proposal."
+                : selectedProposalForDetail?.status === "Rejected"
+                ? "This event proposal was not approved for campus staging."
+                : "Your proposal is undergoing administrative and safety review by OSAS."}
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+            {/* Proposal Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-12 h-12 rounded-2xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
+              <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
                 <HugeIcon className="ph-bold ph-calendar-check" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                    #{selectedProposalForDetail?.id}
+                    Proposal #{selectedProposalForDetail?.id}
                   </span>
                   <StatusBadge status={selectedProposalForDetail?.status} />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                   {selectedProposalForDetail?.title}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                  {selectedProposalForDetail?.organization_name}
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                  Submitted on {selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"}
                 </p>
               </div>
             </div>
 
-            {/* Proposal Specification InfoRow */}
+            {/* Proposal Specification (Unboxed InfoRow List) */}
             <div className="space-y-2">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Proposal Specification
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="ph-buildings" label="Organization" value={selectedProposalForDetail?.organization_name || "N/A"} />
+                <InfoRow icon="ph-buildings" label="Organization" value={selectedProposalForDetail?.organization_name || "Student Organization"} />
                 <InfoRow icon="ph-calendar" label="Target Event Date" value={selectedProposalForDetail?.event_date || "To Be Announced"} />
-                <InfoRow icon="ph-clock" label="Date Submitted" value={selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"} />
-                <InfoRow icon="ph-chart-pie-slice" label="Current Stage">
+                <InfoRow icon="ph-chart-pie-slice" label="Evaluation Stage">
                   <StatusBadge status={selectedProposalForDetail?.status} />
                 </InfoRow>
               </div>
             </div>
 
-            {/* Attached PDF Proposal File */}
-            <div className="rounded-2xl bg-gray-50/60 dark:bg-zinc-900/40 p-4 border border-border/80 dark:border-border">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">
-                Attached Proposal Document
-              </h4>
-              <div
-                onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
-                className="flex items-center justify-between gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border border-border dark:border-border hover:border-pup-maroon/30 dark:hover:border-red-400/30 hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 group-hover:bg-pup-maroon group-hover:text-white transition-colors">
-                    <HugeIcon  className="ph-bold ph-file-pdf text-base" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-gray-800 dark:text-zinc-200 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                      {selectedProposalForDetail?.original_filename || "Proposal.pdf"}
-                    </p>
-                    {selectedProposalForDetail?.size_bytes && (
-                      <p className="text-[10px] text-gray-400 dark:text-zinc-500">
-                        {(selectedProposalForDetail.size_bytes / 1024).toFixed(1)} KB
+            {/* Attached PDF Proposal File (Unboxed Sleek Row) */}
+            {selectedProposalForDetail?.original_filename && (
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Attached Proposal Document
+                </h4>
+                <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 dark:border-red-900/40">
+                      <HugeIcon className="ph-bold ph-file-pdf text-base" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate" title={selectedProposalForDetail.original_filename}>
+                        {selectedProposalForDetail.original_filename}
                       </p>
-                    )}
+                      {selectedProposalForDetail?.size_bytes && (
+                        <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                          {(selectedProposalForDetail.size_bytes / 1024).toFixed(1)} KB · Proposal PDF
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
+                    className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
+                  >
+                    <HugeIcon className="ph-bold ph-eye text-xs mr-1" />
+                    <span>View PDF</span>
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenPdfPreview(selectedProposalForDetail);
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 border border-pup-maroon/20 hover:border-pup-maroon/40 bg-red-50/50 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/40 cursor-pointer shadow-xs active:scale-95 transition-all"
-                >
-                  <HugeIcon  className="ph-bold ph-eye text-sm" />
-                  <span>View Attached PDF</span>
-                </Button>
               </div>
-            </div>
+            )}
 
             {/* Review Timeline & Updates */}
             <div>

@@ -7,8 +7,8 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingBentoSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-squares-four"
           title={
@@ -46,10 +46,10 @@ export default function LandingBentoSkeleton() {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-3">
             {/* ACCORDION CARD 1: EXPANDED (matching activeCardTab = 1) */}
-            <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden">
+            <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden">
               <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-pup-maroon text-white flex items-center justify-center shrink-0">
@@ -68,7 +68,7 @@ export default function LandingBentoSkeleton() {
               </div>
 
               {/* Expanded Form Content */}
-              <div className="px-5 pb-5 pt-1 space-y-5 border-t border-border/60 dark:border-border">
+              <div className="px-5 pb-5 pt-1 space-y-5 border-t border-border dark:border-border">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
@@ -122,7 +122,7 @@ export default function LandingBentoSkeleton() {
             ].map((card, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden"
+                className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden"
               >
                 <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                   <div className="flex items-center gap-3 min-w-0">

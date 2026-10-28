@@ -53,6 +53,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import useTableScroll from "@/hooks/useTableScroll";
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 
@@ -364,7 +366,7 @@ function DigitizationComplianceContent({
 
   const summary = data?.summary;
   const meta = data?.meta;
-  const byCourse = Array.isArray(data?.byCourse) ? data.byCourse : [];
+  const byCourse = useMemo(() => Array.isArray(data?.byCourse) ? data.byCourse : [], [data]);
   
   const sortedByCourse = useMemo(() => {
     let filtered = [...byCourse];
@@ -401,6 +403,18 @@ function DigitizationComplianceContent({
     const startIndex = (page - 1) * pageSize;
     return sortedByCourse.slice(startIndex, startIndex + pageSize);
   }, [sortedByCourse, page, pageSize]);
+
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedByCourse.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, tableSearch, courseFilter, requireApproved, sortBy, sortOrder, pageSize, resetScroll]);
 
   const handlePreview = async () => {
     if (!data || loading) return;
@@ -617,9 +631,9 @@ function DigitizationComplianceContent({
   const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col min-h-full w-full gap-6 animate-fade-up font-jakarta pb-6">
+    <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up font-jakarta">
       {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-chart-pie"
           title="Compliance Analysis"
@@ -644,7 +658,7 @@ function DigitizationComplianceContent({
                   variant="outline"
                   onClick={downloadCsv}
                   disabled={loading || !data || isExportingCsv}
-                  className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isExportingCsv ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
@@ -657,12 +671,12 @@ function DigitizationComplianceContent({
                   type="button"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isGeneratingPdf ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
                   ) : (
-                    "Official Report (PDF)"
+                    "Export PDF Report"
                   )}
                 </Button>
               </div>
@@ -1120,11 +1134,56 @@ function DigitizationComplianceContent({
                       Each required type is counted once per student. Counts follow the selected status and approval filters.
                     </p>
                   </div>
-                  {summary?.totalStudents === 0 ? (
-                    <p className="rounded-xl border border-border bg-gray-50 px-4 py-3 text-[12px] text-gray-700 dark:border-border dark:bg-zinc-900 dark:text-zinc-300">
-                      No students match the current filters.
-                    </p>
-                  ) : Array.isArray(data.missingByDocumentType) && data.missingByDocumentType.length > 0 ? (
+                  {summary?.totalStudents === 0 || !Array.isArray(data.missingByDocumentType) || data.missingByDocumentType.length === 0 || docTypeItems.length === 0 ? (
+                    <div className="py-10 px-4 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/30 flex flex-col items-center justify-center text-center">
+                      <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
+                        <EmptyHeader className="flex flex-col items-center gap-0">
+                          <div className="relative mb-4">
+                            <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-100/60 opacity-50 dark:bg-zinc-800/40"></div>
+                            <EmptyMedia className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+                              <HugeIcon
+                                className={cn(
+                                  "ph-duotone text-2xl text-gray-400 dark:text-zinc-500",
+                                  summary?.totalStudents === 0
+                                    ? hasActiveFilters
+                                      ? "ph-magnifying-glass"
+                                      : "ph-users"
+                                    : "ph-files"
+                                )}
+                              />
+                            </EmptyMedia>
+                          </div>
+                          <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                            {summary?.totalStudents === 0
+                              ? hasActiveFilters
+                                ? "No Matching Students"
+                                : "No Student Records Found"
+                              : "No Document Types Configured"}
+                          </EmptyTitle>
+                          <EmptyDescription className="mt-1 max-w-xs text-xs font-normal text-gray-600 dark:text-zinc-400">
+                            {summary?.totalStudents === 0
+                              ? hasActiveFilters
+                                ? "No students match the current filters. Adjust or reset your criteria to evaluate missing documents."
+                                : "No student records are currently available to evaluate document compliance."
+                              : "No active compliance document types are configured for this view."}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                        {summary?.totalStudents === 0 && hasActiveFilters && (
+                          <EmptyContent>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleClearAll}
+                              title="Reset Filters"
+                              className="mt-4 flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                            >
+                              Reset Filters
+                            </Button>
+                          </EmptyContent>
+                        )}
+                      </Empty>
+                    </div>
+                  ) : (
                     <div className="divide-y divide-border rounded-xl border border-border dark:divide-border dark:border-border">
                       {docTypeItems.map((item) => (
                         <div
@@ -1159,10 +1218,6 @@ function DigitizationComplianceContent({
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="rounded-xl border border-border bg-gray-50 px-4 py-3 text-[12px] text-gray-700 dark:border-border dark:bg-zinc-900 dark:text-zinc-300">
-                      No active compliance document types are configured for this view.
-                    </p>
                   )}
                 </section>
               </div>
@@ -1174,7 +1229,7 @@ function DigitizationComplianceContent({
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+          <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
@@ -1202,7 +1257,7 @@ function DigitizationComplianceContent({
           </div>
         ) : data ? (
           <div className={cn(
-            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border", 
+            "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border", 
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
             <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
@@ -1214,33 +1269,73 @@ function DigitizationComplianceContent({
                   ({sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"})
                 </span>
               </div>
+              <TableScrollControls
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetScroll}
+                isScrolled={isScrolledX}
+              />
             </div>
 
-            <div className="hidden w-full overflow-x-auto rounded-b-2xl sm:block">
+            <div
+              ref={tableContainerRef}
+              className="hidden w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out sm:block"
+            >
               {sortedByCourse.length > 0 ? (
-                <table className="w-full text-sm table-fixed min-w-[760px]">
-                  <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
-                    <tr className="hover:bg-transparent text-left border-b border-border dark:border-border">
-                      <th className="p-4 px-6 w-[32%]">
-                        <button
-                          onClick={() => handleSort("courseCode")}
-                          className="group flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
-                        >
-                          Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
+                <table className="w-full text-sm border-collapse min-w-[850px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      <th
+                        className={cn(
+                          "p-4 px-6 w-[32%] min-w-[200px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200 border-r border-border/80 dark:border-border",
+                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <button
+                            onClick={() => handleSort("courseCode")}
+                            className={cn(
+                              "group flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                              sortBy === "courseCode" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                          {isScrolledX && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={resetScroll}
+                                  className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                  aria-label="Reset scroll to start"
+                                >
+                                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </th>
-                      <th className="p-4 px-6 w-[22%] text-center">
+                      <th className="p-4 px-6 w-[22%] text-center border-r border-border/80 dark:border-border">
                         <button
                           onClick={() => handleSort("total")}
-                          className="group mx-auto flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
+                          className={cn(
+                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                            sortBy === "total" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
                         >
                           Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 px-6 w-[22%] text-center">
+                      <th className="p-4 px-6 w-[22%] text-center border-r border-border/80 dark:border-border">
                         <button
                           onClick={() => handleSort("digitized")}
-                          className="group mx-auto flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
+                          className={cn(
+                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                            sortBy === "digitized" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
                         >
                           Fully Digitized <SortIndicator column="digitized" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
@@ -1248,25 +1343,34 @@ function DigitizationComplianceContent({
                       <th className="p-4 px-6 w-[24%] text-right">
                         <button
                           onClick={() => handleSort("percent")}
-                          className="group ml-auto flex items-center rounded-md text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
+                          className={cn(
+                            "group ml-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                            sortBy === "percent" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
                         >
                           Document Coverage <SortIndicator column="percent" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-transparent">
+                  <tbody className="bg-transparent divide-y divide-border dark:divide-border">
                     {paginatedByCourse.map((row) => {
                       const isSelected = Array.isArray(courseFilter) && courseFilter.includes(row.courseCode)
                       return (
                         <tr
                           key={row.courseCode}
                           className={cn(
-                            "h-[48px] border-b-[0.5px] border-border dark:border-border last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]",
+                            "h-[48px] hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
                         >
-                        <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
+                        <td
+                          className={cn(
+                            "p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em] sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/80 transition-shadow duration-200 border-r border-border/70 dark:border-border/70",
+                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20 group-hover:bg-blue-50/80 dark:group-hover:bg-blue-950/40",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
+                        >
                           <button
                             type="button"
                             onClick={() => toggleCourseFilter(row.courseCode)}
@@ -1277,10 +1381,10 @@ function DigitizationComplianceContent({
                             {row.courseCode || "N/A"}
                           </button>
                         </td>
-                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
+                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center border-r border-border/70 dark:border-border/70">
                           {row.total?.toLocaleString?.() ?? row.total}
                         </td>
-                        <td className="p-4 px-6 text-center text-[13px] font-normal">
+                        <td className="p-4 px-6 text-center text-[13px] font-normal border-r border-border/70 dark:border-border/70">
                           <span className={cn(
                             row.digitized === 0
                               ? "text-gray-400 dark:text-zinc-500"
@@ -1390,7 +1494,7 @@ function DigitizationComplianceContent({
 
             {/* Standard Table Pagination Footer */}
             {sortedByCourse.length > 0 && (
-              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+              <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
                 <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedByCourse.length} of {sortedByCourse.length.toLocaleString()}
@@ -1470,7 +1574,7 @@ function DigitizationComplianceContent({
             <div className="flex items-center justify-between px-6 py-4">
               <div>
                 <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
-                  Missing Students
+                  Compliance Deficiency Details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
                   List of students missing {missingDialog?.documentType || "this document"}
@@ -1521,10 +1625,41 @@ function DigitizationComplianceContent({
             </div>
           </SheetHeader>
 
+          {/* Line-Attached Edge-to-Edge Status Notice */}
+          {missingDialog && (
+            <div
+              className={cn(
+                "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                (missingDialog?.missingStudents || 0) === 0
+                  ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                  : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+              )}
+            >
+              <HugeIcon
+                className={cn(
+                  "ph-bold text-[15px] shrink-0",
+                  (missingDialog?.missingStudents || 0) === 0
+                    ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                    : "ph-warning-circle text-amber-600 dark:text-amber-400"
+                )}
+              />
+              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                <strong className="font-semibold">
+                  {(missingDialog?.missingStudents || 0) === 0
+                    ? "Full Compliance Achieved:"
+                    : "Compliance Deficiency Detected:"}
+                </strong>{" "}
+                {(missingDialog?.missingStudents || 0) === 0
+                  ? "All enrolled student records possess verified digitized files for this document type."
+                  : `${(missingDialog?.missingStudents || 0).toLocaleString()} student records require digitization and archival filing.`}
+              </span>
+            </div>
+          )}
+
           {/* Unboxed Single-Column Body */}
           <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-border/60 dark:divide-white/5">
-            {/* Summary Strip */}
-            <div className="p-6 bg-gradient-to-b from-gray-50/50 to-transparent dark:from-zinc-900/20">
+            {/* Summary Strip (Unboxed) */}
+            <div className="p-6 pb-4 border-b border-border/80 dark:border-border">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                   <HugeIcon className="ph-duotone ph-file-dashed text-2xl" />
@@ -1552,11 +1687,6 @@ function DigitizationComplianceContent({
                 Compliance Specification
               </div>
               <div className="space-y-2.5">
-                <InfoRow
-                  icon={<HugeIcon className="ph-bold ph-file-text text-gray-400 dark:text-zinc-500" />}
-                  label="Document Name"
-                  value={<span className="font-medium text-gray-900 dark:text-zinc-100">{missingDialog?.documentType}</span>}
-                />
                 <InfoRow
                   icon={<HugeIcon className="ph-bold ph-users text-gray-400 dark:text-zinc-500" />}
                   label="Total Enrolled"

@@ -271,8 +271,8 @@ export default function SecurityQuestionsTab({ showToast }) {
   }
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-1 mb-4">
+    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-shield-check"
@@ -297,16 +297,19 @@ export default function SecurityQuestionsTab({ showToast }) {
                 disabled={loading || saving}
                 className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Import
+                Import Questions
               </Button>
 
               <Button
                 onClick={() => handleSave()}
                 disabled={saving || loading}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs border-0"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 {saving ? (
-                  <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
+                  <span className="flex items-center gap-1.5">
+                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                    <span>Saving Questions...</span>
+                  </span>
                 ) : (
                   "Save Questions"
                 )}
@@ -329,7 +332,7 @@ export default function SecurityQuestionsTab({ showToast }) {
         </div>
 
         {/* Questions Form Area */}
-        <div className="p-6">
+        <div className="p-6 flex-[1_0_auto] flex flex-col">
           {loading ? (
             <div className="w-full space-y-4">
               {[1, 2].map((i) => (
@@ -356,7 +359,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 return (
                   <div
                     key={q.id || i}
-                    className="rounded-2xl border border-border/80 dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-all hover:border-border dark:hover:border-white/20 space-y-2.5"
+                    className="rounded-2xl border border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-all hover:border-border dark:hover:border-white/20 space-y-2.5"
                   >
                     {/* Top Row: Question label & Controls */}
                     <div className="flex items-center justify-between gap-3">
@@ -380,7 +383,7 @@ export default function SecurityQuestionsTab({ showToast }) {
 
                       <div className="flex items-center gap-2">
                         {/* Clear Segmented Control [ Required | Optional ] */}
-                        <div className="inline-flex items-center bg-gray-200/70 dark:bg-zinc-800 p-0.5 rounded-xl border border-border/60 dark:border-border">
+                        <div className="inline-flex items-center bg-gray-200/70 dark:bg-zinc-800 p-0.5 rounded-xl border border-border dark:border-border">
                           <button
                             type="button"
                             onClick={() => !q.is_required && handleToggleRequired(i)}
@@ -414,7 +417,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveQuestion(i)}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border border-transparent hover:border-red-200 dark:hover:border-red-900/50 active:scale-95"
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95"
                                 aria-label="Remove Question"
                               >
                                 <HugeIcon className="ph-bold ph-trash text-sm" />
@@ -482,7 +485,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                   title="Add Security Question"
                   className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
-                  Add Question
+                  Add Security Question
                 </button>
               </div>
             </div>
@@ -505,7 +508,7 @@ export default function SecurityQuestionsTab({ showToast }) {
         onConfirm={handleTOTPConfirm}
         title="Security Authorization Required"
         description="Enter the 6-digit code from your authenticator app to authorize updating institutional security questions."
-        actionLabel="Save"
+        actionLabel="Confirm Authorization"
         isLoading={totpLoading}
       />
     </div>

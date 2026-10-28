@@ -202,7 +202,7 @@ export default function OsasKanbanPipeline({
   };
 
   return (
-    <div className="w-full flex flex-col min-h-0 bg-transparent select-none">
+    <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 bg-transparent select-none border-t border-border dark:border-border">
       {/* 1. KANBAN SLIDE TOOLBAR & STAGE QUICK-NAVIGATOR */}
       <div className="px-5 py-3 border-b border-border dark:border-border bg-slate-50/70 dark:bg-zinc-900/60 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Stage Pills / Quick-Jump Buttons */}
@@ -288,7 +288,7 @@ export default function OsasKanbanPipeline({
       </div>
 
       {/* 2. KANBAN HORIZONTAL BOARD WITH SMOOTH SNAP & GRAB-SCROLL */}
-      <div className="relative w-full flex-1 min-h-0">
+      <div className="relative w-full flex flex-[1_0_auto] flex-col min-h-0">
         {/* Left Overflow Edge Fade Indicator */}
         <div
           className={cn(

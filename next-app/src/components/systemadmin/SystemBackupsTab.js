@@ -25,6 +25,7 @@ import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupFilters from "@/components/admin/backup/BackupFilters"
 import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import RestoreModal from "@/components/shared/RestoreModal"
@@ -741,12 +742,12 @@ export default function SystemBackupsTab({ showToast }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="rms-brand-scope animate-fade-up font-jakarta flex w-full flex-col gap-6 pb-6" data-brand-accent="#000000" data-brand-foreground="#FFFFFF" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
-        <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
+      <div className="rms-brand-scope animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6" data-brand-accent="#000000" data-brand-foreground="#FFFFFF" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
+        <div className="relative flex flex-[1_0_auto] min-h-[600px] w-full items-stretch gap-5">
           
           {/* MAIN CONTENT */}
-          <div className="flex-1 flex flex-col">
-            <Card className="flex-1 flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
+          <div className="flex-1 min-w-0 flex flex-col">
+            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Platform Governance Backups"
@@ -756,6 +757,12 @@ export default function SystemBackupsTab({ showToast }) {
                 descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
                 actions={
                   <div className="flex items-center gap-2">
+                    <RefreshButton
+                      onRefresh={() => fetchData(true)}
+                      isLoading={isManualLoading}
+                      title="Refresh Governance Backups"
+                    />
+
                     <Button
                       type="button"
                       variant="outline"
@@ -774,7 +781,7 @@ export default function SystemBackupsTab({ showToast }) {
                         restoreFileRef.current.click()
                       }
                       disabled={localLoading.uploading}
-                      className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       {localLoading.uploading ? (
                         <span className="flex items-center gap-1.5">
@@ -788,7 +795,7 @@ export default function SystemBackupsTab({ showToast }) {
                     <Button
                       onClick={() => handleGenerateBackup()}
                       disabled={localLoading.generating}
-                      className="flex h-10 items-center justify-center rounded-xl! btn-brand-red px-5 active:scale-95 transition-all text-xs font-semibold text-white shadow-xs cursor-pointer border-0"
+                      className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
@@ -934,16 +941,6 @@ export default function SystemBackupsTab({ showToast }) {
               onToggleSimulation={toggleExternalDriveSimulation}
               isRescanning={isRescanning}
               onToggleCollapse={() => handleToggleStatusSidebar(false)}
-              scopeInfo={{
-                title: "Platform Governance Scope",
-                items: [
-                  "Department Stations",
-                  "Department Features",
-                  "Global Directory",
-                  "Platform Activity History",
-                  "System Settings",
-                ],
-              }}
             />
           ) : (
             <button
@@ -965,7 +962,7 @@ export default function SystemBackupsTab({ showToast }) {
           selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => handleDeletePrompt(selectedBackupIds)}
-          actionLabel="Delete"
+          actionLabel="Delete Selected"
           actionIcon="ph-trash"
         />
 
@@ -985,7 +982,8 @@ export default function SystemBackupsTab({ showToast }) {
           selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
           onConfirm={confirmDeleteBackup}
           onCancel={() => setBackupDeleteOpen(false)}
-          confirmLabel="Delete"
+          confirmLabel={backupDeleteTargets.length > 1 ? "Delete Selected" : "Delete Archive"}
+          cancelLabel="Cancel"
           isLoading={backupDeleteLoading}
           variant="danger"
           verificationTarget={backupDeleteVerificationTarget}

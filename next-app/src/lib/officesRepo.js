@@ -50,20 +50,27 @@ export async function createOffice({
   adminEmail,
   moduleIds,
 }) {
-  if (!id || !name || !short_name) {
+  if (!name || !short_name) {
     const error = new Error("Office ID, full name, and short name are required.");
     error.code = "OFFICE_REQUIRED_FIELDS";
     throw error;
   }
-  const oid = String(id).trim().toLowerCase().replace(/^-+|-+$/g, "");
-  if (!/^[a-z0-9-]+$/.test(oid)) {
+  const rawId = id || String(short_name)
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 24);
+  const oid = String(rawId || "").trim().toLowerCase().replace(/^-+|-+$/g, "");
+  if (!oid || !/^[a-z0-9-]+$/.test(oid)) {
     const error = new Error("Office ID can contain only lowercase letters, numbers, and dashes.");
     error.code = "OFFICE_INVALID_ID";
     throw error;
   }
 
   const defaultStorage = storage_path || `.local/storage/${oid}/uploads`;
-  const email = String(adminEmail || "").trim().toLowerCase();
+  const email = String(adminEmail || `admin.${oid}@pup.local`).trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     const error = new Error("A valid email address is required for the office administrator account.");
     error.code = "OFFICE_ADMIN_EMAIL_INVALID";

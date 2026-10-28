@@ -16,6 +16,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -34,6 +41,9 @@ import { cn } from "@/lib/utils"
 import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { fetchJsonOnce } from "@/lib/clientRequest"
+import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 
 // Expanded predefined icon palette so SuperAdmins have rich choices for campus offices
 const PRESET_ICONS = [
@@ -107,6 +117,13 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   )
 }
 
+function formatMiddleTruncate(str, maxLength = 26) {
+  if (!str || str.length <= maxLength) return str
+  const startChars = Math.ceil((maxLength - 3) / 2)
+  const endChars = Math.floor((maxLength - 3) / 2)
+  return str.slice(0, startChars) + "..." + str.slice(str.length - endChars)
+}
+
 export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [offices, setOffices] = useState([])
   const [availableModules, setAvailableModules] = useState([])
@@ -121,7 +138,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [isArchiving, setIsArchiving] = useState(false)
   const [restoreOfficeTarget, setRestoreOfficeTarget] = useState(null)
   const [isRestoring, setIsRestoring] = useState(false)
-  const [hasManuallyEditedId, setHasManuallyEditedId] = useState(false)
+  const [selectedOfficeIdForDetail, setSelectedOfficeIdForDetail] = useState(null)
   const [confirmMatrixLeaveOpen, setConfirmMatrixLeaveOpen] = useState(false)
   const [layoutView, setLayoutView] = useState("grid")
   
@@ -301,7 +318,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     setSelectedOfficeId(null)
     setShowCustomIcon(false)
     setModulesAccordionOpen(false)
-    setHasManuallyEditedId(false)
     setShowAdvancedStorage(false)
     const defaultSelected = availableModules.map(m => m.id)
     setForm({
@@ -324,7 +340,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const handleOpenEdit = (office) => {
     if (office.status !== "Active") return
     setIsEditing(true)
-    setHasManuallyEditedId(true)
     setSelectedOfficeId(office.id)
     const icon = office.icon || "ph-bold ph-building"
     setShowCustomIcon(!PRESET_ICONS.some(p => p.value === icon))
@@ -362,7 +377,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const cleanId = form.id.trim().toLowerCase().replace(/^-+|-+$/g, "")
-    if (!cleanId || !form.name.trim() || !form.short_name.trim() || (!isEditing && !form.adminEmail.trim())) {
+    const cleanAdminEmail = (form.adminEmail.trim() || (cleanId ? `admin.${cleanId}@pup.local` : "")).toLowerCase()
+    if (!cleanId || !form.name.trim() || !form.short_name.trim() || (!isEditing && !cleanAdminEmail)) {
       showToast("Please fill in all required fields", true)
       return
     }
@@ -383,7 +399,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         station_name: form.station_name.trim() || undefined,
         storage_path: form.storage_path.trim() || undefined,
         inbound_path: form.inbound_path.trim() || undefined,
-        adminEmail: form.adminEmail.trim() || undefined,
+        adminEmail: !isEditing ? cleanAdminEmail : undefined,
       }
 
       if (!isEditing) {
@@ -538,6 +554,47 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const paginatedOffices = useMemo(() => {
     return filteredOffices.slice(startIndex, startIndex + pageSize)
   }, [filteredOffices, startIndex, pageSize])
+
+  // Horizontal table scrolling hook
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolled,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([paginatedOffices?.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, pageSize, searchQuery, statusFilter, layoutView, resetScroll]);
+
+  // Derived selected office object ensuring reactivity with background updates
+  const selectedOfficeForDetail = useMemo(() => {
+    if (!selectedOfficeIdForDetail) return null
+    return offices.find((o) => o.id === selectedOfficeIdForDetail) || null
+  }, [offices, selectedOfficeIdForDetail])
+
+  // Office Detail Record Browsing State & Navigation
+  const currentDetailIndex = useMemo(() => {
+    if (!selectedOfficeIdForDetail) return -1
+    return filteredOffices.findIndex((o) => o.id === selectedOfficeIdForDetail)
+  }, [filteredOffices, selectedOfficeIdForDetail])
+
+  const totalOfficeCount = filteredOffices.length
+
+  const handleNavigatePrevDetail = useCallback(() => {
+    if (currentDetailIndex > 0) {
+      setSelectedOfficeIdForDetail(filteredOffices[currentDetailIndex - 1]?.id || null)
+    }
+  }, [currentDetailIndex, filteredOffices])
+
+  const handleNavigateNextDetail = useCallback(() => {
+    if (currentDetailIndex < totalOfficeCount - 1) {
+      setSelectedOfficeIdForDetail(filteredOffices[currentDetailIndex + 1]?.id || null)
+    }
+  }, [currentDetailIndex, totalOfficeCount, filteredOffices])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -731,9 +788,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   }, [availableModules, form.selectedModules])
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
+    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-buildings"
           title={
@@ -749,8 +806,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              {/* 1. View Switcher: Grid vs Table with SuperAdmin Styling */}
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border/60 dark:border-border">
+              {/* 1. View Switcher: Grid vs Table */}
+              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border dark:border-border">
                 <button
                   type="button"
                   onClick={() => setLayoutView("grid")}
@@ -758,7 +815,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                     layoutView === "grid"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                   )}
                 >
@@ -772,7 +829,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                     layoutView === "table"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                   )}
                 >
@@ -816,7 +873,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
                     className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] h-full bg-gray-50 dark:bg-zinc-900",                      selectedKpi === stat.key
+                      "relative overflow-hidden rounded-2xl border cursor-pointer select-none transition-all shadow-xs hover:shadow-sm flex flex-col justify-between min-h-[110px] h-full bg-gray-50/90 hover:bg-gray-50 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90",
+                      selectedKpi === stat.key
                         ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
                         : "border-border dark:border-border"
                     )}
@@ -941,53 +999,85 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
         {/* Navigation Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none">
+          {/* Left: Active vs Archived Apple-style Segmented Control */}
+          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border dark:border-border select-none">
             <button
               type="button"
               onClick={() => setStatusFilter("Active")}
               className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                 statusFilter === "Active"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
               )}
             >
-              Active ({stats.active})
+              <span>Active</span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  statusFilter === "Active"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                )}
+              >
+                {stats.active}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setStatusFilter("Inactive")}
               className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                 statusFilter === "Inactive"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
               )}
             >
-              Archived ({stats.inactive})
+              <span>Archived</span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  statusFilter === "Inactive"
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                )}
+              >
+                {stats.inactive}
+              </span>
             </button>
           </div>
 
-          {/* Right: Search Input */}
-          <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
-            </div>
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search offices by name, acronym, ID..."
-              className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
-              {filteredOffices.length}
+          {/* Right: Scroll controls & Search Input */}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            {layoutView === "table" && (
+              <TableScrollControls
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                isScrolled={isScrolled}
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetScroll}
+              />
+            )}
+            <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+              </div>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search departments by name, acronym, ID..."
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                {filteredOffices.length}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Content Section inside the single card */}
-        <div className="rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
+        <div className="rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
             <OfficeGridSkeleton layoutView={layoutView} count={6} />
           ) : filteredOffices.length === 0 ? (
@@ -1006,14 +1096,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                     {searchQuery
                       ? "No Results Found"
-                      : (statusFilter === "Inactive" ? "No Archived Offices Found" : "No Offices Found")}
+                      : (statusFilter === "Inactive" ? "No Archived Departments Found" : "No Departments Found")}
                   </EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
                     {searchQuery
-                      ? "We couldn't find any offices matching your search criteria. Try adjusting your keywords."
+                      ? "We couldn't find any departments matching your search criteria. Try adjusting your keywords."
                       : (statusFilter === "Inactive"
                         ? "There are currently no archived departments in the system."
-                        : "There are currently no administrative offices or campus departments configured in the system.")}
+                        : "There are currently no administrative or academic campus departments configured in the system.")}
                   </EmptyDescription>
                 </EmptyHeader>
                 {(searchQuery || statusFilter === "Active") && (
@@ -1041,170 +1131,281 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               </Empty>
             </div>
       ) : layoutView === "grid" ? (
-        <div className="p-6 bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
+        <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOffices.map((office) => {
             const accent = office.accent_color || "#800000"
             const isActive = office.status === "Active"
+            const storagePath = office.storage_path || `.local/storage/${office.id}`
             return (
               <Card
                 key={office.id}
+                onClick={() => setSelectedOfficeIdForDetail(office.id)}
                 className={cn(
-                  "group overflow-hidden border relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 rounded-2xl flex flex-col justify-between p-0 py-0 gap-0",
+                  "group overflow-hidden border relative shadow-xs transition-all duration-200 rounded-2xl flex flex-col justify-between p-0 py-0 gap-0 cursor-pointer",
                   isActive
-                    ? "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5"
+                    ? "border-border dark:border-border bg-white dark:bg-card hover:shadow-md hover:-translate-y-0.5"
                     : "border-dashed border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
                 )}
               >
-                {/* Office Accent Banner */}
-                <div
-                  className={cn(
-                    "relative h-[72px] w-full overflow-hidden rounded-t-[15px] border-b transition-all duration-300 flex items-center justify-between px-5 select-none",
-                    isActive
-                      ? "border-black/10 dark:border-white/10"
-                      : "border-black/5 dark:border-white/5 opacity-65 grayscale"
-                  )}
-                  style={{
-                    background: isActive
-                      ? `linear-gradient(135deg, ${accent} 0%, color-mix(in srgb, ${accent} 85%, #000) 45%, color-mix(in srgb, ${accent} 65%, #000) 100%)`
-                      : `linear-gradient(135deg, #9ca3af 0%, #4b5563 100%)`,
-                  }}
-                >
-                  {/* Left: Office Icon & ID chip */}
-                  <div className="flex items-center gap-3">
+                {/* Clean Apple HIG Header: Continuous-corner icon badge, Department code & Overflow menu */}
+                <div className="p-5 pb-0 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
                     <div
                       className={cn(
-                        "h-11 w-11 rounded-xl flex items-center justify-center border text-xl shadow-xs shrink-0 transition-all",
+                        "h-11 w-11 rounded-xl flex items-center justify-center border text-xl shadow-2xs shrink-0 transition-all",
                         isActive
-                          ? "bg-white/20 text-white border-white/35 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
-                          : "bg-white/10 text-white/70 border-white/20"
+                          ? "border-border dark:border-white/10"
+                          : "bg-gray-100 text-gray-400 border-border dark:bg-zinc-800 dark:text-zinc-500"
                       )}
+                      style={{
+                        backgroundColor: isActive ? `${accent}14` : undefined,
+                        color: isActive ? accent : undefined,
+                      }}
                     >
-                      <HugeIcon className={cn(office.icon || "ti ti-building", "drop-shadow-xs text-white")} />
+                      <HugeIcon className={cn(office.icon || "ti ti-building", "text-xl")} />
                     </div>
-                    <span className="px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-md bg-black/25 text-white backdrop-blur-xs border border-white/20 shadow-2xs">
-                      ID: {office.id}
-                    </span>
+
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3
+                          className="font-bold text-gray-900 dark:text-zinc-50 text-base leading-tight hover:text-pup-maroon dark:hover:text-red-400 transition-colors truncate"
+                          title={`View details for ${office.name}`}
+                        >
+                          {office.short_name}
+                        </h3>
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
+                          {office.id}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5" title={office.name}>
+                        {office.name}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Right: Status badge */}
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full backdrop-blur-xs select-none border shrink-0",
-                      isActive
-                        ? "bg-emerald-500/25 text-white border-emerald-400/40"
-                        : "bg-black/35 text-white/80 border-white/20"
-                    )}
-                  >
+                  {/* Status Capsule & Overflow Actions Menu */}
+                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <span
                       className={cn(
-                        "w-1.5 h-1.5 rounded-full",
-                        isActive ? "bg-emerald-400" : "bg-zinc-400"
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full select-none border",
+                        isActive
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                          : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border-border"
                       )}
-                    />
-                    {isActive ? "Active" : "Inactive"}
-                  </span>
+                    >
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isActive ? "bg-emerald-500" : "bg-zinc-400"
+                        )}
+                      />
+                      {isActive ? "Active" : "Archived"}
+                    </span>
+
+                    {/* Secondary/Destructive Actions Overflow Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-8 h-8 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800/80 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-700 dark:text-zinc-400 dark:hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95"
+                          title="More department actions"
+                          aria-label={`More options for ${office.short_name}`}
+                        >
+                          <HugeIcon className="ph-bold ph-dots-three-vertical text-sm" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        sideOffset={6}
+                        className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
+                      >
+                        {/* Zone 1: Popover Header */}
+                        <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                            Department Actions
+                          </span>
+                          <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
+                            #{office.id}
+                          </span>
+                        </div>
+
+                        {/* Zone 2: Action Items */}
+                        <div className="p-1.5 space-y-0.5">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedOfficeIdForDetail(office.id)
+                            }}
+                            className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                          >
+                            <HugeIcon className="ph-bold ph-info text-sm text-gray-500 dark:text-zinc-400" />
+                            <span>View Details</span>
+                          </DropdownMenuItem>
+                          {isActive && (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleOpenEdit(office)
+                              }}
+                              className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                            >
+                              <HugeIcon className="ph-bold ph-sliders text-sm text-gray-500 dark:text-zinc-400" />
+                              <span>Configure Department</span>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (navigator?.clipboard?.writeText) {
+                                navigator.clipboard.writeText(storagePath)
+                                showToast("Storage path copied to clipboard")
+                              }
+                            }}
+                            className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                          >
+                            <HugeIcon className="ph-bold ph-copy text-sm text-gray-500 dark:text-zinc-400" />
+                            <span>Copy Storage Path</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
+                          {isActive ? (
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setArchiveOfficeTarget(office)
+                              }}
+                              className="cursor-pointer text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
+                            >
+                              <HugeIcon className="ph-bold ph-archive text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
+                              <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Archive Department</span>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setRestoreOfficeTarget(office)
+                              }}
+                              className="cursor-pointer text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:bg-emerald-50 dark:focus:bg-emerald-950/30 focus:text-emerald-600 dark:focus:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 data-highlighted:bg-emerald-50 dark:data-highlighted:bg-emerald-950/30 data-highlighted:text-emerald-600 dark:data-highlighted:text-emerald-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
+                            >
+                              <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
+                              <span className="text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400">Restore Department</span>
+                            </DropdownMenuItem>
+                          )}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
 
-                <CardContent className="p-6 flex flex-col h-full justify-between">
-                  <div>
-                    {!isActive && (
-                      <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-600 dark:text-zinc-300 flex items-center justify-between border border-border/60 dark:border-border">
-                        <span className="flex items-center gap-1.5">
-                          <HugeIcon className="ph-bold ph-archive text-gray-400" />
-                          <span>Archived Department</span>
-                        </span>
-                        <span className="text-[10px] font-medium text-gray-400">Archived</span>
-                      </div>
-                    )}
-
-                    <div className="mb-2">
-                      <h3 className="font-bold text-gray-900 dark:text-zinc-50 leading-tight text-base mb-1">
-                        {office.short_name}
-                      </h3>
-                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300 leading-snug">
-                        {office.name}
-                      </h4>
-                    </div>
-
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">
+                <CardContent className="p-5 pt-3 flex flex-col h-full justify-between gap-4">
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-600 dark:text-zinc-400 line-clamp-2 leading-relaxed">
                       {office.description || "No description provided."}
                     </p>
-                  </div>
 
-                  {/* Workstation & Scanner Setup */}
-                  <div className="space-y-1.5 mt-2 pt-3 border-t border-border dark:border-border text-[11px] text-gray-600 dark:text-zinc-400">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-900 dark:text-zinc-300">
-                        <span>Scanning Computer:</span>
-                      </span>
-                      <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                        {office.station_name || "Unassigned"}
-                      </span>
+                    {/* Workstation & Storage Specs (Grouped Inset Card) */}
+                    <div className="rounded-xl bg-gray-50/80 dark:bg-zinc-800/50 p-2.5 space-y-1.5 border border-border text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
+                          <HugeIcon className="ph-bold ph-desktop text-xs" />
+                          <span>Scanning Computer:</span>
+                        </span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100 text-[11px]">
+                          {office.station_name || "Unassigned"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
+                          <HugeIcon className="ph-bold ph-folder text-xs" />
+                          <span>Storage Folder:</span>
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="font-mono text-[11px] text-gray-700 dark:text-zinc-300"
+                            title={storagePath}
+                          >
+                            {formatMiddleTruncate(storagePath, 24)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (navigator?.clipboard?.writeText) {
+                                navigator.clipboard.writeText(storagePath)
+                                showToast("Storage path copied to clipboard")
+                              }
+                            }}
+                            className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            title="Copy path"
+                          >
+                            <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-900 dark:text-zinc-300">
-                        <span>Storage Folder:</span>
-                      </span>
-                      <span className="font-medium text-gray-700 dark:text-zinc-300 truncate max-w-[150px]" title={office.storage_path}>
-                        {office.storage_path || `.local/storage/${office.id}`}
-                      </span>
-                    </div>
                   </div>
 
-                  {/* Office Metrics: Clickable Deep Links */}
-                  <div className="border-t border-border dark:border-border pt-2.5 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
-                    <button
-                      type="button"
-                      onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))}
-                      title={`View assigned personnel in Global Directory`}
-                      className="group/staff flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
-                    >
-                      
-                      <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 group-hover/staff:text-pup-maroon dark:group-hover/staff:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.staff_count || 0}</strong></span>
-                      
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))}
-                      title={`Configure workspace modules for ${office.short_name}`}
-                      className="group/mod flex items-center gap-1.5 font-medium hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer border-0 bg-transparent p-0"
-                    >
-                      
-                      <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 group-hover/mod:text-pup-maroon dark:group-hover/mod:text-red-400 font-bold underline decoration-dotted underline-offset-2">{office.module_count || 0}</strong></span>
-                      
-                    </button>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 mt-5 pt-3 border-t border-border dark:border-border">
-                    {isActive ? (
-                      <>
-                        <Button
-                          onClick={() => handleOpenEdit(office)}
-                          className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none"
+                  {/* Metrics (Pill Chips, No Dotted Underlines) & Primary Action */}
+                  <div className="space-y-3 pt-3 border-t border-border">
+                    <div className="flex items-center justify-between gap-2">
+                      {/* Native HIG Metric Chips */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))
+                          }}
+                          title="View assigned personnel in Global Directory"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
                         >
-                          Configure
+                          <HugeIcon className="ph-bold ph-users text-xs text-gray-400" />
+                          <span>Staff</span>
+                          <span className="font-bold text-gray-900 dark:text-zinc-100">{office.staff_count || 0}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))
+                          }}
+                          title={`Configure workspace modules for ${office.short_name}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
+                        >
+                          <HugeIcon className="ph-bold ph-squares-four text-xs text-gray-400" />
+                          <span>Modules</span>
+                          <span className="font-bold text-gray-900 dark:text-zinc-100">{office.module_count || 0}</span>
+                        </button>
+                      </div>
+
+                      {/* Primary Action Button ([Action Verb] + [Specific Noun]) */}
+                      {isActive ? (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenEdit(office)
+                          }}
+                          className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        >
+                          Configure Department
                         </Button>
+                      ) : (
                         <Button
                           type="button"
-                          variant="outline"
-                          onClick={() => setArchiveOfficeTarget(office)}
-                          className="h-8 px-3 rounded-xl text-xs font-semibold cursor-pointer border border-rose-200 dark:border-rose-900/40 text-[#ff3b30] dark:text-[#ff453a] hover:bg-rose-50 dark:hover:bg-rose-950/20 shadow-xs transition-all active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setRestoreOfficeTarget(office)
+                          }}
+                          className="h-9 px-4 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                         >
-                          Archive
+                          Restore Department
                         </Button>
-                      </>
-                    ) : (
-                      <Button
-                        type="button"
-                        onClick={() => setRestoreOfficeTarget(office)}
-                        className="w-full bg-[#34c759]/10 hover:bg-[#34c759]/20 text-[#28a745] dark:bg-[#30d158]/15 dark:hover:bg-[#30d158]/25 dark:text-[#30d158] font-semibold text-xs h-8 cursor-pointer rounded-xl border-0 shadow-none transition-all active:scale-95 flex items-center justify-center"
-                      >
-                        Restore
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1215,11 +1416,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       ) : (
         /* Compact Table View */
         <>
-          <div className="overflow-x-auto select-none">
-            <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 table-fixed min-w-[960px]">
-              <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-                  <th className="w-12 p-4 text-center align-middle">
+          <div
+            ref={tableContainerRef}
+            className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+          >
+            <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 border-collapse min-w-[960px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase h-11 select-none">
+                  <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border">
                     <input
                       type="checkbox"
                       className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1232,79 +1436,79 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       aria-label="Select all departments on this page"
                     />
                   </th>
-                  <th className="p-4 w-[22%] whitespace-nowrap">
+                  <th className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("short_name")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "short_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "short_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Department / Office{" "}
                       <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[28%] whitespace-nowrap">
+                  <th className="p-4 w-[28%] whitespace-nowrap border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("name")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Office Name & Description{" "}
                       <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[22%] whitespace-nowrap">
+                  <th className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("station_name")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "station_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "station_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Workstation & Storage{" "}
                       <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
+                  <th className="p-4 w-[8%] text-center whitespace-nowrap border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("staff_count")}
                       className={cn(
-                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "staff_count" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "staff_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Staff{" "}
                       <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
+                  <th className="p-4 w-[8%] text-center whitespace-nowrap border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("module_count")}
                       className={cn(
-                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "module_count" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "module_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Modules{" "}
                       <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[8%] whitespace-nowrap">
+                  <th className="p-4 w-[8%] whitespace-nowrap border-r border-border/80 dark:border-border">
                     <button
                       onClick={() => handleSort("status")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                        sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
                       Status{" "}
                       <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
                     Actions
                   </th>
                 </tr>
@@ -1319,12 +1523,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       key={office.id}
                       onClick={(e) => toggleSelect(office.id, e)}
                       className={cn(
-                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/70 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer",
                         !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75",
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                       )}
                     >
-                      <td className="w-12 p-4 align-middle text-center">
+                      <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                         <input
                           type="checkbox"
                           className={cn(
@@ -1336,11 +1540,18 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           aria-label={`Select ${office.short_name}`}
                         />
                       </td>
-                      <td className="p-4 align-middle whitespace-nowrap">
-                        <div className="flex items-center gap-3">
+                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <div
+                          className="flex items-center gap-3 cursor-pointer group/dept"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedOfficeIdForDetail(office.id)
+                          }}
+                          title={`View details for ${office.name}`}
+                        >
                           <div
                             className={cn(
-                              "h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0",
+                              "h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0 transition-transform group-hover/dept:scale-105",
                               isActive
                                 ? "rms-office-accent"
                                 : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
@@ -1352,10 +1563,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
                             } : undefined}
                           >
-                            <HugeIcon  className={office.icon || "ti ti-building"}></HugeIcon>
+                            <HugeIcon className={office.icon || "ti ti-building"} />
                           </div>
                           <div>
-                            <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight">
+                            <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight group-hover/dept:text-pup-maroon dark:group-hover/dept:text-red-400 transition-colors">
                               {office.short_name}
                             </span>
                             <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
@@ -1365,7 +1576,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle overflow-hidden">
+                      <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                         <div className="truncate">
                           <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
                             {office.name}
@@ -1376,19 +1587,35 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden">
-                        <div className="text-[11px] space-y-0.5 truncate">
+                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
+                        <div className="text-[11px] space-y-1">
                           <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
-                            <HugeIcon  className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-xs shrink-0"></HugeIcon>
+                            <HugeIcon  className="ph-bold ph-desktop text-gray-400 dark:text-zinc-500 text-xs shrink-0"></HugeIcon>
                             <span className="truncate">{office.station_name || "Unassigned"}</span>
                           </div>
-                          <div className="text-[10px] text-gray-400 dark:text-zinc-500 truncate" title={office.storage_path}>
-                            {office.storage_path || `.local/storage/${office.id}`}
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-mono">
+                            <span title={office.storage_path || `.local/storage/${office.id}`}>
+                              {formatMiddleTruncate(office.storage_path || `.local/storage/${office.id}`, 22)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (navigator?.clipboard?.writeText) {
+                                  navigator.clipboard.writeText(office.storage_path || `.local/storage/${office.id}`)
+                                  showToast("Storage path copied to clipboard")
+                                }
+                              }}
+                              className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                              title="Copy storage path"
+                            >
+                              <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                            </button>
                           </div>
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle text-center whitespace-nowrap">
+                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1403,7 +1630,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="p-4 align-middle text-center whitespace-nowrap">
+                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1418,74 +1645,155 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="p-4 align-middle whitespace-nowrap">
-                        <div
+                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <span
                           className={cn(
-                            "inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full select-none border",
                             isActive
-                              ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
-                              : "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                              : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border-border"
                           )}
                         >
+                          <span
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              isActive ? "bg-emerald-500" : "bg-zinc-400"
+                            )}
+                          />
                           {isActive ? "Active" : "Archived"}
-                        </div>
+                        </span>
                       </td>
 
                       <td className="p-4 pr-6 align-middle text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          {isActive ? (
-                            <>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleOpenEdit(office)
-                                    }}
-                                    aria-label="Configure Department"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
-                                  >
-                                    <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Configure</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setArchiveOfficeTarget(office)
-                                    }}
-                                    aria-label="Archive Department"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
-                                  >
-                                    <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Archive</TooltipContent>
-                              </Tooltip>
-                            </>
-                          ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedOfficeIdForDetail(office.id)
+                                }}
+                                aria-label="View Details"
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                              >
+                                <HugeIcon className="ph-bold ph-eye text-[15px]" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>View Details</TooltipContent>
+                          </Tooltip>
+
+                          {isActive && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    setRestoreOfficeTarget(office)
+                                    handleOpenEdit(office)
                                   }}
-                                  aria-label="Restore Department"
-                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                  aria-label="Configure Department"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                 >
-                                  <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-[16px]"></HugeIcon>
+                                  <HugeIcon className="ph-bold ph-gear-six text-[15px]" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent>Restore</TooltipContent>
+                              <TooltipContent>Configure Department</TooltipContent>
                             </Tooltip>
                           )}
+
+                          {/* Secondary / Destructive Actions Overflow Menu */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="More department actions"
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                              >
+                                <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              sideOffset={6}
+                              className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
+                            >
+                              {/* Zone 1: Popover Header */}
+                              <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                                  Department Actions
+                                </span>
+                                <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
+                                  #{office.id}
+                                </span>
+                              </div>
+
+                              {/* Zone 2: Action Items */}
+                              <div className="p-1.5 space-y-0.5">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setSelectedOfficeIdForDetail(office.id)
+                                  }}
+                                  className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                >
+                                  <HugeIcon className="ph-bold ph-info text-sm text-gray-500 dark:text-zinc-400" />
+                                  <span>View Details</span>
+                                </DropdownMenuItem>
+                                {isActive && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleOpenEdit(office)
+                                    }}
+                                    className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                  >
+                                    <HugeIcon className="ph-bold ph-sliders text-sm text-gray-500 dark:text-zinc-400" />
+                                    <span>Configure Department</span>
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (navigator?.clipboard?.writeText) {
+                                      navigator.clipboard.writeText(office.storage_path || `.local/storage/${office.id}`)
+                                      showToast("Storage path copied to clipboard")
+                                    }
+                                  }}
+                                  className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                >
+                                  <HugeIcon className="ph-bold ph-copy text-sm text-gray-500 dark:text-zinc-400" />
+                                  <span>Copy Storage Path</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
+                                {isActive ? (
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setArchiveOfficeTarget(office)
+                                    }}
+                                    className="cursor-pointer text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
+                                  >
+                                    <HugeIcon className="ph-bold ph-archive text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
+                                    <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Archive Department</span>
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setRestoreOfficeTarget(office)
+                                    }}
+                                    className="cursor-pointer text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:bg-emerald-50 dark:focus:bg-emerald-950/30 focus:text-emerald-600 dark:focus:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 data-highlighted:bg-emerald-50 dark:data-highlighted:bg-emerald-950/30 data-highlighted:text-emerald-600 dark:data-highlighted:text-emerald-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
+                                  >
+                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
+                                    <span className="text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400">Restore Department</span>
+                                  </DropdownMenuItem>
+                                )}
+                              </div>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>
@@ -1559,19 +1867,19 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             {/* Header: Clean title without icon as requested */}
             <DialogHeader className="p-6 sm:px-8 pt-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left shrink-0">
               <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                {isEditing ? "Edit Office Details" : "Add New Office"}
+                {isEditing ? "Edit Department Details" : "Add New Department"}
               </DialogTitle>
               <DialogDescription className="text-[13px] font-normal text-gray-500 mt-1 dark:text-zinc-400">
-                Set up office identity, scanning computer, and enabled services.
+                Set up department identity, scanning computer, and enabled services.
               </DialogDescription>
             </DialogHeader>
 
             <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 min-h-0">
-              {/* Row 1: Short Name & ID side by side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {/* Row 1: Editable Department Names (Acronym & Full Name) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Office Acronym / Short Name *
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    Department Acronym / Short Name *
                   </label>
                   <Input
                     value={form.short_name}
@@ -1579,14 +1887,17 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       const val = e.target.value
                       setForm(prev => {
                         const next = { ...prev, short_name: val }
-                        if (!isEditing && !hasManuallyEditedId) {
-                          next.id = val
+                        if (!isEditing) {
+                          const generatedId = val
                             .toLowerCase()
                             .trimStart()
                             .replace(/[\s_]+/g, "-")
                             .replace(/[^a-z0-9-]/g, "")
+                            .replace(/^-+|-+$/g, "")
                             .replace(/-+/g, "-")
                             .slice(0, 24)
+                          next.id = generatedId
+                          next.adminEmail = generatedId ? `admin.${generatedId}@pup.local` : ""
                         }
                         return next
                       })
@@ -1597,87 +1908,83 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Office Code / ID *
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    Full Name of the Department *
                   </label>
                   <Input
-                    value={form.id}
-                    onChange={(e) => {
-                      setHasManuallyEditedId(true)
-                      const cleanId = e.target.value
-                        .toLowerCase()
-                        .replace(/[\s_]+/g, "-")
-                        .replace(/[^a-z0-9-]/g, "")
-                        .replace(/-+/g, "-")
-                      setForm(prev => ({ ...prev, id: cleanId }))
-                    }}
-                    disabled={isEditing}
-                    placeholder="e.g. registrar, osas, library"
+                    value={form.name}
+                    onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g. Office of the University Library Services"
                     className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                     required
                   />
-                  {!isEditing && (
-                    <div className="flex items-center justify-between text-[10px] text-gray-400 mt-1">
-                      <span>
-                        Default admin: <code className="text-gray-600 dark:text-zinc-300 font-semibold">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</code>
-                      </span>
-                      {!hasManuallyEditedId && form.id && (
-                        <span className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-medium">
-                          Auto-generated
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Row 2: Full Office Name */}
+              {/* Row 2: Description */}
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Full Name of the Office *
-                </label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g. Office of the University Library Services"
-                  className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
-                  required
-                />
-              </div>
-
-              {!isEditing && (
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Office Administrator Email *
-                  </label>
-                  <Input
-                    type="email"
-                    value={form.adminEmail}
-                    onChange={(e) => setForm(prev => ({ ...prev, adminEmail: e.target.value }))}
-                    placeholder="administrator@example.edu"
-                    autoComplete="email"
-                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                    required
-                  />
-                  <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">
-                    The new administrator will receive their account ID and default password here.
-                  </p>
-                </div>
-              )}
-
-              {/* Row 3: Description */}
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                   Description
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={form.description}
                   onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe the department's institutional role and functions..."
-                  className="w-full min-h-[84px] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 transition-all resize-y shadow-xs"
+                  className="w-full min-h-[72px] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 transition-all resize-y shadow-xs"
                 />
+              </div>
+
+              {/* Row 3: System-Generated Identifiers & Default Admin Provisioning (Grouped Read-Only Section) */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                    {isEditing ? "System Identifier" : "System-Generated Identifiers & Default Admin"}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                    {isEditing ? "Read-only" : "Auto-assigned"}
+                  </span>
+                </div>
+
+                <div className={cn("grid grid-cols-1 gap-3.5", !isEditing ? "sm:grid-cols-3" : "sm:grid-cols-1")}>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                      Department Code / ID
+                    </label>
+                    <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                        {form.id || "office-[auto]"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {!isEditing && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                          Default Admin ID
+                        </label>
+                        <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                          <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                            PUP{(form.id || "OFFICE").trim().toUpperCase()}-001
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                          Department Administrator Email
+                        </label>
+                        <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
+                          <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                            {form.adminEmail || `admin.${form.id || "[office]"}@pup.local`}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Row 3: Scanning Workstation Setup (Simplified Option A) */}
@@ -1707,7 +2014,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                     Workstation Name (Optional)
                   </label>
                   <Input
@@ -1724,8 +2031,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 {showAdvancedStorage && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border dark:border-border animate-fade-in">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Custom Storage Folder Path
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                        Storage Partition Path
                       </label>
                       <Input
                         value={form.storage_path}
@@ -1739,7 +2046,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Scanner Inbound Watch Path
                       </label>
                       <div className="flex gap-2">
@@ -1802,9 +2109,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                     {/* Accordion Content */}
                     {modulesAccordionOpen && (
-                      <div className="p-4 border-t border-border/80 dark:border-border bg-white/70 dark:bg-zinc-950/70 space-y-3 animate-in fade-in duration-150">
+                      <div className="p-4 border-t border-border dark:border-border bg-white/70 dark:bg-zinc-950/70 space-y-3 animate-in fade-in duration-150">
                         <div className="flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300 pb-1">
-                          <span>Select which standard modules should be enabled for this office:</span>
+                          <span>Select which standard modules should be enabled for this department:</span>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -1838,7 +2145,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   "flex items-start gap-2.5 p-2.5 rounded-xl text-xs transition-all border select-none",
                                   isChecked
                                     ? "border-pup-maroon/20 bg-pup-maroon/5 dark:border-border dark:bg-white/5"
-                                    : "border-border/70 bg-gray-50/50 dark:border-border dark:bg-zinc-900/40",
+                                    : "border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/40",
                                   isSystem ? "opacity-80 cursor-default" : "hover:border-pup-maroon/40 cursor-pointer"
                                 )}
                               >
@@ -1870,13 +2177,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
 
                         <div className="text-[10px] text-gray-400 dark:text-zinc-500 italic pt-1 border-t border-border dark:border-border">
-                          * Note: Offices only use this standardized system catalog. Custom modules cannot be created per office.
+                          * Note: Departments only use this standardized system catalog. Custom modules cannot be created per department.
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl border border-border/80 dark:border-border bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
                         <HugeIcon  className="ti ti-layout-grid text-base"></HugeIcon>
@@ -1903,11 +2210,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 )}
               </div>
 
-              {/* Row 5: Expanded Office Icon Section */}
+              {/* Row 5: Expanded Department Icon Section */}
               <div className="space-y-2 pt-1 border-t border-border dark:border-border">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Office Icon
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                    Department Icon
                   </label>
                   <button
                     type="button"
@@ -1933,7 +2240,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
                               selected
                                 ? "border-slate-900 bg-slate-900 text-white dark:border-border dark:bg-zinc-100 dark:text-zinc-900 scale-105"
-                                : "border-border/90 bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                             )}
                           >
                             <HugeIcon  className={opt.value}></HugeIcon>
@@ -1961,7 +2268,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               {/* Row 6: Expanded Branding Theme Colors & Live Preview */}
               <div className="space-y-2 pt-1 border-t border-border dark:border-border">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                     Branding Theme Color
                   </label>
                   <span className="font-mono text-[11px] font-medium text-gray-400 dark:text-zinc-500">
@@ -2000,7 +2307,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </div>
 
                   {/* Custom Color Input & Live Preview */}
-                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 pt-3 border-t border-border/70 dark:border-border">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 pt-3 border-t border-border dark:border-border">
                     <div className="flex items-center gap-3">
                       <div className="relative flex items-center">
                         <div
@@ -2026,9 +2333,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       />
                     </div>
 
-                    {/* Live Office Badge Preview */}
+                    {/* Live Department Badge Preview */}
                     <div className="flex items-center gap-2.5">
-                      <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         Live Preview:
                       </span>
                       <div
@@ -2041,7 +2348,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         }}
                       >
                         <HugeIcon  className={cn(form.icon || "ti ti-building", "text-sm")}></HugeIcon>
-                        <span>{form.short_name || "Office"}</span>
+                        <span>{form.short_name || "Department"}</span>
                       </div>
                     </div>
                   </div>
@@ -2063,7 +2370,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 disabled={submitLoading}
                 className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
               >
-                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Office"}
+                {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Department"}
               </Button>
             </DialogFooter>
           </form>
@@ -2170,6 +2477,24 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         }}
         actionLabel={statusFilter === "Active" ? "Archive" : "Restore"}
         actionVariant={statusFilter === "Active" ? "danger" : "success"}
+      />
+
+      {/* Office Detail Sheet Drawer */}
+      <OfficeDetailSheet
+        open={Boolean(selectedOfficeForDetail)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setSelectedOfficeIdForDetail(null)
+        }}
+        office={selectedOfficeForDetail}
+        onClose={() => setSelectedOfficeIdForDetail(null)}
+        onConfigure={(office) => handleOpenEdit(office)}
+        onRestore={(office) => setRestoreOfficeTarget(office)}
+        onArchive={(office) => setArchiveOfficeTarget(office)}
+        currentIndex={currentDetailIndex}
+        totalCount={totalOfficeCount}
+        onNavigatePrev={handleNavigatePrevDetail}
+        onNavigateNext={handleNavigateNextDetail}
+        showToast={showToast}
       />
     </div>
   )

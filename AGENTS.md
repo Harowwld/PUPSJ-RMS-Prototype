@@ -116,7 +116,7 @@ All database access goes through `*Repo.js` files in `src/lib/`:
 | `next-app/src/components/ui/` | shadcn/ui primitives (Button, Dialog, Skeleton, etc.) |
 | `next-app/src/lib/` | Database repos, utilities, helpers |
 | `next-app/public/assets/` | Static assets (fonts, Phosphor icons) |
-| `next-app/scripts/` | Utility scripts (hot-folder-watcher, reset-students) |
+| `next-app/scripts/` | Utility scripts (hot-folder-watcher, reset-db, seed scripts) |
 | `.local/` | Runtime data (SQLite, uploads, backups) |
 
 ---
@@ -578,6 +578,17 @@ For complete copy-paste patterns and blueprints, refer to [`COMPONENT_STANDARDS.
 - **CRITICAL RULE ON MODAL HEADERS**: Dialog headers (`DialogHeader`) **MUST NOT** have decorative icon boxes or leading icons. Keep them strictly typographic (`DialogTitle` at `text-[16px] font-semibold tracking-[-0.01em]` and `DialogDescription` at `text-[13px] font-normal text-gray-500 mt-1`).
 - **ACTION-ONLY BUTTON WORDS**: Action buttons in modals and toolbars must use single, unambiguous action words (`Save`, `Submit`, `Update`, `Restore`, `Cancel`, `Close`, `Done`). Avoid verbose phrases like `"Skip for Now"` or `"Submit Feedback"`.
 - **OUTLINED DISMISSAL BUTTONS**: Always use `variant="outline"` with `rounded-xl` for cancel/close buttons.
+
+### 8.9 Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
+
+- **NEVER use floating alert boxes**: Alert banners must never float as island cards (`mx-5 my-3.5 rounded-xl border`) inside cards or forms.
+- **Edge-to-Edge Line Attachment**: Alerts must attach directly to container dividers / hairline borders (`border-b` underneath card/section headers, or `border-t border-b` between layout tiers), taking up the exact line/space where they are located (`px-5 sm:px-6 py-2.5`).
+- **Dismissable Interaction**: Dismissable alerts must provide an accessible squircle dismiss button (`ph-bold ph-x`) with session persistence (`sessionStorage`).
+- **Standard Color Tokens**:
+  - **Warning / Amber**: `border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 text-amber-900 dark:text-amber-200`
+  - **Success / Emerald**: `border-b border-emerald-200/90 bg-emerald-50/90 dark:border-emerald-900/40 dark:bg-emerald-950/25 text-emerald-950 dark:text-emerald-200`
+  - **Information / Blue**: `border-b border-blue-200/90 bg-blue-50/90 dark:border-blue-900/40 dark:bg-blue-950/25 text-blue-900 dark:text-blue-200`
+  - **Destructive / Rose**: `border-b border-rose-200/90 bg-rose-50/90 dark:border-rose-900/40 dark:bg-rose-950/25 text-rose-900 dark:text-rose-200`
 
 ---
 

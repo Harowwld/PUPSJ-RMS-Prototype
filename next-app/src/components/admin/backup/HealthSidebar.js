@@ -52,7 +52,6 @@ export default function HealthSidebar({
   lastBackupTime,
   isLoading = false,
   isManualLoading = false,
-  scopeInfo = null,
   externalDrive = null,
   onRescanDrive = null,
   onToggleSimulation = null,
@@ -316,32 +315,6 @@ export default function HealthSidebar({
           </div>
         </div>
 
-        {scopeInfo && (
-          <div className="border-t border-border dark:border-border p-5 bg-gray-50/50 dark:bg-zinc-900/40">
-            <div className="flex items-center gap-2 mb-2.5">
-              <HugeIcon  className="ph-fill ph-shield-check text-[15px] text-indigo-600 dark:text-indigo-400" />
-              <span className="text-[12px] font-semibold text-gray-900 dark:text-zinc-100">
-                {scopeInfo.title || "Platform Governance Scope"}
-              </span>
-            </div>
-            {Array.isArray(scopeInfo.items) ? (
-              <div className="flex flex-wrap gap-1.5">
-                {scopeInfo.items.map((item, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center rounded-lg bg-indigo-50/80 px-2 py-1 text-[11px] font-medium text-indigo-700 border border-indigo-200/50 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/40"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[12px] font-normal leading-relaxed text-[#8E8E93] dark:text-zinc-400">
-                {scopeInfo.description}
-              </p>
-            )}
-          </div>
-        )}
       </Card>
     </div>
   )

@@ -1146,9 +1146,9 @@ export default function Header({ authUser, onLogout, children }) {
             </DropdownMenuTrigger>
             
             {/* Popover content with Three-Zone Architecture */}
-            <DropdownMenuContent align="end" sideOffset={8} className="w-80 rounded-2xl border border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-80 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none">
               {/* 1. Header Zone */}
-              <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b border-border dark:border-white/10 flex items-center justify-between text-left">
+              <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between text-left">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
                     {currentAvatarFilename && !imageError ? (
@@ -1218,11 +1218,11 @@ export default function Header({ authUser, onLogout, children }) {
               </DropdownMenuGroup>
 
               {/* 3. Footer Zone */}
-              <div className="p-1.5 border-t border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/50">
+              <div className="p-1.5 border-t-[0.5px] border-border dark:border-white/10">
                 <button
                   type="button"
                   onClick={handleLogoutAction}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-900/40"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none"
                 >
                   <HugeIcon className="ph-bold ph-sign-out text-sm" />
                   <span>Sign Out</span>

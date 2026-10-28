@@ -76,16 +76,17 @@ try {
 
   // 4. Seed demo student accounts (including Juan Dela Cruz with existing ODRS/Proposals)
   const students = [
-    ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
-    ["2023-00001-IT-1", "Test Student", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
+    ["2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
+    ["2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
     ["2021-00123-SJ-0", "MARIANO, CEDRICK", "BSIT", 4, "BSIT-4A", "marianocedrick412@gmail.com"],
   ];
 
   for (const [sNo, sName, cCode, yLevel, sSection, sEmail] of students) {
     await pool.query(`
-      INSERT INTO students (student_no, name, course_code, year_level, section, status, updated_at)
-      VALUES ($1, $2, $3, $4, $5, 'Active', NOW())
-      ON CONFLICT (student_no) DO UPDATE SET name = EXCLUDED.name, course_code = EXCLUDED.course_code, year_level = EXCLUDED.year_level, section = EXCLUDED.section, status = 'Active', updated_at = NOW()
+      INSERT INTO students (student_no, name, course_code, year_level, section, status, storage_room, storage_cabinet, storage_drawer, updated_at)
+      VALUES ($1, $2, $3, $4, $5, 'Active', 1, 'A', 1, NOW())
+      ON CONFLICT (student_no) DO UPDATE SET name = EXCLUDED.name, course_code = EXCLUDED.course_code, year_level = EXCLUDED.year_level,
+        section = EXCLUDED.section, status = 'Active', storage_room = 1, storage_cabinet = 'A', storage_drawer = 1, updated_at = NOW()
     `, [sNo, encryptPII(sName), cCode, yLevel, sSection]);
 
     await pool.query(`

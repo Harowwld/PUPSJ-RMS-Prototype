@@ -2,7 +2,7 @@
 
 import useUrlPage from "@/hooks/useUrlPage"
 import HugeIcon from "@/components/shared/HugeIcon"
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { Reorder } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +34,7 @@ import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 import { toast } from "sonner"
 import { matchesSearchQuery } from "@/lib/searchUtils"
 
@@ -125,6 +126,34 @@ export default function DigitalRecordsReviewTab({
   const [currentTime, setCurrentTime] = useState(0)
   const statCardsRef = useRef(null)
   const [kpiOrder, setKpiOrder] = useState(["pending", "approved", "declined"])
+
+  // Horizontal scroll container ref & scroll state
+  const tableContainerRef = useRef(null)
+  const [isScrolledX, setIsScrolledX] = useState(false)
+
+  const handleScroll = (e) => {
+    setIsScrolledX(e.currentTarget.scrollLeft > 10)
+  }
+
+  const scrollTable = useCallback((direction) => {
+    if (tableContainerRef.current) {
+      const amount = direction === "left" ? -350 : 350
+      tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" })
+    }
+  }, [])
+
+  const resetTableScroll = useCallback(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({ left: 0 })
+      setIsScrolledX(false)
+    }
+  }, [currentPage, itemsPerPage, statusFilter, searchQuery])
 
   useEffect(() => {
     const timer = setTimeout(() => setCurrentTime(Date.now()), 0)
@@ -699,9 +728,9 @@ export default function DigitalRecordsReviewTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="ph-seal-check"
             title="Records Review"
@@ -1053,7 +1082,7 @@ export default function DigitalRecordsReviewTab({
                       {dateFrom ? format(new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00"), "MMM d") : "Start"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateFrom ? new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00") : undefined}
@@ -1080,7 +1109,7 @@ export default function DigitalRecordsReviewTab({
                       {dateTo ? format(new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00"), "MMM d") : "End"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateTo ? new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00") : undefined}
@@ -1094,6 +1123,14 @@ export default function DigitalRecordsReviewTab({
                 </Popover>
               </div>
             </div>
+
+            {/* Horizontal Scroll Navigation */}
+            <TableScrollControls
+              onScrollLeft={() => scrollTable("left")}
+              onScrollRight={() => scrollTable("right")}
+              onResetScroll={resetTableScroll}
+              isScrolled={isScrolledX}
+            />
           </div>
         </div>
 
@@ -1139,7 +1176,7 @@ export default function DigitalRecordsReviewTab({
         {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
           <RecordsReviewTableSkeleton rowCount={8} embedded={true} />
         ) : error ? (
-          <div className="flex min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
+          <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
             <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <div className="relative mb-6">
@@ -1191,12 +1228,16 @@ export default function DigitalRecordsReviewTab({
             </Empty>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm table-fixed min-w-[1000px]">
-                <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card dark:border-border">
-                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
-                    <th className="w-12 p-4 text-center">
+          <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+            <div
+              ref={tableContainerRef}
+              onScroll={handleScroll}
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+            >
+              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1380px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
                       <input
                         type="checkbox"
                         className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-border"
@@ -1214,25 +1255,53 @@ export default function DigitalRecordsReviewTab({
                         }
                       />
                     </th>
-                    <th className="p-4 w-[14%]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("student_no")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
-                      >
-                        Student No.{" "}
-                        <SortIndicator
-                          column="student_no"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
+                    <th
+                      className={cn(
+                        "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                        isScrolledX
+                          ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                          : "border-r border-border/80 dark:border-border"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSort("student_no")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                            sortBy === "student_no" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          <span>Student No.</span>{" "}
+                          <SortIndicator
+                            column="student_no"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                        {isScrolledX && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resetTableScroll();
+                            }}
+                            title="Reset scroll to start"
+                            className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                          >
+                            <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                          </button>
+                        )}
+                      </div>
                     </th>
-                    <th className="p-4 w-[20%]">
+                    <th className="p-4 w-[220px] min-w-[220px] border-r border-border/80 dark:border-border">
                       <button
                         type="button"
                         onClick={() => handleSort("student_name")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "student_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
                       >
                         Full Name{" "}
                         <SortIndicator
@@ -1242,11 +1311,14 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[16%]">
+                    <th className="p-4 w-[180px] min-w-[180px] border-r border-border/80 dark:border-border">
                       <button
                         type="button"
                         onClick={() => handleSort("doc_type")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
                       >
                         Document Type{" "}
                         <SortIndicator
@@ -1256,14 +1328,17 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[20%] text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                    <th className="p-4 w-[220px] min-w-[220px] text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400 border-r border-border/80 dark:border-border">
                       Filename
                     </th>
-                    <th className="p-4 w-[10%] text-center">
+                    <th className="p-4 w-[130px] min-w-[130px] text-center border-r border-border/80 dark:border-border">
                       <button
                         type="button"
                         onClick={() => handleSort("approval_status")}
-                        className="group inline-flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                        className={cn(
+                          "group inline-flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "approval_status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
                       >
                         Status{" "}
                         <SortIndicator
@@ -1273,11 +1348,14 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[12%]">
+                    <th className="p-4 w-[150px] min-w-[150px] border-r border-border/80 dark:border-border">
                       <button
                         type="button"
                         onClick={() => handleSort("created_at")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
                       >
                         Upload Date{" "}
                         <SortIndicator
@@ -1287,7 +1365,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="w-24 p-4 pr-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                    <th className="w-28 min-w-[110px] p-4 pr-6 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
@@ -1311,7 +1389,12 @@ export default function DigitalRecordsReviewTab({
                           }
                         }}
                       >
-                          <td className="w-12 p-4 text-center">
+                          <td
+                            className={cn(
+                              "w-12 p-4 text-center align-middle border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+                              isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                            )}
+                          >
                             {r.approval_status === "Pending" ? (
                               <input
                                 type="checkbox"
@@ -1324,12 +1407,20 @@ export default function DigitalRecordsReviewTab({
                               />
                             ) : null}
                           </td>
-                          <td className="w-44 p-4 whitespace-nowrap">
+                          <td
+                            className={cn(
+                              "w-44 min-w-[160px] p-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
+                              isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
+                              isScrolledX
+                                ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                                : "border-r border-border/70 dark:border-border/70"
+                            )}
+                          >
                             <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {r.student_no}
                             </span>
                           </td>
-                          <td className="p-4 min-w-[200px] max-w-[260px] overflow-hidden align-middle">
+                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                             <div
                               className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
                               title={formatTitleCase(r.student_name)}
@@ -1337,7 +1428,7 @@ export default function DigitalRecordsReviewTab({
                               {formatTitleCase(r.student_name)}
                             </div>
                           </td>
-                          <td className="p-4 min-w-[160px] overflow-hidden align-middle">
+                          <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                             <span
                               className="inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200"
                               title={r.doc_type}
@@ -1345,7 +1436,7 @@ export default function DigitalRecordsReviewTab({
                               {r.doc_type}
                             </span>
                           </td>
-                          <td className="p-4 min-w-[180px] max-w-[240px] overflow-hidden align-middle">
+                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                             <span
                               className="block truncate text-xs text-gray-600 dark:text-zinc-400 font-normal"
                               title={r.original_filename}
@@ -1353,7 +1444,7 @@ export default function DigitalRecordsReviewTab({
                               {r.original_filename}
                             </span>
                           </td>
-                          <td className="w-32 p-4 text-center align-middle whitespace-nowrap">
+                          <td className="w-32 min-w-[130px] p-4 text-center align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center justify-center">
                               <span
                                 className={cn(
@@ -1365,7 +1456,7 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </div>
                           </td>
-                          <td className="w-36 p-4 whitespace-nowrap align-middle">
+                          <td className="w-36 min-w-[150px] p-4 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
                             <div className="flex flex-col">
                               <span className="text-xs font-medium text-gray-900 dark:text-zinc-100">
                                 {formatUploadedDate(r.created_at).dateStr}
@@ -1375,7 +1466,7 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </div>
                           </td>
-                          <td className="w-28 p-4 text-right">
+                          <td className="w-28 min-w-[110px] p-4 pr-6 text-right align-middle">
                             <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1387,7 +1478,7 @@ export default function DigitalRecordsReviewTab({
                                     <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="top">Preview</TooltipContent>
+                                <TooltipContent side="top">Preview Document</TooltipContent>
                               </Tooltip>
 
                               {r.approval_status === "Pending" && (
@@ -1402,7 +1493,7 @@ export default function DigitalRecordsReviewTab({
                                          <HugeIcon  className="ph-bold ph-check text-[16px]"></HugeIcon>
                                        </button>
                                      </TooltipTrigger>
-                                     <TooltipContent side="top">Approve</TooltipContent>
+                                     <TooltipContent side="top">Approve Document</TooltipContent>
                                    </Tooltip>
 
                                    <Tooltip>
@@ -1423,7 +1514,7 @@ export default function DigitalRecordsReviewTab({
                                          <HugeIcon  className="ph-bold ph-x text-[16px]"></HugeIcon>
                                        </button>
                                      </TooltipTrigger>
-                                     <TooltipContent side="top">Decline</TooltipContent>
+                                     <TooltipContent side="top">Decline Document</TooltipContent>
                                    </Tooltip>
                                  </>
                               )}
@@ -1438,7 +1529,7 @@ export default function DigitalRecordsReviewTab({
 
             {/* Pagination Toolbar */}
             {sortedRecords.length > 0 && (
-              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+              <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
                 <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                   <span>
                     Showing {paginatedRecords.length} of {sortedRecords.length.toLocaleString()}

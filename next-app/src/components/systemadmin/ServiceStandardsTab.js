@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import HugeIcon from "@/components/shared/HugeIcon";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,51 @@ const PRESETS = [
     badge: "Custom",
   },
 ];
+
+/**
+ * Authentic Apple-style stepper control with tactile feedback and bounds enforcement
+ */
+function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
+  const current = Number(value) || min;
+  const canDecrease = current > min;
+  const canIncrease = current < max;
+
+  return (
+    <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/80 dark:border-border shrink-0 ml-4 select-none">
+      <button
+        type="button"
+        disabled={!canDecrease}
+        onClick={() => onAdjust(-1)}
+        aria-label={`Decrease ${label} turnaround days`}
+        className={cn(
+          "w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 shadow-2xs transition-all",
+          canDecrease
+            ? "hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer active:scale-90"
+            : "opacity-40 cursor-not-allowed pointer-events-none"
+        )}
+      >
+        <HugeIcon className="ph-bold ph-minus text-xs" />
+      </button>
+      <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-mono">
+        {current}d
+      </span>
+      <button
+        type="button"
+        disabled={!canIncrease}
+        onClick={() => onAdjust(1)}
+        aria-label={`Increase ${label} turnaround days`}
+        className={cn(
+          "w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 shadow-2xs transition-all",
+          canIncrease
+            ? "hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer active:scale-90"
+            : "opacity-40 cursor-not-allowed pointer-events-none"
+        )}
+      >
+        <HugeIcon className="ph-bold ph-plus text-xs" />
+      </button>
+    </div>
+  );
+}
 
 export default function ServiceStandardsTab({ showToast }) {
   const [loading, setLoading] = useState(true);
@@ -158,7 +204,7 @@ export default function ServiceStandardsTab({ showToast }) {
         setStandards(json.data);
         setConfirmSaveOpen(false);
         showToast?.({
-          title: "Saved",
+          title: "Standards Saved",
           description: `Updated to ${json.data.frameworkName} (${json.data.simpleDays}-${json.data.complexDays}-${json.data.highlyTechnicalDays} ${json.data.workingDaysOnly ? "working" : "calendar"} days).`,
         });
       } else {
@@ -185,8 +231,8 @@ export default function ServiceStandardsTab({ showToast }) {
         setStandards(json.data);
         setConfirmResetOpen(false);
         showToast?.({
-          title: "Restored",
-          description: "Service turnaround standards reset to ARTA RA 11032 defaults (3-7-20).",
+          title: "Defaults Restored",
+          description: "Service turnaround standards reset to ARTA RA 11032 statutory defaults (3-7-20).",
         });
       } else {
         showToast?.({ title: "Failed", description: json?.error || "Could not reset standards." }, true);
@@ -220,13 +266,13 @@ export default function ServiceStandardsTab({ showToast }) {
   }
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-1 flex-col min-h-full w-full gap-6 pb-6">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6 select-none">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-clock-countdown"
           title="Processing Time Standards"
           description="Configure turnaround time standards and compliance rules for document processing."
-          showBorder={false}
+          showBorder={true}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
@@ -243,32 +289,30 @@ export default function ServiceStandardsTab({ showToast }) {
                 variant="outline"
                 onClick={() => setConfirmResetOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Restore
+                Restore Defaults
               </Button>
 
               <Button
                 type="button"
                 onClick={() => setConfirmSaveOpen(true)}
                 disabled={!isModified || saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {saving ? "Saving..." : "Save Standards"}
+                {saving ? "Saving Changes..." : "Save Standards"}
               </Button>
             </div>
           }
         />
 
-        <div className="h-px bg-gray-100 dark:bg-white/5" />
-
-        <CardContent className="p-6 flex flex-col gap-6">
+        <CardContent className="p-6 flex flex-[1_0_auto] flex-col gap-6">
           {/* Preset Segmented Control */}
           <div className="flex flex-col gap-2.5">
-            <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
               Turnaround Framework Presets
             </span>
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border overflow-x-auto">
+            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 overflow-x-auto">
               {PRESETS.map((p) => {
                 const isSelected = activePreset?.id === p.id;
                 return (
@@ -277,10 +321,10 @@ export default function ServiceStandardsTab({ showToast }) {
                     type="button"
                     onClick={() => handleApplyPreset(p)}
                     className={cn(
-                      "flex-1 min-w-[130px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap text-center",
+                      "flex-1 min-w-[130px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap text-center select-none active:scale-[0.98]",
                       isSelected
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                     )}
                   >
                     {p.name}
@@ -290,11 +334,16 @@ export default function ServiceStandardsTab({ showToast }) {
             </div>
 
             {/* Active Preset Context Banner */}
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border dark:border-border text-xs">
-              <span className="text-gray-600 dark:text-zinc-400 text-[12px] leading-relaxed">
-                {activePreset?.description}
-              </span>
-              <span className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-border/80 dark:border-border shrink-0 ml-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border/70 text-xs">
+              <div className="flex items-start gap-2.5">
+                <div className="h-6 w-6 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                  <HugeIcon className="ph-bold ph-info text-xs" />
+                </div>
+                <span className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
+                  {activePreset?.description}
+                </span>
+              </div>
+              <span className="text-xs font-mono font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-1 rounded-lg border border-border/70 shrink-0 self-start sm:self-auto shadow-2xs">
                 {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
               </span>
             </div>
@@ -304,7 +353,7 @@ export default function ServiceStandardsTab({ showToast }) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
             {/* Left Column: Form & Steppers (7 cols) */}
             <div className="lg:col-span-7 flex flex-col gap-5">
-              <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Turnaround Rules & Tier Limits
               </span>
 
@@ -336,7 +385,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     Business Days (Monday – Friday) Only
                   </span>
-                  <span className="text-[11px] text-gray-900 dark:text-zinc-300 leading-normal">
+                  <span className="text-[11px] text-gray-500 dark:text-zinc-400 leading-normal">
                     Excludes Saturdays and Sundays from deadline calculations. Disable to count consecutive calendar days.
                   </span>
                 </div>
@@ -353,13 +402,13 @@ export default function ServiceStandardsTab({ showToast }) {
               </div>
 
               {/* Tier Stepper Rows */}
-              <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-card divide-y divide-border dark:divide-border overflow-hidden">
+              <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card divide-y divide-border/60 overflow-hidden shadow-2xs">
                 {/* Simple */}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Simple Transaction
                       </span>
                       <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/50">
@@ -371,25 +420,13 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 ml-4">
-                    <button
-                      type="button"
-                      onClick={() => adjustDays("simpleDays", -1, 1, standards.complexDays)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 text-xs font-bold"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 text-center font-bold text-xs text-gray-900 dark:text-zinc-50">
-                      {standards.simpleDays}d
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => adjustDays("simpleDays", 1, 1, standards.complexDays)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 text-xs font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <DayStepper
+                    value={standards.simpleDays}
+                    min={1}
+                    max={standards.complexDays}
+                    onAdjust={(delta) => adjustDays("simpleDays", delta, 1, standards.complexDays)}
+                    label="Simple"
+                  />
                 </div>
 
                 {/* Complex */}
@@ -397,7 +434,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-amber-500" />
-                      <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Complex Transaction
                       </span>
                       <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/50">
@@ -409,25 +446,13 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 ml-4">
-                    <button
-                      type="button"
-                      onClick={() => adjustDays("complexDays", -1, standards.simpleDays, standards.highlyTechnicalDays)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 text-xs font-bold"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 text-center font-bold text-xs text-gray-900 dark:text-zinc-50">
-                      {standards.complexDays}d
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => adjustDays("complexDays", 1, standards.simpleDays, standards.highlyTechnicalDays)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 text-xs font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <DayStepper
+                    value={standards.complexDays}
+                    min={standards.simpleDays}
+                    max={standards.highlyTechnicalDays}
+                    onAdjust={(delta) => adjustDays("complexDays", delta, standards.simpleDays, standards.highlyTechnicalDays)}
+                    label="Complex"
+                  />
                 </div>
 
                 {/* Highly Technical */}
@@ -435,7 +460,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-purple-500" />
-                      <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Technical Transaction
                       </span>
                       <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-full border border-purple-200/50">
@@ -447,106 +472,131 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0 ml-4">
-                    <button
-                      type="button"
-                      onClick={() => adjustDays("highlyTechnicalDays", -1, standards.complexDays, 180)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 text-xs font-bold"
-                    >
-                      −
-                    </button>
-                    <span className="w-10 text-center font-bold text-xs text-gray-900 dark:text-zinc-50">
-                      {standards.highlyTechnicalDays}d
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => adjustDays("highlyTechnicalDays", 1, standards.complexDays, 180)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 text-xs font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <DayStepper
+                    value={standards.highlyTechnicalDays}
+                    min={standards.complexDays}
+                    max={180}
+                    onAdjust={(delta) => adjustDays("highlyTechnicalDays", delta, standards.complexDays, 180)}
+                    label="Technical"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Right Column: Live Simulator (5 cols) */}
             <div className="lg:col-span-5 flex flex-col gap-3">
-              <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Fulfillment Schedule Simulation
               </span>
 
-              <div className="rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/20 p-5 flex flex-col gap-4">
-                <div className="flex items-center justify-between pb-3 border-b border-border/70 dark:border-border">
+              <div className="rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/20 p-5 flex flex-col gap-4 shadow-2xs">
+                <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                       Live Delivery Simulator
                     </span>
                   </div>
-                  <span className="text-[11px] text-gray-900 dark:text-zinc-300 font-medium">
+                  <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-medium">
                     Filed {formatCharterDeadline(sampleNow)}
                   </span>
                 </div>
 
                 {/* Milestone 1: Simple */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-border dark:border-border">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                      Simple Tier ({standards.simpleDays} {unitSuffix})
-                    </span>
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                      Estimated Completion
-                    </span>
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0 border border-emerald-100 dark:border-emerald-900/30">
+                      <HugeIcon className="ph-duotone ph-file-text text-base" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          Simple Tier
+                        </span>
+                        <span className="text-[10px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.2 rounded-full border border-emerald-200/50">
+                          {standards.simpleDays} {unitSuffix}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        Estimated Completion
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono text-right">
                     {formatCharterDeadline(simpleDeadline)}
                   </span>
                 </div>
 
                 {/* Milestone 2: Complex */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-border dark:border-border">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                      Complex Tier ({standards.complexDays} {unitSuffix})
-                    </span>
-                    <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                      Estimated Completion
-                    </span>
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center text-sm shrink-0 border border-amber-100 dark:border-amber-900/30">
+                      <HugeIcon className="ph-duotone ph-archive text-base" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          Complex Tier
+                        </span>
+                        <span className="text-[10px] font-mono font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.2 rounded-full border border-amber-200/50">
+                          {standards.complexDays} {unitSuffix}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        Estimated Completion
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono text-right">
                     {formatCharterDeadline(complexDeadline)}
                   </span>
                 </div>
 
                 {/* Milestone 3: Technical */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card border border-border dark:border-border">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                      Technical Tier ({standards.highlyTechnicalDays} {unitSuffix})
-                    </span>
-                    <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-                      Estimated Completion
-                    </span>
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 flex items-center justify-center text-sm shrink-0 border border-purple-100 dark:border-purple-900/30">
+                      <HugeIcon className="ph-duotone ph-certificate text-base" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                          Technical Tier
+                        </span>
+                        <span className="text-[10px] font-mono font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-1.5 py-0.2 rounded-full border border-purple-200/50">
+                          {standards.highlyTechnicalDays} {unitSuffix}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        Estimated Completion
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono text-right">
                     {formatCharterDeadline(technicalDeadline)}
                   </span>
                 </div>
 
                 {/* Active Rule Summary Card */}
-                <div className="p-3 rounded-xl bg-slate-900 text-white dark:bg-zinc-800 text-[11px] leading-relaxed flex flex-col gap-1">
+                <div className="p-4 rounded-xl bg-slate-900 text-white dark:bg-zinc-800/90 border border-slate-800 dark:border-zinc-700/60 shadow-xs flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-100 dark:text-zinc-100">
-                      {standards.frameworkName}
-                    </span>
-                    <span className="text-[10px] text-slate-300 dark:text-zinc-400 uppercase tracking-wider font-semibold">
+                    <div className="flex items-center gap-2">
+                      <HugeIcon className="ph-bold ph-shield-check text-sm text-emerald-400" />
+                      <span className="font-semibold text-xs text-white">
+                        {standards.frameworkName}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-zinc-300 dark:text-zinc-400 font-medium px-2 py-0.5 rounded-full bg-white/10 dark:bg-white/5 border border-white/10">
                       {standards.workingDaysOnly ? "Working Days" : "Calendar Days"}
                     </span>
                   </div>
-                  <span className="text-slate-300 dark:text-zinc-400 text-[11px]">
-                    Simple: {standards.simpleDays}d · Complex: {standards.complexDays}d · Technical: {standards.highlyTechnicalDays}d
-                  </span>
+                  <div className="flex items-center gap-2 text-xs text-zinc-300 dark:text-zinc-400 pt-1 border-t border-white/10">
+                    <span>Simple: <strong className="text-white font-mono">{standards.simpleDays}d</strong></span>
+                    <span>·</span>
+                    <span>Complex: <strong className="text-white font-mono">{standards.complexDays}d</strong></span>
+                    <span>·</span>
+                    <span>Technical: <strong className="text-white font-mono">{standards.highlyTechnicalDays}d</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -554,26 +604,32 @@ export default function ServiceStandardsTab({ showToast }) {
         </CardContent>
       </Card>
 
-      {/* Confirmation Modals - Action Only Word & No Header Icon */}
+      {/* Confirmation Modals - Action Verb + Specific Noun */}
       <ConfirmModal
         open={confirmSaveOpen}
-        onOpenChange={setConfirmSaveOpen}
+        onCancel={() => setConfirmSaveOpen(false)}
         isAppleStyled={true}
         title="Apply Service Standards"
-        message={`Save "${standards.frameworkName}" (${standards.simpleDays}-${standards.complexDays}-${standards.highlyTechnicalDays} ${standards.workingDaysOnly ? "working" : "calendar"} days) as the active institutional turnaround standard?`}
-        confirmText="Save"
+        message={`Save "${standards.frameworkName}" (${standards.simpleDays}-${standards.complexDays}-${standards.highlyTechnicalDays} ${standards.workingDaysOnly ? "working" : "calendar"} days) as the active institutional turnaround standard for student document processing?`}
+        confirmLabel="Save Standards"
         cancelLabel="Cancel"
+        variant="brand"
+        isLoading={saving}
         onConfirm={handleSave}
       />
 
       <ConfirmModal
         open={confirmResetOpen}
-        onOpenChange={setConfirmResetOpen}
+        onCancel={() => setConfirmResetOpen(false)}
         isAppleStyled={true}
-        title="Restore ARTA Standard"
-        message="Restore turnaround limits to Philippine Republic Act No. 11032 statutory defaults (3-7-20 working days)?"
-        confirmText="Restore"
+        isRestoreModal={true}
+        title="Restore Default Standards"
+        message="Are you sure you want to restore the turnaround limits to Philippine Republic Act No. 11032 (ARTA) statutory defaults (3-7-20 working days)? Any custom rules will be replaced."
+        confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
+        variant="warning"
+        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        isLoading={saving}
         onConfirm={handleReset}
       />
     </div>

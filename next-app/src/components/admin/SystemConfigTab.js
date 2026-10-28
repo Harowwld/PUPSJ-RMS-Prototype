@@ -987,8 +987,8 @@ export default function SystemConfigTab({
 
   if (activeError) {
     return (
-      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-6">
-        <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-border mb-4">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
+        <Card className="flex flex-[1_0_auto] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-border">
           <CardContent className="flex flex-col p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
               <EmptyHeader className="flex flex-col items-center gap-0">
@@ -1011,95 +1011,95 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-jakarta flex w-full flex-col gap-4 pb-6">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-4">
         <Tabs
           defaultValue="document-types"
           value={activeSubTab}
           onValueChange={setActiveSubTab}
-          className="flex flex-col gap-4 w-full"
+          className="flex flex-[1_0_auto] flex-col w-full"
         >
-          {/* Top Section Switcher Pill */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("document-types")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                activeSubTab === "document-types"
-                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <HugeIcon className="ph-bold ph-files text-sm" />
-              <span>Document Types</span>
-            </button>
+          <Card className="p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-[1_0_auto] flex-col isolate font-jakarta">
+            {/* Top Section Switcher Bar inside One-Card Container */}
+            <div className="flex items-center px-6 py-3.5 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30 rounded-t-2xl">
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border/80 dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("document-types")}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                    activeSubTab === "document-types"
+                      ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                      : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-files text-sm" />
+                  <span>Document Types</span>
+                </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("degree-programs")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                activeSubTab === "degree-programs"
-                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <HugeIcon className="ph-bold ph-graduation-cap text-sm" />
-              <span>Degree Programs</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("degree-programs")}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                    activeSubTab === "degree-programs"
+                      ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                      : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-graduation-cap text-sm" />
+                  <span>Degree Programs</span>
+                </button>
 
-            {!isOsas && (
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("course-blocks")}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                  activeSubTab === "course-blocks"
-                    ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                {!isOsas && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubTab("course-blocks")}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                      activeSubTab === "course-blocks"
+                        ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                        : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                    )}
+                  >
+                    <HugeIcon className="ph-bold ph-users-three text-sm" />
+                    <span>Course Blocks</span>
+                  </button>
                 )}
-              >
-                <HugeIcon className="ph-bold ph-users-three text-sm" />
-                <span>Course Blocks</span>
-              </button>
-            )}
 
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("bulk-import")}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                    activeSubTab === "bulk-import"
+                      ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                      : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-file-arrow-up text-sm" />
+                  <span>Imports</span>
+                </button>
 
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("recognition-templates")}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
+                    activeSubTab === "recognition-templates"
+                      ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
+                      : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
+                  )}
+                >
+                  <HugeIcon className="ph-bold ph-scan text-sm" />
+                  <span>OCR Configuration</span>
+                </button>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("bulk-import")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                activeSubTab === "bulk-import"
-                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <HugeIcon className="ph-bold ph-file-arrow-up text-sm" />
-              <span>Imports</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("recognition-templates")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border-0",
-                activeSubTab === "recognition-templates"
-                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <HugeIcon className="ph-bold ph-scan text-sm" />
-              <span>OCR Configuration</span>
-            </button>
-          </div>
-
-          <Card className="p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-col isolate font-jakarta mb-4">
-            <div className="relative flex flex-col p-0 w-full">
+            <div className="relative flex flex-[1_0_auto] flex-col p-0 w-full">
               <TabsContent
                 value="document-types"
-                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+                className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
               >
                 <DocTypesTab
                   loading={loading}
@@ -1131,13 +1131,13 @@ export default function SystemConfigTab({
 
               </TabsContent>
 
-              <TabsContent value="recognition-templates" className="m-0 flex flex-col border-0 focus-visible:ring-0">
+              <TabsContent value="recognition-templates" className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0">
                 <RecognitionTemplatesTab showToast={showToast} />
               </TabsContent>
 
               <TabsContent
                 value="degree-programs"
-                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+                className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
               >
                 <CoursesTab
                   loading={loading}
@@ -1169,7 +1169,7 @@ export default function SystemConfigTab({
 
               <TabsContent
                 value="course-blocks"
-                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+                className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
               >
                 <SectionsTab
                   loading={loading}
@@ -1205,7 +1205,7 @@ export default function SystemConfigTab({
 
               <TabsContent
                 value="bulk-import"
-                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+                className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
               >
                 <BulkImportTab
                   importStatus={importStatus}

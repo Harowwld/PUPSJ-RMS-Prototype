@@ -370,8 +370,6 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                   onChange={handleDayChange}
                   disabled={isSaving}
                   className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
-                  menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                  optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   {DAY_LABELS.map((day, idx) => (
                     <option key={idx} value={idx}>
@@ -401,8 +399,6 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 onChange={handleTimeChange}
                 disabled={isSaving}
                 className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 cursor-pointer shadow-none hover:bg-gray-50 dark:hover:bg-zinc-700"
-                menuClassName="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 shadow-2xl p-1.5"
-                optionClassName="rounded-lg text-xs font-medium py-1.5 px-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
               >
                 {HOUR_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

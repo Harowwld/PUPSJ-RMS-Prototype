@@ -142,10 +142,10 @@ export default function StorageExplorerTab({
   return (
     <div
       id="view-storage"
-      className="animate-fade-up font-jakarta flex h-auto w-full flex-col gap-6"
+      className="animate-fade-up font-jakarta flex flex-[1_0_auto] h-auto w-full flex-col gap-6"
     >
       {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta min-h-0 flex-1 mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-folder-open"
           title="Storage Explorer"
@@ -249,12 +249,12 @@ export default function StorageExplorerTab({
             </div>
 
             {/* Level Inner Content */}
-            <div className="flex w-full flex-col min-h-0 flex-1 mx-auto pt-6 bg-white dark:bg-card rounded-b-2xl">
+            <div className="flex w-full flex-col flex-[1_0_auto] mx-auto pt-6 bg-white dark:bg-card rounded-b-2xl">
               {loading ? (
               <StorageExplorerSkeleton />
             ) : locatorModel?.kind === "rooms" ? (
-              <div className="flex flex-col w-full">
-                <div className="px-8 pb-8 w-full">
+              <div className="flex flex-[1_0_auto] flex-col w-full">
+                <div className="px-8 pb-8 w-full flex-[1_0_auto]">
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 w-full">
                     {(() => {
                       const hasActiveTarget = (locatorModel?.rooms || []).some((room) => room.isTarget)

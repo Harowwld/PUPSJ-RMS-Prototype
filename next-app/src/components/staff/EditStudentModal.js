@@ -359,7 +359,7 @@ export default function EditStudentModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+              className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">

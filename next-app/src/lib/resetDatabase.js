@@ -5,18 +5,87 @@ import { buildDefaultStorageLayout, buildDefaultOsasStorageLayout } from "./stor
 import { hashPassword } from "./passwordHash.js";
 import { encryptPII } from "./piiEncryption.js";
 import { invalidateOcrStudentRoster } from "./ocrStudentRoster.js";
+import { clearDynamicOffices } from "./roleUtils.js";
 
-export async function resetDatabase() {
+/**
+ * Wipes all application tables in the database without seeding extra data.
+ * Resets departments and stations back to the pristine baseline (registrar & osas).
+ * Seeds strictly the 7 default demo accounts (5 personnel + 2 student accounts)
+ * and essential system settings (storage layouts, security questions).
+ */
+export async function resetDatabase({ demoAccountsOnly = false } = {}) {
   invalidateOcrStudentRoster();
+  clearDynamicOffices();
+
   await transaction(async ({ query: txQuery }) => {
-    await txQuery(`TRUNCATE TABLE
-      auth_refresh_tokens, auth_sessions, auth_session_versions, auth_session_revocations,
-      transaction_updates, event_proposals, document_requests, documents,
-      student_identity_link_reviews, student_accounts, student_office_memberships,
-      students, student_identity_profiles, staff, global_audit_logs, backups,
-      staff_notification_item_states, staff_notification_state, settings,
-      notifications, staff_notification_reads
-      RESTART IDENTITY CASCADE`);
+    const result = await txQuery(`
+      SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY tablename) AS tables
+      FROM pg_tables
+      WHERE schemaname = 'public'
+        AND tablename NOT IN ('schema_migrations', 'modules')
+    `);
+    if (result.rows[0]?.tables) {
+      await txQuery(`TRUNCATE TABLE ${result.rows[0].tables} RESTART IDENTITY CASCADE`);
+    }
+
+    // Seed default baseline institutional offices with pristine hardware stations
+    await txQuery(`
+      INSERT INTO offices (
+        id, name, short_name, description, icon, accent_color,
+        status, station_name, storage_path, inbound_path, ingest_token,
+        scanner_model, last_station_ping, ingest_paused, created_at, updated_at
+      ) VALUES
+      (
+        'registrar',
+        'Office of the Registrar',
+        'Registrar',
+        'Manages student academic records and document requests',
+        'ph-bold ph-certificate',
+        '#E5484D',
+        'Active',
+        'REG-ARCHIVE-PC01',
+        '.local/storage/registrar/uploads',
+        '.local/hot-folder/INBOUND',
+        NULL,
+        'Fujitsu fi-7160 Batch Duplex',
+        NULL,
+        FALSE,
+        NOW(),
+        NOW()
+      ),
+      (
+        'osas',
+        'Office of Student Affairs and Services',
+        'OSAS',
+        'Manages student affairs records and event proposals',
+        'ph-bold ph-student',
+        '#3B82F6',
+        'Active',
+        'OSAS-OPERATIONS-PC01',
+        '.local/storage/osas/uploads',
+        '.local/hot-folder/INBOUND',
+        NULL,
+        'Canon imageFORMULA Flatbed/ADF',
+        NULL,
+        FALSE,
+        NOW(),
+        NOW()
+      )
+    `);
+
+    // Seed default baseline office_modules
+    await txQuery(`
+      INSERT INTO office_modules (office_id, module_id, enabled, updated_at)
+      SELECT o.id, m.id,
+        CASE
+          WHEN o.id = 'registrar' AND m.id IN ('osas_monitoring', 'student_organizations') THEN FALSE
+          WHEN o.id = 'osas' AND m.id IN ('document_requests', 'request_analytics', 'student_directory') THEN FALSE
+          ELSE TRUE
+        END,
+        NOW()
+      FROM offices o
+      CROSS JOIN modules m
+    `);
   });
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
@@ -86,101 +155,7 @@ export async function resetDatabase() {
     password: defaultPassword,
   });
 
-  // Baseline courses, sections, and document types
-  for (const [code, name] of [
-    ["BSIT", "Bachelor of Science in Information Technology"],
-    ["BSCS", "Bachelor of Science in Computer Science"],
-  ]) {
-    await query(
-      `INSERT INTO courses (office_id, code, name, status)
-       VALUES ('registrar', $1, $2, 'Active')
-       ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`,
-      [code, name]
-    );
-  }
-  for (const [name, code] of [
-    ["BSIT-4A", "BSIT"],
-    ["BSIT-4B", "BSIT"],
-    ["BSCS-3A", "BSCS"],
-  ]) {
-    await query(
-      `INSERT INTO sections (office_id, name, course_code, status)
-       VALUES ('registrar', $1, $2, 'Active')
-       ON CONFLICT (office_id, name, course_code) DO UPDATE SET status='Active'`,
-      [name, code]
-    );
-  }
-  const registrarDocTypes = [
-    { name: "PSA Birth Certificate", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
-    { name: "Birth Certificate", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
-    { name: "CAEPUP Application Form", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
-    { name: "SAR Form", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
-    { name: "Undertaking and Waiver of Right", isCompliance: true, isRequestable: false, category: "Admission & Identity" },
-    { name: "Form 137", isCompliance: true, isRequestable: false, category: "Academic Records" },
-    { name: "Grade 11 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
-    { name: "Grade 12 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
-    { name: "CTC Grade 10 Report Card", isCompliance: true, isRequestable: false, category: "Academic Records" },
-    { name: "Health Information Sheet", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
-    { name: "Certificate of Good Moral Character", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
-    { name: "Certified True Copy of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
-    { name: "Certificate of Transfer Credentials (Honorable Dismissal)", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
-    { name: "Certificate of Enrollment", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Certificate of Registration", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Certification of Grades (Cross-Enrollee)", isCompliance: false, isRequestable: true, category: "Academic Records" },
-    { name: "Transcript of Records", isCompliance: false, isRequestable: true, category: "Academic Records" },
-    { name: "Diploma", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
-    { name: "Certificate of Graduation", isCompliance: false, isRequestable: true, category: "Graduation & Exit Records" },
-    { name: "Certificate of Good Moral", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Clearance Form", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-  ];
-  for (const dt of registrarDocTypes) {
-    await query(
-      `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
-       VALUES ('registrar', $1, $2, 'Active', $3, $4, $5)
-       ON CONFLICT (office_id, name_norm) DO UPDATE SET
-         name = EXCLUDED.name,
-         status = 'Active',
-         is_compliance = EXCLUDED.is_compliance,
-         is_requestable = EXCLUDED.is_requestable,
-         compliance_category = EXCLUDED.compliance_category`,
-      [dt.name, dt.name.toLowerCase(), dt.isCompliance, dt.isRequestable, dt.category]
-    );
-  }
-
-  for (const [code, name] of [["BSA", "Bachelor of Science in Accountancy"]]) {
-    await query(
-      `INSERT INTO courses (office_id, code, name, status)
-       VALUES ('osas', $1, $2, 'Active')
-       ON CONFLICT (office_id, code) DO UPDATE SET name=EXCLUDED.name, status='Active'`,
-      [code, name]
-    );
-  }
-  await query(`DELETE FROM sections WHERE office_id = 'osas'`);
-  const osasDocTypes = [
-    { name: "Event Proposal", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
-    { name: "Constitution & By-Laws (CBL)", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
-    { name: "Activity Request", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
-    { name: "Financial Liquidation Report", isCompliance: true, isRequestable: false, category: "Student Governance & Activities" },
-    { name: "Student Disciplinary Clearance", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Organization Registration Certificate", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Good Moral Certificate", isCompliance: false, isRequestable: true, category: "Certificates & Clearances" },
-    { name: "Clearance Form", isCompliance: true, isRequestable: false, category: "Certificates & Clearances" },
-  ];
-  for (const dt of osasDocTypes) {
-    await query(
-      `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
-       VALUES ('osas', $1, $2, 'Active', $3, $4, $5)
-       ON CONFLICT (office_id, name_norm) DO UPDATE SET
-         name = EXCLUDED.name,
-         status = 'Active',
-         is_compliance = EXCLUDED.is_compliance,
-         is_requestable = EXCLUDED.is_requestable,
-         compliance_category = EXCLUDED.compliance_category`,
-      [dt.name, dt.name.toLowerCase(), dt.isCompliance, dt.isRequestable, dt.category]
-    );
-  }
-
-  // Ensure security questions and pre-seed recovery answers
+  // Ensure security questions and pre-seed recovery answers for staff
   const securityQuestions = [
     [1, "What is your mother's maiden name?", true],
     [2, "What was the name of your first school?", true],
@@ -213,12 +188,11 @@ export async function resetDatabase() {
     }
   }
 
-  // Seed students & student accounts for demo
+  // 6 & 7. Seed 2 students & student accounts for demo
   const studentHash = hashPassword("student123");
   const demoStudents = [
-    ["2022-10001-MN-1", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
-    ["2023-00001-IT-1", "TEST STUDENT", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
-    ["2021-00123-SJ-0", "MARIANO, CEDRICK", "BSIT", 4, "BSIT-4A", "marianocedrick412@gmail.com"],
+    ["2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
+    ["2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
   ];
 
   for (const [sNo, sName, cCode, yLevel, sSec, sEmail] of demoStudents) {
@@ -238,10 +212,11 @@ export async function resetDatabase() {
     const encryptedName = encryptPII(sName);
 
     await query(
-      `INSERT INTO students (student_no, name, course_code, year_level, section, status)
-       VALUES ($1, $2, $3, $4, $5, 'Active')
+      `INSERT INTO students (student_no, name, course_code, year_level, section, status, storage_room, storage_cabinet, storage_drawer)
+       VALUES ($1, $2, $3, $4, $5, 'Active', 1, 'A', 1)
        ON CONFLICT (student_no) DO UPDATE SET name = EXCLUDED.name, course_code = EXCLUDED.course_code,
-         year_level = EXCLUDED.year_level, section = EXCLUDED.section, status = 'Active', updated_at = NOW()`,
+         year_level = EXCLUDED.year_level, section = EXCLUDED.section, status = 'Active',
+         storage_room = 1, storage_cabinet = 'A', storage_drawer = 1, updated_at = NOW()`,
       [sNo, encryptedName, cCode, yLevel, sSec]
     );
     await query(

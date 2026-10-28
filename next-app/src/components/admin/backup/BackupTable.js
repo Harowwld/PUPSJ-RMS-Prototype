@@ -2,6 +2,9 @@
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import { Button } from "@/components/ui/button"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import useTableScroll from "@/hooks/useTableScroll"
+import { useEffect } from "react"
 import {
   Empty,
   EmptyHeader,
@@ -90,6 +93,18 @@ export default function BackupTable({
   scope = "office",
   externalDriveConnected = false,
 }) {
+  const {
+    containerRef: tableContainerRef,
+    isScrolledX,
+    scrollLeft,
+    scrollRight,
+    resetScroll,
+  } = useTableScroll([sortedAndPaginatedBackups.length]);
+
+  useEffect(() => {
+    resetScroll();
+  }, [page, sortBy, sortOrder, resetScroll]);
+
   return (
     <>
       {sortedAndPaginatedBackups.length === 0 ? (
@@ -124,7 +139,7 @@ export default function BackupTable({
               ) : (
                 <Button
                   onClick={handleGenerateBackup}
-                  className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Create Backup
                 </Button>
@@ -133,289 +148,332 @@ export default function BackupTable({
           </Empty>
         </div>
       ) : (
-        <div
-          className={cn(
-            "w-full overflow-x-auto select-none isolate"
-          )}
-        >
-          <table className="w-full text-sm table-fixed min-w-[850px]">
-            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400 select-none">
-                <th className="w-12 p-4 text-center align-middle">
-                  <input
-                    type="checkbox"
-                    className={cn(
-                      "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                      backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
-                    )}
-                    checked={
-                      backups.length > 0 &&
-                      backups.every((b) => selectedBackupIds.includes(b.id))
-                    }
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    disabled={backups.length === 0}
-                  />
-                </th>
-                <th className="p-4 w-[36%]">
-                  <button
-                    onClick={() => handleSort("filename")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "filename" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Backup Archive{" "}
-                    <SortIndicator
-                      column="filename"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
+        <div className="w-full flex-[1_0_auto] flex flex-col">
+          <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
+            <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              Showing {sortedAndPaginatedBackups.length} of {backups.length} {backups.length === 1 ? "backup" : "backups"}
+            </span>
+            <TableScrollControls
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetScroll}
+              isScrolled={isScrolledX}
+            />
+          </div>
+
+          <div
+            ref={tableContainerRef}
+            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none isolate"
+          >
+            <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                  <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
+                    <input
+                      type="checkbox"
+                      className={cn(
+                        "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                        backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
+                      )}
+                      checked={
+                        backups.length > 0 &&
+                        backups.every((b) => selectedBackupIds.includes(b.id))
+                      }
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      disabled={backups.length === 0}
                     />
-                  </button>
-                </th>
-                <th className="p-4 w-[14%] text-center">
-                  <button
-                    onClick={() => handleSort("size_bytes")}
-                    className={cn(
-                      "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "size_bytes" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Size{" "}
-                    <SortIndicator
-                      column="size_bytes"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                    />
-                  </button>
-                </th>
-                <th className="p-4 w-[18%]">
-                  <button
-                    onClick={() => handleSort("created_at")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                      sortBy === "created_at" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Creation Date{" "}
-                    <SortIndicator
-                      column="created_at"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                    />
-                  </button>
-                </th>
-                {scope === "office" ? (
-                  <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                    <div className="inline-flex items-center justify-center gap-1.5">
-                      <span>Backup Copies</span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HugeIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs text-xs font-normal">
-                          Shows where this backup is safely stored: on Internal Storage and an External Drive.
-                        </TooltipContent>
-                      </Tooltip>
+                  </th>
+                  <th className={cn(
+                    "p-4 w-[36%] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                  )}>
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => handleSort("filename")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "filename" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Backup Archive{" "}
+                        <SortIndicator
+                          column="filename"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                      {isScrolledX && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            resetScroll();
+                          }}
+                          title="Reset scroll to start"
+                          aria-label="Reset scroll to start"
+                          className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
+                        >
+                          <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                        </button>
+                      )}
                     </div>
                   </th>
-                ) : (
-                  <th className="p-4 w-[22%] text-center text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                    Status
-                  </th>
-                )}
-                <th className="p-4 pr-6 w-28 text-right text-[12px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border dark:divide-border">
-              {sortedAndPaginatedBackups.map((b) => {
-                if (!b) return null;
-                const isSelected = selectedBackupIds.includes(b.id);
-                return (
-                  <tr
-                    key={b.id}
-                    className={cn(
-                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
-                        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
-                    )}
-                    onClick={(e) => {
-                      if (e.target.closest("button") || e.target.closest("input")) return
-                      handleToggleRow(b.id)
-                    }}
-                  >
-                    <td className="w-12 p-4 align-middle text-center">
-                      <input
-                        type="checkbox"
-                        className={cn(
-                          "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                          isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                        )}
-                        checked={isSelected}
-                        onChange={() => handleToggleRow(b.id)}
+                  <th className="p-4 w-[14%] text-center border-r border-border/80 dark:border-border">
+                    <button
+                      onClick={() => handleSort("size_bytes")}
+                      className={cn(
+                        "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "size_bytes" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Size{" "}
+                      <SortIndicator
+                        column="size_bytes"
+                        sortBy={sortBy}
+                        sortOrder={sortOrder}
                       />
-                    </td>
-                    <td className="p-4 align-middle overflow-hidden">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]" title={b.filename}>
-                          {b.filename}
-                        </span>
-                        {getBackupTypeBadge(b)}
+                    </button>
+                  </th>
+                  <th className="p-4 w-[18%] border-r border-border/80 dark:border-border">
+                    <button
+                      onClick={() => handleSort("created_at")}
+                      className={cn(
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        sortBy === "created_at" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                      )}
+                    >
+                      Creation Date{" "}
+                      <SortIndicator
+                        column="created_at"
+                        sortBy={sortBy}
+                        sortOrder={sortOrder}
+                      />
+                    </button>
+                  </th>
+                  {scope === "office" ? (
+                    <th className="p-4 w-[22%] text-center border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      <div className="inline-flex items-center justify-center gap-1.5">
+                        <span>Backup Copies</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HugeIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-xs font-normal">
+                            Shows where this backup is safely stored: on Internal Storage and an External Drive.
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
-                    </td>
-                    <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100">
-                      {formatBytes(b.size_bytes)}
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 leading-tight">
-                          {formatPHDateTime(b.created_at).split(' at ')[0]}
-                        </span>
-                        <span className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">
-                          {formatPHDateTime(b.created_at).split(' at ')[1]}
-                        </span>
-                      </div>
-                    </td>
-                    {scope === "office" ? (
-                      <td className="p-4 align-middle text-center">
-                        <div className="flex mx-auto w-fit items-center justify-center gap-2">
-                          {/* Node 1: Internal Storage */}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div
-                                className={cn(
-                                  "inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
-                                  b.status_local === "Success"
-                                    ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
-                                    : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
-                                )}
-                              >
-                                <HugeIcon  className="ph-bold ph-hard-drive text-[11px]" />
-                                <span>Internal Storage</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-xs">
-                              <p className="font-semibold">Internal Storage</p>
-                              <p className="text-[11px] opacity-80">
-                                {b.status_local === "Success"
-                                    ? "Backup safely saved on internal system storage"
-                                  : "Preparing backup"}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {/* Node 2: External Hard Drive */}
-                          {b.status_external === "Success" ? (
+                    </th>
+                  ) : (
+                    <th className="p-4 w-[22%] text-center border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                      Status
+                    </th>
+                  )}
+                  <th className="p-4 pr-6 w-28 text-right text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                {sortedAndPaginatedBackups.map((b) => {
+                  if (!b) return null;
+                  const isSelected = selectedBackupIds.includes(b.id);
+                  return (
+                    <tr
+                      key={b.id}
+                      className={cn(
+                          "group hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
+                          isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                      )}
+                      onClick={(e) => {
+                        if (e.target.closest("button") || e.target.closest("input")) return
+                        handleToggleRow(b.id)
+                      }}
+                    >
+                      <td className={cn(
+                        "w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 transition-colors",
+                        isSelected
+                          ? "bg-blue-50 dark:bg-blue-950"
+                          : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40"
+                      )}>
+                        <input
+                          type="checkbox"
+                          className={cn(
+                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                          )}
+                          checked={isSelected}
+                          onChange={() => handleToggleRow(b.id)}
+                        />
+                      </td>
+                      <td className={cn(
+                        "p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
+                        isSelected
+                          ? "bg-blue-50 dark:bg-blue-950"
+                          : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                      )}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]" title={b.filename}>
+                            {b.filename}
+                          </span>
+                          {getBackupTypeBadge(b)}
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                        {formatBytes(b.size_bytes)}
+                      </td>
+                      <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 leading-tight">
+                            {formatPHDateTime(b.created_at).split(' at ')[0]}
+                          </span>
+                          <span className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">
+                            {formatPHDateTime(b.created_at).split(' at ')[1]}
+                          </span>
+                        </div>
+                      </td>
+                      {scope === "office" ? (
+                        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                          <div className="flex mx-auto w-fit items-center justify-center gap-2">
+                            {/* Node 1: Internal Storage */}
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
-                                  <HugeIcon  className="ph-bold ph-check-circle text-[11px]" />
-                                  <span>External Drive</span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-xs">
-                                <p className="font-semibold">External Hard Drive</p>
-                                <p className="text-[11px] opacity-80">
-                                  Backup copy verified on your connected external drive
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : !externalDriveConnected ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-border dark:border-border cursor-not-allowed">
-                                  <HugeIcon  className="ph-bold ph-plugs text-[11px]" />
-                                  <span>Drive Offline</span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-xs">
-                                <p className="font-semibold">External Drive Disconnected</p>
-                                <p className="text-[11px] opacity-80">
-                                  Connect an external USB drive and click &quot;Detect&quot; to copy this backup.
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleSyncExternal?.(b.id)
-                                  }}
-                                  disabled={localLoading?.syncingId === b.id}
+                                <div
                                   className={cn(
-                                    "h-[22px] px-2.5 rounded-full text-[11px] font-medium tracking-[0.04em] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border",
-                                    b.status_external === "Failed"
-                                      ? "border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
-                                      : "border-blue-200 dark:border-blue-800/60 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                    "inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
+                                    b.status_local === "Success"
+                                      ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+                                      : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
                                   )}
                                 >
-                                  {localLoading?.syncingId === b.id ? (
-                                    <>
-                                      <HugeIcon  className="ph-bold ph-arrows-clockwise animate-spin text-[11px]" />
-                                      <span>Copying...</span>
-                                    </>
-                                  ) : (
-                                    <span>{b.status_external === "Failed" ? "Retry" : "Copy"}</span>
-                                  )}
-                                </button>
+                                  <HugeIcon  className="ph-bold ph-hard-drive text-[11px]" />
+                                  <span>Internal Storage</span>
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent className="text-xs">
-                                <p className="font-semibold">Save to External Drive</p>
+                                <p className="font-semibold">Internal Storage</p>
                                 <p className="text-[11px] opacity-80">
-                                  Copy this backup to your external hard drive for safekeeping
+                                  {b.status_local === "Success"
+                                      ? "Backup safely saved on internal system storage"
+                                    : "Preparing backup"}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
-                          )}
+
+                            {/* Node 2: External Hard Drive */}
+                            {b.status_external === "Success" ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
+                                    <HugeIcon  className="ph-bold ph-check-circle text-[11px]" />
+                                    <span>External Drive</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">
+                                  <p className="font-semibold">External Hard Drive</p>
+                                  <p className="text-[11px] opacity-80">
+                                    Backup copy verified on your connected external drive
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : !externalDriveConnected ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-border dark:border-border cursor-not-allowed">
+                                    <HugeIcon  className="ph-bold ph-plugs text-[11px]" />
+                                    <span>Drive Offline</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">
+                                  <p className="font-semibold">External Drive Disconnected</p>
+                                  <p className="text-[11px] opacity-80">
+                                    Connect an external USB drive and click &quot;Detect&quot; to copy this backup.
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleSyncExternal?.(b.id)
+                                    }}
+                                    disabled={localLoading?.syncingId === b.id}
+                                    className={cn(
+                                      "h-[22px] px-2.5 rounded-full text-[11px] font-medium tracking-[0.04em] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border",
+                                      b.status_external === "Failed"
+                                        ? "border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+                                        : "border-blue-200 dark:border-blue-800/60 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                    )}
+                                  >
+                                    {localLoading?.syncingId === b.id ? (
+                                      <>
+                                        <HugeIcon  className="ph-bold ph-arrows-clockwise animate-spin text-[11px]" />
+                                        <span>Copying...</span>
+                                      </>
+                                    ) : (
+                                      <span>{b.status_external === "Failed" ? "Retry" : "Copy"}</span>
+                                    )}
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">
+                                  <p className="font-semibold">Save to External Drive</p>
+                                  <p className="text-[11px] opacity-80">
+                                    Copy this backup to your external hard drive for safekeeping
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </td>
+                      ) : (
+                        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                          <div className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                            Ready
+                          </div>
+                        </td>
+                      )}
+                      <td className="p-4 pr-6 text-right align-middle whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => onDownloadBackup(b.id, b.filename)}
+                                aria-label="Download Backup"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                              >
+                                <HugeIcon  className="ph-bold ph-download-simple text-[16px]"></HugeIcon>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Download to computer
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => onDeleteBackup(b.id)}
+                                aria-label="Delete Backup"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                              >
+                                <HugeIcon  className="ph-bold ph-trash text-[16px]"></HugeIcon>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Delete backup
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </td>
-                    ) : (
-                      <td className="p-4 align-middle text-center">
-                        <div className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                          Ready
-                        </div>
-                      </td>
-                    )}
-                    <td className="p-4 pr-6 text-right align-middle whitespace-nowrap">
-                      <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => onDownloadBackup(b.id, b.filename)}
-                              aria-label="Download Backup"
-                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
-                            >
-                              <HugeIcon  className="ph-bold ph-download-simple text-[16px]"></HugeIcon>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Download to computer
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => onDeleteBackup(b.id)}
-                              aria-label="Delete Backup"
-                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
-                            >
-                              <HugeIcon  className="ph-bold ph-trash text-[16px]"></HugeIcon>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Delete backup
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

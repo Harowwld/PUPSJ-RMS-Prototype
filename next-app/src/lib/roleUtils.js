@@ -154,6 +154,13 @@ export function registerOffices(offices) {
 }
 
 /**
+ * Clear all dynamic office metadata from the runtime registry.
+ */
+export function clearDynamicOffices() {
+  dynamicOfficeRegistry.clear();
+}
+
+/**
  * Format an office identifier string into a clean title or uppercase acronym fallback.
  * @param {string} slug
  * @returns {string}

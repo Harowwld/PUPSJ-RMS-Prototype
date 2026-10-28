@@ -9,10 +9,10 @@ export const runtime = "nodejs";
 // Categorization helper for standard requirements
 function getRequirementCategory(name) {
   const n = String(name || "").toLowerCase();
-  if (n.includes("birth") || n.includes("caepup") || n.includes("waiver") || n.includes("undertaking") || n.includes("sar form")) {
+  if (n.includes("birth") || n.includes("caepup") || n.includes("waiver") || n.includes("undertaking") || n.includes("sar form") || n.includes("id")) {
     return "Admission & Identity";
   }
-  if (n.includes("137") || n.includes("report card") || n.includes("grade 10") || n.includes("grade 11") || n.includes("grade 12")) {
+  if (n.includes("137") || n.includes("report card") || n.includes("grade 10") || n.includes("grade 11") || n.includes("grade 12") || n.includes("diploma")) {
     return "Academic Records";
   }
   if (n.includes("good moral") || n.includes("health") || n.includes("clearance") || n.includes("medical")) {
@@ -29,11 +29,17 @@ function getRequirementDescription(name) {
   if (n.includes("caepup")) {
     return "Official College Admission Evaluation confirmation / CAEPUP application slip.";
   }
+  if (n.includes("diploma")) {
+    return "Senior High School Diploma or official Certificate of Graduation indicating completion of secondary education.";
+  }
+  if (n.includes("id")) {
+    return "Clear photocopy of valid student ID or government-issued identification card.";
+  }
   if (n.includes("137")) {
     return "Senior High School Student Permanent Record (SF10-SHS) with Copy for PUP San Juan remarks.";
   }
-  if (n.includes("grade 12 report card")) {
-    return "Senior High School Final Report Card (Form 138 / SF9) showing complete Grade 12 general average.";
+  if (n.includes("grade 12 report card") || n.includes("grade 12")) {
+    return "Senior High School Final Report Card (Form 138 / SF9) showing complete Grade 12 general average (1st and 2nd Semester).";
   }
   if (n.includes("grade 10") || n.includes("grade 11")) {
     return "Certified true copy of Junior / Senior High School academic progress report.";
@@ -61,6 +67,12 @@ function getRequirementInstructions(name) {
   if (n.includes("137")) {
     return "Must be original SF10-SHS sealed with the official dry seal and principal's signature from your previous high school.";
   }
+  if (n.includes("diploma")) {
+    return "Submit a certified true copy or legible photocopy of your Senior High School Diploma or Certificate of Graduation.";
+  }
+  if (n.includes("id")) {
+    return "Provide a clear front-and-back photocopy with legible text and photograph.";
+  }
   if (n.includes("good moral")) {
     return "Must have been issued within the last 6 months bearing the school dry seal and signature.";
   }
@@ -76,6 +88,8 @@ function getNormalizedGroupKey(name) {
   if (n.includes("grade 12")) return "grade_12_card";
   if (n.includes("grade 11")) return "grade_11_card";
   if (n.includes("grade 10")) return "grade_10_card";
+  if (n.includes("diploma")) return "shs_diploma";
+  if (n.includes("id")) return "photocopy_of_id";
   if (n.includes("health") || n.includes("medical")) return "health_sheet";
   if (n.includes("waiver") || n.includes("undertaking")) return "waiver";
   if (n.includes("sar form")) return "sar_form";

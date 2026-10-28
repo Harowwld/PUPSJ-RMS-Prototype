@@ -197,7 +197,6 @@ export default function NotificationsTab({
   }, [searchQuery]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [debouncedSearch, typeFilters, decisionFilters, activeTab, setPage]);
 
@@ -515,9 +514,9 @@ export default function NotificationsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="font-jakarta w-full flex flex-col h-auto gap-6 focus:outline-none animate-fade-up">
+      <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* Main Card Container encapsulating Header, Toolbar, Feed & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-bell"
@@ -660,11 +659,11 @@ export default function NotificationsTab({
 
           {/* 4. Grouped Notification List / Skeletons / Empty State */}
           {isLoading && !isRefreshing ? (
-            <div className="flex-1 flex flex-col min-h-0 border-t border-border dark:border-border">
+            <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
               <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} />
             </div>
           ) : error ? (
-            <div className="flex-1 flex min-h-0 flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
+            <div className="flex-[1_0_auto] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
               <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
@@ -727,7 +726,7 @@ export default function NotificationsTab({
             </div>
           ) : (
             /* Time-Grouped Notification Feed */
-            <div className="flex flex-col gap-6 p-6 border-t border-border dark:border-border w-full">
+            <div className="flex flex-[1_0_auto] flex-col gap-6 p-6 border-t border-border dark:border-border w-full">
               {groupedItems.map((group) => (
                 <div key={group.key} className="space-y-2.5">
                   {/* Group Header matching user screenshot */}
@@ -861,7 +860,7 @@ export default function NotificationsTab({
 
           {/* 5. Pagination Footer */}
           {!isLoading && !error && total > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border bg-white p-4 px-6 rounded-b-2xl dark:border-border dark:bg-card">
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-border bg-white p-4 px-6 rounded-b-2xl dark:border-border dark:bg-card">
               <div className="flex items-center gap-8">
                 <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                   <span>
@@ -1276,10 +1275,8 @@ export default function NotificationsTab({
                         selectedNotif.mime_type
                       );
                     }}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
-                    style={{ color: "#ffffff" }}
+                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
                   >
-                    <HugeIcon className="ph-bold ph-arrows-clockwise text-sm" />
                     <span>Rescan Document</span>
                   </Button>
                 ) : null}
@@ -1300,10 +1297,8 @@ export default function NotificationsTab({
                     href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-10 items-center justify-center rounded-xl btn-brand-red px-5 text-xs font-semibold text-white! shadow-xs transition-all active:scale-95 cursor-pointer"
-                    style={{ color: "#ffffff" }}
+                    className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
-                    <HugeIcon className="ph-bold ph-file-arrow-down mr-1.5 text-sm" />
                     Download File
                   </a>
                 )}

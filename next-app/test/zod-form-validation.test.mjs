@@ -64,7 +64,7 @@ test("StudentNoSchema validates PUP and testing student number formats and block
   // Acceptances
   const goodStudentNos = [
     "2024-00123-SJ-0",
-    "2023-00456-MN-0",
+    "2023-00456-SJ-0",
     "2021-00892",
     "ALUM-2019-001",
     "ALUMNI-2018-099",

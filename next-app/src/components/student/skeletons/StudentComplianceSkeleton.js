@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 
 export default function StudentComplianceSkeleton() {
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0 space-y-4 animate-in fade-in duration-200">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-col w-full flex-[1_0_auto] animate-in fade-in duration-200">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         {/* Header Skeleton */}
         <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ export default function StudentComplianceSkeleton() {
         </div>
 
         {/* Items Skeleton List */}
-        <div className="p-6 pt-2 space-y-3">
+        <div className="flex flex-[1_0_auto] flex-col p-6 pt-2 space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}

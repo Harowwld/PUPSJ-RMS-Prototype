@@ -1,0 +1,9 @@
+Category,Name,Code,IsCompliance,IsRequestable,ComplianceCategory
+DocumentType,Constitution & By-Laws (CBL),,true,false,Student Governance & Activities
+DocumentType,Event Proposal,,true,false,Student Governance & Activities
+DocumentType,Activity Request,,true,false,Student Governance & Activities
+DocumentType,Activity Permit,,true,false,Student Governance & Activities
+DocumentType,Financial Liquidation Report,,true,false,Student Governance & Activities
+DocumentType,Post-Event Narrative Report,,true,false,Student Governance & Activities
+DocumentType,Post-Event Compliance Clearance Certificate,,true,false,Student Governance & Activities
+DocumentType,Organization Registration Certificate,,true,false,Student Governance & Activities

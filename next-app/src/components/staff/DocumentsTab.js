@@ -404,12 +404,12 @@ export default function DocumentsTab({
     return () => el.removeEventListener("scroll", handleScroll);
   }, [docsLoading, paginatedMatrixRecords.length]);
 
-  // Auto reset scroll to start when matrix page or filter changes
+  // Auto reset scroll to start when matrix page, search, or filters change
   useEffect(() => {
     if (matrixTableContainerRef.current) {
       matrixTableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
     }
-  }, [matrixPage, matrixStatusFilter]);
+  }, [matrixPage, matrixStatusFilter, matrixSearch, matrixCourseFilters, matrixMissingDocFilters]);
 
   // Matrix Filter Groups for MultiCriteriaFilter
   const matrixFilterGroups = useMemo(() => {
@@ -521,11 +521,11 @@ export default function DocumentsTab({
     <TooltipProvider delayDuration={200}>
       <div
         id="view-documents"
-        className="flex flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
+        className="flex flex-[1_0_auto] flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
         tabIndex={0}
       >
         {/* ONE Single Card Container encapsulating Header, Toolbar, Filters, Table & Pagination */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate mb-4">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
           {/* 1. Page Header */}
           <PageHeader
             icon="ph-files"
@@ -1033,7 +1033,7 @@ export default function DocumentsTab({
                     variant="outline"
                     onClick={resetMatrixScroll}
                     disabled={!isScrolledX}
-                    className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     title="Reset horizontal scroll to default"
                   >
                     <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
@@ -1046,7 +1046,7 @@ export default function DocumentsTab({
                         variant="outline"
                         size="icon"
                         onClick={() => scrollMatrixTable("left")}
-                        className="w-8 h-8 rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
+                        className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
                         aria-label="Scroll table left"
                       >
                         <HugeIcon className="ph-bold ph-caret-left text-xs" />
@@ -1061,7 +1061,7 @@ export default function DocumentsTab({
                         variant="outline"
                         size="icon"
                         onClick={() => scrollMatrixTable("right")}
-                        className="w-8 h-8 rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
+                        className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
                         aria-label="Scroll table right"
                       >
                         <HugeIcon className="ph-bold ph-caret-right text-xs" />
@@ -1073,7 +1073,7 @@ export default function DocumentsTab({
               </div>
 
               {/* 5. Matrix Table Content */}
-              <div className="flex flex-col flex-1 w-full min-h-0 border-t border-border dark:border-border">
+              <div className="flex flex-col flex-[1_0_auto] w-full border-t border-border dark:border-border">
                 {docsLoading ? (
                   <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
                 ) : docsError ? (
@@ -1125,7 +1125,7 @@ export default function DocumentsTab({
                 ) : (
                   <div
                     ref={matrixTableContainerRef}
-                    className="w-full overflow-x-auto show-scrollbar pb-2"
+                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
                   >
                     <table className="w-full text-sm border-collapse min-w-max">
                       <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1167,7 +1167,7 @@ export default function DocumentsTab({
                                     <button
                                       type="button"
                                       onClick={resetMatrixScroll}
-                                      className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                      className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
                                       aria-label="Reset scroll to start"
                                     >
                                       <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
@@ -1692,10 +1692,9 @@ export default function DocumentsTab({
                     }
                   }}
                   disabled={!selectedDoc?.doc?.id || !!selectedDoc?.doc?.source_type}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
-                  style={{ color: "#ffffff" }}
+                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                 >
-                  Update
+                  Update Document
                 </Button>
               </div>
             </div>

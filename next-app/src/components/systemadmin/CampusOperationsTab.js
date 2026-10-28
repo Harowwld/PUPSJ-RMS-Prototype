@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+import HugeIcon from "@/components/shared/HugeIcon"
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Reorder } from "framer-motion"
@@ -34,36 +34,48 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></HugeIcon>
+    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400 animate-in fade-in zoom-in duration-normal" />
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-normal"></HugeIcon>
+    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400 animate-in fade-in zoom-in duration-normal" />
   )
 }
 
 function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase()
   if (s === "PENDING" || s === "SUBMITTED") {
-    return "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+    return "bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
   }
   if (s === "PROCESSING" || s === "INPROGRESS" || s === "UNDER REVIEW") {
-    return "bg-[#DBEAFE] text-[#1E40AF] dark:bg-blue-950/40 dark:text-blue-400"
+    return "bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40"
   }
   if (s === "READY" || s === "APPROVED" || s === "DONE" || s === "COMPLETED") {
-    return "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+    return "bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
   }
   if (s === "NEEDS REVISION" || s === "REVISION") {
-    return "bg-[#FEF3C7] text-[#B45309] dark:bg-amber-950/40 dark:text-amber-300"
+    return "bg-orange-50 text-orange-800 border border-orange-200/80 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800/40"
   }
   if (s === "CANCELLED" || s === "DECLINED" || s === "SHREDDED") {
-    return "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+    return "bg-rose-50 text-rose-800 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
   }
-  return "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300"
+  return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+}
+
+function getStatusDotColor(status) {
+  const s = String(status || "").toUpperCase()
+  if (s === "PENDING" || s === "SUBMITTED") return "bg-amber-500"
+  if (s === "PROCESSING" || s === "INPROGRESS" || s === "UNDER REVIEW") return "bg-blue-500"
+  if (s === "READY" || s === "APPROVED" || s === "DONE" || s === "COMPLETED") return "bg-emerald-500"
+  if (s === "NEEDS REVISION" || s === "REVISION") return "bg-orange-500"
+  if (s === "DECLINED" || s === "CANCELLED" || s === "SHREDDED") return "bg-rose-500"
+  return "bg-gray-400"
 }
 
 function formatStudentRequester(name, studentNo) {
@@ -81,7 +93,7 @@ function InfoRow({ icon, label, value, children, className }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-2 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
         className
       )}
     >
@@ -96,12 +108,12 @@ function InfoRow({ icon, label, value, children, className }) {
         {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
       </div>
     </div>
-  );
+  )
 }
 
 export default function CampusOperationsTab() {
-const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
-    const [health, setHealth] = useState(null)
+  const [kpiOrder, setKpiOrder] = useState(["odrs", "osas"])
+  const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [autoRefreshSecs] = useState(15)
@@ -116,6 +128,17 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   const [sortOrder, setSortOrder] = useState("DESC")
   const [page, setPage] = useUrlPage()
   const [pageSize, setPageSize] = useState(10)
+
+  // Horizontal table scrolling hook
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolled,
+    scrollLeft,
+    scrollRight,
+    resetScroll: resetTableScroll,
+  } = useTableScroll();
 
   // Stat Cards dropdown state
   const [selectedKpi, setSelectedKpi] = useState(null)
@@ -201,7 +224,6 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     }, autoRefreshSecs * 1000)
     return () => clearInterval(timer)
   }, [autoRefreshSecs, fetchHealth])
-
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -299,7 +321,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           {
             value: "needs_revision",
             label: "Needs Revision",
-            indicatorColor: "bg-amber-600",
+            indicatorColor: "bg-orange-500",
             count: statusCounts.needs_revision,
           },
           {
@@ -406,9 +428,13 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
 
   // Reset page when filters change
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1)
   }, [search, operationFilters, pageSize, setPage])
+
+  // Auto-reset scroll to start whenever page, filters, search, or sorting changes
+  useEffect(() => {
+    resetTableScroll()
+  }, [page, pageSize, search, operationFilters, sortBy, sortOrder, resetTableScroll])
 
   const handleClearFilters = useCallback(() => {
     setSearch("")
@@ -421,7 +447,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
     Boolean(operationFilters.department?.length > 0) ||
     Boolean(operationFilters.status?.length > 0)
 
-  // Non-tech friendly Top 2 Stat Cards (Focused on University Operations)
+  // University Operations Top 2 Stat Cards
   const statCardsData = useMemo(() => [
     {
       key: "odrs",
@@ -440,9 +466,9 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
   ], [health])
 
   return (
-    <div className="animate-fade-up font-jakarta flex flex-col min-h-full w-full gap-6 pb-6">
+    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta mb-4">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-activity"
@@ -470,115 +496,177 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           </div>
         ) : (
           <div className="px-6 pb-6">
-            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder}
+            <Reorder.Group
+              as="div"
+              axis="x"
+              values={kpiOrder}
+              onReorder={setKpiOrder}
               ref={statCardsRef}
               className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start relative z-20 transition-all duration-500"
             >
               {kpiOrder.map((kpiKey) => {
-                const stat = statCardsData.find(s => s.key === kpiKey);
-                if (!stat) return null;
-                return (
-                <Reorder.Item as="div" value={stat.key}
-                  key={stat.key}
-                  className={cn(
-                    "relative group rounded-xl",
-                    selectedKpi === stat.key ? "z-30" : "z-10"
-                  )}
-                >
-                  <div
-                    onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
-                    className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === stat.key
-                        ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
-                        : "border-border dark:border-border"
-                    )}
-                  >
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                          {stat.label}
-                        </span>
-                      </div>
-                      <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : "bg-[#10b981]")}>
-                        <HugeIcon className={cn("ph-bold text-[15px]", stat.color === "blue" ? "ph-file-text" : "ph-users")} />
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                        </span>
-                        <span className={cn("text-[11px] font-medium mb-1", `text-${stat.color}-600 dark:text-${stat.color}-400`)}>
-                          {stat.sublabel}
-                        </span>
-                      </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                    </div>
-                  </div>
-                  {/* Expandable details drawer */}
-                  <div
-                    className={cn(
-                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                      selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                    )}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {stat.key === "odrs" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Pending Action</span>
-                            <span className="text-base font-black text-gray-900 dark:text-zinc-50">{health?.odrs?.pending ?? 0}</span>
-                          </div>
-                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Progress</span>
-                            <span className="text-base font-black text-blue-700 dark:text-blue-400">{health?.odrs?.inProgress ?? 0}</span>
-                          </div>
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                            <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Ready for Pickup</span>
-                            <span className="text-base font-black text-amber-700 dark:text-amber-400">{health?.odrs?.ready ?? 0}</span>
-                          </div>
-                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Completed</span>
-                            <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{health?.odrs?.completed ?? 0}</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Online requests for Official Transcripts (TOR), Certifications, and Good Moral documents filed through the student portal.
-                        </div>
-                      </div>
-                    )}
+                const stat = statCardsData.find((s) => s.key === kpiKey)
+                if (!stat) return null
+                const isSelected = selectedKpi === stat.key
+                const isBlue = stat.color === "blue"
 
-                    {stat.key === "osas" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Submitted</span>
-                            <span className="text-base font-black text-gray-900 dark:text-zinc-50">{health?.osas?.submitted ?? 0}</span>
-                          </div>
-                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Review</span>
-                            <span className="text-base font-black text-blue-700 dark:text-blue-400">{health?.osas?.underReview ?? 0}</span>
-                          </div>
-                          <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
-                            <span className="block text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Needs Revision</span>
-                            <span className="text-base font-black text-red-700 dark:text-red-400">{health?.osas?.needsRevision ?? 0}</span>
-                          </div>
-                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Approved</span>
-                            <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{health?.osas?.approved ?? 0}</span>
-                          </div>
+                return (
+                  <Reorder.Item
+                    as="div"
+                    value={stat.key}
+                    key={stat.key}
+                    className={cn(
+                      "relative group rounded-2xl",
+                      isSelected ? "z-30" : "z-10"
+                    )}
+                  >
+                    <div
+                      onClick={() => setSelectedKpi(isSelected ? null : stat.key)}
+                      className={cn(
+                        "relative overflow-hidden rounded-2xl border cursor-pointer select-none transition-all shadow-xs hover:shadow-sm flex flex-col justify-between min-h-[114px] bg-gray-50/70 hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/80",
+                        isSelected
+                          ? isBlue
+                            ? "border-blue-500/50 ring-2 ring-blue-500/20 shadow-md"
+                            : "border-emerald-500/50 ring-2 ring-emerald-500/20 shadow-md"
+                          : "border-border dark:border-border"
+                      )}
+                    >
+                      <div className="flex justify-between items-start p-4 pb-0">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
+                            {stat.label}
+                          </span>
                         </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Campus student organization event permits, activity proposals, and annual compliance submissions for OSAS review.
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-2xs shrink-0",
+                            isBlue ? "bg-blue-600" : "bg-emerald-600"
+                          )}
+                        >
+                          <HugeIcon
+                            className={cn(
+                              "ph-bold text-[15px]",
+                              isBlue ? "ph-file-text" : "ph-users"
+                            )}
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
-                </Reorder.Item>
-              );})}
+
+                      <div className="flex justify-between items-end p-4 pt-1">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                            {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-[11px] font-medium mb-1",
+                              isBlue ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"
+                            )}
+                          >
+                            {stat.sublabel}
+                          </span>
+                        </div>
+                        <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-400 text-xl mb-0.5" />
+                      </div>
+                    </div>
+
+                    {/* Expandable details drawer */}
+                    <div
+                      className={cn(
+                        "absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl border border-border bg-white dark:bg-zinc-900 p-4 shadow-xl transition-all duration-300 ease-in-out origin-top",
+                        isSelected
+                          ? "scale-y-100 opacity-100 translate-y-0"
+                          : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+                      )}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {stat.key === "odrs" && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                                Pending Action
+                              </span>
+                              <span className="text-base font-black text-gray-900 dark:text-zinc-50">
+                                {health?.odrs?.pending ?? 0}
+                              </span>
+                            </div>
+                            <div className="bg-blue-50/70 dark:bg-blue-950/30 p-2.5 rounded-xl border border-blue-200/60 dark:border-blue-900/30">
+                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                                In Progress
+                              </span>
+                              <span className="text-base font-black text-blue-700 dark:text-blue-400">
+                                {health?.odrs?.inProgress ?? 0}
+                              </span>
+                            </div>
+                            <div className="bg-amber-50/70 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-900/30">
+                              <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                                Ready for Pickup
+                              </span>
+                              <span className="text-base font-black text-amber-700 dark:text-amber-400">
+                                {health?.odrs?.ready ?? 0}
+                              </span>
+                            </div>
+                            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200/60 dark:border-emerald-900/30">
+                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                                Completed
+                              </span>
+                              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
+                                {health?.odrs?.completed ?? 0}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                            Online requests for Official Transcripts (TOR), Certifications, and Good Moral documents filed through the student portal.
+                          </div>
+                        </div>
+                      )}
+
+                      {stat.key === "osas" && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border">
+                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                                Submitted
+                              </span>
+                              <span className="text-base font-black text-gray-900 dark:text-zinc-50">
+                                {health?.osas?.submitted ?? 0}
+                              </span>
+                            </div>
+                            <div className="bg-blue-50/70 dark:bg-blue-950/30 p-2.5 rounded-xl border border-blue-200/60 dark:border-blue-900/30">
+                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                                In Review
+                              </span>
+                              <span className="text-base font-black text-blue-700 dark:text-blue-400">
+                                {health?.osas?.underReview ?? 0}
+                              </span>
+                            </div>
+                            <div className="bg-orange-50/70 dark:bg-orange-950/30 p-2.5 rounded-xl border border-orange-200/60 dark:border-orange-900/30">
+                              <span className="block text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
+                                Needs Revision
+                              </span>
+                              <span className="text-base font-black text-orange-700 dark:text-orange-400">
+                                {health?.osas?.needsRevision ?? 0}
+                              </span>
+                            </div>
+                            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200/60 dark:border-emerald-900/30">
+                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                                Approved
+                              </span>
+                              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
+                                {health?.osas?.approved ?? 0}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                            Campus student organization event permits, activity proposals, and annual compliance submissions for OSAS review.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Reorder.Item>
+                )
+              })}
             </Reorder.Group>
           </div>
         )}
@@ -621,322 +709,366 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
           </div>
         </div>
 
-        {/* Active Filter Chips Row */}
-        <ActiveFilterChips
-          groups={operationFilterGroups}
-          selected={operationFilters}
-          onRemove={(groupId, val) => {
-            setOperationFilters((prev) => ({
-              ...prev,
-              [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-            }))
-            setPage(1)
-          }}
-          searchQuery={search}
-          onClearSearch={() => {
-            setSearch("")
-            setPage(1)
-          }}
-          onClearAll={handleClearFilters}
-          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-        />
+        {/* Active Filter Chips & Horizontal Scroll Controls */}
+        <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+          <div className="flex-1 min-w-0">
+            <ActiveFilterChips
+              groups={operationFilterGroups}
+              selected={operationFilters}
+              onRemove={(groupId, val) => {
+                setOperationFilters((prev) => ({
+                  ...prev,
+                  [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+                }))
+                setPage(1)
+              }}
+              searchQuery={search}
+              onClearSearch={() => {
+                setSearch("")
+                setPage(1)
+              }}
+              onClearAll={handleClearFilters}
+              className="p-0 border-0"
+            />
+          </div>
+
+          {/* Horizontal Scroll Controls */}
+          <div className="flex items-center gap-2 shrink-0 select-none ml-auto">
+            <TableScrollControls
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              isScrolled={isScrolled}
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetTableScroll}
+            />
+          </div>
+        </div>
 
         {/* Cross-Department Activity Stream Table */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-1">
-            {loading ? (
-              <TransactionsTableSkeleton rowCount={8} />
-            ) : paginatedTransactions.length === 0 ? (
-              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      No Records Found
-                    </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
-                      {hasActiveFilters
-                        ? "No student requests or proposals match your search or filter settings."
-                        : "There are currently no active document requests or event proposals recorded."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  {hasActiveFilters && (
-                    <EmptyContent>
-                      <Button
-                        variant="outline"
-                        onClick={handleClearFilters}
-                        title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                      >
-                        Reset Filters
-                      </Button>
-                    </EmptyContent>
-                  )}
-                </Empty>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed min-w-[1080px]">
-                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-border bg-white dark:bg-card">
-                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500 h-11 select-none">
-                      <th className="p-4 w-[8%]">
-                        <button
-                          onClick={() => handleSort("id")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          ID <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[12%]">
-                        <button
-                          onClick={() => handleSort("officeId")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "officeId" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          Department <SortIndicator column="officeId" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[18%]">
-                        <button
-                          onClick={() => handleSort("studentName")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "studentName" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          Student Requester <SortIndicator column="studentName" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[25%]">
-                        <button
-                          onClick={() => handleSort("title")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "title" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          Document or Proposal Title <SortIndicator column="title" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[16%]">
-                        <button
-                          onClick={() => handleSort("organizationName")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "organizationName" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          Student Org / Details <SortIndicator column="organizationName" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[10%]">
-                        <button
-                          onClick={() => handleSort("status")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          Stage Status <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[8%]">
-                        <button
-                          onClick={() => handleSort("createdAt")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
-                            sortBy === "createdAt" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
-                          )}
-                        >
-                          Submitted <SortIndicator column="createdAt" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 pr-6 text-right w-20 text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
-                    {paginatedTransactions.map((tx) => {
-                      const isRegistrar = tx.officeId === "registrar"
-                      const rel = formatRelativeTime(tx.createdAt)
-
-                      return (
-                        <tr
-                          key={tx.id}
-                          onClick={() => handleOpenDetails(tx)}
-                          className="group h-[52px] border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none"
-                        >
-                          {/* Transaction ID */}
-                          <td className="p-4 align-middle whitespace-nowrap">
-                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                              #{tx.id}
-                            </span>
-                          </td>
-
-                          {/* Department Badge */}
-                          <td className="p-4 align-middle whitespace-nowrap">
-                            {isRegistrar ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                                <HugeIcon  className="ph-bold ph-certificate text-xs"></HugeIcon>
-                                Registrar
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                                <HugeIcon  className="ph-bold ph-student text-xs"></HugeIcon>
-                                OSAS
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Student Requester */}
-                          <td className="p-4 align-middle overflow-hidden">
-                            <div
-                              className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate"
-                              title={formatStudentRequester(tx.studentName, tx.studentNo)}
-                            >
-                              {formatStudentRequester(tx.studentName, tx.studentNo)}
-                            </div>
-                            <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate">
-                              {tx.studentNo}
-                            </div>
-                          </td>
-
-                          {/* Document or Proposal Title */}
-                          <td className="p-4 align-middle overflow-hidden">
-                            <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate" title={tx.title}>
-                              {tx.title}
-                            </div>
-                            {tx.originalFilename && (
-                              <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5">
-                                <HugeIcon  className="ph-bold ph-file-pdf text-red-500 shrink-0"></HugeIcon>
-                                <span className="truncate" title={tx.originalFilename}>{tx.originalFilename}</span>
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Organization / Reference */}
-                          <td className="p-4 align-middle overflow-hidden">
-                            {tx.organizationName ? (
-                              <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate" title={tx.organizationName}>
-                                {tx.organizationName}
-                              </div>
-                            ) : (
-                              <div className="text-[12px] text-gray-900 dark:text-zinc-300 truncate" title={tx.notes || "Standard student request"}>
-                                {tx.notes || "Standard student request"}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Stage Status Badge */}
-                          <td className="p-4 align-middle whitespace-nowrap">
-                            <span className={cn(
-                              "inline-flex items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium whitespace-nowrap",
-                              statusBadgeClass(tx.status)
-                            )}>
-                              {tx.status === "InProgress" ? "In Progress" : tx.status}
-                            </span>
-                          </td>
-
-                          {/* Date Submitted */}
-                          <td className="p-4 align-middle text-[12px] text-gray-900 dark:text-zinc-300 whitespace-nowrap font-mono">
-                            {rel.relative || rel.date}
-                          </td>
-
-                          {/* Action Button */}
-                          <td className="py-0 px-4 pr-6 text-right align-middle" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => handleOpenDetails(tx)}
-                                    aria-label="View Details"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                  >
-                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>View Details</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Pagination Footer */}
-            {sortedTransactions.length > 0 && (
-              <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                  <span>
-                    Showing {paginatedTransactions.length} of {sortedTransactions.length}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span>Rows:</span>
-                    {[10, 20, 50, 100].map((sz) => (
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
+          {loading ? (
+            <TransactionsTableSkeleton rowCount={8} />
+          ) : paginatedTransactions.length === 0 ? (
+            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
+                      <HugeIcon className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                    No Records Found
+                  </EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    {hasActiveFilters
+                      ? "No student requests or proposals match your search or filter settings."
+                      : "There are currently no active document requests or event proposals recorded."}
+                  </EmptyDescription>
+                </EmptyHeader>
+                {hasActiveFilters && (
+                  <EmptyContent>
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      title="Reset Filters"
+                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    >
+                      Reset Filters
+                    </Button>
+                  </EmptyContent>
+                )}
+              </Empty>
+            </div>
+          ) : (
+            <div
+              ref={tableContainerRef}
+              className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            >
+              <table className="w-full text-sm border-collapse min-w-[1240px]">
+                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase h-11 select-none">
+                    {/* ID Header */}
+                    <th
+                      className="p-4 w-[100px] min-w-[100px] max-w-[100px] border-r border-border/80 dark:border-border whitespace-nowrap"
+                    >
                       <button
-                        key={sz}
-                        type="button"
-                        onClick={() => {
-                          setPageSize(sz)
-                          setPage(1)
-                        }}
+                        onClick={() => handleSort("id")}
                         className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                          pageSize === sz
-                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
-                        {sz}
+                        ID <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
-                    ))}
-                  </div>
-                </div>
+                    </th>
 
-                <div className="flex items-center gap-2 select-none">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Prev
-                  </Button>
+                    {/* Department */}
+                    <th className="p-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("officeId")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "officeId" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Department <SortIndicator column="officeId" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
 
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                    {page}
-                  </div>
+                    {/* Student Requester */}
+                    <th className="p-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("studentName")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "studentName" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Student Requester <SortIndicator column="studentName" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page >= totalPages || endIndex >= sortedTransactions.length}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Next
-                  </Button>
+                    {/* Document or Proposal Title */}
+                    <th className="p-4 w-[270px] min-w-[270px] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("title")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "title" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Document or Proposal Title <SortIndicator column="title" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
+
+                    {/* Student Org / Details */}
+                    <th className="p-4 w-[190px] min-w-[190px] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("organizationName")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "organizationName" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Student Org / Details <SortIndicator column="organizationName" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
+
+                    {/* Stage Status */}
+                    <th className="p-4 w-[140px] min-w-[140px] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("status")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Stage Status <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
+
+                    {/* Submitted */}
+                    <th className="p-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
+                      <button
+                        onClick={() => handleSort("createdAt")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          sortBy === "createdAt" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Submitted <SortIndicator column="createdAt" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
+
+                    {/* Actions */}
+                    <th className="p-4 pr-6 text-right w-[80px] min-w-[80px] text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-border/60 font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+                  {paginatedTransactions.map((tx) => {
+                    const isRegistrar = tx.officeId === "registrar"
+                    const rel = formatRelativeTime(tx.createdAt)
+
+                    return (
+                      <tr
+                        key={tx.id}
+                        onClick={() => handleOpenDetails(tx)}
+                        className="group h-[52px] border-b border-border/60 last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 cursor-pointer select-none"
+                      >
+                        {/* Transaction ID */}
+                        <td
+                          className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"
+                        >
+                          <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                            #{tx.id}
+                          </span>
+                        </td>
+
+                        {/* Department Badge */}
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          {isRegistrar ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
+                              <HugeIcon className="ph-bold ph-certificate text-xs" />
+                              Registrar
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">
+                              <HugeIcon className="ph-bold ph-student text-xs" />
+                              OSAS
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Student Requester */}
+                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                          <div
+                            className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate"
+                            title={formatStudentRequester(tx.studentName, tx.studentNo)}
+                          >
+                            {formatStudentRequester(tx.studentName, tx.studentNo)}
+                          </div>
+                          <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate">
+                            {tx.studentNo}
+                          </div>
+                        </td>
+
+                        {/* Document or Proposal Title */}
+                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                          <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate" title={tx.title}>
+                            {tx.title}
+                          </div>
+                          {tx.originalFilename && (
+                            <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5">
+                              <HugeIcon className="ph-bold ph-file-pdf text-red-500 shrink-0" />
+                              <span className="truncate" title={tx.originalFilename}>{tx.originalFilename}</span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Organization / Reference */}
+                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                          {tx.organizationName ? (
+                            <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate" title={tx.organizationName}>
+                              {tx.organizationName}
+                            </div>
+                          ) : (
+                            <div className="text-[12px] text-gray-600 dark:text-zinc-300 truncate" title={tx.notes || "Standard student request"}>
+                              {tx.notes || "Standard student request"}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Stage Status Badge */}
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap shadow-2xs",
+                              statusBadgeClass(tx.status)
+                            )}
+                          >
+                            <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(tx.status))} />
+                            <span>{tx.status === "InProgress" ? "In Progress" : tx.status}</span>
+                          </span>
+                        </td>
+
+                        {/* Date Submitted */}
+                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-mono border-r border-border/70 dark:border-border/70">
+                          {rel.relative || rel.date}
+                        </td>
+
+                        {/* Action Button */}
+                        <td className="py-0 px-4 pr-6 text-right align-middle whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenDetails(tx)}
+                                  aria-label="View Details"
+                                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border-0 bg-transparent shadow-2xs"
+                                >
+                                  <HugeIcon className="ph-bold ph-eye text-[15px]" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>View Details</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination Footer */}
+          {sortedTransactions.length > 0 && (
+            <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-border dark:border-border bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl gap-3">
+              <div className="flex items-center gap-6 text-xs text-gray-700 dark:text-zinc-300 select-none">
+                <span>
+                  Showing {paginatedTransactions.length} of {sortedTransactions.length} records
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 dark:text-zinc-500 text-[11px]">Rows:</span>
+                  {[10, 20, 50, 100].map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => {
+                        setPageSize(sz)
+                        setPage(1)
+                      }}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer",
+                        pageSize === sz
+                          ? "bg-gray-200/80 dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 font-bold"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800/60"
+                      )}
+                    >
+                      {sz}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
-        </Card>
+
+              <div className="flex items-center gap-2 select-none">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+                >
+                  Prev
+                </Button>
+
+                <div className="h-8 min-w-[32px] px-2.5 rounded-xl bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold text-xs flex items-center justify-center shadow-2xs">
+                  {page}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages || endIndex >= sortedTransactions.length}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Standardized Operation Record Details Sheet */}
       <Sheet open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
@@ -961,26 +1093,36 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               <div className="flex items-center gap-3">
                 {sortedTransactions.length > 1 && (
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                    <button
-                      type="button"
-                      disabled={currentTxIndex <= 0}
-                      onClick={handlePrevTx}
-                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      aria-label="Previous Record"
-                      title="Previous Record"
-                    >
-                      <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={currentTxIndex >= sortedTransactions.length - 1}
-                      onClick={handleNextTx}
-                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      aria-label="Next Record"
-                      title="Next Record"
-                    >
-                      <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={currentTxIndex <= 0}
+                          onClick={handlePrevTx}
+                          className="w-7 h-7 rounded-lg border border-border dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer shadow-2xs"
+                          aria-label="Previous Record"
+                        >
+                          <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Previous Record</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={currentTxIndex >= sortedTransactions.length - 1}
+                          onClick={handleNextTx}
+                          className="w-7 h-7 rounded-lg border border-border dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer shadow-2xs"
+                          aria-label="Next Record"
+                        >
+                          <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Next Record</TooltipContent>
+                    </Tooltip>
+
                     <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                       {String(Math.max(1, currentTxIndex + 1)).padStart(2, "0")} of {String(sortedTransactions.length).padStart(2, "0")}
                     </span>
@@ -1000,13 +1142,60 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
             </div>
           </SheetHeader>
 
+          {/* Edge-to-Edge Line-Attached Status Notice */}
+          {sheetItem && (
+            <div
+              className={cn(
+                "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
+                  ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                  : sheetItem?.status === "InProgress"
+                  ? "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+                  : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
+                  ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                  : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+              )}
+            >
+              <HugeIcon
+                className={cn(
+                  "ph-bold text-[15px] shrink-0",
+                  sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
+                    ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                    : sheetItem?.status === "InProgress"
+                    ? "ph-clock text-blue-600 dark:text-blue-400"
+                    : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
+                    ? "ph-x-circle text-rose-600 dark:text-rose-400"
+                    : "ph-warning-circle text-amber-600 dark:text-amber-400"
+                )}
+              />
+              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                <strong className="font-semibold">
+                  {sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
+                    ? "Completed Operation:"
+                    : sheetItem?.status === "InProgress"
+                    ? "Fulfillment In Progress:"
+                    : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
+                    ? "Operation Cancelled:"
+                    : "Pending Operational Review:"}
+                </strong>{" "}
+                {sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
+                  ? "Transaction fulfillment finalized and archived across campus partitions."
+                  : sheetItem?.status === "InProgress"
+                  ? "Department personnel actively fulfilling credentials and processing records."
+                  : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
+                  ? "This cross-office operation was declined or cancelled."
+                  : "Awaiting department evaluation and staff assignment."}
+              </span>
+            </div>
+          )}
+
           {/* SCROLLABLE 1-COLUMN BODY */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Summary Strip */}
-            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+            <div className="flex items-start gap-3.5 pb-4 border-b border-border dark:border-border">
               <div
                 className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border mt-0.5",
+                  "w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border mt-0.5 shadow-2xs",
                   sheetItem?.officeId === "registrar"
                     ? "bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40"
                     : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40"
@@ -1033,13 +1222,14 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   )}
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
                       statusBadgeClass(sheetItem?.status)
                     )}
                   >
-                    {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
+                    <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(sheetItem?.status))} />
+                    <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
                   </span>
-                  <span className="font-mono text-[11px] text-gray-400">
+                  <span className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
                     #{sheetItem?.id}
                   </span>
                 </div>
@@ -1052,7 +1242,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               </div>
             </div>
 
-            {/* SECTION 1: Operation Specification (Unboxed InfoRow) */}
+            {/* SECTION 1: Transaction Specification (Unboxed InfoRow) */}
             <div className="space-y-2">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Transaction Specification
@@ -1065,12 +1255,6 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 />
 
                 <InfoRow
-                  icon="ph-user"
-                  label="Student Requester"
-                  value={formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}
-                />
-
-                <InfoRow
                   icon="ph-identification-badge"
                   label="Student Number"
                   value={sheetItem?.studentNo}
@@ -1080,11 +1264,12 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
                         statusBadgeClass(sheetItem?.status)
                       )}
                     >
-                      {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
+                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(sheetItem?.status))} />
+                      <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
                     </span>
                     <span className="text-[11px] font-mono text-gray-400">
                       {sheetItem?.createdAt ? formatRelativeTime(sheetItem.createdAt).relative : ""}
@@ -1116,16 +1301,14 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
               </div>
             </div>
 
-            {/* SECTION 2: Purpose & Remarks */}
-            <div className="space-y-2 pt-2">
+            {/* SECTION 2: Purpose & Remarks (Unboxed) */}
+            <div className="space-y-1.5 pt-2">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Purpose & Remarks
               </h4>
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-3.5">
-                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                  {sheetItem?.notes || "No special remarks provided by the applicant."}
-                </p>
-              </div>
+              <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap pt-0.5">
+                {sheetItem?.notes || "No special remarks provided by the applicant."}
+              </p>
             </div>
 
             {/* SECTION 3: Attached Document */}
@@ -1134,7 +1317,7 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                   Attached Document
                 </h4>
-                <div className="p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
+                <div className="p-3.5 rounded-xl border border-border dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
                       <HugeIcon className="ph-bold ph-file-pdf text-base" />
@@ -1156,9 +1339,9 @@ const [kpiOrder, setKpiOrder] = useState(["total","operational","maintenance"]);
                     variant="outline"
                     size="sm"
                     onClick={() => handleOpenPdfPreview(sheetItem)}
-                    className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-2.5 rounded-lg cursor-pointer shadow-xs active:scale-95 transition-all"
+                    className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-3 rounded-xl cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <HugeIcon className="ph-bold ph-eye text-sm mr-1" /> Preview
+                    Preview Document
                   </Button>
                 </div>
               </div>

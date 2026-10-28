@@ -95,6 +95,11 @@ export async function POST(req) {
     String(form.get("allowOverwrite") || form.get("replaceExisting") || "").toLowerCase() === "true" ||
     form.get("allowOverwrite") === "1" ||
     form.get("replaceExisting") === "1";
+  const replaceDocumentIdRaw = form.get("replaceDocumentId");
+  const replaceDocumentId =
+    replaceDocumentIdRaw && Number.isFinite(Number(replaceDocumentIdRaw))
+      ? Number(replaceDocumentIdRaw)
+      : null;
 
   // === OSAS Polymorphic Ingestion (Student Organizations) ===
   if (officeId === "osas") {
@@ -176,6 +181,7 @@ export async function POST(req) {
         buffer: buf,
         uploadedBy: user.id,
         allowOverwrite,
+        replaceDocumentId,
       });
     } catch (e) {
       if (e?.isDuplicate || e?.code === "DUPLICATE_DOCUMENT") {
@@ -356,6 +362,7 @@ export async function POST(req) {
       buffer: buf,
       uploadedBy: user.id,
       allowOverwrite,
+      replaceDocumentId,
     });
   } catch (e) {
     if (createdStudentForUpload) {

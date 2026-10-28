@@ -412,7 +412,7 @@ export default function BulkImportQuestionsModal({
             /* Double-Check & Review Area */
             <div className="space-y-3">
               {/* File Info & Action Bar */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50/80 dark:bg-zinc-900/40 border border-border/60 dark:border-border">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50/80 dark:bg-zinc-900/40 border border-border dark:border-border">
                 <div className="min-w-0 flex-1 pr-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -446,7 +446,7 @@ export default function BulkImportQuestionsModal({
                   return (
                     <div
                       key={row.id}
-                      className="rounded-xl border border-border/80 dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-3 space-y-2 transition-all"
+                      className="rounded-xl border border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-3 space-y-2 transition-all"
                     >
                       <div className="flex items-center gap-2">
                         {/* Index Badge */}
@@ -488,7 +488,7 @@ export default function BulkImportQuestionsModal({
                         <button
                           type="button"
                           onClick={() => handleRemoveRow(index)}
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border border-transparent hover:border-red-200 dark:hover:border-red-900/50 active:scale-95 shrink-0"
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95 shrink-0"
                           aria-label="Remove Question"
                         >
                           <HugeIcon className="ph-bold ph-trash text-sm" />
@@ -550,7 +550,7 @@ export default function BulkImportQuestionsModal({
             type="button"
             onClick={handleImport}
             disabled={!canImport}
-            className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
+            className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
           >
             Import Questions
           </Button>

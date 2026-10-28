@@ -6,8 +6,8 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingFooterSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-panel-bottom"
           title={
@@ -41,11 +41,11 @@ export default function LandingFooterSkeleton() {
           </div>
         </div>
 
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column (lg:col-span-6) */}
             <div className="lg:col-span-6 space-y-5">
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
                 <div>
                   <div className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Physical Archive Location
@@ -68,19 +68,19 @@ export default function LandingFooterSkeleton() {
               </div>
 
               {/* Map Directions Box */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
                 <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
               </div>
 
               {/* Watermark Box */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-24 w-full rounded-xl dark:bg-muted" />
               </div>
 
               {/* Sub-Footer & Copyright */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
                 <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
               </div>
@@ -88,7 +88,7 @@ export default function LandingFooterSkeleton() {
 
             {/* Right Column (lg:col-span-6) */}
             <div className="lg:col-span-6 space-y-5">
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
                 <div className="space-y-3">
                   <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
@@ -97,7 +97,7 @@ export default function LandingFooterSkeleton() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
                 <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
                 <div className="space-y-3">
                   <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />

@@ -7,8 +7,8 @@ import PageHeader from "@/components/shared/PageHeader"
 
 export default function LandingWorkflowSkeleton() {
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none mb-4">
+    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="ph-bold ph-git-merge"
           title={
@@ -43,10 +43,10 @@ export default function LandingWorkflowSkeleton() {
         </div>
 
         {/* Content Body */}
-        <CardContent className="font-jakarta bg-white p-[24px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-6">
             {/* Section Title & Narrative Copy Skeleton */}
-            <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
+            <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
               <div className="space-y-1">
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -70,7 +70,7 @@ export default function LandingWorkflowSkeleton() {
             </div>
 
             {/* Header Bar with Curve Style & Add Step Buttons */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -131,7 +131,7 @@ export default function LandingWorkflowSkeleton() {
               {["02", "03", "04"].map((stepNum) => (
                 <div
                   key={stepNum}
-                  className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-2xs overflow-hidden"
+                  className="rounded-xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs overflow-hidden"
                 >
                   <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl">
                     <div className="flex items-center gap-3.5 min-w-0">

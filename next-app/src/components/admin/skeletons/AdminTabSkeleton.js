@@ -5,9 +5,9 @@ import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCard
 
 export default function AdminTabSkeleton({ showStats = true }) {
   return (
-    <div className="flex flex-1 flex-col min-h-full w-full gap-6 animate-fade-up select-none">
+    <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up select-none">
       {/* Main Container Card */}
-      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate font-jakarta">
+      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] min-h-[500px] isolate font-jakarta">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">

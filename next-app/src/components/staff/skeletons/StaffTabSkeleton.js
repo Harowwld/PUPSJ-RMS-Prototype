@@ -6,7 +6,7 @@ export default function StaffTabSkeleton() {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col w-full gap-4 animate-fade-up select-none font-jakarta">
       {/* ONE Single Container Card */}
-      <div className="min-h-0 min-w-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 mb-4 isolate font-jakarta">
+      <div className="min-h-0 min-w-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] isolate font-jakarta">
         {/* Header Skeleton */}
         <div className="flex min-w-0 items-center justify-between p-3 sm:p-6">
           <div className="flex items-center gap-3">

@@ -247,19 +247,19 @@ export default function RestoreModal({
                 </div>
               ) : previewData?.tables && previewData.tables.length > 0 ? (
                 <div className="max-h-48 overflow-y-auto custom-scrollbar select-none relative">
-                  <table className="w-full text-xs table-fixed min-w-[420px]">
-                    <thead className="sticky top-0 z-20 bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border shadow-2xs">
-                      <tr className="text-left text-[11px] font-semibold text-gray-600 dark:text-zinc-300">
-                        <th className="sticky top-0 z-20 py-2.5 px-3.5 w-[36%] font-semibold bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                  <table className="w-full text-xs border-collapse min-w-[420px]">
+                    <thead className="sticky top-0 z-20 bg-gray-100/90 dark:bg-zinc-800/90 backdrop-blur-xs border-b border-border dark:border-border select-none">
+                      <tr className="text-left text-[11px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider select-none">
+                        <th className="py-2.5 px-3.5 w-[36%] font-semibold border-r border-border/80 dark:border-border">
                           Resource Table
                         </th>
-                        <th className="sticky top-0 z-20 py-2.5 px-3.5 w-[18%] font-semibold text-center bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                        <th className="py-2.5 px-3.5 w-[18%] font-semibold text-center border-r border-border/80 dark:border-border">
                           Live Count
                         </th>
-                        <th className="sticky top-0 z-20 py-2.5 px-3.5 w-[18%] font-semibold text-center bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                        <th className="py-2.5 px-3.5 w-[18%] font-semibold text-center border-r border-border/80 dark:border-border">
                           In Backup
                         </th>
-                        <th className="sticky top-0 z-20 py-2.5 px-3.5 pr-4 w-[28%] font-semibold text-right bg-gray-100 dark:bg-zinc-800 border-b border-border dark:border-border">
+                        <th className="py-2.5 px-3.5 pr-4 w-[28%] font-semibold text-right">
                           Net Impact
                         </th>
                       </tr>
@@ -270,14 +270,14 @@ export default function RestoreModal({
                         const isSafeMerge = mode === "merge";
 
                         return (
-                          <tr key={t.name} className="hover:bg-gray-50/60 dark:hover:bg-zinc-800/40 transition-colors">
-                            <td className="py-2.5 px-3.5 font-medium text-gray-800 dark:text-zinc-200 font-mono truncate" title={t.name}>
+                          <tr key={t.name} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
+                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-mono truncate border-r border-border/70 dark:border-border/70" title={t.name}>
                               {t.name}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-600 dark:text-zinc-400 font-mono whitespace-nowrap">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {t.liveRows}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-600 dark:text-zinc-400 font-mono whitespace-nowrap">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {t.backupRows}
                             </td>
                             <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">
