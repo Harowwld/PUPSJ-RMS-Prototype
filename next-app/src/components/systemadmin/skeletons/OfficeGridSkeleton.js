@@ -11,26 +11,26 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
         <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
           <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 border-collapse min-w-[960px]">
             <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-                <th className="w-12 py-3 px-4 text-center align-middle border-r border-border/80 dark:border-border">
+              <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                <th className="w-12 py-3 px-4 text-center align-middle">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="py-3 px-4 w-[22%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[28%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="py-3 px-4 w-[28%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-40 dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="py-3 px-4 w-[22%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[8%] text-center whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="py-3 px-4 w-[8%] text-center whitespace-nowrap">
                   <Skeleton className="h-3.5 w-10 mx-auto dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[8%] text-center whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="py-3 px-4 w-[8%] text-center whitespace-nowrap">
                   <Skeleton className="h-3.5 w-10 mx-auto dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[8%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="py-3 px-4 w-[8%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-12 dark:bg-muted" />
                 </th>
                 <th className="py-3 px-4 pr-6 text-right w-20 whitespace-nowrap">
@@ -44,10 +44,10 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                   key={i}
                   className="border-b border-border dark:border-border last:border-b-0"
                 >
-                  <td className="w-12 py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                  <td className="w-12 py-3 px-4 align-middle text-center">
                     <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-8 w-8 rounded-lg shrink-0 dark:bg-muted" />
                       <div className="flex flex-col gap-1">
@@ -61,7 +61,7 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                  <td className="py-3 px-4 align-middle overflow-hidden">
                     <div className="flex flex-col gap-1">
                       <Skeleton
                         className={cn(
@@ -72,19 +72,19 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                       <Skeleton className="h-2.5 w-52 rounded dark:bg-muted" />
                     </div>
                   </td>
-                  <td className="py-3 px-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap overflow-hidden">
                     <div className="flex flex-col gap-1">
                       <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                       <Skeleton className="h-2.5 w-36 rounded dark:bg-muted" />
                     </div>
                   </td>
-                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap">
                     <Skeleton className="h-6 w-12 rounded-lg mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap">
                     <Skeleton className="h-6 w-12 rounded-lg mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap">
                     <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                   </td>
                   <td className="py-3 px-4 pr-6 align-middle text-right whitespace-nowrap">

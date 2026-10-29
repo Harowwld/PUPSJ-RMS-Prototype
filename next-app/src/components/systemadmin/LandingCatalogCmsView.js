@@ -384,32 +384,34 @@ export default function LandingCatalogCmsView({ showToast }) {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
-          <button
-            type="button"
-            onClick={() => setActiveTab("content")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "content"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Catalog Content
-          </button>
+        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
+            <button
+              type="button"
+              onClick={() => setActiveTab("content")}
+              className={cn(
+                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                activeTab === "content"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+              )}
+            >
+              Catalog Content
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("preview")}
-            className={cn(
-              "relative h-full flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
-              activeTab === "preview"
-                ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
-            )}
-          >
-            Interactive Live Preview
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("preview")}
+              className={cn(
+                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                activeTab === "preview"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+              )}
+            >
+              Interactive Live Preview
+            </button>
+          </div>
         </div>
 
         {/* Content Body */}

@@ -24,14 +24,14 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
         <table className="w-full text-sm border-collapse min-w-[850px]">
           <thead className="sticky top-0 z-10 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs border-b border-border select-none">
-            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-              <th className="py-3 px-6 w-[32%] border-r border-border/80 dark:border-border">
+            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+              <th className="py-3 px-6 w-[32%] border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-6 w-[22%] text-center border-r border-border/80 dark:border-border">
+              <th className="py-3 px-6 w-[22%] text-center">
                 <Skeleton className="h-3.5 w-24 mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-6 w-[22%] text-center border-r border-border/80 dark:border-border">
+              <th className="py-3 px-6 w-[22%] text-center">
                 <Skeleton className="h-3.5 w-24 mx-auto dark:bg-muted" />
               </th>
               <th className="py-3 px-6 w-[24%] text-right">
@@ -46,7 +46,7 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
                 className="h-[54px] border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Program */}
-                <td className="py-3 px-6 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-6 align-middle border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white dark:bg-card">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-6 w-16 rounded-md dark:bg-muted shrink-0" />
                     <Skeleton
@@ -59,12 +59,12 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
                 </td>
 
                 {/* Total Students */}
-                <td className="py-3 px-6 align-middle text-center border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-6 align-middle text-center">
                   <Skeleton className="h-4 w-12 mx-auto rounded dark:bg-muted font-mono" />
                 </td>
 
                 {/* Fully Digitized */}
-                <td className="py-3 px-6 align-middle text-center border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-6 align-middle text-center">
                   <Skeleton className="h-4 w-12 mx-auto rounded dark:bg-muted font-mono" />
                 </td>
 

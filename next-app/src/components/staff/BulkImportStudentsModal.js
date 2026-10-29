@@ -691,8 +691,8 @@ export default function BulkImportStudentsModal({
             >
               <table className="w-full text-xs border-collapse min-w-[1160px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider select-none">
-                    <th className="w-12 min-w-[48px] p-3 text-center border-r border-border/80 dark:border-border">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="w-12 min-w-[48px] p-3 text-center">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
@@ -710,14 +710,14 @@ export default function BulkImportStudentsModal({
                         }}
                       />
                     </th>
-                    <th className="p-3 w-44 min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">Student No.</th>
-                    <th className="p-3 min-w-[220px] whitespace-nowrap border-r border-border/80 dark:border-border">Full Name</th>
-                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap border-r border-border/80 dark:border-border">Course</th>
-                    <th className="p-3 w-20 min-w-[70px] whitespace-nowrap text-center border-r border-border/80 dark:border-border">Year</th>
-                    <th className="p-3 w-24 min-w-[80px] whitespace-nowrap text-center border-r border-border/80 dark:border-border">Section</th>
-                    <th className="p-3 pr-4 w-32 min-w-[110px] whitespace-nowrap border-r border-border/80 dark:border-border">Room</th>
-                    <th className="p-3 pr-6 w-40 min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">Cabinet</th>
-                    <th className="p-3 pl-2 pr-4 w-36 min-w-[120px] whitespace-nowrap border-r border-border/80 dark:border-border">Drawer</th>
+                    <th className="p-3 w-44 min-w-[150px] whitespace-nowrap">Student No.</th>
+                    <th className="p-3 min-w-[220px] whitespace-nowrap">Full Name</th>
+                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap">Course</th>
+                    <th className="p-3 w-20 min-w-[70px] whitespace-nowrap text-center">Year</th>
+                    <th className="p-3 w-24 min-w-[80px] whitespace-nowrap text-center">Section</th>
+                    <th className="p-3 pr-4 w-32 min-w-[110px] whitespace-nowrap">Room</th>
+                    <th className="p-3 pr-6 w-40 min-w-[150px] whitespace-nowrap">Cabinet</th>
+                    <th className="p-3 pl-2 pr-4 w-36 min-w-[120px] whitespace-nowrap">Drawer</th>
                     <th className="p-3 pr-5 text-right w-20 min-w-[70px] whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -738,7 +738,7 @@ export default function BulkImportStudentsModal({
                         )}
                         onClick={() => toggleCsvRowSelected(r.index)}
                       >
-                        <td className="w-12 p-3 text-center align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="w-12 p-3 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -746,24 +746,24 @@ export default function BulkImportStudentsModal({
                             className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
                           />
                         </td>
-                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100">
                           {r.student.studentNo}
                         </td>
-                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate border-r border-border/70 dark:border-border/70" title={formatTitleCase(r.student.name)}>
+                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate" title={formatTitleCase(r.student.name)}>
                           {formatTitleCase(r.student.name)}
                         </td>
-                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle">
                           <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                             {r.student.courseCode}
                           </span>
                         </td>
-                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400">
                           {r.student.yearLevel}
                         </td>
-                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400">
                           {r.student.section}
                         </td>
-                        <td className="p-3 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-24 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(room || "")}
@@ -778,7 +778,7 @@ export default function BulkImportStudentsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pr-6 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-6 align-middle" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-30 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(cabinet || "")}
@@ -793,7 +793,7 @@ export default function BulkImportStudentsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pl-2 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pl-2 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-24 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(drawer || "")}

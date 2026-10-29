@@ -587,8 +587,8 @@ export default function BulkImportOrganizationsModal({
             >
               <table className="w-full text-xs border-collapse min-w-[1260px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider select-none">
-                    <th className="w-12 min-w-[48px] p-3 text-center border-r border-border/80 dark:border-border">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="w-12 min-w-[48px] p-3 text-center">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
@@ -606,13 +606,13 @@ export default function BulkImportOrganizationsModal({
                         }}
                       />
                     </th>
-                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap border-r border-border/80 dark:border-border">Acronym</th>
-                    <th className="p-3 min-w-[220px] whitespace-nowrap border-r border-border/80 dark:border-border">Organization Name</th>
-                    <th className="p-3 w-36 min-w-[130px] whitespace-nowrap border-r border-border/80 dark:border-border">Category</th>
-                    <th className="p-3 w-48 min-w-[160px] whitespace-nowrap border-r border-border/80 dark:border-border">Adviser</th>
-                    <th className="p-3 pr-4 w-28 min-w-[95px] whitespace-nowrap border-r border-border/80 dark:border-border">Room</th>
-                    <th className="p-3 pr-6 w-64 min-w-[240px] whitespace-nowrap border-r border-border/80 dark:border-border">Cabinet</th>
-                    <th className="p-3 pl-2 pr-4 w-32 min-w-[110px] whitespace-nowrap border-r border-border/80 dark:border-border">Drawer</th>
+                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap">Acronym</th>
+                    <th className="p-3 min-w-[220px] whitespace-nowrap">Organization Name</th>
+                    <th className="p-3 w-36 min-w-[130px] whitespace-nowrap">Category</th>
+                    <th className="p-3 w-48 min-w-[160px] whitespace-nowrap">Adviser</th>
+                    <th className="p-3 pr-4 w-28 min-w-[95px] whitespace-nowrap">Room</th>
+                    <th className="p-3 pr-6 w-64 min-w-[240px] whitespace-nowrap">Cabinet</th>
+                    <th className="p-3 pl-2 pr-4 w-32 min-w-[110px] whitespace-nowrap">Drawer</th>
                     <th className="p-3 pr-5 text-right w-20 min-w-[70px] whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -633,7 +633,7 @@ export default function BulkImportOrganizationsModal({
                         )}
                         onClick={() => toggleCsvRowSelected(r.index)}
                       >
-                        <td className="w-12 p-3 text-center align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="w-12 p-3 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -641,13 +641,13 @@ export default function BulkImportOrganizationsModal({
                             className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
                           />
                         </td>
-                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100">
                           {r.organization?.acronym || "N/A"}
                         </td>
-                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate border-r border-border/70 dark:border-border/70" title={formatTitleCase(r.organization?.name)}>
+                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate" title={formatTitleCase(r.organization?.name)}>
                           {formatTitleCase(r.organization?.name)}
                         </td>
-                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle">
                           <span className={cn(
                             "inline-flex w-fit items-center justify-center rounded-lg px-2 py-0.5 text-[11px] font-medium border",
                             (r.organization?.category || "Academic") === "Academic"
@@ -657,10 +657,10 @@ export default function BulkImportOrganizationsModal({
                             {r.organization?.category || "Academic"}
                           </span>
                         </td>
-                        <td className="p-3 align-middle text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70" title={r.organization?.adviserName || "N/A"}>
+                        <td className="p-3 align-middle text-gray-600 dark:text-zinc-400 truncate" title={r.organization?.adviserName || "N/A"}>
                           {r.organization?.adviserName || "N/A"}
                         </td>
-                        <td className="p-3 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-20 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(room || "1")}
@@ -672,7 +672,7 @@ export default function BulkImportOrganizationsModal({
                             <option value="2">2</option>
                           </Select>
                         </td>
-                        <td className="p-3 pr-6 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-6 align-middle" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-56 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(cabinet || "ACADEMIC ORGANIZATIONS")}
@@ -687,7 +687,7 @@ export default function BulkImportOrganizationsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pl-2 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pl-2 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-22 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(drawer || "1")}

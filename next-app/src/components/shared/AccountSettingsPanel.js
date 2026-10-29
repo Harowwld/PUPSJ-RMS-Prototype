@@ -144,7 +144,7 @@ export default function AccountSettingsPanel() {
         setAuthUser(user);
         if (user.avatar_filename) {
           setAvatarUrl(`/api/account/avatar?id=${user.id}&t=${Date.now()}`);
-          const match = user.avatar_filename.match(/default(\d)/);
+          const match = user.avatar_filename.match(/default(\d+)/);
           if (match) {
             setSelectedDefaultAvatarId(parseInt(match[1], 10));
           }
@@ -1440,7 +1440,7 @@ export default function AccountSettingsPanel() {
                   </div>
 
                   <div className="mt-6">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-w-2xl">
                       {DEFAULT_AVATARS.map((avatar) => {
                         const isSelected = selectedDefaultAvatarId === avatar.id;
                         return (

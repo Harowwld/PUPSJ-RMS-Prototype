@@ -483,8 +483,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
 
           {/* Navigation Toolbar */}
           <div className="shrink-0 border-t border-border dark:border-border p-1.5 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-            {/* Left: Status Line Tabs */}
-            <div className="flex items-center gap-4 sm:gap-6 min-w-0 select-none overflow-x-auto">
+            {/* Left: Status Segmented Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 min-w-0 select-none overflow-x-auto">
               {STATUS_TABS.map((item) => {
                 const isActive = item.id === ""
                   ? statusFilters.length === 0
@@ -497,10 +497,10 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       setStatusFilters(item.id ? [item.id] : []);
                     }}
                     className={cn(
-                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                      "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
                       isActive
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                     )}
                   >
                     {item.label}

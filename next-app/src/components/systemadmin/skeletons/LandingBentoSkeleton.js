@@ -32,16 +32,18 @@ export default function LandingBentoSkeleton() {
           }
         />
 
-        {/* Standardized SuperAdmin Underline Navigation Tabs */}
-        <div className="flex items-center gap-6 shrink-0 h-10 px-6 border-b border-border dark:border-border bg-white dark:bg-card select-none">
-          <div className="relative h-full flex items-center text-[13px] font-semibold text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50">
-            Bento Cards (5)
-          </div>
-          <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
-            Header &amp; Overview
-          </div>
-          <div className="relative h-full flex items-center text-[13px] text-[#8E8E93] font-normal">
-            Interactive Bento Preview
+        {/* Standardized SuperAdmin Navigation Segmented Tabs */}
+        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
+            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs">
+              Bento Cards (5)
+            </div>
+            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-gray-500 dark:text-zinc-400">
+              Header &amp; Overview
+            </div>
+            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-gray-500 dark:text-zinc-400">
+              Interactive Bento Preview
+            </div>
           </div>
         </div>
 

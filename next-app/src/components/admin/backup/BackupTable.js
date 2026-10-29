@@ -167,7 +167,7 @@ export default function BackupTable({
           >
             <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                   <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                     <input
                       type="checkbox"
@@ -191,7 +191,7 @@ export default function BackupTable({
                       <button
                         onClick={() => handleSort("filename")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "filename" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -218,11 +218,11 @@ export default function BackupTable({
                       )}
                     </div>
                   </th>
-                  <th className="p-4 w-[14%] text-center border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[14%] text-center">
                     <button
                       onClick={() => handleSort("size_bytes")}
                       className={cn(
-                        "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "size_bytes" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -234,11 +234,11 @@ export default function BackupTable({
                       />
                     </button>
                   </th>
-                  <th className="p-4 w-[18%] border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[18%]">
                     <button
                       onClick={() => handleSort("created_at")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "created_at" ? "text-gray-900 dark:text-white font-semibold" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -251,7 +251,7 @@ export default function BackupTable({
                     </button>
                   </th>
                   {scope === "office" ? (
-                    <th className="p-4 w-[22%] text-center border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="p-4 w-[22%] text-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <div className="inline-flex items-center justify-center gap-1.5">
                         <span>Backup Copies</span>
                         <Tooltip>
@@ -265,11 +265,11 @@ export default function BackupTable({
                       </div>
                     </th>
                   ) : (
-                    <th className="p-4 w-[22%] text-center border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="p-4 w-[22%] text-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Status
                     </th>
                   )}
-                  <th className="p-4 pr-6 w-28 text-right text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                  <th className="p-4 pr-6 w-28 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     Actions
                   </th>
                 </tr>
@@ -320,10 +320,10 @@ export default function BackupTable({
                           {getBackupTypeBadge(b)}
                         </div>
                       </td>
-                      <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100">
                         {formatBytes(b.size_bytes)}
                       </td>
-                      <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle">
                         <div className="flex flex-col">
                           <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 leading-tight">
                             {formatPHDateTime(b.created_at).split(' at ')[0]}
@@ -334,7 +334,7 @@ export default function BackupTable({
                         </div>
                       </td>
                       {scope === "office" ? (
-                        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle text-center">
                           <div className="flex mx-auto w-fit items-center justify-center gap-2">
                             {/* Node 1: Internal Storage */}
                             <Tooltip>
@@ -430,7 +430,7 @@ export default function BackupTable({
                           </div>
                         </td>
                       ) : (
-                        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle text-center">
                           <div className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                             Ready
                           </div>

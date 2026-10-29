@@ -899,8 +899,8 @@ export default function DocumentsTab({
 
               {/* 3. Navigation Toolbar for Matrix */}
               <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-                {/* Left: Status Filter Tabs */}
-                <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+                {/* Left: Status Filter Segmented Tabs */}
+                <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
                   <button
                     type="button"
                     onClick={() => {
@@ -908,22 +908,22 @@ export default function DocumentsTab({
                       setMatrixPage(1);
                     }}
                     className={cn(
-                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                      "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                       matrixStatusFilter === "all"
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                        : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                     )}
                   >
-                    All Students
+                    <span>All Students</span>
                     <span
                       className={cn(
-                        "ml-1.5 text-xs",
+                        "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         matrixStatusFilter === "all"
-                          ? "text-gray-900 dark:text-zinc-100 font-semibold"
-                          : "text-gray-400 dark:text-zinc-500 font-normal"
+                          ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
+                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                       )}
                     >
-                      ({kpiStats.totalStudents})
+                      {kpiStats.totalStudents}
                     </span>
                   </button>
 
@@ -934,22 +934,22 @@ export default function DocumentsTab({
                       setMatrixPage(1);
                     }}
                     className={cn(
-                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                      "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                       matrixStatusFilter === "incomplete"
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                        : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                     )}
                   >
-                    Incomplete / Missing
+                    <span>Incomplete / Missing</span>
                     <span
                       className={cn(
-                        "ml-1.5 text-xs",
+                        "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         matrixStatusFilter === "incomplete"
-                          ? "text-gray-900 dark:text-zinc-100 font-semibold"
-                          : "text-gray-400 dark:text-zinc-500 font-normal"
+                          ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                       )}
                     >
-                      ({kpiStats.incomplete})
+                      {kpiStats.incomplete}
                     </span>
                   </button>
 
@@ -960,22 +960,22 @@ export default function DocumentsTab({
                       setMatrixPage(1);
                     }}
                     className={cn(
-                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                      "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                       matrixStatusFilter === "compliant"
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                        : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                     )}
                   >
-                    Fully Compliant
+                    <span>Fully Compliant</span>
                     <span
                       className={cn(
-                        "ml-1.5 text-xs",
+                        "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         matrixStatusFilter === "compliant"
-                          ? "text-gray-900 dark:text-zinc-100 font-semibold"
-                          : "text-gray-400 dark:text-zinc-500 font-normal"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                       )}
                     >
-                      ({kpiStats.fullyCompliant})
+                      {kpiStats.fullyCompliant}
                     </span>
                   </button>
                 </div>
@@ -1129,7 +1129,7 @@ export default function DocumentsTab({
                   >
                     <table className="w-full text-sm border-collapse min-w-max">
                       <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                        <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                        <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           {/* Sticky Column: Student No */}
                           <th className="p-4 pl-6 sticky left-0 z-30 bg-gray-50 dark:bg-zinc-900 border-r border-border/70 w-[180px] min-w-[180px] max-w-[180px]">
                             <button
@@ -1180,7 +1180,7 @@ export default function DocumentsTab({
                           </th>
 
                           {/* Program & Section */}
-                          <th className="p-4 w-[160px] min-w-[160px] border-r border-border/80 dark:border-border">
+                          <th className="p-4 w-[160px] min-w-[160px]">
                             <button
                               type="button"
                               onClick={() => handleMatrixSort("course")}
@@ -1196,7 +1196,7 @@ export default function DocumentsTab({
                           </th>
 
                           {/* Progress */}
-                          <th className="p-4 w-[210px] min-w-[210px] border-r border-border/80 dark:border-border">
+                          <th className="p-4 w-[210px] min-w-[210px]">
                             <button
                               type="button"
                               onClick={() => handleMatrixSort("progress")}
@@ -1215,10 +1215,10 @@ export default function DocumentsTab({
                           {complianceDocTypes.map((docType) => (
                             <th
                               key={docType}
-                              className="p-4 text-center w-[185px] min-w-[185px] border-r border-border/40 select-none"
+                              className="p-4 text-center w-[185px] min-w-[185px] select-none"
                               title={docType}
                             >
-                              <div className="truncate max-w-[165px] mx-auto text-xs font-semibold normal-case text-gray-700 dark:text-zinc-200">
+                              <div className="truncate max-w-[165px] mx-auto text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                 {docType}
                               </div>
                             </th>
@@ -1246,7 +1246,7 @@ export default function DocumentsTab({
                             </td>
 
                             {/* Program & Section */}
-                            <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap w-[160px] min-w-[160px] border-r border-border/80 dark:border-border">
+                            <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap w-[160px] min-w-[160px]">
                               <span className="font-semibold text-gray-900 dark:text-zinc-100">
                                 {item.student.courseCode}
                               </span>{" "}
@@ -1256,7 +1256,7 @@ export default function DocumentsTab({
                             </td>
 
                             {/* Progress */}
-                            <td className="p-4 whitespace-nowrap w-[210px] min-w-[210px] border-r border-border/80 dark:border-border">
+                            <td className="p-4 whitespace-nowrap w-[210px] min-w-[210px]">
                               <div className="flex items-center gap-3">
                                 <div className="w-24 h-2.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden shrink-0 border border-black/5 dark:border-white/5">
                                   <div
@@ -1290,7 +1290,7 @@ export default function DocumentsTab({
                             {item.requirements.map((req) => (
                               <td
                                 key={req.docType}
-                                className="p-3.5 text-center border-r border-border/40 align-middle w-[185px] min-w-[185px]"
+                                className="p-3.5 text-center align-middle w-[185px] min-w-[185px]"
                               >
                                 {req.status === "verified" ? (
                                   <Tooltip>

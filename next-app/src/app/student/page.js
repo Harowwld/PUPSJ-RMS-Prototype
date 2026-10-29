@@ -1807,13 +1807,13 @@ function StudentDashboard() {
                       >
                         <table className="w-full text-sm border-collapse min-w-[900px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
-                              <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                              <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("id")}
                                   className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                                     sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
@@ -1821,12 +1821,12 @@ function StudentDashboard() {
                                   <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                              <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("doc_type")}
                                   className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                                     sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
@@ -1834,17 +1834,17 @@ function StudentDashboard() {
                                   <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap border-r border-border/80 dark:border-border">
-                                <span className="flex items-center text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                              <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap">
+                                <span className="flex items-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
                                   Purpose / Description
                                 </span>
                               </th>
-                              <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                              <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("status")}
                                   className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                                     sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
@@ -1852,12 +1852,12 @@ function StudentDashboard() {
                                   <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                              <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => handleSort("created_at")}
                                   className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                                     sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                   )}
                                 >
@@ -1865,10 +1865,10 @@ function StudentDashboard() {
                                   <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                                 </button>
                               </th>
-                              <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">Action</th>
+                              <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">Actions</th>
                             </tr>
                           </thead>
-                          <tbody className="bg-transparent">
+                          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                             {loading ? (
                               <StudentRequestsTableRowsSkeleton rowCount={itemsPerPage || 6} />
                             ) : (
@@ -1882,10 +1882,10 @@ function StudentDashboard() {
                                     "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
                                 )}
                               >
-                                <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                                <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100">
                                   #{item.id}
                                 </td>
-                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                <td className="p-4 align-middle overflow-hidden">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                       {item.doc_type}
@@ -1907,15 +1907,15 @@ function StudentDashboard() {
                                   </div>
                                 </td>
 
-                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                <td className="p-4 align-middle overflow-hidden">
                                   <div className="truncate text-xs font-normal text-gray-600 dark:text-zinc-400" title={item.notes}>
                                     {item.notes || "N/A"}
                                   </div>
                                 </td>
-                                <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <td className="p-4 align-middle whitespace-nowrap">
                                   <StatusBadge status={item.status} />
                                 </td>
-                                <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                   {formatPHDateTime(item.created_at)}
                                 </td>
                                 <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>

@@ -249,14 +249,14 @@ export default function RestoreModal({
                 <div className="max-h-48 overflow-y-auto custom-scrollbar select-none relative">
                   <table className="w-full text-xs border-collapse min-w-[420px]">
                     <thead className="sticky top-0 z-20 bg-gray-100/90 dark:bg-zinc-800/90 backdrop-blur-xs border-b border-border dark:border-border select-none">
-                      <tr className="text-left text-[11px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider select-none">
-                        <th className="py-2.5 px-3.5 w-[36%] font-semibold border-r border-border/80 dark:border-border">
+                      <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                        <th className="py-2.5 px-3.5 w-[36%] font-semibold">
                           Resource Table
                         </th>
-                        <th className="py-2.5 px-3.5 w-[18%] font-semibold text-center border-r border-border/80 dark:border-border">
+                        <th className="py-2.5 px-3.5 w-[18%] font-semibold text-center">
                           Live Count
                         </th>
-                        <th className="py-2.5 px-3.5 w-[18%] font-semibold text-center border-r border-border/80 dark:border-border">
+                        <th className="py-2.5 px-3.5 w-[18%] font-semibold text-center">
                           In Backup
                         </th>
                         <th className="py-2.5 px-3.5 pr-4 w-[28%] font-semibold text-right">
@@ -271,13 +271,13 @@ export default function RestoreModal({
 
                         return (
                           <tr key={t.name} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-mono truncate border-r border-border/70 dark:border-border/70" title={t.name}>
+                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-mono truncate" title={t.name}>
                               {t.name}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap">
                               {t.liveRows}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap">
                               {t.backupRows}
                             </td>
                             <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">

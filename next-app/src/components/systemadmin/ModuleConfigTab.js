@@ -124,6 +124,29 @@ export default function ModuleConfigTab({ showToast }) {
   const [matrixSortBy, setMatrixSortBy] = useState("name")
   const [matrixSortOrder, setMatrixSortOrder] = useState("ASC")
 
+  const currentOffice = useMemo(() => {
+    if (!matrix?.offices || matrix.offices.length === 0) return null
+    return matrix.offices.find((o) => o.id === selectedOfficeId) || matrix.offices[0]
+  }, [matrix, selectedOfficeId])
+
+  const isCurrentArchived = currentOffice?.status === "Inactive" || currentOffice?.status === "Archived"
+
+  const filteredOffices = useMemo(() => {
+    if (!matrix?.offices) return []
+    return matrix.offices.filter((o) => {
+      const isArchived = o.status === "Inactive" || o.status === "Archived"
+      if (officeFilter === "Archived") return isArchived
+      return !isArchived
+    })
+  }, [matrix, officeFilter])
+
+  useEffect(() => {
+    if (filteredOffices.length > 0 && !filteredOffices.some((o) => o.id === selectedOfficeId)) {
+      const timer = setTimeout(() => setSelectedOfficeId(filteredOffices[0].id), 0)
+      return () => clearTimeout(timer)
+    }
+  }, [filteredOffices, selectedOfficeId])
+
   // Horizontal scroll hook for Compare Features (Matrix view)
   const {
     tableContainerRef: matrixTableContainerRef,
@@ -133,7 +156,7 @@ export default function ModuleConfigTab({ showToast }) {
     scrollLeft,
     scrollRight,
     resetScroll: resetMatrixScroll,
-  } = useTableScroll([filteredOffices?.length, modules?.length]);
+  } = useTableScroll([filteredOffices?.length, matrix?.modules?.length]);
 
   useEffect(() => {
     resetMatrixScroll();
@@ -395,41 +418,6 @@ export default function ModuleConfigTab({ showToast }) {
       executeBatchToggle(officeId, category, true)
     }
   }
-
-  const currentOffice = useMemo(() => {
-    if (!matrix?.offices || matrix.offices.length === 0) return null
-    return matrix.offices.find((o) => o.id === selectedOfficeId) || matrix.offices[0]
-  }, [matrix, selectedOfficeId])
-
-  const isCurrentArchived = currentOffice?.status === "Inactive" || currentOffice?.status === "Archived"
-
-  const filteredOffices = useMemo(() => {
-    if (!matrix?.offices) return []
-    return matrix.offices.filter((o) => {
-      const isArchived = o.status === "Inactive" || o.status === "Archived"
-      if (officeFilter === "Archived") return isArchived
-      return !isArchived
-    })
-  }, [matrix, officeFilter])
-
-  useEffect(() => {
-    if (filteredOffices.length > 0 && !filteredOffices.some((o) => o.id === selectedOfficeId)) {
-      const timer = setTimeout(() => setSelectedOfficeId(filteredOffices[0].id), 0)
-      return () => clearTimeout(timer)
-    }
-  }, [filteredOffices, selectedOfficeId])
-
-  // Track horizontal scroll state on the matrix container
-  useEffect(() => {
-    const el = matrixTableContainerRef.current
-    if (!el) return
-    const handleScroll = () => {
-      setIsScrolledX(el.scrollLeft > 20)
-    }
-    el.addEventListener("scroll", handleScroll, { passive: true })
-    handleScroll()
-    return () => el.removeEventListener("scroll", handleScroll)
-  }, [loading, viewMode, filteredOffices.length])
 
   // Auto reset scroll to start when filters or view change
   useEffect(() => {
@@ -1280,14 +1268,14 @@ export default function ModuleConfigTab({ showToast }) {
             >
               <table className="w-full border-collapse text-left min-w-max">
                 <thead className="sticky top-0 z-20 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
-                    <th className="p-4 pl-6 w-[340px] min-w-[340px] max-w-[340px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30 border-r border-border/80 dark:border-border">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="p-4 pl-6 w-[340px] min-w-[340px] max-w-[340px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30 border-r border-border/70 dark:border-border/70">
                       <div className="flex items-center justify-between gap-2">
                         <button
                           type="button"
                           onClick={() => handleMatrixSort("name")}
                           className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                             matrixSortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1302,7 +1290,7 @@ export default function ModuleConfigTab({ showToast }) {
                         <th
                           key={o.id}
                           className={cn(
-                            "p-4 text-center w-[150px] min-w-[150px] border-r border-border/80 dark:border-border last:border-r-0 select-none",
+                            "p-4 text-center w-[150px] min-w-[150px] select-none",
                             isArchived && "opacity-75"
                           )}
                         >
@@ -1571,7 +1559,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
         const isLocked = isSystem || isOfficeArchived
 
         return (
-          <td key={o.id} className="p-4 text-center align-middle w-[150px] min-w-[150px] border-r border-border/70 dark:border-border/70 last:border-r-0">
+          <td key={o.id} className="p-4 text-center align-middle w-[150px] min-w-[150px]">
             <div className="inline-flex items-center justify-center">
               {isToggling ? (
                 <div className="w-9 h-5 flex items-center justify-center">

@@ -49,6 +49,7 @@
     "@marcosdemik/liquidglass": "^2.0.5",
     "adm-zip": "^0.6.1",
     "better-sqlite3": "^12.11.1",
+    "boring-avatars": "^2.0.4",
     "chokidar": "^4.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

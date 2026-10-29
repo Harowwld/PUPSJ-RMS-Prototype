@@ -1422,8 +1422,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           >
             <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 border-collapse min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase h-11 select-none">
-                  <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border">
+                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
+                  <th className="w-12 p-4 text-center align-middle">
                     <input
                       type="checkbox"
                       className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1436,11 +1436,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       aria-label="Select all departments on this page"
                     />
                   </th>
-                  <th className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[22%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("short_name")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "short_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1448,11 +1448,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[28%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[28%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("name")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1460,11 +1460,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[22%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("station_name")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "station_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1472,11 +1472,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[8%] text-center whitespace-nowrap border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
                     <button
                       onClick={() => handleSort("staff_count")}
                       className={cn(
-                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "staff_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1484,11 +1484,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[8%] text-center whitespace-nowrap border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
                     <button
                       onClick={() => handleSort("module_count")}
                       className={cn(
-                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "module_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1496,11 +1496,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[8%] whitespace-nowrap border-r border-border/80 dark:border-border">
+                  <th className="p-4 w-[8%] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("status")}
                       className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                         sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
@@ -1508,7 +1508,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                  <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     Actions
                   </th>
                 </tr>
@@ -1528,7 +1528,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                       )}
                     >
-                      <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                      <td className="w-12 p-4 align-middle text-center">
                         <input
                           type="checkbox"
                           className={cn(
@@ -1540,7 +1540,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           aria-label={`Select ${office.short_name}`}
                         />
                       </td>
-                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle whitespace-nowrap">
                         <div
                           className="flex items-center gap-3 cursor-pointer group/dept"
                           onClick={(e) => {
@@ -1576,7 +1576,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle overflow-hidden">
                         <div className="truncate">
                           <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
                             {office.name}
@@ -1587,7 +1587,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden">
                         <div className="text-[11px] space-y-1">
                           <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
                             <HugeIcon  className="ph-bold ph-desktop text-gray-400 dark:text-zinc-500 text-xs shrink-0"></HugeIcon>
@@ -1615,7 +1615,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle text-center whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1630,7 +1630,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle text-center whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1645,7 +1645,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 align-middle whitespace-nowrap">
                         <span
                           className={cn(
                             "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full select-none border",

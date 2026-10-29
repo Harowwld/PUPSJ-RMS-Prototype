@@ -1236,7 +1236,7 @@ export default function DigitalRecordsReviewTab({
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[1380px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
                       <input
                         type="checkbox"
@@ -1268,7 +1268,7 @@ export default function DigitalRecordsReviewTab({
                           type="button"
                           onClick={() => handleSort("student_no")}
                           className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                             sortBy === "student_no" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1294,12 +1294,12 @@ export default function DigitalRecordsReviewTab({
                         )}
                       </div>
                     </th>
-                    <th className="p-4 w-[220px] min-w-[220px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[220px] min-w-[220px]">
                       <button
                         type="button"
                         onClick={() => handleSort("student_name")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "student_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -1311,12 +1311,12 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[180px] min-w-[180px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[180px] min-w-[180px]">
                       <button
                         type="button"
                         onClick={() => handleSort("doc_type")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -1328,15 +1328,15 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[220px] min-w-[220px] text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400 border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[220px] min-w-[220px] text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Filename
                     </th>
-                    <th className="p-4 w-[130px] min-w-[130px] text-center border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[130px] min-w-[130px] text-center">
                       <button
                         type="button"
                         onClick={() => handleSort("approval_status")}
                         className={cn(
-                          "group inline-flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group inline-flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "approval_status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -1348,12 +1348,12 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[150px] min-w-[150px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[150px] min-w-[150px]">
                       <button
                         type="button"
                         onClick={() => handleSort("created_at")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -1365,7 +1365,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="w-28 min-w-[110px] p-4 pr-6 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                    <th className="w-28 min-w-[110px] p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
@@ -1420,7 +1420,7 @@ export default function DigitalRecordsReviewTab({
                               {r.student_no}
                             </span>
                           </td>
-                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle">
                             <div
                               className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
                               title={formatTitleCase(r.student_name)}
@@ -1428,7 +1428,7 @@ export default function DigitalRecordsReviewTab({
                               {formatTitleCase(r.student_name)}
                             </div>
                           </td>
-                          <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle">
                             <span
                               className="inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200"
                               title={r.doc_type}
@@ -1436,7 +1436,7 @@ export default function DigitalRecordsReviewTab({
                               {r.doc_type}
                             </span>
                           </td>
-                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle">
                             <span
                               className="block truncate text-xs text-gray-600 dark:text-zinc-400 font-normal"
                               title={r.original_filename}
@@ -1444,7 +1444,7 @@ export default function DigitalRecordsReviewTab({
                               {r.original_filename}
                             </span>
                           </td>
-                          <td className="w-32 min-w-[130px] p-4 text-center align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="w-32 min-w-[130px] p-4 text-center align-middle whitespace-nowrap">
                             <div className="flex items-center justify-center">
                               <span
                                 className={cn(
@@ -1456,7 +1456,7 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </div>
                           </td>
-                          <td className="w-36 min-w-[150px] p-4 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
+                          <td className="w-36 min-w-[150px] p-4 whitespace-nowrap align-middle">
                             <div className="flex flex-col">
                               <span className="text-xs font-medium text-gray-900 dark:text-zinc-100">
                                 {formatUploadedDate(r.created_at).dateStr}

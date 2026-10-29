@@ -77,8 +77,12 @@ export function useTableScroll(dependencies = []) {
 
   return {
     containerRef,
+    tableContainerRef: containerRef,
     isScrolledX,
+    isScrolled: isScrolledX,
     canScroll,
+    canScrollLeft: isScrolledX,
+    canScrollRight: canScroll,
     scrollLeft,
     scrollRight,
     resetScroll,

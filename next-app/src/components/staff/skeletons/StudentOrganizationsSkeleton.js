@@ -65,22 +65,22 @@ export default function StudentOrganizationsSkeleton() {
           <table className="w-full text-sm border-collapse min-w-[1040px]">
             <thead className="border-b border-border bg-gray-50/90 dark:bg-zinc-900/90">
               <tr className="h-11">
-                <th className="p-4 pl-6 w-[280px] border-r border-border/80 dark:border-border">
+                <th className="p-4 pl-6 w-[280px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[140px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[140px]">
                   <Skeleton className="h-3.5 w-20 rounded" />
                 </th>
-                <th className="p-4 w-[200px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[200px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[130px] text-center border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[130px] text-center">
                   <Skeleton className="h-3.5 w-16 mx-auto rounded" />
                 </th>
-                <th className="p-4 w-[180px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[180px]">
                   <Skeleton className="h-3.5 w-32 rounded" />
                 </th>
-                <th className="p-4 w-[120px] text-center border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[120px] text-center">
                   <Skeleton className="h-3.5 w-14 mx-auto rounded" />
                 </th>
                 <th className="p-4 pr-6 text-right w-[90px]">
@@ -91,26 +91,26 @@ export default function StudentOrganizationsSkeleton() {
             <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
               {Array.from({ length: 6 }).map((_, i) => (
                 <tr key={i} className="h-14">
-                  <td className="p-4 pl-6 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4 pl-6">
                     <div className="flex items-center gap-2">
                       <Skeleton className="w-2.5 h-2.5 rounded-full shrink-0" />
                       <Skeleton className="h-5 w-12 rounded" />
                       <Skeleton className="h-4 w-40 rounded" />
                     </div>
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-5 w-24 rounded-full" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-4 w-32 rounded" />
                   </td>
-                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="p-4 text-center">
                     <Skeleton className="h-5 w-12 mx-auto rounded-full" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-5 w-24 rounded-md" />
                   </td>
-                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="p-4 text-center">
                     <Skeleton className="h-5 w-16 mx-auto rounded-full" />
                   </td>
                   <td className="p-4 pr-6 text-right">

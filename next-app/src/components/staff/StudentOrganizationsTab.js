@@ -1710,13 +1710,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               >
                 <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
-                          "p-4 pl-6 w-[280px] min-w-[280px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                          isScrolledX
-                            ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                            : "border-r border-border/80 dark:border-border"
+                          "p-4 pl-6 w-[280px] min-w-[280px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow border-r border-border/70",
+                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
                         <div className="flex items-center justify-between gap-1">
@@ -1736,11 +1734,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           )}
                         </div>
                       </th>
-                      <th className="p-4 w-[140px] min-w-[140px] border-r border-border/80 dark:border-border">Category</th>
-                      <th className="p-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">Faculty Adviser</th>
-                      <th className="p-4 w-[130px] min-w-[130px] text-center border-r border-border/80 dark:border-border">Officers</th>
-                      <th className="p-4 w-[180px] min-w-[180px] border-r border-border/80 dark:border-border">Constitution & By-Laws</th>
-                      <th className="p-4 w-[120px] min-w-[120px] text-center border-r border-border/80 dark:border-border">Status</th>
+                      <th className="p-4 w-[140px] min-w-[140px]">Category</th>
+                      <th className="p-4 w-[200px] min-w-[200px]">Faculty Adviser</th>
+                      <th className="p-4 w-[130px] min-w-[130px] text-center">Officers</th>
+                      <th className="p-4 w-[180px] min-w-[180px]">Constitution & By-Laws</th>
+                      <th className="p-4 w-[120px] min-w-[120px] text-center">Status</th>
                       <th className="p-4 pr-6 text-right w-[90px] min-w-[90px]">Actions</th>
                     </tr>
                   </thead>
@@ -1757,10 +1755,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           {/* Org Name & Acronym */}
                           <td
                             className={cn(
-                              "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
-                              isScrolledX
-                                ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                                : "border-r border-border/70 dark:border-border/70"
+                              "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                             )}
                           >
                             <div className="min-w-0">
@@ -1794,14 +1790,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Category Badge */}
-                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 whitespace-nowrap">
                             <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
                               {org.category}
                             </span>
                           </td>
 
                           {/* Faculty Adviser */}
-                          <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 overflow-hidden">
                             <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
                               {org.adviser_name || (
                                 <span className="text-gray-400 italic">Not assigned</span>
@@ -1815,7 +1811,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Authorized Officers */}
-                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 text-center whitespace-nowrap">
                             <button
                               type="button"
                               onClick={() => openManageOrgSheet(org, "officers")}
@@ -1830,7 +1826,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Constitution & By-Laws */}
-                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 whitespace-nowrap">
                             {Number(org.pending_cbl_count) > 0 ? (
                               <button
                                 type="button"
@@ -1902,7 +1898,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Status */}
-                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 text-center whitespace-nowrap">
                             <span
                               className={cn(
                                 "inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border",

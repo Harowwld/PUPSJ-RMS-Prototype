@@ -132,7 +132,7 @@ const StaffTableRow = React.memo(({
           {s.id}
         </span>
       </td>
-      <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+      <td className="p-4 align-middle overflow-hidden">
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 min-w-0 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
             <span className="truncate" title={getStaffCleanName(s)}>
@@ -144,7 +144,7 @@ const StaffTableRow = React.memo(({
           </div>
         </div>
       </td>
-      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+      <td className="p-4 align-middle whitespace-nowrap">
         <div className={cn(
           "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
@@ -156,7 +156,7 @@ const StaffTableRow = React.memo(({
           {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
         </div>
       </td>
-      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+      <td className="p-4 align-middle whitespace-nowrap">
         {s.totp_enabled ? (
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             2FA Enabled
@@ -167,7 +167,7 @@ const StaffTableRow = React.memo(({
           </span>
         )}
       </td>
-      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+      <td className="p-4 align-middle whitespace-nowrap">
         {(!active.relative && (!active.date || active.date === "N/A")) ? (
           <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
             Never active
@@ -659,31 +659,51 @@ export default function StaffDirectoryTab({
 
         {/* Navigation Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-6 shrink-0 select-none">
+          {/* Left: Active vs Archived Segmented Tabs */}
+          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
             <button
               type="button"
               onClick={() => handleTabChange("active")}
               className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                 activeTab === "active"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
               )}
             >
-              Active ({officeStaff.filter((s) => s.status !== "Archived").length})
+              <span>Active</span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  activeTab === "active"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                )}
+              >
+                {officeStaff.filter((s) => s.status !== "Archived").length}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => handleTabChange("archived")}
               className={cn(
-                "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent",
+                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                 activeTab === "archived"
-                  ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                  : "text-gray-500 font-medium hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
               )}
             >
-              Archived ({officeStaff.filter((s) => s.status === "Archived").length})
+              <span>Archived</span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  activeTab === "archived"
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                )}
+              >
+                {officeStaff.filter((s) => s.status === "Archived").length}
+              </span>
             </button>
           </div>
 
@@ -838,7 +858,7 @@ export default function StaffDirectoryTab({
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                       <input
                         type="checkbox"
@@ -868,7 +888,7 @@ export default function StaffDirectoryTab({
                         <button
                           onClick={() => handleSort("id")}
                           className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                             sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -895,11 +915,11 @@ export default function StaffDirectoryTab({
                         )}
                       </div>
                     </th>
-                    <th className="p-4 w-[26%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[26%]">
                       <button
                         onClick={() => handleSort("fname")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -911,11 +931,11 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[16%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[16%]">
                       <button
                         onClick={() => handleSort("role")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -927,11 +947,11 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[14%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[14%]">
                       <button
                         onClick={() => handleSort("totp_enabled")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "totp_enabled" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -943,11 +963,11 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[18%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[18%]">
                       <button
                         onClick={() => handleSort("last_active")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "last_active" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -959,7 +979,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-24 p-4 pr-6 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                    <th className="w-24 p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>

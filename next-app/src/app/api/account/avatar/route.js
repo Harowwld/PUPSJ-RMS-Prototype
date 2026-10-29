@@ -7,7 +7,7 @@ import { updateStaff } from "@/lib/staffRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
-import { getDefaultAvatarSvg, isDefaultAvatarId } from "@/lib/defaultAvatars";
+import { isDefaultAvatarId, getDefaultAvatarSvg } from "@/lib/defaultAvatars";
 
 export const runtime = "nodejs";
 

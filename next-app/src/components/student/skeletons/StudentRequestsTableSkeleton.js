@@ -13,12 +13,12 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           className="h-[52px] border-b border-border dark:border-border last:border-b-0"
         >
           {/* Ticket # */}
-          <td className="p-4 pl-6 align-middle border-r border-border/70 dark:border-border/70">
+          <td className="p-4 pl-6 align-middle">
             <Skeleton className="h-4 w-12 rounded dark:bg-muted font-mono" />
           </td>
 
           {/* Document Type */}
-          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+          <td className="p-4 align-middle overflow-hidden">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -28,7 +28,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Purpose / Description */}
-          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+          <td className="p-4 align-middle overflow-hidden">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -38,12 +38,12 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Status */}
-          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          <td className="p-4 align-middle whitespace-nowrap">
             <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
           </td>
 
           {/* Date Requested */}
-          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          <td className="p-4 align-middle whitespace-nowrap">
             <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
           </td>
 
@@ -165,20 +165,20 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none">
           <table className="w-full text-sm border-collapse min-w-[900px]">
             <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
-                <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap border-r border-border/80 dark:border-border">
+              <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-36 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </th>
-                <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </th>
                 <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap">

@@ -789,15 +789,15 @@ export default function CampusOperationsTab() {
             >
               <table className="w-full text-sm border-collapse min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase h-11 select-none">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
                     <th
-                      className="p-4 w-[100px] min-w-[100px] max-w-[100px] border-r border-border/80 dark:border-border whitespace-nowrap"
+                      className="p-4 w-[100px] min-w-[100px] max-w-[100px] whitespace-nowrap"
                     >
                       <button
                         onClick={() => handleSort("id")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -806,11 +806,11 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Department */}
-                    <th className="p-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[130px] min-w-[130px]">
                       <button
                         onClick={() => handleSort("officeId")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "officeId" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -819,11 +819,11 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Student Requester */}
-                    <th className="p-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[200px] min-w-[200px]">
                       <button
                         onClick={() => handleSort("studentName")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "studentName" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -832,11 +832,11 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Document or Proposal Title */}
-                    <th className="p-4 w-[270px] min-w-[270px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[270px] min-w-[270px]">
                       <button
                         onClick={() => handleSort("title")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "title" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -845,11 +845,11 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Student Org / Details */}
-                    <th className="p-4 w-[190px] min-w-[190px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[190px] min-w-[190px]">
                       <button
                         onClick={() => handleSort("organizationName")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "organizationName" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -858,11 +858,11 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Stage Status */}
-                    <th className="p-4 w-[140px] min-w-[140px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[140px] min-w-[140px]">
                       <button
                         onClick={() => handleSort("status")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -871,11 +871,11 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Submitted */}
-                    <th className="p-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[130px] min-w-[130px]">
                       <button
                         onClick={() => handleSort("createdAt")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           sortBy === "createdAt" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                         )}
                       >
@@ -884,13 +884,13 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Actions */}
-                    <th className="p-4 pr-6 text-right w-[80px] min-w-[80px] text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                    <th className="p-4 pr-6 text-right w-[80px] min-w-[80px] text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-border/60 font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+                <tbody className="divide-y divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
                   {paginatedTransactions.map((tx) => {
                     const isRegistrar = tx.officeId === "registrar"
                     const rel = formatRelativeTime(tx.createdAt)
@@ -899,11 +899,11 @@ export default function CampusOperationsTab() {
                       <tr
                         key={tx.id}
                         onClick={() => handleOpenDetails(tx)}
-                        className="group h-[52px] border-b border-border/60 last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 cursor-pointer select-none"
+                        className="group h-[52px] border-b border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 cursor-pointer select-none"
                       >
                         {/* Transaction ID */}
                         <td
-                          className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"
+                          className="p-4 align-middle whitespace-nowrap"
                         >
                           <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                             #{tx.id}
@@ -911,7 +911,7 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Department Badge */}
-                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle whitespace-nowrap">
                           {isRegistrar ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                               <HugeIcon className="ph-bold ph-certificate text-xs" />
@@ -926,7 +926,7 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Student Requester */}
-                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle overflow-hidden">
                           <div
                             className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate"
                             title={formatStudentRequester(tx.studentName, tx.studentNo)}
@@ -939,7 +939,7 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Document or Proposal Title */}
-                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle overflow-hidden">
                           <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate" title={tx.title}>
                             {tx.title}
                           </div>
@@ -952,7 +952,7 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Organization / Reference */}
-                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle overflow-hidden">
                           {tx.organizationName ? (
                             <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate" title={tx.organizationName}>
                               {tx.organizationName}
@@ -965,7 +965,7 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Stage Status Badge */}
-                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle whitespace-nowrap">
                           <span
                             className={cn(
                               "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap shadow-2xs",
@@ -978,7 +978,7 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Date Submitted */}
-                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-mono border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-mono">
                           {rel.relative || rel.date}
                         </td>
 

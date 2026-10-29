@@ -21,17 +21,17 @@ export default function TaxonomyTableSkeleton({
       <div className="overflow-x-auto show-scrollbar pb-2">
         <table className="w-full text-sm border-collapse min-w-[850px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 py-3 px-4 text-center border-r border-border/80 dark:border-border">
+            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+              <th className="w-12 py-3 px-4 text-center">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="w-[24%] py-3 px-4 border-r border-border/80 dark:border-border">
+              <th className="w-[24%] py-3 px-4">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="w-[48%] py-3 px-4 border-r border-border/80 dark:border-border">
+              <th className="w-[48%] py-3 px-4">
                 <Skeleton className="h-3.5 w-32 dark:bg-muted" />
               </th>
-              <th className="w-[14%] py-3 px-4 border-r border-border/80 dark:border-border">
+              <th className="w-[14%] py-3 px-4">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
               <th className="w-28 py-3 px-4 pr-6 text-right">
@@ -46,17 +46,17 @@ export default function TaxonomyTableSkeleton({
                 className="border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Checkbox */}
-                <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle text-center">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
 
                 {/* Primary Code / Identifier */}
-                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle whitespace-nowrap">
                   <Skeleton className="h-4 w-20 rounded dark:bg-muted" />
                 </td>
 
                 {/* Designation / Block / Scope */}
-                <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle overflow-hidden">
                   <div className="flex flex-col gap-1">
                     <Skeleton
                       className={cn(
@@ -71,7 +71,7 @@ export default function TaxonomyTableSkeleton({
                 </td>
 
                 {/* Status Badge */}
-                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle whitespace-nowrap">
                   <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
                 </td>
 

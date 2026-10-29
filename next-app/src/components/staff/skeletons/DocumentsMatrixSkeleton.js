@@ -16,23 +16,23 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
         <table className="w-full text-sm border-collapse min-w-[960px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-              <th className="py-3 px-4 w-[15%] border-r border-border/80 dark:border-border">
+            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+              <th className="py-3 px-4 w-[15%]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[22%] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[22%]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[18%] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[18%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[12%] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[12%]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[18%] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[18%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[10%] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[10%]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
               <th className="py-3 px-4 pr-6 text-right w-20">
@@ -47,12 +47,12 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
                 className="h-[60px] border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Student No */}
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </td>
 
                 {/* Name */}
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <div className="space-y-1">
                     <Skeleton
                       className={cn(
@@ -65,17 +65,17 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
                 </td>
 
                 {/* Document Type */}
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* File */}
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />
@@ -83,7 +83,7 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
                 </td>
 
                 {/* Created */}
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                 </td>
 

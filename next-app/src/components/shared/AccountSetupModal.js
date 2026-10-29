@@ -44,7 +44,7 @@ export default function AccountSetupModal({ authUser }) {
 
   // Avatar state (Step 3)
   const [selectedAvatarId, setSelectedAvatarId] = useState(() => {
-    const match = authUser?.avatar_filename?.match(/default(\d)/)
+    const match = authUser?.avatar_filename?.match(/default(\d+)/)
     return match ? Number(match[1]) : 1
   })
   const [avatarLoading, setAvatarLoading] = useState(false)
@@ -566,7 +566,7 @@ export default function AccountSetupModal({ authUser }) {
                   </span>
                 </div>
 
-                {/* 4 Default Avatars Grid */}
+                {/* Default Avatars Grid */}
                 <div>
                   <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
                     Select Default Avatar

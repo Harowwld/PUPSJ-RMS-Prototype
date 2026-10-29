@@ -16,26 +16,26 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
         <table className="w-full text-sm border-collapse min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 py-3 px-4 text-center border-r border-border/80 dark:border-border">
+            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+              <th className="w-12 py-3 px-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[160px] min-w-[160px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[160px] min-w-[160px] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[220px] min-w-[220px]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[180px] min-w-[180px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[180px] min-w-[180px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[220px] min-w-[220px]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[130px] min-w-[130px] text-center border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[130px] min-w-[130px] text-center">
                 <Skeleton className="h-3.5 w-16 mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[150px] min-w-[150px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[150px] min-w-[150px]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
               <th className="w-28 min-w-[110px] py-3 px-4 pr-6 text-right">
@@ -50,17 +50,17 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 className="border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Checkbox */}
-                <td className="w-12 py-3 px-4 text-center border-r border-border/70 dark:border-border/70">
+                <td className="w-12 py-3 px-4 text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white dark:bg-card">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
 
                 {/* Student No */}
-                <td className="py-3 px-4 w-[160px] min-w-[160px] whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 w-[160px] min-w-[160px] whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white dark:bg-card">
                   <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Student Name */}
-                <td className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 w-[220px] min-w-[220px]">
                   <Skeleton
                     className={cn(
                       "h-4 rounded dark:bg-muted",
@@ -70,22 +70,22 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 </td>
 
                 {/* Document Type */}
-                <td className="py-3 px-4 w-[180px] min-w-[180px] border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 w-[180px] min-w-[180px]">
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Filename */}
-                <td className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 w-[220px] min-w-[220px]">
                   <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
                 </td>
 
                 {/* Status */}
-                <td className="py-3 px-4 w-[130px] min-w-[130px] text-center border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 w-[130px] min-w-[130px] text-center">
                   <Skeleton className="h-6 w-20 rounded-full mx-auto dark:bg-muted" />
                 </td>
 
                 {/* Upload Date */}
-                <td className="py-3 px-4 w-[150px] min-w-[150px] border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 w-[150px] min-w-[150px]">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-14 rounded dark:bg-muted" />

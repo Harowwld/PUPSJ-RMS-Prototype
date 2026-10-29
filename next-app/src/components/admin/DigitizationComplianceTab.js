@@ -1284,7 +1284,7 @@ function DigitizationComplianceContent({
               {sortedByCourse.length > 0 ? (
                 <table className="w-full text-sm border-collapse min-w-[850px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
                           "p-4 px-6 w-[32%] min-w-[200px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200 border-r border-border/80 dark:border-border",
@@ -1295,7 +1295,7 @@ function DigitizationComplianceContent({
                           <button
                             onClick={() => handleSort("courseCode")}
                             className={cn(
-                              "group flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                              "group flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
                               sortBy === "courseCode" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                             )}
                           >
@@ -1318,22 +1318,22 @@ function DigitizationComplianceContent({
                           )}
                         </div>
                       </th>
-                      <th className="p-4 px-6 w-[22%] text-center border-r border-border/80 dark:border-border">
+                      <th className="p-4 px-6 w-[22%] text-center">
                         <button
                           onClick={() => handleSort("total")}
                           className={cn(
-                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
                             sortBy === "total" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
                           Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 px-6 w-[22%] text-center border-r border-border/80 dark:border-border">
+                      <th className="p-4 px-6 w-[22%] text-center">
                         <button
                           onClick={() => handleSort("digitized")}
                           className={cn(
-                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
                             sortBy === "digitized" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1344,7 +1344,7 @@ function DigitizationComplianceContent({
                         <button
                           onClick={() => handleSort("percent")}
                           className={cn(
-                            "group ml-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                            "group ml-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
                             sortBy === "percent" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1381,10 +1381,10 @@ function DigitizationComplianceContent({
                             {row.courseCode || "N/A"}
                           </button>
                         </td>
-                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
                           {row.total?.toLocaleString?.() ?? row.total}
                         </td>
-                        <td className="p-4 px-6 text-center text-[13px] font-normal border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 px-6 text-center text-[13px] font-normal">
                           <span className={cn(
                             row.digitized === 0
                               ? "text-gray-400 dark:text-zinc-500"

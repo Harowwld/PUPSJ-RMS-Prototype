@@ -100,16 +100,16 @@ const ConflictResolutionModals = memo(({
             <div className="max-h-[46vh] overflow-auto rounded-xl border border-border/80 dark:border-border shadow-xs bg-white dark:bg-card select-none">
               <table className="w-full text-sm border-collapse min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-                    <th className="py-3 px-4 w-[28%] font-semibold border-r border-border/80 dark:border-border">Displaced Drawer</th>
-                    <th className="py-3 px-4 w-[18%] font-semibold border-r border-border/80 dark:border-border">Affected Records</th>
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="py-3 px-4 w-[28%] font-semibold">Displaced Drawer</th>
+                    <th className="py-3 px-4 w-[18%] font-semibold">Affected Records</th>
                     <th className="py-3 px-4 w-[54%] font-semibold">Target Destination</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {templateConflictRows.map((row) => (
                     <tr key={row.sourceKey} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                      <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
+                      <td className="py-3.5 px-4 align-top">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 shrink-0">
                             <HugeIcon  className="ph-bold ph-archive text-sm" />
@@ -137,7 +137,7 @@ const ConflictResolutionModals = memo(({
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
+                      <td className="py-3.5 px-4 align-top">
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
                           
                           {row.count} {row.count === 1 ? "record" : "records"}
@@ -253,19 +253,19 @@ const ConflictResolutionModals = memo(({
             <div className="max-h-[50vh] overflow-auto rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs select-none">
               <table className="w-full text-sm border-collapse min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-                    <th className="py-3 px-4 w-[38%] font-semibold border-r border-border/80 dark:border-border">Original Location</th>
-                    <th className="py-3 px-4 w-[42%] font-semibold border-r border-border/80 dark:border-border">New Destination</th>
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="py-3 px-4 w-[38%] font-semibold">Original Location</th>
+                    <th className="py-3 px-4 w-[42%] font-semibold">New Destination</th>
                     <th className="py-3 px-4 w-[20%] font-semibold text-center">Records Moved</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {applyPreviewRows.map((r) => (
                     <tr key={r.fromKey} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 truncate border-r border-border/70 dark:border-border/70">
+                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 truncate">
                         {r.fromLabel}
                       </td>
-                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate border-r border-border/70 dark:border-border/70">
+                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                         <div className="flex items-center gap-2 truncate">
                           <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                           <span className="truncate">{r.toLabel}</span>
@@ -319,9 +319,9 @@ const ConflictResolutionModals = memo(({
             <div className="max-h-[50vh] overflow-auto rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs select-none">
               <table className="w-full text-sm border-collapse min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-                    <th className="py-3 px-4 w-[38%] font-semibold border-r border-border/80 dark:border-border">From Location</th>
-                    <th className="py-3 px-4 w-[42%] font-semibold border-r border-border/80 dark:border-border">To Destination</th>
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="py-3 px-4 w-[38%] font-semibold">From Location</th>
+                    <th className="py-3 px-4 w-[42%] font-semibold">To Destination</th>
                     <th className="py-3 px-4 w-[20%] font-semibold text-center">Records Migrated</th>
                   </tr>
                 </thead>
@@ -338,10 +338,10 @@ const ConflictResolutionModals = memo(({
                         key={`${idx}-${r?.from?.room}-${r?.from?.cabinet}-${r?.from?.drawer}`}
                         className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none"
                       >
-                        <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 border-r border-border/70 dark:border-border/70">
+                        <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300">
                           Room {r?.from?.room} · Cabinet {r?.from?.cabinet} · Drawer {r?.from?.drawer}
                         </td>
-                        <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                        <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           <div className="flex items-center gap-2">
                             <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                             <span>Room {r?.to?.room} · Cabinet {r?.to?.cabinet} · Drawer {r?.to?.drawer}</span>

@@ -275,7 +275,7 @@ export default function NotificationsTab({
   };
 
   // Mark specific notification read or unread
-  const toggleReadState = async (id, markAsRead) => {
+  const toggleReadState = useCallback(async (id, markAsRead) => {
     try {
       const action = markAsRead ? "markRead" : "markUnread";
       const res = await fetch("/api/notifications", {
@@ -304,7 +304,7 @@ export default function NotificationsTab({
     } catch (e) {
       setError(e?.message || "Failed to update notification");
     }
-  };
+  }, [selectedNotif, load]);
 
   // Mark all read
   const markAllRead = useCallback(async () => {
@@ -571,25 +571,25 @@ export default function NotificationsTab({
 
           {/* 2. Navigation Toolbar: Read / Unread Tabs ONLY */}
           <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
-            {/* Left: Underline Tabs */}
-            <div className="flex items-center gap-6 select-none overflow-x-auto">
+            {/* Left: Segmented Control Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab("unread")}
                 className={cn(
-                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap gap-1.5",
+                  "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                   activeTab === "unread"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                 )}
               >
                 <span>Unread</span>
                 <span
                   className={cn(
-                    "text-[11px] font-semibold px-2 py-0.2 rounded-full",
+                    "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     activeTab === "unread"
-                      ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "bg-gray-200/80 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                      ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 border border-pup-maroon/20 dark:border-red-500/30"
+                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                   )}
                 >
                   {unreadCount}
@@ -599,19 +599,19 @@ export default function NotificationsTab({
                 type="button"
                 onClick={() => setActiveTab("read")}
                 className={cn(
-                  "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap gap-1.5",
+                  "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
                   activeTab === "read"
-                    ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                    : "text-gray-500 dark:text-zinc-400 font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                 )}
               >
                 <span>Read</span>
                 <span
                   className={cn(
-                    "text-[11px] font-semibold px-2 py-0.2 rounded-full",
+                    "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     activeTab === "read"
-                      ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "bg-gray-200/80 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                      ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
+                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                   )}
                 >
                   {readCount}

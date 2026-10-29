@@ -1009,12 +1009,12 @@ export default function StudentComplianceTab({ authUser }) {
             >
               <table className="w-full text-sm border-collapse table-fixed min-w-[750px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th
-                      className="p-4 pl-6 w-[44%] border-r border-border/80 dark:border-border"
+                      className="p-4 pl-6 w-[44%]"
                       aria-sort={sortConfig.column === "docType" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <button type="button" onClick={() => handleSort("docType")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold tracking-wider uppercase", sortConfig.column === "docType" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                      <button type="button" onClick={() => handleSort("docType")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-semibold", sortConfig.column === "docType" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Requirement
                         {sortConfig.column === "docType" ? (
                           <HugeIcon
@@ -1029,10 +1029,10 @@ export default function StudentComplianceTab({ authUser }) {
                       </button>
                     </th>
                     <th
-                      className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border"
+                      className="p-4 w-[22%] whitespace-nowrap"
                       aria-sort={sortConfig.column === "category" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <button type="button" onClick={() => handleSort("category")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold tracking-wider uppercase", sortConfig.column === "category" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                      <button type="button" onClick={() => handleSort("category")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-semibold", sortConfig.column === "category" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Category
                         {sortConfig.column === "category" ? (
                           <HugeIcon
@@ -1047,10 +1047,10 @@ export default function StudentComplianceTab({ authUser }) {
                       </button>
                     </th>
                     <th
-                      className="p-4 w-[22%] whitespace-nowrap border-r border-border/80 dark:border-border"
+                      className="p-4 w-[22%] whitespace-nowrap"
                       aria-sort={sortConfig.column === "status" ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
                     >
-                      <button type="button" onClick={() => handleSort("status")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] font-semibold tracking-wider uppercase", sortConfig.column === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
+                      <button type="button" onClick={() => handleSort("status")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-semibold", sortConfig.column === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Status
                         {sortConfig.column === "status" ? (
                           <HugeIcon
@@ -1064,12 +1064,12 @@ export default function StudentComplianceTab({ authUser }) {
                         )}
                       </button>
                     </th>
-                    <th className="p-4 pr-6 w-[12%] text-right whitespace-nowrap">
+                    <th className="p-4 pr-6 w-[12%] text-right whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border dark:border-border">
+                <tbody className="divide-y divide-border dark:divide-border">
                   {sortedRequirements.map((item) => {
                     const isSubmitted = item.status === "Submitted";
 
@@ -1079,7 +1079,7 @@ export default function StudentComplianceTab({ authUser }) {
                         onClick={() => setSelectedRequirement(item)}
                         className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none group"
                       >
-                        <td className="p-4 pl-6 overflow-hidden border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 pl-6 overflow-hidden">
                           <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors" title={item.docType}>
                             {item.docType}
                           </div>
@@ -1087,10 +1087,10 @@ export default function StudentComplianceTab({ authUser }) {
                             {item.description}
                           </div>
                         </td>
-                        <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap">
                           {item.category}
                         </td>
-                        <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 whitespace-nowrap">
                           {isSubmitted ? (
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
@@ -1355,20 +1355,20 @@ export default function StudentComplianceTab({ authUser }) {
             {/* Requirements Checklist Table */}
             <div className="rounded-2xl border border-border dark:border-border overflow-hidden shadow-xs print:border-border">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs font-semibold text-[11px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 border-b border-border select-none print:bg-gray-100">
+                <thead className="bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs font-semibold text-xs text-gray-500 dark:text-zinc-400 border-b border-border select-none print:bg-gray-100">
                   <tr>
-                    <th className="py-3 px-3 text-center w-9 border-r border-border/80 dark:border-border">#</th>
-                    <th className="py-3 px-4 border-r border-border/80 dark:border-border">Requirement / Credential</th>
-                    <th className="py-3 px-4 border-r border-border/80 dark:border-border">Category</th>
+                    <th className="py-3 px-3 text-center w-9">#</th>
+                    <th className="py-3 px-4">Requirement / Credential</th>
+                    <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-border print:divide-border">
                   {sortedRequirements.map((r, idx) => (
                     <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none print:border-b print:border-border">
-                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px] border-r border-border/70 dark:border-border/70">{idx + 1}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal border-r border-border/70 dark:border-border/70">{r?.docType || r?.name || "N/A"}</td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">{r?.category || "N/A"}</td>
+                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r?.docType || r?.name || "N/A"}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap">{r?.category || "N/A"}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={cn(

@@ -9,26 +9,26 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
         <table className="w-full text-sm border-collapse min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 select-none">
-              <th className="py-3 px-4 w-[100px] min-w-[100px] border-r border-border/80 dark:border-border">
+            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+              <th className="py-3 px-4 w-[100px] min-w-[100px]">
                 <Skeleton className="h-3.5 w-10 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[130px] min-w-[130px]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[200px] min-w-[200px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[270px] min-w-[270px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[270px] min-w-[270px]">
                 <Skeleton className="h-3.5 w-32 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[190px] min-w-[190px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[190px] min-w-[190px]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[140px] min-w-[140px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[140px] min-w-[140px]">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[130px] min-w-[130px] border-r border-border/80 dark:border-border">
+              <th className="py-3 px-4 w-[130px] min-w-[130px]">
                 <Skeleton className="h-3.5 w-14 dark:bg-muted" />
               </th>
               <th className="py-3 px-4 pr-6 text-right w-[80px] min-w-[80px]">
@@ -42,13 +42,13 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                 key={i}
                 className="h-[52px] border-b border-border dark:border-border last:border-b-0"
               >
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-5 w-10 rounded-md dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <div className="flex flex-col gap-1">
                     <Skeleton
                       className={cn(
@@ -59,7 +59,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                     <Skeleton className="h-2.5 w-20 font-mono rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton
                     className={cn(
                       "h-3.5 rounded dark:bg-muted",
@@ -67,13 +67,13 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                     )}
                   />
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
+                <td className="py-3 px-4 align-middle">
                   <Skeleton className="h-3 w-16 font-mono rounded dark:bg-muted" />
                 </td>
                 <td className="py-3 px-4 pr-6 align-middle text-right">

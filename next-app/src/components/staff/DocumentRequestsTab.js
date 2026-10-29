@@ -940,8 +940,8 @@ export default function DocumentRequestsTab({
           {/* 2. Navigation Toolbar */}
           {!error && (
             <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-              {/* Left: Client Type Line Tabs */}
-              <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+              {/* Left: Client Type Segmented Tabs */}
+              <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
                 {[
                   { label: "All Requests", value: "" },
                   { label: "Students", value: "Student" },
@@ -960,10 +960,10 @@ export default function DocumentRequestsTab({
                         setPage(1);
                       }}
                       className={cn(
-                        "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                        "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
                         isActive
-                          ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-zinc-50"
-                          : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                       )}
                     >
                       {item.label}
@@ -1096,20 +1096,18 @@ export default function DocumentRequestsTab({
               >
                 <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
-                          "p-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                          isScrolledX
-                            ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                            : "border-r border-border/80 dark:border-border"
+                          "p-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow border-r border-border/70",
+                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
                         <div className="flex items-center justify-between gap-1">
                           <button
                             type="button"
                             onClick={() => handleSort("id")}
-                            className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
+                            className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                           >
                             <span>ID</span>
                             <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
@@ -1129,51 +1127,51 @@ export default function DocumentRequestsTab({
                           )}
                         </div>
                       </th>
-                      <th className="p-4 w-[240px] min-w-[240px] border-r border-border/80 dark:border-border">
+                      <th className="p-4 w-[240px] min-w-[240px]">
                         <button
                           type="button"
                           onClick={() => handleSort("student")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
                           <span>Requester</span>
                           <SortIndicator column="student" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-[200px] min-w-[200px] border-r border-border/80 dark:border-border">
+                      <th className="p-4 w-[200px] min-w-[200px]">
                         <button
                           type="button"
                           onClick={() => handleSort("doc_type")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
                           <span>Document Type</span>
                           <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-[140px] min-w-[140px] border-r border-border/80 dark:border-border">
+                      <th className="p-4 w-[140px] min-w-[140px]">
                         <button
                           type="button"
                           onClick={() => handleSort("status")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
                           <span>Status</span>
                           <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
-                      <th className="p-4 w-[220px] min-w-[220px] border-r border-border/80 dark:border-border">
+                      <th className="p-4 w-[220px] min-w-[220px]">
                         <span>Processing Time</span>
                       </th>
-                      <th className="p-4 w-[160px] min-w-[160px] border-r border-border/80 dark:border-border">
+                      <th className="p-4 w-[160px] min-w-[160px]">
                         <button
                           type="button"
                           onClick={() => handleSort("created_at")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer uppercase hover:text-gray-900 dark:hover:text-white"
+                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         >
                           <span>Created At</span>
                           <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>
                       <th className="p-4 pr-6 text-right w-[80px] min-w-[80px]">
-                        <span>Action</span>
+                        <span>Actions</span>
                       </th>
                     </tr>
                   </thead>
@@ -1194,16 +1192,14 @@ export default function DocumentRequestsTab({
                           >
                             <td
                               className={cn(
-                                "p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
+                                "p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
                                 selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
-                                isScrolledX
-                                  ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                                  : "border-r border-border/70 dark:border-border/70"
+                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                               )}
                             >
                               #{r.id}
                             </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                            <td className="p-4 align-middle overflow-hidden">
                               <div className="flex items-center gap-2">
                                 <span
                                   className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
@@ -1248,19 +1244,19 @@ export default function DocumentRequestsTab({
                                 )}
                               </div>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                            <td className="p-4 align-middle overflow-hidden">
                               <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
                                 <span className="truncate" title={r.doc_type}>
                                   {r.doc_type}
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="p-4 align-middle whitespace-nowrap">
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                               </div>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                            <td className="p-4 align-middle overflow-hidden">
                               <div className="flex flex-col gap-1 min-w-0">
                                 <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
                                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass)}>
@@ -1276,7 +1272,7 @@ export default function DocumentRequestsTab({
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 whitespace-nowrap">
                               {formatPHDateTime(r.created_at)}
                             </td>
                             <td className="p-4 pr-6 align-middle text-right">

@@ -136,10 +136,10 @@ const LogRow = React.memo(function LogRow({
             <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
           </button>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400">
           {formattedTimestamp}
         </td>
-        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle whitespace-nowrap">
           <span
             className={cn(
               "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
@@ -149,7 +149,7 @@ const LogRow = React.memo(function LogRow({
             {severityInfo.label}
           </span>
         </td>
-        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle overflow-hidden">
           <div className="flex items-center gap-2.5 min-w-0">
             <AuditActorAvatar
               log={log}
@@ -166,10 +166,10 @@ const LogRow = React.memo(function LogRow({
             </div>
           </div>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
           {formatActionLabel(log.action)}
         </td>
-        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[280px]">
+        <td className="p-4 align-middle overflow-hidden max-w-[280px]">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
@@ -363,7 +363,7 @@ export default function LogTable({
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className={cn(
                       "w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                       isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
@@ -384,11 +384,11 @@ export default function LogTable({
                         </Tooltip>
                       )}
                     </th>
-                    <th className="p-4 w-[16%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[16%]">
                       <button
                         onClick={() => handleSort("created_at")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           logSortBy === "created_at"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -402,11 +402,11 @@ export default function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[10%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[10%]">
                       <button
                         onClick={() => handleSort("severity")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           logSortBy === "severity"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -420,11 +420,11 @@ export default function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[20%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[20%]">
                       <button
                         onClick={() => handleSort("actor")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           logSortBy === "actor"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -438,11 +438,11 @@ export default function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[18%] border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[18%]">
                       <button
                         onClick={() => handleSort("action")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-semibold tracking-wider uppercase",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                           logSortBy === "action"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -456,10 +456,10 @@ export default function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="p-4 w-[24%] max-w-[280px] text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400 border-r border-border/80 dark:border-border">
+                    <th className="p-4 w-[24%] max-w-[280px] text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Description
                     </th>
-                    <th className="p-4 pr-6 w-20 text-right text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-zinc-400">
+                    <th className="p-4 pr-6 w-20 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>

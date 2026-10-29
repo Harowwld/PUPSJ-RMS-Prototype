@@ -142,19 +142,19 @@ export default function OfficeDocumentsTable({
           >
             <table className="w-full text-sm border-collapse min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
-                  <th className="w-[16%] min-w-[150px] p-4 border-r border-border/80 dark:border-border">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
-                  <th className="w-[26%] min-w-[200px] p-4 border-r border-border/80 dark:border-border">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
-                  <th className="w-[28%] min-w-[220px] p-4 border-r border-border/80 dark:border-border">Document</th>
-                  <th className="w-[10%] min-w-[100px] p-4 border-r border-border/80 dark:border-border">Year</th>
-                  <th className="w-[12%] min-w-[120px] p-4 border-r border-border/80 dark:border-border">Status</th>
-                  <th className="w-24 min-w-[96px] p-4 pr-6 text-right">Action</th>
+                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                  <th className="w-[16%] min-w-[150px] p-4">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
+                  <th className="w-[26%] min-w-[200px] p-4">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
+                  <th className="w-[28%] min-w-[220px] p-4">Document</th>
+                  <th className="w-[10%] min-w-[100px] p-4">Year</th>
+                  <th className="w-[12%] min-w-[120px] p-4">Status</th>
+                  <th className="w-24 min-w-[96px] p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {visibleRows.map((document) => (
                   <tr key={document.id} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
-                    <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                    <td className="p-4 align-middle overflow-hidden whitespace-nowrap">
                       {officeLabel === "OSAS" ? (
                         <span
                           className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full"
@@ -168,19 +168,19 @@ export default function OfficeDocumentsTable({
                         </span>
                       )}
                     </td>
-                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                    <td className="p-4 align-middle overflow-hidden">
                       <div className="font-semibold text-gray-900 dark:text-zinc-100 truncate" title={formatTitleCase(document.student_name)}>
                         {formatTitleCase(document.student_name) || "N/A"}
                       </div>
                     </td>
-                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                    <td className="p-4 align-middle overflow-hidden">
                       <div className="font-semibold text-xs text-gray-900 dark:text-zinc-100 truncate" title={document.doc_type}>{document.doc_type}</div>
                       <div className="truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.original_filename}>{document.original_filename}</div>
                     </td>
-                    <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                    <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                       {getYear(document) || "N/A"}
                     </td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                    <td className="p-4 align-middle whitespace-nowrap">
                       <Badge variant="outline" className={cn(
                         "rounded-full text-[10px] font-medium px-2.5 py-0.5",
                         document.approval_status === "Approved"

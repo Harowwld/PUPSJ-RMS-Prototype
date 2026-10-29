@@ -66,28 +66,28 @@ export default function StudentDirectorySkeleton() {
           <table className="w-full text-sm border-collapse min-w-[1100px]">
             <thead className="border-b border-border bg-gray-50/90 dark:bg-zinc-900/90">
               <tr className="h-11">
-                <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border">
+                <th className="w-12 p-4 text-center">
                   <Skeleton className="h-4 w-4 mx-auto rounded" />
                 </th>
-                <th className="p-4 w-[160px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[160px]">
                   <Skeleton className="h-3.5 w-24 rounded" />
                 </th>
-                <th className="p-4 w-[240px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[240px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[190px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[190px]">
                   <Skeleton className="h-3.5 w-32 rounded" />
                 </th>
-                <th className="p-4 w-[130px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[130px]">
                   <Skeleton className="h-3.5 w-20 rounded" />
                 </th>
-                <th className="p-4 w-[200px] border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[200px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[100px] text-center border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[100px] text-center">
                   <Skeleton className="h-3.5 w-12 mx-auto rounded" />
                 </th>
-                <th className="p-4 w-[120px] text-center border-r border-border/80 dark:border-border">
+                <th className="p-4 w-[120px] text-center">
                   <Skeleton className="h-3.5 w-14 mx-auto rounded" />
                 </th>
                 <th className="w-28 p-4 text-right">
@@ -98,28 +98,28 @@ export default function StudentDirectorySkeleton() {
             <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
               {Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i} className="h-14">
-                  <td className="w-12 p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="w-12 p-4 text-center">
                     <Skeleton className="h-4 w-4 mx-auto rounded" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-6 w-28 rounded-full" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-4 w-36 rounded" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-5 w-28 rounded-full" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-4 w-16 rounded" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="p-4">
                     <Skeleton className="h-4 w-32 rounded" />
                   </td>
-                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="p-4 text-center">
                     <Skeleton className="h-5 w-8 mx-auto rounded-full" />
                   </td>
-                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="p-4 text-center">
                     <Skeleton className="h-5 w-16 mx-auto rounded-full" />
                   </td>
                   <td className="p-4 text-right">

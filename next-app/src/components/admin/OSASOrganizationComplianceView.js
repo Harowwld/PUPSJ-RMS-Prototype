@@ -1197,8 +1197,8 @@ export default function OSASOrganizationComplianceView({
 
           {/* 3. Navigation Toolbar: Category Line Tabs & Search/Status Controls */}
           <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-            {/* Left: Category Line Tabs */}
-            <div className="flex items-center gap-6 shrink-0 select-none overflow-x-auto">
+            {/* Left: Category Segmented Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
               {CATEGORIES.map((cat) => {
                 const isActive = categoryFilter === cat;
                 return (
@@ -1207,10 +1207,10 @@ export default function OSASOrganizationComplianceView({
                     type="button"
                     onClick={() => { setCategoryFilter(cat); setPage(1); }}
                     className={cn(
-                      "relative h-9 flex items-center text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer border-0 bg-transparent whitespace-nowrap",
+                      "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
                       isActive
-                        ? "text-gray-900 dark:text-zinc-50 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gray-900 dark:after:bg-white"
-                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                     )}
                   >
                     {cat === "All" ? "All Organizations" : `${cat} Orgs`}
@@ -1273,7 +1273,7 @@ export default function OSASOrganizationComplianceView({
               {sortedOrganizations.length > 0 ? (
                 <table className="w-full text-sm border-collapse min-w-[1050px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                    <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       {/* Column 1: Organization */}
                       <th
                         className={cn(
@@ -1286,7 +1286,7 @@ export default function OSASOrganizationComplianceView({
                             type="button"
                             onClick={() => handleSort("name")}
                             className={cn(
-                              "group flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                              "group flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
                               sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                             )}
                           >
@@ -1311,19 +1311,19 @@ export default function OSASOrganizationComplianceView({
                       </th>
 
                       {/* Column 2: Faculty Adviser */}
-                      <th className="py-3 px-6 w-[22%] border-r border-border/80 dark:border-border">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                      <th className="py-3 px-6 w-[22%]">
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           Faculty Adviser
                         </span>
                       </th>
 
                       {/* Column 3: Archival CBL */}
-                      <th className="py-3 px-6 w-[14%] text-center border-r border-border/80 dark:border-border">
+                      <th className="py-3 px-6 w-[14%] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("hasCbl")}
                           className={cn(
-                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
                             sortBy === "hasCbl" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1332,12 +1332,12 @@ export default function OSASOrganizationComplianceView({
                       </th>
 
                       {/* Column 4: Authorized Officers */}
-                      <th className="py-3 px-6 w-[14%] text-center border-r border-border/80 dark:border-border">
+                      <th className="py-3 px-6 w-[14%] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("activeOfficerCount")}
                           className={cn(
-                            "group mx-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
                             sortBy === "activeOfficerCount" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1351,7 +1351,7 @@ export default function OSASOrganizationComplianceView({
                           type="button"
                           onClick={() => handleSort("complianceScore")}
                           className={cn(
-                            "group ml-auto flex items-center text-[11px] font-semibold uppercase tracking-wider transition-colors focus:outline-none cursor-pointer",
+                            "group ml-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
                             sortBy === "complianceScore" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
@@ -1416,7 +1416,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 2: Faculty Adviser */}
-                          <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
+                          <td className="py-3.5 px-6">
                             {org.adviserName ? (
                               <div className="min-w-0 max-w-[200px]">
                                 <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -1441,7 +1441,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 3: Archival CBL (1-Click Preview) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="py-3.5 px-6 text-center whitespace-nowrap">
                             {org.hasCbl ? (
                               <button
                                 type="button"
@@ -1467,7 +1467,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 4: Authorized Officers (1-Click Roster View) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="py-3.5 px-6 text-center whitespace-nowrap">
                             {org.activeOfficerCount > 0 ? (
                               <button
                                 type="button"

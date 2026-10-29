@@ -543,7 +543,7 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
           toggleRow(log.id);
         }}
       >
-        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+        <td className="p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
             className="mx-auto flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer transition-colors active:scale-95"
@@ -555,10 +555,10 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             )}
           </button>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-xs font-normal text-gray-700 dark:text-zinc-300 border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-normal text-gray-700 dark:text-zinc-300">
           {formattedTimestamp}
         </td>
-        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle whitespace-nowrap">
           <span
             className={cn(
               "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shadow-none transition-all",
@@ -568,10 +568,10 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             {severityInfo.label}
           </span>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100">
           {log.action === "Rotate Password" ? "Password Rotated" : log.action}
         </td>
-        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[280px]">
+        <td className="p-4 align-middle overflow-hidden max-w-[280px]">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="block truncate max-w-[260px] text-xs font-normal text-gray-600 dark:text-zinc-400">
@@ -679,20 +679,20 @@ function LogTable({
           <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none">
             <table className="w-full text-sm border-collapse min-w-[900px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
-                  <th className="w-12 min-w-[48px] p-4 text-center border-r border-border/80 dark:border-border">
+                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                  <th className="w-12 min-w-[48px] p-4 text-center">
                     <Skeleton className="h-3 w-3 rounded mx-auto dark:bg-muted" />
                   </th>
-                  <th className="w-[18%] min-w-[170px] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[18%] min-w-[170px] p-4">
                     <Skeleton className="h-3 w-20 dark:bg-muted" />
                   </th>
-                  <th className="w-[12%] min-w-[110px] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[12%] min-w-[110px] p-4">
                     <Skeleton className="h-3 w-14 dark:bg-muted" />
                   </th>
-                  <th className="w-[22%] min-w-[180px] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[22%] min-w-[180px] p-4">
                     <Skeleton className="h-3 w-24 dark:bg-muted" />
                   </th>
-                  <th className="w-[40%] min-w-[280px] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[40%] min-w-[280px] p-4">
                     <Skeleton className="h-3 w-32 dark:bg-muted" />
                   </th>
                   <th className="w-20 min-w-[80px] p-4 pr-6 text-right">
@@ -700,14 +700,14 @@ function LogTable({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border dark:border-border">
+              <tbody className="divide-y divide-border dark:divide-border">
                 {[1, 2, 3, 4, 5, 6].map((row) => (
                   <tr key={row} className="h-[52px] border-b border-border dark:border-border last:border-b-0">
-                    <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70"><Skeleton className="h-4 w-4 mx-auto rounded dark:bg-muted" /></td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"><Skeleton className="h-3.5 w-24 dark:bg-muted" /></td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"><Skeleton className="h-5 w-16 rounded-full dark:bg-muted" /></td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
-                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70"><Skeleton className="h-3.5 w-full dark:bg-muted" /></td>
+                    <td className="p-4 align-middle text-center"><Skeleton className="h-4 w-4 mx-auto rounded dark:bg-muted" /></td>
+                    <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-3.5 w-24 dark:bg-muted" /></td>
+                    <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-5 w-16 rounded-full dark:bg-muted" /></td>
+                    <td className="p-4 align-middle whitespace-nowrap"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
+                    <td className="p-4 align-middle overflow-hidden"><Skeleton className="h-3.5 w-full dark:bg-muted" /></td>
                     <td className="p-4 pr-6 align-middle text-right whitespace-nowrap"><Skeleton className="h-7 w-7 ml-auto rounded-lg dark:bg-muted" /></td>
                   </tr>
                 ))}
@@ -831,13 +831,13 @@ function LogTable({
             >
               <table className="w-full text-sm border-collapse min-w-[900px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase select-none">
-                    <th className="w-12 min-w-[48px] p-4 text-center border-r border-border/80 dark:border-border"></th>
-                    <th className="w-[18%] min-w-[170px] p-4 border-r border-border/80 dark:border-border">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                    <th className="w-12 min-w-[48px] p-4 text-center"></th>
+                    <th className="w-[18%] min-w-[170px] p-4">
                       <button
                         onClick={() => handleSort("created_at")}
                         className={cn(
-                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-[11px] font-semibold tracking-wider uppercase cursor-pointer",
+                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-xs font-semibold cursor-pointer",
                           logSortBy === "created_at"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -851,11 +851,11 @@ function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="w-[12%] min-w-[110px] p-4 border-r border-border/80 dark:border-border">
+                    <th className="w-[12%] min-w-[110px] p-4">
                       <button
                         onClick={() => handleSort("severity")}
                         className={cn(
-                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-[11px] font-semibold tracking-wider uppercase cursor-pointer",
+                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-xs font-semibold cursor-pointer",
                           logSortBy === "severity"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -869,11 +869,11 @@ function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="w-[22%] min-w-[180px] p-4 border-r border-border/80 dark:border-border">
+                    <th className="w-[22%] min-w-[180px] p-4">
                       <button
                         onClick={() => handleSort("action")}
                         className={cn(
-                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-[11px] font-semibold tracking-wider uppercase cursor-pointer",
+                          "group flex items-center gap-1.5 transition-colors focus:outline-none text-xs font-semibold cursor-pointer",
                           logSortBy === "action"
                             ? "text-gray-900 dark:text-white"
                             : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -887,10 +887,10 @@ function LogTable({
                         />
                       </button>
                     </th>
-                    <th className="w-[28%] max-w-[280px] p-4 border-r border-border/80 dark:border-border text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="w-[28%] max-w-[280px] p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Description
                     </th>
-                    <th className="w-20 min-w-[80px] p-4 pr-6 text-right text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
+                    <th className="w-20 min-w-[80px] p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Action
                     </th>
                   </tr>

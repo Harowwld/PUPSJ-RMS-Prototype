@@ -232,20 +232,20 @@ export default function RateLimitingTab() {
             >
               <table className="w-full text-sm border-collapse min-w-[700px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
-                    <th className="w-[20%] p-4 border-r border-border/80 dark:border-border">
+                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                    <th className="w-[20%] p-4">
                       Type
                     </th>
-                    <th className="w-[24%] p-4 border-r border-border/80 dark:border-border">
+                    <th className="w-[24%] p-4">
                       Identifier
                     </th>
-                    <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                    <th className="w-[18%] p-4">
                       IP Address
                     </th>
-                    <th className="w-[14%] p-4 border-r border-border/80 dark:border-border">
+                    <th className="w-[14%] p-4">
                       Violations
                     </th>
-                    <th className="w-[14%] p-4 border-r border-border/80 dark:border-border">
+                    <th className="w-[14%] p-4">
                       Lockout Until
                     </th>
                     <th className="w-20 p-4 pr-6 text-right">
@@ -256,19 +256,19 @@ export default function RateLimitingTab() {
                 <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {data.recentViolations.map((violation) => (
                     <tr key={violation.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
-                      <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{violation.endpoint_type}</td>
-                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">{violation.endpoint_type}</td>
+                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 truncate">
                         {violation.identifier}
                       </td>
-                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 whitespace-nowrap">
                         {violation.ip_address}
                       </td>
-                      <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 text-xs whitespace-nowrap">
                         <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300">
                           {violation.violation_count}
                         </span>
                       </td>
-                      <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">
                         {violation.lockout_until
                           ? formatTime(violation.lockout_until)
                           : "None"}
@@ -327,14 +327,14 @@ export default function RateLimitingTab() {
       >
         <table className="w-full text-sm border-collapse min-w-[550px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-            <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
-              <th className="w-[42%] p-4 border-r border-border/80 dark:border-border">
+            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
+              <th className="w-[42%] p-4">
                 Endpoint Type
               </th>
-              <th className="w-[25%] p-4 border-r border-border/80 dark:border-border">
-                Window (seconds)
+              <th className="w-[25%] p-4">
+                Window (Seconds)
               </th>
-              <th className="w-[25%] p-4 border-r border-border/80 dark:border-border">
+              <th className="w-[25%] p-4">
                 Max Requests
               </th>
               <th className="w-20 p-4 pr-6 text-right">
@@ -345,11 +345,11 @@ export default function RateLimitingTab() {
           <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
             {data.configs.map((config) => (
               <tr key={config.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
-                <td className="p-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                <td className="p-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 whitespace-nowrap">
                   {config.endpoint_type}
                 </td>
-                <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{config.window_seconds}s</td>
-                <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{config.max_requests} req</td>
+                <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{config.window_seconds}s</td>
+                <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{config.max_requests} req</td>
                 <td className="p-4 pr-6 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end">
                     <Tooltip>
@@ -402,17 +402,17 @@ export default function RateLimitingTab() {
           >
             <table className="w-full text-sm border-collapse min-w-[650px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 uppercase">
-                  <th className="w-[24%] p-4 border-r border-border/80 dark:border-border">
+                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                  <th className="w-[24%] p-4">
                     IP Address
                   </th>
-                  <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[18%] p-4">
                     Risk Level
                   </th>
-                  <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[18%] p-4">
                     Failed Logins
                   </th>
-                  <th className="w-[18%] p-4 border-r border-border/80 dark:border-border">
+                  <th className="w-[18%] p-4">
                     Unique Users
                   </th>
                   <th className="w-[22%] p-4 pr-6 text-left">
@@ -423,16 +423,16 @@ export default function RateLimitingTab() {
               <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {suspiciousIPs.map((ip, index) => (
                   <tr key={index} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
-                    <td className="p-4 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.ip}</td>
-                    <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                    <td className="p-4 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">{ip.ip}</td>
+                    <td className="p-4 text-xs whitespace-nowrap">
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`}
                       >
                         {ip.riskLevel}
                       </span>
                     </td>
-                    <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.failed_logins}</td>
-                    <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.unique_users}</td>
+                    <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{ip.failed_logins}</td>
+                    <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{ip.unique_users}</td>
                     <td className="p-4 pr-6 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap">{formatTime(ip.last_seen)}</td>
                   </tr>
                 ))}
