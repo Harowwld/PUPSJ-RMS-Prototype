@@ -1092,14 +1092,14 @@ export default function DocumentRequestsTab({
             ) : (
               <div
                 ref={tableContainerRef}
-                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
                 <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
-                          "p-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow border-r border-border/70",
+                          "p-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1199,7 +1199,7 @@ export default function DocumentRequestsTab({
                             >
                               #{r.id}
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex items-center gap-2">
                                 <span
                                   className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
@@ -1244,19 +1244,19 @@ export default function DocumentRequestsTab({
                                 )}
                               </div>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
                                 <span className="truncate" title={r.doc_type}>
                                   {r.doc_type}
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
                                 {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                               </div>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex flex-col gap-1 min-w-0">
                                 <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
                                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass)}>
@@ -1272,7 +1272,7 @@ export default function DocumentRequestsTab({
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 whitespace-nowrap">
+                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {formatPHDateTime(r.created_at)}
                             </td>
                             <td className="p-4 pr-6 align-middle text-right">

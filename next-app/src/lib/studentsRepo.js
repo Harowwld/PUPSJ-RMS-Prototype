@@ -80,20 +80,21 @@ export async function createStudent({
       [normalizedOfficeId, normalizedCourseCode]
     );
     if (!course) throw new Error(`Invalid courseCode: ${normalizedCourseCode}`);
+    const canonicalCourseCode = course.code;
 
     const sectionRow = await runOne(
       `SELECT id, course_code FROM sections
-       WHERE office_id = $1 AND name = $2 AND (course_code = $3 OR course_code IS NULL)
-       ORDER BY CASE WHEN course_code = $3 THEN 0 ELSE 1 END
+       WHERE office_id = $1 AND name = $2 AND (upper(course_code) = upper($3) OR course_code IS NULL)
+       ORDER BY CASE WHEN upper(course_code) = upper($3) THEN 0 ELSE 1 END
        LIMIT 1 FOR UPDATE`,
-      [normalizedOfficeId, normalizedSection, normalizedCourseCode]
+      [normalizedOfficeId, normalizedSection, canonicalCourseCode]
     );
     if (!sectionRow) {
-      throw new Error(`Section ${normalizedSection} is not defined for course ${normalizedCourseCode}`);
+      throw new Error(`Section ${normalizedSection} is not defined for course ${canonicalCourseCode}`);
     }
     if (!sectionRow.course_code) {
       await run("UPDATE sections SET course_code = $1 WHERE office_id = $2 AND id = $3", [
-        normalizedCourseCode,
+        canonicalCourseCode,
         normalizedOfficeId,
         sectionRow.id,
       ]);
@@ -105,14 +106,14 @@ export async function createStudent({
           student_no, name, course_code, year_level, section,
           storage_room, storage_cabinet, storage_drawer, status
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [studentNo, normalizedName, normalizedCourseCode, academicYear, normalizedSection,
+        [studentNo, normalizedName, canonicalCourseCode, academicYear, normalizedSection,
           room, canonicalizeCabinetId(cabinet), drawer, status || "Active"]
       );
     } else {
       await run(
         `INSERT INTO students (student_no, name, course_code, year_level, section, status)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [studentNo, normalizedName, normalizedCourseCode, academicYear, normalizedSection, status || "Active"]
+        [studentNo, normalizedName, canonicalCourseCode, academicYear, normalizedSection, status || "Active"]
       );
     }
 
@@ -183,7 +184,7 @@ export async function listStudents({
   }
 
   if (courseCode) {
-    filters.push("course_code = ?");
+    filters.push("upper(course_code) = upper(?)");
     params.push(courseCode);
   }
 
@@ -280,7 +281,7 @@ export async function updateStudent(studentNo, patch) {
       : normalizeStudentName(patch.name);
     const next = {
       name: encryptPII(rawName),
-      course_code: String(patch.courseCode ?? existing.course_code).trim().toUpperCase(),
+      course_code: String(patch.courseCode ?? existing.course_code).trim(),
       year_level: patch.yearLevel === undefined ? existing.year_level : Number(patch.yearLevel),
       section: String(patch.section ?? existing.section).trim(),
       status: patch.status ?? existing.status,
@@ -291,17 +292,20 @@ export async function updateStudent(studentNo, patch) {
       [officeId, next.course_code]
     );
     if (!course) throw new Error(`Invalid courseCode: ${next.course_code}`);
+    const canonicalCourseCode = course.code;
+    next.course_code = canonicalCourseCode;
+
     const sectionRow = await runOne(
       `SELECT id, course_code FROM sections
-       WHERE office_id = $1 AND name = $2 AND (course_code = $3 OR course_code IS NULL)
-       ORDER BY CASE WHEN course_code = $3 THEN 0 ELSE 1 END
+       WHERE office_id = $1 AND name = $2 AND (upper(course_code) = upper($3) OR course_code IS NULL)
+       ORDER BY CASE WHEN upper(course_code) = upper($3) THEN 0 ELSE 1 END
        LIMIT 1 FOR UPDATE`,
-      [officeId, next.section, next.course_code]
+      [officeId, next.section, canonicalCourseCode]
     );
-    if (!sectionRow) throw new Error(`Section ${next.section} is not defined for course ${next.course_code}`);
+    if (!sectionRow) throw new Error(`Section ${next.section} is not defined for course ${canonicalCourseCode}`);
     if (!sectionRow.course_code) {
       await run("UPDATE sections SET course_code = $1 WHERE office_id = $2 AND id = $3", [
-        next.course_code, officeId, sectionRow.id,
+        canonicalCourseCode, officeId, sectionRow.id,
       ]);
     }
 
@@ -316,7 +320,7 @@ export async function updateStudent(studentNo, patch) {
          WHERE student_no = $9
            AND EXISTS (SELECT 1 FROM student_office_memberships som
                        WHERE som.student_no = students.student_no AND som.office_id = $10 AND som.status = 'Active')`,
-        [next.name, next.course_code, next.year_level, next.section, room, cabinet, drawer, next.status, studentNo, officeId]
+        [next.name, canonicalCourseCode, next.year_level, next.section, room, cabinet, drawer, next.status, studentNo, officeId]
       );
     } else {
       await run(
@@ -324,7 +328,7 @@ export async function updateStudent(studentNo, patch) {
          WHERE student_no = $6
            AND EXISTS (SELECT 1 FROM student_office_memberships som
                        WHERE som.student_no = students.student_no AND som.office_id = $7 AND som.status = 'Active')`,
-        [next.name, next.course_code, next.year_level, next.section, next.status, studentNo, officeId]
+        [next.name, canonicalCourseCode, next.year_level, next.section, next.status, studentNo, officeId]
       );
     }
     return true;

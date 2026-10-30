@@ -17,10 +17,10 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
         <table className="w-full text-sm border-collapse min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 py-3 px-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
+              <th className="w-12 py-3 px-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[160px] min-w-[160px] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
+              <th className="py-3 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
               <th className="py-3 px-4 w-[220px] min-w-[220px]">
@@ -60,7 +60,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 </td>
 
                 {/* Student Name */}
-                <td className="py-3 px-4 w-[220px] min-w-[220px]">
+                <td className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/70 dark:border-border/70">
                   <Skeleton
                     className={cn(
                       "h-4 rounded dark:bg-muted",
@@ -70,22 +70,22 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
                 </td>
 
                 {/* Document Type */}
-                <td className="py-3 px-4 w-[180px] min-w-[180px]">
+                <td className="py-3 px-4 w-[180px] min-w-[180px] border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Filename */}
-                <td className="py-3 px-4 w-[220px] min-w-[220px]">
+                <td className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-4 w-36 rounded dark:bg-muted" />
                 </td>
 
                 {/* Status */}
-                <td className="py-3 px-4 w-[130px] min-w-[130px] text-center">
+                <td className="py-3 px-4 w-[130px] min-w-[130px] text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full mx-auto dark:bg-muted" />
                 </td>
 
                 {/* Upload Date */}
-                <td className="py-3 px-4 w-[150px] min-w-[150px]">
+                <td className="py-3 px-4 w-[150px] min-w-[150px] border-r border-border/70 dark:border-border/70">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-14 rounded dark:bg-muted" />

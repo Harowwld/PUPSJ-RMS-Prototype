@@ -24,7 +24,7 @@ import {
 } from "@/lib/timeFormat";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
-import { cn } from "@/lib/utils";
+import { cn, formatLogDetails } from "@/lib/utils";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import LogStatCards from "@/components/admin/audit-logs/StatCards";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
@@ -617,9 +617,9 @@ export default function MyActivityPanel({ embedded = false }) {
 
                             <p
                               className="text-xs text-muted-foreground mt-0.5 line-clamp-1 break-words font-normal"
-                              title={log.details || "No known description"}
+                              title={formatLogDetails(log.details) || "No known description"}
                             >
-                              {log.details || "No known description"}
+                              {formatLogDetails(log.details) || "No known description"}
                             </p>
 
                             <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-400 dark:text-zinc-500">

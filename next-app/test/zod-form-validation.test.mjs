@@ -32,6 +32,8 @@ test("PersonNameSchema correctly rejects numeric dummy inputs and accepts legiti
   // Acceptances
   const goodNames = [
     "Juan Dela Cruz",
+    "DELA CRUZ, JUAN A.",
+    "SANTOS, MARIA CLARA L.",
     "Maria Santos-Reyes",
     "Ma. Teresa O'Connor",
     "John Paul II.",

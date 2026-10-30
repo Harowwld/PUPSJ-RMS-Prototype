@@ -17,7 +17,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
         <table className={cn("w-full text-sm border-separate border-spacing-0", showScope ? "min-w-[1240px]" : "min-w-[1240px]")}>
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 py-3 px-4 text-center">
+              <th className="w-12 min-w-12 max-w-12 py-3 px-2.5 text-center">
                 <Skeleton className="h-3.5 w-3.5 rounded mx-auto dark:bg-muted" />
               </th>
               <th className={cn("py-3 px-4", showScope ? "w-[15%]" : "w-[16%]")}>
@@ -51,29 +51,29 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                 key={i}
                 className="h-[52px] border-b border-border dark:border-border last:border-b-0"
               >
-                <td className="py-3 px-4 align-middle text-center">
+                <td className="w-12 min-w-12 max-w-12 py-3 px-2.5 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-3.5 rounded mx-auto dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle whitespace-nowrap">
+                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <div className="flex flex-col gap-1">
                     <Skeleton className="h-3.5 w-24 font-mono rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle whitespace-nowrap">
+                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle overflow-hidden">
+                <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </td>
                 {showScope && (
-                  <td className="py-3 px-4 align-middle whitespace-nowrap">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                   </td>
                 )}
-                <td className="py-3 px-4 align-middle whitespace-nowrap">
+                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle overflow-hidden max-w-[280px]">
+                <td className="py-3 px-4 align-middle overflow-hidden max-w-[280px] border-r border-border/70 dark:border-border/70">
                   <Skeleton
                     className={cn(
                       "h-3.5 rounded dark:bg-muted",

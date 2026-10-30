@@ -1232,12 +1232,12 @@ export default function DigitalRecordsReviewTab({
             <div
               ref={tableContainerRef}
               onScroll={handleScroll}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[1380px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                    <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
+                    <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
                       <input
                         type="checkbox"
                         className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-border"
@@ -1258,9 +1258,8 @@ export default function DigitalRecordsReviewTab({
                     <th
                       className={cn(
                         "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                        isScrolledX
-                          ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                          : "border-r border-border/80 dark:border-border"
+                        isScrolledX &&
+                          "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}
                     >
                       <div className="flex items-center justify-between gap-1">
@@ -1420,7 +1419,7 @@ export default function DigitalRecordsReviewTab({
                               {r.student_no}
                             </span>
                           </td>
-                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle">
+                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                             <div
                               className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
                               title={formatTitleCase(r.student_name)}
@@ -1428,7 +1427,7 @@ export default function DigitalRecordsReviewTab({
                               {formatTitleCase(r.student_name)}
                             </div>
                           </td>
-                          <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle">
+                          <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                             <span
                               className="inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200"
                               title={r.doc_type}
@@ -1436,7 +1435,7 @@ export default function DigitalRecordsReviewTab({
                               {r.doc_type}
                             </span>
                           </td>
-                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle">
+                          <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                             <span
                               className="block truncate text-xs text-gray-600 dark:text-zinc-400 font-normal"
                               title={r.original_filename}
@@ -1444,7 +1443,7 @@ export default function DigitalRecordsReviewTab({
                               {r.original_filename}
                             </span>
                           </td>
-                          <td className="w-32 min-w-[130px] p-4 text-center align-middle whitespace-nowrap">
+                          <td className="w-32 min-w-[130px] p-4 text-center align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center justify-center">
                               <span
                                 className={cn(
@@ -1456,7 +1455,7 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </div>
                           </td>
-                          <td className="w-36 min-w-[150px] p-4 whitespace-nowrap align-middle">
+                          <td className="w-36 min-w-[150px] p-4 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
                             <div className="flex flex-col">
                               <span className="text-xs font-medium text-gray-900 dark:text-zinc-100">
                                 {formatUploadedDate(r.created_at).dateStr}

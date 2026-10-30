@@ -10,7 +10,7 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { cn, formatLogDetails } from "@/lib/utils";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 
 /**
@@ -110,7 +110,7 @@ export default function LogDetailSheet({
   const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
   const formattedDescription = (() => {
     if (!selectedLog) return "";
-    const text = selectedLog.details || "No known description";
+    const text = formatLogDetails(selectedLog.details) || "No known description";
     const parts = text.split(/'([^']+)'/g);
     if (parts.length === 1) return text;
     return parts.map((part, i) => {
@@ -391,7 +391,7 @@ export default function LogDetailSheet({
                     {selectedLog.details && (
                       <button
                         type="button"
-                        onClick={() => handleCopy?.(selectedLog.details, "Description")}
+                        onClick={() => handleCopy?.(formatLogDetails(selectedLog.details), "Description")}
                         className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer pt-0.5"
                       >
                         <HugeIcon className="ph-bold ph-copy text-xs" />

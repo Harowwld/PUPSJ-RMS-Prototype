@@ -271,13 +271,13 @@ export default function RestoreModal({
 
                         return (
                           <tr key={t.name} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-mono truncate" title={t.name}>
+                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-mono truncate border-r border-border/70 dark:border-border/70" title={t.name}>
                               {t.name}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {t.liveRows}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {t.backupRows}
                             </td>
                             <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">

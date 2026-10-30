@@ -13,12 +13,12 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           className="h-[52px] border-b border-border dark:border-border last:border-b-0"
         >
           {/* Ticket # */}
-          <td className="p-4 pl-6 align-middle">
+          <td className="p-4 pl-6 align-middle border-r border-border/70 dark:border-border/70">
             <Skeleton className="h-4 w-12 rounded dark:bg-muted font-mono" />
           </td>
 
           {/* Document Type */}
-          <td className="p-4 align-middle overflow-hidden">
+          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -28,7 +28,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Purpose / Description */}
-          <td className="p-4 align-middle overflow-hidden">
+          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
             <Skeleton
               className={cn(
                 "h-4 rounded dark:bg-muted",
@@ -38,12 +38,12 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           </td>
 
           {/* Status */}
-          <td className="p-4 align-middle whitespace-nowrap">
+          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
             <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
           </td>
 
           {/* Date Requested */}
-          <td className="p-4 align-middle whitespace-nowrap">
+          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
             <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
           </td>
 
@@ -162,7 +162,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         </div>
 
         {/* 4. Main Table Skeleton */}
-        <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none">
+        <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none">
           <table className="w-full text-sm border-collapse min-w-[900px]">
             <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
               <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">

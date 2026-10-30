@@ -92,10 +92,6 @@ export default function DocTypesTab({
   const [newDocTypeIsRequestable, setNewDocTypeIsRequestable] = useState(false)
   const [newDocTypeIsCompliance, setNewDocTypeIsCompliance] = useState(true)
 
-  const [selectedQuickAddPurpose, setSelectedQuickAddPurpose] = useState(null)
-  const quickAddPurpose = selectedQuickAddPurpose ?? (docPurposeFilter === "requestable" ? "requestable" : "compliance")
-  const setQuickAddPurpose = setSelectedQuickAddPurpose
-
   const [isEditDocTypeOpen, setIsEditDocTypeOpen] = useState(false)
   const [editDocType, setEditDocType] = useState({
     id: null,
@@ -104,50 +100,33 @@ export default function DocTypesTab({
     isCompliance: false,
   })
 
-  const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
-
-  async function addDocType(e, nameOverride = null) {
+  async function addDocType(e) {
     if (e) e.preventDefault()
-    const name = (nameOverride || newDocTypeName).trim()
+    const name = newDocTypeName.trim()
     if (!name) return
 
-    if (nameOverride) setIsQuickAddLoading(true)
-
     try {
-      const isReq = nameOverride 
-        ? quickAddPurpose === "requestable"
-        : newDocTypeIsRequestable
-      const isComp = nameOverride 
-        ? quickAddPurpose === "compliance"
-        : newDocTypeIsCompliance
-
       const res = await fetch("/api/doc-types?admin=true", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          isRequestable: isReq,
-          isCompliance: isComp,
+          isRequestable: newDocTypeIsRequestable,
+          isCompliance: newDocTypeIsCompliance,
         }),
       })
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed")
 
-      if (!nameOverride) {
-        setNewDocTypeName("")
-        setNewDocTypeIsRequestable(false)
-        setNewDocTypeIsCompliance(true)
-        setIsAddDocTypeOpen(false)
-      } else {
-        setNewDocTypeName("")
-      }
+      setNewDocTypeName("")
+      setNewDocTypeIsRequestable(false)
+      setNewDocTypeIsCompliance(true)
+      setIsAddDocTypeOpen(false)
 
       showToast({ title: "Document Type Added", description: "The new document type has been successfully registered in the system." })
       if (loadAll) loadAll()
     } catch (err) {
       showToast(formatErrorMessage(err, "Registration Failed"), true)
-    } finally {
-      if (nameOverride) setIsQuickAddLoading(false)
     }
   }
 
@@ -283,6 +262,15 @@ export default function DocTypesTab({
           }
           description="Manage formal document categories and digitization requirements."
           className="p-6"
+          actions={
+            <Button
+              onClick={() => setIsAddDocTypeOpen(true)}
+              disabled={showArchived}
+              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+            >
+              Add Document Type
+            </Button>
+          }
         />
 
         {/* Navigation Toolbar */}
@@ -416,14 +404,6 @@ export default function DocTypesTab({
               onResetScroll={resetScroll}
               isScrolled={isScrolledX}
             />
-
-            <Button
-              onClick={() => setIsAddDocTypeOpen(true)}
-              disabled={showArchived}
-              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-            >
-              Add Document Type
-            </Button>
           </div>
         </div>
 
@@ -499,12 +479,12 @@ export default function DocTypesTab({
           ) : (
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[950px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
+                      <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
@@ -517,8 +497,8 @@ export default function DocTypesTab({
                         />
                       </th>
                       <th className={cn(
-                        "w-[44%] p-4 border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                        "w-[44%] p-4 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}>
                         <div className="flex items-center justify-between">
                           <button
@@ -552,93 +532,6 @@ export default function DocTypesTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {!showArchived && (
-                      <tr
-                        className={cn(
-                          "group hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
-                          newDocTypeName.trim() && "bg-amber-50/50 dark:bg-amber-950/10"
-                        )}
-                      >
-                        <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40"></td>
-                        <td className={cn(
-                          "p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow duration-200",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                        )}>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              placeholder="Quick add document type name..."
-                              value={newDocTypeName}
-                              onChange={(e) => setNewDocTypeName(e.target.value)}
-                              onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    e.preventDefault()
-                                    addDocType(null, newDocTypeName)
-                                  }
-                              }}
-                              className={cn(
-                                "h-9 flex-1 rounded-xl border-[0.5px] border-black/15 bg-white text-xs font-semibold focus-visible:ring-0 focus-visible:border-black/30",
-                                newDocTypeName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-border dark:border-border dark:bg-card"
-                              )}
-                            />
-                            <Button
-                              size="sm"
-                              disabled={
-                                !newDocTypeName.trim() || isQuickAddLoading
-                              }
-                              onClick={() => addDocType(null, newDocTypeName)}
-                              title="Add Document Type"
-                              className="h-9 w-9 p-0 flex items-center justify-center rounded-xl text-[14px] font-semibold text-emerald-600 dark:text-emerald-400 shadow-[0_1px_2px_rgba(0,0,0,0.05)] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none bg-white dark:bg-zinc-900 border-[1.5px] border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-500/40 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/40 shrink-0"
-                            >
-                              {isQuickAddLoading ? (
-                                <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
-                              ) : (
-                                <HugeIcon  className="ph-bold ph-plus" strokeWidth={2.5}></HugeIcon>
-                              )}
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
-                            <button
-                              type="button"
-                              onClick={() => setQuickAddPurpose("compliance")}
-                              className={cn(
-                                "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                                quickAddPurpose === "compliance"
-                                   ? "bg-white dark:bg-zinc-700 text-purple-700 dark:text-purple-300 shadow-xs"
-                                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                              )}
-                            >
-                              Compliance
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setQuickAddPurpose("requestable")}
-                              className={cn(
-                                "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                                quickAddPurpose === "requestable"
-                                  ? "bg-white dark:bg-zinc-700 text-blue-700 dark:text-blue-300 shadow-xs"
-                                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                              )}
-                            >
-                              Requestable
-                            </button>
-                          </div>
-                        </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
-                          {newDocTypeName.trim() ? (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                              Draft
-                            </div>
-                          ) : (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
-                              New
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4 pr-6 text-right align-middle whitespace-nowrap"></td>
-                      </tr>
-                    )}
                     {filteredDocTypes.map((dt) => {
                       const isDisabled = showArchived
                         ? dt.status !== "Archived"
@@ -694,7 +587,7 @@ export default function DocTypesTab({
                               {dt.name}
                             </span>
                           </td>
-                          <td className="p-4 align-middle whitespace-nowrap">
+                          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               {dt.is_requestable && (
                                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40">
@@ -715,7 +608,7 @@ export default function DocTypesTab({
                               )}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left whitespace-nowrap">
+                          <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {dt.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived

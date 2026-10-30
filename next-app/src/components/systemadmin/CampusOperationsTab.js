@@ -3,11 +3,9 @@
 import HugeIcon from "@/components/shared/HugeIcon"
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
-import { Reorder } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
@@ -36,6 +34,7 @@ import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import ServiceStandardsSheet from "./ServiceStandardsSheet"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -85,6 +84,19 @@ function formatStudentRequester(name, studentNo) {
   return name
 }
 
+export function formatTransactionId(tx) {
+  if (!tx) return ""
+  const num = tx.originalId ?? (typeof tx.id === "string" ? tx.id.replace(/^[a-z]+-/, "") : tx.id)
+  const padded = String(num || 0).padStart(3, "0")
+  if (tx.officeId === "registrar" || tx.type === "document_request") {
+    return `#ODRS-${padded}`
+  }
+  if (tx.officeId === "osas" || tx.type === "event_proposal") {
+    return `#OSAS-${padded}`
+  }
+  return `#TX-${padded}`
+}
+
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -93,7 +105,7 @@ function InfoRow({ icon, label, value, children, className }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-2 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
         className
       )}
     >
@@ -111,8 +123,9 @@ function InfoRow({ icon, label, value, children, className }) {
   )
 }
 
-export default function CampusOperationsTab() {
-  const [kpiOrder, setKpiOrder] = useState(["odrs", "osas"])
+export default function CampusOperationsTab({ showToast, initialStandardsOpen = false }) {
+  const [standardsSheetOpen, setStandardsSheetOpen] = useState(Boolean(initialStandardsOpen))
+  const [slaStandards, setSlaStandards] = useState(null)
   const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -140,10 +153,6 @@ export default function CampusOperationsTab() {
     resetScroll: resetTableScroll,
   } = useTableScroll();
 
-  // Stat Cards dropdown state
-  const [selectedKpi, setSelectedKpi] = useState(null)
-  const statCardsRef = useRef(null)
-
   // Request Details Sheet
   const [selectedItem, setSelectedItem] = useState(null)
   const [sheetItem, setSheetItem] = useState(null)
@@ -152,6 +161,15 @@ export default function CampusOperationsTab() {
     setSheetItem(item)
     setSelectedItem(item)
   }, [])
+
+  const handleCopy = useCallback((text, label) => {
+    if (!text) return
+    navigator.clipboard?.writeText(String(text))
+    showToast?.({
+      title: "Copied to Clipboard",
+      description: `${label} has been successfully copied to your clipboard.`,
+    })
+  }, [showToast])
 
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfPreviewData, setPdfPreviewData] = useState(null)
@@ -170,22 +188,6 @@ export default function CampusOperationsTab() {
     })
     setPdfPreviewOpen(true)
   }
-
-  // Click outside to close stat card dropdown
-  useEffect(() => {
-    if (!selectedKpi) return
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("touchstart", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside)
-    }
-  }, [selectedKpi])
 
   const fetchHealth = useCallback(async (isManual = false) => {
     if (!isManual) {
@@ -212,10 +214,23 @@ export default function CampusOperationsTab() {
     }
   }, [])
 
+  const fetchSlaStandards = useCallback(async () => {
+    try {
+      const res = await fetch("/api/system/sla-settings", { cache: "no-store" })
+      const json = await res.json()
+      if (res.ok && json.ok) {
+        setSlaStandards(json.data)
+      }
+    } catch (err) {
+      console.warn("[CampusOperations] Failed to load SLA standards:", err)
+    }
+  }, [])
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHealth()
-  }, [fetchHealth])
+    fetchSlaStandards()
+  }, [fetchHealth, fetchSlaStandards])
 
   useEffect(() => {
     if (!autoRefreshSecs || autoRefreshSecs <= 0) return
@@ -366,7 +381,12 @@ export default function CampusOperationsTab() {
       // Keyword search
       if (search.trim()) {
         const q = search.toLowerCase()
-        const matchId = String(tx.id || "").toLowerCase().includes(q)
+        const formattedId = formatTransactionId(tx).toLowerCase()
+        const rawId = String(tx.originalId || "").toLowerCase()
+        const matchId =
+          String(tx.id || "").toLowerCase().includes(q) ||
+          formattedId.includes(q) ||
+          rawId.includes(q)
         const matchTitle = (tx.title || "").toLowerCase().includes(q)
         const studentDisplay = formatStudentRequester(tx.studentName, tx.studentNo).toLowerCase()
         const matchStudent = (tx.studentNo || "").toLowerCase().includes(q) || studentDisplay.includes(q)
@@ -389,8 +409,8 @@ export default function CampusOperationsTab() {
       let bVal = b[sortBy] ?? ""
 
       if (sortBy === "id") {
-        aVal = Number(a.id) || 0
-        bVal = Number(b.id) || 0
+        aVal = Number(a.originalId) || Number(String(a.id).replace(/\D+/g, "")) || 0
+        bVal = Number(b.originalId) || Number(String(b.id).replace(/\D+/g, "")) || 0
       } else if (sortBy === "studentName") {
         aVal = formatStudentRequester(a.studentName, a.studentNo)
         bVal = formatStudentRequester(b.studentName, b.studentNo)
@@ -447,28 +467,10 @@ export default function CampusOperationsTab() {
     Boolean(operationFilters.department?.length > 0) ||
     Boolean(operationFilters.status?.length > 0)
 
-  // University Operations Top 2 Stat Cards
-  const statCardsData = useMemo(() => [
-    {
-      key: "odrs",
-      label: "Registrar Document Requests",
-      value: health?.odrs?.total ?? 0,
-      sublabel: `${health?.odrs?.activeBacklog ?? 0} needing action · ${health?.odrs?.today ?? 0} received today`,
-      color: "blue",
-    },
-    {
-      key: "osas",
-      label: "OSAS Student Org Proposals",
-      value: health?.osas?.total ?? 0,
-      sublabel: `${health?.osas?.activePending ?? 0} awaiting review · ${health?.osas?.totalOrgs ?? 0} student orgs active`,
-      color: "emerald",
-    },
-  ], [health])
-
   return (
-    <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
-      {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+    <div className="animate-fade-up flex flex-[1_0_auto] flex-col w-full gap-6">
+      {/* ONE Single Card Container encapsulating Header, Toolbar, Table & Pagination */}
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* Header */}
         <PageHeader
           icon="ph-bold ph-activity"
@@ -489,187 +491,42 @@ export default function CampusOperationsTab() {
           }
         />
 
-        {/* Signature 2 Stat Cards with expandable details */}
-        {loading && !health ? (
-          <div className="px-6 pb-6">
-            <KpiStatCardsSkeleton count={2} />
+        {/* Full Top-Level Turnaround Standards Institutional Banner */}
+        <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 text-xs transition-colors">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon border border-pup-maroon/20 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40 shadow-2xs">
+              <HugeIcon className="ph-bold ph-timer text-lg" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  {slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
+                </p>
+                <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                  {slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA
+                </span>
+                <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal">
+                  • {slaStandards?.workingDaysOnly !== false ? "Business Days (Mon–Fri)" : "Consecutive Calendar Days"}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                Automated turnaround compliance targets and queue SLA velocity across Registrar and OSAS operations are measured against this baseline.
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="px-6 pb-6">
-            <Reorder.Group
-              as="div"
-              axis="x"
-              values={kpiOrder}
-              onReorder={setKpiOrder}
-              ref={statCardsRef}
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start relative z-20 transition-all duration-500"
+
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStandardsSheetOpen(true)}
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
             >
-              {kpiOrder.map((kpiKey) => {
-                const stat = statCardsData.find((s) => s.key === kpiKey)
-                if (!stat) return null
-                const isSelected = selectedKpi === stat.key
-                const isBlue = stat.color === "blue"
-
-                return (
-                  <Reorder.Item
-                    as="div"
-                    value={stat.key}
-                    key={stat.key}
-                    className={cn(
-                      "relative group rounded-2xl",
-                      isSelected ? "z-30" : "z-10"
-                    )}
-                  >
-                    <div
-                      onClick={() => setSelectedKpi(isSelected ? null : stat.key)}
-                      className={cn(
-                        "relative overflow-hidden rounded-2xl border cursor-pointer select-none transition-all shadow-xs hover:shadow-sm flex flex-col justify-between min-h-[114px] bg-gray-50/70 hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/80",
-                        isSelected
-                          ? isBlue
-                            ? "border-blue-500/50 ring-2 ring-blue-500/20 shadow-md"
-                            : "border-emerald-500/50 ring-2 ring-emerald-500/20 shadow-md"
-                          : "border-border dark:border-border"
-                      )}
-                    >
-                      <div className="flex justify-between items-start p-4 pb-0">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                            {stat.label}
-                          </span>
-                        </div>
-                        <div
-                          className={cn(
-                            "w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-2xs shrink-0",
-                            isBlue ? "bg-blue-600" : "bg-emerald-600"
-                          )}
-                        >
-                          <HugeIcon
-                            className={cn(
-                              "ph-bold text-[15px]",
-                              isBlue ? "ph-file-text" : "ph-users"
-                            )}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-end p-4 pt-1">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                            {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                          </span>
-                          <span
-                            className={cn(
-                              "text-[11px] font-medium mb-1",
-                              isBlue ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"
-                            )}
-                          >
-                            {stat.sublabel}
-                          </span>
-                        </div>
-                        <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-400 text-xl mb-0.5" />
-                      </div>
-                    </div>
-
-                    {/* Expandable details drawer */}
-                    <div
-                      className={cn(
-                        "absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl border border-border bg-white dark:bg-zinc-900 p-4 shadow-xl transition-all duration-300 ease-in-out origin-top",
-                        isSelected
-                          ? "scale-y-100 opacity-100 translate-y-0"
-                          : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {stat.key === "odrs" && (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border">
-                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                Pending Action
-                              </span>
-                              <span className="text-base font-black text-gray-900 dark:text-zinc-50">
-                                {health?.odrs?.pending ?? 0}
-                              </span>
-                            </div>
-                            <div className="bg-blue-50/70 dark:bg-blue-950/30 p-2.5 rounded-xl border border-blue-200/60 dark:border-blue-900/30">
-                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                In Progress
-                              </span>
-                              <span className="text-base font-black text-blue-700 dark:text-blue-400">
-                                {health?.odrs?.inProgress ?? 0}
-                              </span>
-                            </div>
-                            <div className="bg-amber-50/70 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-900/30">
-                              <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                                Ready for Pickup
-                              </span>
-                              <span className="text-base font-black text-amber-700 dark:text-amber-400">
-                                {health?.odrs?.ready ?? 0}
-                              </span>
-                            </div>
-                            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200/60 dark:border-emerald-900/30">
-                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                                Completed
-                              </span>
-                              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
-                                {health?.odrs?.completed ?? 0}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                            Online requests for Official Transcripts (TOR), Certifications, and Good Moral documents filed through the student portal.
-                          </div>
-                        </div>
-                      )}
-
-                      {stat.key === "osas" && (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border">
-                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                Submitted
-                              </span>
-                              <span className="text-base font-black text-gray-900 dark:text-zinc-50">
-                                {health?.osas?.submitted ?? 0}
-                              </span>
-                            </div>
-                            <div className="bg-blue-50/70 dark:bg-blue-950/30 p-2.5 rounded-xl border border-blue-200/60 dark:border-blue-900/30">
-                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                In Review
-                              </span>
-                              <span className="text-base font-black text-blue-700 dark:text-blue-400">
-                                {health?.osas?.underReview ?? 0}
-                              </span>
-                            </div>
-                            <div className="bg-orange-50/70 dark:bg-orange-950/30 p-2.5 rounded-xl border border-orange-200/60 dark:border-orange-900/30">
-                              <span className="block text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
-                                Needs Revision
-                              </span>
-                              <span className="text-base font-black text-orange-700 dark:text-orange-400">
-                                {health?.osas?.needsRevision ?? 0}
-                              </span>
-                            </div>
-                            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200/60 dark:border-emerald-900/30">
-                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                                Approved
-                              </span>
-                              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
-                                {health?.osas?.approved ?? 0}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-xl border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                            Campus student organization event permits, activity proposals, and annual compliance submissions for OSAS review.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </Reorder.Item>
-                )
-              })}
-            </Reorder.Group>
+              <HugeIcon className="ph-bold ph-sliders text-xs" />
+              <span>Configure Standards</span>
+            </Button>
           </div>
-        )}
+        </div>
 
         {/* Navigation Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
@@ -787,12 +644,15 @@ export default function CampusOperationsTab() {
               ref={tableContainerRef}
               className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
             >
-              <table className="w-full text-sm border-collapse min-w-[1240px]">
+              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
                     <th
-                      className="p-4 w-[100px] min-w-[100px] max-w-[100px] whitespace-nowrap"
+                      className={cn(
+                        "p-4 pl-6 w-[100px] min-w-[100px] max-w-[100px] whitespace-nowrap sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow",
+                        isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                      )}
                     >
                       <button
                         onClick={() => handleSort("id")}
@@ -819,7 +679,7 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Student Requester */}
-                    <th className="p-4 w-[200px] min-w-[200px]">
+                    <th className="p-4 w-[200px] min-w-[180px] max-w-[240px]">
                       <button
                         onClick={() => handleSort("studentName")}
                         className={cn(
@@ -832,7 +692,7 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Document or Proposal Title */}
-                    <th className="p-4 w-[270px] min-w-[270px]">
+                    <th className="p-4 w-[270px] min-w-[200px] max-w-[340px]">
                       <button
                         onClick={() => handleSort("title")}
                         className={cn(
@@ -845,7 +705,7 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Student Org / Details */}
-                    <th className="p-4 w-[190px] min-w-[190px]">
+                    <th className="p-4 w-[220px] min-w-[180px] max-w-[340px]">
                       <button
                         onClick={() => handleSort("organizationName")}
                         className={cn(
@@ -884,13 +744,13 @@ export default function CampusOperationsTab() {
                     </th>
 
                     {/* Actions */}
-                    <th className="p-4 pr-6 text-right w-[80px] min-w-[80px] text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                    <th className="px-1 py-3 text-center w-12 min-w-[48px] max-w-[48px] text-[11px] font-semibold text-gray-500 dark:text-zinc-400 sticky right-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                       Actions
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+                <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-card">
                   {paginatedTransactions.map((tx) => {
                     const isRegistrar = tx.officeId === "registrar"
                     const rel = formatRelativeTime(tx.createdAt)
@@ -899,19 +759,22 @@ export default function CampusOperationsTab() {
                       <tr
                         key={tx.id}
                         onClick={() => handleOpenDetails(tx)}
-                        className="group h-[52px] border-b border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 cursor-pointer select-none"
+                        className="group h-[52px] border-b border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer select-none"
                       >
-                        {/* Transaction ID */}
+                        {/* Transaction ID (Sticky Left) */}
                         <td
-                          className="p-4 align-middle whitespace-nowrap"
+                          className={cn(
+                            "p-4 pl-6 align-middle whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/70 dark:group-hover:bg-zinc-800/40 transition-shadow border-b border-border dark:border-border border-r border-border/70 dark:border-border/70",
+                            isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
                         >
                           <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                            #{tx.id}
+                            {formatTransactionId(tx)}
                           </span>
                         </td>
 
                         {/* Department Badge */}
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           {isRegistrar ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
                               <HugeIcon className="ph-bold ph-certificate text-xs" />
@@ -926,46 +789,52 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Student Requester */}
-                        <td className="p-4 align-middle overflow-hidden">
-                          <div
-                            className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate"
-                            title={formatStudentRequester(tx.studentName, tx.studentNo)}
-                          >
-                            {formatStudentRequester(tx.studentName, tx.studentNo)}
-                          </div>
-                          <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate">
-                            {tx.studentNo}
+                        <td className="p-4 align-middle overflow-hidden max-w-[240px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                          <div className="w-full min-w-0">
+                            <div
+                              className="font-semibold text-[13px] text-gray-900 dark:text-zinc-50 truncate block"
+                              title={formatStudentRequester(tx.studentName, tx.studentNo)}
+                            >
+                              {formatStudentRequester(tx.studentName, tx.studentNo)}
+                            </div>
+                            <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate block">
+                              {tx.studentNo}
+                            </div>
                           </div>
                         </td>
 
                         {/* Document or Proposal Title */}
-                        <td className="p-4 align-middle overflow-hidden">
-                          <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate" title={tx.title}>
-                            {tx.title}
-                          </div>
-                          {tx.originalFilename && (
-                            <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5">
-                              <HugeIcon className="ph-bold ph-file-pdf text-red-500 shrink-0" />
-                              <span className="truncate" title={tx.originalFilename}>{tx.originalFilename}</span>
+                        <td className="p-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                          <div className="w-full min-w-0">
+                            <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate block" title={tx.title}>
+                              {tx.title}
                             </div>
-                          )}
+                            {tx.originalFilename && (
+                              <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5 min-w-0">
+                                <HugeIcon className="ph-bold ph-file-pdf text-red-500 shrink-0" />
+                                <span className="truncate block" title={tx.originalFilename}>{tx.originalFilename}</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
 
-                        {/* Organization / Reference */}
-                        <td className="p-4 align-middle overflow-hidden">
-                          {tx.organizationName ? (
-                            <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate" title={tx.organizationName}>
-                              {tx.organizationName}
-                            </div>
-                          ) : (
-                            <div className="text-[12px] text-gray-600 dark:text-zinc-300 truncate" title={tx.notes || "Standard student request"}>
-                              {tx.notes || "Standard student request"}
-                            </div>
-                          )}
+                        {/* Student Org / Details */}
+                        <td className="p-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                          <div className="w-full min-w-0">
+                            {tx.organizationName ? (
+                              <div className="text-[12px] font-semibold text-blue-600 dark:text-blue-400 truncate block" title={tx.organizationName}>
+                                {tx.organizationName}
+                              </div>
+                            ) : (
+                              <div className="text-[12px] text-gray-600 dark:text-zinc-300 truncate block" title={tx.notes || "Standard student request"}>
+                                {tx.notes || "Standard student request"}
+                              </div>
+                            )}
+                          </div>
                         </td>
 
                         {/* Stage Status Badge */}
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <span
                             className={cn(
                               "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap shadow-2xs",
@@ -978,13 +847,16 @@ export default function CampusOperationsTab() {
                         </td>
 
                         {/* Date Submitted */}
-                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-mono">
+                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-mono border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           {rel.relative || rel.date}
                         </td>
 
-                        {/* Action Button */}
-                        <td className="py-0 px-4 pr-6 text-right align-middle whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end">
+                        {/* Action Button (Sticky Right, Fixed 48px) */}
+                        <td
+                          className="py-0 px-2 text-center align-middle whitespace-nowrap sticky right-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/70 dark:group-hover:bg-zinc-800/40 border-b border-border dark:border-border w-12 min-w-[48px] max-w-[48px]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-center">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <button
@@ -1010,12 +882,12 @@ export default function CampusOperationsTab() {
 
           {/* Pagination Footer */}
           {sortedTransactions.length > 0 && (
-            <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-border dark:border-border bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl gap-3">
-              <div className="flex items-center gap-6 text-xs text-gray-700 dark:text-zinc-300 select-none">
+            <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl gap-3">
+              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
                 <span>
                   Showing {paginatedTransactions.length} of {sortedTransactions.length} records
                 </span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400 dark:text-zinc-500 text-[11px]">Rows:</span>
                   {[10, 20, 50, 100].map((sz) => (
                     <button
@@ -1026,10 +898,10 @@ export default function CampusOperationsTab() {
                         setPage(1)
                       }}
                       className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer",
+                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
                         pageSize === sz
-                          ? "bg-gray-200/80 dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 font-bold"
-                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800/60"
+                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                          : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
                       )}
                     >
                       {sz}
@@ -1041,26 +913,26 @@ export default function CampusOperationsTab() {
               <div className="flex items-center gap-2 select-none">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Prev
                 </Button>
 
-                <div className="h-8 min-w-[32px] px-2.5 rounded-xl bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold text-xs flex items-center justify-center shadow-2xs">
+                <div className="h-8 min-w-[32px] px-2.5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 font-bold text-xs flex items-center justify-center text-gray-800 dark:text-zinc-200 shadow-2xs font-mono">
                   {page}
                 </div>
 
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   disabled={page >= totalPages || endIndex >= sortedTransactions.length}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
                 >
                   Next
                 </Button>
@@ -1191,101 +1063,170 @@ export default function CampusOperationsTab() {
 
           {/* SCROLLABLE 1-COLUMN BODY */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Summary Strip */}
-            <div className="flex items-start gap-3.5 pb-4 border-b border-border dark:border-border">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border mt-0.5 shadow-2xs",
-                  sheetItem?.officeId === "registrar"
-                    ? "bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40"
-                    : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40"
-                )}
-              >
-                <HugeIcon
-                  className={
+            {/* Identity / Transaction Summary Strip (Unboxed) */}
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div
+                  className={cn(
+                    "size-11 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border shadow-2xs",
                     sheetItem?.officeId === "registrar"
-                      ? "ph-bold ph-certificate"
-                      : "ph-bold ph-student"
-                  }
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  {sheetItem?.officeId === "registrar" ? (
-                    <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 inline-flex items-center gap-1">
-                      Registrar
-                    </span>
-                  ) : (
-                    <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30 inline-flex items-center gap-1">
-                      OSAS
-                    </span>
+                      ? "bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40"
+                      : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40"
                   )}
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
-                      statusBadgeClass(sheetItem?.status)
-                    )}
-                  >
-                    <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(sheetItem?.status))} />
-                    <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
-                  </span>
-                  <span className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">
-                    #{sheetItem?.id}
-                  </span>
+                >
+                  <HugeIcon
+                    className={
+                      sheetItem?.officeId === "registrar"
+                        ? "ph-bold ph-certificate"
+                        : "ph-bold ph-student"
+                    }
+                  />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                  {sheetItem?.title}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                  Requester: <strong className="text-gray-900 dark:text-zinc-200">{formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}</strong>
-                </p>
+                <div className="min-w-0">
+                  <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                    {sheetItem?.title}
+                  </span>
+                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
+                    Requester: <strong className="text-gray-900 dark:text-zinc-200 font-semibold">{formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}</strong>
+                    {sheetItem?.studentNo ? ` • ${sheetItem.studentNo}` : ""}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                  {formatTransactionId(sheetItem)}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
+                    statusBadgeClass(sheetItem?.status)
+                  )}
+                >
+                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(sheetItem?.status))} />
+                  {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
+                </span>
               </div>
             </div>
 
-            {/* SECTION 1: Transaction Specification (Unboxed InfoRow) */}
+            {/* SECTION 1: Transaction Specification */}
             <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Transaction Specification
-              </h4>
-              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                <HugeIcon className="ph-bold ph-sliders text-pup-maroon dark:text-red-400 text-sm" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                  Transaction Specification
+                </h3>
+              </div>
+
+              <div className="divide-y-0">
                 <InfoRow
-                  icon={sheetItem?.officeId === "registrar" ? "ph-certificate" : "ph-student"}
+                  icon="ph-bold ph-hash"
+                  label="Transaction ID"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                      {formatTransactionId(sheetItem)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(formatTransactionId(sheetItem), "Transaction ID")}
+                      className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Copy Transaction ID"
+                    >
+                      <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                    </button>
+                  </div>
+                </InfoRow>
+
+                <InfoRow
+                  icon={sheetItem?.officeId === "registrar" ? "ph-bold ph-certificate" : "ph-bold ph-student"}
                   label="Department"
-                  value={sheetItem?.officeId === "registrar" ? "University Registrar" : "Student Affairs (OSAS)"}
-                />
+                >
+                  {sheetItem?.officeId === "registrar" ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300 border border-pup-maroon/20">
+                      <HugeIcon className="ph-bold ph-certificate text-xs" />
+                      University Registrar
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">
+                      <HugeIcon className="ph-bold ph-student text-xs" />
+                      Student Affairs (OSAS)
+                    </span>
+                  )}
+                </InfoRow>
 
                 <InfoRow
-                  icon="ph-identification-badge"
-                  label="Student Number"
-                  value={sheetItem?.studentNo}
-                />
-
-                <InfoRow icon="ph-chart-pie-slice" label="Current Stage">
+                  icon="ph-bold ph-chart-pie-slice"
+                  label="Current Stage"
+                >
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border shadow-2xs",
                         statusBadgeClass(sheetItem?.status)
                       )}
                     >
                       <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(sheetItem?.status))} />
                       <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
                     </span>
-                    <span className="text-[11px] font-mono text-gray-400">
+                    <span className="text-[11px] font-mono text-gray-400 font-normal">
                       {sheetItem?.createdAt ? formatRelativeTime(sheetItem.createdAt).relative : ""}
                     </span>
                   </div>
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-clock"
+                  icon="ph-bold ph-user"
+                  label="Student Requester"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{formatStudentRequester(sheetItem?.studentName, sheetItem?.studentNo)}</span>
+                    {sheetItem?.studentName && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(sheetItem.studentName, "Requester Name")}
+                        className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Copy Requester Name"
+                      >
+                        <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                      </button>
+                    )}
+                  </div>
+                </InfoRow>
+
+                <InfoRow
+                  icon="ph-bold ph-identification-badge"
+                  label="Student Number"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                      {sheetItem?.studentNo}
+                    </span>
+                    {sheetItem?.studentNo && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(sheetItem.studentNo, "Student Number")}
+                        className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Copy Student Number"
+                      >
+                        <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                      </button>
+                    )}
+                  </div>
+                </InfoRow>
+
+                <InfoRow
+                  icon="ph-bold ph-clock"
                   label="Submitted At"
-                  value={sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
-                />
+                >
+                  <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
+                  </span>
+                </InfoRow>
 
                 {sheetItem?.organizationName && (
                   <InfoRow
-                    icon="ph-buildings"
+                    icon="ph-bold ph-buildings"
                     label="Organization"
                     value={sheetItem.organizationName}
                   />
@@ -1293,7 +1234,7 @@ export default function CampusOperationsTab() {
 
                 {sheetItem?.eventDate && (
                   <InfoRow
-                    icon="ph-calendar"
+                    icon="ph-bold ph-calendar"
                     label="Event Schedule"
                     value={sheetItem.eventDate.substring(0, 10)}
                   />
@@ -1301,11 +1242,14 @@ export default function CampusOperationsTab() {
               </div>
             </div>
 
-            {/* SECTION 2: Purpose & Remarks (Unboxed) */}
-            <div className="space-y-1.5 pt-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Purpose & Remarks
-              </h4>
+            {/* SECTION 2: Purpose & Remarks */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                <HugeIcon className="ph-bold ph-chat-text text-pup-maroon dark:text-red-400 text-sm" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                  Purpose & Remarks
+                </h3>
+              </div>
               <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap pt-0.5">
                 {sheetItem?.notes || "No special remarks provided by the applicant."}
               </p>
@@ -1314,9 +1258,12 @@ export default function CampusOperationsTab() {
             {/* SECTION 3: Attached Document */}
             {sheetItem?.originalFilename && (
               <div className="space-y-2 pt-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Attached Document
-                </h4>
+                <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                  <HugeIcon className="ph-bold ph-file-pdf text-pup-maroon dark:text-red-400 text-sm" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                    Attached Document
+                  </h3>
+                </div>
                 <div className="p-3.5 rounded-xl border border-border dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
@@ -1348,8 +1295,23 @@ export default function CampusOperationsTab() {
             )}
           </div>
 
-          {/* STICKY SHEET FOOTER */}
-          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-end shrink-0">
+          {/* Executive Action Bar Sheet Footer */}
+          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+            <div>
+              {sheetItem && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleCopy(JSON.stringify(sheetItem, null, 2), "Operation Record JSON")}
+                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
+                  title="Copy operation record data"
+                >
+                  <HugeIcon className="ph-bold ph-copy text-sm" />
+                  <span>Copy Record Data</span>
+                </Button>
+              )}
+            </div>
+
             <Button
               type="button"
               variant="outline"
@@ -1370,6 +1332,17 @@ export default function CampusOperationsTab() {
           setPdfPreviewData(null)
         }}
         preview={pdfPreviewData}
+      />
+
+      {/* Service Standards Configuration Sheet */}
+      <ServiceStandardsSheet
+        open={standardsSheetOpen}
+        onOpenChange={setStandardsSheetOpen}
+        showToast={showToast}
+        onStandardsUpdated={() => {
+          fetchHealth(true)
+          fetchSlaStandards()
+        }}
       />
     </div>
   )

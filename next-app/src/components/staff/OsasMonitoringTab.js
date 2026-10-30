@@ -1410,12 +1410,12 @@ export default function OsasMonitoringTab({ showToast }) {
                 <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
                   <div
                     ref={tableContainerRef}
-                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                   >
                   <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 border-r border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
                           <div className="flex items-center justify-between gap-1">
                             <span>Proposal ID</span>
                             {isScrolledX && (
@@ -1454,7 +1454,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               #{item.id}
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 overflow-hidden">
+                          <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
                               {item.title}
                             </div>
@@ -1484,7 +1484,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               )}
                             </div>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden">
+                          <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5 min-w-0 overflow-hidden">
                               <span className="truncate" title={item.student_name}>{item.student_name}</span>
                               {item.officer_position && (
@@ -1497,7 +1497,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {item.submitted_by_email || item.student_no}
                             </div>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap">
+                          <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <span
                               className={cn(
                                 "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
@@ -1508,7 +1508,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {item.status}
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px]">
+                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
                             {item.created_at
                               ? new Date(item.created_at).toLocaleDateString(undefined, {
                                   month: "short",
@@ -1641,12 +1641,12 @@ export default function OsasMonitoringTab({ showToast }) {
                 <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
                   <div
                     ref={tableContainerRef}
-                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                   >
                   <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 border-r border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
                           <div className="flex items-center justify-between gap-1">
                             <span>Report ID</span>
                             {isScrolledX && (
@@ -1689,7 +1689,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 #{item.id}
                               </span>
                             </td>
-                            <td className="py-3.5 px-6 overflow-hidden">
+                            <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.event_title}>
                                 {item.event_title}
                               </div>
@@ -1702,7 +1702,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 <span className="truncate" title={item.organization_name}>{item.organization_name}</span>
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden">
+                            <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
                                 {item.student_name}
                               </div>
@@ -1710,7 +1710,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {item.submitted_by_email || item.student_no}
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap">
+                            <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <div className="font-semibold text-gray-900 dark:text-zinc-100">
                                 {attendees != null ? `${Number(attendees).toLocaleString()} attendees` : "N/A"}
                               </div>
@@ -1718,7 +1718,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
                               </div>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap">
+                            <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <span
                                 className={cn(
                                   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
@@ -1729,7 +1729,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {item.status}
                               </span>
                             </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px]">
+                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
                               {item.created_at
                                 ? new Date(item.created_at).toLocaleDateString(undefined, {
                                     month: "short",

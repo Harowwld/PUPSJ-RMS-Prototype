@@ -26,15 +26,6 @@ export default function SecurityQuestionsSkeleton() {
           }
         />
 
-        {/* Demo Accounts Toggle Row */}
-        <div className="mx-6 flex items-center justify-between gap-4 border-b border-border py-4 dark:border-border">
-          <div className="space-y-1">
-            <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
-            <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
-          </div>
-          <Skeleton className="h-6 w-11 rounded-full dark:bg-muted" />
-        </div>
-
         {/* Questions Form Area */}
         <div className="p-6 flex-[1_0_auto] flex flex-col space-y-4">
           {[1, 2, 3].map((i) => (

@@ -45,12 +45,12 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                 className="h-[60px] border-b border-border dark:border-border last:border-b-0"
               >
                 {/* ID */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-10 dark:bg-muted" />
                 </td>
 
                 {/* Student / Requester */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-8 w-8 rounded-full dark:bg-muted shrink-0" />
                     <div className="space-y-1">
@@ -66,17 +66,17 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                 </td>
 
                 {/* Document Type */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-32 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Processing Time */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
                       <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
@@ -87,7 +87,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                 </td>
 
                 {/* Created At */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />

@@ -31,6 +31,7 @@ import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import { evaluateDriveStateTransition } from "@/lib/driveEventDetector"
 
 import { formatPHDateTime } from "@/lib/timeFormat"
+import { formatLogDetails } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -573,7 +574,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           actor_id: r.actor_id,
           role: r.role,
           action: r.action,
-          details: r.details || "N/A",
+          details: formatLogDetails(r.details) || "N/A",
           severity: r.severity || "INFO",
           userAgent: r.user_agent || "N/A",
           entityType: r.entity_type || "",

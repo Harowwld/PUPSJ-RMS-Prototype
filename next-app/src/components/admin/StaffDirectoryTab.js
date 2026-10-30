@@ -132,7 +132,7 @@ const StaffTableRow = React.memo(({
           {s.id}
         </span>
       </td>
-      <td className="p-4 align-middle overflow-hidden">
+      <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 min-w-0 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
             <span className="truncate" title={getStaffCleanName(s)}>
@@ -144,7 +144,7 @@ const StaffTableRow = React.memo(({
           </div>
         </div>
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
         <div className={cn(
           "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
           s.role === "SystemAdmin" || s.role === "SuperAdmin"
@@ -156,7 +156,7 @@ const StaffTableRow = React.memo(({
           {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
         </div>
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
         {s.totp_enabled ? (
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             2FA Enabled
@@ -167,7 +167,7 @@ const StaffTableRow = React.memo(({
           </span>
         )}
       </td>
-      <td className="p-4 align-middle whitespace-nowrap">
+      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
         {(!active.relative && (!active.date || active.date === "N/A")) ? (
           <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
             Never active
@@ -854,12 +854,12 @@ export default function StaffDirectoryTab({
           <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                    <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
+                    <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                       <input
                         type="checkbox"
                         className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -881,8 +881,8 @@ export default function StaffDirectoryTab({
                       />
                     </th>
                     <th className={cn(
-                      "p-4 w-[18%] min-w-[160px] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                      isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                      "p-4 w-[18%] min-w-[160px] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                      isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                     )}>
                       <div className="flex items-center justify-between">
                         <button

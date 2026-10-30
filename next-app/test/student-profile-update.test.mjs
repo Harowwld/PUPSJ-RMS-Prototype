@@ -9,9 +9,9 @@ const { pool, query } = await import("../src/lib/postgres.js");
 
 test("student profile update allows name changes and protects archive/restore lifecycle separation", async (t) => {
   const suffix = `${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-  const courseCode = `STU${suffix}`;
+  const courseCode = `STU${suffix.slice(0, 5)}`;
   const sectionName = `1`;
-  const studentNo = `STU-${suffix}`;
+  const studentNo = `TEST-${Date.now().toString().slice(-6)}-${suffix.slice(0, 4)}`;
   let courseId;
 
   t.after(async () => {
@@ -64,7 +64,8 @@ test("student profile update allows name changes and protects archive/restore li
   assert.equal(createdCourse.status, 201);
   courseId = createdCourse.body.data.id;
 
-  const initialName = `INITIAL NAME ${suffix}`;
+  const letterSuffix = Array.from({ length: 6 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+  const initialName = `INITIAL NAME ${letterSuffix}`;
   const createdStudent = await request("/api/students?officeId=registrar", "POST", {
     studentNo,
     name: initialName,
@@ -79,7 +80,7 @@ test("student profile update allows name changes and protects archive/restore li
   assert.equal(createdStudent.body.data.status, "Active");
 
   // 1. Updating name without sending status should succeed
-  const updatedNameA = `UPDATED NAME A ${suffix}`;
+  const updatedNameA = `UPDATED NAME A ${letterSuffix}`;
   const patchWithoutStatus = await request(`/api/students/${encodeURIComponent(studentNo)}?officeId=registrar`, "PATCH", {
     name: updatedNameA,
   });
@@ -92,7 +93,7 @@ test("student profile update allows name changes and protects archive/restore li
   assert.equal(fetchAfterA.body.data.status, "Active");
 
   // 2. Updating name while passing current status ("Active") should succeed
-  const updatedNameB = `UPDATED NAME B ${suffix}`;
+  const updatedNameB = `UPDATED NAME B ${letterSuffix}`;
   const patchWithUnchangedStatus = await request(`/api/students/${encodeURIComponent(studentNo)}?officeId=registrar`, "PATCH", {
     name: updatedNameB,
     status: "Active",
@@ -107,7 +108,7 @@ test("student profile update allows name changes and protects archive/restore li
 
   // 3. Attempting to change status to "Archived" while modifying name should return 400
   const patchMixedArchive = await request(`/api/students/${encodeURIComponent(studentNo)}?officeId=registrar`, "PATCH", {
-    name: `REJECTED NAME ${suffix}`,
+    name: `REJECTED NAME ${letterSuffix}`,
     status: "Archived",
   });
   assert.equal(patchMixedArchive.status, 400);
@@ -122,7 +123,7 @@ test("student profile update allows name changes and protects archive/restore li
 
   // 5. Attempting to restore and modify name in one request should return 400
   const patchMixedRestore = await request(`/api/students/${encodeURIComponent(studentNo)}?officeId=registrar`, "PATCH", {
-    name: `REJECTED RESTORE NAME ${suffix}`,
+    name: `REJECTED RESTORE NAME ${letterSuffix}`,
     status: "Active",
   });
   assert.equal(patchMixedRestore.status, 400);
@@ -140,4 +141,13 @@ test("student profile update allows name changes and protects archive/restore li
   assert.equal(finalFetch.status, 200);
   assert.equal(finalFetch.body.data.name, updatedNameB);
   assert.equal(finalFetch.body.data.status, "Active");
+
+  // 7. Case-insensitive degree program update (e.g. BS PSY / BS Psy) with section (e.g. 3-1)
+  const patchPsychology = await request(`/api/students/${encodeURIComponent(studentNo)}?officeId=registrar`, "PATCH", {
+    courseCode: "BS PSY",
+    section: "3-1",
+  });
+  assert.equal(patchPsychology.status, 200, "Updating student to BS PSY section 3-1 should succeed");
+  assert.equal(patchPsychology.body.data.course_code, "BS Psy");
+  assert.equal(patchPsychology.body.data.section, "3-1");
 });

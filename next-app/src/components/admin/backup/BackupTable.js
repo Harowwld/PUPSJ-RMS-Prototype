@@ -163,12 +163,12 @@ export default function BackupTable({
 
           <div
             ref={tableContainerRef}
-            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none isolate"
+            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none isolate"
           >
             <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                  <th className="w-12 p-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
+                  <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                     <input
                       type="checkbox"
                       className={cn(
@@ -184,8 +184,8 @@ export default function BackupTable({
                     />
                   </th>
                   <th className={cn(
-                    "p-4 w-[36%] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                    "p-4 w-[36%] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                   )}>
                     <div className="flex items-center justify-between">
                       <button
@@ -320,10 +320,10 @@ export default function BackupTable({
                           {getBackupTypeBadge(b)}
                         </div>
                       </td>
-                      <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100">
+                      <td className="p-4 align-middle text-center text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                         {formatBytes(b.size_bytes)}
                       </td>
-                      <td className="p-4 align-middle">
+                      <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                         <div className="flex flex-col">
                           <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 leading-tight">
                             {formatPHDateTime(b.created_at).split(' at ')[0]}
@@ -334,7 +334,7 @@ export default function BackupTable({
                         </div>
                       </td>
                       {scope === "office" ? (
-                        <td className="p-4 align-middle text-center">
+                        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                           <div className="flex mx-auto w-fit items-center justify-center gap-2">
                             {/* Node 1: Internal Storage */}
                             <Tooltip>
@@ -430,7 +430,7 @@ export default function BackupTable({
                           </div>
                         </td>
                       ) : (
-                        <td className="p-4 align-middle text-center">
+                        <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                           <div className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                             Ready
                           </div>

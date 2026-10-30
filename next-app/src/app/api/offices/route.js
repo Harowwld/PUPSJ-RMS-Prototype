@@ -57,12 +57,15 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
     }
     const allowedFields = new Set([
-      "id", "name", "short_name", "description", "icon", "accent_color", "station_name",
+      "id", "name", "short_name", "description", "icon", "accent_color", "status", "station_name",
       "storage_path", "ingest_token", "scanner_model", "inbound_path", "adminEmail", "moduleIds",
     ]);
     const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
     if (unsupportedField) {
       return NextResponse.json({ ok: false, error: `Unsupported field: ${unsupportedField}` }, { status: 400 });
+    }
+    if (body.status !== undefined && !["Active", "Inactive"].includes(body.status)) {
+      return NextResponse.json({ ok: false, error: "Invalid office status" }, { status: 400 });
     }
     if (body.moduleIds !== undefined && (!Array.isArray(body.moduleIds) || body.moduleIds.some((id) => typeof id !== "string" || !id.trim()))) {
       return NextResponse.json({ ok: false, error: "moduleIds must be an array of module ID strings" }, { status: 400 });

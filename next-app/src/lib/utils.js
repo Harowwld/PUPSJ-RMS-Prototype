@@ -49,3 +49,6 @@ export function formatTitleCase(str) {
     .join(" ");
 }
 
+export { formatLogDetails } from "./auditLogFormatting";
+
+

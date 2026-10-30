@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { DEFAULT_AVATARS } from "@/lib/defaultAvatars"
+import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars"
 import { formatErrorMessage } from "@/lib/errorUtils"
 
 function getCsrfToken() {
@@ -48,6 +48,9 @@ export default function AccountSetupModal({ authUser }) {
     return match ? Number(match[1]) : 1
   })
   const [avatarLoading, setAvatarLoading] = useState(false)
+  const [showAllAvatars, setShowAllAvatars] = useState(() => selectedAvatarId > DEFAULT_AVATAR_VISIBLE_COUNT)
+  const avatarsExpanded = showAllAvatars
+  const visibleAvatars = avatarsExpanded ? DEFAULT_AVATARS : DEFAULT_AVATARS.slice(0, DEFAULT_AVATAR_VISIBLE_COUNT)
 
   const fetchQuestions = useCallback(async () => {
     setSecLoading(true)
@@ -550,7 +553,7 @@ export default function AccountSetupModal({ authUser }) {
                     Choose Profile Avatar
                   </h3>
                   <p className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-normal">
-                    Select one of the 4 default avatars to personalize your profile, or skip to continue with your initials.
+                    Select a default avatar to personalize your profile, or skip to continue with your initials.
                   </p>
                 </div>
 
@@ -571,8 +574,8 @@ export default function AccountSetupModal({ authUser }) {
                   <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
                     Select Default Avatar
                   </label>
-                  <div className="grid grid-cols-4 gap-3 w-full">
-                    {DEFAULT_AVATARS.map((avatar) => {
+                  <div className="grid grid-cols-6 gap-2.5 w-full max-h-72 overflow-y-auto p-1 -m-1">
+                    {visibleAvatars.map((avatar) => {
                       const isSelected = selectedAvatarId === avatar.id;
                       return (
                         <button
@@ -580,24 +583,43 @@ export default function AccountSetupModal({ authUser }) {
                           type="button"
                           onClick={() => setSelectedAvatarId(avatar.id)}
                           className={cn(
-                            "relative aspect-square rounded-xl overflow-hidden border-2 transition-all p-0 flex items-center justify-center cursor-pointer active:scale-95",
+                            "relative aspect-square rounded-full transition-all p-0 flex items-center justify-center cursor-pointer active:scale-95",
                             isSelected
-                              ? "border-pup-maroon dark:border-red-400 ring-2 ring-pup-maroon/20 dark:ring-red-400/20 shadow-md"
-                              : "border-gray-200 dark:border-white/10 opacity-70 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700"
+                              ? "ring-2 ring-pup-maroon dark:ring-red-400 ring-offset-2 ring-offset-white dark:ring-offset-card shadow-sm"
+                              : "opacity-75 hover:opacity-100"
                           )}
                           title={avatar.name}
                         >
-                          <div className="w-full h-full flex items-center justify-center scale-[1.5]">
-                            {avatar.svg}
+                          <div
+                            className={cn(
+                              "w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-gray-50 dark:bg-zinc-800 transition-colors",
+                              isSelected
+                                ? "border-pup-maroon dark:border-red-400"
+                                : "border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-zinc-700"
+                            )}
+                          >
+                            <div className="w-full h-full flex items-center justify-center scale-[1.5]">
+                              {avatar.svg}
+                            </div>
                           </div>
                           {isSelected && (
-                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs">
+                            <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs ring-1 ring-white dark:ring-card">
                               <HugeIcon className="ph-bold ph-check text-[10px]" />
                             </div>
                           )}
                         </button>
                       );
                     })}
+                  </div>
+                  <div className="mt-3 flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAllAvatars((prev) => !prev)}
+                      className="h-8 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    >
+                      {avatarsExpanded ? "Show Fewer Avatars" : "View More Avatars"}
+                    </Button>
                   </div>
                 </div>
               </div>

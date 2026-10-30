@@ -38,7 +38,7 @@
     "test:security": "node --experimental-test-module-mocks --test test/security/*.test.mjs",
     "test:security-questions": "node --env-file=.env --test test/security-questions-import.test.mjs",
     "test:totp": "node --env-file=.env --test test/totp-verification.test.mjs",
-    "test": "node --env-file=.env --test test/totp-verification.test.mjs test/security-questions-import.test.mjs test/demo-account-password.test.mjs test/org-banner-gradient.test.mjs",
+    "test": "node --env-file=.env --test test/totp-verification.test.mjs test/security-questions-import.test.mjs test/demo-account-password.test.mjs test/org-banner-gradient.test.mjs test/backup-authorization-code.test.mjs test/audit-log-formatting.test.mjs",
     "test:all": "node --env-file=.env --experimental-test-module-mocks --test --test-concurrency=1 test/*.test.mjs test/security/*.test.mjs e2e/*.test.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },

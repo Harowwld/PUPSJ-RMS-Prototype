@@ -1,9 +1,11 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import { formatLogDetails } from "@/lib/utils";
+
 export default function LogExpandedRow({ log, handleCopy }) {
   const formattedDescription = (() => {
-    const text = log.details || "No known description";
+    const text = formatLogDetails(log?.details) || "No known description";
     const parts = text.split(/'([^']+)'/g);
     if (parts.length === 1) return text;
     return parts.map((part, i) => {

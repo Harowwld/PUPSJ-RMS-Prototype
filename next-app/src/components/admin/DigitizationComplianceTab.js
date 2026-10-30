@@ -1279,7 +1279,7 @@ function DigitizationComplianceContent({
 
             <div
               ref={tableContainerRef}
-              className="hidden w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out sm:block"
+              className="hidden w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 sm:block"
             >
               {sortedByCourse.length > 0 ? (
                 <table className="w-full text-sm border-collapse min-w-[850px]">
@@ -1287,7 +1287,7 @@ function DigitizationComplianceContent({
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
-                          "p-4 px-6 w-[32%] min-w-[200px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200 border-r border-border/80 dark:border-border",
+                          "p-4 px-6 w-[32%] min-w-[200px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1381,10 +1381,10 @@ function DigitizationComplianceContent({
                             {row.courseCode || "N/A"}
                           </button>
                         </td>
-                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
+                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center border-r border-border/70 dark:border-border/70">
                           {row.total?.toLocaleString?.() ?? row.total}
                         </td>
-                        <td className="p-4 px-6 text-center text-[13px] font-normal">
+                        <td className="p-4 px-6 text-center text-[13px] font-normal border-r border-border/70 dark:border-border/70">
                           <span className={cn(
                             row.digitized === 0
                               ? "text-gray-400 dark:text-zinc-500"

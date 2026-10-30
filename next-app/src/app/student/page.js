@@ -1803,7 +1803,7 @@ function StudentDashboard() {
                     ) : (
                       <div
                         ref={tableContainerRef}
-                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none border-t border-border dark:border-border"
+                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
                       >
                         <table className="w-full text-sm border-collapse min-w-[900px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1882,10 +1882,10 @@ function StudentDashboard() {
                                     "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
                                 )}
                               >
-                                <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                                <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                                   #{item.id}
                                 </td>
-                                <td className="p-4 align-middle overflow-hidden">
+                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                       {item.doc_type}
@@ -1907,15 +1907,15 @@ function StudentDashboard() {
                                   </div>
                                 </td>
 
-                                <td className="p-4 align-middle overflow-hidden">
+                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                                   <div className="truncate text-xs font-normal text-gray-600 dark:text-zinc-400" title={item.notes}>
                                     {item.notes || "N/A"}
                                   </div>
                                 </td>
-                                <td className="p-4 align-middle whitespace-nowrap">
+                                <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   <StatusBadge status={item.status} />
                                 </td>
-                                <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                                <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   {formatPHDateTime(item.created_at)}
                                 </td>
                                 <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>

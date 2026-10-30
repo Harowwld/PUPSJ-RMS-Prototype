@@ -27,6 +27,24 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
           }
         />
 
+        {/* System-Wide Prototype Feature Row Skeleton */}
+        <div className="border-t border-border dark:border-border px-6 py-4 flex items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-44 rounded dark:bg-muted" />
+                <Skeleton className="h-4 w-24 rounded-full dark:bg-muted" />
+              </div>
+              <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-4 w-14 rounded dark:bg-muted" />
+            <Skeleton className="h-6 w-11 rounded-full dark:bg-muted" />
+          </div>
+        </div>
+
         {/* Navigation Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex items-center gap-6 h-9">
@@ -46,7 +64,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
               <table className="w-full border-collapse text-left min-w-max">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                    <th className="py-3 px-4 pl-6 w-72 sticky left-0 border-r border-border/70 dark:border-border/70">
+                    <th className="py-3 px-4 pl-6 w-72 sticky left-0">
                       <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                     </th>
                     <th className="py-3 px-4 w-28">
@@ -71,11 +89,17 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 border-r border-border/70 dark:border-border/70">
                         <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                       </td>
-                      {[1, 2, 3, 4].map((j) => (
-                        <td key={j} className="py-3 px-4 text-center">
+                      {[1, 2, 3, 4].map((j, idx) => (
+                        <td
+                          key={j}
+                          className={cn(
+                            "py-3 px-4 text-center",
+                            idx < 3 && "border-r border-border/70 dark:border-border/70"
+                          )}
+                        >
                           <Skeleton className="h-6 w-11 mx-auto rounded-full dark:bg-muted" />
                         </td>
                       ))}

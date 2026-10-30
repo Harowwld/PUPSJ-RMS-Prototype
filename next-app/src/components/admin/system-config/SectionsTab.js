@@ -82,6 +82,7 @@ export default function SectionsTab({
     canScrollLeft,
     canScrollRight,
     isScrolled,
+    isScrolledX,
     scrollLeft,
     scrollRight,
     resetScroll,
@@ -97,15 +98,11 @@ export default function SectionsTab({
   const [isEditSectionOpen, setIsEditSectionOpen] = useState(false)
   const [editSection, setEditSection] = useState({ id: null, name: "", courseCode: "" })
 
-  const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
-
-  async function addSection(e, overrideData = null) {
+  async function addSection(e) {
     if (e) e.preventDefault()
-    const name = overrideData ? overrideData.name : newSectionName.trim()
-    const courseCode = overrideData ? overrideData.courseCode : secCourseCode.trim()
+    const name = newSectionName.trim()
+    const courseCode = secCourseCode.trim()
     if (!name || !courseCode) return
-
-    if (overrideData) setIsQuickAddLoading(true)
 
     try {
       const res = await fetch("/api/sections", {
@@ -119,20 +116,14 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed")
       
-      if (!overrideData) {
-        setNewSectionName("")
-        setSecCourseCode("")
-        setIsAddSectionOpen(false)
-      } else {
-        setNewSectionName("")
-      }
+      setNewSectionName("")
+      setSecCourseCode("")
+      setIsAddSectionOpen(false)
 
       showToast({ title: "Course Block Created", description: "The new course block has been successfully registered in the system." })
       if (loadAll) loadAll()
     } catch (err) {
       showToast(formatErrorMessage(err, "Registration Failed"), true)
-    } finally {
-      if (overrideData) setIsQuickAddLoading(false)
     }
   }
 
@@ -267,6 +258,15 @@ export default function SectionsTab({
             </div>
           }
           description="Manage academic cohorts, sections, and organizational blocks."
+          actions={
+            <Button
+              onClick={() => setIsAddSectionOpen(true)}
+              disabled={showArchived}
+              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+            >
+              Add Block
+            </Button>
+          }
           className="p-6"
         />
 
@@ -371,14 +371,6 @@ export default function SectionsTab({
               onScrollRight={scrollRight}
               onResetScroll={resetScroll}
             />
-
-            <Button
-              onClick={() => setIsAddSectionOpen(true)}
-              disabled={showArchived}
-              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-            >
-              Add Block
-            </Button>
           </div>
         </div>
 
@@ -465,12 +457,12 @@ export default function SectionsTab({
           ) : (
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[950px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
+                      <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
@@ -483,8 +475,8 @@ export default function SectionsTab({
                         />
                       </th>
                       <th className={cn(
-                        "w-[24%] p-4 border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                        "w-[24%] p-4 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}>
                         <div className="flex items-center justify-between">
                           <button
@@ -528,78 +520,6 @@ export default function SectionsTab({
                     </tr>
                   </thead>
                   <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {!showArchived && (
-                      <tr className={cn(
-                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
-                        (secCourseCode || newSectionName.trim()) && "bg-amber-50/50 dark:bg-amber-950/10"
-                      )}>
-                        <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40"></td>
-                        <td className={cn(
-                          "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow duration-200",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                        )}>
-                          <Select
-                            className={cn(
-                              "h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 transition-all shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80",
-                              secCourseCode ? "ring-1 ring-amber-100" : ""
-                            )}
-                            value={secCourseCode}
-                            onChange={(e) => setSecCourseCode(e.target.value)}
-                          >
-                            <option value=""></option>
-                            {courses.map((c) => (
-                              <option key={c.code} value={c.code}>
-                                {c.code}
-                              </option>
-                            ))}
-                          </Select>
-                        </td>
-                        <td className="p-4 align-middle overflow-hidden">
-                          <div className="flex items-center gap-2">
-                            <Input
-                              placeholder="Quick add block name (e.g. Block 1)..."
-                              value={newSectionName}
-                              onChange={(e) => setNewSectionName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                   e.preventDefault();
-                                   addSection(null, { courseCode: secCourseCode, name: newSectionName });
-                                }
-                              }}
-                              className={cn(
-                                "h-9 flex-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs transition-all focus-visible:ring-pup-maroon",
-                                (secCourseCode || newSectionName.trim()) ? "ring-2 ring-amber-100" : ""
-                              )}
-                            />
-                            <Button
-                              size="sm"
-                              disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
-                              onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
-                              title="Add Course Block"
-                              className="h-10 w-10 p-0 flex items-center justify-center rounded-xl text-[14px] font-semibold text-emerald-600 dark:text-emerald-400 shadow-[0_1px_2px_rgba(0,0,0,0.05)] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none bg-white dark:bg-zinc-900 border-[1.5px] border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-500/40 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/40 shrink-0 cursor-pointer"
-                            >
-                            {isQuickAddLoading ? (
-                              <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
-                            ) : (
-                              <HugeIcon  className="ph-bold ph-plus" strokeWidth={2.5}></HugeIcon>
-                            )}
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
-                          {(secCourseCode || newSectionName.trim()) ? (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                              Draft
-                            </div>
-                          ) : (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
-                              New
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4 pr-6 text-right align-middle whitespace-nowrap"></td>
-                      </tr>
-                    )}
                     {filteredSections.map((sec) => {
                       const isDisabled = showArchived
                         ? sec.status !== "Archived"
@@ -655,12 +575,12 @@ export default function SectionsTab({
                               {sec.course_code || "N/A"}
                             </span>
                           </td>
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100" title={sec.name}>
                               {sec.name}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left whitespace-nowrap">
+                          <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {sec.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived

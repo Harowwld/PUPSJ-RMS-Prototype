@@ -45,15 +45,18 @@ import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 
+// Stored icons may use either the "ti ti-x" or "ph-bold ph-x" prefix, so compare by bare icon name.
+const iconKey = (value = "") => String(value).trim().split(/\s+/).pop().replace(/^(ti|ph)-/, "")
+
 // Expanded predefined icon palette so SuperAdmins have rich choices for campus offices
 const PRESET_ICONS = [
   { value: "ti ti-building", label: "Building" },
   { value: "ti ti-landmark", label: "Institution" },
   { value: "ti ti-school", label: "College" },
   { value: "ti ti-graduation-cap", label: "Graduation" },
-  { value: "ti ti-badge-check", label: "Registrar" },
+  { value: "ti ti-certificate", label: "Registrar" },
   { value: "ti ti-scroll", label: "Diploma" },
-  { value: "ti ti-scroll-text", label: "Credentials" },
+  { value: "ti ti-passport", label: "Credentials" },
   { value: "ti ti-award", label: "Honors" },
   { value: "ti ti-shield-check", label: "Clearance" },
   { value: "ti ti-users", label: "Personnel" },
@@ -63,7 +66,7 @@ const PRESET_ICONS = [
   { value: "ti ti-clipboard-check", label: "Evaluations" },
   { value: "ti ti-file-text", label: "Documents" },
   { value: "ti ti-folder", label: "Folders" },
-  { value: "ti ti-folder-archive", label: "Archive Folder" },
+  { value: "ti ti-archive-02", label: "Archive Folder" },
   { value: "ti ti-archive", label: "Archives" },
   { value: "ti ti-book", label: "Library" },
   { value: "ti ti-book-open", label: "Textbooks" },
@@ -82,6 +85,19 @@ const PRESET_ICONS = [
   { value: "ti ti-laptop", label: "Computing" },
   { value: "ti ti-briefcase", label: "Career & Placement" },
   { value: "ti ti-message-square", label: "Guidance & Counseling" },
+  { value: "ti ti-teacher", label: "Faculty" },
+  { value: "ti ti-presentation-01", label: "Seminars" },
+  { value: "ti ti-customer-service-01", label: "Help Desk" },
+  { value: "ti ti-megaphone-01", label: "Announcements" },
+  { value: "ti ti-printer", label: "Printing" },
+  { value: "ti ti-stamp-01", label: "Authentication" },
+  { value: "ti ti-id", label: "ID Services" },
+  { value: "ti ti-hospital-01", label: "Medical" },
+  { value: "ti ti-bus-01", label: "Transport" },
+  { value: "ti ti-store-01", label: "Supply" },
+  { value: "ti ti-key-01", label: "Access Keys" },
+  { value: "ti ti-globe", label: "International Affairs" },
+  { value: "ti ti-security-check", label: "Safety & Security" },
 ]
 
 // Expanded institutional branding colors palette
@@ -215,7 +231,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [selectedOfficeId, setSelectedOfficeId] = useState(null)
-  const [showCustomIcon, setShowCustomIcon] = useState(false)
   const [modulesAccordionOpen, setModulesAccordionOpen] = useState(false)
   const [showAdvancedStorage, setShowAdvancedStorage] = useState(false)
 
@@ -316,7 +331,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const handleOpenCreate = () => {
     setIsEditing(false)
     setSelectedOfficeId(null)
-    setShowCustomIcon(false)
     setModulesAccordionOpen(false)
     setShowAdvancedStorage(false)
     const defaultSelected = availableModules.map(m => m.id)
@@ -342,7 +356,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     setIsEditing(true)
     setSelectedOfficeId(office.id)
     const icon = office.icon || "ph-bold ph-building"
-    setShowCustomIcon(!PRESET_ICONS.some(p => p.value === icon))
     setModulesAccordionOpen(false)
     setShowAdvancedStorage(Boolean(office.storage_path || office.inbound_path))
     setForm({
@@ -1209,11 +1222,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         <button
                           type="button"
                           onClick={(e) => e.stopPropagation()}
-                          className="w-8 h-8 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800/80 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-700 dark:text-zinc-400 dark:hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                           title="More department actions"
                           aria-label={`More options for ${office.short_name}`}
                         >
-                          <HugeIcon className="ph-bold ph-dots-three-vertical text-sm" />
+                          <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -1418,7 +1431,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         <>
           <div
             ref={tableContainerRef}
-            className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+            className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
           >
             <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 border-collapse min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1448,7 +1461,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
                     </button>
                   </th>
-                  <th className="p-4 w-[28%] whitespace-nowrap">
+                  <th className="p-4 w-[28%] max-w-[340px] whitespace-nowrap">
                     <button
                       onClick={() => handleSort("name")}
                       className={cn(
@@ -1528,7 +1541,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                       )}
                     >
-                      <td className="w-12 p-4 align-middle text-center">
+                      <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                         <input
                           type="checkbox"
                           className={cn(
@@ -1540,7 +1553,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           aria-label={`Select ${office.short_name}`}
                         />
                       </td>
-                      <td className="p-4 align-middle whitespace-nowrap">
+                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         <div
                           className="flex items-center gap-3 cursor-pointer group/dept"
                           onClick={(e) => {
@@ -1576,18 +1589,18 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle overflow-hidden">
-                        <div className="truncate">
+                      <td className="p-4 align-middle overflow-hidden max-w-[340px] border-r border-border/70 dark:border-border/70">
+                        <div className="w-full min-w-0">
                           <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
                             {office.name}
                           </span>
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate block" title={office.description || "No description provided."}>
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate block mt-0.5" title={office.description || "No description provided."}>
                             {office.description || "No description provided."}
                           </span>
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden">
+                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                         <div className="text-[11px] space-y-1">
                           <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
                             <HugeIcon  className="ph-bold ph-desktop text-gray-400 dark:text-zinc-500 text-xs shrink-0"></HugeIcon>
@@ -1615,7 +1628,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </td>
 
-                      <td className="p-4 align-middle text-center whitespace-nowrap">
+                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1630,7 +1643,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="p-4 align-middle text-center whitespace-nowrap">
+                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1645,7 +1658,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </button>
                       </td>
 
-                      <td className="p-4 align-middle whitespace-nowrap">
+                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         <span
                           className={cn(
                             "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full select-none border",
@@ -1865,7 +1878,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         <DialogContent className="w-full max-w-4xl sm:max-w-4xl rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {/* Header: Clean title without icon as requested */}
-            <DialogHeader className="p-6 sm:px-8 pt-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left shrink-0">
+            <DialogHeader className="p-6 sm:px-8 pt-6 pb-0 bg-white dark:bg-card border-none text-left shrink-0">
               <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 {isEditing ? "Edit Department Details" : "Add New Department"}
               </DialogTitle>
@@ -2216,52 +2229,31 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                     Department Icon
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomIcon(v => !v)}
-                    className="text-[10px] font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
-                  >
-                    {showCustomIcon ? "Use icon catalog" : "Custom icon class"}
-                  </button>
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">{PRESET_ICONS.length} icons available</span>
                 </div>
 
-                {!showCustomIcon ? (
-                  <div className="p-3.5 sm:p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
-                    <div className="grid grid-cols-6 sm:grid-cols-12 gap-2.5 sm:gap-3">
-                      {PRESET_ICONS.map((opt) => {
-                        const selected = form.icon === opt.value
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            title={opt.label}
-                            onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
-                            className={cn(
-                              "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
-                              selected
-                                ? "border-slate-900 bg-slate-900 text-white dark:border-border dark:bg-zinc-100 dark:text-zinc-900 scale-105"
-                                : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                            )}
-                          >
-                            <HugeIcon  className={opt.value}></HugeIcon>
-                          </button>
-                        )
-                      })}
-                    </div>
+                <div className="p-3.5 sm:p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
+                  <div className="grid grid-cols-6 sm:grid-cols-12 gap-2.5 sm:gap-3">
+                    {PRESET_ICONS.map((opt) => {
+                      const selected = iconKey(form.icon) === iconKey(opt.value)
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          title={opt.label}
+                          onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
+                          className={cn(
+                            "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
+                            selected
+                              ? "border-slate-900 bg-slate-900 text-white dark:border-border dark:bg-zinc-100 dark:text-zinc-900 scale-105"
+                              : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                          )}
+                        >
+                          <HugeIcon  className={opt.value}></HugeIcon>
+                        </button>
+                      )
+                    })}
                   </div>
-                ) : (
-                  <Input
-                    value={form.icon}
-                    onChange={(e) => setForm(prev => ({ ...prev, icon: e.target.value }))}
-                    placeholder="e.g. ti ti-building, ph-bold ph-certificate"
-                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
-                  />
-                )}
-                <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-500 pt-0.5">
-                  <span className="flex items-center gap-1.5">
-                    Selected icon: <HugeIcon  className={form.icon}></HugeIcon> <code className="text-gray-600 dark:text-zinc-400 font-medium">{form.icon}</code>
-                  </span>
-                  <span>{PRESET_ICONS.length} icons available</span>
                 </div>
               </div>
 
@@ -2384,7 +2376,19 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         onConfirm={() => {
           setConfirmMatrixLeaveOpen(false)
           setDialogOpen(false)
-          window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules" } }))
+          const targetOfficeId = form.id || selectedOfficeId
+          if (typeof onSwitchTab === "function") {
+            onSwitchTab("modules", targetOfficeId)
+          }
+          window.dispatchEvent(
+            new CustomEvent("switch-view", {
+              detail: {
+                view: "modules",
+                officeId: targetOfficeId,
+                viewMode: "office",
+              },
+            })
+          )
         }}
         title="Discard Unsaved Changes?"
         message="Opening Compare Features will close this dialog and discard any unsaved changes to this department. Do you want to continue?"

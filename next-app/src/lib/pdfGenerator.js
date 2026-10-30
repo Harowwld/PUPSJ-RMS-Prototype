@@ -1,6 +1,7 @@
 import jsPDFRaw from "jspdf"
 import autoTableRaw from "jspdf-autotable"
 import { formatPHDateTime } from "./timeFormat.js"
+import { formatLogDetails } from "./auditLogFormatting.js"
 
 const jsPDF = typeof jsPDFRaw === "function" ? jsPDFRaw : (jsPDFRaw?.jsPDF || jsPDFRaw?.default || jsPDFRaw)
 const autoTable = typeof autoTableRaw === "function" ? autoTableRaw : (autoTableRaw?.default || autoTableRaw)
@@ -431,7 +432,7 @@ export const generateAuditLogsPdf = async (logs = [], options = {}) => {
       base.push(log?.officeName || log?.office_name || log?.scope || (log?.office_id ? "Office" : "Global"))
     }
     base.push(log?.action || "Activity")
-    base.push(log?.details || "N/A")
+    base.push(formatLogDetails(log?.details) || "N/A")
     return base
   })
 

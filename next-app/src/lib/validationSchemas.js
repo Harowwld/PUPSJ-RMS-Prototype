@@ -37,10 +37,10 @@ export const PH_PHONE_REGEX =
 
 /**
  * Human Names:
- * Must contain letters, allows accents, spaces, hyphens, apostrophes, and periods.
+ * Must contain letters, allows accents, spaces, hyphens, apostrophes, commas, and periods.
  * Strictly disallows strings consisting only of digits, punctuation, or dummy code.
  */
-export const HUMAN_NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ\s.'-]+$/;
+export const HUMAN_NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ\s.',-]+$/;
 
 // ============================================================================
 // 2. Field Primitives
@@ -64,7 +64,7 @@ export const PersonNameSchema = (fieldLabel = "Name") =>
     .max(60, `${fieldLabel} cannot exceed 60 characters`)
     .regex(
       HUMAN_NAME_REGEX,
-      `${fieldLabel} can only contain letters, spaces, hyphens, apostrophes, and periods`
+      `${fieldLabel} can only contain letters, spaces, hyphens, apostrophes, commas, and periods`
     )
     .refine(
       (val) => /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(val),
@@ -115,8 +115,7 @@ export const StudentRegistrationSchema = z.object({
     .string({ required_error: "Course code is required" })
     .trim()
     .min(2, "Course code must be at least 2 characters")
-    .max(15, "Course code cannot exceed 15 characters")
-    .toUpperCase(),
+    .max(15, "Course code cannot exceed 15 characters"),
   yearLevel: z.coerce
     .number({ required_error: "Academic entry year is required" })
     .int("Academic entry year must be an integer")
@@ -148,7 +147,7 @@ export const StudentRegistrationSchema = z.object({
 
 export const StudentUpdateSchema = z.object({
   name: PersonNameSchema("Student Name").optional(),
-  courseCode: z.string().trim().min(2).max(15).toUpperCase().optional(),
+  courseCode: z.string().trim().min(2).max(15).optional(),
   yearLevel: z.coerce.number().int().min(2000).max(2100).optional(),
   section: z.string().trim().min(1).max(20).optional(),
   room: z.coerce.number().int().positive().optional(),
@@ -255,7 +254,7 @@ export const StudentDocumentRequestSchema = z
       return true;
     },
     {
-      message: "Requester name can only contain letters, spaces, hyphens, and periods",
+      message: "Requester name can only contain letters, spaces, hyphens, apostrophes, commas, and periods",
       path: ["requesterName"],
     }
   );

@@ -1706,14 +1706,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               /* Table View Mode */
               <div
                 ref={tableContainerRef}
-                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
                 <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
-                          "p-4 pl-6 w-[280px] min-w-[280px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow border-r border-border/70",
+                          "p-4 pl-6 w-[280px] min-w-[280px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1790,14 +1790,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Category Badge */}
-                          <td className="p-4 whitespace-nowrap">
+                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
                               {org.category}
                             </span>
                           </td>
 
                           {/* Faculty Adviser */}
-                          <td className="p-4 overflow-hidden">
+                          <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
                               {org.adviser_name || (
                                 <span className="text-gray-400 italic">Not assigned</span>
@@ -1811,7 +1811,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Authorized Officers */}
-                          <td className="p-4 text-center whitespace-nowrap">
+                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <button
                               type="button"
                               onClick={() => openManageOrgSheet(org, "officers")}
@@ -1826,7 +1826,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Constitution & By-Laws */}
-                          <td className="p-4 whitespace-nowrap">
+                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {Number(org.pending_cbl_count) > 0 ? (
                               <button
                                 type="button"
@@ -1898,7 +1898,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           </td>
 
                           {/* Status */}
-                          <td className="p-4 text-center whitespace-nowrap">
+                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <span
                               className={cn(
                                 "inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border",

@@ -47,12 +47,12 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
                 className="h-[60px] border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Student No */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                 </td>
 
                 {/* Name */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="space-y-1">
                     <Skeleton
                       className={cn(
@@ -65,17 +65,17 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
                 </td>
 
                 {/* Document Type */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* Status */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
 
                 {/* File */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="space-y-1">
                     <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />
@@ -83,7 +83,7 @@ export default function DocumentsMatrixSkeleton({ rowCount = 7, embedded = false
                 </td>
 
                 {/* Created */}
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                 </td>
 

@@ -98,28 +98,28 @@ export default function StudentDirectorySkeleton() {
             <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
               {Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i} className="h-14">
-                  <td className="w-12 p-4 text-center">
+                  <td className="w-12 p-4 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-4 mx-auto rounded" />
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-6 w-28 rounded-full" />
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-36 rounded" />
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-28 rounded-full" />
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-16 rounded" />
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-32 rounded" />
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-8 mx-auto rounded-full" />
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-16 mx-auto rounded-full" />
                   </td>
                   <td className="p-4 text-right">

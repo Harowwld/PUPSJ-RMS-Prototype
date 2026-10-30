@@ -506,7 +506,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                   </div>
 
                   {/* Cards List */}
-                  <div className="flex flex-col gap-2 max-h-[580px] overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-2.5">
                     {currentItems.map((item, idx) => {
                       const isSelected = idx === safeSelectedIdx
                       return (
@@ -516,15 +516,15 @@ export default function LandingCatalogCmsView({ showToast }) {
                           className={cn(
                             "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 select-none",
                             isSelected
-                              ? "border-pup-maroon dark:border-red-500/60 bg-red-50/50 dark:bg-red-950/20 shadow-xs"
+                              ? "border-pup-maroon dark:border-red-500 ring-2 ring-pup-maroon/25 dark:ring-red-500/30 bg-white dark:bg-zinc-900 shadow-sm"
                               : "border-border dark:border-border bg-white dark:bg-zinc-900/50 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60"
                           )}
                         >
                           <div
                             className={cn(
-                              "w-7 h-7 rounded-xl flex items-center justify-center font-mono text-[11px] font-bold shrink-0",
+                              "w-7 h-7 rounded-xl flex items-center justify-center font-mono text-[11px] font-bold shrink-0 transition-colors",
                               isSelected
-                                ? "bg-pup-maroon text-white"
+                                ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
                                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
                             )}
                           >
@@ -533,11 +533,18 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                              <span
+                                className={cn(
+                                  "text-xs font-semibold truncate transition-colors",
+                                  isSelected
+                                    ? "text-pup-maroon dark:text-red-400"
+                                    : "text-gray-900 dark:text-zinc-100"
+                                )}
+                              >
                                 {item.title || "Untitled Document"}
                               </span>
                             </div>
-                            <p className="text-[11px] text-gray-900 dark:text-zinc-300 truncate mt-0.5">
+                            <p className="text-[11px] text-gray-600 dark:text-zinc-300 truncate mt-0.5">
                               {item.client || "Official Record"} · {item.requirements?.length || 0} requirements
                             </p>
                           </div>

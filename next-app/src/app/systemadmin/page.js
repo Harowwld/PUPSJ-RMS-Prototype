@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
-import ServiceStandardsSkeleton from "@/components/systemadmin/skeletons/ServiceStandardsSkeleton"
 import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
 import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
@@ -32,7 +31,6 @@ const SYSTEMADMIN_NAV_ITEMS = [
   { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
 
   { type: "header", label: "Campus Operations" },
-  { key: "standards", label: "Processing Time Standards", iconClass: "ph-bold ph-clock-countdown" },
   { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
 
   { type: "header", label: "Public Portal & Identity" },
@@ -124,9 +122,6 @@ const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/Landing
 const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
   loading: () => <SecurityQuestionsSkeleton />,
 })
-const ServiceStandardsTab = dynamic(() => import("@/components/systemadmin/ServiceStandardsTab"), {
-  loading: () => <ServiceStandardsSkeleton />,
-})
 
 const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing", "activity", "settings"]
 
@@ -152,6 +147,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     : "offices"
 
   const [view, setView] = useState(initialView)
+  const [selectedOfficeId, setSelectedOfficeId] = useState(() => searchParams?.get("office") || "")
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   useEffect(() => {
@@ -178,6 +174,9 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       const { view: targetView, officeId, section } = e.detail || {}
       if (targetView) {
         setView(targetView)
+        if (officeId) {
+          setSelectedOfficeId(officeId)
+        }
         const params = new URLSearchParams()
         params.set("view", targetView)
         if (officeId) {
@@ -304,10 +303,16 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     })()
   }, [initialAuth, router])
 
-  const switchView = useCallback((nextView) => {
+  const switchView = useCallback((nextView, officeId) => {
     setView(nextView)
+    if (officeId) {
+      setSelectedOfficeId(officeId)
+    }
     const params = new URLSearchParams()
     params.set("view", nextView)
+    if (officeId) {
+      params.set("office", officeId)
+    }
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
   }, [router])
 
@@ -350,12 +355,16 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
             {view === "branding" && <InstitutionalBrandingTab showToast={showToast} />}
-            {view === "modules" && <ModuleConfigTab showToast={showToast} />}
-            {view === "standards" && <ServiceStandardsTab showToast={showToast} />}
+            {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
             {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
             {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
-            {view === "health" && <CampusOperationsTab showToast={showToast} />}
+            {(view === "health" || view === "standards") && (
+              <CampusOperationsTab
+                showToast={showToast}
+                initialStandardsOpen={view === "standards"}
+              />
+            )}
             {view === "backups" && <SystemBackupsTab showToast={showToast} />}
             {view === "landing" && <LandingPageCmsTab showToast={showToast} />}
             {view === "activity" && <MyActivityPanel />}

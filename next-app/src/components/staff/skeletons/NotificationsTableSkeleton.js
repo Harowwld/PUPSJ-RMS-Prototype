@@ -47,25 +47,25 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
                 key={i}
                 className="h-[56px] border-b border-border dark:border-border last:border-b-0"
               >
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className={cn("h-4 rounded dark:bg-muted", i % 2 === 0 ? "w-28" : "w-36")} />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className={cn("h-3.5 rounded dark:bg-muted", i % 3 === 0 ? "w-36" : "w-44")} />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-16 rounded dark:bg-muted" />
                 </td>
                 <td className="py-3 px-4 pr-6 align-middle text-right">

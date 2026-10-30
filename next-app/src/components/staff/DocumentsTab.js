@@ -1125,13 +1125,13 @@ export default function DocumentsTab({
                 ) : (
                   <div
                     ref={matrixTableContainerRef}
-                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
                   >
                     <table className="w-full text-sm border-collapse min-w-max">
                       <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                         <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           {/* Sticky Column: Student No */}
-                          <th className="p-4 pl-6 sticky left-0 z-30 bg-gray-50 dark:bg-zinc-900 border-r border-border/70 w-[180px] min-w-[180px] max-w-[180px]">
+                          <th className="p-4 pl-6 sticky left-0 z-30 bg-gray-50 dark:bg-zinc-900 w-[180px] min-w-[180px] max-w-[180px]">
                             <button
                               type="button"
                               onClick={() => handleMatrixSort("student_no")}
@@ -1147,7 +1147,7 @@ export default function DocumentsTab({
                           </th>
 
                           {/* Sticky Column: Student Name */}
-                          <th className="p-4 sticky left-[180px] z-30 bg-gray-50 dark:bg-zinc-900 border-r border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[240px] min-w-[240px] max-w-[240px]">
+                          <th className="p-4 sticky left-[180px] z-30 bg-gray-50 dark:bg-zinc-900 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[240px] min-w-[240px] max-w-[240px]">
                             <div className="flex items-center justify-between gap-1">
                               <button
                                 type="button"
@@ -1246,7 +1246,7 @@ export default function DocumentsTab({
                             </td>
 
                             {/* Program & Section */}
-                            <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap w-[160px] min-w-[160px]">
+                            <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap w-[160px] min-w-[160px] border-r border-border/70 dark:border-border/70">
                               <span className="font-semibold text-gray-900 dark:text-zinc-100">
                                 {item.student.courseCode}
                               </span>{" "}
@@ -1256,7 +1256,7 @@ export default function DocumentsTab({
                             </td>
 
                             {/* Progress */}
-                            <td className="p-4 whitespace-nowrap w-[210px] min-w-[210px]">
+                            <td className="p-4 whitespace-nowrap w-[210px] min-w-[210px] border-r border-border/70 dark:border-border/70">
                               <div className="flex items-center gap-3">
                                 <div className="w-24 h-2.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden shrink-0 border border-black/5 dark:border-white/5">
                                   <div
@@ -1290,7 +1290,7 @@ export default function DocumentsTab({
                             {item.requirements.map((req) => (
                               <td
                                 key={req.docType}
-                                className="p-3.5 text-center align-middle w-[185px] min-w-[185px]"
+                                className="p-3.5 text-center align-middle w-[185px] min-w-[185px] border-r border-border/70 dark:border-border/70 last:border-r-0"
                               >
                                 {req.status === "verified" ? (
                                   <Tooltip>

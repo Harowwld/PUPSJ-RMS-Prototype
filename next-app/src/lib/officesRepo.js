@@ -42,6 +42,7 @@ export async function createOffice({
   description,
   icon,
   accent_color,
+  status,
   station_name,
   storage_path,
   ingest_token,
@@ -89,10 +90,11 @@ export async function createOffice({
       throw error;
     }
 
+    const officeStatus = status === "Inactive" ? "Inactive" : "Active";
     await run(
-      `INSERT INTO offices(id, name, short_name, description, icon, accent_color, station_name, storage_path, inbound_path, ingest_token, scanner_model, last_station_ping)
-       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
-      [oid, name, short_name, description || null, icon || null, accent_color || "#800000", defaultStation, defaultStorage, defaultInbound, defaultToken, defaultScanner]
+      `INSERT INTO offices(id, name, short_name, description, icon, accent_color, status, station_name, storage_path, inbound_path, ingest_token, scanner_model, last_station_ping)
+       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+      [oid, name, short_name, description || null, icon || null, accent_color || "#800000", officeStatus, defaultStation, defaultStorage, defaultInbound, defaultToken, defaultScanner]
     );
 
     const allMods = (await run("SELECT id, is_system FROM modules")).rows;

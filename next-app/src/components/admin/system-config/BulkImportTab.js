@@ -302,7 +302,7 @@ export default function BulkImportTab({
                     <>
                       <div
                         ref={tableContainerRef}
-                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                       >
                         <table className="w-full text-sm border-collapse min-w-[850px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -327,15 +327,15 @@ export default function BulkImportTab({
                           </thead>
                           <tbody className="divide-y divide-border dark:border-border">
                             <tr className="bg-gray-50/60 dark:bg-zinc-900/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60 border-b border-border dark:border-border transition-colors">
-                              <td className="p-4 text-center">
+                              <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
                                 <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-border dark:border-border">
                                   <HugeIcon className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
                                 </div>
                               </td>
-                              <td className="p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                              <td className="p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
                                 NEW
                               </td>
-                              <td className="p-4">
+                              <td className="p-4 border-r border-border/70 dark:border-border/70">
                       <Select
                         className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                         value={quickAdd.category}
@@ -353,7 +353,7 @@ export default function BulkImportTab({
                         {!isOsas && <option value="Section">Section</option>}
                       </Select>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 border-r border-border/70 dark:border-border/70">
                       <Input
                         className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         value={quickAdd.name}
@@ -369,7 +369,7 @@ export default function BulkImportTab({
                         placeholder="Quick add name/label..."
                       />
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 border-r border-border/70 dark:border-border/70">
                       {quickAdd.category.toLowerCase() === "section" ? (
                         <Select
                           className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
@@ -445,7 +445,7 @@ export default function BulkImportTab({
                         )}
                       >
                         <td
-                          className={cn("p-4 text-center", row.error && "border-l-4 border-l-red-500")}
+                          className={cn("p-4 text-center border-r border-border/70 dark:border-border/70", row.error && "border-l-4 border-l-red-500")}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <input
@@ -459,10 +459,10 @@ export default function BulkImportTab({
                             disabled={!isSelectable}
                           />
                         </td>
-                        <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                        <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {row.index}
                         </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             <Select
                               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -493,7 +493,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 align-middle overflow-hidden">
+                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             <Input
                               className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -534,7 +534,7 @@ export default function BulkImportTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
+                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
                               <Select

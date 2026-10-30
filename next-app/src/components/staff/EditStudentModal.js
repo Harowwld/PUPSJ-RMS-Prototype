@@ -93,7 +93,7 @@ export default function EditStudentModal({
     if (!student) return;
 
     const cleanName = name.trim().replace(/\s+/g, " ").toUpperCase();
-    const cleanCourse = courseCode.trim().toUpperCase();
+    const cleanCourse = courseCode.trim();
     const parsedYear = parseInt(yearLevel, 10);
     const cleanSec = section.trim();
     const parsedRoom = parseInt(room, 10);

@@ -8,6 +8,7 @@ import {
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { decryptPII } from "@/lib/piiEncryption";
 import { addAuditActorIds } from "@/lib/auditActor";
+import { formatLogDetails } from "@/lib/auditLogFormatting";
 
 export const runtime = "nodejs";
 
@@ -55,7 +56,7 @@ export async function GET(req) {
     const readableRows = await addAuditActorIds(rows.map((row) => ({
       ...row,
       actor: decryptPII(row.actor),
-      details: decryptPII(row.details),
+      details: formatLogDetails(decryptPII(row.details)),
     })));
 
     return NextResponse.json({ ok: true, data: readableRows, total });

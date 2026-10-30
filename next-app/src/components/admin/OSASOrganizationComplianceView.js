@@ -1268,7 +1268,7 @@ export default function OSASOrganizationComplianceView({
           <div className="flex flex-[1_0_auto] flex-col border-t border-border dark:border-border bg-white dark:bg-card">
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
               {sortedOrganizations.length > 0 ? (
                 <table className="w-full text-sm border-collapse min-w-[1050px]">
@@ -1277,7 +1277,7 @@ export default function OSASOrganizationComplianceView({
                       {/* Column 1: Organization */}
                       <th
                         className={cn(
-                          "py-3 px-6 w-[32%] min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200 border-r border-border/80 dark:border-border",
+                          "py-3 px-6 w-[32%] min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1416,7 +1416,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 2: Faculty Adviser */}
-                          <td className="py-3.5 px-6">
+                          <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
                             {org.adviserName ? (
                               <div className="min-w-0 max-w-[200px]">
                                 <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -1441,7 +1441,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 3: Archival CBL (1-Click Preview) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap">
+                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {org.hasCbl ? (
                               <button
                                 type="button"
@@ -1467,7 +1467,7 @@ export default function OSASOrganizationComplianceView({
                           </td>
 
                           {/* Column 4: Authorized Officers (1-Click Roster View) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap">
+                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {org.activeOfficerCount > 0 ? (
                               <button
                                 type="button"

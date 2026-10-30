@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+import { cn, formatLogDetails } from "@/lib/utils"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import { formatPHDateTime } from "@/lib/timeFormat"
@@ -124,7 +124,7 @@ export default function AuditLogsTab({
         log?.actor || "System",
         log?.role || "N/A",
         log?.action || "N/A",
-        log?.details || "No known description",
+        formatLogDetails(log?.details) || "No known description",
         log?.ip || "N/A",
         log?.user_agent || "N/A",
         log?.entity_type || "N/A",

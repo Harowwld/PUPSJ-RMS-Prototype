@@ -46,17 +46,17 @@ export default function TaxonomyTableSkeleton({
                 className="border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Checkbox */}
-                <td className="py-3 px-4 align-middle text-center">
+                <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
 
                 {/* Primary Code / Identifier */}
-                <td className="py-3 px-4 align-middle whitespace-nowrap">
+                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-4 w-20 rounded dark:bg-muted" />
                 </td>
 
                 {/* Designation / Block / Scope */}
-                <td className="py-3 px-4 align-middle overflow-hidden">
+                <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                   <div className="flex flex-col gap-1">
                     <Skeleton
                       className={cn(
@@ -71,7 +71,7 @@ export default function TaxonomyTableSkeleton({
                 </td>
 
                 {/* Status Badge */}
-                <td className="py-3 px-4 align-middle whitespace-nowrap">
+                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
                 </td>
 

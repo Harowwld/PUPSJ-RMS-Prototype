@@ -1176,12 +1176,12 @@ export default function StudentDirectoryTab({
             ) : (
               <div
                 ref={tableContainerRef}
-                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
                 <table className="w-full text-sm border-separate border-spacing-0 min-w-[1320px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center border-r border-border/70 sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
+                      <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1192,7 +1192,7 @@ export default function StudentDirectoryTab({
 
                       <th
                         className={cn(
-                          "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow border-r border-border/70",
+                          "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1327,13 +1327,13 @@ export default function StudentDirectoryTab({
                             </span>
                           </td>
 
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
                               {formatTitleCase(s.name)}
                             </div>
                           </td>
 
-                          <td className="p-4 align-middle overflow-hidden whitespace-nowrap">
+                          <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <Badge
                                 variant="outline"
@@ -1347,11 +1347,11 @@ export default function StudentDirectoryTab({
                             </div>
                           </td>
 
-                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle">
+                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
                             {s.yearLevel || "N/A"}
                           </td>
 
-                          <td className="p-4 align-middle whitespace-nowrap">
+                          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                               <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs shrink-0"></HugeIcon>
                               <span>
@@ -1360,7 +1360,7 @@ export default function StudentDirectoryTab({
                             </div>
                           </td>
 
-                          <td className="p-4 text-center align-middle">
+                          <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                             <Badge
                               variant="outline"
                               className={cn(
@@ -1374,7 +1374,7 @@ export default function StudentDirectoryTab({
                             </Badge>
                           </td>
 
-                          <td className="p-4 text-center align-middle">
+                          <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                             <Badge
                               variant="outline"
                               className={cn(

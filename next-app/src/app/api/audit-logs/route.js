@@ -4,6 +4,7 @@ import { decryptPII } from "../../../lib/piiEncryption";
 import { getPrincipalOfficeId, isAdmin, requireAuth, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { addAuditActorIds } from "../../../lib/auditActor";
+import { formatLogDetails } from "../../../lib/auditLogFormatting";
 
 export const runtime = "nodejs";
 
@@ -83,7 +84,7 @@ export async function GET(req) {
     data: await addAuditActorIds(rows.map(r => ({
       ...r,
       actor: decryptPII(r.actor),
-      details: decryptPII(r.details),
+      details: formatLogDetails(decryptPII(r.details)),
     }))),
     total,
   });
@@ -106,7 +107,7 @@ export async function POST(req) {
     await writeAuditLog(req, action, {
       actor: body.actor,
       role: body.role,
-      details: body.details || "",
+      details: formatLogDetails(body.details || ""),
       severity: body.severity || "INFO",
       entity_type: body.entity_type || "",
       entity_id: body.entity_id || "",

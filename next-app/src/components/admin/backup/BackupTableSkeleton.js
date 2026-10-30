@@ -18,10 +18,10 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
         <table className="w-full text-sm border-collapse min-w-[1050px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 py-3 px-4 text-center align-middle border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
+              <th className="w-12 py-3 px-4 text-center align-middle sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[36%] border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
+              <th className="py-3 px-4 w-[36%] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
               <th className="py-3 px-4 w-[14%] text-center">
@@ -57,16 +57,16 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
                     />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle text-center">
+                <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-4 w-14 mx-auto rounded dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="flex flex-col gap-1.5">
                     <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
                     <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle text-center">
+                <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-[22px] w-14 rounded-full mx-auto dark:bg-muted" />
                 </td>
                 <td className="py-3 px-4 pr-6 align-middle text-right">

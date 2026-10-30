@@ -583,7 +583,7 @@ export default function BulkImportOrganizationsModal({
             {/* Table */}
             <div
               ref={tableContainerRef}
-              className="flex-1 min-h-0 w-full overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none border-t border-border dark:border-border"
+              className="flex-1 min-h-0 w-full overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
             >
               <table className="w-full text-xs border-collapse min-w-[1260px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -633,7 +633,7 @@ export default function BulkImportOrganizationsModal({
                         )}
                         onClick={() => toggleCsvRowSelected(r.index)}
                       >
-                        <td className="w-12 p-3 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="w-12 p-3 text-center align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -641,13 +641,13 @@ export default function BulkImportOrganizationsModal({
                             className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
                           />
                         </td>
-                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100">
+                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                           {r.organization?.acronym || "N/A"}
                         </td>
-                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate" title={formatTitleCase(r.organization?.name)}>
+                        <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate border-r border-border/70 dark:border-border/70" title={formatTitleCase(r.organization?.name)}>
                           {formatTitleCase(r.organization?.name)}
                         </td>
-                        <td className="p-3 align-middle">
+                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
                           <span className={cn(
                             "inline-flex w-fit items-center justify-center rounded-lg px-2 py-0.5 text-[11px] font-medium border",
                             (r.organization?.category || "Academic") === "Academic"
@@ -657,10 +657,10 @@ export default function BulkImportOrganizationsModal({
                             {r.organization?.category || "Academic"}
                           </span>
                         </td>
-                        <td className="p-3 align-middle text-gray-600 dark:text-zinc-400 truncate" title={r.organization?.adviserName || "N/A"}>
+                        <td className="p-3 align-middle text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70" title={r.organization?.adviserName || "N/A"}>
                           {r.organization?.adviserName || "N/A"}
                         </td>
-                        <td className="p-3 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-20 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(room || "1")}
@@ -672,7 +672,7 @@ export default function BulkImportOrganizationsModal({
                             <option value="2">2</option>
                           </Select>
                         </td>
-                        <td className="p-3 pr-6 align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pr-6 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-56 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(cabinet || "ACADEMIC ORGANIZATIONS")}
@@ -687,7 +687,7 @@ export default function BulkImportOrganizationsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pl-2 pr-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 pl-2 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
                             className="h-7.5 w-22 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
                             value={String(drawer || "1")}

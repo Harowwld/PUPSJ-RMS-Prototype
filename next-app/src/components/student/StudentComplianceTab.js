@@ -1005,7 +1005,7 @@ export default function StudentComplianceTab({ authUser }) {
             /* Table View */
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
               <table className="w-full text-sm border-collapse table-fixed min-w-[750px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1079,7 +1079,7 @@ export default function StudentComplianceTab({ authUser }) {
                         onClick={() => setSelectedRequirement(item)}
                         className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none group"
                       >
-                        <td className="p-4 pl-6 overflow-hidden">
+                        <td className="p-4 pl-6 overflow-hidden border-r border-border/70 dark:border-border/70">
                           <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors" title={item.docType}>
                             {item.docType}
                           </div>
@@ -1087,10 +1087,10 @@ export default function StudentComplianceTab({ authUser }) {
                             {item.description}
                           </div>
                         </td>
-                        <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap">
+                        <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {item.category}
                         </td>
-                        <td className="p-4 whitespace-nowrap">
+                        <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isSubmitted ? (
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
@@ -1366,9 +1366,9 @@ export default function StudentComplianceTab({ authUser }) {
                 <tbody className="divide-y divide-border dark:divide-border print:divide-border">
                   {sortedRequirements.map((r, idx) => (
                     <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none print:border-b print:border-border">
-                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px]">{idx + 1}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal">{r?.docType || r?.name || "N/A"}</td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap">{r?.category || "N/A"}</td>
+                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px] border-r border-border/70 dark:border-border/70">{idx + 1}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal border-r border-border/70 dark:border-border/70">{r?.docType || r?.name || "N/A"}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">{r?.category || "N/A"}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={cn(

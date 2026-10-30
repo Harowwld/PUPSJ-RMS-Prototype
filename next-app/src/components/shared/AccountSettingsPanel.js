@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getClientSession } from "@/lib/clientAuth";
-import { DEFAULT_AVATARS } from "@/lib/defaultAvatars";
+import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -61,6 +61,9 @@ export default function AccountSettingsPanel() {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [selectedDefaultAvatarId, setSelectedDefaultAvatarId] = useState(1);
   const [avatarSaving, setAvatarSaving] = useState(false);
+  const [showAllAvatars, setShowAllAvatars] = useState(false);
+  const avatarsExpanded = showAllAvatars;
+  const visibleAvatars = avatarsExpanded ? DEFAULT_AVATARS : DEFAULT_AVATARS.slice(0, DEFAULT_AVATAR_VISIBLE_COUNT);
 
   // Profile Form State
   const [fname, setFname] = useState("");
@@ -146,7 +149,9 @@ export default function AccountSettingsPanel() {
           setAvatarUrl(`/api/account/avatar?id=${user.id}&t=${Date.now()}`);
           const match = user.avatar_filename.match(/default(\d+)/);
           if (match) {
-            setSelectedDefaultAvatarId(parseInt(match[1], 10));
+            const savedAvatarId = parseInt(match[1], 10);
+            setSelectedDefaultAvatarId(savedAvatarId);
+            if (savedAvatarId > DEFAULT_AVATAR_VISIBLE_COUNT) setShowAllAvatars(true);
           }
         } else {
           setAvatarUrl(null);
@@ -1431,7 +1436,7 @@ export default function AccountSettingsPanel() {
                         Profile Avatar
                       </h3>
                       <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                        Select one of the 4 default avatars to personalize your profile across all system views.
+                        Select one of the default avatars to personalize your profile across all system views.
                       </p>
                     </div>
                     <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
@@ -1440,8 +1445,8 @@ export default function AccountSettingsPanel() {
                   </div>
 
                   <div className="mt-6">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-w-2xl">
-                      {DEFAULT_AVATARS.map((avatar) => {
+                    <div className="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-8 gap-3 w-full">
+                      {visibleAvatars.map((avatar) => {
                         const isSelected = selectedDefaultAvatarId === avatar.id;
                         return (
                           <button
@@ -1450,7 +1455,7 @@ export default function AccountSettingsPanel() {
                             disabled={avatarSaving}
                             onClick={() => handleSelectDefaultAvatar(avatar.id)}
                             className={cn(
-                              "group relative flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-95",
+                              "group relative flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-95",
                               isSelected
                                 ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500 dark:bg-red-500/10 shadow-xs ring-2 ring-pup-maroon/30 dark:ring-red-500/30"
                                 : "border-border bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800/60 hover:border-gray-300 dark:hover:border-white/10",
@@ -1482,6 +1487,16 @@ export default function AccountSettingsPanel() {
                           </button>
                         );
                       })}
+                    </div>
+                    <div className="mt-4 flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowAllAvatars((prev) => !prev)}
+                        className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      >
+                        {avatarsExpanded ? "Show Fewer Avatars" : "View More Avatars"}
+                      </Button>
                     </div>
                   </div>
                 </div>

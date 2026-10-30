@@ -1,4 +1,5 @@
 import { dbAll, dbRun, dbGet } from "./postgresCompat.js";
+import { formatLogDetails } from "./auditLogFormatting.js";
 
 // PostgreSQL migration currently provides global_audit_logs (not the legacy
 // office-local audit_logs table). Keep the public API while using that table.
@@ -313,7 +314,7 @@ export async function createGlobalAuditLog(data) {
   const role = data.role;
   const officeId = data.officeId || data.office_id || null;
   const action = data.action;
-  const details = data.details || "";
+  const details = formatLogDetails(data.details || "");
   const severity = data.severity || "INFO";
   const ip = data.ip || "localhost";
   const user_agent = data.user_agent || "";

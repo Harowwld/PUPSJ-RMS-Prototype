@@ -18,7 +18,7 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                 <th className="py-3 px-4 w-[22%] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-32 dark:bg-muted" />
                 </th>
-                <th className="py-3 px-4 w-[28%] whitespace-nowrap">
+                <th className="py-3 px-4 w-[28%] max-w-[340px] whitespace-nowrap">
                   <Skeleton className="h-3.5 w-40 dark:bg-muted" />
                 </th>
                 <th className="py-3 px-4 w-[22%] whitespace-nowrap">
@@ -44,10 +44,10 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                   key={i}
                   className="border-b border-border dark:border-border last:border-b-0"
                 >
-                  <td className="w-12 py-3 px-4 align-middle text-center">
+                  <td className="w-12 py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-3 px-4 align-middle whitespace-nowrap">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-8 w-8 rounded-lg shrink-0 dark:bg-muted" />
                       <div className="flex flex-col gap-1">
@@ -61,30 +61,30 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 align-middle overflow-hidden">
-                    <div className="flex flex-col gap-1">
+                  <td className="py-3 px-4 align-middle overflow-hidden max-w-[340px] border-r border-border/70 dark:border-border/70">
+                    <div className="flex flex-col gap-1 w-full min-w-0">
                       <Skeleton
                         className={cn(
                           "h-3.5 rounded dark:bg-muted",
                           i % 2 === 0 ? "w-36" : "w-44"
                         )}
                       />
-                      <Skeleton className="h-2.5 w-52 rounded dark:bg-muted" />
+                      <Skeleton className="h-2.5 w-[85%] rounded dark:bg-muted" />
                     </div>
                   </td>
-                  <td className="py-3 px-4 align-middle whitespace-nowrap overflow-hidden">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                     <div className="flex flex-col gap-1">
                       <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                       <Skeleton className="h-2.5 w-36 rounded dark:bg-muted" />
                     </div>
                   </td>
-                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap">
+                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-6 w-12 rounded-lg mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap">
+                  <td className="py-3 px-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-6 w-12 rounded-lg mx-auto dark:bg-muted" />
                   </td>
-                  <td className="py-3 px-4 align-middle whitespace-nowrap">
+                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                   </td>
                   <td className="py-3 px-4 pr-6 align-middle text-right whitespace-nowrap">

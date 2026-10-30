@@ -94,15 +94,11 @@ export default function CoursesTab({
   const [editCourse, setEditCourse] = useState({ id: null, code: "", name: "" })
   const [editCourseBlocks, setEditCourseBlocks] = useState([""])
 
-  const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
-
-  async function addCourse(e, overrideData = null) {
+  async function addCourse(e) {
     if (e) e.preventDefault()
-    const code = overrideData ? overrideData.code : newCourseCode.trim()
-    const name = overrideData ? overrideData.name : newCourseName.trim()
+    const code = newCourseCode.trim()
+    const name = newCourseName.trim()
     if (!code || !name) return
-
-    if (overrideData) setIsQuickAddLoading(true)
 
     try {
       const res = await fetch("/api/courses", {
@@ -111,21 +107,16 @@ export default function CoursesTab({
         body: JSON.stringify({
           code,
           name,
-          blocks: overrideData ? [] : newCourseBlocks.filter((b) => b.trim()),
+          blocks: newCourseBlocks.filter((b) => b.trim()),
         }),
       })
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed")
 
-      if (!overrideData) {
-        setNewCourseCode("")
-        setNewCourseName("")
-        setNewCourseBlocks([""])
-        setIsAddCourseOpen(false)
-      } else {
-        setNewCourseCode("")
-        setNewCourseName("")
-      }
+      setNewCourseCode("")
+      setNewCourseName("")
+      setNewCourseBlocks([""])
+      setIsAddCourseOpen(false)
 
       showToast({
         title: "Degree Program Added",
@@ -135,8 +126,6 @@ export default function CoursesTab({
       if (loadAll) loadAll()
     } catch (err) {
       showToast(formatErrorMessage(err, "Registration Failed"), true)
-    } finally {
-      if (overrideData) setIsQuickAddLoading(false)
     }
   }
 
@@ -282,6 +271,15 @@ export default function CoursesTab({
             </div>
           }
           description="Manage academic programs and their corresponding identifiers."
+          actions={
+            <Button
+              onClick={() => setIsAddCourseOpen(true)}
+              disabled={showArchived}
+              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+            >
+              Add Program
+            </Button>
+          }
           className="p-6"
         />
 
@@ -365,14 +363,6 @@ export default function CoursesTab({
               onResetScroll={resetScroll}
               isScrolled={isScrolledX}
             />
-
-            <Button
-              onClick={() => setIsAddCourseOpen(true)}
-              disabled={showArchived}
-              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-            >
-              Add Program
-            </Button>
           </div>
         </div>
 
@@ -448,12 +438,12 @@ export default function CoursesTab({
           ) : (
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[950px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
+                      <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-border"
@@ -466,8 +456,8 @@ export default function CoursesTab({
                         />
                       </th>
                       <th className={cn(
-                        "w-[22%] p-4 border-r border-border/80 dark:border-border sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
+                        "w-[22%] p-4 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                        isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}>
                         <div className="flex items-center justify-between">
                           <button
@@ -511,88 +501,6 @@ export default function CoursesTab({
                     </tr>
                   </thead>
                   <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {!showArchived && (
-                      <tr
-                        className={cn(
-                          "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
-                          (newCourseCode.trim() || newCourseName.trim()) && "bg-emerald-50/40 dark:bg-emerald-950/10"
-                        )}
-                      >
-                        <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40"></td>
-                        <td className={cn(
-                          "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow duration-200",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
-                        )}>
-                          <Input
-                            placeholder="CODE (e.g. BSIT)"
-                            value={newCourseCode}
-                            onChange={(e) =>
-                              setNewCourseCode(e.target.value.toUpperCase())
-                            }
-                            className={cn(
-                              "h-10 w-full max-w-[160px] rounded-xl border border-border bg-white text-xs font-semibold transition-all focus-visible:ring-pup-maroon",
-                              newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-border dark:border-border dark:bg-card"
-                            )}
-                          />
-                        </td>
-                        <td className="p-4 align-middle overflow-hidden">
-                          <div className="flex items-center gap-2">
-                            <Input
-                              placeholder="Full program designation..."
-                              value={newCourseName}
-                              onChange={(e) => setNewCourseName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault()
-                                  addCourse(null, {
-                                    code: newCourseCode,
-                                    name: newCourseName,
-                                  })
-                                }
-                              }}
-                              className={cn(
-                                "h-10 flex-1 rounded-xl border border-border bg-white text-sm transition-all focus-visible:ring-pup-maroon",
-                                newCourseCode.trim() || newCourseName.trim() ? "ring-1 ring-emerald-200 border-emerald-300 dark:ring-emerald-500/30 dark:border-emerald-500/50" : "focus-visible:border-border dark:border-border dark:bg-card"
-                              )}
-                            />
-                            <Button
-                              size="sm"
-                              disabled={
-                                !newCourseCode.trim() ||
-                                !newCourseName.trim() ||
-                                isQuickAddLoading
-                              }
-                              onClick={() =>
-                                addCourse(null, {
-                                  code: newCourseCode,
-                                  name: newCourseName,
-                                })
-                              }
-                              title="Add Degree Program"
-                              className="h-10 w-10 p-0 flex items-center justify-center rounded-xl text-[14px] font-semibold text-emerald-600 dark:text-emerald-400 shadow-[0_1px_2px_rgba(0,0,0,0.05)] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none bg-white dark:bg-zinc-900 border-[1.5px] border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-500/40 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/40 shrink-0"
-                            >
-                              {isQuickAddLoading ? (
-                                <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
-                              ) : (
-                                <HugeIcon  className="ph-bold ph-plus" strokeWidth={2.5}></HugeIcon>
-                              )}
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-4 align-middle whitespace-nowrap">
-                          {newCourseCode.trim() || newCourseName.trim() ? (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                              Draft
-                            </div>
-                          ) : (
-                            <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
-                              New
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4 pr-6 text-right align-middle whitespace-nowrap"></td>
-                      </tr>
-                    )}
                     {filteredCourses.map((c) => {
                       const isDisabled = showArchived
                         ? c.status !== "Archived"
@@ -648,12 +556,12 @@ export default function CoursesTab({
                               {c.code}
                             </span>
                           </td>
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100" title={c.name}>
                               {c.name}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left whitespace-nowrap">
+                          <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {c.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived

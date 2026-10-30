@@ -330,7 +330,7 @@ test('Popover Primitive Exports Three-Zone Architecture Components', () => {
 
 test('Datepicker Popovers Hug Content with w-auto without sm:w-auto Workaround', () => {
   const files = [
-    'src/app/account/activity/page.js',
+    'src/components/shared/MyActivityPanel.js',
     'src/components/admin/audit-logs/LogFilters.js',
     'src/components/admin/DigitalRecordsReviewTab.js',
     'src/components/admin/analytics/SlaFilters.js',

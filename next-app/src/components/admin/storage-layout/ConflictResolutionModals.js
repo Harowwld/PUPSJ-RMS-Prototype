@@ -109,7 +109,7 @@ const ConflictResolutionModals = memo(({
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {templateConflictRows.map((row) => (
                     <tr key={row.sourceKey} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                      <td className="py-3.5 px-4 align-top">
+                      <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 shrink-0">
                             <HugeIcon  className="ph-bold ph-archive text-sm" />
@@ -137,7 +137,7 @@ const ConflictResolutionModals = memo(({
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 align-top">
+                      <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
                           
                           {row.count} {row.count === 1 ? "record" : "records"}
@@ -262,10 +262,10 @@ const ConflictResolutionModals = memo(({
                 <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                   {applyPreviewRows.map((r) => (
                     <tr key={r.fromKey} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 truncate">
+                      <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 truncate border-r border-border/70 dark:border-border/70">
                         {r.fromLabel}
                       </td>
-                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                      <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate border-r border-border/70 dark:border-border/70">
                         <div className="flex items-center gap-2 truncate">
                           <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                           <span className="truncate">{r.toLabel}</span>
@@ -338,10 +338,10 @@ const ConflictResolutionModals = memo(({
                         key={`${idx}-${r?.from?.room}-${r?.from?.cabinet}-${r?.from?.drawer}`}
                         className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none"
                       >
-                        <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300">
+                        <td className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-zinc-300 border-r border-border/70 dark:border-border/70">
                           Room {r?.from?.room} · Cabinet {r?.from?.cabinet} · Drawer {r?.from?.drawer}
                         </td>
-                        <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                        <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                           <div className="flex items-center gap-2">
                             <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                             <span>Room {r?.to?.room} · Cabinet {r?.to?.cabinet} · Drawer {r?.to?.drawer}</span>

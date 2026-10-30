@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { cn, formatTitleCase } from "@/lib/utils"
+import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 
 import LogExpandedRow from "./LogExpandedRow"
@@ -118,7 +118,7 @@ const LogRow = React.memo(function LogRow({
       >
         <td
           className={cn(
-            "p-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 transition-colors",
+            "w-12 min-w-12 max-w-12 px-2.5 py-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 transition-colors",
             isSelected
               ? "bg-blue-50 dark:bg-blue-950"
               : isExpanded
@@ -136,10 +136,10 @@ const LogRow = React.memo(function LogRow({
             <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
           </button>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400">
+        <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
           {formattedTimestamp}
         </td>
-        <td className="p-4 align-middle whitespace-nowrap">
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
           <span
             className={cn(
               "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
@@ -149,7 +149,7 @@ const LogRow = React.memo(function LogRow({
             {severityInfo.label}
           </span>
         </td>
-        <td className="p-4 align-middle overflow-hidden">
+        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
           <div className="flex items-center gap-2.5 min-w-0">
             <AuditActorAvatar
               log={log}
@@ -166,21 +166,21 @@ const LogRow = React.memo(function LogRow({
             </div>
           </div>
         </td>
-        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
+        <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
           {formatActionLabel(log.action)}
         </td>
-        <td className="p-4 align-middle overflow-hidden max-w-[280px]">
+        <td className="p-4 align-middle overflow-hidden max-w-[280px] border-r border-border/70 dark:border-border/70">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
-                {log.details || "No known description"}
+                {formatLogDetails(log.details) || "No known description"}
               </span>
             </TooltipTrigger>
             <TooltipContent
               side="top"
               className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
             >
-              {log.details || "No known description"}
+              {formatLogDetails(log.details) || "No known description"}
             </TooltipContent>
           </Tooltip>
         </td>
@@ -359,13 +359,13 @@ export default function LogTable({
 
             <div
               ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
               <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className={cn(
-                      "w-12 p-4 text-center border-r border-border/80 dark:border-border sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                      "w-12 min-w-12 max-w-12 px-2.5 py-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                       isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                     )}>
                       {isScrolledX && (

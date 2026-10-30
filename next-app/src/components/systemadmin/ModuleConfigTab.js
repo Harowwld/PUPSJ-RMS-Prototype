@@ -6,6 +6,7 @@ import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfi
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
@@ -105,7 +106,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   )
 }
 
-export default function ModuleConfigTab({ showToast }) {
+export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
@@ -115,18 +116,57 @@ export default function ModuleConfigTab({ showToast }) {
     status: [],
   })
   const [officeFilter, setOfficeFilter] = useState("Active") // "Active" | "Archived"
-  const [selectedOfficeId, setSelectedOfficeId] = useState("")
+  const [selectedOfficeId, setSelectedOfficeId] = useState(initialOfficeId || "")
   const [viewMode, setViewMode] = useState("office") // "office" | "matrix"
   const [confirmModalState, setConfirmModalState] = useState(null)
   const [toggling, setToggling] = useState({})
+
+  useEffect(() => {
+    if (initialOfficeId) {
+      const timer = setTimeout(() => {
+        setSelectedOfficeId(initialOfficeId)
+        setViewMode("office")
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [initialOfficeId])
+
+  // System-Wide Demo Accounts Setting
+  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true)
+  const [demoSettingLoading, setDemoSettingLoading] = useState(true)
+  const [demoSettingSaving, setDemoSettingSaving] = useState(false)
   
   // Matrix Table Sorting
   const [matrixSortBy, setMatrixSortBy] = useState("name")
   const [matrixSortOrder, setMatrixSortOrder] = useState("ASC")
 
+  const deptCardsScrollRef = useRef(null)
+
+  const scrollDeptCards = useCallback((direction) => {
+    if (deptCardsScrollRef.current) {
+      const amount = direction === "left" ? -300 : 300
+      deptCardsScrollRef.current.scrollBy({ left: amount, behavior: "smooth" })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (selectedOfficeId && deptCardsScrollRef.current) {
+      const card = deptCardsScrollRef.current.querySelector(
+        `[data-office-id="${String(selectedOfficeId).toLowerCase()}"]`
+      )
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
+      }
+    }
+  }, [selectedOfficeId])
+
   const currentOffice = useMemo(() => {
     if (!matrix?.offices || matrix.offices.length === 0) return null
-    return matrix.offices.find((o) => o.id === selectedOfficeId) || matrix.offices[0]
+    return (
+      matrix.offices.find(
+        (o) => String(o.id).toLowerCase() === String(selectedOfficeId).toLowerCase()
+      ) || matrix.offices[0]
+    )
   }, [matrix, selectedOfficeId])
 
   const isCurrentArchived = currentOffice?.status === "Inactive" || currentOffice?.status === "Archived"
@@ -142,10 +182,16 @@ export default function ModuleConfigTab({ showToast }) {
 
   useEffect(() => {
     if (filteredOffices.length > 0 && !filteredOffices.some((o) => o.id === selectedOfficeId)) {
+      const inOther = matrix?.offices?.find((o) => o.id === selectedOfficeId)
+      if (inOther) {
+        const isArchived = inOther.status === "Inactive" || inOther.status === "Archived"
+        const timer = setTimeout(() => setOfficeFilter(isArchived ? "Archived" : "Active"), 0)
+        return () => clearTimeout(timer)
+      }
       const timer = setTimeout(() => setSelectedOfficeId(filteredOffices[0].id), 0)
       return () => clearTimeout(timer)
     }
-  }, [filteredOffices, selectedOfficeId])
+  }, [filteredOffices, selectedOfficeId, matrix])
 
   // Horizontal scroll hook for Compare Features (Matrix view)
   const {
@@ -200,7 +246,7 @@ export default function ModuleConfigTab({ showToast }) {
       if (cached && !isSilent) {
         setMatrix(cached)
         if (cached.offices?.length > 0) {
-          setSelectedOfficeId((prev) => prev || cached.offices[0].id)
+          setSelectedOfficeId((prev) => prev || initialOfficeId || cached.offices[0].id)
         }
         setLoading(false)
       }
@@ -211,7 +257,7 @@ export default function ModuleConfigTab({ showToast }) {
         setMatrix(json.data)
         setCachedData("systemadmin_module_matrix", json.data, 60000)
         if (json.data.offices?.length > 0) {
-          setSelectedOfficeId((prev) => prev || json.data.offices[0].id)
+          setSelectedOfficeId((prev) => prev || initialOfficeId || json.data.offices[0].id)
         }
       } else if (!cached) {
         showToast(json.error || "Failed to fetch module matrix", true)
@@ -223,16 +269,52 @@ export default function ModuleConfigTab({ showToast }) {
     } finally {
       setLoading(false)
     }
+  }, [showToast, initialOfficeId])
+
+  const loadDemoAccountSetting = useCallback(async () => {
+    try {
+      const response = await fetch("/api/system/settings", { cache: "no-store" })
+      const result = await response.json()
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to load login settings")
+      setDemoAccountsEnabled(String(result.data?.login_demo_accounts_enabled ?? "true").toLowerCase() !== "false")
+    } catch (error) {
+      showToast?.({ title: "Load Failed", description: error.message || "Could not load demo account visibility." }, true)
+    } finally {
+      setDemoSettingLoading(false)
+    }
   }, [showToast])
+
+  const handleDemoAccountsToggle = async (enabled) => {
+    setDemoSettingSaving(true)
+    try {
+      const response = await fetch("/api/system/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "login_demo_accounts_enabled", value: String(enabled) }),
+      })
+      const result = await response.json()
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to save login setting")
+      setDemoAccountsEnabled(enabled)
+      showToast?.({ title: "Saved", description: `Demo Accounts button ${enabled ? "shown" : "hidden"} on the login page.` })
+    } catch (error) {
+      showToast?.({ title: "Save Failed", description: error.message || "Could not update demo account visibility." }, true)
+    } finally {
+      setDemoSettingSaving(false)
+    }
+  }
 
   const handleManualRefresh = useCallback(async () => {
     setIsManualLoading(true)
     try {
-      await fetchMatrix(true)
+      await Promise.all([fetchMatrix(true), loadDemoAccountSetting()])
     } finally {
       setIsManualLoading(false)
     }
-  }, [fetchMatrix])
+  }, [fetchMatrix, loadDemoAccountSetting])
+
+  useEffect(() => {
+    queueMicrotask(loadDemoAccountSetting)
+  }, [loadDemoAccountSetting])
 
   useEffect(() => {
     const timer = setTimeout(() => fetchMatrix(), 0)
@@ -248,6 +330,11 @@ export default function ModuleConfigTab({ showToast }) {
     const handleSwitch = (e) => {
       if (e.detail?.officeId) {
         setSelectedOfficeId(e.detail.officeId)
+        if (e.detail?.viewMode) {
+          setViewMode(e.detail.viewMode)
+        } else {
+          setViewMode("office")
+        }
       }
     }
     window.addEventListener("switch-view", handleSwitch)
@@ -659,6 +746,39 @@ export default function ModuleConfigTab({ showToast }) {
           }
         />
 
+        {/* System-Wide Prototype Feature: Login Demo Accounts */}
+        <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
+              <HugeIcon className="ph-bold ph-user-switch text-lg" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  Public Login Demo Accounts
+                </p>
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                  Prototype Access
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+            <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+              {demoAccountsEnabled ? "Enabled" : "Disabled"}
+            </span>
+            <Switch
+              checked={demoAccountsEnabled}
+              onCheckedChange={handleDemoAccountsToggle}
+              disabled={demoSettingLoading || demoSettingSaving}
+              aria-label="Show Demo Accounts button on login page"
+            />
+          </div>
+        </div>
+
         {/* Navigation Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Segmented Control */}
@@ -818,16 +938,42 @@ export default function ModuleConfigTab({ showToast }) {
               {/* Department Selector Bar */}
               <div className="p-5 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
                 <div className="flex flex-col gap-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-semibold text-gray-900 dark:text-zinc-300 px-1 gap-1">
-                    <span>Select Department ({filteredOffices.length}):</span>
-                    <span className="text-[11px] font-normal text-gray-400">
-                      Click a department to customize the features its staff can use
-                    </span>
+                  <div className="flex items-center justify-between text-xs font-semibold text-gray-900 dark:text-zinc-300 px-1">
+                    <div className="flex items-center gap-2">
+                      <span>Select Department ({filteredOffices.length}):</span>
+                      <span className="text-[11px] font-normal text-gray-400 hidden sm:inline">
+                        Click a department to customize its features
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => scrollDeptCards("left")}
+                        title="Scroll left"
+                        aria-label="Scroll departments left"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollDeptCards("right")}
+                        title="Scroll right"
+                        aria-label="Scroll departments right"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95"
+                      >
+                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  <div
+                    ref={deptCardsScrollRef}
+                    className="flex items-stretch gap-3 overflow-x-auto show-scrollbar pb-2 pt-0.5 select-none scroll-smooth"
+                  >
                   {filteredOffices.map((o) => {
-                    const isSelected = o.id === selectedOfficeId
+                    const isSelected = String(o.id).toLowerCase() === String(selectedOfficeId).toLowerCase()
                     const isOfficeArchived = o.status === "Inactive" || o.status === "Archived"
                     const activeCount = officeCounts[o.id] || 0
                     const accent = o.accent_color || "#800000"
@@ -837,11 +983,12 @@ export default function ModuleConfigTab({ showToast }) {
                       <button
                         key={o.id}
                         type="button"
+                        data-office-id={String(o.id).toLowerCase()}
                         onClick={() => setSelectedOfficeId(o.id)}
                         className={cn(
-                          "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between gap-3 cursor-pointer group select-none shadow-2xs",
+                          "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between gap-3 cursor-pointer group select-none shadow-2xs w-[240px] min-w-[240px] shrink-0",
                           isSelected
-                            ? "bg-white dark:bg-zinc-900 shadow-sm ring-2 ring-slate-900/10 dark:ring-white/20 border-slate-900/40 dark:border-white/20"
+                            ? "bg-pup-maroon/[0.03] dark:bg-red-500/[0.06] border-pup-maroon dark:border-red-500 ring-2 ring-pup-maroon/30 dark:ring-red-500/30 shadow-md"
                             : "bg-white/80 dark:bg-zinc-900/60 border-border/80 dark:border-border hover:border-gray-400 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-900",
                           isOfficeArchived && !isSelected && "opacity-75"
                         )}
@@ -849,17 +996,27 @@ export default function ModuleConfigTab({ showToast }) {
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2.5">
                             <div
-                              className="h-9 w-9 rounded-xl flex items-center justify-center text-sm shadow-2xs shrink-0 border"
+                              className={cn(
+                                "h-9 w-9 rounded-xl flex items-center justify-center text-sm shadow-2xs shrink-0 border transition-all",
+                                isSelected && "ring-2 ring-pup-maroon/20 dark:ring-red-400/30"
+                              )}
                               style={{
-                                backgroundColor: `${accent}14`,
+                                backgroundColor: `${accent}18`,
                                 color: accent,
-                                borderColor: `${accent}28`,
+                                borderColor: isSelected ? accent : `${accent}30`,
                               }}
                             >
                               <HugeIcon  className={cn(officeIconClass, "text-base")}></HugeIcon>
                             </div>
                             <div>
-                              <div className="text-xs font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon transition-colors">
+                              <div
+                                className={cn(
+                                  "text-xs font-bold transition-colors",
+                                  isSelected
+                                    ? "text-pup-maroon dark:text-red-400"
+                                    : "text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon"
+                                )}
+                              >
                                 {o.short_name}
                               </div>
                               <div className="text-[10px] text-gray-400 font-mono">
@@ -877,9 +1034,9 @@ export default function ModuleConfigTab({ showToast }) {
                               <Badge
                                 variant="secondary"
                                 className={cn(
-                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold font-mono",
+                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold font-mono transition-colors",
                                   isSelected
-                                    ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                                    ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
                                 )}
                               >
@@ -889,7 +1046,14 @@ export default function ModuleConfigTab({ showToast }) {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] text-gray-600 dark:text-zinc-300 truncate w-full pt-1 border-t border-border/40">
+                        <div
+                          className={cn(
+                            "flex items-center justify-between text-[11px] truncate w-full pt-1 border-t transition-colors",
+                            isSelected
+                              ? "border-pup-maroon/20 dark:border-red-500/20 text-gray-900 dark:text-zinc-200 font-medium"
+                              : "border-border/40 text-gray-600 dark:text-zinc-300"
+                          )}
+                        >
                           <span className="truncate">{o.name || o.short_name}</span>
                           {isOfficeArchived && (
                             <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-mono font-medium">
@@ -908,7 +1072,7 @@ export default function ModuleConfigTab({ showToast }) {
             {currentOffice && (
               <div
                 key={currentOffice.id}
-                className="flex flex-col flex-[1_0_auto] overflow-hidden bg-white dark:bg-card motion-safe:animate-in motion-safe:fade-in-50 motion-safe:slide-in-from-bottom-1 duration-200 ease-out"
+                className="flex flex-col flex-[1_0_auto] overflow-hidden bg-white dark:bg-card"
               >
               <div className="p-5 border-b border-border dark:border-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20">
                 <div className="flex items-center gap-3.5">
@@ -1264,12 +1428,12 @@ export default function ModuleConfigTab({ showToast }) {
           ) : (
             <div
               ref={matrixTableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
               <table className="w-full border-collapse text-left min-w-max">
                 <thead className="sticky top-0 z-20 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                    <th className="p-4 pl-6 w-[340px] min-w-[340px] max-w-[340px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30 border-r border-border/70 dark:border-border/70">
+                    <th className="p-4 pl-6 w-[340px] min-w-[340px] max-w-[340px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30">
                       <div className="flex items-center justify-between gap-2">
                         <button
                           type="button"
@@ -1551,7 +1715,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
         </div>
       </td>
 
-      {offices.map((o) => {
+      {offices.map((o, idx) => {
         const toggleKey = `${o.id}-${m.id}`
         const isToggling = toggling[toggleKey]
         const enabled = isSystem || Boolean(assignments[o.id]?.[m.id]?.enabled)
@@ -1559,7 +1723,13 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
         const isLocked = isSystem || isOfficeArchived
 
         return (
-          <td key={o.id} className="p-4 text-center align-middle w-[150px] min-w-[150px]">
+          <td
+            key={o.id}
+            className={cn(
+              "p-4 text-center align-middle w-[150px] min-w-[150px]",
+              idx < offices.length - 1 && "border-r border-border/70 dark:border-border/70"
+            )}
+          >
             <div className="inline-flex items-center justify-center">
               {isToggling ? (
                 <div className="w-9 h-5 flex items-center justify-center">

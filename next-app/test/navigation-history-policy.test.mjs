@@ -28,7 +28,7 @@ test("Post-login role navigation redirects map to correct portal", () => {
 });
 
 test("Redirect query param overrides default dashboard if role is authorized", () => {
-  const redirect = "/account/activity";
+  const redirect = "/account";
   assert.equal(canAccessPage(redirect, "SuperAdmin"), true);
   assert.equal(canAccessPage(redirect, "Staff"), true);
   assert.equal(canAccessPage(redirect, "Student"), true);

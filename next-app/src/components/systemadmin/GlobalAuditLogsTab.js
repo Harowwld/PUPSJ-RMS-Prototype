@@ -26,7 +26,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
-import { cn, formatTitleCase } from "@/lib/utils"
+import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -352,7 +352,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               officeName,
               scope: scopeLabel,
               action: r.action,
-              details: r.details || "N/A",
+              details: formatLogDetails(r.details) || "N/A",
               severity: r.severity || "INFO",
               userAgent: r.user_agent || "N/A",
               user_agent: r.user_agent || "N/A",
@@ -535,7 +535,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         log?.role || "N/A",
         log?.scope || "Global",
         log?.action || "N/A",
-        log?.details || "No known description",
+        formatLogDetails(log?.details) || "No known description",
         log?.ip || "N/A",
         log?.user_agent || "N/A",
         log?.entity_type || "N/A",
@@ -1008,13 +1008,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
             <div className="flex-[1_0_auto] overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
               <div
                 ref={tableContainerRef}
-                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
               >
                 <table className="w-full text-sm border-collapse min-w-[1040px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                   <th
-                    className="w-12 p-4 text-center"
+                    className="w-12 min-w-12 max-w-12 px-2.5 py-4 text-center"
                   >
                   </th>
                   <th className="p-4 w-[14%]">
@@ -1120,7 +1120,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         >
                           {/* Accordion Chevron */}
                           <td
-                            className="p-4 align-middle text-center"
+                            className="w-12 min-w-12 max-w-12 px-2.5 py-4 align-middle text-center border-r border-border/70 dark:border-border/70"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
@@ -1133,12 +1133,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Timestamp */}
-                          <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                          <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {formattedTimestamp}
                           </td>
 
                           {/* Level / Severity */}
-                          <td className="p-4 align-middle">
+                          <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                             <span
                               className={cn(
                                 "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
@@ -1150,7 +1150,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Actor */}
-                          <td className="p-4 align-middle overflow-hidden">
+                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-2.5 min-w-0">
                               <AuditActorAvatar
                                 log={log}
@@ -1169,7 +1169,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Scope */}
-                          <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100">
+                          <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                             {log.office_id ? (
                               <span className="font-medium text-gray-800 dark:text-zinc-300 truncate inline-block max-w-full" title={log.scope}>
                                 {log.scope}
@@ -1182,23 +1182,23 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </td>
 
                           {/* Action */}
-                          <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100">
+                          <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                             {formatActionLabel(log.action)}
                           </td>
 
                           {/* Description Tooltip */}
-                          <td className="p-4 align-middle overflow-hidden max-w-[280px]">
+                          <td className="p-4 align-middle overflow-hidden max-w-[280px] border-r border-border/70 dark:border-border/70">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
-                                  {log.details || "N/A"}
+                                  {formatLogDetails(log.details) || "N/A"}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent
                                 side="top"
                                 className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
                               >
-                                {log.details || "N/A"}
+                                {formatLogDetails(log.details) || "N/A"}
                               </TooltipContent>
                             </Tooltip>
                           </td>

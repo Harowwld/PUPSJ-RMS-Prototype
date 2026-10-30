@@ -1460,7 +1460,7 @@ export default function RecordsArchiveTab({
                 <div 
                   ref={tableContainerRef}
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out"
+                  className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
                 >
                   <table className="w-full text-sm border-collapse min-w-[850px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1492,7 +1492,7 @@ export default function RecordsArchiveTab({
                             )}
                             onClick={() => handleStudentSelect(row.student)}
                           >
-                            <td className="w-12 p-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                            <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                                <input
                                  type="checkbox"
                                  className={cn(
@@ -1503,12 +1503,12 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 {row.student.acronym || row.student.studentNo}
                               </span>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden">
+                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-2 min-w-0 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                   <span className="truncate" title={formatTitleCase(row.student.name)}>
@@ -1533,13 +1533,13 @@ export default function RecordsArchiveTab({
                               </div>
                             </td>
                             {isOsas && (
-                              <td className="p-4 align-middle whitespace-nowrap">
+                              <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
                                   {row.student.category || "Academic"}
                                 </span>
                               </td>
                             )}
-                            <td className="p-4 align-middle whitespace-nowrap">
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
