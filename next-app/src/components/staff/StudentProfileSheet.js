@@ -17,6 +17,8 @@ import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { EmptyState } from "@/components/ui/empty";
+import { Files01Icon, InboxIcon } from "hugeicons-react";
 
 /**
  * Standard Information Row (label : value)
@@ -238,10 +240,10 @@ export default function StudentProfileSheet({
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* Top Header matching reference design: Student Profile < > 01 of 100 X */}
-        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+        <SheetHeader className="shrink-0 p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+              <SheetTitle>
                 {student?.category || student?.rawOrg ? "Organization Details" : "Student Details"}
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -272,7 +274,7 @@ export default function StudentProfileSheet({
                   >
                     <HugeIcon className="ph-bold ph-caret-right text-xs" />
                   </button>
-                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                     {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
                   </span>
                 </div>
@@ -340,7 +342,7 @@ export default function StudentProfileSheet({
                 <span className="text-base font-bold text-gray-900 dark:text-zinc-100 truncate block">
                   {displayName}
                 </span>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
                   {student.acronym || student.studentNo}
                 </p>
               </div>
@@ -368,7 +370,7 @@ export default function StudentProfileSheet({
                   onLocateStudent?.(student);
                 }}
                 title="Locate in Physical Archive"
-                className="h-8 px-3 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 cursor-pointer shadow-xs active:scale-95 transition-all"
+                className="h-8 px-3 cursor-pointer"
               >
                 Locate Drawer
               </Button>
@@ -396,7 +398,7 @@ export default function StudentProfileSheet({
                     icon="ph-bold ph-hash"
                     label="Organization Acronym"
                   >
-                    <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                    <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
                       {student.acronym || student.studentNo}
                     </span>
                   </InfoRow>
@@ -443,7 +445,7 @@ export default function StudentProfileSheet({
                     icon="ph-bold ph-hash"
                     label="Student Number"
                   >
-                    <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                    <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
                       {student.studentNo}
                     </span>
                   </InfoRow>
@@ -525,7 +527,7 @@ export default function StudentProfileSheet({
                 label="Full Coordinates"
               >
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                  <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                     Room {student.room} • Cabinet {student.cabinet} • Drawer {student.drawer}
                   </span>
                   <Button
@@ -717,11 +719,14 @@ export default function StudentProfileSheet({
                 })}
               </div>
             ) : studentDocs.length === 0 ? (
-              <div className="py-4 text-center text-xs text-gray-400 dark:text-zinc-500 italic">
-                {isOrg
+              <EmptyState
+                variant="compact"
+                icon={Files01Icon}
+                title="No Digitized Records"
+                description={isOrg
                   ? "No digitized records uploaded for this organization yet."
                   : "No digitized records uploaded for this student yet."}
-              </div>
+              />
             ) : (
               <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/30">
                 {studentDocs.map((doc, docIdx) => (
@@ -831,9 +836,12 @@ export default function StudentProfileSheet({
                   Loading requests...
                 </div>
               ) : requests.length === 0 ? (
-                <div className="py-4 text-center text-xs text-gray-400 dark:text-zinc-500 italic">
-                  No document requests recorded for this student.
-                </div>
+                <EmptyState
+                  variant="compact"
+                  icon={InboxIcon}
+                  title="No Document Requests"
+                  description="No document requests recorded for this student."
+                />
               ) : (
                 <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/30">
                   {requests.map((req, reqIdx) => (
@@ -857,7 +865,7 @@ export default function StudentProfileSheet({
                           {req.status === "InProgress" ? "In Progress" : (req.status || "Pending")}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1 font-mono">
+                      <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1 font-sans tabular-nums">
                         <HugeIcon className="ph-bold ph-calendar text-[10px]" />
                         {formatPHDateTime(req.created_at)}
                       </div>
@@ -870,7 +878,7 @@ export default function StudentProfileSheet({
         </div>
 
         {/* Executive Footer - Clean Action Bar */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between shrink-0">
           <div>
             {isArchived ? (
               onRestoreStudent && (

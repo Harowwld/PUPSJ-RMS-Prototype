@@ -37,6 +37,7 @@ import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
 import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils"
 import React from "react"
+import { AlertCircleIcon as EmptyAlertCircleIcon, Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 const formatLastLoginDate = (dateStr) => {
   if (!dateStr || dateStr === "N/A") return "N/A"
@@ -128,7 +129,7 @@ const StaffTableRow = React.memo(({
           : "bg-white group-hover:bg-gray-50/40 dark:bg-card dark:group-hover:bg-zinc-800/80",
         isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
       )}>
-        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+        <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
           {s.id}
         </span>
       </td>
@@ -649,7 +650,7 @@ export default function StaffDirectoryTab({
               <Button
                 onClick={() => onSwitchView("create")}
                 disabled={activeTab === "archived" || isLoading}
-                className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs"
+                className="flex h-10 items-center justify-center disabled:opacity-50 cursor-pointer px-5"
               >
                 Register Staff
               </Button>
@@ -674,7 +675,7 @@ export default function StaffDirectoryTab({
               <span>Active</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   activeTab === "active"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -696,7 +697,7 @@ export default function StaffDirectoryTab({
               <span>Archived</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   activeTab === "archived"
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -719,7 +720,7 @@ export default function StaffDirectoryTab({
                 onChange={(e) => setLocalSearch(e.target.value)}
                 disabled={isLoading}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                 {filteredStaff.length.toLocaleString()}
               </div>
             </div>
@@ -794,34 +795,27 @@ export default function StaffDirectoryTab({
           </div>
         ) : error ? (
           <div className="p-6 flex-[1_0_auto] flex flex-col justify-center border-t border-border dark:border-border rounded-b-2xl">
-            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   Could not load personnel data
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                <EmptyDescription>
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           </div>
         ) : filteredStaff.length === 0 ? (
-          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon className={cn("text-3xl text-gray-400 dark:text-zinc-500", activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass")} />
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia>{activeTab === "archived" && !hasActiveFilters && search === "" ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
+                <EmptyTitle>
                   {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No Archived Personnel Found" : "No Personnel Found")}
                 </EmptyTitle>
-                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                <EmptyDescription>
                   {hasActiveFilters || search !== ""
                     ? "Try adjusting your search filters to find what you're looking for."
                     : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
@@ -833,7 +827,7 @@ export default function StaffDirectoryTab({
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -841,7 +835,7 @@ export default function StaffDirectoryTab({
                   activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                     <Button
                       onClick={() => onSwitchView("create")}
-                      className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="flex h-10 px-5 cursor-pointer"
                     >
                       Register Staff
                     </Button>

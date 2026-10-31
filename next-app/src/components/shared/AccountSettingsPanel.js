@@ -36,6 +36,8 @@ import {
 import { getRoleBranding } from "@/lib/roleBranding";
 import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom";
 import { setHighContrastPreference } from "@/lib/accessibility";
+import { HelpCircleIcon as EmptyHelpCircleIcon } from "hugeicons-react";
+import { Switch } from "@/components/ui/switch";
 
 const getNowTimestamp = () => Date.now();
 
@@ -775,7 +777,7 @@ export default function AccountSettingsPanel() {
                       </h3>
                       <p className="text-lg font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate max-w-[240px]">
                         {authUser?.role === "Student" && studentNo ? (
-                          <span className="font-mono text-sm text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
+                          <span className="font-sans tabular-nums text-sm text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
                         ) : (
                           authUser?.email || authUser?.username
                         )}
@@ -926,7 +928,7 @@ export default function AccountSettingsPanel() {
                                 <Input
                                   type="text"
                                   placeholder=" "
-                                  className="focus-visible:ring-0 focus-visible:ring-offset-0 font-mono"
+                                  className="focus-visible:ring-0 focus-visible:ring-offset-0 font-sans tabular-nums"
                                   value={studentNo}
                                   onChange={(e) => setStudentNo(e.target.value)}
                                 />
@@ -944,7 +946,7 @@ export default function AccountSettingsPanel() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {profileLoading && (
                           <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1049,7 +1051,7 @@ export default function AccountSettingsPanel() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {pwLoading && (
                             <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1081,19 +1083,14 @@ export default function AccountSettingsPanel() {
                     <form onSubmit={submitSecurity} className="space-y-6">
                       <div className="space-y-6">
                         {globalQuestions.length === 0 ? (
-                          <div className="py-10 px-4 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/30 flex flex-col items-center justify-center text-center">
-                            <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-4">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-100/60 opacity-50 dark:bg-zinc-800/40"></div>
-                                  <EmptyMedia className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-question text-2xl text-gray-400 dark:text-zinc-500" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                          <div className="rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30">
+                            <Empty variant="compact">
+                              <EmptyHeader>
+                                <EmptyMedia><EmptyHelpCircleIcon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
                                   No Recovery Questions Configured
                                 </EmptyTitle>
-                                <EmptyDescription className="mt-1 max-w-xs text-xs font-normal text-gray-600 dark:text-zinc-400">
+                                <EmptyDescription>
                                   Institutional security questions have not been configured yet. Contact your system administrator to enable question-based account recovery.
                                 </EmptyDescription>
                               </EmptyHeader>
@@ -1162,7 +1159,7 @@ export default function AccountSettingsPanel() {
                           <Button
                             type="submit"
                             disabled={secLoading}
-                            className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {secLoading && (
                               <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1247,7 +1244,7 @@ export default function AccountSettingsPanel() {
                             type="button"
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {totpLoading && (
                               <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1293,7 +1290,7 @@ export default function AccountSettingsPanel() {
                                  type="button"
                                  onClick={startTOTPSetup}
                                  disabled={totpSetupLoading}
-                                 className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                 className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                                >
                                  {totpSetupLoading && (
                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1338,7 +1335,7 @@ export default function AccountSettingsPanel() {
                                     setTotpStep("idle");
                                   }}
                                   disabled={totpLoading || totpToken.length !== 6}
-                                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                  className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {totpLoading && (
                                     <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1410,7 +1407,7 @@ export default function AccountSettingsPanel() {
                               type="button"
                               onClick={generateNewRecoveryCodes}
                               disabled={recoveryCodesLoading}
-                              className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {recoveryCodesLoading && (
                                 <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
@@ -1568,15 +1565,11 @@ export default function AccountSettingsPanel() {
                           Enhances border boundaries, text contrast, and focused outlines across data tables and panels.
                         </p>
                       </div>
-                      <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={!!userPreferences.high_contrast}
-                          onChange={(e) => handleAccessibilityToggle("high_contrast", e.target.checked)}
-                        />
-                        <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-zinc-700"></div>
-                      </label>
+                      <Switch
+                        checked={!!userPreferences.high_contrast}
+                        onCheckedChange={(checked) => handleAccessibilityToggle("high_contrast", checked)}
+                        aria-label="High Contrast Mode"
+                      />
                     </div>
                   </div>
                 </div>

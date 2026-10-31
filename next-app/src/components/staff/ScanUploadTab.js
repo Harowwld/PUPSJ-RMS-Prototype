@@ -26,6 +26,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
+import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
 
 const COORDINATE_REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
@@ -596,15 +597,13 @@ export default function ScanUploadTab({
             <ScanUploadSkeleton />
           ) : error ? (
             <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
-              <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-semibold text-[#1C1C1E] dark:text-zinc-50">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     Could not load tab
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                  <EmptyDescription>
                     {error}
                   </EmptyDescription>
                 </EmptyHeader>
@@ -1833,10 +1832,10 @@ export default function ScanUploadTab({
                             })
                           }
                           className={cn(
-                            "w-full h-10 px-5 text-xs font-semibold rounded-xl active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs",
+                            "w-full h-10 px-5 disabled:opacity-50 cursor-pointer",
                             isReplaceMode || rescanContext
-                              ? "bg-amber-600 hover:bg-amber-700 text-white"
-                              : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900"
+                              ? ""
+                              : ""
                           )}
                         >
                           {isReplaceMode || rescanContext ? "Replace Existing Document" : "Upload Document"}

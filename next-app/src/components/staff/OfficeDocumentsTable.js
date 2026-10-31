@@ -12,6 +12,7 @@ import TableScrollControls from "@/components/shared/TableScrollControls"
 import useTableScroll from "@/hooks/useTableScroll"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
+import { Files01Icon as EmptyFiles01Icon } from "hugeicons-react";
 
 function getYear(document) {
   const year = Number(String(document?.student_no || "").split("-")[0])
@@ -84,7 +85,7 @@ export default function OfficeDocumentsTable({
               placeholder="Search this office's documents"
               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               {rows.length.toLocaleString()}
             </div>
           </div>
@@ -100,19 +101,14 @@ export default function OfficeDocumentsTable({
       </div>
 
       {visibleRows.length === 0 ? (
-        <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
-          <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-            <EmptyHeader className="flex flex-col items-center gap-0">
-              <div className="relative mb-6">
-                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon className="ph-duotone ph-files text-3xl text-pup-maroon dark:text-red-400" />
-                </EmptyMedia>
-              </div>
-              <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+        <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia><EmptyFiles01Icon size="1em" /></EmptyMedia>
+              <EmptyTitle>
                 No {officeLabel} Documents
               </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+              <EmptyDescription>
                 {query.trim()
                   ? "No documents match your active search terms. Try clearing your query."
                   : "Documents from other offices are intentionally excluded from this table."}
@@ -157,13 +153,13 @@ export default function OfficeDocumentsTable({
                     <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       {officeLabel === "OSAS" ? (
                         <span
-                          className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full"
+                          className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full"
                           title={document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
                         >
                           {document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
                         </span>
                       ) : (
-                        <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                        <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                           {document.student_no || "N/A"}
                         </span>
                       )}

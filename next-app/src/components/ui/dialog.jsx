@@ -79,7 +79,7 @@ function DialogContent({
         <DialogPrimitive.Popup
           data-slot="dialog-content"
           className={cn(
-            "pointer-events-auto grid w-full max-w-full gap-4 rounded-2xl bg-popover p-4 text-sm text-popover-foreground border-[0.5px] border-border dark:border-white/10 outline-none sm:max-w-sm",
+            "pointer-events-auto grid w-full max-w-full gap-4 rounded-2xl bg-popover p-6 text-sm text-popover-foreground border-[0.5px] border-border dark:border-white/10 outline-none sm:max-w-sm",
             className
           )}
           style={{
@@ -110,7 +110,7 @@ function DialogHeader({
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex min-w-0 flex-col gap-0 text-left", className)}
       {...props} />
   );
 }
@@ -125,7 +125,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        "flex min-w-0 flex-col-reverse gap-2.5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}>
@@ -146,7 +146,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("font-heading text-base  font-medium", className)}
+      className={cn("text-[16px] font-semibold tracking-[-0.01em] text-gray-900 [overflow-wrap:anywhere] dark:text-zinc-50", className)}
       {...props} />
   );
 }
@@ -159,7 +159,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        "mt-1 text-[13px] font-normal text-gray-500 [overflow-wrap:anywhere] dark:text-zinc-400 *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
         className
       )}
       {...props} />

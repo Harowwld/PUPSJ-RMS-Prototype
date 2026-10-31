@@ -35,6 +35,7 @@ import { getCachedData, setCachedData } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
+import { InboxIcon as EmptyInboxIcon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -502,7 +503,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   {slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
                 </p>
-                <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
                   {slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA
                 </span>
                 <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal">
@@ -541,7 +542,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               placeholder="Search student, document, or org..."
               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
               {filteredTransactions.length}
             </div>
           </div>
@@ -607,19 +608,14 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           {loading ? (
             <TransactionsTableSkeleton rowCount={8} />
           ) : paginatedTransactions.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className="ph-duotone ph-tray text-3xl text-gray-400 dark:text-zinc-500" />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia><EmptyInboxIcon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No Records Found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     {hasActiveFilters
                       ? "No student requests or proposals match your search or filter settings."
                       : "There are currently no active document requests or event proposals recorded."}
@@ -631,7 +627,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       variant="outline"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
@@ -768,7 +764,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
                         >
-                          <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                          <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                             {formatTransactionId(tx)}
                           </span>
                         </td>
@@ -797,7 +793,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             >
                               {formatStudentRequester(tx.studentName, tx.studentNo)}
                             </div>
-                            <div className="text-[11px] font-mono text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate block">
+                            <div className="text-[11px] font-sans tabular-nums text-[#8E8E93] dark:text-zinc-500 mt-0.5 truncate block">
                               {tx.studentNo}
                             </div>
                           </div>
@@ -847,7 +843,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         </td>
 
                         {/* Date Submitted */}
-                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-mono border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-sans tabular-nums border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           {rel.relative || rel.date}
                         </td>
 
@@ -922,7 +918,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   Prev
                 </Button>
 
-                <div className="h-8 min-w-[32px] px-2.5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 font-bold text-xs flex items-center justify-center text-gray-800 dark:text-zinc-200 shadow-2xs font-mono">
+                <div className="h-8 min-w-[32px] px-2.5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 font-bold text-xs flex items-center justify-center text-gray-800 dark:text-zinc-200 shadow-2xs font-sans tabular-nums">
                   {page}
                 </div>
 
@@ -951,10 +947,10 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
           {/* TOP HEADER: Operation Record Details + < > 01 of XX + X button */}
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                <SheetTitle>
                   Operation Record Details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
@@ -995,7 +991,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       <TooltipContent>Next Record</TooltipContent>
                     </Tooltip>
 
-                    <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                    <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                       {String(Math.max(1, currentTxIndex + 1)).padStart(2, "0")} of {String(sortedTransactions.length).padStart(2, "0")}
                     </span>
                   </div>
@@ -1094,7 +1090,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
                   {formatTransactionId(sheetItem)}
                 </span>
                 <span
@@ -1124,7 +1120,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   label="Transaction ID"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                    <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
                       {formatTransactionId(sheetItem)}
                     </span>
                     <button
@@ -1169,7 +1165,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", getStatusDotColor(sheetItem?.status))} />
                       <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
                     </span>
-                    <span className="text-[11px] font-mono text-gray-400 font-normal">
+                    <span className="text-[11px] font-sans tabular-nums text-gray-400 font-normal">
                       {sheetItem?.createdAt ? formatRelativeTime(sheetItem.createdAt).relative : ""}
                     </span>
                   </div>
@@ -1199,7 +1195,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   label="Student Number"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       {sheetItem?.studentNo}
                     </span>
                     {sheetItem?.studentNo && (
@@ -1219,7 +1215,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   icon="ph-bold ph-clock"
                   label="Submitted At"
                 >
-                  <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                  <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                     {sheetItem?.createdAt ? formatPHDateTime(sheetItem.createdAt) : "N/A"}
                   </span>
                 </InfoRow>
@@ -1274,7 +1270,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         {sheetItem.originalFilename}
                       </span>
                       {sheetItem.sizeBytes && (
-                        <span className="text-[10px] text-gray-400 font-mono">
+                        <span className="text-[10px] text-gray-400 font-sans tabular-nums">
                           {(sheetItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
                         </span>
                       )}
@@ -1296,7 +1292,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           </div>
 
           {/* Executive Action Bar Sheet Footer */}
-          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <div>
               {sheetItem && (
                 <Button

@@ -1,6 +1,8 @@
 "use client"
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
+import useCreateAnother from "@/hooks/useCreateAnother";
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -34,6 +36,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function SortIndicator({ sortState, column }) {
   if (sortState?.key !== column) {
@@ -87,6 +90,7 @@ export default function CoursesTab({
   }, [pageCourse, localSearch, showArchived, sortCourse, resetScroll]);
 
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false)
+  const { attachForm, ...repeat } = useCreateAnother(isAddCourseOpen)
   const [newCourseCode, setNewCourseCode] = useState("")
   const [newCourseName, setNewCourseName] = useState("")
   const [newCourseBlocks, setNewCourseBlocks] = useState([""])
@@ -99,6 +103,7 @@ export default function CoursesTab({
     const code = newCourseCode.trim()
     const name = newCourseName.trim()
     if (!code || !name) return
+    if (!repeat.beginSave()) return
 
     try {
       const res = await fetch("/api/courses", {
@@ -113,19 +118,24 @@ export default function CoursesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed")
 
-      setNewCourseCode("")
-      setNewCourseName("")
-      setNewCourseBlocks([""])
-      setIsAddCourseOpen(false)
+      repeat.complete(() => {
+        setNewCourseCode("")
+        setNewCourseName("")
+        setNewCourseBlocks([""])
+      }, () => setIsAddCourseOpen(false))
 
       showToast({
         title: "Degree Program Added",
         description:
           "The new degree program has been successfully registered in the system.",
       })
-      if (loadAll) loadAll()
+      Promise.resolve().then(() => loadAll?.()).catch(() => {
+        showToast({ title: "Refresh Failed", description: "Program created. Refresh the list to see the new entry." }, true)
+      })
     } catch (err) {
       showToast(formatErrorMessage(err, "Registration Failed"), true)
+    } finally {
+      repeat.endSave()
     }
   }
 
@@ -275,7 +285,7 @@ export default function CoursesTab({
             <Button
               onClick={() => setIsAddCourseOpen(true)}
               disabled={showArchived}
-              className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-5 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+              className="flex h-10 items-center justify-center px-5 disabled:opacity-50 cursor-pointer border-0"
             >
               Add Program
             </Button>
@@ -303,7 +313,7 @@ export default function CoursesTab({
               <span>Active</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   !showArchived
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -328,7 +338,7 @@ export default function CoursesTab({
               <span>Archived</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   showArchived
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -389,19 +399,14 @@ export default function CoursesTab({
               <TaxonomyTableSkeleton rowCount={6} embedded={true} showSubtext={true} showPagination={false} />
             </div>
           ) : filteredCourses.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className={cn("text-3xl text-gray-400 dark:text-zinc-500", showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass")} />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>{showArchived && totalInView === 0 ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
+                  <EmptyTitle>
                     {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Programs Found" : "No Degree Programs Found")}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     {totalInView > 0
                       ? "Try adjusting your search filters to find what you're looking for."
                       : showArchived
@@ -418,7 +423,7 @@ export default function CoursesTab({
                         setLocalSearch("")
                       }}
                       title="Reset Filters"
-                      className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
@@ -426,7 +431,7 @@ export default function CoursesTab({
                     !showArchived && (
                       <Button
                         onClick={() => setIsAddCourseOpen(true)}
-                        className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="flex h-10 px-5 cursor-pointer"
                       >
                         Add Program
                       </Button>
@@ -552,7 +557,7 @@ export default function CoursesTab({
                               : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
                             isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
                           )}>
-                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                               {c.code}
                             </span>
                           </td>
@@ -739,6 +744,7 @@ export default function CoursesTab({
       <Dialog
         open={isAddCourseOpen}
         onOpenChange={(open) => {
+          if (repeat.saving) return
           setIsAddCourseOpen(open)
           if (!open) {
             setNewCourseCode("")
@@ -747,20 +753,20 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-xl dark:border-border dark:bg-card">
+          <DialogHeader className="p-6 pb-0">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                <DialogTitle>
                   New Degree Program
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+                <DialogDescription className="mt-1">
                   Register a new academic track and its initial organizational blocks.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
-          <form onSubmit={addCourse}>
+          <form ref={attachForm} onSubmit={addCourse}>
             <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-4">
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
@@ -842,10 +848,12 @@ export default function CoursesTab({
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="mx-0 mb-0 p-6 pt-0 flex flex-wrap flex-row items-center justify-end gap-2.5">
+              <CreateAnotherToggle checked={repeat.createAnother} onCheckedChange={repeat.setCreateAnother} disabled={repeat.saving} savedCount={repeat.savedCount} />
               <Button
                 type="button"
                 variant="outline"
+                disabled={repeat.saving}
                 onClick={() => {
                   setIsAddCourseOpen(false)
                   setNewCourseCode("")
@@ -858,9 +866,10 @@ export default function CoursesTab({
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                disabled={repeat.saving}
+                className="h-10 px-5 cursor-pointer border-0"
               >
-                Create Program
+                {repeat.saving ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>
           </form>
@@ -877,14 +886,14 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
+        <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-xl dark:border-border dark:bg-card">
+          <DialogHeader className="p-6 pb-0">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                <DialogTitle>
                   Update Program Details
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+                <DialogDescription className="mt-1">
                   Modify the designation or associated blocks for this program.
                 </DialogDescription>
               </div>
@@ -982,7 +991,7 @@ export default function CoursesTab({
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -997,7 +1006,7 @@ export default function CoursesTab({
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="h-10 px-5 cursor-pointer border-0"
               >
                 Save Changes
               </Button>

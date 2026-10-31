@@ -41,6 +41,29 @@ test('Checkbox Styles in globals.css', () => {
   )
 })
 
+test('Radio Button Styles in globals.css', () => {
+  const cssPath = path.join(ROOT_DIR, 'src/app/globals.css')
+  assert.ok(fs.existsSync(cssPath), 'globals.css must exist')
+  const css = fs.readFileSync(cssPath, 'utf8')
+
+  // Must reset native appearance to prevent black borders and color leaks
+  assert.ok(
+    css.includes('input[type="radio"]:not(.sr-only)'),
+    'globals.css must target input[type="radio"]:not(.sr-only)'
+  )
+
+  assert.ok(
+    css.includes('border-radius: 9999px !important;'),
+    'globals.css must set border-radius: 9999px !important on radio buttons'
+  )
+
+  // Must contain SVG white center dot
+  assert.ok(
+    css.includes("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white'"),
+    'globals.css must render clean SVG white circle dot for :checked radios'
+  )
+})
+
 test('Table Clickable Rows in Components', () => {
   // 1. BulkImportTab
   const bulkImportPath = path.join(ROOT_DIR, 'src/components/admin/system-config/BulkImportTab.js')

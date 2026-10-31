@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { EmptyState } from "@/components/ui/empty";
+import { UserGroupIcon, LayoutGridIcon } from "hugeicons-react";
 
 /**
  * Middle-truncates long filesystem paths so root and leaf directories remain visible.
@@ -199,10 +201,10 @@ export default function OfficeDetailSheet({
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* Top Header matching reference standard: Department Details < > 01 of XX X */}
-        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+        <SheetHeader className="shrink-0 p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+              <SheetTitle>
                 Department Details
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -234,7 +236,7 @@ export default function OfficeDetailSheet({
                   >
                     <HugeIcon className="ph-bold ph-caret-right text-xs" />
                   </button>
-                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                     {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
                   </span>
                 </div>
@@ -304,7 +306,7 @@ export default function OfficeDetailSheet({
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
                     {displayOffice.short_name}
                   </span>
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
                     #{displayOffice.id}
                   </span>
                 </div>
@@ -351,7 +353,7 @@ export default function OfficeDetailSheet({
                 label="Department Code"
                 value={
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-gray-900 dark:text-zinc-100">
+                    <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100">
                       {displayOffice.id}
                     </span>
                     <button
@@ -379,7 +381,7 @@ export default function OfficeDetailSheet({
                       className="w-3.5 h-3.5 rounded-full border border-black/15 dark:border-white/20 shadow-2xs shrink-0"
                       style={{ backgroundColor: accent }}
                     />
-                    <span className="font-mono text-xs text-gray-700 dark:text-zinc-300 uppercase">
+                    <span className="font-sans tabular-nums text-xs text-gray-700 dark:text-zinc-300 uppercase">
                       {accent}
                     </span>
                   </div>
@@ -390,10 +392,10 @@ export default function OfficeDetailSheet({
                 label="Default Admin"
                 value={
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-semibold text-gray-900 dark:text-zinc-100">
+                    <span className="font-sans tabular-nums text-xs font-semibold text-gray-900 dark:text-zinc-100">
                       {defaultAdminId}
                     </span>
-                    <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-mono">
+                    <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
                       ({defaultAdminEmail})
                     </span>
                     <button
@@ -460,7 +462,7 @@ export default function OfficeDetailSheet({
                 value={
                   <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="font-mono text-xs text-gray-700 dark:text-zinc-300"
+                      className="font-sans tabular-nums text-xs text-gray-700 dark:text-zinc-300"
                       title={inboundPath}
                     >
                       {formatMiddleTruncate(inboundPath, 30)}
@@ -482,7 +484,7 @@ export default function OfficeDetailSheet({
                 value={
                   <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="font-mono text-xs text-gray-700 dark:text-zinc-300"
+                      className="font-sans tabular-nums text-xs text-gray-700 dark:text-zinc-300"
                       title={storagePath}
                     >
                       {formatMiddleTruncate(storagePath, 30)}
@@ -504,7 +506,7 @@ export default function OfficeDetailSheet({
                 value={
                   displayOffice.ingest_token ? (
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-gray-600 dark:text-zinc-400">
+                      <span className="font-sans tabular-nums text-xs text-gray-600 dark:text-zinc-400">
                         ••••••••••••{displayOffice.ingest_token.slice(-6)}
                       </span>
                       <button
@@ -556,7 +558,7 @@ export default function OfficeDetailSheet({
                   Assigned Personnel Roster
                 </h3>
               </div>
-              <Badge variant="outline" className="text-[11px] font-mono px-2 py-0.5 rounded-full border-border dark:border-border text-gray-600 dark:text-zinc-300">
+              <Badge variant="outline" className="text-[11px] font-sans tabular-nums px-2 py-0.5 rounded-full border-border dark:border-border text-gray-600 dark:text-zinc-300">
                 {staffLoading ? "..." : `${staffList.length} Staff`}
               </Badge>
             </div>
@@ -603,7 +605,7 @@ export default function OfficeDetailSheet({
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0 ml-2">
-                        <span className="font-mono text-[10px] text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-gray-200/60 dark:border-white/10">
+                        <span className="font-sans tabular-nums text-[10px] text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-gray-200/60 dark:border-white/10">
                           {staff.id}
                         </span>
                       </div>
@@ -632,15 +634,12 @@ export default function OfficeDetailSheet({
                 </Button>
               </div>
             ) : (
-              <div className="p-6 text-center rounded-2xl border border-dashed border-border dark:border-zinc-800 bg-gray-50/40 dark:bg-zinc-800/20 mt-1">
-                <HugeIcon className="ph-duotone ph-users text-2xl text-gray-400 mx-auto mb-1.5" />
-                <p className="text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  No Personnel Assigned
-                </p>
-                <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                  Assign administrative officers or staff accounts to activate this department workspace.
-                </p>
-              </div>
+              <EmptyState
+                variant="compact"
+                icon={UserGroupIcon}
+                title="No Personnel Assigned"
+                description="Assign administrative officers or staff accounts to activate this department workspace."
+              />
             )}
           </div>
 
@@ -653,7 +652,7 @@ export default function OfficeDetailSheet({
                   Department Workspace Modules
                 </h3>
               </div>
-              <Badge variant="outline" className="text-[11px] font-mono px-2 py-0.5 rounded-full border-border dark:border-border text-gray-600 dark:text-zinc-300">
+              <Badge variant="outline" className="text-[11px] font-sans tabular-nums px-2 py-0.5 rounded-full border-border dark:border-border text-gray-600 dark:text-zinc-300">
                 {modulesLoading ? "..." : `${enabledModules.length} Active`}
               </Badge>
             </div>
@@ -682,7 +681,7 @@ export default function OfficeDetailSheet({
                         </span>
                       </div>
                       {mod.is_system && (
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 uppercase shrink-0">
+                        <span className="text-[9px] font-sans tabular-nums px-1.5 py-0.2 rounded bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 uppercase shrink-0">
                           Core
                         </span>
                       )}
@@ -705,21 +704,18 @@ export default function OfficeDetailSheet({
                 </Button>
               </div>
             ) : (
-              <div className="p-6 text-center rounded-2xl border border-dashed border-border dark:border-zinc-800 bg-gray-50/40 dark:bg-zinc-800/20 mt-1">
-                <HugeIcon className="ph-duotone ph-squares-four text-2xl text-gray-400 mx-auto mb-1.5" />
-                <p className="text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  No Custom Modules Configured
-                </p>
-                <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                  This department operates with standard institutional defaults.
-                </p>
-              </div>
+              <EmptyState
+                variant="compact"
+                icon={LayoutGridIcon}
+                title="No Custom Modules Configured"
+                description="This department operates with standard institutional defaults."
+              />
             )}
           </div>
         </div>
 
         {/* Executive Action Bar Footer */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
           <div>
             {isActive ? (
               onConfigure && (

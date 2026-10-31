@@ -59,25 +59,17 @@ export default function PdfPreviewDialog({
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border bg-white dark:bg-card"
       >
         <DialogHeader 
-          className="shrink-0 bg-gray-50 dark:bg-white/5"
-          style={{
-            padding: '20px 24px',
-            borderBottom: '0.5px solid rgba(0,0,0,0.08)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px'
-          }}
+          className="shrink-0"
+          style={{ padding: '20px 24px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}
         >
           <div className="min-w-0">
-            <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
+            <DialogTitle className="text-left">
               Activity History Report Preview
             </DialogTitle>
-            <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
+            <p className="text-left text-[13px] font-normal text-gray-500 dark:text-zinc-400">
               Review the report before downloading. Check the recorded actions and details.
             </p>
           </div>
@@ -147,7 +139,7 @@ export default function PdfPreviewDialog({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
+        <div className="flex shrink-0 items-center px-6 py-4">
           <Button
             variant="ghost"
             size="icon"
@@ -178,7 +170,7 @@ export default function PdfPreviewDialog({
             <Button
               onClick={handleDownloadFromPreview}
               disabled={!pdfBlobUrl}
-              className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none h-10 px-5 rounded-xl! text-xs font-semibold shadow-xs cursor-pointer"
+              className="disabled:opacity-50 h-10 px-5 cursor-pointer"
             >
               Download PDF
             </Button>

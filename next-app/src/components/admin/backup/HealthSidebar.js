@@ -180,7 +180,7 @@ export default function HealthSidebar({
                   <div className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-zinc-100">
                     <span className="font-semibold">{extTotalText || "External Drive"}</span>
                     {externalDrive.fsType && (
-                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded font-semibold">
+                      <span className="text-[10px] uppercase font-sans tabular-nums px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded font-semibold">
                         {externalDrive.fsType}
                       </span>
                     )}
@@ -208,7 +208,7 @@ export default function HealthSidebar({
                   <span className="truncate max-w-[170px] font-medium" title={externalDrive.label || "External Storage"}>
                     {externalDrive.label || "External Storage"}
                   </span>
-                  <span className="truncate max-w-[130px] font-mono text-[10px]" title={externalDrive.path || "Mounted"}>
+                  <span className="truncate max-w-[130px] font-sans tabular-nums text-[10px]" title={externalDrive.path || "Mounted"}>
                     {externalDrive.path || "Mounted"}
                   </span>
                 </div>

@@ -1,6 +1,8 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { EmptyState } from "@/components/ui/empty";
+import { Files01Icon } from "hugeicons-react";
 
 export const CATALOG_ITEMS = [
   {
@@ -330,9 +332,12 @@ export default function DocumentCatalog() {
           </div>
 
           {items.length === 0 ? (
-            <div className="py-12 flex flex-col items-center justify-center text-center">
-              <p className="text-sm font-medium text-gray-500">No catalog documents available at this time.</p>
-            </div>
+            <EmptyState
+              variant="compact"
+              icon={Files01Icon}
+              title="No Catalog Documents Available"
+              description="No catalog documents are available at this time. Check back later for updates."
+            />
           ) : (
             <>
               {/* Apple-style Horizontal Carousel */}
@@ -366,10 +371,10 @@ export default function DocumentCatalog() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-5">
-                        <span className="text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                        <span className="text-[10px] font-sans tabular-nums font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
                           {doc.client || "Student & Alumni"}
                         </span>
-                        <span className="text-[10px] font-mono text-zinc-400 font-medium tracking-wide">
+                        <span className="text-[10px] font-sans tabular-nums text-zinc-400 font-medium tracking-wide">
                           Official Document
                         </span>
                       </div>
@@ -383,7 +388,7 @@ export default function DocumentCatalog() {
                       </p>
                       
                       <div className="pt-5 border-t border-black/5 mt-auto">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-3 flex items-center gap-1.5">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-3 flex items-center gap-1.5">
                           <HugeIcon  className="ph-bold ph-shield-check text-sm" />
                           Filing Requirements
                         </div>

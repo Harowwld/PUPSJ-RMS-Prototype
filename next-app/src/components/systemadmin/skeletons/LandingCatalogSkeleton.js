@@ -73,7 +73,7 @@ export default function LandingCatalogSkeleton() {
                       <span className="text-sm font-bold text-gray-900 dark:text-zinc-100">
                         Catalog Credentials
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-sans tabular-nums">
                         6 of 8
                       </span>
                     </div>
@@ -89,7 +89,7 @@ export default function LandingCatalogSkeleton() {
                 <div className="flex flex-col gap-2">
                   {/* Item 1: Active Selected Card */}
                   <div className="p-3.5 rounded-2xl border border-red-300 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/30 flex items-center gap-3.5 select-none">
-                    <div className="w-7 h-7 rounded-xl bg-pup-maroon text-white flex items-center justify-center font-mono text-[11px] font-bold shrink-0">
+                    <div className="w-7 h-7 rounded-xl bg-pup-maroon text-white flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0">
                       01
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
@@ -109,7 +109,7 @@ export default function LandingCatalogSkeleton() {
                       key={pos}
                       className="p-3.5 rounded-2xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 flex items-center gap-3.5 select-none"
                     >
-                      <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 flex items-center justify-center font-mono text-[11px] font-bold shrink-0">
+                      <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0">
                         {pos}
                       </div>
                       <div className="flex-1 min-w-0 space-y-1">
@@ -136,7 +136,7 @@ export default function LandingCatalogSkeleton() {
                 <div className="p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
                   <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                     <div className="space-y-1">
-                      <span className="text-[10px] font-mono uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
+                      <span className="text-[10px] font-sans tabular-nums uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                         Document Card Editor
                       </span>
                       <Skeleton className="h-5 w-48 rounded dark:bg-muted" />

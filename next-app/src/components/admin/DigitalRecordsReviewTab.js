@@ -37,6 +37,7 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import { toast } from "sonner"
 import { matchesSearchQuery } from "@/lib/searchUtils"
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -1026,7 +1027,7 @@ export default function DigitalRecordsReviewTab({
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               {sortedRecords.length.toLocaleString()}
             </div>
           </div>
@@ -1177,37 +1178,27 @@ export default function DigitalRecordsReviewTab({
           <RecordsReviewTableSkeleton rowCount={8} embedded={true} />
         ) : error ? (
           <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
-            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon  className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   Load failed
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                <EmptyDescription>
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           </div>
         ) : sortedRecords.length === 0 ? (
-          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   {hasActiveFilters ? "No Records Found" : "No Records Yet"}
                 </EmptyTitle>
-                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                <EmptyDescription>
                   {hasActiveFilters
                     ? "Try adjusting your search filters to find what you're looking for."
                     : "There are currently no digital records in the system."}
@@ -1219,7 +1210,7 @@ export default function DigitalRecordsReviewTab({
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -1415,7 +1406,7 @@ export default function DigitalRecordsReviewTab({
                                 : "border-r border-border/70 dark:border-border/70"
                             )}
                           >
-                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {r.student_no}
                             </span>
                           </td>

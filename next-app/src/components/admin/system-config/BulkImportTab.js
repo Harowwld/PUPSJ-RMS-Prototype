@@ -262,7 +262,7 @@ export default function BulkImportTab({
                     setCurrentPage(1)
                   }}
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                   {filteredImportRows.length.toLocaleString()}
                 </div>
               </div>
@@ -333,7 +333,9 @@ export default function BulkImportTab({
                                 </div>
                               </td>
                               <td className="p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
-                                NEW
+                                <span className="inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:text-zinc-300">
+                                  NEW
+                                </span>
                               </td>
                               <td className="p-4 border-r border-border/70 dark:border-border/70">
                       <Select
@@ -419,7 +421,7 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                        className="h-9 px-4 cursor-pointer border-0"
                       >
                         Add Item
                       </Button>
@@ -459,7 +461,7 @@ export default function BulkImportTab({
                             disabled={!isSelectable}
                           />
                         </td>
-                        <td className="p-4 align-middle text-center text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle text-center text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {row.index}
                         </td>
                         <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
@@ -520,12 +522,12 @@ export default function BulkImportTab({
                               {String(row.category || "").toLowerCase() === "documenttype" && (row.isCompliance || row.isRequestable) && (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {row.isCompliance && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
                                       Compliance
                                     </span>
                                   )}
                                   {row.isRequestable && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
                                       Requestable
                                     </span>
                                   )}
@@ -570,7 +572,7 @@ export default function BulkImportTab({
                           ) : (
                             <div>
                               {row.code ? (
-                                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                                <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
                                   {row.code}
                                 </span>
                               ) : (
@@ -740,7 +742,7 @@ export default function BulkImportTab({
                 <Button
                   onClick={executeBulkImport}
                   disabled={importRows.filter((r) => !r.error && importSelected[r.index]).length === 0}
-                  className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs px-6 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
+                  className="flex h-10 items-center justify-center px-6 disabled:opacity-50 cursor-pointer border-0"
                 >
                   Confirm Import
                 </Button>
@@ -803,7 +805,7 @@ export default function BulkImportTab({
             <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button
                 onClick={resetImport}
-                className="flex h-10 w-full items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs active:scale-95 transition-all cursor-pointer shadow-xs border-0"
+                className="flex h-10 w-full items-center justify-center cursor-pointer border-0"
               >
                 Done
               </Button>
@@ -829,7 +831,7 @@ export default function BulkImportTab({
 
           {/* Modal Header */}
           <div className="mb-6">
-            <DialogTitle className="text-[18px] font-semibold tracking-[-0.01em] text-[#111] dark:text-zinc-50">
+            <DialogTitle>
               Import Instructions
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -951,7 +953,7 @@ export default function BulkImportTab({
             <Button
               type="button"
               onClick={() => setShowInstructions(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+              className="h-10 px-5 cursor-pointer border-0"
             >
               Done
             </Button>

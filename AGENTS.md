@@ -131,8 +131,8 @@ All database access goes through `*Repo.js` files in `src/lib/`:
 | **Auth** | JWT (HS256) via **jose**, HTTP-only cookie `pup_session` |
 | **UI Components** | shadcn/ui primitives (Radix-based) |
 | **Notifications** | sonner (toast notifications) |
-| **Icons** | Phosphor icons (bold, duotone, fill variants) |
-| **Font** | Inter (self-hosted) |
+| **Icons** | Hugeicons (`hugeicons-react`; direct named imports for new and migrated UI) |
+| **Font** | Plus Jakarta Sans (self-hosted) |
 | **Encryption** | Node.js crypto (AES-256-CBC for backups) |
 
 ---
@@ -463,25 +463,28 @@ const res = await fetch("/api/storage-layout", { cache: "no-store" });
 
 ### 8.2 Typography
 
-- **Primary**: Inter (self-hosted from `public/assets/fonts/inter/`)
-- **Mono**: System mono for IDs/timestamps (e.g., `font-mono text-[11px]`)
+Typography defaults belong on body or in Tailwind's base layer. Component utilities must retain control of sizes, weights, and line heights. Do not reintroduce universal important font/line-height rules; all app text must use Plus Jakarta Sans. Shared Input/Select default to 13px and preserve explicit caller sizes.
 
-### 8.3 Icon System (Phosphor)
+- **Primary**: Plus Jakarta Sans (self-hosted from `public/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2`)
+- **Single-family policy**: IDs, timestamps, recovery codes, previews, and code text use the same family. Use `tabular-nums` for aligned digits; do not introduce monospace or serif styles.
 
-Loaded variants: `bold`, `duotone`, `fill`, `thin`, `light`
+### 8.3 Icon System (Hugeicons)
 
-Common patterns:
-- Navigation: `ph-bold ph-icon-name`
-- Empty states: `ph-duotone ph-icon-name` (larger, `text-3xl`)
-- Status indicators: `ph-fill ph-icon-name` (solid)
+Use direct named Hugeicons imports from `hugeicons-react` for new and migrated UI. Do not introduce Phosphor icons or `ph-*` class names. Existing `HugeIcon` calls are a compatibility layer for legacy class names, not the pattern for new code.
+
+- Empty states: pass a Hugeicons component to `<EmptyState icon={Search01Icon} />`, or render `<Search01Icon size="1em" />` inside `<EmptyMedia>`.
+- The empty-state media wrapper supplies theme-aware color and icon sizing: 48px for page states, 28px for compact states. Use standalone symbols without decorative icon boxes, borders, backgrounds, or shadows. Decorative media is hidden from assistive technology.
+- Follow `COMPONENT_STANDARDS.md` section 5.10 for page and compact empty-state variants.
 
 ### 8.4 Button Conventions & Apple HIG Standards
+
+The shared `@/components/ui/button` supplies role-themed primary colors through `--brand-accent` and `--brand-foreground`, plus dimensions, typography, radius, focus ring, disabled styling, and press feedback. These colors must remain role-aware in both light and dark mode, including dialogs and sheets. Prefer `<Button>` with layout classes only. Use `size="sm"` for compact 36px actions. Solid semantic confirmations use `variant="success"`, `variant="warning"`, or `variant="danger"`; the existing `destructive` variant remains a soft secondary action. Do not replace role colors with hardcoded slate/white defaults or add important brand-button classes.
 
 Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized dimensions, typography, and variants:
 
 ```jsx
 // 1. Primary Action Button: Text-only (no static leading icons like plus/upload)
-<Button className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all">
+<Button>
   Register Staff
 </Button>
 
@@ -505,6 +508,8 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 
 ### 8.5 Border Radius Hierarchy (Apple HIG Tokens)
 
+**Switch contract**: Use `@/components/ui/switch` for settings. Default tracks are 44×24px with 20px white thumbs; `size="sm"` tracks are 36×20px with 16px thumbs. Enabled tracks are emerald in both themes. Supply an associated label or accessible name, including module and office context in matrices. Preserve controlled state and disabled behavior; do not rebuild switches with hidden checkboxes. Global checkbox rules must exclude aria-hidden form inputs.
+
 | Scope | Token | Usage |
 |---|---|---|
 | **Outer Page Containers** | `rounded-2xl` | Standalone cards, single-card views, sheets, dialog popups |
@@ -526,6 +531,7 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
   </div>
   ```
 - **`<Select>` Dropdown Component (`@/components/ui/select`)**:
+  - The adapter uses Base UI Select for keyboard navigation, typeahead, listbox semantics, disabled-item protection, focus return, and viewport collision handling. Preserve the options/children and existing callback APIs. Supply a visible associated label or accessible name.
   - Always use the project's `<Select>` component.
   - **CRITICAL AGENT RULE ON SCROLLBARS**: Never add `max-h-* overflow-y-auto` to `menuClassName`. The inner options container already manages scrolling (`max-h-60 overflow-y-auto`). Adding scroll classes to `menuClassName` creates nested double scrollbars!
   - **UNIFIED BORDER & FOCUS RING STYLING**: All dropdown triggers are unified with search inputs: `rounded-xl border border-gray-200 dark:border-white/10 shadow-none` with focus ring `focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80`. Never add thick rings (`focus:ring-2`, `focus:ring-4`, `focus-visible:ring-2`) or outdated borders (`border-gray-300`).
@@ -576,10 +582,13 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 For complete copy-paste patterns and blueprints, refer to [`COMPONENT_STANDARDS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/COMPONENT_STANDARDS.md).
 
 - **CRITICAL RULE ON MODAL HEADERS**: Dialog headers (`DialogHeader`) **MUST NOT** have decorative icon boxes or leading icons. Keep them strictly typographic (`DialogTitle` at `text-[16px] font-semibold tracking-[-0.01em]` and `DialogDescription` at `text-[13px] font-normal text-gray-500 mt-1`).
+- **NO MODAL SECTION DIVIDERS**: Dialog and sheet headers/footers must not use separator lines or tinted bands to divide them from the body. Use spacing instead. Keep functional field, table, notice, and preview borders inside the body. `DialogFooter` must not introduce negative margins.
 - **ACTION-ONLY BUTTON WORDS**: Action buttons in modals and toolbars must use single, unambiguous action words (`Save`, `Submit`, `Update`, `Restore`, `Cancel`, `Close`, `Done`). Avoid verbose phrases like `"Skip for Now"` or `"Submit Feedback"`.
 - **OUTLINED DISMISSAL BUTTONS**: Always use `variant="outline"` with `rounded-xl` for cancel/close buttons.
 
 ### 8.9 Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
+
+Use `@/components/shared/NoticeBanner` for shared tones, direct Hugeicons, semantic roles, actions, and dismissal. Put it in the unpadded container shell between content tiers. Use a stable entity-specific `dismissKey` for session persistence, or retain an existing parent-owned persistence handler through `onDismiss`. Keep structured form/data groups separate from notice banners.
 
 - **NEVER use floating alert boxes**: Alert banners must never float as island cards (`mx-5 my-3.5 rounded-xl border`) inside cards or forms.
 - **Edge-to-Edge Line Attachment**: Alerts must attach directly to container dividers / hairline borders (`border-b` underneath card/section headers, or `border-t border-b` between layout tiers), taking up the exact line/space where they are located (`px-5 sm:px-6 py-2.5`).
@@ -730,25 +739,25 @@ Use `Skeleton` from `@/components/ui/skeleton`:
 ### 10.2 Empty States (Tables)
 
 ```jsx
+import { Search01Icon } from "hugeicons-react";
+import { EmptyState } from "@/components/ui/empty";
+
 {displayLogs.length === 0 ? (
   <tr className="border-0 hover:bg-transparent">
     <td colSpan={5} className="p-0 border-0">
-      <div className="h-[400px] flex flex-col items-center justify-center text-gray-500">
-        <div className="w-16 h-16 rounded-full bg-white border border-gray-200
-                        flex items-center justify-center mb-4 shadow-sm">
-          <i className="ph-duotone ph-icon-name text-3xl text-pup-maroon"></i>
-        </div>
-        <div className="text-lg font-bold text-gray-900">No data yet</div>
-        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-          Actionable subtitle text
-        </div>
-      </div>
+      <EmptyState
+        icon={Search01Icon}
+        title="No Activity Found"
+        description="Try adjusting your search filters."
+      />
     </td>
   </tr>
 ) : (
   // ... table rows
 )}
 ```
+
+Use `variant="compact"` for sheets, chart panels, and small cards. Keep no-records, no-matches, errors, and no-selection states distinct. Do not add pulsing halos or global CSS overrides to empty states; preserve normal button variants for recovery actions.
 
 ### 10.3 Pagination Pattern
 

@@ -39,6 +39,7 @@ import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { hasAdminPrivileges } from "@/lib/roleUtils";
 import { generateExportFilename } from "@/lib/exportHelpers";
+import { StudentIcon as EmptyStudentIcon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -710,7 +711,7 @@ export default function StudentDirectoryTab({
                   <Button
                     type="button"
                     onClick={() => setRegisterOpen(true)}
-                    className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                    className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
                   >
                     Register Student
                   </Button>
@@ -1043,7 +1044,7 @@ export default function StudentDirectoryTab({
                 <span>Active</span>
                 <span
                   className={cn(
-                    "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     activeTab === "active"
                       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                       : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1069,7 +1070,7 @@ export default function StudentDirectoryTab({
                 <span>Archived</span>
                 <span
                   className={cn(
-                    "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     activeTab === "archived"
                       ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                       : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1097,7 +1098,7 @@ export default function StudentDirectoryTab({
                   }}
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {filteredStudents.length.toLocaleString()}
                 </div>
               </div>
@@ -1141,19 +1142,14 @@ export default function StudentDirectoryTab({
                 ))}
               </div>
             ) : paginatedStudents.length === 0 ? (
-              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className="ph-duotone ph-student text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+              <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia><EmptyStudentIcon size="1em" /></EmptyMedia>
+                    <EmptyTitle>
                       No Student Records Found
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    <EmptyDescription>
                       {hasActiveFilters
                         ? "Try clearing some filter options or changing your search criteria."
                         : "There are currently no student records in this view. Enroll a student to get started."}
@@ -1165,7 +1161,7 @@ export default function StudentDirectoryTab({
                         variant="outline"
                         onClick={handleResetFilters}
                         title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         Reset Filters
                       </Button>
@@ -1322,7 +1318,7 @@ export default function StudentDirectoryTab({
                               isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                             )}
                           >
-                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               {s.studentNo}
                             </span>
                           </td>

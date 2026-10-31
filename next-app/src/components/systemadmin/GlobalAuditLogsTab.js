@@ -41,6 +41,7 @@ import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
 import PdfPreviewDialog from "../admin/audit-logs/PdfPreviewDialog"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -731,7 +732,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     type="button"
                     onClick={handlePreviewPDF}
                     disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-10 px-5 cursor-pointer"
                   >
                     {isGeneratingPdf ? (
                       <span className="flex items-center gap-1.5">
@@ -781,7 +782,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     <HugeIcon className="ph-bold ph-x text-[11px]" />
                   </button>
                 )}
-                <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono pointer-events-none">
+                <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums pointer-events-none">
                   {total.toLocaleString()}
                 </span>
               </div>
@@ -946,18 +947,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
             <AuditLogsTableSkeleton rowCount={8} embedded={true} showScope={true} />
           ) : error ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
-              <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-red-500 dark:text-red-400" />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     Load failed
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                  <EmptyDescription>
                     {error}
                   </EmptyDescription>
                 </EmptyHeader>
@@ -966,7 +962,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     variant="outline"
                     onClick={() => fetchLogs(true)}
                     title="Retry Loading"
-                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Retry Loading
                   </Button>
@@ -975,18 +971,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
           ) : logs.length === 0 ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
-              <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No Activity Found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     Try adjusting your search filters to find what you&apos;re looking for.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -996,7 +987,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       variant="outline"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>

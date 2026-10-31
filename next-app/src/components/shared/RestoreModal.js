@@ -1,4 +1,5 @@
 "use client";
+import NoticeBanner from "@/components/shared/NoticeBanner";
 
 import { useState, useEffect, useMemo } from "react";
 import HugeIcon from "@/components/shared/HugeIcon";
@@ -108,30 +109,13 @@ export default function RestoreModal({
     <Dialog open={open} onOpenChange={handleCancelAction}>
       <DialogContent className="sm:max-w-2xl md:max-w-3xl w-full p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
         {/* Header */}
-        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+        <DialogHeader className="p-6 pb-0 text-left">
           <div className="flex items-start gap-4">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-2xs",
-                mode === "merge"
-                  ? "bg-emerald-50 text-emerald-600 border border-emerald-200/80 dark:bg-emerald-950/40 dark:border-emerald-800/40 dark:text-emerald-400"
-                  : "bg-red-50 text-red-600 border border-red-200/80 dark:bg-red-950/40 dark:border-red-800/40 dark:text-red-400"
-              )}
-            >
-              <HugeIcon
-                className={cn(
-                  "text-[20px]",
-                  mode === "merge"
-                    ? "ph-duotone ph-git-merge"
-                    : "ph-duotone ph-warning-octagon"
-                )}
-              />
-            </div>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              <DialogTitle>
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed">
+              <DialogDescription className="mt-1">
                 {description}
               </DialogDescription>
             </div>
@@ -139,17 +123,20 @@ export default function RestoreModal({
         </DialogHeader>
 
         {/* Content Body */}
+        {mode === "overwrite" && <NoticeBanner tone="warning">
+          <span className="font-semibold">Destructive Action:</span> Live records in this partition will be permanently overwritten. Any new records created after this snapshot was taken will be lost.
+        </NoticeBanner>}
         <div className="p-6 space-y-4">
           {/* File Summary Badge */}
           <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border/80 bg-gray-50/70 dark:border-border dark:bg-zinc-900/40">
             <div className="flex items-center gap-2.5 min-w-0">
               <HugeIcon className="ph-duotone ph-file-zip text-[18px] text-gray-400 dark:text-zinc-500 shrink-0" />
-              <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate font-mono">
+              <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate font-sans tabular-nums">
                 {displayFilename}
               </span>
             </div>
             {previewData?.totalArchiveFiles !== undefined && (
-              <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 shrink-0 font-mono">
+              <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 shrink-0 font-sans tabular-nums">
                 {previewData.totalArchiveFiles} files
               </span>
             )}
@@ -205,15 +192,6 @@ export default function RestoreModal({
             </div>
           </div>
 
-          {/* Overwrite Warning Callout */}
-          {mode === "overwrite" && (
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/60 dark:bg-amber-950/30 dark:border-amber-800/40">
-              <HugeIcon className="ph-duotone ph-warning text-[17px] text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                <span className="font-semibold">Destructive Action:</span> Live records in this partition will be permanently overwritten. Any new records created after this snapshot was taken will be lost.
-              </p>
-            </div>
-          )}
 
           {/* Table Diff Preview */}
           <div className="space-y-1.5">
@@ -271,13 +249,13 @@ export default function RestoreModal({
 
                         return (
                           <tr key={t.name} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 border-b border-border dark:border-border last:border-b-0 transition-colors select-none">
-                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-mono truncate border-r border-border/70 dark:border-border/70" title={t.name}>
+                            <td className="py-2.5 px-3.5 font-semibold text-gray-900 dark:text-zinc-100 font-sans tabular-nums truncate border-r border-border/70 dark:border-border/70" title={t.name}>
                               {t.name}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-sans tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {t.liveRows}
                             </td>
-                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-mono whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-3.5 text-center text-gray-700 dark:text-zinc-300 font-sans tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {t.backupRows}
                             </td>
                             <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">
@@ -315,17 +293,13 @@ export default function RestoreModal({
             </div>
           </div>
 
-          {/* Zero-Loss Safety Snapshot Callout */}
-          <div className="flex items-center gap-2.5 p-3 rounded-xl bg-blue-50/70 border border-blue-200/60 dark:bg-blue-950/30 dark:border-blue-800/40">
-            <HugeIcon className="ph-duotone ph-shield-check text-[18px] text-blue-600 dark:text-blue-400 shrink-0" />
-            <p className="text-xs text-blue-800 dark:text-blue-300">
-              <span className="font-semibold">Zero-Loss Safety:</span> An automated Pre-Restore Safety Snapshot of current data is created before changes are applied.
-            </p>
-          </div>
         </div>
+        <NoticeBanner tone="info" className="mb-6">
+          <span className="font-semibold">Zero-Loss Safety:</span> An automated Pre-Restore Safety Snapshot of current data is created before changes are applied.
+        </NoticeBanner>
 
         {/* Footer with Action-Word Only Buttons */}
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"

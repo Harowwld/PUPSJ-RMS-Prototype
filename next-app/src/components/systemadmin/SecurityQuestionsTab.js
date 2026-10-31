@@ -263,7 +263,7 @@ export default function SecurityQuestionsTab({ showToast }) {
               <Button
                 onClick={() => handleSave()}
                 disabled={saving || loading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 cursor-pointer"
               >
                 {saving ? (
                   <span className="flex items-center gap-1.5">
@@ -311,7 +311,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                     {/* Top Row: Question label & Controls */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-border dark:border-border shadow-2xs">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-sans tabular-nums text-xs border border-border dark:border-border shadow-2xs">
                           {i + 1}
                         </span>
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
@@ -415,7 +415,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                       )}
 
                       {trimmed.length > 0 && (
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                           {trimmed.length} chars
                         </span>
                       )}

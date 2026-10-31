@@ -441,7 +441,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {saving ? "Saving Changes..." : "Save Landing Content"}
                 </Button>
@@ -504,7 +504,7 @@ export default function LandingPageCmsTab({ showToast }) {
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                             Headline Line 1 (Upper)
                           </label>
-                          <span className="text-[11px] text-gray-400 font-mono">
+                          <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                             {heroData.headlineLine1.length}/45
                           </span>
                         </div>
@@ -527,7 +527,7 @@ export default function LandingPageCmsTab({ showToast }) {
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                             Headline Line 2 (Lower Accent)
                           </label>
-                          <span className="text-[11px] text-gray-400 font-mono">
+                          <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                             {heroData.headlineLine2.length}/45
                           </span>
                         </div>
@@ -551,7 +551,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Hero Subtitle &amp; Institutional Description
                         </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
+                        <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                           {heroData.description.length}/280
                         </span>
                       </div>
@@ -625,7 +625,7 @@ export default function LandingPageCmsTab({ showToast }) {
                       type="button"
                       onClick={() => newPhotoInputRef.current?.click()}
                       disabled={isAddingPhoto}
-                      className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-9 px-4 cursor-pointer"
                     >
                       {isAddingPhoto ? "Uploading Photo..." : "Upload Photo"}
                     </Button>
@@ -730,7 +730,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
                   {/* Slide cycler in preview */}
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
+                    <span className="text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300">
                       Slide {previewSlideIdx + 1} of {heroData.slides.length}
                     </span>
                     <div className="flex items-center gap-1">
@@ -818,7 +818,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         <div className="flex flex-wrap items-center justify-center gap-4">
                           <Button
                             type="button"
-                            className="h-11 px-8 rounded-full bg-slate-900 hover:bg-slate-800 text-[13px] font-semibold text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md pointer-events-none"
+                            className="h-11 px-8 flex items-center justify-center gap-2 cursor-pointer pointer-events-none"
                           >
                             <span>{(!heroData.ctaText || heroData.ctaText === "Request Document") ? "Request Document" : heroData.ctaText}</span>
                           </Button>
@@ -1103,7 +1103,7 @@ function SlideCard({
 
         {/* Resolution badge */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10 pointer-events-none select-none">
-          <span className="rounded-md bg-zinc-900/80 backdrop-blur-md text-white border border-white/10 text-[10px] font-mono px-2 py-0.5">
+          <span className="rounded-md bg-zinc-900/80 backdrop-blur-md text-white border border-white/10 text-[10px] font-sans tabular-nums px-2 py-0.5">
             {naturalSize ? `${naturalSize.width} × ${naturalSize.height}` : "16:9"}
           </span>
         </div>

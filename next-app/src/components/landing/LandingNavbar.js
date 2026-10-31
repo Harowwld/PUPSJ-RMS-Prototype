@@ -189,7 +189,7 @@ export default function LandingNavbar() {
                 {sessionUser ? (
                   <Button
                     onClick={() => router.push(getDashboardPath())}
-                    className="h-8 px-4 rounded-full btn-brand-red text-xs font-semibold tracking-wide cursor-pointer text-white active:scale-95 transition-all"
+                    className="h-8 px-4 tracking-wide cursor-pointer"
                   >
                     Dashboard ↗
                   </Button>

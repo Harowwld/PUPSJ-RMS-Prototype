@@ -24,6 +24,7 @@ import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"
 import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column) {
@@ -275,15 +276,13 @@ export default function LogTable({
           ? "border-t border-border dark:border-border rounded-b-2xl"
           : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}>
-        <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-          <EmptyHeader className="flex flex-col items-center gap-0">
-            <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-              <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-            </EmptyMedia>
-            <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+            <EmptyTitle>
               Load failed
             </EmptyTitle>
-            <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+            <EmptyDescription>
               {error}
             </EmptyDescription>
           </EmptyHeader>
@@ -301,19 +300,14 @@ export default function LogTable({
           : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
       )}>
         {displayLogs.length === 0 ? (
-          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   No Activity Found
                 </EmptyTitle>
-                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                <EmptyDescription>
                   Try adjusting your search filters to find what you&apos;re looking for.
                 </EmptyDescription>
               </EmptyHeader>
@@ -335,7 +329,7 @@ export default function LogTable({
                       setLogPage(1)
                     }}
                     title="Reset Filters"
-                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -346,7 +340,7 @@ export default function LogTable({
         ) : (
           <div className="w-full flex-[1_0_auto] flex flex-col">
             <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
-              <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              <span className="text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                 Showing {displayLogs.length.toLocaleString()} of {logTotal.toLocaleString()} {logTotal === 1 ? "event" : "events"}
               </span>
               <TableScrollControls

@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { toPct, fromPct } from "@/lib/storageLayoutUtils"
+import { EmptyState } from "@/components/ui/empty"
+import { Cursor01Icon, Clock01Icon } from "hugeicons-react"
 
 const CabinetSidebar = memo(({
   carouselIndex = 0,
@@ -94,15 +96,12 @@ const CabinetSidebar = memo(({
         {activeTab === "properties" && (
           <div>
             {!selectedCabinet ? (
-              <div className="flex h-[320px] flex-col items-center justify-center text-center">
-                <HugeIcon  className="ph-duotone ph-mouse-left-click text-[24px] text-gray-300 dark:text-zinc-600"></HugeIcon>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50 mt-3">
-                  No cabinet selected
-                </h3>
-                <p className="text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1 max-w-[200px] mx-auto">
-                  Select a cabinet on the map to edit its properties.
-                </p>
-              </div>
+              <EmptyState
+                variant="compact"
+                icon={Cursor01Icon}
+                title="No Cabinet Selected"
+                description="Select a cabinet on the map to edit its properties."
+              />
             ) : (
               <div className="space-y-4">
                 {selectedCabinetIds.size > 1 && (
@@ -261,9 +260,12 @@ const CabinetSidebar = memo(({
           <div className="space-y-4">
             <div className="max-h-[350px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
               {history.length === 0 ? (
-                <div className="text-center text-xs font-medium text-gray-400 py-6">
-                  No history states tracked yet.
-                </div>
+                <EmptyState
+                  variant="compact"
+                  icon={Clock01Icon}
+                  title="No Layout History Yet"
+                  description="Changes to the storage layout will appear here."
+                />
               ) : (
                 history.map((item, idx) => {
                   const isActive = idx === historyIndex

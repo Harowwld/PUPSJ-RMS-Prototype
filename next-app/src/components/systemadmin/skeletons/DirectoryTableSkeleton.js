@@ -40,7 +40,7 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
                 <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
-                  <Skeleton className="h-4 w-28 font-mono rounded dark:bg-muted" />
+                  <Skeleton className="h-4 w-28 font-sans tabular-nums rounded dark:bg-muted" />
                 </td>
                 <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                   <div className="flex flex-col gap-1.5">

@@ -19,6 +19,8 @@ import { getRequestCharterStatus } from "@/lib/citizenCharter";
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
 import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { EmptyState } from "@/components/ui/empty";
+import { Attachment01Icon, Clock01Icon } from "hugeicons-react";
 
 export function getRequestStatusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
@@ -154,10 +156,10 @@ export default function DocumentRequestDetailSheet({
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* Top Header matching reference design: Request Details < > 01 of 100 X */}
-        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+        <SheetHeader className="shrink-0 p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+              <SheetTitle>
                 Request Details
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -188,7 +190,7 @@ export default function DocumentRequestDetailSheet({
                   >
                     <HugeIcon className="ph-bold ph-caret-right text-xs" />
                   </button>
-                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                     {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
                   </span>
                 </div>
@@ -293,7 +295,7 @@ export default function DocumentRequestDetailSheet({
                         {displayName}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
                       {detail.student_no ? `Student No: ${detail.student_no}` : `Client: ${detail.client_type || "Requester"}`}
                     </p>
                   </div>
@@ -363,7 +365,7 @@ export default function DocumentRequestDetailSheet({
                       icon="ph-bold ph-hash"
                       label="Student Number"
                     >
-                      <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                      <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
                         {detail.student_no}
                       </span>
                     </InfoRow>
@@ -498,7 +500,7 @@ export default function DocumentRequestDetailSheet({
                   >
                     {studentForRequest || detail.room ? (
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                        <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                           Room {detail.room || studentForRequest?.room} • Cabinet {detail.cabinet || studentForRequest?.cabinet} • Drawer {detail.drawer || studentForRequest?.drawer}
                         </span>
                         <Button
@@ -547,9 +549,12 @@ export default function DocumentRequestDetailSheet({
                 </div>
 
                 {attachments.length === 0 ? (
-                  <div className="py-4 text-center text-xs text-gray-400 dark:text-zinc-500 italic">
-                    No supporting attachments uploaded for this request.
-                  </div>
+                  <EmptyState
+                    variant="compact"
+                    icon={Attachment01Icon}
+                    title="No Supporting Attachments"
+                    description="No supporting attachments uploaded for this request."
+                  />
                 ) : (
                   <div className="flex flex-wrap items-start gap-3 pt-1">
                     {attachments.map((att) => {
@@ -722,7 +727,7 @@ export default function DocumentRequestDetailSheet({
                           <span className="font-semibold text-gray-800 dark:text-zinc-200">
                             {u.status === "InProgress" ? "In Progress" : u.status}
                           </span>
-                          <span className="text-gray-400 dark:text-zinc-500 font-mono text-[10px]">
+                          <span className="text-gray-400 dark:text-zinc-500 font-sans tabular-nums text-[10px]">
                             {formatPHDateTime(u.created_at)}
                           </span>
                         </div>
@@ -738,9 +743,12 @@ export default function DocumentRequestDetailSheet({
                     ))}
                   </div>
                 ) : (
-                  <div className="py-3 text-center text-xs text-gray-400 dark:text-zinc-500 italic">
-                    No activity records logged yet.
-                  </div>
+                  <EmptyState
+                    variant="compact"
+                    icon={Clock01Icon}
+                    title="No Activity Recorded Yet"
+                    description="Updates to this request will appear here."
+                  />
                 )}
               </div>
             </div>
@@ -748,7 +756,7 @@ export default function DocumentRequestDetailSheet({
         </div>
 
         {/* Executive Footer - Clean Action Bar */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex items-center justify-between gap-3 flex-row">
+        <SheetFooter className="shrink-0 p-4 px-6 flex items-center justify-between gap-3 flex-row">
           <div>
             {hasEdits && (
               <Button
@@ -775,7 +783,7 @@ export default function DocumentRequestDetailSheet({
             {hasEdits && (
               <Button
                 type="button"
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                className="h-10 px-5 cursor-pointer disabled:opacity-50"
                 onClick={handleManualSave}
                 disabled={saving}
               >

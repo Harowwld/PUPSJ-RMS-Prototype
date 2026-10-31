@@ -118,11 +118,11 @@ export default function EditOrganizationModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0 font-jakarta">
-        <DialogHeader className="p-6 pb-4 bg-white dark:bg-card border-b border-border dark:border-border text-left">
-          <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
+        <DialogHeader className="p-6 pb-0 text-left">
+          <DialogTitle>
             Edit Organization Record
           </DialogTitle>
-          <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+          <DialogDescription className="mt-1">
             Update official student organization accreditation information and filing coordinates.
           </DialogDescription>
         </DialogHeader>
@@ -262,7 +262,7 @@ export default function EditOrganizationModal({
             </div>
           </div>
 
-          <DialogFooter className="p-4 px-6 bg-gray-50/80 dark:bg-card border-t border-border dark:border-border flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-4 px-6 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -275,7 +275,7 @@ export default function EditOrganizationModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 cursor-pointer"
             >
               {isSubmitting ? "Saving Changes..." : "Save Changes"}
             </Button>

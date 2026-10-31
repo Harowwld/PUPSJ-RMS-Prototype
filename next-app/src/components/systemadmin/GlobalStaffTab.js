@@ -1,4 +1,6 @@
 "use client"
+import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle"
+import useCreateAnother from "@/hooks/useCreateAnother"
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import useUrlPage from "@/hooks/useUrlPage"
@@ -48,6 +50,7 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -126,6 +129,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   // Detail Sheet & Dialogs
   const [inspectMember, setInspectMember] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
+  const { attachForm, ...repeat } = useCreateAnother(formOpen)
   const [isEditing, setIsEditing] = useState(false)
   const [targetIsExistingSysAdmin, setTargetIsExistingSysAdmin] = useState(false)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
@@ -189,7 +193,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     if (formOpen && !isEditing) {
       const off = form.role === "SystemAdmin" ? "global" : (form.office_id || "")
       const r = form.role || "Staff"
-      fetch(`/api/staff/next-id?officeId=${encodeURIComponent(off)}&role=${encodeURIComponent(r)}`)
+      fetch(`/api/staff/next-id?officeId=${encodeURIComponent(off)}&role=${encodeURIComponent(r)}`, { cache: "no-store" })
         .then((res) => res.json())
         .then((json) => {
           if (active && json.ok && json.nextId) {
@@ -201,7 +205,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     return () => {
       active = false
     }
-  }, [formOpen, isEditing, form.office_id, form.role])
+  }, [formOpen, isEditing, form.office_id, form.role, repeat.savedCount])
 
   // Archive & Restore Confirmation Modals
   const [archiveTarget, setArchiveTarget] = useState(null)
@@ -326,6 +330,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       showToast("Please select an assigned office/department", true)
       return
     }
+    if (!repeat.beginSave()) return
     setSubmitLoading(true)
     
     try {
@@ -357,10 +362,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             ? "Personnel account created. Credentials were emailed to the new user."
             : "Personnel account created, but the credential email was not sent. Check SMTP settings.",
           !isEditing && !json.credentialEmail?.sent)
-        setFormOpen(false)
+        if (!isEditing) {
+          repeat.complete(() => {
+            setNextIdPreview("")
+            setForm((current) => ({ ...current, id: "", fname: "", lname: "", email: "", status: "Active" }))
+          }, () => setFormOpen(false))
+        } else {
+          setFormOpen(false)
+        }
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")
-        fetchData()
+        Promise.resolve().then(() => fetchData()).catch(() => {
+          showToast("Personnel saved. Refresh the directory to see the updated list.", true)
+        })
         
         if (!isEditing && json.defaultPassword) {
           setTempPassword(json.defaultPassword)
@@ -373,6 +387,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       showToast("Network error saving personnel", true)
     } finally {
       setSubmitLoading(false)
+      repeat.endSave()
     }
   }
 
@@ -848,7 +863,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
               <Button
                 onClick={handleOpenCreate}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 cursor-pointer"
               >
                 Register Personnel
               </Button>
@@ -985,7 +1000,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <span>Active</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   statusFilter === "Active"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1007,7 +1022,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <span>Archived</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   statusFilter === "Inactive"
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1040,7 +1055,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 placeholder="Search by name, ID or email..."
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                 {filteredStaff.length}
               </div>
             </div>
@@ -1095,24 +1110,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           {loading ? (
             <DirectoryTableSkeleton rowCount={8} />
           ) : filteredStaff.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className={cn(
-                        hasActiveFilters ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-users"),
-                        "text-3xl text-gray-400 dark:text-zinc-500"
-                      )}></HugeIcon>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>{hasActiveFilters ? <EmptySearch01Icon size="1em" /> : statusFilter === "Inactive" ? <EmptyArchive01Icon size="1em" /> : <EmptyUserGroupIcon size="1em" />}</EmptyMedia>
+                  <EmptyTitle>
                     {hasActiveFilters 
                       ? "No Results Found" 
                       : (statusFilter === "Inactive" ? "No Archived Personnel Found" : "No Personnel Found")}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     {hasActiveFilters
                       ? "We couldn't find any personnel matching your search criteria. Try adjusting your partition filters or keywords."
                       : (statusFilter === "Inactive"
@@ -1127,7 +1134,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         variant="outline"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         Reset Filters
                       </Button>
@@ -1135,7 +1142,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       <Button
                         onClick={handleOpenCreate}
                         title="Register Personnel"
-                        className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="h-10 px-5 cursor-pointer"
                       >
                         Register Personnel
                       </Button>
@@ -1260,7 +1267,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       )}
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                      <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                      <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                         {member.id}
                       </span>
                     </td>
@@ -1464,20 +1471,20 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       {/* Register / Edit Form Dialog */}
       <Dialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => { if (!submitLoading) setFormOpen(open) }}
       >
-        <DialogContent className="sm:max-w-2xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none text-left">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+        <DialogContent className="sm:max-w-2xl w-full max-h-[92dvh] flex flex-col gap-0 rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden">
+          <form ref={attachForm} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
+            <DialogHeader className="p-6 pb-0 text-left shrink-0">
+              <DialogTitle>
                 {isEditing ? "Edit Personnel Profile" : "Register Personnel Account"}
               </DialogTitle>
-              <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
+              <DialogDescription className="mt-1">
                 Define the authorization scope, profile metadata, and security settings for the account.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="p-6 space-y-5">
+            <div className="min-h-0 overflow-y-auto p-6 space-y-5">
               {/* Row 1: Editable Full Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1582,7 +1589,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       Employee ID
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                         {isEditing ? form.id : (nextIdPreview || "PUP-[AUTO]")}
                       </span>
                     </div>
@@ -1594,7 +1601,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       Official Email Address
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                         {isEditing ? form.email : (form.email || suggestedEmail || `${(form.role || "staff").toLowerCase()}.[lastname]@pup.local`)}
                       </span>
                     </div>
@@ -1603,7 +1610,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               </div>
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="mx-0 mb-0 p-6 pt-0 flex flex-wrap flex-row items-center justify-end gap-2.5 shrink-0">
+              {!isEditing && <CreateAnotherToggle checked={repeat.createAnother} onCheckedChange={repeat.setCreateAnother} disabled={submitLoading} savedCount={repeat.savedCount} />}
               <Button
                 type="button"
                 variant="outline"
@@ -1616,7 +1624,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <Button
                 type="submit"
                 disabled={submitLoading}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all"
+                className="h-10 px-5 cursor-pointer"
               >
                 {submitLoading ? (
                   <span className="flex items-center gap-1.5">
@@ -1624,9 +1632,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <span>Saving Changes...</span>
                   </span>
                 ) : isEditing ? (
-                  "Save Changes"
+                  "Save"
                 ) : (
-                  "Register Personnel"
+                  "Register"
                 )}
               </Button>
             </DialogFooter>
@@ -1636,12 +1644,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
       {/* Temporary Password Dialog */}
       <Dialog open={pwDialogOpen} onOpenChange={setPwDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 overflow-hidden shadow-2xl">
-          <DialogHeader className="p-6 pb-0 border-none text-left">
-            <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+        <DialogContent finalFocus={formOpen ? fnameRef : undefined} className="max-w-md rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>
               Staff Credentials Generated
             </DialogTitle>
-            <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
+            <DialogDescription className="mt-1">
               Please share this temporary password securely with the user. They will be prompted to change it upon first login.
             </DialogDescription>
           </DialogHeader>
@@ -1655,7 +1663,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               onClick={() => {
                 navigator.clipboard.writeText(tempPassword)
@@ -1668,7 +1676,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             </Button>
             <Button
               onClick={() => setPwDialogOpen(false)}
-              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all"
+              className="h-10 px-5 cursor-pointer"
             >
               Done
             </Button>
@@ -1775,16 +1783,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             const isSelf = inspectMember.id === authUser?.id
             const isSysAdmin = inspectMember.role === "SystemAdmin" || inspectMember.role === "SuperAdmin"
             const initials = `${inspectMember.fname?.charAt(0) || ""}${inspectMember.lname?.charAt(0) || ""}`.toUpperCase() || "ST"
-            const currentMemberIndex = filteredMembers.findIndex(m => m.id === inspectMember.id)
+            const currentMemberIndex = filteredStaff.findIndex(m => m.id === inspectMember.id)
             const hasPrevMember = currentMemberIndex > 0
-            const hasNextMember = currentMemberIndex >= 0 && currentMemberIndex < filteredMembers.length - 1
+            const hasNextMember = currentMemberIndex >= 0 && currentMemberIndex < filteredStaff.length - 1
 
             return (
               <>
-                <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+                <SheetHeader className="shrink-0 p-0">
                   <div className="flex items-center justify-between px-6 py-4">
                     <div>
-                      <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                      <SheetTitle>
                         Personnel Details
                       </SheetTitle>
                       <SheetDescription className="sr-only">
@@ -1793,12 +1801,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {filteredMembers.length > 1 && currentMemberIndex !== -1 && (
+                      {filteredStaff.length > 1 && currentMemberIndex !== -1 && (
                         <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
                           <button
                             type="button"
                             disabled={!hasPrevMember}
-                            onClick={() => hasPrevMember && setInspectMember(filteredMembers[currentMemberIndex - 1])}
+                            onClick={() => hasPrevMember && setInspectMember(filteredStaff[currentMemberIndex - 1])}
                             className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                             aria-label="Previous Personnel"
                             title="Previous Personnel"
@@ -1808,15 +1816,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           <button
                             type="button"
                             disabled={!hasNextMember}
-                            onClick={() => hasNextMember && setInspectMember(filteredMembers[currentMemberIndex + 1])}
+                            onClick={() => hasNextMember && setInspectMember(filteredStaff[currentMemberIndex + 1])}
                             className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                             aria-label="Next Personnel"
                             title="Next Personnel"
                           >
                             <HugeIcon className="ph-bold ph-caret-right text-xs" />
                           </button>
-                          <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                            {String(currentMemberIndex + 1).padStart(2, "0")} of {String(filteredMembers.length).padStart(2, "0")}
+                          <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                            {String(currentMemberIndex + 1).padStart(2, "0")} of {String(filteredStaff.length).padStart(2, "0")}
                           </span>
                         </div>
                       )}
@@ -1886,7 +1894,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
                           {inspectMember.id} • <span className="font-sans font-medium text-gray-600 dark:text-zinc-300">{inspectMember.section || "Administration"}</span>
                         </p>
                       </div>
@@ -1922,14 +1930,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                       <div className="py-2.5 flex items-center justify-between text-xs">
                         <span className="font-medium text-gray-500 dark:text-zinc-400">Employee ID</span>
-                        <span className="font-mono font-semibold text-gray-900 dark:text-zinc-100 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800">
+                        <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800">
                           {inspectMember.id}
                         </span>
                       </div>
                       <div className="py-2.5 flex items-center justify-between text-xs gap-3">
                         <span className="font-medium text-gray-500 dark:text-zinc-400 shrink-0">Official Email</span>
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono text-gray-900 dark:text-zinc-100 truncate text-[11px]" title={inspectMember.email}>
+                          <span className="font-sans tabular-nums text-gray-900 dark:text-zinc-100 truncate text-[11px]" title={inspectMember.email}>
                             {getStaffCleanEmail(inspectMember)}
                           </span>
                           <button
@@ -1971,13 +1979,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                       <div className="py-2.5 flex items-center justify-between text-xs">
                         <span className="font-medium text-gray-500 dark:text-zinc-400">Registered On</span>
-                        <span className="font-mono text-[11px] text-gray-700 dark:text-zinc-300">
+                        <span className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300">
                           {inspectMember.created_at ? formatPHDateTime(inspectMember.created_at) : "N/A"}
                         </span>
                       </div>
                       <div className="py-2.5 flex items-center justify-between text-xs">
                         <span className="font-medium text-gray-500 dark:text-zinc-400">Last Active Session</span>
-                        <span className="font-mono text-[11px] text-gray-700 dark:text-zinc-300">
+                        <span className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300">
                           {inspectMember.last_active ? formatPHDateTime(inspectMember.last_active) : "Never logged in"}
                         </span>
                       </div>
@@ -2011,7 +2019,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   </div>
                 </div>
 
-                <SheetFooter className="p-4 px-6 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 flex items-center justify-between gap-2">
+                <SheetFooter className="p-4 px-6 flex items-center justify-between gap-2">
                   <Button
                     type="button"
                     variant="outline"

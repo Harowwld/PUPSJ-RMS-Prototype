@@ -313,7 +313,7 @@ export default function ForgotPasswordPage() {
                     type="submit"
                     disabled={forgotLoading || !forgotIdentifier.trim()}
                     title="Request Password Reset"
-                    className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                    className="w-full h-11 disabled:opacity-50 flex items-center justify-center"
                   >
                     {forgotLoading ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -344,7 +344,7 @@ export default function ForgotPasswordPage() {
                   </p>
                 </div>
                 <div className="absolute bottom-[64px] left-[52px] right-[52px]">
-                  <Button type="button" onClick={handleClose} className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all">
+                  <Button type="button" onClick={handleClose} className="w-full h-11">
                     Done
                   </Button>
                 </div>
@@ -445,7 +445,7 @@ export default function ForgotPasswordPage() {
                     type="submit"
                     disabled={forgotLoading || (forgotStep === 4 ? !forgotQuestionId || !forgotAnswer.trim() : !forgotResetToken.trim()) || !forgotNewPassword || !forgotConfirmPassword}
                     title="Reset Password"
-                    className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                    className="w-full h-11 disabled:opacity-50 flex items-center justify-center"
                   >
                     {forgotLoading ? (
                       <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>

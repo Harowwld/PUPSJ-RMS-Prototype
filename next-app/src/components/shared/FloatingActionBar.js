@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+
+const getActionVariant = (variant) => ["danger", "success", "warning"].includes(variant) ? variant : "outline";
 
 export default function FloatingActionBar({
   selectedCount = 0,
@@ -56,19 +57,11 @@ export default function FloatingActionBar({
           {actions.map((act, idx) => (
             <Button
               key={act.label || idx}
+              variant={getActionVariant(act.variant)}
               size="sm"
               onClick={act.onClick}
               disabled={act.disabled}
-              className={cn(
-                "flex h-[36px] items-center justify-center rounded-xl px-5 text-[13px] font-medium transition-all active:scale-95 shadow-none cursor-pointer whitespace-nowrap",
-                act.variant === "danger"
-                  ? "btn-brand-red !text-white text-white"
-                  : act.variant === "success"
-                  ? "btn-brand-green !text-white text-white"
-                  : act.variant === "warning"
-                  ? "bg-amber-600 hover:bg-amber-700 !text-white text-white"
-                  : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
-              )}
+              className="px-5"
             >
               {act.label}
             </Button>
@@ -117,17 +110,9 @@ export default function FloatingActionBar({
         {actionLabel && (
           <Button
             size="sm"
+            variant={getActionVariant(actionVariant)}
             onClick={onAction}
-            className={cn(
-              "flex h-[36px] items-center justify-center rounded-xl px-5 text-[13px] font-medium transition-all active:scale-95 shadow-none cursor-pointer whitespace-nowrap",
-              actionVariant === "danger"
-                ? "bg-rose-600 hover:bg-rose-700 active:bg-rose-800 !text-white text-white border-0"
-                : actionVariant === "success"
-                ? "btn-brand-green !text-white text-white"
-                : actionVariant === "warning"
-                ? "bg-amber-600 hover:bg-amber-700 !text-white text-white"
-                : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
-            )}
+            className="px-5"
           >
             {actionLabel}
           </Button>

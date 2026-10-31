@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty";
+import { Attachment01Icon } from "hugeicons-react";
 
 /**
  * Formats bytes into clean human-readable strings (e.g. 111 KB, 12 MB)
@@ -333,7 +335,7 @@ export function UploadProgressCard({
 
       {/* Right: Percentage & optional Cancel */}
       <div className="flex items-center gap-2 shrink-0">
-        <span className="font-mono text-xs text-gray-500 dark:text-zinc-400 font-medium">
+        <span className="font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium">
           {Math.round(progress)}%
         </span>
         {onCancel && (
@@ -721,9 +723,7 @@ export default function FileAttachmentDropzone({
 
       {/* Read-only empty state */}
       {readOnly && items.length === 0 && (
-        <div className="py-4 text-center text-xs text-gray-400 dark:text-zinc-500 italic">
-          No files attached.
-        </div>
+        <EmptyState variant="compact" icon={Attachment01Icon} title="No Files Attached" />
       )}
     </div>
   );

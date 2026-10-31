@@ -344,7 +344,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save FAQ Content"}
               </Button>
@@ -405,7 +405,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Section Heading
                       </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
+                      <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                         {(faqData.heading || "").length}/60
                       </span>
                     </div>
@@ -428,7 +428,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Section Subtitle Description
                       </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
+                      <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                         {(faqData.description || "").length}/200
                       </span>
                     </div>
@@ -453,7 +453,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Questions &amp; Answers List</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-mono">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-sans tabular-nums">
                       {faqData.faqs.length}/{MAX_FAQ_ITEMS}
                     </span>
                   </h3>
@@ -467,7 +467,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   type="button"
                   disabled={faqData.faqs.length >= MAX_FAQ_ITEMS}
                   onClick={addNewFaq}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 transition-all"
+                  className="h-9 px-4 cursor-pointer disabled:opacity-40"
                   title={faqData.faqs.length >= MAX_FAQ_ITEMS ? `Maximum limit of ${MAX_FAQ_ITEMS} questions reached` : "Add question"}
                 >
                   Add Question
@@ -535,7 +535,7 @@ export default function LandingFaqCmsView({ showToast }) {
                         className="px-4 py-3 bg-gray-50/70 dark:bg-zinc-950/40 flex items-center justify-between cursor-pointer select-none gap-3"
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <span className="w-6 h-6 rounded-lg bg-pup-maroon text-white text-[11px] font-bold font-mono flex items-center justify-center shrink-0">
+                          <span className="w-6 h-6 rounded-lg bg-pup-maroon text-white text-[11px] font-bold font-sans tabular-nums flex items-center justify-center shrink-0">
                             {String(originalIdx + 1).padStart(2, "0")}
                           </span>
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -609,7 +609,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                                 Question Text
                               </label>
-                              <span className="text-[11px] text-gray-400 font-mono">
+                              <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                                 {item.q.length}/140
                               </span>
                             </div>
@@ -628,7 +628,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                                 Answer Explanation
                               </label>
-                              <span className="text-[11px] text-gray-400 font-mono">
+                              <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                                 {item.a.length}/400
                               </span>
                             </div>
@@ -648,7 +648,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                                 Category Tag
                               </label>
-                              <span className="text-[11px] text-gray-400 font-mono">
+                              <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                                 {(item.category || "").length}/30
                               </span>
                             </div>
@@ -695,7 +695,7 @@ export default function LandingFaqCmsView({ showToast }) {
 
                               {/* Quick Presets row */}
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono uppercase tracking-wider mr-1">
+                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums uppercase tracking-wider mr-1">
                                   Presets:
                                 </span>
                                 {STANDARD_CATEGORIES.map((cat) => {
@@ -707,7 +707,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                       type="button"
                                       onClick={() => updateFaqItem(originalIdx, "category", cat)}
                                       className={cn(
-                                        "px-2.5 py-0.5 rounded-lg text-[10px] font-mono transition-all cursor-pointer border",
+                                        "px-2.5 py-0.5 rounded-lg text-[10px] font-sans tabular-nums transition-all cursor-pointer border",
                                         isSelected
                                           ? "bg-pup-maroon text-white border-pup-maroon font-bold shadow-xs"
                                           : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border-transparent hover:border-border dark:hover:border-zinc-700"
@@ -759,7 +759,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   </p>
                 </div>
 
-                <span className="text-xs font-mono text-gray-400">
+                <span className="text-xs font-sans tabular-nums text-gray-400">
                   {faqData.faqs.length} Total Questions
                 </span>
               </div>

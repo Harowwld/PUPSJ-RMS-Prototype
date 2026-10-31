@@ -88,7 +88,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
       >
         <HugeIcon className="ph-bold ph-minus text-xs" />
       </button>
-      <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-mono">
+      <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-sans tabular-nums">
         {current}d
       </span>
       <button
@@ -298,7 +298,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 type="button"
                 onClick={() => setConfirmSaveOpen(true)}
                 disabled={!isModified || saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Standards"}
               </Button>
@@ -343,7 +343,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   {activePreset?.description}
                 </span>
               </div>
-              <span className="text-xs font-mono font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-1 rounded-lg border border-border/70 shrink-0 self-start sm:self-auto shadow-2xs">
+              <span className="text-xs font-sans tabular-nums font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-1 rounded-lg border border-border/70 shrink-0 self-start sm:self-auto shadow-2xs">
                 {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
               </span>
             </div>
@@ -390,6 +390,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   </span>
                 </div>
                 <Switch
+                  aria-label="Business days only"
                   checked={standards.workingDaysOnly}
                   onCheckedChange={(checked) =>
                     setStandards((prev) => ({
@@ -513,7 +514,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Simple Tier
                         </span>
-                        <span className="text-[10px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.2 rounded-full border border-emerald-200/50">
+                        <span className="text-[10px] font-sans tabular-nums font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.2 rounded-full border border-emerald-200/50">
                           {standards.simpleDays} {unitSuffix}
                         </span>
                       </div>
@@ -522,7 +523,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono text-right">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-sans tabular-nums text-right">
                     {formatCharterDeadline(simpleDeadline)}
                   </span>
                 </div>
@@ -538,7 +539,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Complex Tier
                         </span>
-                        <span className="text-[10px] font-mono font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.2 rounded-full border border-amber-200/50">
+                        <span className="text-[10px] font-sans tabular-nums font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.2 rounded-full border border-amber-200/50">
                           {standards.complexDays} {unitSuffix}
                         </span>
                       </div>
@@ -547,7 +548,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono text-right">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-sans tabular-nums text-right">
                     {formatCharterDeadline(complexDeadline)}
                   </span>
                 </div>
@@ -563,7 +564,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Technical Tier
                         </span>
-                        <span className="text-[10px] font-mono font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-1.5 py-0.2 rounded-full border border-purple-200/50">
+                        <span className="text-[10px] font-sans tabular-nums font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-1.5 py-0.2 rounded-full border border-purple-200/50">
                           {standards.highlyTechnicalDays} {unitSuffix}
                         </span>
                       </div>
@@ -572,7 +573,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-mono text-right">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 font-sans tabular-nums text-right">
                     {formatCharterDeadline(technicalDeadline)}
                   </span>
                 </div>
@@ -591,11 +592,11 @@ export default function ServiceStandardsTab({ showToast }) {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-zinc-300 dark:text-zinc-400 pt-1 border-t border-white/10">
-                    <span>Simple: <strong className="text-white font-mono">{standards.simpleDays}d</strong></span>
+                    <span>Simple: <strong className="text-white font-sans tabular-nums">{standards.simpleDays}d</strong></span>
                     <span>·</span>
-                    <span>Complex: <strong className="text-white font-mono">{standards.complexDays}d</strong></span>
+                    <span>Complex: <strong className="text-white font-sans tabular-nums">{standards.complexDays}d</strong></span>
                     <span>·</span>
-                    <span>Technical: <strong className="text-white font-mono">{standards.highlyTechnicalDays}d</strong></span>
+                    <span>Technical: <strong className="text-white font-sans tabular-nums">{standards.highlyTechnicalDays}d</strong></span>
                   </div>
                 </div>
               </div>

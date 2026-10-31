@@ -25,6 +25,7 @@ import SectionsTab from "./system-config/SectionsTab"
 import BulkImportTab from "./system-config/BulkImportTab"
 import RecognitionTemplatesTab from "./system-config/RecognitionTemplatesTab"
 import { formatErrorMessage } from "@/lib/errorUtils"
+import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
 
 const SYSTEM_CONFIG_SUB_TABS = ["document-types", "degree-programs", "course-blocks", "bulk-import", "recognition-templates"]
 
@@ -990,15 +991,13 @@ export default function SystemConfigTab({
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
         <Card className="flex flex-[1_0_auto] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-border">
           <CardContent className="flex flex-col p-6">
-            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   Could not load configuration
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                <EmptyDescription>
                   {activeError}
                 </EmptyDescription>
               </EmptyHeader>

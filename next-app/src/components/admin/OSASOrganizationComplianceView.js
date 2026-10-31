@@ -42,11 +42,13 @@ import {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
+  EmptyState,
 } from "@/components/ui/empty";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon } from "hugeicons-react";
 
 const CATEGORIES = ["All", "Academic", "Non-Academic"];
 
@@ -834,7 +836,7 @@ export default function OSASOrganizationComplianceView({
                   type="button"
                   onClick={handleOpenPdfReport}
                   disabled={loading || organizations.length === 0 || isGeneratingPdf}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 cursor-pointer"
                 >
                   {isGeneratingPdf ? (
                     <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
@@ -903,7 +905,7 @@ export default function OSASOrganizationComplianceView({
                                       <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
                                         Percentage of recognized student organizations with 100% completed compliance requirements.
                                       </p>
-                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-border/60 dark:border-border">
+                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-sans tabular-nums border border-border/60 dark:border-border">
                                         (Compliant Orgs / Total Orgs) × 100
                                       </div>
                                     </TooltipContent>
@@ -1123,7 +1125,7 @@ export default function OSASOrganizationComplianceView({
                                       <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
                                         Constitution & By-Laws (CBL) digitization and verification completion across all registered organizations.
                                       </p>
-                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-border/60 dark:border-border">
+                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-sans tabular-nums border border-border/60 dark:border-border">
                                         (Archived CBLs / Total Organizations) × 100
                                       </div>
                                     </TooltipContent>
@@ -1390,7 +1392,7 @@ export default function OSASOrganizationComplianceView({
                               </span>
                               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 {org.acronym && (
-                                  <span className="px-1.5 py-0.5 text-[10px] font-bold font-mono tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border shrink-0">
+                                  <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border shrink-0">
                                     {org.acronym}
                                   </span>
                                 )}
@@ -1423,7 +1425,7 @@ export default function OSASOrganizationComplianceView({
                                   {org.adviserName}
                                 </div>
                                 {org.adviserEmail ? (
-                                  <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono truncate mt-0.5">
+                                  <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate mt-0.5">
                                     {org.adviserEmail}
                                   </div>
                                 ) : (
@@ -1509,7 +1511,7 @@ export default function OSASOrganizationComplianceView({
                                     style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
                                   />
                                 </div>
-                                <span className="font-mono text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[32px] text-right">
+                                <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[32px] text-right">
                                   {score}%
                                 </span>
                                 <Badge
@@ -1548,17 +1550,12 @@ export default function OSASOrganizationComplianceView({
                   ))}
                 </div>
               ) : (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-buildings text-3xl text-gray-400 dark:text-zinc-500" />
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Student Organizations Found</EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia><EmptyBuilding03Icon size="1em" /></EmptyMedia>
+                      <EmptyTitle>No Student Organizations Found</EmptyTitle>
+                      <EmptyDescription>
                         {activeChips.length > 0
                           ? "No organizations match the selected filter criteria. Try clearing filters."
                           : "No recognized student organizations registered in OSAS."}
@@ -1571,7 +1568,7 @@ export default function OSASOrganizationComplianceView({
                           variant="outline"
                           onClick={handleResetFilters}
                           title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
                           Reset Filters
                         </Button>
@@ -1659,10 +1656,10 @@ export default function OSASOrganizationComplianceView({
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
             {/* TOP HEADER: Organization Leadership Roster + < > 01 of XX + X button */}
-            <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+            <SheetHeader className="shrink-0 p-0">
               <div className="flex items-center justify-between px-6 py-4">
                 <div>
-                  <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                  <SheetTitle>
                     Organization Leadership Roster
                   </SheetTitle>
                   <SheetDescription className="sr-only">
@@ -1693,7 +1690,7 @@ export default function OSASOrganizationComplianceView({
                       >
                         <HugeIcon className="ph-bold ph-caret-right text-xs" />
                       </button>
-                      <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                      <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                         {String(Math.max(1, currentOrgIndex + 1)).padStart(2, "0")} of {String(sortedOrganizations.length).padStart(2, "0")}
                       </span>
                     </div>
@@ -1764,7 +1761,7 @@ export default function OSASOrganizationComplianceView({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     {selectedOrgForOfficers?.acronym && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold font-mono tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border">
+                      <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border">
                         {selectedOrgForOfficers.acronym}
                       </span>
                     )}
@@ -1823,7 +1820,7 @@ export default function OSASOrganizationComplianceView({
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                     Accredited Officer Roster
                   </h4>
-                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 font-mono">
+                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                     {selectedOrgForOfficers?.officers?.length || 0} registered
                   </span>
                 </div>
@@ -1859,19 +1856,14 @@ export default function OSASOrganizationComplianceView({
 
                     if (filtered.length === 0) {
                       return (
-                        <div className="py-10 px-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 text-center">
-                          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center mx-auto mb-2.5 shadow-xs">
-                            <HugeIcon className="ph-duotone ph-users-three text-xl" />
-                          </div>
-                          <h4 className="text-xs font-bold text-gray-900 dark:text-white">
-                            No Officers Found
-                          </h4>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 max-w-xs mx-auto">
-                            {officerSearch.trim()
-                              ? "No student officers match your search query."
-                              : "This organization has no active student officers authorized by OSAS."}
-                          </p>
-                        </div>
+                        <EmptyState
+                          variant="compact"
+                          icon={UserGroupIcon}
+                          title="No Officers Found"
+                          description={officerSearch.trim()
+                            ? "No student officers match your search query."
+                            : "This organization has no active student officers authorized by OSAS."}
+                        />
                       );
                     }
 
@@ -1927,7 +1919,7 @@ export default function OSASOrganizationComplianceView({
 
                               <div className="mt-0.5 flex items-center gap-2 flex-wrap text-[11px] text-gray-500 dark:text-zinc-400">
                                 {officer.studentNo && (
-                                  <span className="font-mono text-[10px] text-gray-600 dark:text-zinc-400">
+                                  <span className="font-sans tabular-nums text-[10px] text-gray-600 dark:text-zinc-400">
                                     {officer.studentNo}
                                   </span>
                                 )}
@@ -1942,7 +1934,7 @@ export default function OSASOrganizationComplianceView({
                                       description: `${officer.name || "Officer"}'s email copied to clipboard.`,
                                     });
                                   }}
-                                  className="group/btn inline-flex items-center gap-1 font-mono text-[10px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+                                  className="group/btn inline-flex items-center gap-1 font-sans tabular-nums text-[10px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                                   title="Click to copy email"
                                 >
                                   <HugeIcon className="ph-bold ph-envelope-simple text-[11px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
@@ -1969,7 +1961,7 @@ export default function OSASOrganizationComplianceView({
             </div>
 
             {/* STICKY SHEET FOOTER */}
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-end shrink-0">
+            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -2014,18 +2006,18 @@ export default function OSASOrganizationComplianceView({
           <DialogContent
             hideClose={true}
             className={cn(
-              "flex flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard rounded-2xl dark:border-border dark:bg-muted z-[70] gap-0",
+              "flex flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-normal ease-standard rounded-2xl dark:border-border z-[70] gap-0 bg-white dark:bg-card",
               isFullscreenPreview
                 ? "h-[96vh] w-[98vw] max-w-[98vw] sm:max-w-[98vw]"
                 : "h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] xl:max-w-[1400px]"
             )}
           >
-            <DialogHeader className="shrink-0 bg-gray-50 dark:bg-white/5 border-b border-border dark:border-border px-6 py-4 flex flex-row items-center justify-between gap-4">
+            <DialogHeader className="shrink-0 px-6 py-4 flex flex-row items-center justify-between gap-4">
               <div className="min-w-0">
-                <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em]">
+                <DialogTitle className="text-left">
                   Official OSAS Student Organization Compliance Report
                 </DialogTitle>
-                <DialogDescription className="text-left font-normal text-gray-900 dark:text-zinc-300 text-xs mt-0.5">
+                <DialogDescription className="text-left mt-0.5">
                   Accreditation and institutional audit report: PUP San Juan OSAS
                 </DialogDescription>
               </div>
@@ -2087,7 +2079,7 @@ export default function OSASOrganizationComplianceView({
               )}
             </div>
 
-            <div className="flex shrink-0 items-center justify-between bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
+            <div className="flex shrink-0 items-center justify-between px-6 py-4">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -2124,7 +2116,7 @@ export default function OSASOrganizationComplianceView({
                 <Button
                   onClick={handleDownloadPdf}
                   disabled={!pdfBlobUrl || isGeneratingPdf}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                  className="h-10 px-5 disabled:opacity-50 cursor-pointer"
                 >
                   Download PDF
                 </Button>

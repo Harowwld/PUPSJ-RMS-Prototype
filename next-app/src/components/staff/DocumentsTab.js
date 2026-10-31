@@ -23,6 +23,7 @@ import {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
+  EmptyState,
 } from "@/components/ui/empty";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -35,6 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon } from "hugeicons-react";
 
 const DEFAULT_KPI_ORDER = ["compliant", "incomplete", "rate"];
 const STORAGE_KEY = "pupsj_staff_docs_matrix_kpi_order";
@@ -917,7 +919,7 @@ export default function DocumentsTab({
                     <span>All Students</span>
                     <span
                       className={cn(
-                        "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                        "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         matrixStatusFilter === "all"
                           ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
                           : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -943,7 +945,7 @@ export default function DocumentsTab({
                     <span>Incomplete / Missing</span>
                     <span
                       className={cn(
-                        "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                        "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         matrixStatusFilter === "incomplete"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                           : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -969,7 +971,7 @@ export default function DocumentsTab({
                     <span>Fully Compliant</span>
                     <span
                       className={cn(
-                        "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                        "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                         matrixStatusFilter === "compliant"
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                           : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -995,7 +997,7 @@ export default function DocumentsTab({
                       placeholder="Search student no., name, or section..."
                       className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                     />
-                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                       {filteredMatrixRecords.length > 0
                         ? filteredMatrixRecords.length.toLocaleString()
                         : "0"}
@@ -1078,34 +1080,27 @@ export default function DocumentsTab({
                   <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
                 ) : docsError ? (
                   <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
-                    <Empty className="h-full min-h-0 flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <EmptyMedia className="w-16 h-16 rounded-2xl bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-warning-circle text-2xl text-pup-maroon dark:text-primary" />
-                        </EmptyMedia>
-                        <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           Could Not Load Compliance Matrix
                         </EmptyTitle>
-                        <EmptyDescription className="text-xs font-normal text-gray-500 mt-1 max-w-md dark:text-zinc-400">
+                        <EmptyDescription>
                           {docsError}
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>
                   </div>
                 ) : filteredMatrixRecords.length === 0 ? (
-                  <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[460px] w-full">
-                    <Empty className="flex flex-1 h-full min-h-[380px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-5">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[460px] w-full">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           No Matching Students
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        <EmptyDescription>
                           We could not find any student records matching your selected matrix filters.
                         </EmptyDescription>
                       </EmptyHeader>
@@ -1115,7 +1110,7 @@ export default function DocumentsTab({
                           variant="outline"
                           onClick={handleClearMatrixFilters}
                           title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
                           Reset Filters
                         </Button>
@@ -1233,7 +1228,7 @@ export default function DocumentsTab({
                             className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                           >
                             {/* Sticky Student No */}
-                            <td className="p-4 pl-6 sticky left-0 z-20 bg-white dark:bg-card group-hover:bg-gray-50 dark:group-hover:bg-zinc-800/90 border-r border-border/70 font-mono text-xs text-gray-900 dark:text-zinc-100 font-semibold w-[180px] min-w-[180px] max-w-[180px] whitespace-nowrap">
+                            <td className="p-4 pl-6 sticky left-0 z-20 bg-white dark:bg-card group-hover:bg-gray-50 dark:group-hover:bg-zinc-800/90 border-r border-border/70 font-sans tabular-nums text-xs text-gray-900 dark:text-zinc-100 font-semibold w-[180px] min-w-[180px] max-w-[180px] whitespace-nowrap">
                               {item.student.studentNo}
                             </td>
 
@@ -1446,14 +1441,14 @@ export default function DocumentsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted gap-0">
-            <DialogHeader className="shrink-0 border-b border-border bg-white p-6 pb-4 dark:border-border dark:bg-card text-left">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-border gap-0 bg-white dark:bg-card">
+            <DialogHeader className="shrink-0 p-6 pb-0 text-left">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-10">
-                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  <DialogTitle>
                     Document View: {selectedDoc?.doc_type || "Loading..."}
                   </DialogTitle>
-                  <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+                  <DialogDescription className="mt-1">
                     Viewing details for student {selectedDoc?.student_no}.
                   </DialogDescription>
                 </div>
@@ -1506,10 +1501,11 @@ export default function DocumentsTab({
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-white dark:bg-card">
-                    <div className="flex flex-col items-center gap-4 text-gray-400">
-                      <HugeIcon className="ph-duotone ph-file-dashed text-xl" />
-                      <p className="text-sm font-medium">No document file available.</p>
-                    </div>
+                    <EmptyState
+                      icon={FileRemoveIcon}
+                      title="No Document File Available"
+                      description="This record has no attached digital file."
+                    />
                   </div>
                 )}
               </div>
@@ -1533,7 +1529,7 @@ export default function DocumentsTab({
                       <label className="text-[10px] font-semibold tracking-widest text-gray-400">
                         Student Number
                       </label>
-                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50 font-mono">
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50 font-sans tabular-nums">
                         {selectedDoc?.student_no}
                       </p>
                     </div>
@@ -1624,7 +1620,7 @@ export default function DocumentsTab({
               </div>
             </div>
 
-            <div className="flex shrink-0 justify-between items-center gap-3 border-t border-border bg-white p-4 dark:border-border dark:bg-card">
+            <div className="flex shrink-0 justify-between items-center gap-3 p-4">
               <div className="flex items-center gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1692,7 +1688,7 @@ export default function DocumentsTab({
                     }
                   }}
                   disabled={!selectedDoc?.doc?.id || !!selectedDoc?.doc?.source_type}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                  className="h-10 px-5 cursor-pointer disabled:opacity-50"
                 >
                   Update Document
                 </Button>

@@ -101,10 +101,10 @@ export default function PermanentAdmissionRecordSheet({
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* 1. TOP HEADER: Title + Sequential Navigation (< > 01 of XX) + Squircle Close */}
-        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+        <SheetHeader className="shrink-0 p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+              <SheetTitle>
                 Permanent Admission Record
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -135,7 +135,7 @@ export default function PermanentAdmissionRecordSheet({
                   >
                     <HugeIcon className="ph-bold ph-caret-right text-xs" />
                   </button>
-                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                     {String(currentIndex + 1).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
                   </span>
                 </div>
@@ -201,7 +201,7 @@ export default function PermanentAdmissionRecordSheet({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-mono font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
+              <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
                 {docCategory}
               </span>
               <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
@@ -307,7 +307,7 @@ export default function PermanentAdmissionRecordSheet({
                       {originalFilename}
                     </p>
                     {sizeBytes ? (
-                      <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                      <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                         {(sizeBytes / 1024).toFixed(1)} KB · Digitized Record
                       </p>
                     ) : null}
@@ -332,7 +332,7 @@ export default function PermanentAdmissionRecordSheet({
         </div>
 
         {/* 4. Sheet Footer */}
-        <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
           <Button
             type="button"
             variant="outline"

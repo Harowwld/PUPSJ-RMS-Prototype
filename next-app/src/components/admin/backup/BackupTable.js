@@ -22,6 +22,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 import { formatBytes } from "@/lib/utils"
 import BackupPagination from "./BackupPagination"
 import { cn } from "@/lib/utils"
+import { Database01Icon as EmptyDatabase01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -108,19 +109,14 @@ export default function BackupTable({
   return (
     <>
       {sortedAndPaginatedBackups.length === 0 ? (
-        <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-          <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-            <EmptyHeader className="flex flex-col items-center gap-0">
-              <div className="relative mb-6">
-                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon className={cn("ph-duotone text-3xl text-gray-400 dark:text-zinc-500", isFilterActive ? "ph-magnifying-glass" : "ph-database")} />
-                </EmptyMedia>
-              </div>
-              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+        <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia>{isFilterActive ? <EmptySearch01Icon size="1em" /> : <EmptyDatabase01Icon size="1em" />}</EmptyMedia>
+              <EmptyTitle>
                 {isFilterActive ? "No matches found" : "No backups detected"}
               </EmptyTitle>
-              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+              <EmptyDescription>
                 {isFilterActive 
                   ? "Adjust your search parameters or date range to locate specific historical records." 
                   : "There are no local database backups in the history log yet."}
@@ -132,14 +128,14 @@ export default function BackupTable({
                   variant="outline"
                   onClick={onClearFilters}
                   title="Reset Filters"
-                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
                   Reset Filters
                 </Button>
               ) : (
                 <Button
                   onClick={handleGenerateBackup}
-                  className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 cursor-pointer"
                 >
                   Create Backup
                 </Button>
@@ -150,7 +146,7 @@ export default function BackupTable({
       ) : (
         <div className="w-full flex-[1_0_auto] flex flex-col">
           <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
-            <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+            <span className="text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               Showing {sortedAndPaginatedBackups.length} of {backups.length} {backups.length === 1 ? "backup" : "backups"}
             </span>
             <TableScrollControls
@@ -314,7 +310,7 @@ export default function BackupTable({
                         isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
                       )}>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]" title={b.filename}>
+                          <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]" title={b.filename}>
                             {b.filename}
                           </span>
                           {getBackupTypeBadge(b)}

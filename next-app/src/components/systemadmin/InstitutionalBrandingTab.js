@@ -405,7 +405,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Branding"}
               </Button>
@@ -661,7 +661,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         }
                         placeholder="e.g. OFFICIAL ACADEMIC ARCHIVES & RECORDS"
                         maxLength={100}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-mono dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                       />
                     </div>
                   </div>
@@ -692,7 +692,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           }
                           placeholder={branding.campusName ? "Default: CAMPUS REGISTRAR" : "Default: REGISTRAR"}
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-mono dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                         />
                       </div>
 
@@ -710,7 +710,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           }
                           placeholder={branding.campusName ? "Default: CAMPUS DIRECTOR" : "Default: HEAD OF INSTITUTION"}
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-mono dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                         />
                       </div>
                     </div>
@@ -755,7 +755,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         }
                         placeholder="#7A1E28"
                         maxLength={7}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-mono font-semibold dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums font-semibold dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                       />
                     </div>
                   </div>
@@ -919,7 +919,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   </h3>
 
                   {/* Sample Document ID */}
-                  <p className="text-[9px] italic text-gray-500 mt-1 font-mono">
+                  <p className="text-[9px] italic text-gray-500 mt-1 font-sans tabular-nums">
                     Document ID: {derivedPrefix}-SPEC-2026-XXXX
                   </p>
 
@@ -965,7 +965,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           Auto
                         </span>
                       </div>
-                      <span className="font-semibold font-mono text-gray-900">{derivedPrefix}</span>
+                      <span className="font-semibold font-sans tabular-nums text-gray-900">{derivedPrefix}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border text-gray-600">
                       <span>Primary Seal</span>

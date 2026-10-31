@@ -93,7 +93,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
       >
         <HugeIcon className="ph-bold ph-minus text-xs" />
       </button>
-      <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-mono">
+      <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-sans tabular-nums">
         {current}d
       </span>
       <button
@@ -286,13 +286,13 @@ export default function ServiceStandardsSheet({
           className="w-full sm:max-w-lg md:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
           {/* Header strictly typographic per COMPONENT_STANDARDS.md */}
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                <SheetTitle>
                   Turnaround Standards
                 </SheetTitle>
-                <SheetDescription className="text-xs text-gray-500 dark:text-zinc-400 font-normal mt-0.5">
+                <SheetDescription className="mt-0.5">
                   Configure turnaround presets, SLA thresholds, and calendar rules for document processing.
                 </SheetDescription>
               </div>
@@ -346,7 +346,7 @@ export default function ServiceStandardsSheet({
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                    <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
                       {activePreset?.badge || "Custom"}
                     </span>
                     <span
@@ -393,7 +393,7 @@ export default function ServiceStandardsSheet({
                             )}>
                               {p.name}
                             </span>
-                            <span className="text-[10px] font-mono font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
+                            <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
                               {p.simpleDays}-{p.complexDays}-{p.highlyTechnicalDays}d
                             </span>
                           </div>
@@ -446,6 +446,7 @@ export default function ServiceStandardsSheet({
                       </span>
                     </div>
                     <Switch
+                      aria-label="Business days only"
                       checked={standards.workingDaysOnly}
                       onCheckedChange={(checked) =>
                         setStandards((prev) => ({
@@ -574,11 +575,11 @@ export default function ServiceStandardsSheet({
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           <span className="font-medium text-gray-900 dark:text-zinc-100">Simple Tier</span>
-                          <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400">
+                          <span className="text-[10px] font-sans tabular-nums text-emerald-700 dark:text-emerald-400">
                             ({standards.simpleDays} {unitSuffix})
                           </span>
                         </div>
-                        <span className="font-mono font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100">
                           {formatCharterDeadline(simpleDeadline)}
                         </span>
                       </div>
@@ -587,11 +588,11 @@ export default function ServiceStandardsSheet({
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                           <span className="font-medium text-gray-900 dark:text-zinc-100">Complex Tier</span>
-                          <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400">
+                          <span className="text-[10px] font-sans tabular-nums text-amber-700 dark:text-amber-400">
                             ({standards.complexDays} {unitSuffix})
                           </span>
                         </div>
-                        <span className="font-mono font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100">
                           {formatCharterDeadline(complexDeadline)}
                         </span>
                       </div>
@@ -600,11 +601,11 @@ export default function ServiceStandardsSheet({
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                           <span className="font-medium text-gray-900 dark:text-zinc-100">Technical Tier</span>
-                          <span className="text-[10px] font-mono text-purple-700 dark:text-purple-400">
+                          <span className="text-[10px] font-sans tabular-nums text-purple-700 dark:text-purple-400">
                             ({standards.highlyTechnicalDays} {unitSuffix})
                           </span>
                         </div>
-                        <span className="font-mono font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100">
                           {formatCharterDeadline(technicalDeadline)}
                         </span>
                       </div>
@@ -616,7 +617,7 @@ export default function ServiceStandardsSheet({
           </div>
 
           {/* Sticky Sheet Footer */}
-          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between shrink-0">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -641,7 +642,7 @@ export default function ServiceStandardsSheet({
                 type="button"
                 onClick={() => setConfirmSaveOpen(true)}
                 disabled={!isModified || saving || loading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
               >
                 {saving ? "Saving..." : "Save Standards"}
               </Button>

@@ -148,14 +148,14 @@ export default function LandingFooter() {
             <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2.5rem] p-8 sm:p-10 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-8 shadow-xl">
               {/* Registrar Schedule */}
               <div>
-                <h4 className="text-[11px] uppercase font-mono font-bold text-red-400 tracking-wider mb-4">
+                <h4 className="text-[11px] uppercase font-sans tabular-nums font-bold text-red-400 tracking-wider mb-4">
                   {footerData.scheduleEyebrow || "Registrar Schedule"}
                 </h4>
                 <div className="space-y-2.5">
                   {(footerData.scheduleItems || []).map((item, idx) => (
                     <div key={idx} className="flex flex-col gap-1 pb-2.5 border-b border-white/5 last:border-0 last:pb-0">
                       <span className="text-[11px] text-zinc-500 font-medium">{item.label}</span>
-                      <span className={cn("text-[13px] font-mono", item.status === "closed" ? "text-rose-400" : item.status === "break" ? "text-zinc-400" : "text-white font-medium")}>{item.value}</span>
+                      <span className={cn("text-[13px] font-sans tabular-nums", item.status === "closed" ? "text-rose-400" : item.status === "break" ? "text-zinc-400" : "text-white font-medium")}>{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -163,17 +163,17 @@ export default function LandingFooter() {
               
               {/* Direct Contact Channels */}
               <div>
-                <h4 className="text-[11px] uppercase font-mono font-bold text-red-400 tracking-wider mb-4">
+                <h4 className="text-[11px] uppercase font-sans tabular-nums font-bold text-red-400 tracking-wider mb-4">
                   {footerData.contactsEyebrow || "Official Desk"}
                 </h4>
                 <div className="space-y-2.5">
                   {(footerData.contactItems || []).map((contact, idx) => (
                     <div key={idx} className="flex flex-col gap-1 pb-2.5 border-b border-white/5 last:border-0 last:pb-0">
-                      <span className="text-[11px] font-mono text-zinc-500 uppercase font-medium">{contact.label}</span>
+                      <span className="text-[11px] font-sans tabular-nums text-zinc-500 uppercase font-medium">{contact.label}</span>
                       {contact.type === "email" ? (
                         <a href={`mailto:${contact.value}`} className="text-[13px] font-medium text-zinc-200 hover:text-white transition-colors">{contact.value}</a>
                       ) : (
-                        <span className="text-[13px] font-mono text-zinc-300">{contact.value}</span>
+                        <span className="text-[13px] font-sans tabular-nums text-zinc-300">{contact.value}</span>
                       )}
                     </div>
                   ))}
@@ -183,8 +183,8 @@ export default function LandingFooter() {
             
             {/* Sub-footer Links */}
             <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[1.5rem] px-8 sm:px-10 py-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-              <span className="text-[11px] font-mono text-zinc-500">{footerData.copyrightText}</span>
-              <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} title="Scroll to Top" className="text-[11px] font-mono font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
+              <span className="text-[11px] font-sans tabular-nums text-zinc-500">{footerData.copyrightText}</span>
+              <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} title="Scroll to Top" className="text-[11px] font-sans tabular-nums font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
                 Top
                 <HugeIcon className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
               </button>

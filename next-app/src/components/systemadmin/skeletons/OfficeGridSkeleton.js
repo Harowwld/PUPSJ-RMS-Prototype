@@ -57,7 +57,7 @@ export default function OfficeGridSkeleton({ layoutView = "grid", count = 6 }) {
                             i % 2 === 0 ? "w-24" : "w-28"
                           )}
                         />
-                        <Skeleton className="h-2.5 w-16 font-mono rounded dark:bg-muted" />
+                        <Skeleton className="h-2.5 w-16 font-sans tabular-nums rounded dark:bg-muted" />
                       </div>
                     </div>
                   </td>

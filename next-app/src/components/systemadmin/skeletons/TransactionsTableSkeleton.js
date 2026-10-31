@@ -56,7 +56,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                         i % 2 === 0 ? "w-28" : "w-36"
                       )}
                     />
-                    <Skeleton className="h-2.5 w-20 font-mono rounded dark:bg-muted" />
+                    <Skeleton className="h-2.5 w-20 font-sans tabular-nums rounded dark:bg-muted" />
                   </div>
                 </td>
                 <td className="py-3 px-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
@@ -78,7 +78,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
                 <td className="py-3 px-4 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
-                  <Skeleton className="h-3 w-16 font-mono rounded dark:bg-muted" />
+                  <Skeleton className="h-3 w-16 font-sans tabular-nums rounded dark:bg-muted" />
                 </td>
                 <td className="py-3 px-2 align-middle text-center border-b border-border dark:border-border w-12 min-w-[48px] max-w-[48px]">
                   <Skeleton className="h-7 w-7 mx-auto rounded-lg dark:bg-muted" />

@@ -5,13 +5,14 @@ import HugeIcon from "@/components/shared/HugeIcon";
 import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import {
-  PhShield,
-  PhWarning,
-  PhChartLine,
-  PhLock,
-  PhUnlock,
-  PhGauge,
-} from "@phosphor-icons/react"
+  Shield01Icon,
+  AlertCircleIcon,
+  Analytics01Icon,
+  LockIcon,
+  SquareUnlock01Icon,
+  DashboardSpeed01Icon,
+} from "hugeicons-react"
+import { EmptyState } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { RefreshButton } from "@/components/shared/RefreshButton"
@@ -165,7 +166,7 @@ export default function RateLimitingTab() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-pup-maroon dark:text-primary shrink-0">
-              <PhShield className="h-5 w-5" />
+              <Shield01Icon className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -182,7 +183,7 @@ export default function RateLimitingTab() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-pup-maroon dark:text-primary shrink-0">
-              <PhChartLine className="h-5 w-5" />
+              <Analytics01Icon className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -196,7 +197,7 @@ export default function RateLimitingTab() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-              <PhWarning className="h-5 w-5" />
+              <AlertCircleIcon className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -221,10 +222,12 @@ export default function RateLimitingTab() {
         </div>
         <div>
           {data.recentViolations.length === 0 ? (
-            <div className="p-8 text-center text-gray-900 dark:text-zinc-300">
-              <PhShield className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-zinc-600" />
-              <p className="text-xs font-medium">No recent violations</p>
-            </div>
+            <EmptyState
+              variant="compact"
+              icon={Shield01Icon}
+              title="No Recent Violations"
+              description="Recent rate-limit violations will appear here when detected."
+            />
           ) : (
             <div
               ref={violationsScroll.tableContainerRef}
@@ -257,10 +260,10 @@ export default function RateLimitingTab() {
                   {data.recentViolations.map((violation) => (
                     <tr key={violation.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
                       <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{violation.endpoint_type}</td>
-                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 text-xs font-sans tabular-nums text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70">
                         {violation.identifier}
                       </td>
-                      <td className="p-4 text-xs font-mono text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                      <td className="p-4 text-xs font-sans tabular-nums text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                         {violation.ip_address}
                       </td>
                       <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
@@ -288,7 +291,7 @@ export default function RateLimitingTab() {
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-primary transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                 aria-label="Clear violation"
                               >
-                                <PhUnlock className="h-4 w-4" />
+                                <SquareUnlock01Icon className="h-4 w-4" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Clear</TooltipContent>
@@ -391,10 +394,12 @@ export default function RateLimitingTab() {
       </div>
       <div>
         {suspiciousIPs.length === 0 ? (
-          <div className="p-8 text-center text-gray-900 dark:text-zinc-300">
-            <PhShield className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-zinc-600" />
-            <p className="text-xs font-medium">No suspicious activity detected</p>
-          </div>
+          <EmptyState
+            variant="compact"
+            icon={Shield01Icon}
+            title="No Suspicious Activity Detected"
+            description="IP addresses flagged for suspicious activity will appear here."
+          />
         ) : (
           <div
             ref={suspiciousScroll.tableContainerRef}
@@ -423,7 +428,7 @@ export default function RateLimitingTab() {
               <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {suspiciousIPs.map((ip, index) => (
                   <tr key={index} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
-                    <td className="p-4 text-xs font-mono font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.ip}</td>
+                    <td className="p-4 text-xs font-sans tabular-nums font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.ip}</td>
                     <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`}
@@ -472,9 +477,9 @@ export default function RateLimitingTab() {
         {/* Apple Segmented Controls */}
         <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border w-fit">
           {[
-            { id: "overview", label: "Overview", icon: PhGauge },
-            { id: "configs", label: "Configurations", icon: PhLock },
-            { id: "suspicious", label: "Suspicious IPs", icon: PhWarning },
+            { id: "overview", label: "Overview", icon: DashboardSpeed01Icon },
+            { id: "configs", label: "Configurations", icon: LockIcon },
+            { id: "suspicious", label: "Suspicious IPs", icon: AlertCircleIcon },
           ].map((tab) => (
             <button
               key={tab.id}

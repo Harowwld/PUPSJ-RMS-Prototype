@@ -119,11 +119,11 @@ export default function OfficeDirectory() {
           className="lg:col-span-7 space-y-3"
         >
           <div className="flex items-center gap-2.5">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#800000] ">
+            <span className="text-[11px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
               Campus Archive &amp; Records
             </span>
             
-            <span className="text-[11px] font-mono text-zinc-500 ">
+            <span className="text-[11px] font-sans tabular-nums text-zinc-500 ">
               San Juan Campus
             </span>
           </div>
@@ -148,10 +148,10 @@ export default function OfficeDirectory() {
         >
           <div className="w-full sm:w-auto min-w-[280px] p-4 sm:p-5 rounded-2xl bg-white  border border-black/[0.06] [0.08] shadow-[0_12px_30px_-10px_rgba(0,0,0,0.06)]">
             <div className="flex items-center justify-between gap-4 mb-2.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400  font-semibold">
+              <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-zinc-400  font-semibold">
                 Desk Operational State
               </span>
-              <span className="text-[11px] font-mono font-bold text-gray-900 ">
+              <span className="text-[11px] font-sans tabular-nums font-bold text-gray-900 ">
                 {manilaInfo.timeStr || "PST (UTC+8)"}
               </span>
             </div>
@@ -165,7 +165,7 @@ export default function OfficeDirectory() {
 
             <div className="mt-3 pt-2.5 border-t border-border  flex items-center justify-between text-[11px] text-zinc-500 ">
               <span>Same-Day Evaluation Cut-off</span>
-              <span className="font-mono font-bold text-[#800000] ">3:00 PM PHT</span>
+              <span className="font-sans tabular-nums font-bold text-[#800000] ">3:00 PM PHT</span>
             </div>
           </div>
         </motion.div>
@@ -195,11 +195,11 @@ export default function OfficeDirectory() {
           <div>
             {/* Location Eyebrow & Badges */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50  border border-red-100  text-[11px] font-mono font-semibold text-[#800000] ">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50  border border-red-100  text-[11px] font-sans tabular-nums font-semibold text-[#800000] ">
                 <HugeIcon  className="ph-bold ph-map-pin text-xs" />
                 <span>Physical Campus Archive</span>
               </div>
-              <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+              <span className="text-[10px] font-sans tabular-nums text-zinc-400 uppercase tracking-wider">
                 Room 101 · Ground Level
               </span>
             </div>
@@ -256,7 +256,7 @@ export default function OfficeDirectory() {
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-3">
                 <HugeIcon  className="ph-bold ph-users-three text-[#800000]  text-sm" />
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-900 ">
+                <span className="text-[11px] font-sans tabular-nums font-bold uppercase tracking-wider text-gray-900 ">
                   Designated Service Windows
                 </span>
               </div>
@@ -266,10 +266,10 @@ export default function OfficeDirectory() {
                 <div className="p-4 rounded-2xl bg-zinc-50/80  border border-black/[0.04] [0.06] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white   font-mono text-[10px] font-bold tracking-wider">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-zinc-900 text-white   font-sans tabular-nums text-[10px] font-bold tracking-wider">
                         WINDOW 01
                       </span>
-                      <span className="text-[10px] font-mono text-emerald-600  font-semibold flex items-center gap-1">
+                      <span className="text-[10px] font-sans tabular-nums text-emerald-600  font-semibold flex items-center gap-1">
                         
                         Undergrad Desk
                       </span>
@@ -281,7 +281,7 @@ export default function OfficeDirectory() {
                       Certificate of Registration (COR), Certified Grade Slips, Assessment validation, and residency verifications.
                     </p>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-mono text-zinc-400">
+                  <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-sans tabular-nums text-zinc-400">
                     Processing time: 1 – 3 working days
                   </div>
                 </div>
@@ -290,10 +290,10 @@ export default function OfficeDirectory() {
                 <div className="p-4 rounded-2xl bg-zinc-50/80  border border-black/[0.04] [0.06] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2.5 py-0.5 rounded-lg bg-[#800000] text-white   font-mono text-[10px] font-bold tracking-wider">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-[#800000] text-white   font-sans tabular-nums text-[10px] font-bold tracking-wider">
                         WINDOW 02
                       </span>
-                      <span className="text-[10px] font-mono text-[#800000]  font-semibold flex items-center gap-1">
+                      <span className="text-[10px] font-sans tabular-nums text-[#800000]  font-semibold flex items-center gap-1">
                         
                         Alumni Desk
                       </span>
@@ -305,7 +305,7 @@ export default function OfficeDirectory() {
                       Official Transcript of Records (TOR), Second Diploma copy, CAV (DFA/CHED Apostille), and dry-seal release.
                     </p>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-mono text-zinc-400">
+                  <div className="mt-3 pt-2 border-t border-border/60  text-[10px] font-sans tabular-nums text-zinc-400">
                     Processing time: 7 – 20 working days
                   </div>
                 </div>
@@ -336,10 +336,10 @@ export default function OfficeDirectory() {
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#800000] ">
+                <span className="text-[10px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
                   Operating Calendar
                 </span>
-                <span className="text-[10px] font-mono text-zinc-400">
+                <span className="text-[10px] font-sans tabular-nums text-zinc-400">
                   Academic Year 2025–2026
                 </span>
               </div>
@@ -355,14 +355,14 @@ export default function OfficeDirectory() {
               <div className="space-y-3 text-xs">
                 <div className="flex items-center justify-between pb-2.5 border-b border-border ">
                   <span className="font-semibold text-gray-700 ">Monday – Friday</span>
-                  <span className="font-mono font-bold text-gray-950 ">8:00 AM – 5:00 PM</span>
+                  <span className="font-sans tabular-nums font-bold text-gray-950 ">8:00 AM – 5:00 PM</span>
                 </div>
                 <div className="flex items-center justify-between pb-2.5 border-b border-border ">
                   <div className="flex items-center gap-1.5">
                     <span className="font-medium text-gray-600 ">Noon Break Shift</span>
-                    <span className="text-[10px] font-mono text-amber-600 ">(Rotational)</span>
+                    <span className="text-[10px] font-sans tabular-nums text-amber-600 ">(Rotational)</span>
                   </div>
-                  <span className="font-mono text-gray-600 ">12:00 PM – 1:00 PM</span>
+                  <span className="font-sans tabular-nums text-gray-600 ">12:00 PM – 1:00 PM</span>
                 </div>
                 <div className="flex items-center justify-between pb-2.5 border-b border-border ">
                   <span className="font-medium text-gray-600 ">Saturday &amp; Sunday</span>
@@ -391,10 +391,10 @@ export default function OfficeDirectory() {
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#800000] ">
+                <span className="text-[10px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
                   Official Communication
                 </span>
-                <span className="text-[10px] font-mono text-zinc-400">
+                <span className="text-[10px] font-sans tabular-nums text-zinc-400">
                   Institutional Desks
                 </span>
               </div>
@@ -411,7 +411,7 @@ export default function OfficeDirectory() {
                 {/* Registrar Email */}
                 <div className="p-3 rounded-2xl bg-zinc-50  border border-black/[0.04] [0.06] flex items-center justify-between gap-2">
                   <div className="overflow-hidden">
-                    <span className="block text-zinc-400 text-[10px] font-mono uppercase tracking-wider mb-0.5">
+                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
                       Registrar Evaluation Desk
                     </span>
                     <a 
@@ -434,7 +434,7 @@ export default function OfficeDirectory() {
                 {/* OSAS Email */}
                 <div className="p-3 rounded-2xl bg-zinc-50  border border-black/[0.04] [0.06] flex items-center justify-between gap-2">
                   <div className="overflow-hidden">
-                    <span className="block text-zinc-400 text-[10px] font-mono uppercase tracking-wider mb-0.5">
+                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
                       Student Affairs (OSAS Clearances)
                     </span>
                     <a 
@@ -457,10 +457,10 @@ export default function OfficeDirectory() {
                 {/* Campus Trunkline */}
                 <div className="p-3 rounded-2xl bg-zinc-50  border border-black/[0.04] [0.06] flex items-center justify-between gap-2">
                   <div className="overflow-hidden">
-                    <span className="block text-zinc-400 text-[10px] font-mono uppercase tracking-wider mb-0.5">
+                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
                       Campus Direct Trunklines
                     </span>
-                    <span className="font-mono font-bold text-gray-800  truncate block">
+                    <span className="font-sans tabular-nums font-bold text-gray-800  truncate block">
                       (02) 8724-4112 / (02) 8724-4113
                     </span>
                   </div>
@@ -477,7 +477,7 @@ export default function OfficeDirectory() {
             </div>
 
             {/* Official Certification Watermark */}
-            <div className="mt-5 pt-3 border-t border-border  flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+            <div className="mt-5 pt-3 border-t border-border  flex items-center justify-between text-[10px] text-zinc-400 font-sans tabular-nums">
               <span>PUP SAN JUAN OFFICIAL RECORDS</span>
               <span className="text-[#800000]  font-semibold">RA 11032 ARTA</span>
             </div>

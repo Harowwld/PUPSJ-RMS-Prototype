@@ -835,7 +835,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={isLoading || (loginStep === 1 && !username.trim())}
-                      className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                      className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {isLoading ? (
                         <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -911,7 +911,7 @@ export default function Home() {
                         type="submit"
                         disabled={forgotLoading || !forgotIdentifier.trim()}
                         title="Request Password Reset"
-                        className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                        className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                       >
                         {forgotLoading ? (
                           <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -967,7 +967,7 @@ export default function Home() {
                       {forgotError && <p role="alert" className="text-[12px] text-[#E5484D]">{forgotError}</p>}
                     </div>
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
-                      <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white disabled:opacity-50">
+                      <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-10 disabled:opacity-50">
                         {forgotLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-lg" /> : "Reset Password"}
                       </Button>
                     </div>
@@ -984,7 +984,7 @@ export default function Home() {
                       </p>
                     </div>
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
-                      <Button type="button" onClick={() => { setView("login"); resetForgotState(); }} className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 transition-all">
+                      <Button type="button" onClick={() => { setView("login"); resetForgotState(); }} className="w-full h-10">
                         Done
                       </Button>
                     </div>
@@ -1173,7 +1173,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={studentSignupLoading}
-                      className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
+                      className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {studentSignupLoading ? (
                         <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
@@ -1261,7 +1261,7 @@ export default function Home() {
                         <p className="text-[10px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
                           {acc.title}
                         </p>
-                        <p className="text-[9.5px] text-gray-400 dark:text-zinc-400 font-mono truncate">
+                        <p className="text-[9.5px] text-gray-400 dark:text-zinc-400 font-sans tabular-nums truncate">
                           {acc.email}
                         </p>
                       </div>
@@ -1276,7 +1276,7 @@ export default function Home() {
                     <HugeIcon  className="ph-bold ph-info text-xs"></HugeIcon>
                     1-click instant fill & sign in
                   </span>
-                  <span className="font-mono text-[9px] text-gray-400">
+                  <span className="font-sans tabular-nums text-[9px] text-gray-400">
                     {DEMO_ACCOUNTS.length} mock accounts
                   </span>
                 </div>
@@ -1296,12 +1296,12 @@ export default function Home() {
         <Dialog open={show2FAModal} onOpenChange={(open) => {
           if (!twoFactorLoading) setShow2FAModal(open);
         }}>
-          <DialogContent className="max-w-md rounded-[20px] border-border bg-white dark:border-border dark:bg-zinc-900">
+          <DialogContent className="max-w-md rounded-2xl border-border bg-white dark:border-border dark:bg-zinc-900">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+              <DialogTitle>
                 Two-Factor Authentication
               </DialogTitle>
-              <DialogDescription className="font-medium text-gray-500 dark:text-zinc-400">
+              <DialogDescription>
                 Enter the 6-digit code from your authenticator app, a recovery code, or your Serial key.
               </DialogDescription>
             </DialogHeader>
@@ -1333,7 +1333,7 @@ export default function Home() {
                   type="submit"
                   disabled={twoFactorLoading}
                   title="Verify & Log In"
-                  className="w-full h-10 rounded-xl bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold text-xs shadow-xs active:scale-95 transition-all disabled:opacity-50 group"
+                  className="w-full h-10 disabled:opacity-50 group"
                 >
                   {twoFactorLoading ? (
                     <>

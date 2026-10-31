@@ -59,12 +59,12 @@ export default function UserGuideModal({ open, onClose }) {
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <DialogHeader className="p-6 border-b border-border shrink-0 bg-white dark:border-border dark:bg-card text-left">
+            <DialogHeader className="p-6 shrink-0 text-left">
               <div>
-                <DialogTitle className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
+                <DialogTitle>
                   {TABS.find(t => t.id === activeTab)?.label}
                 </DialogTitle>
-                <DialogDescription className="text-sm font-medium text-gray-500 mt-1 dark:text-zinc-400">
+                <DialogDescription className="mt-1">
                   {activeTab === 'general' && "Welcome to the E-MANAGE Records Keeping System."}
                   {activeTab === 'staff' && "Learn how to manage students, scan documents, and process requests."}
                   {activeTab === 'admin' && "Technical procedures for system administrators and records heads."}
@@ -215,7 +215,7 @@ export default function UserGuideModal({ open, onClose }) {
               </TabsContent>
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0">
+            <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5 shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -227,7 +227,7 @@ export default function UserGuideModal({ open, onClose }) {
               <Button
                 type="button"
                 onClick={onClose}
-                className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="h-10 px-5 cursor-pointer border-0"
               >
                 Acknowledge
               </Button>

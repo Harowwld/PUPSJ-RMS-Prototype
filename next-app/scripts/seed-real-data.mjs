@@ -12,7 +12,11 @@ const CSV_TAXONOMY_PATH = fs.existsSync(path.resolve(process.cwd(), "../_SAMPLE_
   : path.resolve(process.cwd(), "../_SAMPLE_DATA/system_data - final.csv");
 const CSV_OSAS_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/osas_system_data - final.csv");
 const CSV_STUDENTS_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/cleaned_student_data.csv");
-const REAL_PDF_PATH = path.resolve(process.cwd(), "../_SAMPLE_DATA/sample pdf.pdf");
+const REAL_PDF_PATH = [
+  path.resolve(process.cwd(), "../_SAMPLE_DATA/pdfs/registrar/sample pdf.pdf"),
+  path.resolve(process.cwd(), "../_SAMPLE_DATA/pdfs/sample pdf.pdf"),
+  path.resolve(process.cwd(), "../_SAMPLE_DATA/sample pdf.pdf"),
+].find(p => fs.existsSync(p)) || path.resolve(process.cwd(), "../_SAMPLE_DATA/pdfs/registrar/sample pdf.pdf");
 const UPLOADS_DIR = path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR || ".local", "uploads");
 
 function normalizeCourseCode(raw) {

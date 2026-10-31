@@ -27,6 +27,7 @@ import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone"
 import { detectDocType } from "@/lib/ocrClient"
 import { cn } from "@/lib/utils"
 import { formatErrorMessage } from "@/lib/errorUtils"
+import { BoundingBoxIcon as EmptyBoundingBoxIcon, Upload01Icon as EmptyUpload01Icon } from "hugeicons-react";
 
 const FIELDS = [
   ["firstName", "First name"],
@@ -679,7 +680,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
 
             <div className="pt-2 border-t border-border dark:border-border">
               <Button
-                className="w-full h-10 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+                className="w-full h-10 cursor-pointer border-0"
                 onClick={saveTemplate}
                 disabled={saving || loading}
               >
@@ -696,7 +697,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <span>Drag across the printed value area to calibrate field coordinates.</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-mono text-gray-600 dark:text-zinc-300">
+                <span className="rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                   Scale: 0.00 – 1.00
                 </span>
                 {draftRegion && (
@@ -774,25 +775,20 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 </div>
               </div>
             ) : (
-              <Empty className="flex h-[520px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-5">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon  className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-red-400" />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty className="min-h-[520px]">
+                <EmptyHeader>
+                  <EmptyMedia><EmptyUpload01Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No Sample Document Loaded
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-sm text-xs font-normal text-gray-900 dark:text-zinc-300">
+                  <EmptyDescription>
                     Load a representative PSA PDF or image to visualize text boundaries and calibrate coordinate extraction boxes.
                   </EmptyDescription>
                 </EmptyHeader>
-                <EmptyContent className="mt-5 flex flex-col items-center gap-2">
+                <EmptyContent>
                   <Button
                     type="button"
-                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+                    className="h-10 px-5 cursor-pointer border-0"
                     onClick={chooseSampleFile}
                   >
                     Upload Sample Document
@@ -815,7 +811,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                       {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Field"}
                     </span>
                   </div>
-                  <p className="mt-1 font-mono text-xs text-gray-600 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded-lg border border-border dark:border-border truncate">
+                  <p className="mt-1 font-sans tabular-nums text-xs text-gray-600 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-800/50 p-2 rounded-lg border border-border dark:border-border truncate">
                     {previewText ? `"${previewText}"` : "No OCR text detected inside this bounding box yet."}
                   </p>
                 </div>
@@ -880,15 +876,13 @@ export default function RecognitionTemplatesTab({ showToast }) {
             </div>
 
             {displayTemplates.length === 0 ? (
-              <Empty className="py-12 flex flex-col items-center justify-center text-center border-0 bg-transparent">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-800">
-                    <HugeIcon  className="ph-duotone ph-bounding-box text-2xl text-gray-400 dark:text-zinc-500" />
-                  </EmptyMedia>
-                  <EmptyTitle className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty variant="compact">
+                <EmptyHeader>
+                  <EmptyMedia><EmptyBoundingBoxIcon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     {templateFilter === "Archived" ? "No Archived Templates" : "No Templates Saved"}
                   </EmptyTitle>
-                  <EmptyDescription className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500 max-w-[200px]">
+                  <EmptyDescription>
                     {templateFilter === "Archived"
                       ? "No templates are currently archived."
                       : "Calibrate and save field coordinates to create your first template."}

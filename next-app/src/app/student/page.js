@@ -33,6 +33,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyState,
   EmptyContent,
 } from "@/components/ui/empty";
 
@@ -61,6 +62,7 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -1341,9 +1343,8 @@ function StudentDashboard() {
                             <Button
                               type="button"
                               onClick={() => setIsFormOpen(true)}
-                              className="flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white! border-0"
+                              className="flex h-10 px-5 cursor-pointer border-0"
                               title="New Document Request"
-                              style={{ color: "#ffffff" }}
                             >
                               Request
                             </Button>
@@ -1642,12 +1643,11 @@ function StudentDashboard() {
                                 type="submit"
                                 disabled={requestSubmitting || docTypes.length === 0}
                                 title="Submit Request"
-                                className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
-                                style={{ color: "#ffffff" }}
+                                className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
                               >
                                 {requestSubmitting ? (
                                   <>
-                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm text-white!"></HugeIcon>
+                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                                     Submitting...
                                   </>
                                 ) : (
@@ -1754,19 +1754,14 @@ function StudentDashboard() {
 
                     {/* 5. Request History Table / Empty State */}
                     {!loading && sortedRequests.length === 0 ? (
-                      <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
-                        <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <div className="relative mb-6">
-                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                <HugeIcon className={cn("ph-duotone text-3xl text-gray-400 dark:text-zinc-500", hasActiveFilters ? "ph-magnifying-glass" : "ph-tray")} />
-                              </EmptyMedia>
-                            </div>
-                            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                      <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+                        <Empty>
+                          <EmptyHeader>
+                            <EmptyMedia>{hasActiveFilters ? <EmptySearch01Icon size="1em" /> : <EmptyInboxIcon size="1em" />}</EmptyMedia>
+                            <EmptyTitle>
                               {hasActiveFilters ? "No Matches Found" : "No Document Requests Yet"}
                             </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                            <EmptyDescription>
                               {hasActiveFilters
                                 ? "Try adjusting your search query or status filter."
                                 : "You haven't submitted any document requests yet. Click the button below to submit your first request."}
@@ -1782,7 +1777,7 @@ function StudentDashboard() {
                                   setCurrentPage(1);
                                 }}
                                 title="Reset Filters"
-                                className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
                                 Reset Filters
                               </Button>
@@ -1791,8 +1786,7 @@ function StudentDashboard() {
                                 type="button"
                                 onClick={() => setIsFormOpen(true)}
                                 title="Submit Request"
-                                className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs border-0"
-                                style={{ color: "#ffffff" }}
+                                className="flex h-10 px-5 disabled:opacity-50 cursor-pointer border-0"
                               >
                                 Submit Request
                               </Button>
@@ -2082,10 +2076,9 @@ function StudentDashboard() {
                             disabled={myOrganizations.length === 0}
                             title={myOrganizations.length === 0 ? "You must be an officer authorized by OSAS to submit proposals" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
                             className={cn(
-                              "flex h-10 px-5 text-xs font-semibold rounded-xl! active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white! border-0",
+                              "flex h-10 px-5 cursor-pointer border-0",
                               myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
                             )}
-                            style={myOrganizations.length > 0 ? { color: "#ffffff" } : undefined}
                           >
                             {osasSubView === "proposals" ? "Submit Proposal" : osasSubView === "post_event" ? "Submit Report" : "Submit CBL"}
                           </Button>
@@ -2310,12 +2303,11 @@ function StudentDashboard() {
                                   type="submit"
                                   disabled={proposalSubmitting}
                                   title="Submit Proposal"
-                                  className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
-                                  style={{ color: "#ffffff" }}
+                                  className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
                                   {proposalSubmitting ? (
                                     <>
-                                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm text-white!"></HugeIcon>
+                                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
                                       Submitting...
                                     </>
                                   ) : (
@@ -2354,7 +2346,7 @@ function StudentDashboard() {
                               value={proposalSearch}
                               onChange={(e) => setProposalSearch(e.target.value)}
                             />
-                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                               {filteredProposals.length.toLocaleString()}
                             </div>
                           </div>
@@ -2399,19 +2391,14 @@ function StudentDashboard() {
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
                         ) : data.proposals.length === 0 ? (
-                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-file-text text-3xl text-gray-400 dark:text-zinc-500" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty>
+                              <EmptyHeader>
+                                <EmptyMedia><EmptyFile02Icon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
                                   No Event Proposals Yet
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                <EmptyDescription>
                                   You haven&apos;t submitted any event proposals yet. Use the form above to submit your first proposal.
                                 </EmptyDescription>
                               </EmptyHeader>
@@ -2421,8 +2408,7 @@ function StudentDashboard() {
                                     type="button"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit Proposal"
-                                    className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
-                                    style={{ color: "#ffffff" }}
+                                    className="flex h-10 px-5 cursor-pointer border-0"
                                   >
                                     Submit Proposal
                                   </Button>
@@ -2431,19 +2417,14 @@ function StudentDashboard() {
                             </Empty>
                           </div>
                         ) : filteredProposals.length === 0 ? (
-                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty>
+                              <EmptyHeader>
+                                <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
                                   No Matches Found
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                <EmptyDescription>
                                   Try adjusting your search query or filter criteria.
                                 </EmptyDescription>
                               </EmptyHeader>
@@ -2455,7 +2436,7 @@ function StudentDashboard() {
                                     setProposalFilters({ status: [], organization: [] });
                                   }}
                                   title="Reset Filters"
-                                  className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                  className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                                 >
                                   Reset Filters
                                 </Button>
@@ -2695,8 +2676,7 @@ function StudentDashboard() {
                                   type="submit"
                                   disabled={postEventSubmitting}
                                   title="Submit Post-Event Report"
-                                  className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
-                                  style={{ color: "#ffffff" }}
+                                  className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
                                   {postEventSubmitting ? "Submitting..." : "Submit Post-Event Report"}
                                 </Button>
@@ -2719,19 +2699,14 @@ function StudentDashboard() {
 
                       <div className="border-t border-border dark:border-border flex flex-col flex-[1_0_auto] p-5 space-y-3">
                         {postEventReports.length === 0 ? (
-                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-gray-400 dark:text-zinc-500" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty>
+                              <EmptyHeader>
+                                <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
                                   No Post-Event Reports Yet
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                <EmptyDescription>
                                   You haven&apos;t submitted any accomplishment or liquidation reports yet. Use the form above to submit your report.
                                 </EmptyDescription>
                               </EmptyHeader>
@@ -2741,8 +2716,7 @@ function StudentDashboard() {
                                     type="button"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit Post-Event Report"
-                                    className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
-                                    style={{ color: "#ffffff" }}
+                                    className="flex h-10 px-5 cursor-pointer border-0"
                                   >
                                     Submit Post-Event Report
                                   </Button>
@@ -2914,7 +2888,7 @@ function StudentDashboard() {
                                 type="submit"
                                 disabled={cblSubmitting}
                                 title="Submit to OSAS"
-                                className="w-full sm:w-auto h-10 px-6 btn-brand-red text-white! font-semibold text-xs shadow-xs rounded-xl! gap-2 flex items-center justify-center dark:shadow-none active:scale-95 cursor-pointer border-0"
+                                className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
                               >
                                 {cblSubmitting ? (
                                   <>
@@ -2995,19 +2969,14 @@ function StudentDashboard() {
                             <Skeleton className="h-20 w-full rounded-2xl" />
                           </div>
                         ) : cblVersions.length === 0 ? (
-                          <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                              <EmptyHeader className="flex flex-col items-center gap-0">
-                                <div className="relative mb-6">
-                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                                    <HugeIcon className="ph-duotone ph-book-open text-3xl text-gray-400 dark:text-zinc-500" />
-                                  </EmptyMedia>
-                                </div>
-                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty>
+                              <EmptyHeader>
+                                <EmptyMedia><EmptyBookOpen01Icon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
                                   No CBL Submissions Yet
                                 </EmptyTitle>
-                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                                <EmptyDescription>
                                   Click the button below to submit your organization&apos;s Constitution & By-Laws or proposed amendments.
                                 </EmptyDescription>
                               </EmptyHeader>
@@ -3017,8 +2986,7 @@ function StudentDashboard() {
                                     type="button"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit CBL Document"
-                                    className="mt-6 flex h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! active:scale-95 cursor-pointer shadow-xs border-0"
-                                    style={{ color: "#ffffff" }}
+                                    className="flex h-10 px-5 cursor-pointer border-0"
                                   >
                                     Submit CBL Document
                                   </Button>
@@ -3137,10 +3105,10 @@ function StudentDashboard() {
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
           {/* TOP HEADER: Document Request Details + < > 01 of XX + X button */}
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                <SheetTitle>
                   Document Request Details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
@@ -3171,7 +3139,7 @@ function StudentDashboard() {
                     >
                       <HugeIcon className="ph-bold ph-caret-right text-xs" />
                     </button>
-                    <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                    <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                       {String(Math.max(1, currentRequestDetailIndex + 1)).padStart(2, "0")} of {String(sortedRequests.length).padStart(2, "0")}
                     </span>
                   </div>
@@ -3253,7 +3221,7 @@ function StudentDashboard() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                     Request #{selectedRequestForDetail?.id}
                   </span>
                   <StatusBadge status={selectedRequestForDetail?.status} />
@@ -3562,7 +3530,7 @@ function StudentDashboard() {
                             )}
                           </div>
                           {upd.created_at && (
-                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                               {formatPHDateTime(upd.created_at)}
                             </span>
                           )}
@@ -3605,14 +3573,16 @@ function StudentDashboard() {
                     )}
                 </div>
               ) : (
-                <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
-                  No updates posted yet. Your request is queued for review by the Registrar.
-                </div>
+                <EmptyState
+                  variant="compact"
+                  title="No Updates Posted Yet"
+                  description="Your request is queued for review by the Registrar."
+                />
               )}
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
             <Button
               variant="outline"
               onClick={() => setSelectedRequestForDetail(null)}
@@ -3636,10 +3606,10 @@ function StudentDashboard() {
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
           {/* TOP HEADER: Event Proposal Details + < > 01 of XX + X button */}
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                <SheetTitle>
                   Event Proposal Details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
@@ -3670,7 +3640,7 @@ function StudentDashboard() {
                     >
                       <HugeIcon className="ph-bold ph-caret-right text-xs" />
                     </button>
-                    <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                    <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                       {String(Math.max(1, currentProposalDetailIndex + 1)).padStart(2, "0")} of {String(filteredProposals.length).padStart(2, "0")}
                     </span>
                   </div>
@@ -3742,7 +3712,7 @@ function StudentDashboard() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                     Proposal #{selectedProposalForDetail?.id}
                   </span>
                   <StatusBadge status={selectedProposalForDetail?.status} />
@@ -3786,7 +3756,7 @@ function StudentDashboard() {
                         {selectedProposalForDetail.original_filename}
                       </p>
                       {selectedProposalForDetail?.size_bytes && (
-                        <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                        <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                           {(selectedProposalForDetail.size_bytes / 1024).toFixed(1)} KB · Proposal PDF
                         </p>
                       )}
@@ -3853,7 +3823,7 @@ function StudentDashboard() {
                             )}
                           </div>
                           {upd.created_at && (
-                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                               {formatPHDateTime(upd.created_at)}
                             </span>
                           )}
@@ -3866,14 +3836,16 @@ function StudentDashboard() {
                   })}
                 </div>
               ) : (
-                <div className="rounded-xl bg-gray-50/60 dark:bg-zinc-900/30 p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
-                  No updates posted yet. Your proposal is queued for evaluation by OSAS.
-                </div>
+                <EmptyState
+                  variant="compact"
+                  title="No Updates Posted Yet"
+                  description="Your proposal is queued for evaluation by OSAS."
+                />
               )}
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
             <Button
               variant="outline"
               onClick={() => setSelectedProposalForDetail(null)}

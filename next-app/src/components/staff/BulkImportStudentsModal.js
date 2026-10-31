@@ -455,11 +455,11 @@ export default function BulkImportStudentsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw] lg:max-w-[95vw] xl:max-w-[1440px] 2xl:max-w-[1560px] max-h-[92vh] h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-card border border-border shadow-2xl font-jakarta gap-0">
         {/* Header */}
-        <DialogHeader className="bg-white p-6 pb-4 dark:bg-card border-b border-border text-left shrink-0 pr-12">
-          <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+        <DialogHeader className="p-6 pb-0 text-left shrink-0 pr-12">
+          <DialogTitle>
             Bulk Import Students
           </DialogTitle>
-          <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+          <DialogDescription className="mt-1">
             Upload a CSV spreadsheet to validate and import multiple student master records and physical archive assignments at once.
           </DialogDescription>
         </DialogHeader>
@@ -516,7 +516,7 @@ export default function BulkImportStudentsModal({
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Button
                   type="button"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     csvInputRef.current?.click();
@@ -551,7 +551,7 @@ export default function BulkImportStudentsModal({
                   ].map((header) => (
                     <span
                       key={header}
-                      className="font-mono text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-border text-gray-700 dark:text-zinc-300 shadow-2xs"
+                      className="font-sans tabular-nums text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-border text-gray-700 dark:text-zinc-300 shadow-2xs"
                     >
                       {header}
                     </span>
@@ -746,14 +746,14 @@ export default function BulkImportStudentsModal({
                             className="h-4 w-4 rounded border-border text-pup-maroon accent-pup-maroon cursor-pointer"
                           />
                         </td>
-                        <td className="p-3 align-middle font-mono font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                        <td className="p-3 align-middle font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                           {r.student.studentNo}
                         </td>
                         <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate border-r border-border/70 dark:border-border/70" title={formatTitleCase(r.student.name)}>
                           {formatTitleCase(r.student.name)}
                         </td>
                         <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
-                          <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                          <span className="font-sans tabular-nums text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
                             {r.student.courseCode}
                           </span>
                         </td>
@@ -876,7 +876,7 @@ export default function BulkImportStudentsModal({
         )}
 
         {/* Footer Actions */}
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5 shrink-0">
           {hasInvalidSelected && (
             <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5 mr-auto">
               <HugeIcon className="ph-bold ph-warning text-sm shrink-0" />
@@ -898,7 +898,7 @@ export default function BulkImportStudentsModal({
             type="button"
             onClick={handleImportStudents}
             disabled={csvLoading || !csvFile || selectedCount === 0 || hasInvalidSelected}
-            className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+            className="flex h-10 px-5 disabled:opacity-50 cursor-pointer"
           >
             {csvLoading ? (
               <span className="flex items-center gap-2">

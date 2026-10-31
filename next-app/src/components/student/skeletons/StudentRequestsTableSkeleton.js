@@ -14,7 +14,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
         >
           {/* Ticket # */}
           <td className="p-4 pl-6 align-middle border-r border-border/70 dark:border-border/70">
-            <Skeleton className="h-4 w-12 rounded dark:bg-muted font-mono" />
+            <Skeleton className="h-4 w-12 rounded dark:bg-muted font-sans tabular-nums" />
           </td>
 
           {/* Document Type */}

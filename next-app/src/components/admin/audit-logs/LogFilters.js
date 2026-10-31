@@ -154,7 +154,7 @@ export default function LogFilters({
           onChange={handleSearchChange}
           disabled={isLoading}
         />
-        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
           {logTotal.toLocaleString()}
         </div>
       </div>

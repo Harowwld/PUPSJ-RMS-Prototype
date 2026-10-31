@@ -50,6 +50,7 @@ import {
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
+import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
 
 const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
@@ -355,7 +356,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     <Button
                       type="button"
                       disabled={loading || !data || isGeneratingPdf}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
+                      className="h-10 px-5 cursor-pointer gap-1.5"
                     >
                       {isGeneratingPdf ? (
                         <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
@@ -495,15 +496,13 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (
-            <Empty className="flex h-[400px] flex-col items-center justify-center rounded-2xl border border-border bg-white text-center text-gray-500 shadow-sm dark:border-border dark:bg-card dark:text-zinc-400 dark:shadow-none">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   Data Unavailable
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                <EmptyDescription>
                   {error || "Could not load request analytics."}
                 </EmptyDescription>
               </EmptyHeader>
@@ -532,20 +531,20 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         <DialogContent 
           data-light-only
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-gray-100 p-0 font-jakarta shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] dark:border-border dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col gap-0 overflow-hidden rounded-2xl border border-border p-0 font-jakarta shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] dark:border-border bg-white dark:bg-card"
         >
           <DialogHeader 
-            className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-b border-border bg-gray-50 px-6 py-4 dark:border-border dark:bg-white/5 sm:flex-row sm:items-center"
+            className="flex shrink-0 flex-col items-stretch justify-between gap-3 px-6 py-4 sm:flex-row sm:items-center"
           >
             <div className="min-w-0 flex flex-col gap-0.5">
-              <DialogTitle className="text-left text-[15px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-left">
                 {previewReportType === "csm"
                   ? "Client Satisfaction Measurement (CSM) Report"
                   : previewReportType === "comprehensive"
                   ? "Combined Processing Time and Client Satisfaction Report"
                   : "Citizen's Charter Processing Time Report"}
               </DialogTitle>
-              <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-left">
+              <p className="text-left text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                 Reporting Coverage: {startDate || "Earliest Records"} – {endDate || "Present"}
               </p>
             </div>
@@ -661,7 +660,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-border bg-white px-6 py-4 dark:border-border dark:bg-card">
+          <div className="flex shrink-0 items-center justify-end gap-2.5 px-6 py-4">
             <Button
               type="button"
               variant="outline"
@@ -683,7 +682,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               type="button"
               onClick={handlePrint}
               disabled={!pdfBlobUrl}
-              className="h-10 rounded-xl! px-5 text-xs font-semibold text-white shadow-xs transition-all btn-brand-red active:scale-95 disabled:opacity-50"
+              className="h-10 px-5 disabled:opacity-50"
             >
               Download Report
             </Button>

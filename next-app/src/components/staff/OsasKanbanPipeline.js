@@ -4,6 +4,8 @@ import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { EmptyState } from "@/components/ui/empty";
+import { InboxIcon } from "hugeicons-react";
 
 const STAGE_SUBTITLES = {
   proposals: {
@@ -456,7 +458,7 @@ export default function OsasKanbanPipeline({
                             </div>
 
                             <div className="flex items-center gap-1 shrink-0">
-                              <span className="font-mono text-[9px] text-slate-400 dark:text-zinc-500">
+                              <span className="font-sans tabular-nums text-[9px] text-slate-400 dark:text-zinc-500">
                                 #{isProposal ? "EP" : "PER"}-{item.id}
                               </span>
 
@@ -600,17 +602,13 @@ export default function OsasKanbanPipeline({
 
                     {/* Empty Column Placeholder */}
                     {!columnItems.length && (
-                      <div className="rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30 py-10 px-3 text-center flex flex-col items-center justify-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400 dark:text-zinc-500">
-                          <HugeIcon className="ph-duotone ph-tray text-lg" />
-                        </div>
-                        <p className="text-xs text-slate-600 dark:text-zinc-400 font-semibold">
-                          No {stream === "proposals" ? "proposals" : "reports"} in this stage
-                        </p>
-                        <span className="text-[10px] text-slate-400 dark:text-zinc-500 max-w-[200px] leading-relaxed">
-                          Drag eligible items here to advance pipeline status
-                        </span>
-                      </div>
+                      <EmptyState
+                        variant="compact"
+                        className="rounded-2xl border border-dashed border-border bg-gray-50/50 dark:bg-zinc-900/30"
+                        icon={InboxIcon}
+                        title={`No ${stream === "proposals" ? "proposals" : "reports"} in this stage`}
+                        description="Drag eligible items here to advance pipeline status"
+                      />
                     )}
                   </div>
                 </div>

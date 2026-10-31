@@ -1,120 +1,96 @@
-import * as React from "react"
 import { cn } from "@/lib/utils"
 
-function Empty({
-  className,
-  ...props
-}) {
+function Empty({ className, variant = "page", ...props }) {
   return (
-    <>
-      <div
-        data-slot="empty"
-        className={cn(
-          "flex w-full min-w-0 flex-1 flex-col items-center justify-center bg-transparent border-0",
-          className
-        )}
-        {...props} />
-    </>
+    <div
+      data-slot="empty"
+      data-variant={variant}
+      className={cn(
+        "group/empty flex w-full min-w-0 flex-col items-center justify-center text-center",
+        variant === "compact"
+          ? "min-h-0 flex-none px-4 py-6"
+          : "min-h-[360px] flex-1 px-6 py-12",
+        className
+      )}
+      {...props}
+    />
   )
 }
 
-function EmptyHeader({
-  className,
-  ...props
-}) {
+function EmptyHeader({ className, ...props }) {
   return (
     <div
       data-slot="empty-header"
-      className={cn("flex flex-col items-center", className)}
-      {...props} />
+      className={cn("flex w-full min-w-0 flex-col items-center", className)}
+      {...props}
+    />
   )
 }
 
-function EmptyMedia({
-  children,
-  className,
-  ...props
-}) {
-  const cleanChildren = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-      const isIcon = child.type === "i" || child.type === "svg" || (typeof child.props.className === "string" && (child.props.className.includes("ph-") || child.props.className.includes("fa-") || child.props.className.includes("ti-")));
-      if (isIcon) {
-        let newClass = child.props.className || "";
-        newClass = newClass
-          .replace(/\bph-(duotone|bold|fill|thin|light)\b/g, "ph")
-          .replace(/\btext-[a-z0-9-/]+\b/g, "")
-          .replace(/\btext-(base|lg|xl|2xl|3xl|4xl|5xl)\b/g, "");
-        return React.cloneElement(child, {
-          className: cn("ph", newClass),
-          style: {
-            ...child.props.style,
-            fontSize: '48px',
-            color: '#C7C7CC',
-          }
-        })
-      }
-    }
-    return child
-  })
-
+function EmptyMedia({ className, ...props }) {
   return (
     <div
       data-slot="empty-icon"
-      className={cn("flex shrink-0 items-center justify-center bg-transparent border-0 shadow-none rounded-none", className)}
+      aria-hidden="true"
+      className={cn(
+        "mb-4 flex h-12 w-12 shrink-0 items-center justify-center text-[48px] text-gray-400 dark:text-zinc-500 group-data-[variant=compact]/empty:mb-3 group-data-[variant=compact]/empty:h-7 group-data-[variant=compact]/empty:w-7 group-data-[variant=compact]/empty:text-[28px]",
+        className
+      )}
       {...props}
-    >
-      {cleanChildren}
-    </div>
+    />
   )
 }
 
-function EmptyTitle({
-  className,
-  ...props
-}) {
+function EmptyTitle({ className, ...props }) {
   return (
     <div
       data-slot="empty-title"
-      className={cn("font-bold tracking-tight text-[#1C1C1E] dark:text-zinc-50", className)}
-      {...props} />
+      className={cn(
+        "max-w-full text-xl font-semibold leading-tight tracking-[-0.02em] text-gray-900 [overflow-wrap:anywhere] dark:text-zinc-50 group-data-[variant=compact]/empty:text-sm group-data-[variant=compact]/empty:tracking-[-0.01em]",
+        className
+      )}
+      {...props}
+    />
   )
 }
 
-function EmptyDescription({
-  className,
-  ...props
-}) {
+function EmptyDescription({ className, ...props }) {
   return (
     <div
       data-slot="empty-description"
       className={cn(
-        "font-normal text-[#8E8E93] text-center max-w-[240px] mx-auto",
+        "mt-2 max-w-xs text-sm font-normal leading-relaxed text-gray-500 [overflow-wrap:anywhere] dark:text-zinc-400 group-data-[variant=compact]/empty:mt-1 group-data-[variant=compact]/empty:text-xs",
         className
       )}
-      {...props} />
+      {...props}
+    />
   )
 }
 
-function EmptyContent({
-  className,
-  ...props
-}) {
+function EmptyContent({ className, ...props }) {
   return (
     <div
       data-slot="empty-content"
       className={cn(
-        "flex w-full flex-col items-center",
+        "mt-6 flex w-full min-w-0 flex-col items-center gap-2 empty:hidden [&>button]:max-w-full [&>button]:whitespace-normal [&>a]:max-w-full [&>a]:whitespace-normal",
         className
       )}
-      {...props} />
+      {...props}
+    />
   )
 }
 
-export {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyContent,
-  EmptyMedia,
+function EmptyState({ icon: Icon, title, description, children, variant = "page", className }) {
+  return (
+    <Empty variant={variant} className={className}>
+      <EmptyHeader>
+        {Icon && <EmptyMedia><Icon size="1em" /></EmptyMedia>}
+        <EmptyTitle>{title}</EmptyTitle>
+        {description && <EmptyDescription>{description}</EmptyDescription>}
+      </EmptyHeader>
+      {children && <EmptyContent>{children}</EmptyContent>}
+    </Empty>
+  )
 }
+
+export { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent, EmptyMedia, EmptyState }

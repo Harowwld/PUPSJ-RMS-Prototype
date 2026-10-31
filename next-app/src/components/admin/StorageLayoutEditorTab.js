@@ -1563,7 +1563,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             <Button
               onClick={saveLayout}
               disabled={saving || hasAnyCollisions}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-10 px-5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />

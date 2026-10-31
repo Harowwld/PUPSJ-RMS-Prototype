@@ -42,6 +42,7 @@ import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
+import { AlertCircleIcon as EmptyAlertCircleIcon, NotificationOff01Icon as EmptyNotificationOff01Icon, Search01Icon as EmptySearch01Icon, TickDouble01Icon as EmptyTickDouble01Icon } from "hugeicons-react";
 
 /**
  * Returns icon, badge styling, and title accent for a notification type & status.
@@ -586,7 +587,7 @@ export default function NotificationsTab({
                 <span>Unread</span>
                 <span
                   className={cn(
-                    "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     activeTab === "unread"
                       ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 border border-pup-maroon/20 dark:border-red-500/30"
                       : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -608,7 +609,7 @@ export default function NotificationsTab({
                 <span>Read</span>
                 <span
                   className={cn(
-                    "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     activeTab === "read"
                       ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
                       : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -664,46 +665,31 @@ export default function NotificationsTab({
             </div>
           ) : error ? (
             <div className="flex-[1_0_auto] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
-              <Empty className="flex h-[360px] flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
-                    <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                  </EmptyMedia>
-                  <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     Could not load notifications
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-md text-xs font-normal text-gray-600 dark:text-zinc-300">
+                  <EmptyDescription>
                     {error}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             </div>
           ) : items.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] border-t border-border dark:border-border w-full">
-              <Empty className="flex flex-1 h-full min-h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-5">
-                    <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border/80 bg-white shadow-sm dark:border-border dark:bg-zinc-800">
-                      <HugeIcon
-                        className={cn(
-                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                          hasActiveFilters
-                            ? "ph-magnifying-glass"
-                            : activeTab === "unread"
-                            ? "ph-checks"
-                            : "ph-bell-slash"
-                        )}
-                      />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] border-t border-border dark:border-border w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>{hasActiveFilters ? <EmptySearch01Icon size="1em" /> : activeTab === "unread" ? <EmptyTickDouble01Icon size="1em" /> : <EmptyNotificationOff01Icon size="1em" />}</EmptyMedia>
+                  <EmptyTitle>
                     {hasActiveFilters
                       ? "No matching notifications"
                       : activeTab === "unread"
                       ? "You're all caught up!"
                       : "No read notifications"}
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-sm text-sm font-medium text-gray-900 dark:text-zinc-300">
+                  <EmptyDescription>
                     {hasActiveFilters
                       ? "No notifications match your current search or filter criteria. Try clearing filters."
                       : activeTab === "unread"
@@ -716,7 +702,7 @@ export default function NotificationsTab({
                     <Button
                       variant="outline"
                       onClick={handleClearFilters}
-                      className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
@@ -934,10 +920,10 @@ export default function NotificationsTab({
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden focus:outline-none focus-visible:outline-none"
           >
             {/* Top Header matching reference design: Notification Details < > 01 of XX X */}
-            <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+            <SheetHeader className="shrink-0 p-0">
               <div className="flex items-center justify-between px-6 py-4">
                 <div>
-                  <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                  <SheetTitle>
                     Notification Details
                   </SheetTitle>
                   <SheetDescription className="sr-only">
@@ -968,7 +954,7 @@ export default function NotificationsTab({
                       >
                         <HugeIcon className="ph-bold ph-caret-right text-xs" />
                       </button>
-                      <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                      <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                         {String(selectedNotifIndex + 1).padStart(2, "0")} of {String(activeNavList.length).padStart(2, "0")}
                       </span>
                     </div>
@@ -1132,7 +1118,7 @@ export default function NotificationsTab({
                           {selectedNotif.student_no && (
                             <InfoRow icon="ph-bold ph-identification-card" label="Student Number">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                                <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                   {selectedNotif.student_no}
                                 </span>
                                 <button
@@ -1169,7 +1155,7 @@ export default function NotificationsTab({
                           {selectedNotif.original_filename && (
                             <InfoRow icon="ph-bold ph-paperclip" label="Original File">
                               <span
-                                className="font-mono text-xs truncate block max-w-[240px]"
+                                className="font-sans tabular-nums text-xs truncate block max-w-[240px]"
                                 title={selectedNotif.original_filename}
                               >
                                 {selectedNotif.original_filename}
@@ -1180,7 +1166,7 @@ export default function NotificationsTab({
                           {selectedNotif.entity_type === "document_request" && (
                             <InfoRow icon="ph-bold ph-arrow-square-out" label="Related Request">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                <span className="font-sans tabular-nums text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                   REQ-{selectedNotif.entity_id || selectedNotif.metadata?.request_id}
                                 </span>
                                 {onNavigateTab && (
@@ -1247,7 +1233,7 @@ export default function NotificationsTab({
             ) : null}
 
             {/* Executive Action Bar Footer */}
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
               <div>
                 {selectedNotif?.entity_type === "document_request" && onNavigateTab ? (
                   <Button
@@ -1275,7 +1261,7 @@ export default function NotificationsTab({
                         selectedNotif.mime_type
                       );
                     }}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+                    className="h-10 px-5 cursor-pointer flex items-center gap-1.5"
                   >
                     <span>Rescan Document</span>
                   </Button>

@@ -71,7 +71,7 @@ export default function LandingFaqSkeleton() {
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Questions &amp; Answers List
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-mono">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-sans tabular-nums">
                     8/12
                   </span>
                 </div>

@@ -56,7 +56,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                 </td>
                 <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <div className="flex flex-col gap-1">
-                    <Skeleton className="h-3.5 w-24 font-mono rounded dark:bg-muted" />
+                    <Skeleton className="h-3.5 w-24 font-sans tabular-nums rounded dark:bg-muted" />
                   </div>
                 </td>
                 <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">

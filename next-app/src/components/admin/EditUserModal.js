@@ -28,13 +28,13 @@ export default function EditUserModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card">
-        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
+        <DialogHeader className="p-6 pb-0">
           <div className="flex items-start gap-4">
             <div className="min-w-0">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              <DialogTitle>
                 Update Personnel Profile
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+              <DialogDescription className="mt-1">
                 Changes will sync across the repository immediately after saving.
               </DialogDescription>
             </div>
@@ -141,7 +141,7 @@ export default function EditUserModal({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -154,7 +154,7 @@ export default function EditUserModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+              className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
             >
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>

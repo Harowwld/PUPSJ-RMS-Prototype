@@ -33,13 +33,13 @@ export default function DefaultPasswordModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card gap-0">
-        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
+        <DialogHeader className="p-6 pb-0">
           <div className="flex items-start gap-4">
             <div className="min-w-0">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              <DialogTitle>
                 Account Credentials Ready
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+              <DialogDescription className="mt-1">
                 The staff account has been created. Securely share these
                 temporary credentials with the user.
               </DialogDescription>
@@ -92,7 +92,7 @@ export default function DefaultPasswordModal({
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
@@ -104,7 +104,7 @@ export default function DefaultPasswordModal({
           <Button
             type="button"
             onClick={onClose}
-            className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all border-0"
+            className="h-10 px-5 cursor-pointer border-0"
           >
             Done
           </Button>

@@ -69,6 +69,7 @@ function getStudentFolderYear(s) {
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import OfficeDocumentsTable from "@/components/staff/OfficeDocumentsTable"
 import { cn, formatTitleCase } from "@/lib/utils"
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, UserGroupIcon as EmptyUserGroupIcon } from "hugeicons-react";
 
 
 function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
@@ -777,7 +778,7 @@ export default function RecordsArchiveTab({
               <span>Active</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   !showArchived
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -799,7 +800,7 @@ export default function RecordsArchiveTab({
               <span>Archived</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   showArchived
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -825,7 +826,7 @@ export default function RecordsArchiveTab({
                   value={quickQuery}
                   onChange={(e) => setQuickQuery(e.target.value)}
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {quickMatchCount.toLocaleString()}
                 </div>
               </div>
@@ -1135,22 +1136,14 @@ export default function RecordsArchiveTab({
               ) : loading ? (
                 <RecordsArchiveSkeleton />
               ) : students.length === 0 && !showArchived ? (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className={cn(
-                            "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                            isOsas ? "ph-buildings" : "ph-users-three"
-                          )}></HugeIcon>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia>{isOsas ? <EmptyBuilding03Icon size="1em" /> : <EmptyUserGroupIcon size="1em" />}</EmptyMedia>
+                      <EmptyTitle>
                         {isOsas ? "No Student Organization Records Yet" : "No Student Records Yet"}
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                      <EmptyDescription>
                         {isOsas
                           ? "Register recognized student organizations in the Student Organizations tab to view and manage their Constitution & By-Laws and physical archives here."
                           : "Register your first student record in the Upload tab. After that, you can browse, search, and locate drawers here."}
@@ -1161,7 +1154,7 @@ export default function RecordsArchiveTab({
                         type="button"
                         onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
                         title={isOsas ? "Go to Student Organizations" : "Go to Upload"}
-                        className="mt-4 h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="mt-4 h-10 px-5 cursor-pointer"
                       >
                         {isOsas ? "Register Organization" : "Upload Records"}
                       </Button>
@@ -1169,19 +1162,14 @@ export default function RecordsArchiveTab({
                   </Empty>
                 </div>
               ) : archivedStudents.length === 0 && showArchived ? (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-archive text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia><EmptyArchive01Icon size="1em" /></EmptyMedia>
+                      <EmptyTitle>
                         {isOsas ? "No Archived Organizations" : "No Archived Students"}
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                      <EmptyDescription>
                         {isOsas
                           ? "There are currently no archived organization records found in the system."
                           : "There are currently no archived records found in the system."}
@@ -1213,24 +1201,16 @@ export default function RecordsArchiveTab({
                   })}
                 </div>
               ) : filteredExplorerItems.length === 0 ? (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-2xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className={cn(
-                            "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                            showArchived ? "ph-archive" : (isOsas ? "ph-buildings" : "ph-users")
-                          )}></HugeIcon>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia>{showArchived ? <EmptyArchive01Icon size="1em" /> : isOsas ? <EmptyBuilding03Icon size="1em" /> : <EmptyUserGroupIcon size="1em" />}</EmptyMedia>
+                      <EmptyTitle>
                         {showArchived
                           ? (isOsas ? "No Archived Organizations" : "No Archived Students")
                           : (isOsas ? "No Organizations In This Category" : "No Students In This Year")}
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                      <EmptyDescription>
                         {showArchived
                           ? (isOsas
                               ? "There are currently no archived organizations found for this category."
@@ -1283,7 +1263,7 @@ export default function RecordsArchiveTab({
                           <div className="flex flex-col justify-between h-full min-h-[160px]">
                             <div>
                               <div className="flex items-center gap-2 pr-7 flex-wrap">
-                                <span className="rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 font-mono text-[11px] font-bold text-white tracking-wider">
+                                <span className="rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 font-sans tabular-nums text-[11px] font-bold text-white tracking-wider">
                                   {row.student.acronym || row.student.studentNo}
                                 </span>
                                 <span className="rounded-full border border-white/20 bg-black/10 px-2 py-0.5 text-[10px] font-semibold text-white/90">
@@ -1504,7 +1484,7 @@ export default function RecordsArchiveTab({
                                />
                             </td>
                             <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 {row.student.acronym || row.student.studentNo}
                               </span>
                             </td>

@@ -16,6 +16,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
+  EmptyState,
   EmptyContent,
 } from "@/components/ui/empty";
 import {
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
 import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
+import { Clock01Icon as EmptyClock01Icon, InboxIcon } from "hugeicons-react";
 
 /**
  * Standard Information Row (label : value)
@@ -501,8 +503,7 @@ export default function StudentOverviewTab({
               <Button
                 type="button"
                 onClick={onNewRequest}
-                className="flex h-10 px-5 text-xs font-semibold rounded-xl active:scale-95 transition-all cursor-pointer shadow-xs btn-brand-red text-white border-0"
-                style={{ color: "#ffffff" }}
+                className="flex h-10 px-5 cursor-pointer border-0"
               >
                 Request Document
               </Button>
@@ -584,7 +585,7 @@ export default function StudentOverviewTab({
                   <Button
                     type="button"
                     onClick={item.action}
-                    className="h-8 px-4 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-800 dark:hover:bg-red-700 shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0 self-start sm:self-center"
+                    className="h-8 px-4 cursor-pointer shrink-0 self-start sm:self-center"
                   >
                     {item.actionLabel}
                   </Button>
@@ -609,7 +610,7 @@ export default function StudentOverviewTab({
             )}
           </div>
           {activeRequest && (
-            <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+            <span className="text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400">
               Ticket #{activeRequest.ticket_no || activeRequest.id}
             </span>
           )}
@@ -706,28 +707,21 @@ export default function StudentOverviewTab({
             </div>
           </div>
         ) : (
-          <div className="p-6 rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-gray-500 border border-border dark:bg-zinc-800 dark:text-zinc-400">
-                <HugeIcon className="ph-bold ph-tray text-2xl" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100">
-                  No In-Flight Document Requests
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                  Need official credentials, TOR, certifications, or diploma duplicates? Submit a request anytime.
-                </p>
-              </div>
-            </div>
+          <EmptyState
+            variant="compact"
+            className="rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30"
+            icon={InboxIcon}
+            title="No In-Flight Document Requests"
+            description="Need official credentials, TOR, certifications, or diploma duplicates? Submit a request anytime."
+          >
             <Button
               type="button"
               onClick={onNewRequest}
-              className="h-9 px-4 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-800 dark:hover:bg-red-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0 self-start sm:self-auto"
+              className="h-9 px-4 cursor-pointer"
             >
               Request Document
             </Button>
-          </div>
+          </EmptyState>
         )}
       </div>
 
@@ -896,7 +890,7 @@ export default function StudentOverviewTab({
                             <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                               {event.title}
                             </span>
-                            <span className="text-[11px] text-gray-400 font-mono">
+                            <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                               {event.subtitle}
                             </span>
                             <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400">
@@ -1004,19 +998,14 @@ export default function StudentOverviewTab({
               </div>
             </>
           ) : (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className="ph-duotone ph-clock-counter-clockwise text-3xl text-gray-400 dark:text-zinc-500" />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia><EmptyClock01Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     {activityFilter === "all" ? "No Recent Activity Yet" : "No Activity in this Category"}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription>
                     {activityFilter === "all"
                       ? "Status updates for document requests, compliance archiving, and event proposals will be tracked here."
                       : `No status transitions recorded under ${activityFilter === "requests" ? "Registrar Requests" : activityFilter === "compliance" ? "Permanent Records" : "OSAS Affairs"}.`}
@@ -1028,7 +1017,7 @@ export default function StudentOverviewTab({
                       variant="outline"
                       onClick={() => handleFilterChange("all")}
                       title="View All Activity"
-                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       View All Activity
                     </Button>
@@ -1108,10 +1097,10 @@ export default function StudentOverviewTab({
           showCloseButton={false}
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                <SheetTitle>
                   Post-Event Liquidation Details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
@@ -1153,7 +1142,7 @@ export default function StudentOverviewTab({
                 <HugeIcon className="ph-bold ph-clipboard-text" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-mono font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
+                <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
                   {selectedPostEventDetail?.organization_name || "Student Affairs"}
                 </span>
                 <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
@@ -1200,7 +1189,7 @@ export default function StudentOverviewTab({
                           <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                             {selectedPostEventDetail.narrative_original_filename}
                           </p>
-                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                             Narrative Event Report
                           </p>
                         </div>
@@ -1217,7 +1206,7 @@ export default function StudentOverviewTab({
                           <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                             {selectedPostEventDetail.liquidation_original_filename}
                           </p>
-                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                             Financial Liquidation Statement
                           </p>
                         </div>
@@ -1229,7 +1218,7 @@ export default function StudentOverviewTab({
             )}
           </div>
 
-          <SheetFooter className="shrink-0 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 p-4 px-6 flex flex-row items-center justify-end">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
             <Button
               type="button"
               variant="outline"

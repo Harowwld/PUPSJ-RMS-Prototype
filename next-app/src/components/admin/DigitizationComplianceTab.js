@@ -57,6 +57,7 @@ import TableScrollControls from "@/components/shared/TableScrollControls";
 import useTableScroll from "@/hooks/useTableScroll";
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Files01Icon as EmptyFiles01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon } from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -331,7 +332,7 @@ function DigitizationComplianceContent({
   const firstLoadRef = useRef(true);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    
+
     // Always enforce the correct view
     const oldStatus = params.get("status") || "Active";
     const oldCourse = params.get("course") || "";
@@ -340,9 +341,9 @@ function DigitizationComplianceContent({
     const currentView = params.get("view");
 
     // Only update if something actually changed
-    const hasChanged = 
-        oldStatus !== statusFilter || 
-        oldCourse !== currentCourse || 
+    const hasChanged =
+        oldStatus !== statusFilter ||
+        oldCourse !== currentCourse ||
         (oldApproved === "1") !== requireApproved ||
         currentView !== "digitization";
 
@@ -351,7 +352,7 @@ function DigitizationComplianceContent({
         params.set("status", statusFilter);
         if (currentCourse) params.set("course", currentCourse); else params.delete("course");
         if (requireApproved) params.set("approved", "1"); else params.delete("approved");
-        
+
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         router.replace(newUrl, { scroll: false });
     }
@@ -367,16 +368,16 @@ function DigitizationComplianceContent({
   const summary = data?.summary;
   const meta = data?.meta;
   const byCourse = useMemo(() => Array.isArray(data?.byCourse) ? data.byCourse : [], [data]);
-  
+
   const sortedByCourse = useMemo(() => {
     let filtered = [...byCourse];
     if (tableSearch.trim()) {
       const search = tableSearch.toLowerCase();
-      filtered = filtered.filter(row => 
+      filtered = filtered.filter(row =>
         row.courseCode?.toLowerCase().includes(search)
       );
     }
-    
+
     return filtered.sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
@@ -644,13 +645,13 @@ function DigitizationComplianceContent({
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <RefreshButton 
-                onRefresh={() => load(true)} 
-                isLoading={manualLoading} 
+              <RefreshButton
+                onRefresh={() => load(true)}
+                isLoading={manualLoading}
                 title="Refresh Compliance Data"
               />
 
-              
+
 
               <div className="flex items-center gap-2">
                 <Button
@@ -671,7 +672,7 @@ function DigitizationComplianceContent({
                   type="button"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 cursor-pointer"
                 >
                   {isGeneratingPdf ? (
                     <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
@@ -692,7 +693,7 @@ function DigitizationComplianceContent({
         ) : !error && data ? (
           <div className="px-6 pb-6">
             <div className={cn(
-              "transition-all duration-slow", 
+              "transition-all duration-slow",
               (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}>
               {/* Stats Cards */}
@@ -701,7 +702,7 @@ function DigitizationComplianceContent({
               if (key === "completeness") return (
               <Reorder.Item as="div" value="completeness" key="completeness" className={cn(selectedKpi === "completeness" ? "z-30" : "z-10")}>
 
-                
+
                 <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "completeness" ? "z-30" : "z-10")}>
                   <div
                     onClick={() => setSelectedKpi(selectedKpi === "completeness" ? null : "completeness")}
@@ -722,15 +723,15 @@ function DigitizationComplianceContent({
                             <TooltipTrigger asChild>
                               <HugeIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                             </TooltipTrigger>
-                            <TooltipContent 
-                              side="right" 
+                            <TooltipContent
+                              side="right"
                               className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-border dark:border-border text-xs font-normal"
                             >
                               <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Digitization Formula</p>
                               <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
                                 Percentage of expected mandatory documents uploaded across all active/selected students.
                               </p>
-                              <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-mono border border-border/60 dark:border-border">
+                              <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-sans tabular-nums border border-border/60 dark:border-border">
                                 (Digitized Docs / Expected Docs) × 100
                               </div>
                             </TooltipContent>
@@ -741,7 +742,7 @@ function DigitizationComplianceContent({
                         <HugeIcon className="ph-bold text-[15px] ph-pie-chart" />
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-end p-4 pt-1">
                       <div className="flex items-baseline gap-2">
                         <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
@@ -821,7 +822,7 @@ function DigitizationComplianceContent({
                         <HugeIcon className="ph-bold text-[15px] ph-users" />
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-end p-4 pt-1">
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
@@ -882,7 +883,7 @@ function DigitizationComplianceContent({
                         <HugeIcon className="ph-bold text-[15px] ph-check-circle" />
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-end p-4 pt-1">
                       <div className="flex items-baseline gap-2">
                         <span className="text-[25px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
@@ -946,7 +947,7 @@ function DigitizationComplianceContent({
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               {sortedByCourse.length}
             </div>
           </div>
@@ -1047,17 +1048,17 @@ function DigitizationComplianceContent({
           {loading && !data ? (
             <ComplianceCalcSkeleton />
           ) : !error && data ? (() => {
-            const percent = summary?.totalExpectedDocsCount > 0 
-              ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100)) 
+            const percent = summary?.totalExpectedDocsCount > 0
+              ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100))
               : 0;
             const fullyDigitizedCount = summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0;
             return (
               <div className={cn(
-                "transition-all duration-slow", 
+                "transition-all duration-slow",
                 (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
               )}>
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
-                  
+
                   {/* Context & Formula */}
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
@@ -1103,10 +1104,10 @@ function DigitizationComplianceContent({
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Substantial Progress Bar */}
                     <div className="relative h-[8px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
-                      <div 
+                      <div
                         className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-slow ease-standard"
                         style={{ width: `${percent}%` }}
                       />
@@ -1135,32 +1136,18 @@ function DigitizationComplianceContent({
                     </p>
                   </div>
                   {summary?.totalStudents === 0 || !Array.isArray(data.missingByDocumentType) || data.missingByDocumentType.length === 0 || docTypeItems.length === 0 ? (
-                    <div className="py-10 px-4 rounded-xl border border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/30 flex flex-col items-center justify-center text-center">
-                      <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                        <EmptyHeader className="flex flex-col items-center gap-0">
-                          <div className="relative mb-4">
-                            <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-100/60 opacity-50 dark:bg-zinc-800/40"></div>
-                            <EmptyMedia className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-                              <HugeIcon
-                                className={cn(
-                                  "ph-duotone text-2xl text-gray-400 dark:text-zinc-500",
-                                  summary?.totalStudents === 0
-                                    ? hasActiveFilters
-                                      ? "ph-magnifying-glass"
-                                      : "ph-users"
-                                    : "ph-files"
-                                )}
-                              />
-                            </EmptyMedia>
-                          </div>
-                          <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                    <div className="rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30">
+                      <Empty variant="compact">
+                        <EmptyHeader>
+                          <EmptyMedia>{summary?.totalStudents === 0 ? hasActiveFilters ? <EmptySearch01Icon size="1em" /> : <EmptyUserGroupIcon size="1em" /> : <EmptyFiles01Icon size="1em" />}</EmptyMedia>
+                          <EmptyTitle>
                             {summary?.totalStudents === 0
                               ? hasActiveFilters
                                 ? "No Matching Students"
                                 : "No Student Records Found"
                               : "No Document Types Configured"}
                           </EmptyTitle>
-                          <EmptyDescription className="mt-1 max-w-xs text-xs font-normal text-gray-600 dark:text-zinc-400">
+                          <EmptyDescription>
                             {summary?.totalStudents === 0
                               ? hasActiveFilters
                                 ? "No students match the current filters. Adjust or reset your criteria to evaluate missing documents."
@@ -1230,25 +1217,20 @@ function DigitizationComplianceContent({
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
           <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
-            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyTitle>Data Unavailable</EmptyTitle>
+                <EmptyDescription>
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => load(true)}
-                  className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer" 
+                  className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
                   Retry Loading
                 </Button>
@@ -1257,7 +1239,7 @@ function DigitizationComplianceContent({
           </div>
         ) : data ? (
           <div className={cn(
-            "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border", 
+            "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border",
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
             <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
@@ -1265,7 +1247,7 @@ function DigitizationComplianceContent({
                 <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
                   Program Breakdown
                 </h4>
-                <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                <span className="text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                   ({sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"})
                 </span>
               </div>
@@ -1415,29 +1397,24 @@ function DigitizationComplianceContent({
                   </tbody>
                 </table>
               ) : (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500" />
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
-                        {tableSearch 
-                          ? `No results found for "${tableSearch}".` 
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                      <EmptyTitle>No data found</EmptyTitle>
+                      <EmptyDescription>
+                        {tableSearch
+                          ? `No results found for "${tableSearch}".`
                           : "No student records available to analyze."}
                       </EmptyDescription>
                     </EmptyHeader>
                     {hasActiveFilters && (
                       <EmptyContent>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={handleClearAll}
                           title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
                           Reset Filters
                         </Button>
@@ -1570,10 +1547,10 @@ function DigitizationComplianceContent({
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl p-0 flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border"
         >
           {/* Reference Header */}
-          <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+          <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+                <SheetTitle>
                   Compliance Deficiency Details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
@@ -1603,7 +1580,7 @@ function DigitizationComplianceContent({
                         <HugeIcon className="ph-bold ph-caret-right text-xs" />
                       </button>
                     </div>
-                    <span className="font-mono text-[11px] font-medium text-gray-500 dark:text-zinc-400 select-none px-1">
+                    <span className="font-sans tabular-nums text-[11px] font-medium text-gray-500 dark:text-zinc-400 select-none px-1">
                       {String(currentDocIndex + 1).padStart(2, "0")} of {String(totalDocCount).padStart(2, "0")}
                     </span>
                   </div>
@@ -1727,7 +1704,7 @@ function DigitizationComplianceContent({
                   Non-Compliant Students
                 </div>
                 {missingStudentsData?.total > 0 && (
-                  <span className="text-xs font-mono text-gray-500 dark:text-zinc-400">
+                  <span className="text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400">
                     {missingStudentsData.total.toLocaleString()} total
                   </span>
                 )}
@@ -1780,7 +1757,7 @@ function DigitizationComplianceContent({
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                        <span className="font-mono text-xs font-medium text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-lg border border-gray-200/60 dark:border-white/10">
+                        <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-lg border border-gray-200/60 dark:border-white/10">
                           {student.student_no}
                         </span>
                         <button
@@ -1815,7 +1792,7 @@ function DigitizationComplianceContent({
           </div>
 
           {/* Sticky Footer */}
-          <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <div>
               {missingStudentsData?.total > missingStudentsData?.limit ? (
                 <div className="flex items-center gap-1.5">
@@ -1877,31 +1854,23 @@ function DigitizationComplianceContent({
           setReportOpen(open);
         }}
       >
-        <DialogContent 
+        <DialogContent
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border bg-white dark:bg-card"
         >
-          <DialogHeader 
-            className="shrink-0 bg-gray-50 dark:bg-white/5"
-            style={{
-              padding: '20px 24px',
-              borderBottom: '0.5px solid rgba(0,0,0,0.08)',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px'
-            }}
+          <DialogHeader
+            className="shrink-0"
+            style={{ padding: '20px 24px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}
           >
             <div className="min-w-0">
-              <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
+              <DialogTitle className="text-left">
                 Compliance Report Preview
               </DialogTitle>
-              <DialogDescription className="text-left" style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }}>
+              <DialogDescription className="text-left">
                 Review the generated document before downloading. Ensure all records and rates are correctly captured.
               </DialogDescription>
             </div>
-            
+
             <DialogClose asChild>
               <button
                 type="button"
@@ -1964,7 +1933,7 @@ function DigitizationComplianceContent({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border">
+          <div className="flex shrink-0 items-center px-6 py-4">
             <Button
               variant="ghost"
               size="icon"
@@ -1995,7 +1964,7 @@ function DigitizationComplianceContent({
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl || isGeneratingPdf}
-                className="h-10 px-5 rounded-xl! text-xs font-semibold text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                className="h-10 px-5 disabled:opacity-50 cursor-pointer"
               >
                 Download Report
               </Button>

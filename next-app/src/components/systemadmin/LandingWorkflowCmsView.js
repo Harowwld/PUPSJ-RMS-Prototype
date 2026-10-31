@@ -358,7 +358,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Workflow Content"}
               </Button>
@@ -421,7 +421,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Main Heading Line 1
                         </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
+                        <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                           {workflowData.headingLine1.length}/40
                         </span>
                       </div>
@@ -444,7 +444,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Main Heading Line 2
                         </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
+                        <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                           {workflowData.headingLine2.length}/40
                         </span>
                       </div>
@@ -468,7 +468,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Section Narrative &amp; Subtitle
                       </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
+                      <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                         {workflowData.description.length}/320
                       </span>
                     </div>
@@ -494,7 +494,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Sequential Application Process</span>
-                    <span className="text-xs font-mono font-medium text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-sans tabular-nums font-medium text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
                       {currentSteps.length} of {MAX_STEPS} Steps
                     </span>
                   </h3>
@@ -530,7 +530,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     type="button"
                     disabled={currentSteps.length >= MAX_STEPS}
                     onClick={addNewStep}
-                    className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 transition-all"
+                    className="h-9 px-4 cursor-pointer disabled:opacity-40"
                     title={currentSteps.length >= MAX_STEPS ? `Maximum of ${MAX_STEPS} steps reached` : "Add blank step"}
                   >
                     Add Step
@@ -562,7 +562,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
                           {/* Step Number Badge */}
-                          <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                          <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                             {String(idx + 1).padStart(2, "0")}
                           </div>
 
@@ -639,7 +639,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                                 Step Main Title
                               </label>
-                              <span className="text-[10px] text-gray-400 font-mono">
+                              <span className="text-[10px] text-gray-400 font-sans tabular-nums">
                                 {step.title?.length || 0}/60
                               </span>
                             </div>
@@ -658,7 +658,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                                 Detailed Step Instructions
                               </label>
-                              <span className="text-[10px] text-gray-400 font-mono">
+                              <span className="text-[10px] text-gray-400 font-sans tabular-nums">
                                 {step.desc?.length || 0}/280
                               </span>
                             </div>
@@ -683,7 +683,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               {(step.tags || []).map((tag, tIdx) => (
                                 <span
                                   key={tIdx}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-border dark:border-border"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-sans tabular-nums font-medium bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-border dark:border-border"
                                 >
                                   <span>{tag}</span>
                                   <button
@@ -740,7 +740,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
+                  <span className="text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300">
                     Viewing {currentSteps.length} Steps · Arc: {workflowData.curveStyle}
                   </span>
                 </div>
@@ -785,7 +785,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                           <div className="absolute left-0 top-0">
                             <div
                               className={cn(
-                                "w-11 h-11 rounded-full flex items-center justify-center font-mono text-sm transition-all duration-300",
+                                "w-11 h-11 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-all duration-300",
                                 isSelected
                                   ? "bg-[#800000] text-white shadow-md"
                                   : "bg-white/5 border border-white/10 text-zinc-400 group-hover:text-white"

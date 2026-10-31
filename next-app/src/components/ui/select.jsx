@@ -1,252 +1,71 @@
 "use client"
 
 import * as React from "react"
-import { createPortal } from "react-dom"
-import { cn } from "@/lib/utils"
+import { Select as Primitive } from "@base-ui/react/select"
 import { ArrowDown01Icon, Tick01Icon, UnfoldMoreIcon } from "hugeicons-react"
+import { cn } from "@/lib/utils"
+
+function extractOptions(nodes, groupDisabled = false) {
+  const options = []
+  React.Children.forEach(nodes, child => {
+    if (!React.isValidElement(child)) return
+    if (child.type === React.Fragment) options.push(...extractOptions(child.props.children, groupDisabled))
+    else if (child.type === "optgroup") {
+      options.push({ isHeader: true, label: child.props.label })
+      options.push(...extractOptions(child.props.children, groupDisabled || child.props.disabled))
+    } else if (child.type === "option") options.push({ value: child.props.value ?? child.props.children, label: child.props.children, disabled: groupDisabled || child.props.disabled })
+  })
+  return options
+}
 
 const Select = React.forwardRef(({
-  className,
-  buttonClassName,
-  containerClassName,
-  children,
-  options: optionsProp,
-  value,
-  onChange,
-  onValueChange,
-  placeholder,
-  title,
-  menuClassName,
-  optionClassName,
-  usePortal = true,
-  indicator = "caret",
-  align = "start",
-  ...props
+  className, buttonClassName, containerClassName, children, options: optionsProp,
+  value, defaultValue, onChange, onValueChange, placeholder, title, menuClassName,
+  optionClassName, usePortal = true, indicator = "caret", align = "start",
+  name, form, required, disabled, readOnly, ...props
 }, ref) => {
+  const options = Array.isArray(optionsProp)
+    ? optionsProp.map(option => typeof option === "object" && option !== null ? option : { value: option, label: String(option) })
+    : extractOptions(children)
+  const items = options.filter(option => !option.isHeader)
+  const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue)
   const [isOpen, setIsOpen] = React.useState(false)
-  const [mounted, setMounted] = React.useState(false)
-  const [coords, setCoords] = React.useState({ top: 0, left: 0, width: 0 })
-  const triggerRef = React.useRef(null)
-  const menuRef = React.useRef(null)
-
-  React.useEffect(() => {
-    setMounted(true)
-    return () => setMounted(false)
-  }, [])
-
-  const updateCoords = React.useCallback(() => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      let left = rect.left
-      const menuWidth = menuRef.current?.offsetWidth || rect.width
-      if (align === "end") {
-        left = rect.right - menuWidth
-      }
-      if (typeof window !== "undefined") {
-        if (left + menuWidth > window.innerWidth - 12) {
-          left = Math.max(12, window.innerWidth - menuWidth - 12)
-        }
-        if (left < 12) {
-          left = 12
-        }
-      }
-      setCoords({
-        top: rect.bottom,
-        left,
-        width: rect.width,
-      })
-    }
-  }, [align])
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") return
-    if (isOpen && usePortal) {
-      updateCoords()
-      const raf = requestAnimationFrame(updateCoords)
-      window.addEventListener("scroll", updateCoords, true)
-      window.addEventListener("resize", updateCoords)
-      return () => {
-        cancelAnimationFrame(raf)
-        window.removeEventListener("scroll", updateCoords, true)
-        window.removeEventListener("resize", updateCoords)
-      }
-    }
-  }, [isOpen, usePortal, updateCoords])
-
-  React.useEffect(() => {
-    if (typeof document === "undefined") return
-    function handleClickOutside(event) {
-      if (
-        triggerRef.current && !triggerRef.current.contains(event.target) &&
-        menuRef.current && !menuRef.current.contains(event.target)
-      ) {
-        setIsOpen(false)
-      }
-    }
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [isOpen])
-
-  // Extract options from options prop or children
-  let options = []
-  if (Array.isArray(optionsProp)) {
-    options = optionsProp.map((opt) =>
-      typeof opt === "object" && opt !== null
-        ? opt
-        : { value: opt, label: String(opt) }
-    )
-  } else if (children) {
-    const extractOptions = (nodes) => {
-      const list = []
-      React.Children.forEach(nodes, (child, idx) => {
-        if (!child) return
-        if (child.type === React.Fragment) {
-          list.push(...extractOptions(child.props.children))
-        } else if (child.type === "optgroup") {
-          if (child.props.label) {
-            list.push({
-              isHeader: true,
-              label: child.props.label,
-              key: `header-${child.props.label}-${idx}`,
-            })
-          }
-          if (child.props.children) {
-            list.push(...extractOptions(child.props.children))
-          }
-        } else if (child.type === "option") {
-          list.push({
-            value: child.props.value,
-            label: child.props.children,
-            disabled: child.props.disabled,
-          })
-        }
-      })
-      return list
-    }
-    options = extractOptions(children)
-  }
-
-  const selectedOption = options.find((o) => !o.isHeader && String(o.value) === String(value))
-
-  const handleSelect = (val) => {
-    if (onValueChange) {
-      onValueChange(val)
-    }
-    if (onChange) {
-      onChange({ target: { value: val } })
-    }
-    setIsOpen(false)
-  }
-
-  const renderMenu = () => (
-    <div
-      ref={menuRef}
-      style={usePortal ? {
-        position: "fixed",
-        top: coords.top + 4,
-        left: coords.left,
-        minWidth: Math.max(coords.width, 224),
-        zIndex: 9999,
-      } : undefined}
-      className={cn(
-        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card",
-        usePortal ? "" : "absolute z-50 top-[calc(100%+4px)] left-0 min-w-[200px] w-full",
-        menuClassName
-      )}
-    >
-      {title && (
-        <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 text-xs font-semibold text-gray-900 dark:text-zinc-100 select-none">
-          {title}
-        </div>
-      )}
-      <div className="p-1.5 space-y-0.5 max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
-        {options.map((option, idx) => {
-          if (option.isHeader) {
-            return (
-              <div
-                key={option.key || `header-${idx}`}
-                className="px-2 pt-2 pb-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider select-none border-t-[0.5px] first:border-t-0 border-border dark:border-white/10 first:pt-1.5"
-              >
-                {option.label}
-              </div>
-            )
-          }
-
-          const isSelected = String(value) === String(option.value)
-          return (
-            <button
-              key={option.value !== undefined ? String(option.value) : `opt-${idx}`}
-              type="button"
-              disabled={option.disabled}
-              onClick={() => handleSelect(option.value)}
-              className={cn(
-                "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs font-medium transition-colors min-w-0 cursor-pointer",
-                isSelected
-                  ? "bg-gray-200/70 text-gray-900 dark:bg-white/15 dark:text-zinc-50"
-                  : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/10",
-                option.disabled && "opacity-50 cursor-not-allowed",
-                optionClassName
-              )}
-            >
-              <span className="truncate flex-1 min-w-0">{option.label}</span>
-              {isSelected && (
-                <Tick01Icon size={14} className="ml-2 text-gray-900 dark:text-zinc-100 shrink-0" />
-              )}
-            </button>
-          )
-        })}
-      </div>
-    </div>
+  const currentValue = value !== undefined ? value : uncontrolledValue
+  // Callers mix numeric options with string values from change events.
+  const selected = items.find(option => String(option.value) === String(currentValue))
+  const content = (
+    <Primitive.Positioner align={align} sideOffset={4} alignItemWithTrigger={false} collisionPadding={12} className="z-[9999] outline-none">
+      <Primitive.Popup data-slot="select-popup" className={cn("w-[var(--anchor-width)] min-w-[min(14rem,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-gray-700 shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200", menuClassName)}>
+        {title && <div className="px-3 py-2 text-xs font-semibold">{title}</div>}
+        <Primitive.List className="max-h-[min(15rem,var(--available-height))] overflow-y-auto overflow-x-hidden p-1.5 outline-none">
+          {options.map((option, index) => option.isHeader ? (
+            <div key={`heading-${index}`} role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-medium text-gray-500 dark:text-zinc-400">{option.label}</div>
+          ) : (
+            <Primitive.Item key={`${option.value}-${index}`} value={option.value} disabled={option.disabled} className={cn("flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs font-normal outline-none data-highlighted:bg-gray-100 data-selected:bg-gray-100 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-zinc-800 dark:data-selected:bg-zinc-800", optionClassName)}>
+              <Primitive.ItemText className="min-w-0 flex-1 truncate">{option.label}</Primitive.ItemText>
+              <Primitive.ItemIndicator><Tick01Icon size={14} aria-hidden="true" /></Primitive.ItemIndicator>
+            </Primitive.Item>
+          ))}
+        </Primitive.List>
+      </Primitive.Popup>
+    </Primitive.Positioner>
   )
-
+  const Indicator = indicator === "updown" ? UnfoldMoreIcon : ArrowDown01Icon
   return (
-    <div className={cn("relative w-full min-w-0 h-auto", containerClassName)}>
-      <button
-        type="button"
-        ref={(el) => {
-          triggerRef.current = el
-          if (ref) {
-            if (typeof ref === "function") ref(el)
-            else if (ref.hasOwnProperty('current')) ref.current = el
-          }
-        }}
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "flex h-11 w-full items-center justify-between overflow-hidden rounded-xl border border-border bg-white px-3 text-sm font-normal text-gray-700 shadow-none outline-none transition-all hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:border-border dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0 cursor-pointer",
-          isOpen && "border-pup-maroon ring-1 ring-pup-maroon dark:border-red-500/80 dark:ring-red-500/80",
-          buttonClassName,
-          className
-        )}
-        {...props}
-      >
-        <span className="flex-1 text-left truncate min-w-0">
-          {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options.find((o) => !o.isHeader)?.label || "Select..."))}
-        </span>
-        {indicator === "updown" ? (
-          <UnfoldMoreIcon
-            size={16}
-            className={cn(
-              "ml-2 shrink-0 text-gray-400 dark:text-zinc-500 transition-colors duration-200 pointer-events-none",
-              isOpen && "text-pup-maroon dark:text-red-400"
-            )}
-          />
-        ) : (
-          <ArrowDown01Icon
-            size={16}
-            className={cn(
-              "ml-2 shrink-0 text-gray-400 dark:text-zinc-500 transition-transform duration-200 pointer-events-none",
-              isOpen && "rotate-180 text-pup-maroon dark:text-red-400"
-            )}
-          />
-        )}
-      </button>
-
-      {isOpen && mounted && (usePortal ? createPortal(renderMenu(), document.body) : renderMenu())}
-    </div>
+    <Primitive.Root onOpenChange={setIsOpen} value={selected?.value ?? null} onValueChange={next => {
+      setUncontrolledValue(next)
+      onValueChange?.(next)
+      onChange?.({ target: { value: next, name } })
+    }} items={items} name={name} form={form} required={required} disabled={disabled} readOnly={readOnly}>
+      <div className={cn("relative h-auto w-full min-w-0", containerClassName)}>
+        <Primitive.Trigger ref={ref} data-slot="select-trigger" className={cn("flex h-10 w-full min-w-0 cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white px-3 text-[13px] font-normal text-gray-700 shadow-none outline-none transition-colors focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon data-popup-open:border-pup-maroon data-popup-open:ring-1 data-popup-open:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200", buttonClassName, className)} {...props}>
+          <Primitive.Value className="min-w-0 flex-1 truncate text-left" placeholder={placeholder ?? items[0]?.label ?? "Select…"} />
+          <Primitive.Icon><Indicator size={16} aria-hidden="true" className="shrink-0 text-gray-400" /></Primitive.Icon>
+        </Primitive.Trigger>
+        {usePortal ? <Primitive.Portal>{content}</Primitive.Portal> : isOpen ? content : null}
+      </div>
+    </Primitive.Root>
   )
 })
 Select.displayName = "Select"
-
 export { Select }

@@ -36,6 +36,7 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Clock01Icon as EmptyClock01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function parseDateLocal(str) {
   if (!str) return undefined;
@@ -356,7 +357,7 @@ export default function MyActivityPanel({ embedded = false }) {
               onChange={(e) => setLocalSearch(e.target.value)}
               disabled={loading}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
               {total.toLocaleString()}
             </div>
           </div>
@@ -496,18 +497,13 @@ export default function MyActivityPanel({ embedded = false }) {
           <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="flex-[1_0_auto] border-t border-border dark:border-border" />
         ) : error ? (
           <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400 border-t border-border dark:border-border rounded-b-2xl">
-            <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   Activity Log Error
                 </EmptyTitle>
-                <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                <EmptyDescription>
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
@@ -515,7 +511,7 @@ export default function MyActivityPanel({ embedded = false }) {
                 <Button
                   variant="outline"
                   onClick={handleRefresh}
-                  className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Retry Loading
                 </Button>
@@ -524,20 +520,13 @@ export default function MyActivityPanel({ embedded = false }) {
           </div>
         ) : rows.length === 0 ? (
           <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
-            <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-zinc-800">
-                  <HugeIcon
-                    className={cn(
-                      "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                      hasActiveFilters ? "ph-magnifying-glass" : "ph-clock-counter-clockwise"
-                    )}
-                  />
-                </EmptyMedia>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia>{hasActiveFilters ? <EmptySearch01Icon size="1em" /> : <EmptyClock01Icon size="1em" />}</EmptyMedia>
+                <EmptyTitle>
                   {hasActiveFilters ? "No Activity Found" : "No Activity Recorded Yet"}
                 </EmptyTitle>
-                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                <EmptyDescription>
                   {hasActiveFilters
                     ? "Try adjusting your search filters to find what you're looking for."
                     : "Your sign-ins, security changes, and account actions will automatically appear here."}
@@ -549,7 +538,7 @@ export default function MyActivityPanel({ embedded = false }) {
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="mt-6 h-10 px-5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -627,7 +616,7 @@ export default function MyActivityPanel({ embedded = false }) {
                               {log.ip && (
                                 <>
                                   <span>·</span>
-                                  <span className="font-mono">{log.ip}</span>
+                                  <span className="font-sans tabular-nums">{log.ip}</span>
                                 </>
                               )}
                             </div>

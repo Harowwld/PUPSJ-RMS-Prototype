@@ -171,13 +171,13 @@ export default function EditStudentModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
         <form onSubmit={handleSubmit}>
-          <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none text-left">
-            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>
               Edit Student Profile
             </DialogTitle>
-            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+            <DialogDescription className="mt-1">
               Update registry details and archive drawer coordinates for student{" "}
-              <span className="font-mono font-semibold text-gray-900 dark:text-zinc-200">
+              <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-200">
                 {student?.studentNo}
               </span>
               .
@@ -200,7 +200,7 @@ export default function EditStudentModal({
                   type="text"
                   disabled
                   value={student?.studentNo || ""}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/50 text-xs font-mono text-gray-900 dark:text-zinc-300 cursor-not-allowed shadow-none"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/50 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300 cursor-not-allowed shadow-none"
                 />
               </div>
 
@@ -346,7 +346,7 @@ export default function EditStudentModal({
           </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -359,7 +359,7 @@ export default function EditStudentModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+              className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">

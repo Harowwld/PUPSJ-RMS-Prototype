@@ -1,221 +1,118 @@
-# PUPSJ RMS Prototype - Complete Technology Stack Documentation
+# PUPSJ RMS Prototype — Complete Technology Stack Documentation
 
-## **Core Framework & Runtime**
-
-### **Next.js 16.1.6** (React 19.2.3)
-- **Architecture**: App Router (modern Next.js routing)
-- **Runtime**: Node.js server-side rendering
-- **Build Tool**: Next.js built-in bundler with Turbopack
-- **Development**: Hot Module Replacement (HMR) with development server
-
-### **Package Management**
-- **Manager**: pnpm (evidenced by `.pnpm-store` directory)
-- **Scripts**: Custom scripts for database management, hot folder watching, and development workflows
+> [!NOTE]
+> For operational developer guides, startup sequences, and agent conventions, see [`AGENTS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/AGENTS.md).
+> For design system and Apple HIG button/modal rules, see [`COMPONENT_STANDARDS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/COMPONENT_STANDARDS.md).
 
 ---
 
-## **Database & Persistence Layer**
+## 1. Core Framework & Runtime
 
-### **PostgreSQL 16 (local Docker only)**
-- **Implementation**: PostgreSQL server accessed through the `pg` Node.js client
-- **Location**: Local Docker service at `localhost:5432` (configurable via `DATABASE_URL`)
-- **Connection Management**: Shared connection pool in `src/lib/postgres.js`
-- **Features**: Foreign keys, numbered migrations, transactions, audit trails, and office/module access control
-- **Migration utility**: `scripts/migrate-sqlite-to-postgres.mjs` imports legacy SQLite backups when supplied; SQLite is not the active runtime database
-
-### **Database Schema**
-- Tables: `offices`, `modules`, `office_modules`, `staff`, `students`, `student_accounts`, `documents`, `document_requests`, `event_proposals`, `transaction_updates`, `global_audit_logs`, and supporting configuration tables
-- Repository Pattern: Dedicated `*Repo.js` files for data access abstraction
+### **Next.js 16.3.5** (React 19.2.3)
+- **Architecture**: Next.js App Router (`next-app/src/app/`)
+- **Runtime**: Node.js 20+ server-side runtime
+- **Package Manager**: `pnpm`
+- **Build Tool**: Turbopack & Next.js production compiler
 
 ---
 
-## **UI Framework & Styling**
+## 2. Database & Persistence Layer
 
-### **Tailwind CSS v4** (Modern)
-- **Configuration**: CSS-based configuration using `@theme` tokens
-- **Custom Design System**: PUP brand colors (`pup-maroon`, `pup-darkMaroon`)
-- **Typography**: Self-hosted Inter font (300-700 weights)
-- **Responsive**: Mobile-first responsive design
-
-### **Component Architecture**
-- **Base**: shadcn/ui components (v4.1.0) with custom theming
-- **UI Library**: Custom component library in `/src/components/ui/`
-  - Dialog, Button, Input, Card, Table, Skeleton, etc.
-- **Icons**: Phosphor icon set (duotone, bold variants)
-- **Animations**: `tw-animate-css` for Tailwind animations
-
-### **Design Tokens**
-```css
---color-pup-maroon: #800000;
---color-pup-darkMaroon: #5a0000;
---radius-brand: 8px;
-```
+### **PostgreSQL 16 (Local Docker)**
+- **Container**: `pupsj-rms-postgres` (defined in `next-app/docker-compose.yml`)
+- **Port Mapping**: Host port `5433` mapped to container port `5432`
+- **Connection**: `postgres://pupsj_rms:pupsj_rms_local@localhost:5433/pupsj_rms`
+- **Driver**: `pg` (v8.23.0) with shared connection pooling (`src/lib/postgres.js`)
+- **Schema & Migrations**: Numbered SQL migrations in `next-app/migrations/` managed via `scripts/run-migrations.mjs`
+- **Multi-Tenancy Model**: Unified relational schema with `offices`, `modules`, `office_modules`, and office-partitioned transactions and records
+- **Pattern**: Repository pattern via `src/lib/*Repo.js`
 
 ---
 
-## **Authentication & Security**
+## 3. UI Framework & Styling
 
-### **JWT-based Session Management**
-- **Library**: `jose` (v5.2.4) - Modern JWT implementation
-- **Algorithm**: HS256 signing
-- **Storage**: HTTP-only session cookies (`pup_session`)
-- **Session**: No explicit expiration (browser session-based)
+### **Tailwind CSS v4**
+- **Configuration**: CSS-first configuration via `@theme` tokens in `src/app/globals.css`
+- **Brand Colors**: PUP Maroon (`#800000`), Dark Maroon (`#5a0000`)
+- **Typography**: Plus Jakarta Sans (self-hosted variable font)
+- **Component Primitives**: Base UI (`@base-ui/react`), Radix / shadcn/ui primitives
+- **Icons**: Hugeicons (`@hugeicons/react`, `hugeicons-react`, `@hugeicons/core-free-icons`) using direct named imports (Phosphor icons deprecated)
+- **Toasts**: `sonner` (`<Toaster />`)
+- **Motion**: `framer-motion`, `motion`, `tw-animate-css`
+
+---
+
+## 4. Authentication & Security
+
+### **JWT Session Management**
+- **Library**: `jose` (HS256)
+- **Storage**: HTTP-only cookie (`pup_session`)
+- **Principal Verification**: Mandatory server-side DB validation of active status on all protected routes
+- **CSRF Protection**: State-changing endpoints verified with CSRF headers/tokens
 
 ### **Two-Factor Authentication (TOTP)**
-- **Library**: `speakeasy` (v2.0.0) for TOTP generation/verification
-- **QR Codes**: `qrcode` (v1.5.4) for authenticator app setup
-- **Encryption**: AES-256-CBC for TOTP secret storage
-- **Implementation**: Custom TOTP challenge modal system
+- **Libraries**: `speakeasy`, `otpauth`, `qrcode`
+- **Encryption**: AES-256 for secrets at rest
 
-### **Role-based Access Control**
-- Roles: Admin, Staff
-- Middleware: Route-level protection with `AuthGuard` components
-- API Security: Session verification on all protected endpoints
-
----
-
-## **File Processing & OCR**
-
-### **OCR Pipeline**
-- **Engine**: Tesseract.js (v5.1.0) - Client-side OCR
-- **Language Model**: `wink-eng-lite-web-model` for NLP processing
-- **NLP**: `wink-nlp` (v2.4.0) for name normalization
-- **PDF Processing**: `pdfjs-dist` (v4.10.38) for PDF text extraction
-
-### **File Management**
-- **Hot Folder**: Automated file watching with `chokidar` (v4.0.3)
-- **Archive**: `adm-zip` (v0.5.16) for backup/restore operations
-- **PDF Generation**: `jspdf` (v4.2.1) for document creation
+### **Role-Based Access Control (RBAC)**
+- **Roles**:
+  - `SuperAdmin` (`/superadmin` / `/systemadmin`)
+  - `Admin` (`/admin`)
+  - `Staff` (`/staff`)
+  - `Student` (`/student`)
 
 ---
 
-## **API Architecture**
+## 5. Document Processing, OCR & Ingestion
 
-### **Next.js API Routes**
-- **Pattern**: RESTful API under `/api/*`
-- **Authentication**: JWT middleware for protected routes
-- **Response Format**: Consistent `{ ok: true/false, data/error }` structure
-
-### **Key API Endpoints**
-- `/api/auth/*` - Authentication, TOTP
-- `/api/staff/*` - Staff management
-- `/api/students/*` - Student records
-- `/api/documents/*` - Document management
-- `/api/ingest/*` - Hot folder ingestion
-- `/api/system/*` - Admin operations
+### **OCR & Parsing Pipeline**
+- **Local OCR / Extraction**: Apple Vision native worker & `pdfjs-dist` text layer extraction
+- **NLP Normalization**: `wink-nlp` & `wink-eng-lite-web-model` for names and dates
+- **PDF Generation & Manipulation**: `jspdf`, `jspdf-autotable`, `pdf-lib`
+- **Hot-Folder Ingest**: Real-time file system watcher via `chokidar` with bearer-token authenticated ingestion API
 
 ---
 
-## **Real-time Features**
+## 6. Backup & Disaster Recovery
 
-### **Socket.io** (v4.8.3)
-- **Implementation**: Real-time updates for hot folder processing
-- **Client**: `socket.io-client` for browser connections
-- **Use Cases**: File processing status, live notifications
-
----
-
-## **Data Visualization**
-
-### **Charts & Analytics**
-- **Library**: `recharts` (v3.8.1) for dashboard charts
-- **Types**: Line charts, bar charts, analytics visualizations
+- **Encryption**: AES-256-GCM authenticated encryption for snapshots (`.zip.enc`)
+- **Packaging**: `adm-zip`
+- **Integrity**: SHA-256 cryptographic checksums stored in database
+- **Strategy**: 3-2-1 strategy with append-only immutable external archive policy (see [`BACKUP_SPEC.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/BACKUP_SPEC.md))
 
 ---
 
-## **Development Tools**
+## 7. Key Dependencies Overview
 
-### **Code Quality**
-- **Linting**: ESLint with Next.js configuration
-- **Package Manager**: pnpm for efficient dependency management
-
-### **Build & Deployment**
-- **Build**: `next build` for production optimization
-- **Start**: `next start` for production server
-- **Environment**: dotenv for environment variable management
-
----
-
-## **Specialized Features**
-
-### **Hot Folder System**
-- **Watcher**: File system monitoring with `chokidar`
-- **Processing**: Automated OCR and metadata extraction
-- **Workflow**: INBOUND → PROCESSING → DONE/FAILED folders
-
-### **Storage Layout Management**
-- **Coordinate System**: Normalized 0..1 rectangles for physical storage mapping
-- **Visualization**: 2D room/cabinet/drawer layout system
-- **Validation**: Prevents deletion of locations with assigned records
-
-### **Audit Logging**
-- **Comprehensive**: All major actions logged with actor, timestamp, details
-- **Search**: Full-text search with filtering capabilities
-- **Personal**: "My Activity" views for individual users
-
----
-
-## **Environment Configuration**
-
-### **Required Environment Variables**
-- `JWT_SECRET` - JWT signing key
-- `LOCAL_DATA_DIR` - Override for `.local/` directory (optional)
-- `HOT_FOLDER_*` - Hot folder configuration (optional)
-
-### **Development Setup**
-- Hot reload with concurrent Next.js and hot folder watcher
-- Database seeding with sample data
-- Admin account creation utilities
-
----
-
-## **Complete Dependencies List**
-
-### **Production Dependencies**
+### **Production**
 ```json
 {
-  "@base-ui/react": "^1.3.0",
-  "adm-zip": "^0.5.16",
+  "@base-ui/react": "^1.8.0",
+  "@hugeicons/react": "^1.1.10",
+  "adm-zip": "^0.6.1",
   "chokidar": "^4.0.3",
-  "class-variance-authority": "^0.7.1",
   "clsx": "^2.1.1",
-  "jose": "^5.2.4",
+  "date-fns": "^4.4.0",
+  "framer-motion": "^12.43.0",
+  "hugeicons-react": "^0.3.0",
+  "jose": "^5.10.0",
   "jspdf": "^4.2.1",
-  "lucide-react": "^1.7.0",
-  "next": "16.1.6",
-  "next-themes": "^0.4.6",
-  "otpauth": "^9.2.2",
+  "jspdf-autotable": "^5.0.8",
+  "next": "16.3.5",
+  "otpauth": "^9.5.2",
+  "pdf-lib": "^1.17.1",
   "pdfjs-dist": "^4.10.38",
+  "pg": "^8.23.0",
   "qrcode": "^1.5.4",
   "react": "19.2.3",
   "react-dom": "19.2.3",
-  "recharts": "^3.8.1",
-  "shadcn": "^4.1.0",
+  "recharts": "^3.10.1",
   "socket.io": "^4.8.3",
   "socket.io-client": "^4.8.3",
-  "sonner": "^2.0.7",
+  "sonner": "^2.0.8",
   "speakeasy": "^2.0.0",
-  "tailwind-merge": "^3.5.0",
-  "tesseract.js": "^5.1.0",
-  "tw-animate-css": "^1.4.0",
-  "wink-eng-lite-web-model": "^1.8.1",
-  "wink-nlp": "^2.4.0"
+  "tailwind-merge": "^3.7.0",
+  "wink-nlp": "^2.4.0",
+  "zod": "^4.6.5"
 }
 ```
-
-### **Development Dependencies**
-```json
-{
-  "@tailwindcss/postcss": "^4",
-  "concurrently": "^9.1.2",
-  "dotenv": "^16.4.7",
-  "eslint": "^9",
-  "eslint-config-next": "16.1.6",
-  "tailwindcss": "^4",
-  "wait-on": "^8.0.1"
-}
-```
-
----
-
-This technology stack provides a modern, full-stack web application with offline capabilities, real-time features, and comprehensive document management functionality specifically designed for educational record management.

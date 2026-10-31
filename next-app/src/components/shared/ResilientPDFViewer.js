@@ -145,7 +145,7 @@ export default function ResilientPDFViewer({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isReuploading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 cursor-pointer"
               >
                 {isReuploading ? (
                   <span className="flex items-center gap-1.5">

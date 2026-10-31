@@ -233,37 +233,26 @@ export default function ConfirmModal({
         )}
       >
         <DialogHeader className={cn(
-          "p-6 border-b border-border dark:border-border bg-gray-50 dark:bg-white/5 min-w-0",
-          isAppleStyled && "bg-white dark:bg-card border-none pb-0",
-          (!selectedItems.length && !isVerificationEnabled) && "pb-5 border-b-0"
+          "p-6 min-w-0",
+          (selectedItems.length > 0 || isVerificationEnabled) && "pb-0"
         )}>
           <div className="flex items-start gap-4 w-full">
             <div className="min-w-0 flex-1">
-              <DialogTitle className={cn(
-                "text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate"
-              )}>
+              <DialogTitle>
                 {title}
               </DialogTitle>
-              <DialogDescription className={cn(
-                "text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1"
-              )}>
+              <DialogDescription>
                 {displayMessage}
               </DialogDescription>
               {note && (
-                isRegistrationModal ? (
-                  <div className="mt-3 p-0 border-none bg-transparent">
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-450 p-0">
-                      {note}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30">
-                    <HugeIcon  className="ph-bold ph-info text-amber-600 shrink-0" />
-                    <p className="text-[11px] font-semibold text-amber-700">
-                      {note}
-                    </p>
-                  </div>
-                )
+                <p className={cn(
+                  "mt-3 text-[12px] font-normal",
+                  isRegistrationModal
+                    ? "text-gray-500 dark:text-zinc-400"
+                    : "text-amber-700 dark:text-amber-300"
+                )}>
+                  {note}
+                </p>
               )}
             </div>
           </div>
@@ -359,7 +348,7 @@ export default function ConfirmModal({
                       Security Authorization Code
                     </label>
                     <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl border border-gray-200/80 bg-gray-50/80 dark:bg-zinc-800/60 dark:border-zinc-700/80 shadow-2xs">
-                      <span className="font-mono text-[26px] font-bold tracking-[0.25em] text-pup-maroon dark:text-red-400 pl-1 select-all">
+                      <span className="font-sans tabular-nums text-[26px] font-bold tracking-[0.25em] text-pup-maroon dark:text-red-400 pl-1 select-all">
                         {verificationTarget}
                       </span>
                     </div>
@@ -408,7 +397,7 @@ export default function ConfirmModal({
                             inputMode="numeric"
                             autoComplete="one-time-code"
                             className={cn(
-                              "h-[46px] w-[46px] rounded-xl border bg-white dark:bg-card text-center text-[19px] font-mono font-bold transition-all duration-150 caret-transparent shadow-2xs",
+                              "h-[46px] w-[46px] rounded-xl border bg-white dark:bg-card text-center text-[19px] font-sans tabular-nums font-bold transition-all duration-150 caret-transparent shadow-2xs",
                               "focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon dark:focus:ring-red-500/20 dark:focus:border-red-500",
                               hasDigit
                                 ? isMatch
@@ -442,7 +431,7 @@ export default function ConfirmModal({
                         Security Authorization Code
                       </label>
                       <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-6 dark:bg-card dark:border-border shadow-inner">
-                        <span className="font-mono text-[22px] font-bold tracking-[0.25em] text-red-700 dark:text-red-400 pl-1 select-all">
+                        <span className="font-sans tabular-nums text-[22px] font-bold tracking-[0.25em] text-red-700 dark:text-red-400 pl-1 select-all">
                           {verificationTarget}
                         </span>
                       </div>
@@ -490,7 +479,7 @@ export default function ConfirmModal({
                               inputMode="numeric"
                               autoComplete="one-time-code"
                               className={cn(
-                                "h-14 w-12 rounded-xl border-2 bg-white text-center text-xl font-mono font-bold text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50 dark:focus:ring-red-900/20",
+                                "h-14 w-12 rounded-xl border-2 bg-white text-center text-xl font-sans tabular-nums font-bold text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50 dark:focus:ring-red-900/20",
                                 hasDigit
                                   ? isMatch
                                     ? "border-emerald-500 bg-emerald-50/20 text-gray-900 dark:text-zinc-50"
@@ -521,7 +510,7 @@ export default function ConfirmModal({
           </div>
         )}
 
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
@@ -535,13 +524,9 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
+            variant={isUnsavedChangesModal ? "warning" : normalizedVariant === "danger" ? "danger" : normalizedVariant === "success" ? "success" : normalizedVariant === "warning" ? "warning" : "default"}
             className={cn(
-              "h-10 px-5 text-xs font-semibold rounded-xl! shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
-              normalizedVariant === "success" && "btn-brand-green text-white",
-              (normalizedVariant === "warning" && !isUnsavedChangesModal) && "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white border-0",
-              normalizedVariant === "brand" && "btn-brand-red",
-              normalizedVariant === "danger" && "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border-0",
-              isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white border-0",
+              "h-10 px-5",
               isRegistrationModal && "w-[120px]",
               confirmClassName
             )}

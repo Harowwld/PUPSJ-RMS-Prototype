@@ -187,13 +187,13 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent hideClose className="flex max-h-[85vh] w-full max-w-3xl sm:max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-zinc-900">
-        <DialogHeader className="border-b border-gray-100 p-6 pb-4 text-left dark:border-white/10">
+        <DialogHeader className="p-6 pb-0 text-left">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+            <DialogTitle>
               Failed Documents {failedRows.length > 0 && `(${failedRows.length})`}
             </DialogTitle>
           </div>
-          <DialogDescription className="mt-1 text-[13px] text-gray-500 dark:text-zinc-400">
+          <DialogDescription className="mt-1">
             These documents encountered processing errors or are missing from the ingest directory. You can retry them or clear them from the review queue.
           </DialogDescription>
         </DialogHeader>
@@ -243,7 +243,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4 dark:border-white/10">
+        <div className="flex items-center justify-between px-6 py-4">
           {failedRows.length > 0 ? (
             <Button
               type="button"

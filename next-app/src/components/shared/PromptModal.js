@@ -39,7 +39,7 @@ export default function PromptModal({
       headerIconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-red-600 shadow-sm dark:border-border",
       buttonIcon: "ph-bold ph-trash",
       listDot: "bg-red-500",
-      confirmVariant: "destructive",
+      confirmVariant: "danger",
     },
     brand: {
       headerIcon: "ph-duotone ph-user-gear",
@@ -53,15 +53,14 @@ export default function PromptModal({
       headerIconWrap: "bg-amber-50 dark:bg-amber-950/30 border-amber-100 text-amber-600 shadow-sm dark:border-border",
       buttonIcon: "ph-bold ph-warning",
       listDot: "bg-amber-500",
-      confirmVariant: "default",
-      confirmStyle: "bg-orange-600 hover:bg-orange-700 border-0! border-none! shadow-[inset_0_1px_0_rgba(255,255,255,0.22),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_3px_rgba(0,0,0,0.2),0_1px_2px_-1px_rgba(0,0,0,0.1)]! text-white",
+      confirmVariant: "warning",
     },
     success: {
       headerIcon: "ph-duotone ph-arrow-counter-clockwise",
       headerIconWrap: "bg-green-50 border-green-100 text-green-600 shadow-sm dark:bg-emerald-950/30 dark:border-border",
       buttonIcon: "ph-bold ph-check",
       listDot: "bg-emerald-500",
-      confirmVariant: "default",
+      confirmVariant: "success",
     },
     default: {
       headerIcon: "ph-duotone ph-info",
@@ -83,14 +82,14 @@ export default function PromptModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleCancel()}>
       <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-lg dark:border-border dark:bg-card gap-0">
-        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none min-w-0">
+        <DialogHeader className="p-6 pb-0 min-w-0">
           <div className="flex items-start gap-4 w-full">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 truncate">
+              <DialogTitle>
                 {title}
               </DialogTitle>
               {message ? (
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+                <DialogDescription className="mt-1">
                   {message}
                 </DialogDescription>
               ) : null}
@@ -158,7 +157,7 @@ export default function PromptModal({
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
@@ -170,16 +169,10 @@ export default function PromptModal({
           </Button>
           <Button
             type="button"
-            variant={v.confirmVariant}
+            variant={isDeclineModal ? "danger" : v.confirmVariant}
             onClick={onConfirm}
             disabled={isLoading || confirmDisabled}
-            className={cn(
-              "flex h-10 items-center justify-center rounded-xl! text-xs font-semibold shadow-none! border-none! py-0 px-5 cursor-pointer active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
-              variant === "success" && "btn-brand-green text-white",
-              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white"),
-              (variant === "danger" || isDeclineModal) && "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white",
-              (variant === "brand" || (!variant || variant === "default")) && "btn-brand-red"
-            )}
+            className="h-10 px-5"
           >
             {isLoading ? "Processing..." : confirmLabel}
           </Button>

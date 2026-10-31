@@ -80,7 +80,7 @@ export default function PublicTracker() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-border  relative z-10">
           <div>
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-[#800000]  block mb-1">
+            <span className="text-[11px] font-sans tabular-nums font-semibold uppercase tracking-widest text-[#800000]  block mb-1">
               Public Records Verification
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950 ">
@@ -91,7 +91,7 @@ export default function PublicTracker() {
             </p>
           </div>
 
-          <div className="self-start sm:self-auto text-xs font-mono text-gray-500  bg-gray-50  px-3.5 py-1.5 rounded-full border border-border/70 ">
+          <div className="self-start sm:self-auto text-xs font-sans tabular-nums text-gray-500  bg-gray-50  px-3.5 py-1.5 rounded-full border border-border/70 ">
             Real-Time Query
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function PublicTracker() {
                   setTicketInput(e.target.value);
                   if (error) setError("");
                 }}
-                className="h-13 w-full rounded-2xl bg-gray-50  border border-border  text-sm font-mono placeholder:font-sans placeholder:text-gray-400 px-5 focus:outline-none focus:border-[#800000]/40 focus:ring-4 focus:ring-[#800000]/5 transition-all text-gray-900 "
+                className="h-13 w-full rounded-2xl bg-gray-50  border border-border  text-sm font-sans tabular-nums placeholder:font-sans placeholder:text-gray-400 px-5 focus:outline-none focus:border-[#800000]/40 focus:ring-4 focus:ring-[#800000]/5 transition-all text-gray-900 "
               />
             </div>
             <Button 
@@ -148,7 +148,7 @@ export default function PublicTracker() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/80 ">
                 <div>
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-sm font-mono font-bold text-gray-950 ">Ticket #{result.id}</span>
+                    <span className="text-sm font-sans tabular-nums font-bold text-gray-950 ">Ticket #{result.id}</span>
                     <span className="text-gray-300 ">·</span>
                     <span className="text-sm font-semibold text-gray-900 ">{result.doc_type}</span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusBadge(result.status)}`}>
@@ -164,7 +164,7 @@ export default function PublicTracker() {
                   </p>
                 </div>
 
-                <div className="text-xs font-mono text-gray-400  sm:text-right">
+                <div className="text-xs font-sans tabular-nums text-gray-400  sm:text-right">
                   <span>LOGGED: {result.created_at ? new Date(result.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently"}</span>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function PublicTracker() {
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className={`w-5 h-5 rounded-full text-[11px] font-mono font-bold flex items-center justify-center ${
+                          <span className={`w-5 h-5 rounded-full text-[11px] font-sans tabular-nums font-bold flex items-center justify-center ${
                             isDone 
                               ? "bg-[#800000] text-white" 
                               : "bg-gray-200  text-gray-600 "
@@ -207,7 +207,7 @@ export default function PublicTracker() {
               {/* Updates History */}
               {Array.isArray(result.updates) && result.updates.length > 0 && (
                 <div className="mt-6 pt-5 border-t border-border/80 ">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 block mb-2.5">
+                  <span className="text-[10px] font-sans tabular-nums font-bold uppercase tracking-wider text-gray-400 block mb-2.5">
                     Official Update Log
                   </span>
                   <div className="space-y-2">
@@ -223,7 +223,7 @@ export default function PublicTracker() {
                             </span>
                             <span className="text-gray-600 ">{up.message || "Status updated by Registrar."}</span>
                           </div>
-                          <span className="text-[10px] text-gray-400 shrink-0 font-mono">
+                          <span className="text-[10px] text-gray-400 shrink-0 font-sans tabular-nums">
                             {new Date(up.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
                         </div>

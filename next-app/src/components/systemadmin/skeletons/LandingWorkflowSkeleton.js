@@ -78,7 +78,7 @@ export default function LandingWorkflowSkeleton() {
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Sequential Application Process
                   </span>
-                  <span className="text-xs font-mono font-medium text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-sans tabular-nums font-medium text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
                     5 of 7 Steps
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export default function LandingWorkflowSkeleton() {
               <div className="rounded-xl border border-pup-maroon/40 dark:border-red-500/40 bg-white dark:bg-card shadow-xs overflow-hidden">
                 <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                    <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                       01
                     </div>
                     <div className="min-w-0 space-y-1">
@@ -137,7 +137,7 @@ export default function LandingWorkflowSkeleton() {
                 >
                   <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl">
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                      <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                         {stepNum}
                       </div>
                       <div className="min-w-0 space-y-1">

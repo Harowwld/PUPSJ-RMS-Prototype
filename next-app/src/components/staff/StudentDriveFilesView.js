@@ -17,6 +17,7 @@ import { cn, formatTitleCase } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { motion } from "framer-motion";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { Files01Icon as EmptyFiles01Icon } from "hugeicons-react";
 
 export default function StudentDriveFilesView({
   student,
@@ -130,7 +131,7 @@ export default function StudentDriveFilesView({
             </div>
 
             <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-gray-500 dark:text-zinc-400">
-              <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/60 dark:border-zinc-700">
+              <span className="font-sans tabular-nums text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/60 dark:border-zinc-700">
                 {student.acronym || student.studentNo}
               </span>
               {student.adviser && (
@@ -158,7 +159,7 @@ export default function StudentDriveFilesView({
             <Button
               type="button"
               onClick={() => onLocateStudent(student)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 cursor-pointer"
               title="Locate student's physical filing drawer in the archive map"
             >
               Locate Archive Drawer
@@ -232,19 +233,14 @@ export default function StudentDriveFilesView({
       {/* 3. Document Files Content Area */}
       {studentDocs.length === 0 ? (
         // Standard Empty State
-        <div className="py-16 rounded-2xl flex-1 flex flex-col items-center justify-center min-h-[380px] w-full bg-white/40 dark:bg-card/40 border border-border/60 dark:border-border">
-          <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-900 dark:text-zinc-300">
-            <EmptyHeader className="flex flex-col items-center gap-0">
-              <div className="relative mb-6">
-                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                  <HugeIcon className="ph-duotone ph-files text-3xl text-gray-400 dark:text-zinc-500" />
-                </EmptyMedia>
-              </div>
-              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+        <div className="rounded-2xl flex-1 flex flex-col items-center justify-center min-h-[380px] w-full bg-white/40 dark:bg-card/40 border border-border/60 dark:border-border">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia><EmptyFiles01Icon size="1em" /></EmptyMedia>
+              <EmptyTitle>
                 No Digitized Documents in this Folder
               </EmptyTitle>
-              <EmptyDescription className="max-w-md text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+              <EmptyDescription>
                 Hardcopy physical archives for {displayName} are safely filed in Room {student.room}, Cabinet {student.cabinet}, Drawer {student.drawer}.
               </EmptyDescription>
             </EmptyHeader>
@@ -253,7 +249,7 @@ export default function StudentDriveFilesView({
                 <Button
                   type="button"
                   onClick={() => onLocateStudent(student)}
-                  className="mt-5 h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white cursor-pointer active:scale-95 transition-all shadow-xs"
+                  className="h-10 px-5 cursor-pointer"
                 >
                   Locate Archive Drawer in Storage Map
                 </Button>

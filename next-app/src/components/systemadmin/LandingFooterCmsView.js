@@ -11,6 +11,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingFooterSkeleton from "./skeletons/LandingFooterSkeleton"
 import { cn } from "@/lib/utils"
+import { Switch } from "@/components/ui/switch";
 
 export const MAX_SCHEDULE_ITEMS = 3
 export const MAX_CONTACT_ITEMS = 3
@@ -337,7 +338,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Footer Content"}
               </Button>
@@ -400,7 +401,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Platform Subtitle / Description
                         </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
+                        <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                           {footerData.brandSubtitle.length}/250
                         </span>
                       </div>
@@ -424,7 +425,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Archive Room / Hall Name
                         </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
+                        <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                           {footerData.locationHall.length}/80
                         </span>
                       </div>
@@ -450,7 +451,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                           Campus Street Address
                         </label>
-                        <span className="text-[11px] text-gray-400 font-mono">
+                        <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                           {footerData.locationAddress.length}/200
                         </span>
                       </div>
@@ -482,20 +483,17 @@ export default function LandingFooterCmsView({ showToast }) {
                       </p>
                     </div>
 
-                    <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={footerData.mapsEnabled}
-                        onChange={(e) =>
+                    <Switch
+                      size="sm"
+                      checked={footerData.mapsEnabled}
+                      onCheckedChange={(checked) =>
                           setFooterData((prev) => ({
                             ...prev,
-                            mapsEnabled: e.target.checked,
+                            mapsEnabled: checked,
                           }))
                         }
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700 peer-checked:bg-pup-maroon dark:peer-checked:bg-red-600" />
-                    </label>
+                      aria-label="Show map directions link"
+                    />
                   </div>
 
                   <div>
@@ -514,7 +512,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           }))
                         }
                         placeholder="https://maps.google.com/?q=..."
-                        className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-mono dark:border-border dark:bg-card disabled:opacity-50"
+                        className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-sans tabular-nums dark:border-border dark:bg-card disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -532,20 +530,17 @@ export default function LandingFooterCmsView({ showToast }) {
                       </p>
                     </div>
 
-                    <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={footerData.watermarkEnabled}
-                        onChange={(e) =>
+                    <Switch
+                      size="sm"
+                      checked={footerData.watermarkEnabled}
+                      onCheckedChange={(checked) =>
                           setFooterData((prev) => ({
                             ...prev,
-                            watermarkEnabled: e.target.checked,
+                            watermarkEnabled: checked,
                           }))
                         }
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-hidden dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:bg-zinc-900 dark:after:border-zinc-700 peer-checked:bg-pup-maroon dark:peer-checked:bg-red-600" />
-                    </label>
+                      aria-label="Show footer watermark"
+                    />
                   </div>
 
                   <div>
@@ -563,7 +558,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       }
                       placeholder="EMANAGE"
                       maxLength={20}
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-mono font-bold uppercase tracking-wider dark:border-border dark:bg-card disabled:opacity-50"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums font-bold uppercase tracking-wider dark:border-border dark:bg-card disabled:opacity-50"
                     />
                   </div>
 
@@ -624,7 +619,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       size="sm"
                       onClick={addScheduleRow}
                       disabled={footerData.scheduleItems.length >= MAX_SCHEDULE_ITEMS}
-                      className="h-8 rounded-xl bg-pup-maroon hover:bg-[#600000] text-white text-xs font-semibold px-3 cursor-pointer shadow-xs active:scale-95 transition-all disabled:opacity-40"
+                      className="h-8 px-3 cursor-pointer disabled:opacity-40"
                     >
                       Add
                     </Button>
@@ -718,7 +713,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateScheduleItem(idx, "value", e.target.value)
                               }
                               placeholder="e.g. 8:00 AM – 5:00 PM"
-                              className="h-8 rounded-lg text-xs font-mono"
+                              className="h-8 rounded-lg text-xs font-sans tabular-nums"
                             />
                           </div>
 
@@ -763,7 +758,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       size="sm"
                       onClick={addContactChannel}
                       disabled={footerData.contactItems.length >= MAX_CONTACT_ITEMS}
-                      className="h-8 rounded-xl bg-pup-maroon hover:bg-[#600000] text-white text-xs font-semibold px-3 cursor-pointer shadow-xs active:scale-95 transition-all disabled:opacity-40"
+                      className="h-8 px-3 cursor-pointer disabled:opacity-40"
                     >
                       Add
                     </Button>
@@ -857,7 +852,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateContactItem(idx, "value", e.target.value)
                               }
                               placeholder="e.g. info@pup.edu.ph"
-                              className="h-8 rounded-lg text-xs font-mono"
+                              className="h-8 rounded-lg text-xs font-sans tabular-nums"
                             />
                           </div>
 
@@ -965,7 +960,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2rem] p-6 sm:p-8 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-xl">
                         {/* Registrar Schedule */}
                         <div>
-                          <h4 className="text-[10px] uppercase font-mono font-bold text-red-400 tracking-wider mb-3">
+                          <h4 className="text-[10px] uppercase font-sans tabular-nums font-bold text-red-400 tracking-wider mb-3">
                             {footerData.scheduleEyebrow || "Registrar Schedule"}
                           </h4>
                           <div className="space-y-2">
@@ -979,7 +974,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 </span>
                                 <span
                                   className={cn(
-                                    "text-xs font-mono",
+                                    "text-xs font-sans tabular-nums",
                                     item.status === "closed"
                                       ? "text-rose-400"
                                       : item.status === "break"
@@ -996,7 +991,7 @@ export default function LandingFooterCmsView({ showToast }) {
 
                         {/* Direct Contact Channels */}
                         <div>
-                          <h4 className="text-[10px] uppercase font-mono font-bold text-red-400 tracking-wider mb-3">
+                          <h4 className="text-[10px] uppercase font-sans tabular-nums font-bold text-red-400 tracking-wider mb-3">
                             {footerData.contactsEyebrow || "Official Desk"}
                           </h4>
                           <div className="space-y-2">
@@ -1005,7 +1000,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 key={idx}
                                 className="flex flex-col gap-0.5 pb-2 border-b border-white/5 last:border-0 last:pb-0"
                               >
-                                <span className="text-[10px] font-mono text-zinc-500 uppercase font-medium">
+                                <span className="text-[10px] font-sans tabular-nums text-zinc-500 uppercase font-medium">
                                   {contact.label}
                                 </span>
                                 {contact.type === "email" ? (
@@ -1013,7 +1008,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                     {contact.value}
                                   </span>
                                 ) : (
-                                  <span className="text-xs font-mono text-zinc-300">
+                                  <span className="text-xs font-sans tabular-nums text-zinc-300">
                                     {contact.value}
                                   </span>
                                 )}
@@ -1025,10 +1020,10 @@ export default function LandingFooterCmsView({ showToast }) {
 
                       {/* Sub-footer Links Card */}
                       <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-2xl px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
-                        <span className="text-[10px] font-mono text-zinc-500">
+                        <span className="text-[10px] font-sans tabular-nums text-zinc-500">
                           {footerData.copyrightText}
                         </span>
-                        <div className="text-[10px] font-mono font-medium text-zinc-400 flex items-center gap-1">
+                        <div className="text-[10px] font-sans tabular-nums font-medium text-zinc-400 flex items-center gap-1">
                           <span>Back to Top</span>
                           <HugeIcon className="ph-bold ph-arrow-up text-[10px]" />
                         </div>

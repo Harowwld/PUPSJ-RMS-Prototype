@@ -118,10 +118,10 @@ export default function OsasProposalReviewSheet({
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* TOP HEADER: Event Proposal Details + < > 01 of XX + X button */}
-        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+        <SheetHeader className="shrink-0 p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+              <SheetTitle>
                 Event Proposal Details
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -152,7 +152,7 @@ export default function OsasProposalReviewSheet({
                   >
                     <HugeIcon className="ph-bold ph-caret-right text-xs" />
                   </button>
-                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                     {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
                   </span>
                 </div>
@@ -438,7 +438,7 @@ export default function OsasProposalReviewSheet({
                 <div className="flex items-center justify-between text-xs text-purple-800 dark:text-purple-300 pt-1 border-t border-purple-200/60 dark:border-purple-900/40">
                   <span>
                     Due:{" "}
-                    <strong className="font-mono">
+                    <strong className="font-sans tabular-nums">
                       {selected.post_event_due_date
                         ? new Date(selected.post_event_due_date).toLocaleDateString(undefined, {
                             month: "short",
@@ -613,7 +613,7 @@ export default function OsasProposalReviewSheet({
                   Remarks & Instructions {isNoteRequired && "(Required, min 5 chars)"}
                 </span>
                 {isNoteRequired && (
-                  <span className={cn("font-mono text-[10px]", isNoteValid ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+                  <span className={cn("font-sans tabular-nums text-[10px]", isNoteValid ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
                     {note.trim().length} / 5 min
                   </span>
                 )}
@@ -667,7 +667,7 @@ export default function OsasProposalReviewSheet({
                         {update.status}
                       </span>
                       {update.created_at && (
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                           {new Date(update.created_at).toLocaleDateString(undefined, {
                             month: "short",
                             day: "numeric",
@@ -692,7 +692,7 @@ export default function OsasProposalReviewSheet({
         </div>
 
         {/* STICKY SHEET FOOTER */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between gap-3">
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between gap-3">
           <Button
             variant="outline"
             onClick={() => {
@@ -705,8 +705,7 @@ export default function OsasProposalReviewSheet({
           </Button>
 
           <Button
-            className="h-10 px-6 text-xs font-semibold rounded-xl btn-brand-red text-white! bg-pup-maroon hover:bg-pup-darkMaroon shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ color: "#ffffff" }}
+            className="h-10 px-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => save?.()}
             disabled={isSaving || !isNoteValid}
           >

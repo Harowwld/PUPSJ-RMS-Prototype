@@ -7,11 +7,14 @@ import React from "react";
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-brand border border-transparent bg-clip-padding text-xs font-semibold whitespace-nowrap cursor-pointer transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-xl border border-transparent bg-clip-padding text-xs font-semibold whitespace-nowrap cursor-pointer transition-[color,background-color,border-color,box-shadow,transform] duration-150 outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 motion-reduce:transition-none motion-reduce:transform-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-pup-maroon text-white hover:bg-pup-darkMaroon",
+        default: "bg-[var(--brand-accent,#800000)] text-[color:var(--brand-foreground,#ffffff)] shadow-xs hover:bg-[color-mix(in_srgb,var(--brand-accent,#800000)_85%,black)] dark:border-white/10 dark:shadow-none",
+        success: "bg-emerald-700 text-white shadow-xs hover:bg-emerald-800 dark:shadow-none",
+        warning: "bg-amber-700 text-white shadow-xs hover:bg-amber-800 dark:shadow-none",
+        danger: "bg-red-600 text-white shadow-xs hover:bg-red-700 dark:shadow-none",
         outline:
           "border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs",
         secondary:
@@ -24,9 +27,9 @@ const buttonVariants = cva(
       },
       size: {
         default:
-          "h-10 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 text-xs",
-        xs: "h-7 gap-1 rounded-brand px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-brand px-3 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+          "h-10 gap-2 px-5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 text-xs",
+        xs: "h-7 gap-1 rounded-lg px-2.5 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-9 gap-1.5 px-4 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-12 gap-2 px-6 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4 text-xs font-semibold",
         icon: "size-10",
         "icon-xs":
@@ -56,6 +59,7 @@ function Button({
     return (
       <ButtonPrimitive
         data-slot="button"
+        data-variant={variant}
         render={children}
         nativeButton={isNativeButton}
         className={cn(buttonVariants({ variant, size, className }))}
@@ -65,6 +69,7 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
+      data-variant={variant}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}>
       {children}

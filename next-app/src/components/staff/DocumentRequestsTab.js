@@ -1,4 +1,7 @@
 "use client";
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
+import useCreateAnother from "@/hooks/useCreateAnother";
 import HugeIcon from "@/components/shared/HugeIcon";
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -52,6 +55,7 @@ import {
 import {
   getRequestCharterStatus,
 } from "@/lib/citizenCharter";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -157,6 +161,7 @@ export default function DocumentRequestsTab({
   const [sortOrder, setSortOrder] = useState("DESC");
 
   const [createOpen, setCreateOpen] = useState(false);
+  const { attachForm, ...repeat } = useCreateAnother(createOpen);
   const [createClientType, setCreateClientType] = useState("Student");
   const [createStudentNo, setCreateStudentNo] = useState("");
   const [createCourseCode, setCreateCourseCode] = useState("");
@@ -214,8 +219,8 @@ export default function DocumentRequestsTab({
     return () => clearTimeout(timer);
   }, [loadSlaStandards]);
 
-  const resetCreateForm = () => {
-    setCreateClientType("Student");
+  const resetCreateForm = (keepClientType = false) => {
+    if (!keepClientType) setCreateClientType("Student");
     setCreateStudentNo("");
     setCreateCourseCode("");
     setCreateRequesterName("");
@@ -230,6 +235,7 @@ export default function DocumentRequestsTab({
   };
 
   const handleCreateOpenChange = (open) => {
+    if (submitting) return;
     setCreateOpen(open);
     if (!open) resetCreateForm();
   };
@@ -568,6 +574,7 @@ export default function DocumentRequestsTab({
       return;
     }
 
+    if (!repeat.beginSave()) return;
     setSubmitting(true);
     try {
       const formData = new FormData();
@@ -590,9 +597,11 @@ export default function DocumentRequestsTab({
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create request");
       showToast?.({ title: "Request Created", description: "Request added successfully." });
-      handleCreateOpenChange(false);
+      repeat.complete(() => resetCreateForm(repeat.createAnother), () => setCreateOpen(false));
       setPage(1);
-      loadList({ showLoading: true });
+      Promise.resolve().then(() => loadList({ showLoading: true })).catch(() => {
+        showToast?.({ title: "Refresh Failed", description: "Request created. Refresh the list to see the new entry." }, true);
+      });
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
@@ -603,6 +612,7 @@ export default function DocumentRequestsTab({
       );
     } finally {
       setSubmitting(false);
+      repeat.endSave();
     }
   };
 
@@ -927,7 +937,7 @@ export default function DocumentRequestsTab({
                       type="button"
                       onClick={() => setCreateOpen(true)}
                       title="Create Document Request"
-                      className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                      className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
                     >
                       Create Request
                     </Button>
@@ -988,7 +998,7 @@ export default function DocumentRequestsTab({
                     placeholder="Search student, name, program..."
                     className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                     {total > 0 ? `${total.toLocaleString()}` : "0"}
                   </div>
                 </div>
@@ -1031,31 +1041,24 @@ export default function DocumentRequestsTab({
             {(loading && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
-              <div className="p-12 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
-                <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-border flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-border dark:shadow-none">
-                      <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
-                    </EmptyMedia>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Requests</EmptyTitle>
-                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
+              <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                    <EmptyTitle>Could Not Load Requests</EmptyTitle>
+                    <EmptyDescription>
                       {error}
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               </div>
             ) : displayedRows.length === 0 ? (
-              <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                <Empty className="flex flex-1 h-full min-h-[360px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon  className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Document Requests Found</EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+              <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                    <EmptyTitle>No Document Requests Found</EmptyTitle>
+                    <EmptyDescription>
                       {activeChips.length > 0
                         ? "No document requests match your active filters or search terms."
                         : clientTypeFilters.includes("Alumni") && !clientTypeFilters.includes("Student")
@@ -1072,7 +1075,7 @@ export default function DocumentRequestsTab({
                         variant="outline"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                     Reset Filters
                   </Button>
@@ -1081,7 +1084,7 @@ export default function DocumentRequestsTab({
                         type="button"
                         onClick={() => setCreateOpen(true)}
                         title="Create Document Request"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
+                        className="flex h-10 items-center justify-center px-5 cursor-pointer"
                       >
                         Create Request
                       </Button>
@@ -1192,7 +1195,7 @@ export default function DocumentRequestsTab({
                           >
                             <td
                               className={cn(
-                                "p-4 align-middle text-xs font-mono text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                "p-4 align-middle text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
                                 selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
                                 isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                               )}
@@ -1231,7 +1234,7 @@ export default function DocumentRequestsTab({
                               </div>
                               <div className="flex items-center gap-1.5 mt-1 min-w-0 overflow-hidden text-xs font-normal text-[#8E8E93] dark:text-zinc-500">
                                 {r.student_no ? (
-                                  <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap shrink-0">
+                                  <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap shrink-0">
                                     {r.student_no}
                                   </span>
                                 ) : (
@@ -1418,23 +1421,20 @@ export default function DocumentRequestsTab({
         {/* 7. Dialog: Create Request */}
         <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
           <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card flex flex-col gap-0 max-h-[92vh]">
-            <DialogHeader className="bg-white p-6 pb-4 dark:bg-card border-b border-border/70 text-left shrink-0">
+            <DialogHeader className="p-6 pb-0 text-left shrink-0">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20 dark:text-red-400">
-                  <HugeIcon className="ph-bold ph-file-plus text-xl" />
-                </div>
                 <div className="min-w-0 pr-8">
-                  <DialogTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  <DialogTitle>
                     New Document Request
                   </DialogTitle>
-                  <DialogDescription className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+                  <DialogDescription className="mt-1">
                     Initiate an official document issuance request for a current student, alumnus, or parent/guardian.
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
-            <form onSubmit={handleCreate} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <form ref={attachForm} onSubmit={handleCreate} className="flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(92vh-140px)]">
                 {/* Client Type Selector */}
                 <div>
@@ -1507,7 +1507,7 @@ export default function DocumentRequestsTab({
                         </div>
                         <div className="min-w-0 flex-1 pr-6">
                           <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
-                          <div className="text-xs text-gray-500 font-mono mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
+                          <div className="text-xs text-gray-500 font-sans tabular-nums mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
                           <div className="text-xs text-gray-600 mt-1.5 flex flex-wrap gap-x-4 gap-y-1 dark:text-zinc-300">
                             <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "N/A"}</strong></span>
                             <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "N/A"}</strong></span>
@@ -1554,7 +1554,7 @@ export default function DocumentRequestsTab({
                                     {s?.name}
                                   </div>
                                   <div className="text-[11px] text-gray-600 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span className="font-mono">{sn}</span>
+                                    <span className="font-sans tabular-nums">{sn}</span>
                                     <span className="text-gray-300 dark:text-zinc-700">•</span>
                                     <span>{s?.courseCode || s?.course_code || "N/A"} - {s?.section || "N/A"}</span>
                                   </div>
@@ -1737,18 +1737,20 @@ export default function DocumentRequestsTab({
               </div>
 
               {/* Dialog Actions */}
-              <DialogFooter className="p-5 md:px-8 bg-gray-50/70 dark:bg-zinc-900/60 border-t border-border/70 flex items-center justify-end gap-3 shrink-0">
+              <DialogFooter className="mx-0 mb-0 p-5 md:px-8 flex flex-wrap flex-row items-center justify-end gap-3 shrink-0">
+                <CreateAnotherToggle checked={repeat.createAnother} onCheckedChange={repeat.setCreateAnother} disabled={submitting} savedCount={repeat.savedCount} />
                 <Button
                   type="button"
                   variant="outline"
                   className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   onClick={() => handleCreateOpenChange(false)}
+                  disabled={submitting}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="px-6 h-10 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50 gap-2 flex items-center"
+                  className="px-6 h-10 cursor-pointer disabled:opacity-50 gap-2 flex items-center"
                   disabled={submitting}
                 >
                   {submitting ? (
@@ -1757,7 +1759,7 @@ export default function DocumentRequestsTab({
                       Saving...
                     </>
                   ) : (
-                    "Create Request"
+                    "Create"
                   )}
                 </Button>
               </DialogFooter>
@@ -1768,33 +1770,29 @@ export default function DocumentRequestsTab({
         {/* 8. Dialog: No Digital Copy Warning */}
         <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border">
-            <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0">
+            <DialogHeader className="p-6 pb-0">
               <div className="min-w-0">
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                <DialogTitle>
                   No Digital Copy
                 </DialogTitle>
-                <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                <DialogDescription className="mt-1">
                   Document not yet scanned. Check physical storage.
                 </DialogDescription>
               </div>
             </DialogHeader>
+            <NoticeBanner tone="warning" className="mt-4">Check physical file in archives before releasing.</NoticeBanner>
             <div className="p-6 pt-4 space-y-4">
               <div className="space-y-3 text-sm">
-                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 text-xs text-amber-800 dark:border-amber-950/40 dark:bg-amber-950/10">
-                  Check physical file in archives before releasing.
-                </div>
                 {studentForRequest || detail?.room ? (
                   <div className="rounded-xl p-3 bg-white dark:bg-zinc-800/60 border border-border dark:border-border text-xs font-semibold text-pup-maroon dark:text-red-400">
                     Room {detail?.room || studentForRequest?.room} · Cabinet {detail?.cabinet || studentForRequest?.cabinet} · Drawer {detail?.drawer || studentForRequest?.drawer}
                   </div>
                 ) : (
-                  <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
+                  <Empty variant="compact">
                     <EmptyHeader>
-                      <EmptyMedia>
-                        <HugeIcon  className="ph-bold ph-warning-circle text-xl text-red-600"></HugeIcon>
-                      </EmptyMedia>
-                      <EmptyTitle className="text-sm">No Mapped Storage Location</EmptyTitle>
-                      <EmptyDescription className="text-red-700/70 text-xs">
+                      <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                      <EmptyTitle>No Mapped Storage Location</EmptyTitle>
+                      <EmptyDescription>
                         This requester has no physical drawer assignment.
                       </EmptyDescription>
                     </EmptyHeader>
@@ -1802,7 +1800,7 @@ export default function DocumentRequestsTab({
                 )}
               </div>
             </div>
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1815,7 +1813,7 @@ export default function DocumentRequestsTab({
               {studentForRequest || detail?.room ? (
                 <Button
                   type="button"
-                  className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold shadow-xs py-0 px-5 cursor-pointer active:scale-95 transition-all"
+                  className="flex h-10 items-center justify-center py-0 px-5 cursor-pointer"
                   onClick={() => {
                     setFileWarningOpen(false);
                     const target = studentForRequest || (detail?.room ? {
@@ -1838,16 +1836,13 @@ export default function DocumentRequestsTab({
         {/* Reopen Request Dialog Modal */}
         <Dialog open={reopenModalOpen} onOpenChange={setReopenModalOpen}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border">
-            <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0 text-left">
+            <DialogHeader className="p-6 pb-0 text-left">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
-                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-lg" />
-                </div>
                 <div>
-                  <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  <DialogTitle>
                     Reopen Document Request
                   </DialogTitle>
-                  <DialogDescription className="text-[13px] font-normal text-gray-600 dark:text-zinc-300 mt-1">
+                  <DialogDescription className="mt-1">
                     Reopen closed request #{detail?.id} to reactivate workflow and notify the requester.
                   </DialogDescription>
                 </div>
@@ -1889,15 +1884,13 @@ export default function DocumentRequestsTab({
                 />
               </div>
 
-              <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">
-                <HugeIcon className="ph-fill ph-info text-sm shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-                <span>
-                  Reopening adds an activity-history entry and posts an update on the student portal.
-                </span>
-              </div>
+
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <NoticeBanner tone="info" className="mb-6">
+              Reopening adds an activity-history entry and posts an update on the student portal.
+            </NoticeBanner>
+            <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1909,7 +1902,7 @@ export default function DocumentRequestsTab({
               </Button>
               <Button
                 type="button"
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                className="h-10 px-5 cursor-pointer disabled:opacity-50"
                 onClick={handleConfirmReopen}
                 disabled={reopenSubmitting || reopenReason.trim().length < 5}
               >

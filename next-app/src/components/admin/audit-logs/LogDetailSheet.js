@@ -139,10 +139,10 @@ export default function LogDetailSheet({
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
         {/* Top Header matching reference design: Audit Event Details < > 01 of 100 X */}
-        <SheetHeader className="shrink-0 p-0 border-b border-border dark:border-border bg-white dark:bg-card">
+        <SheetHeader className="shrink-0 p-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <SheetTitle className="text-base font-bold text-gray-900 dark:text-zinc-50 tracking-tight">
+              <SheetTitle>
                 Audit Event Details
               </SheetTitle>
               <SheetDescription className="sr-only">
@@ -173,7 +173,7 @@ export default function LogDetailSheet({
                   >
                     <HugeIcon className="ph-bold ph-caret-right text-xs" />
                   </button>
-                  <span className="font-mono text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
+                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
                     {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ export default function LogDetailSheet({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
                   #LOG-{selectedLog.id}
                 </span>
                 {severityInfo && (
@@ -281,7 +281,7 @@ export default function LogDetailSheet({
                   label="Log Sequence ID"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">
+                    <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
                       #{selectedLog.id}
                     </span>
                     <button
@@ -322,7 +322,7 @@ export default function LogDetailSheet({
                   icon="ph-bold ph-clock"
                   label="Timestamp"
                 >
-                  <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                  <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                     {formattedTime}
                   </span>
                 </InfoRow>
@@ -355,7 +355,7 @@ export default function LogDetailSheet({
                         label="Reference ID"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                          <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                             {selectedLog.entityId}
                           </span>
                           <button
@@ -418,7 +418,7 @@ export default function LogDetailSheet({
                   label="IP Address"
                 >
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       {selectedLog.ip || "::1"}
                     </span>
                     <div className="flex items-center gap-1">
@@ -450,7 +450,7 @@ export default function LogDetailSheet({
                   icon="ph-bold ph-desktop"
                   label="Client Environment"
                 >
-                  <span className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed font-mono break-all font-normal">
+                  <span className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed font-sans tabular-nums break-all font-normal">
                     {selectedLog.userAgent || selectedLog.user_agent || "Direct System Execution"}
                   </span>
                 </InfoRow>
@@ -460,7 +460,7 @@ export default function LogDetailSheet({
         )}
 
         {/* Executive Action Bar Footer */}
-        <SheetFooter className="shrink-0 p-4 px-6 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 flex flex-row items-center justify-between">
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
           <div>
             {selectedLog && (
               <Button

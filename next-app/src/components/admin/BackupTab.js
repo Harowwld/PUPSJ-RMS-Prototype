@@ -35,6 +35,7 @@ import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
 
 export default function BackupTab({
   systemHealth,
@@ -344,7 +345,7 @@ export default function BackupTab({
                     <Button
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 active:scale-95 transition-all text-xs font-semibold shadow-xs cursor-pointer border-0"
+                      className="flex h-10 items-center justify-center px-5 cursor-pointer border-0"
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
@@ -393,18 +394,13 @@ export default function BackupTab({
                 </div>
               ) : error ? (
                 <div className="flex-1 flex min-h-[400px] flex-col items-center justify-center p-6 rounded-b-2xl">
-                  <Empty className="flex h-[350px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-gray-300 dark:text-zinc-650" />
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                      <EmptyTitle>
                         Could not load backups
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                      <EmptyDescription>
                         {error}
                       </EmptyDescription>
                       <Button 

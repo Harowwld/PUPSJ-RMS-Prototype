@@ -23,6 +23,7 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { cn } from "@/lib/utils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { getAdjacentRowId, getBulkActionSkipReason, getRangeIds, getRowClickSelection } from "@/lib/batchReviewSelection";
+import { CheckmarkSquare01Icon as EmptyCheckmarkSquare01Icon, File02Icon as EmptyFile02Icon } from "hugeicons-react";
 
 const STATUS_TABS = [
   { id: "Needs Review", label: "Needs Review" },
@@ -523,7 +524,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   placeholder="Search filename or OCR text..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {total > 0 ? `${total.toLocaleString()}` : "0"}
                 </div>
               </div>
@@ -587,18 +588,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2 sm:p-3">
                 {rows.length === 0 ? (
                   <div className="flex flex-1 items-center justify-center p-6">
-                    <Empty className="flex min-h-0 flex-1 flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-5">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-lg dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon  className="ph-duotone ph-check-square text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia><EmptyCheckmarkSquare01Icon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           No Documents in Queue
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                        <EmptyDescription>
                           {query.trim()
                             ? "No documents match your active search filter."
                             : `There are no inbound documents waiting under "${status ? STATUS_TABS.find(t => t.id === status)?.label || status : "All"}".`}
@@ -998,7 +994,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             !selected.staff_selected_student_no ||
                             !selected.proposed_doc_type
                           }
-                          className="h-8 px-3 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 active:scale-95 disabled:opacity-50 transition-all cursor-pointer shadow-xs sm:h-10 sm:px-5"
+                          className="h-8 px-3 disabled:opacity-50 cursor-pointer sm:h-10 sm:px-5"
                         >
                           {saving ? "Confirming..." : "Confirm Document"}
                         </Button>
@@ -1029,18 +1025,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </div>
                 ) : (
                   <div className="flex flex-1 items-center justify-center p-8">
-                    <Empty className="flex h-full min-h-0 flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-5">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-lg dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon  className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia><EmptyFile02Icon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           Select a Document
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                        <EmptyDescription>
                           Choose an item from the review queue on the left to inspect its scanned preview and extracted OCR fields.
                         </EmptyDescription>
                       </EmptyHeader>
@@ -1055,13 +1046,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       </div>
       <Dialog open={confirmBulkDismiss} onOpenChange={setConfirmBulkDismiss}>
         <DialogContent className="flex flex-col gap-0 sm:max-w-md rounded-2xl bg-white p-0 dark:bg-zinc-900">
-          <DialogHeader className="border-b border-border p-6 pb-4 text-left">
-            <DialogTitle className="text-base font-semibold">Dismiss selected files?</DialogTitle>
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>Dismiss selected files?</DialogTitle>
           </DialogHeader>
           <div className="p-6 text-sm text-gray-600 dark:text-zinc-300">
             This will dismiss up to {selectedIds.length} selected files that are still eligible. Other files will be skipped and listed in the results.
           </div>
-          <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
+          <div className="flex justify-end gap-2 px-6 py-4">
             <Button variant="outline" onClick={() => setConfirmBulkDismiss(false)} className="rounded-xl">Cancel</Button>
             <Button variant="destructive" onClick={() => runBulkAction("dismiss", { confirmed: true })} className="rounded-xl">Dismiss Selected Files</Button>
           </div>
@@ -1069,8 +1060,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       </Dialog>
       <Dialog open={Boolean(bulkResults)} onOpenChange={(open) => !open && setBulkResults(null)}>
         <DialogContent className="flex flex-col gap-0 sm:max-w-xl rounded-2xl bg-white p-0 dark:bg-zinc-900">
-          <DialogHeader className="border-b border-border p-6 pb-4 text-left">
-            <DialogTitle className="text-base font-semibold">Bulk action results</DialogTitle>
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>Bulk action results</DialogTitle>
           </DialogHeader>
           {bulkResults && (
             <div className="space-y-3 p-6">
@@ -1090,7 +1081,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               </div>
             </div>
           )}
-          <div className="flex justify-end border-t border-border px-6 py-4">
+          <div className="flex justify-end px-6 py-4">
             <Button onClick={() => setBulkResults(null)} className="rounded-xl">Done</Button>
           </div>
         </DialogContent>
@@ -1100,8 +1091,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           hideClose
           className="!fixed !inset-0 !flex !h-screen !w-screen !max-w-none !translate-x-0 !translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-zinc-950 p-0 text-white shadow-none"
         >
-          <DialogHeader className="flex shrink-0 flex-row items-center justify-between border-b border-white/10 bg-black/70 px-5 py-3 text-white">
-            <DialogTitle className="truncate pr-4 text-sm font-semibold text-white">
+          <DialogHeader className="flex shrink-0 flex-row items-center justify-between px-5 py-3 text-white">
+            <DialogTitle className="pr-4 text-white">
               {fullscreenPreview?.title || "Document preview"}
             </DialogTitle>
             <button

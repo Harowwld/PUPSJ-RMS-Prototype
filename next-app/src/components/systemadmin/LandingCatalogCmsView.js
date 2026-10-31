@@ -375,7 +375,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Catalog Content"}
               </Button>
@@ -436,7 +436,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Main Section Heading
                       </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
+                      <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                         {catalogData.heading?.length || 0}/50
                       </span>
                     </div>
@@ -456,7 +456,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Section Description / Intro
                       </label>
-                      <span className="text-[11px] text-gray-400 font-mono">
+                      <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                         {catalogData.description?.length || 0}/200
                       </span>
                     </div>
@@ -484,7 +484,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         <span className="text-sm font-bold text-gray-900 dark:text-zinc-100">
                           Catalog Credentials
                         </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-sans tabular-nums">
                           {currentItems.length} of {MAX_CATALOG_ITEMS}
                         </span>
                       </div>
@@ -499,7 +499,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       onClick={handleAddCard}
                       disabled={currentItems.length >= MAX_CATALOG_ITEMS}
                       title="Add Card to Catalog"
-                      className="h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-xs font-semibold px-3 cursor-pointer shadow-xs disabled:opacity-50 active:scale-95 transition-all"
+                      className="h-8 px-3 cursor-pointer disabled:opacity-50"
                     >
                       Add Document
                     </Button>
@@ -522,7 +522,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         >
                           <div
                             className={cn(
-                              "w-7 h-7 rounded-xl flex items-center justify-center font-mono text-[11px] font-bold shrink-0 transition-colors",
+                              "w-7 h-7 rounded-xl flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
                               isSelected
                                 ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
                                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
@@ -590,14 +590,14 @@ export default function LandingCatalogCmsView({ showToast }) {
                   <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
                     <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                       <div className="space-y-0.5">
-                        <span className="text-[10px] font-mono uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
+                        <span className="text-[10px] font-sans tabular-nums uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
                           Document Card Editor
                         </span>
                         <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                           {currentCard.title || "Untitled Document"}
                         </h3>
                       </div>
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 font-mono font-bold">
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 font-sans tabular-nums font-bold">
                         Slot {String(safeSelectedIdx + 1).padStart(2, "0")}
                       </span>
                     </div>
@@ -608,7 +608,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300">
                           Official Document Title
                         </label>
-                        <span className="text-[10px] text-gray-400 font-mono">
+                        <span className="text-[10px] text-gray-400 font-sans tabular-nums">
                           {currentCard.title?.length || 0}/60
                         </span>
                       </div>
@@ -633,13 +633,13 @@ export default function LandingCatalogCmsView({ showToast }) {
                         className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs mb-2 font-medium"
                       />
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-[10px] text-gray-400 font-mono">Suggestions:</span>
+                        <span className="text-[10px] text-gray-400 font-sans tabular-nums">Suggestions:</span>
                         {CLIENT_PILLS.map((pill) => (
                           <button
                             key={pill}
                             type="button"
                             onClick={() => updateCardField("client", pill)}
-                            className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-600 dark:text-zinc-300 hover:border-pup-maroon hover:text-pup-maroon transition-colors cursor-pointer"
+                            className="px-2 py-0.5 rounded-full text-[10px] font-sans tabular-nums bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-600 dark:text-zinc-300 hover:border-pup-maroon hover:text-pup-maroon transition-colors cursor-pointer"
                           >
                             {pill}
                           </button>
@@ -667,7 +667,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         <label className="text-xs font-bold text-gray-700 dark:text-zinc-300">
                           Mandatory Filing Requirements ({currentCard.requirements?.length || 0})
                         </label>
-                        <span className="text-[10px] text-gray-400 font-mono">
+                        <span className="text-[10px] text-gray-400 font-sans tabular-nums">
                           Shown directly on the carousel card
                         </span>
                       </div>
@@ -714,7 +714,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                           size="sm"
                           onClick={addRequirement}
                           disabled={!newRequirementText.trim()}
-                          className="h-9 rounded-xl bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-700 dark:hover:bg-zinc-600 text-xs font-semibold px-3 cursor-pointer shadow-xs"
+                          className="h-9 px-3 cursor-pointer"
                         >
                           Add Requirement
                         </Button>
@@ -723,7 +723,7 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                     {/* IN-EDITOR LIVE CARD MINI-PREVIEW (Apple-style Card) */}
                     <div className="p-4 rounded-2xl bg-zinc-100/80 dark:bg-zinc-950/60 border border-border dark:border-border">
-                      <div className="text-[10px] font-mono uppercase font-bold text-gray-500 mb-3 flex items-center justify-between">
+                      <div className="text-[10px] font-sans tabular-nums uppercase font-bold text-gray-500 mb-3 flex items-center justify-between">
                         <span>Carousel Card Preview</span>
                         <span className="text-pup-maroon dark:text-red-400 font-semibold">
                           Real-Time Renderer
@@ -733,10 +733,10 @@ export default function LandingCatalogCmsView({ showToast }) {
                       {/* Apple-style card container */}
                       <div className="max-w-[420px] mx-auto bg-[#f5f5f7] dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 text-left shadow-sm border border-black/[0.04] dark:border-border font-jakarta">
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
+                          <span className="text-[10px] font-sans tabular-nums font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
                             {currentCard.client || "Student & Alumni"}
                           </span>
-                          <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 font-medium">
+                          <span className="text-[10px] font-sans tabular-nums text-zinc-400 dark:text-zinc-500 font-medium">
                             Official Document
                           </span>
                         </div>
@@ -750,7 +750,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         </p>
 
                         <div className="pt-4 border-t border-black/5 dark:border-border">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-2.5 flex items-center gap-1.5">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-2.5 flex items-center gap-1.5">
                             <HugeIcon className="ph-bold ph-shield-check text-xs" />
                             Filing Requirements
                           </div>
@@ -792,7 +792,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-gray-900 dark:text-zinc-300">
+                  <span className="text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300">
                     Card {previewActiveIdx + 1} of {currentItems.length}
                   </span>
 
@@ -843,10 +843,10 @@ export default function LandingCatalogCmsView({ showToast }) {
                         )}
                       >
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
+                          <span className="text-[10px] font-sans tabular-nums font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
                             {doc.client || "Student & Alumni"}
                           </span>
-                          <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 font-medium">
+                          <span className="text-[10px] font-sans tabular-nums text-zinc-400 dark:text-zinc-500 font-medium">
                             Official Document
                           </span>
                         </div>
@@ -860,7 +860,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         </p>
 
                         <div className="pt-4 border-t border-black/5 dark:border-border mt-auto">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono mb-2 flex items-center gap-1.5">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-2 flex items-center gap-1.5">
                             <HugeIcon className="ph-bold ph-shield-check text-xs" />
                             Filing Requirements
                           </div>

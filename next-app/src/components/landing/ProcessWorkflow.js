@@ -239,7 +239,7 @@ export default function ProcessWorkflow() {
                             delay: idx * 0.08 + 0.04,
                             ease: [0.16, 1, 0.3, 1],
                           }}
-                          className={`w-12 h-12 rounded-full flex items-center justify-center font-mono text-sm transition-all duration-300 ${
+                          className={`w-12 h-12 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-all duration-300 ${
                             isSelected
                               ? "bg-[#800000] text-white"
                               : "bg-white/5 border border-white/10 text-zinc-400"

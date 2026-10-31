@@ -270,7 +270,7 @@ export default function AuditLogsTab({
                     type="button"
                     onClick={handlePreviewPDF}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 font-semibold text-xs active:scale-95 disabled:opacity-50 transition-all cursor-pointer px-5 shadow-xs border-0"
+                    className="flex h-10 items-center justify-center disabled:opacity-50 cursor-pointer px-5 border-0"
                   >
                     {isGeneratingPdf ? (
                       <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>

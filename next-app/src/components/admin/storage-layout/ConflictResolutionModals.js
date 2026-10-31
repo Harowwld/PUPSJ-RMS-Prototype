@@ -43,11 +43,11 @@ const ConflictResolutionModals = memo(({
         onOpenChange={setTemplateConflictOpen}
       >
         <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
-            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>
               Template Conflict Resolution
             </DialogTitle>
-            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-relaxed">
+            <DialogDescription className="mt-1">
               The selected room template removes drawers that currently store student documents. Reassign these records to continue.
             </DialogDescription>
           </DialogHeader>
@@ -217,7 +217,7 @@ const ConflictResolutionModals = memo(({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -229,7 +229,7 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               onClick={openApplyPreview}
-              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+              className="h-10 px-5 cursor-pointer border-0"
             >
               Continue
             </Button>
@@ -240,11 +240,11 @@ const ConflictResolutionModals = memo(({
       {/* 2. Confirm Reassignment Preview Modal */}
       <Dialog open={applyPreviewOpen} onOpenChange={setApplyPreviewOpen}>
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
-            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>
               Confirm Reassignment
             </DialogTitle>
-            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-relaxed">
+            <DialogDescription className="mt-1">
               Review the drawer migrations before applying the new room layout template.
             </DialogDescription>
           </DialogHeader>
@@ -283,7 +283,7 @@ const ConflictResolutionModals = memo(({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -295,7 +295,7 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               onClick={applyTemplateWithMappings}
-              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white shadow-xs active:scale-95 transition-all cursor-pointer border-0"
+              className="h-10 px-5 cursor-pointer border-0"
             >
               Apply Template
             </Button>
@@ -306,11 +306,11 @@ const ConflictResolutionModals = memo(({
       {/* 3. Template Apply Results Report Modal */}
       <Dialog open={applyReportOpen} onOpenChange={setApplyReportOpen}>
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
-            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+          <DialogHeader className="p-6 pb-0 text-left">
+            <DialogTitle>
               Template Apply Report
             </DialogTitle>
-            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-relaxed">
+            <DialogDescription className="mt-1">
               Per-drawer reassignment results from the latest template application.
             </DialogDescription>
           </DialogHeader>
@@ -361,7 +361,7 @@ const ConflictResolutionModals = memo(({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"

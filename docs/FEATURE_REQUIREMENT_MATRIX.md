@@ -467,5 +467,5 @@ When presenting or validating this Feature Requirement Matrix in capstone evalua
 4. **Primary Documentation Cross-Reference:**
    - Architecture & Data Layer: [`docs/TECHNOLOGY_STACK.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/TECHNOLOGY_STACK.md)
    - Backup & Air-Gap Specifications: [`docs/BACKUP_SPEC.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/BACKUP_SPEC.md)
-   - Migration Verification Status: [`docs/IMPLEMENTATION_CHECKLIST.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/IMPLEMENTATION_CHECKLIST.md)
-   - Multi-Tenant Office Architecture: [`docs/plans/multi-office-architecture.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/plans/multi-office-architecture.md)
+   - Migration Verification Status: [`docs/archive/IMPLEMENTATION_CHECKLIST.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/archive/IMPLEMENTATION_CHECKLIST.md)
+   - Multi-Tenant Office Architecture (Historical Plan): [`docs/archive/plans/multi-office-architecture.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/archive/plans/multi-office-architecture.md)

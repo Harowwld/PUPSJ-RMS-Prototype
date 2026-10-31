@@ -60,12 +60,12 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
 
                 {/* Total Students */}
                 <td className="py-3 px-6 align-middle text-center border-r border-border/70 dark:border-border/70">
-                  <Skeleton className="h-4 w-12 mx-auto rounded dark:bg-muted font-mono" />
+                  <Skeleton className="h-4 w-12 mx-auto rounded dark:bg-muted font-sans tabular-nums" />
                 </td>
 
                 {/* Fully Digitized */}
                 <td className="py-3 px-6 align-middle text-center border-r border-border/70 dark:border-border/70">
-                  <Skeleton className="h-4 w-12 mx-auto rounded dark:bg-muted font-mono" />
+                  <Skeleton className="h-4 w-12 mx-auto rounded dark:bg-muted font-sans tabular-nums" />
                 </td>
 
                 {/* Completeness */}

@@ -111,7 +111,7 @@ export default function BackupFilters({
           {isLoading ? (
             <Skeleton className="h-3.5 w-6 rounded dark:bg-muted" />
           ) : (
-            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
               {(backupTotal || 0).toLocaleString()}
             </span>
           )}

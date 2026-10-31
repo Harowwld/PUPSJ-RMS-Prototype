@@ -32,6 +32,7 @@ import RestoreModal from "@/components/shared/RestoreModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
+import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -795,7 +796,7 @@ export default function SystemBackupsTab({ showToast }) {
                     <Button
                       onClick={() => handleGenerateBackup()}
                       disabled={localLoading.generating}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-10 px-5 cursor-pointer"
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
@@ -868,18 +869,13 @@ export default function SystemBackupsTab({ showToast }) {
               ) : error ? (
                 <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
-                    <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon  className="ph-duotone ph-warning-circle text-xl text-gray-300 dark:text-zinc-650" />
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           Could not load backups
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300">
+                        <EmptyDescription>
                           {error}
                         </EmptyDescription>
                         <Button 

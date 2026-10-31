@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { Select } from "@/components/ui/select"
 import { formatErrorMessage } from "@/lib/errorUtils"
+import { Switch } from "@/components/ui/switch";
 
 const DAY_LABELS = [
   "Sunday",
@@ -282,28 +283,12 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         </div>
 
         {/* Apple Switch Toggle */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={schedule.enabled}
-          onClick={handleToggle}
-          disabled={isSaving}
+        <Switch
+          checked={schedule.enabled}
+          onCheckedChange={handleToggle}
           aria-label="Toggle automatic backups"
-          className={cn(
-            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 active:scale-95",
-            schedule.enabled
-              ? "bg-[#34C759]"
-              : "bg-gray-200 dark:bg-zinc-700",
-            isSaving && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          <span
-            className={cn(
-              "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-xs transition-transform duration-200 ease-out",
-              schedule.enabled ? "translate-x-5" : "translate-x-0"
-            )}
-          />
-        </button>
+          disabled={isSaving}
+        />
       </div>
 
       {/* macOS Settings Grouped Rows: Expands when enabled */}
@@ -425,28 +410,13 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               </span>
             </div>
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={schedule.retention?.enabled !== false}
-              onClick={handleRetentionToggle}
-              disabled={isSaving}
+            <Switch
+              size="sm"
+              checked={schedule.retention?.enabled !== false}
+              onCheckedChange={handleRetentionToggle}
               aria-label="Toggle GFS smart storage retention"
-              className={cn(
-                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 active:scale-95",
-                schedule.retention?.enabled !== false
-                  ? "bg-blue-600"
-                  : "bg-gray-200 dark:bg-zinc-700",
-                isSaving && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <span
-                className={cn(
-                  "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-out",
-                  schedule.retention?.enabled !== false ? "translate-x-4" : "translate-x-0"
-                )}
-              />
-            </button>
+              disabled={isSaving}
+            />
           </div>
 
           {/* Apple Time Machine Status Strip */}
@@ -464,7 +434,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 )}
               />
               <span className="text-gray-900 dark:text-zinc-300">Last Run:</span>
-              <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">
+              <span className="font-semibold text-gray-900 dark:text-zinc-200 font-sans tabular-nums text-[11px]">
                 {lastRunFormatted || "Never"}
               </span>
 
@@ -487,7 +457,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               <div className="flex items-center gap-1.5 text-gray-900 dark:text-zinc-300">
                 <HugeIcon  className="ph-bold ph-calendar-blank text-[13px] text-gray-400 dark:text-zinc-500" />
                 <span>Next Run:</span>
-                <span className="font-semibold text-gray-900 dark:text-zinc-200 font-mono text-[11px]">
+                <span className="font-semibold text-gray-900 dark:text-zinc-200 font-sans tabular-nums text-[11px]">
                   {nextRunFormatted}
                 </span>
               </div>

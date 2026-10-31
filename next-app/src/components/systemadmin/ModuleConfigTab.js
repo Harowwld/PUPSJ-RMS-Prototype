@@ -1,4 +1,5 @@
 "use client"
+import NoticeBanner from "@/components/shared/NoticeBanner";
 
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 function getOfficeIcon(office) {
   if (office?.icon && office.icon.trim()) return office.icon
@@ -655,19 +657,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           />
-          <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center rounded-b-2xl bg-white dark:bg-card text-center py-16">
-            <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                    <HugeIcon className="ph-duotone ph-buildings text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                  </EmptyMedia>
-                </div>
-                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center rounded-b-2xl bg-white dark:bg-card text-center ">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia><EmptyBuilding03Icon size="1em" /></EmptyMedia>
+                <EmptyTitle>
                   No Departments Found
                 </EmptyTitle>
-                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                <EmptyDescription>
                   There are currently no campus departments or administrative offices configured in the system.
                 </EmptyDescription>
               </EmptyHeader>
@@ -675,7 +672,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 <Button
                   onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices" } }))}
                   title="Manage Departments"
-                  className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
+                  className="flex h-10 items-center justify-center px-5 cursor-pointer"
                 >
                   Manage Departments
                 </Button>
@@ -795,7 +792,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
             >
               <span>Active</span>
               <span className={cn(
-                "text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium",
+                "text-[10px] px-1.5 py-0.2 rounded-full font-sans tabular-nums font-medium",
                 officeFilter === "Active"
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
                   : "bg-gray-200/70 text-gray-600 dark:bg-zinc-700 dark:text-zinc-400"
@@ -815,7 +812,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
             >
               <span>Archived</span>
               <span className={cn(
-                "text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium",
+                "text-[10px] px-1.5 py-0.2 rounded-full font-sans tabular-nums font-medium",
                 officeFilter === "Archived"
                   ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                   : "bg-gray-200/70 text-gray-600 dark:bg-zinc-700 dark:text-zinc-400"
@@ -837,7 +834,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 placeholder="Search features by name, description..."
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                 {filteredModules.length}
               </div>
             </div>
@@ -898,22 +895,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           {viewMode === "office" && (
             <div className="flex flex-col flex-[1_0_auto]">
               {filteredOffices.length === 0 ? (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className={cn(
-                            officeFilter === "Archived" ? "ph-archive" : "ph-buildings",
-                            "ph-duotone text-3xl text-gray-400 dark:text-zinc-500"
-                          )}></HugeIcon>
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia>{officeFilter === "Archived" ? <EmptyArchive01Icon size="1em" /> : <EmptyBuilding03Icon size="1em" />}</EmptyMedia>
+                      <EmptyTitle>
                         {officeFilter === "Archived" ? "No Archived Departments Found" : "No Departments Found"}
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                      <EmptyDescription>
                         {officeFilter === "Archived"
                           ? "There are currently no archived departments in the system."
                           : "No departments matching your current filter were found."}
@@ -925,7 +914,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           variant="outline"
                           onClick={() => setOfficeFilter("Active")}
                           title="View Active Departments"
-                          className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
+                          className="flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
                         >
                           View Active Departments
                         </Button>
@@ -1019,7 +1008,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                               >
                                 {o.short_name}
                               </div>
-                              <div className="text-[10px] text-gray-400 font-mono">
+                              <div className="text-[10px] text-gray-400 font-sans tabular-nums">
                                 #{o.id}
                               </div>
                             </div>
@@ -1034,7 +1023,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                               <Badge
                                 variant="secondary"
                                 className={cn(
-                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold font-mono transition-colors",
+                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold font-sans tabular-nums transition-colors",
                                   isSelected
                                     ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -1056,7 +1045,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         >
                           <span className="truncate">{o.name || o.short_name}</span>
                           {isOfficeArchived && (
-                            <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-mono font-medium">
+                            <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-sans tabular-nums font-medium">
                               {activeCount} active
                             </span>
                           )}
@@ -1107,7 +1096,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", true)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Enable all workspace features for this department"}
-                    className="h-9 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 cursor-pointer flex items-center justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50 shadow-xs active:scale-95 transition-all"
+                    className="h-9 cursor-pointer flex items-center justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Enable All Features
                   </Button>
@@ -1125,52 +1114,25 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
               {/* Archived Office Warning Notice Banner (Attached edge-to-edge dismissable alert) */}
               {isCurrentArchived && !dismissedArchivedAlerts.includes(currentOffice.id) && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <HugeIcon className="ph-bold ph-warning-circle text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                      <strong className="font-semibold text-amber-950 dark:text-amber-100">Archived Department Notice:</strong> This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold text-amber-950 dark:text-amber-100">Departments & Stations</strong> to change feature access.
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices", officeId: currentOffice.id } }))}
-                      title="Restore Department in Departments & Stations"
-                      className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-[11px] font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center justify-center active:scale-95"
-                    >
-                      Restore
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDismissArchivedAlert(currentOffice.id)}
-                      className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
-                      aria-label="Dismiss notice"
-                      title="Dismiss notice"
-                    >
-                      <HugeIcon className="ph-bold ph-x text-sm" />
-                    </button>
-                  </div>
-                </div>
+                <NoticeBanner tone="warning" onDismiss={() => handleDismissArchivedAlert(currentOffice.id)} action={
+                  <Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices", officeId: currentOffice.id } }))} title="Restore Department in Departments & Stations">Restore</Button>
+                }>
+                  <strong className="font-semibold">Archived Department Notice:</strong> This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
+                </NoticeBanner>
               )}
 
               {/* Module Cards Content Area */}
               <CardContent className="p-6 space-y-8 flex flex-col flex-[1_0_auto] rounded-b-2xl">
                 {/* Empty State when no modules match filters */}
                 {filteredModules.length === 0 ? (
-                  <div className="py-16 rounded-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 text-center my-2">
-                    <Empty className="flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                  <div className="rounded-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border border-dashed border-border dark:border-border bg-white/40 dark:bg-zinc-900/20 text-center my-2">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           No Features Found
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        <EmptyDescription>
                           We couldn&apos;t find any features matching your search or filter criteria. Try clearing filters or adjusting your keywords.
                         </EmptyDescription>
                       </EmptyHeader>
@@ -1179,7 +1141,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           variant="outline"
                           onClick={handleClearFilters}
                           title="Reset Filters"
-                          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                         >
                           Reset Filters
                         </Button>
@@ -1361,22 +1323,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       {viewMode === "matrix" && (
         <>
           {filteredOffices.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className={cn(
-                        officeFilter === "Archived" ? "ph-archive" : "ph-buildings",
-                        "ph-duotone text-3xl text-gray-400 dark:text-zinc-500"
-                      )}></HugeIcon>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>{officeFilter === "Archived" ? <EmptyArchive01Icon size="1em" /> : <EmptyBuilding03Icon size="1em" />}</EmptyMedia>
+                  <EmptyTitle>
                     {officeFilter === "Archived" ? "No Archived Departments Found" : "No Departments Found"}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     {officeFilter === "Archived"
                       ? "There are currently no archived departments in the system."
                       : "No departments matching your current filter were found."}
@@ -1388,7 +1342,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       variant="outline"
                       onClick={() => setOfficeFilter("Active")}
                       title="View Active Departments"
-                      className="mt-6 flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
+                      className="flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
                     >
                       View Active Departments
                     </Button>
@@ -1397,19 +1351,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               </Empty>
             </div>
           ) : filteredModules.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl text-gray-400 dark:text-zinc-500"></HugeIcon>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No Features Found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     We couldn&apos;t find any features matching your search or filter criteria in the summary table.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -1418,7 +1367,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -1650,30 +1599,13 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
             <div className="w-3.5 h-3.5 border-2 border-pup-maroon border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <label 
+          <Switch
+            checked={isEnabled}
+            onCheckedChange={() => onToggle(office.id, m.id, isEnabled, isSystem)}
+            aria-label={`${m.name} for ${office.short_name || office.name}`}
+            disabled={isLocked}
             title={isOfficeArchived ? "Reactivate this department to change feature access" : isSystem ? "This is a required system tool and cannot be turned off" : undefined}
-            className={cn("relative inline-flex items-center select-none", isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
-          >
-            <input
-              type="checkbox"
-              checked={isEnabled}
-              disabled={isLocked}
-              onChange={() => onToggle(office.id, m.id, isEnabled, isSystem)}
-              className="sr-only peer"
-            />
-            <div
-              className={cn(
-                "w-10 h-6 bg-gray-200 dark:bg-zinc-700 rounded-full transition-colors relative",
-                "after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-xs",
-                "peer-checked:after:translate-x-4",
-                isSystem
-                  ? "peer-checked:bg-slate-700 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
-                  : isOfficeArchived
-                  ? "peer-checked:bg-gray-400 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
-                  : "peer-checked:bg-slate-900 dark:peer-checked:bg-zinc-100 dark:after:bg-zinc-900"
-              )}
-            ></div>
-          </label>
+          />
         )}
       </div>
     </div>
@@ -1736,30 +1668,14 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                   <div className="w-3.5 h-3.5 border-2 border-pup-maroon border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : (
-                <label 
+                <Switch
+                  size="sm"
+                  checked={enabled}
+                  onCheckedChange={() => onToggle(o.id, m.id, enabled, isSystem)}
+                  aria-label={`${m.name} for ${o.short_name || o.name}`}
+                  disabled={isLocked}
                   title={isOfficeArchived ? `Reactivate ${o.short_name} to change feature access` : isSystem ? "This is a required system tool and cannot be turned off" : undefined}
-                  className={cn("relative inline-flex items-center select-none", isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
-                >
-                  <input
-                    type="checkbox"
-                    checked={enabled}
-                    disabled={isLocked}
-                    onChange={() => onToggle(o.id, m.id, enabled, isSystem)}
-                    className="sr-only peer"
-                  />
-                  <div
-                    className={cn(
-                      "w-9 h-5 bg-gray-200 dark:bg-zinc-700 rounded-full transition-colors relative",
-                      "after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-xs",
-                      "peer-checked:after:translate-x-4",
-                      isSystem
-                        ? "peer-checked:bg-slate-700 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
-                        : isOfficeArchived
-                        ? "peer-checked:bg-gray-400 dark:peer-checked:bg-zinc-600 cursor-not-allowed"
-                        : "peer-checked:bg-slate-900 dark:peer-checked:bg-zinc-100 dark:after:bg-zinc-900"
-                    )}
-                  ></div>
-                </label>
+                />
               )}
             </div>
           </td>

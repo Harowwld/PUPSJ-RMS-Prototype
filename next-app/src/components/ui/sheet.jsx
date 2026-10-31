@@ -136,7 +136,7 @@ function SheetHeader({
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex flex-col gap-0.5 p-4", className)}
+      className={cn("flex min-w-0 flex-col gap-0 p-4 text-left", className)}
       {...props} />
   );
 }
@@ -160,7 +160,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("font-heading text-base font-medium text-foreground", className)}
+      className={cn("text-[17px] font-semibold tracking-[-0.01em] text-gray-900 [overflow-wrap:anywhere] dark:text-zinc-50", className)}
       {...props} />
   );
 }
@@ -172,7 +172,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("mt-1 text-[13px] font-normal text-gray-500 [overflow-wrap:anywhere] dark:text-zinc-400", className)}
       {...props} />
   );
 }

@@ -47,6 +47,7 @@ import {
 } from "@/lib/pdfGenerator";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 
 
@@ -431,6 +432,12 @@ export default function StudentComplianceTab({ authUser }) {
           <meta charset="utf-8" />
           <title>${escapeHtml(printDocTitle)}</title>
           <style>
+            @font-face {
+              font-family: "Plus Jakarta Sans";
+              src: url("${window.location.origin}/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2") format("woff2");
+              font-weight: 100 900;
+              font-display: swap;
+            }
             @page {
               size: A4 portrait;
               margin: 14mm 16mm 14mm 16mm;
@@ -443,7 +450,7 @@ export default function StudentComplianceTab({ authUser }) {
               print-color-adjust: exact !important;
             }
             body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              font-family: "Plus Jakarta Sans", sans-serif;
               color: #111827;
               background: #ffffff;
               font-size: 11px;
@@ -491,7 +498,7 @@ export default function StudentComplianceTab({ authUser }) {
             .doc-id {
               font-size: 8.5px;
               font-style: italic;
-              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              font-family: inherit;
               color: #6b7280;
               margin-bottom: 10px;
             }
@@ -532,7 +539,7 @@ export default function StudentComplianceTab({ authUser }) {
             .meta-val-maroon {
               font-size: 11px;
               font-weight: 700;
-              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              font-family: inherit;
               color: ${brandColor};
             }
             table {
@@ -635,8 +642,10 @@ export default function StudentComplianceTab({ authUser }) {
     `);
     doc.close();
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
+        await doc.fonts.load('11px "Plus Jakarta Sans"');
+        await doc.fonts.ready;
         printFrame.contentWindow.focus();
         printFrame.contentWindow.print();
       } catch (err) {
@@ -704,8 +713,7 @@ export default function StudentComplianceTab({ authUser }) {
               <Button
                 type="button"
                 onClick={() => setPrintModalOpen(true)}
-                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white! border-0 shadow-xs cursor-pointer active:scale-95 transition-all"
-                style={{ color: "#ffffff" }}
+                className="h-10 px-5 border-0 cursor-pointer"
               >
                 Print Slip
               </Button>
@@ -960,28 +968,16 @@ export default function StudentComplianceTab({ authUser }) {
           )}
         >
           {sortedRequirements.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon
-                        className={cn(
-                          "ph-duotone text-3xl text-gray-400 dark:text-zinc-500",
-                          searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
-                            ? "ph-magnifying-glass"
-                            : "ph-clipboard-check"
-                        )}
-                      />
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>{searchQuery || statusFilters.length > 0 || categoryFilters.length > 0 ? <EmptySearch01Icon size="1em" /> : <EmptyCheckListIcon size="1em" />}</EmptyMedia>
+                  <EmptyTitle>
                     {searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
                       ? "No Matches Found"
                       : "No Document Requirements Assigned"}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400 mt-1">
+                  <EmptyDescription>
                     {searchQuery || statusFilters.length > 0 || categoryFilters.length > 0
                       ? "Try adjusting your search query or clearing some of the combined filters."
                       : "There are currently no document requirements assigned for your degree program."}
@@ -993,7 +989,7 @@ export default function StudentComplianceTab({ authUser }) {
                       variant="outline"
                       onClick={clearAllFilters}
                       title="Reset Filters"
-                      className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
@@ -1097,7 +1093,7 @@ export default function StudentComplianceTab({ authUser }) {
                                 Completed
                               </span>
                               {item.document?.createdAt && (
-                                <span className="text-[10.5px] font-mono text-gray-400 dark:text-zinc-500">
+                                <span className="text-[10.5px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                                   {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
                                 </span>
                               )}
@@ -1151,7 +1147,7 @@ export default function StudentComplianceTab({ authUser }) {
                       <div className="flex flex-col flex-grow">
                         {/* 1. Top Metadata Row: Category Pill & Dot Status (No Colored Backgrounds) */}
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-mono font-medium text-gray-600 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-gray-200/80 dark:border-white/10 shadow-2xs truncate max-w-[180px]">
+                          <span className="text-[10px] font-sans tabular-nums font-medium text-gray-600 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-gray-200/80 dark:border-white/10 shadow-2xs truncate max-w-[180px]">
                             {item.category}
                           </span>
 
@@ -1182,7 +1178,7 @@ export default function StudentComplianceTab({ authUser }) {
 
                       {/* 4. Bottom Divider Section matching Catalog "Filing Requirements" */}
                       <div className="pt-4 border-t border-black/5 dark:border-white/10 mt-auto">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 font-mono mb-2.5 flex items-center gap-1.5">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 font-sans tabular-nums mb-2.5 flex items-center gap-1.5">
                           <HugeIcon className="ph-bold ph-shield-check text-xs" />
                           <span>{isSubmitted ? "Archival Verification" : "Submission Guideline"}</span>
                         </div>
@@ -1198,7 +1194,7 @@ export default function StudentComplianceTab({ authUser }) {
                               </span>
                             </div>
                             {item.document?.createdAt && (
-                              <div className="text-[10.5px] text-gray-400 dark:text-zinc-500 font-mono pl-6">
+                              <div className="text-[10.5px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums pl-6">
                                 Archived {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
                               </div>
                             )}
@@ -1214,7 +1210,7 @@ export default function StudentComplianceTab({ authUser }) {
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pt-3 mt-3 border-t border-black/5 dark:border-white/10 font-mono">
+                        <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pt-3 mt-3 border-t border-black/5 dark:border-white/10 font-sans tabular-nums">
                           <div className="flex items-center gap-1.5">
                             <HugeIcon className="ph-bold ph-map-pin text-xs text-gray-400 dark:text-zinc-500" />
                             <span>{isSubmitted ? "Registrar Vault (Rm 102)" : "Window Counter (Rm 102)"}</span>
@@ -1271,11 +1267,11 @@ export default function StudentComplianceTab({ authUser }) {
       {/* 2. Official Compliance Slip Print Modal */}
       <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
         <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-card border border-border dark:border-border shadow-2xl font-jakarta print:border-0 print:shadow-none print:max-h-none print:overflow-visible print:w-full print:max-w-none print:bg-white">
-          <DialogHeader className="p-6 pb-4 border-b border-border dark:border-border shrink-0 print:hidden">
-            <DialogTitle className="text-base font-bold text-gray-900 dark:text-zinc-50">
+          <DialogHeader className="p-6 pb-0 shrink-0 print:hidden">
+            <DialogTitle>
               Student Document Compliance Slip
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-900 dark:text-zinc-300">
+            <DialogDescription>
               Official institutional summary generated from PUPSJ Records Keeping System.
             </DialogDescription>
           </DialogHeader>
@@ -1323,7 +1319,7 @@ export default function StudentComplianceTab({ authUser }) {
               </h3>
 
               {/* Document ID & Timestamp */}
-              <p className="text-[9px] italic text-gray-900 dark:text-zinc-300 text-center font-mono mt-0.5">
+              <p className="text-[9px] italic text-gray-900 dark:text-zinc-300 text-center font-sans tabular-nums mt-0.5">
                 Document ID: RKS-CMP-{student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-{new Date().getFullYear()} · Issued on {new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}
               </p>
 
@@ -1342,7 +1338,7 @@ export default function StudentComplianceTab({ authUser }) {
               </div>
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Student Number</span>
-                <span className="font-mono text-xs font-bold text-pup-maroon dark:text-red-400 block">{student.studentNo}</span>
+                <span className="font-sans tabular-nums text-xs font-bold text-pup-maroon dark:text-red-400 block">{student.studentNo}</span>
               </div>
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Compliance Status</span>
@@ -1366,7 +1362,7 @@ export default function StudentComplianceTab({ authUser }) {
                 <tbody className="divide-y divide-border dark:divide-border print:divide-border">
                   {sortedRequirements.map((r, idx) => (
                     <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none print:border-b print:border-border">
-                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-mono text-[11px] border-r border-border/70 dark:border-border/70">{idx + 1}</td>
+                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-sans tabular-nums text-[11px] border-r border-border/70 dark:border-border/70">{idx + 1}</td>
                       <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal border-r border-border/70 dark:border-border/70">{r?.docType || r?.name || "N/A"}</td>
                       <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">{r?.category || "N/A"}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
@@ -1392,7 +1388,7 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5 shrink-0 print:hidden">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5 shrink-0 print:hidden">
             <Button
               type="button"
               variant="outline"
@@ -1420,8 +1416,7 @@ export default function StudentComplianceTab({ authUser }) {
             <Button
               type="button"
               onClick={handlePrintSlip}
-              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white! border-0 cursor-pointer active:scale-95 shadow-xs transition-all"
-              style={{ color: "#ffffff" }}
+              className="h-10 px-5 border-0 cursor-pointer"
             >
               Print Slip
             </Button>

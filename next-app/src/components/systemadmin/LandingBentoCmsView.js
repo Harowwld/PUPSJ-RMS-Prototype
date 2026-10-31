@@ -204,7 +204,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+                className="flex h-10 items-center justify-center cursor-pointer px-5"
               >
                 {saving ? (
                   <>
@@ -334,7 +334,7 @@ export default function LandingBentoCmsView({ showToast }) {
                             }))
                           }
                           placeholder="e.g. Submitted!"
-                          className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono"
+                          className="h-10 rounded-xl bg-white dark:bg-card text-xs font-sans tabular-nums"
                         />
                       </div>
                     </div>
@@ -358,7 +358,7 @@ export default function LandingBentoCmsView({ showToast }) {
 
                     {/* Simulation Flow Steps */}
                     <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-4">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-sans tabular-nums">
                         Interactive Simulation Flow Labels
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -488,12 +488,12 @@ export default function LandingBentoCmsView({ showToast }) {
 
                     {/* Milestones */}
                     <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-4">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-sans tabular-nums">
                         Schedule Milestones (3 Steps)
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border dark:border-border">
-                          <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 1: Schedule</span>
+                          <span className="text-[10px] font-sans tabular-nums font-bold text-pup-maroon dark:text-red-400">Step 1: Schedule</span>
                           <Input
                             value={bentoData.card2?.step1Title || ""}
                             onChange={(e) =>
@@ -519,7 +519,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         </div>
 
                         <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border dark:border-border">
-                          <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 2: Notification</span>
+                          <span className="text-[10px] font-sans tabular-nums font-bold text-pup-maroon dark:text-red-400">Step 2: Notification</span>
                           <Input
                             value={bentoData.card2?.step2Title || ""}
                             onChange={(e) =>
@@ -545,7 +545,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         </div>
 
                         <div className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-border dark:border-border">
-                          <span className="text-[10px] font-mono font-bold text-pup-maroon dark:text-red-400">Step 3: Counter</span>
+                          <span className="text-[10px] font-sans tabular-nums font-bold text-pup-maroon dark:text-red-400">Step 3: Counter</span>
                           <Input
                             value={bentoData.card2?.step3Title || ""}
                             onChange={(e) =>
@@ -646,7 +646,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-3">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-sans tabular-nums">
                         Flow Diagram Node Labels
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -775,7 +775,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-3">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-sans tabular-nums">
                         Preparation Checklist Items
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -899,7 +899,7 @@ export default function LandingBentoCmsView({ showToast }) {
                             }))
                           }
                           placeholder="RA 11032"
-                          className="h-10 rounded-xl bg-white dark:bg-card text-xs font-mono font-bold"
+                          className="h-10 rounded-xl bg-white dark:bg-card text-xs font-sans tabular-nums font-bold"
                         />
                       </div>
                     </div>
@@ -922,7 +922,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 space-y-3">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-mono">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 font-sans tabular-nums">
                         Anti-Red Tape &amp; Efficiency Guarantees
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

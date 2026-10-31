@@ -1,6 +1,5 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
 import React, { useState } from "react"
 import {
   Tooltip as ChartTooltip,
@@ -23,7 +22,10 @@ import {
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
+  EmptyMedia,
+  EmptyState,
 } from "@/components/ui/empty"
+import { Analytics01Icon, PieChartIcon, File02Icon, StarIcon } from "hugeicons-react"
 
 /**
  * Custom Tooltip to ensure no "?" is shown
@@ -263,17 +265,13 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center justify-center gap-0">
-                  <div className="relative mb-3 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
-                      <HugeIcon className="ph-duotone ph-chart-line text-2xl text-gray-400 dark:text-zinc-500" />
-                    </div>
-                  </div>
-                  <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty variant="compact">
+                <EmptyHeader>
+                  <EmptyMedia><Analytics01Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No trend data
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     Select a different range to display trend lines.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -377,17 +375,13 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center justify-center gap-0">
-                  <div className="relative mb-3 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
-                      <HugeIcon className="ph-duotone ph-chart-bar text-2xl text-gray-400 dark:text-zinc-500" />
-                    </div>
-                  </div>
-                  <EmptyTitle className="text-base font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty variant="compact">
+                <EmptyHeader>
+                  <EmptyMedia><Analytics01Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No requests found
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-xs font-normal text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     Select a different date range or wait for new requests.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -445,17 +439,13 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                   </ResponsiveContainer>
                 </>
               ) : (
-                <Empty data-compact="true" className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center p-0">
-                  <EmptyHeader className="flex flex-col items-center justify-center gap-0 max-w-[240px]">
-                    <div className="relative mb-3 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
-                        <HugeIcon className="ph-duotone ph-chart-pie text-2xl text-gray-400 dark:text-zinc-500" />
-                      </div>
-                    </div>
-                    <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                <Empty variant="compact">
+                  <EmptyHeader>
+                    <EmptyMedia><PieChartIcon size="1em" /></EmptyMedia>
+                    <EmptyTitle>
                       No status data
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-[200px] text-[11px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
+                    <EmptyDescription>
                       Status distribution requires active request logs.
                     </EmptyDescription>
                   </EmptyHeader>
@@ -559,17 +549,13 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 ))}
               </div>
             ) : (
-              <Empty data-compact="true" className="flex flex-col items-center justify-center border-0 bg-transparent py-4 text-center p-0 w-full my-auto">
-                <EmptyHeader className="flex flex-col items-center justify-center gap-0 max-w-[240px]">
-                  <div className="relative mb-3 flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-100/70 dark:bg-zinc-800/50 flex items-center justify-center border border-border/50 dark:border-border shadow-xs">
-                      <HugeIcon className="ph-duotone ph-file-text text-2xl text-gray-400 dark:text-zinc-500" />
-                    </div>
-                  </div>
-                  <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
+              <Empty variant="compact">
+                <EmptyHeader>
+                  <EmptyMedia><File02Icon size="1em" /></EmptyMedia>
+                  <EmptyTitle>
                     No requests recorded yet
                   </EmptyTitle>
-                  <EmptyDescription className="text-[12px] font-normal text-gray-400 dark:text-zinc-500 mt-1 max-w-[220px] text-center mx-auto">
+                  <EmptyDescription>
                     Top requested document types will appear here.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -670,14 +656,13 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
               </div>
             </div>
           ) : (
-            <div className="py-8 flex flex-col items-center justify-center text-center border-t border-border dark:border-border">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 border border-amber-200/60 dark:border-amber-800/30">
-                <HugeIcon className="ph-duotone ph-star text-2xl" />
-              </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">No student feedback recorded yet</p>
-              <p className="text-xs text-gray-900 dark:text-zinc-300 max-w-sm mt-1">
-                Feedback scores and service ratings will automatically populate here as students rate completed document requests.
-              </p>
+            <div className="border-t border-border dark:border-border">
+              <EmptyState
+                variant="compact"
+                icon={StarIcon}
+                title="No Student Feedback Recorded Yet"
+                description="Feedback scores and service ratings will automatically populate here as students rate completed document requests."
+              />
             </div>
           )}
         </div>

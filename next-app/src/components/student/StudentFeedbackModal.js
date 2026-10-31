@@ -133,11 +133,11 @@ export default function StudentFeedbackModal({
   return (
     <Dialog open={isModalOpen} onOpenChange={(openState) => !openState && handleClose()}>
       <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card gap-0 font-jakarta">
-        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+        <DialogHeader className="p-6 pb-0 text-left">
           <div className="flex items-start gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                <DialogTitle>
                   Rate Your Experience
                 </DialogTitle>
                 {request?.id && (
@@ -146,7 +146,7 @@ export default function StudentFeedbackModal({
                   </span>
                 )}
               </div>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+              <DialogDescription className="mt-1">
                 {request?.doc_type ? `${request.doc_type} · ` : ""}Help the Registrar improve student and alumni digital services.
               </DialogDescription>
             </div>
@@ -254,7 +254,7 @@ export default function StudentFeedbackModal({
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -267,8 +267,7 @@ export default function StudentFeedbackModal({
             <Button
               type="submit"
               disabled={!rating || submitting}
-              className="h-10 px-5 text-xs font-semibold rounded-xl! btn-brand-red text-white! shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
-              style={{ color: "#ffffff" }}
+              className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

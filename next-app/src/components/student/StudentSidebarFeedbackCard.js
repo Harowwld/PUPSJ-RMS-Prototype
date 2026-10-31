@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const RATING_LABELS = {
   1: "Poor",
@@ -173,15 +174,15 @@ export default function StudentSidebarFeedbackCard({
         </span>
       </div>
 
-      {/* Primary Action Button */}
-      <button
+      <Button
+        size="sm"
         type="button"
         onClick={() => onRateRequest?.(targetRequest, hoverRating || 0)}
         title="Rate Request"
-        className="h-8 w-full text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-800 dark:hover:bg-red-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center border-0"
+        className="w-full"
       >
         Rate
-      </button>
+      </Button>
     </div>
   );
 }

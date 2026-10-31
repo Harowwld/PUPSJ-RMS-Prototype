@@ -1,6 +1,8 @@
 "use client";
 
 import HugeIcon from "@/components/shared/HugeIcon";
+import { EmptyState } from "@/components/ui/empty";
+import { Search01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -1534,7 +1536,7 @@ export default function Sidebar({
                   Search views...
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-1.5 h-4.5 min-w-[32px] text-[9.5px] font-mono font-semibold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded shadow-2xs leading-none shrink-0">
+              <kbd className="inline-flex items-center justify-center px-1.5 h-4.5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded shadow-2xs leading-none shrink-0">
                 {isMac ? "⌘K" : "Ctrl K"}
               </kbd>
             </button>
@@ -1965,7 +1967,7 @@ export default function Sidebar({
           hideClose={true}
           className="sm:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200/90 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 shadow-2xl backdrop-blur-xl"
         >
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200/80 dark:border-white/10">
+          <div className="flex items-center gap-3 px-5 py-4">
             <HugeIcon className="ph-bold ph-magnifying-glass text-xl text-pup-maroon dark:text-red-400 shrink-0" />
             <input
               ref={commandInputRef}
@@ -2067,14 +2069,14 @@ export default function Sidebar({
 
                             <div className="flex items-center gap-2 shrink-0">
                               {item.shortcut && (
-                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 rounded border border-gray-200 dark:border-zinc-700">
+                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-sans tabular-nums font-bold bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 rounded border border-gray-200 dark:border-zinc-700">
                                   {item.shortcut}
                                 </kbd>
                               )}
                               {isFocused && (
                                 <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400 flex items-center gap-1">
                                   <span>Select</span>
-                                  <kbd className="px-1 py-0.5 rounded bg-pup-maroon/10 dark:bg-white/10 text-[9px] font-mono">
+                                  <kbd className="px-1 py-0.5 rounded bg-pup-maroon/10 dark:bg-white/10 text-[9px] font-sans tabular-nums">
                                     ↵
                                   </kbd>
                                 </span>
@@ -2088,41 +2090,40 @@ export default function Sidebar({
                 ));
               })()
             ) : (
-              <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500">
-                <HugeIcon className="ph-duotone ph-magnifying-glass text-3xl mb-2 opacity-50" />
-                <div className="text-sm font-medium">No matching views or actions found</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  Try searching for a sidebar section, view name, or control
-                </div>
-              </div>
+              <EmptyState
+                variant="compact"
+                icon={Search01Icon}
+                title="No Matching Views or Actions Found"
+                description="Try searching for a sidebar section, view name, or control."
+              />
             )}
           </div>
 
-          <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50/90 dark:bg-zinc-850/70 border-t border-gray-200/80 dark:border-white/10 text-[11px] text-gray-500 dark:text-zinc-400 select-none">
+          <div className="flex items-center justify-between px-4 py-2.5 text-[11px] text-gray-500 dark:text-zinc-400 select-none">
             <div className="flex items-center gap-3.5">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
                   ↑
                 </kbd>
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
                   ↓
                 </kbd>
                 <span>navigate</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
                   ↵
                 </kbd>
                 <span>select</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
                   ESC
                 </kbd>
                 <span>close</span>
               </span>
               <span className="hidden md:flex items-center gap-1 text-[10px] text-gray-400">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-mono text-[9px] shadow-2xs">
+                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
                   {isMac ? "⌘B" : "CTRL B"}
                 </kbd>
                 <span>sidebar</span>
@@ -2149,7 +2150,7 @@ export default function Sidebar({
           side="left"
           className="w-[310px] sm:w-[360px] p-0 max-w-[85vw] bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-white/10 flex flex-col"
         >
-          <SheetHeader className="p-4 border-b border-gray-200/80 dark:border-white/10 flex flex-row items-center gap-2.5">
+          <SheetHeader className="p-4 flex flex-row items-center gap-2.5">
             <img
               src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
               alt="eManage Logo"
@@ -2164,10 +2165,10 @@ export default function Sidebar({
               }
             />
             <div>
-              <SheetTitle className="font-bold text-base leading-tight text-gray-900 dark:text-zinc-50">
+              <SheetTitle>
                 eManage
               </SheetTitle>
-              <SheetDescription className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
+              <SheetDescription>
                 {isStudent
                   ? "Student Portal"
                   : activeView === "systemadmin"
@@ -2179,7 +2180,7 @@ export default function Sidebar({
             </div>
           </SheetHeader>
 
-          <div className="p-3 pb-1 border-b border-gray-100 dark:border-white/5">
+          <div className="p-3 pb-1">
             <button
               type="button"
               onClick={() => {
@@ -2273,10 +2274,10 @@ export default function Sidebar({
       <Dialog open={showSessionExpired} onOpenChange={setShowSessionExpired}>
         <DialogContent className="max-w-md rounded-2xl border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50">
+            <DialogTitle>
               Session Expired
             </DialogTitle>
-            <DialogDescription className="font-medium text-gray-500 pt-2 dark:text-zinc-400">
+            <DialogDescription className="pt-2">
               Your active session has ended or you signed out from another window. Please sign in
               again to continue using the system.
             </DialogDescription>
@@ -2284,7 +2285,7 @@ export default function Sidebar({
           <DialogFooter className="mt-4">
             <Button
               onClick={handleSessionExpiredRedirect}
-              className="w-full h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="w-full h-10 px-5 cursor-pointer"
             >
               Sign In Again
             </Button>

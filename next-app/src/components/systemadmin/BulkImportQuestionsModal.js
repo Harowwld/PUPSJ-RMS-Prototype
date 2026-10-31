@@ -334,11 +334,11 @@ export default function BulkImportQuestionsModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0 font-jakarta">
         {/* Header - Strictly NO ICON */}
-        <DialogHeader className="p-6 pb-0 bg-white dark:bg-card border-none min-w-0">
-          <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+        <DialogHeader className="p-6 pb-0 min-w-0">
+          <DialogTitle>
             Import Security Questions
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-1">
+          <DialogDescription className="mt-1">
             {fileInfo
               ? "Review and double-check questions extracted from your file before importing."
               : "Select a CSV or text file from your device to double-check and import questions."}
@@ -418,7 +418,7 @@ export default function BulkImportQuestionsModal({
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                       {fileInfo.name}
                     </span>
-                    <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                    <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                       {fileInfo.size}
                     </span>
                   </div>
@@ -450,7 +450,7 @@ export default function BulkImportQuestionsModal({
                     >
                       <div className="flex items-center gap-2">
                         {/* Index Badge */}
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-mono text-xs border border-border dark:border-border shadow-2xs shrink-0">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-sans tabular-nums text-xs border border-border dark:border-border shadow-2xs shrink-0">
                           {index + 1}
                         </span>
 
@@ -511,7 +511,7 @@ export default function BulkImportQuestionsModal({
                         </span>
 
                         {row.trimmed.length > 0 && (
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                             {row.trimmed.length} chars
                           </span>
                         )}
@@ -537,7 +537,7 @@ export default function BulkImportQuestionsModal({
         </div>
 
         {/* Footer - Only Action Word Buttons */}
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
@@ -550,7 +550,7 @@ export default function BulkImportQuestionsModal({
             type="button"
             onClick={handleImport}
             disabled={!canImport}
-            className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
+            className="h-10 px-5 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
           >
             Import Questions
           </Button>

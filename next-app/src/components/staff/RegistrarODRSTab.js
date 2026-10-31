@@ -1,4 +1,5 @@
 "use client";
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import HugeIcon from "@/components/shared/HugeIcon";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
   ALLOWED_REOPEN_TRANSITIONS,
 } from "@/lib/constants";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { Cursor01Icon as EmptyCursor01Icon, InboxIcon as EmptyInboxIcon } from "hugeicons-react";
 
 const statuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"];
 
@@ -247,19 +249,14 @@ export default function RegistrarODRSTab({ showToast }) {
             </div>
             <div className="space-y-2">
               {rows.length === 0 ? (
-                <div className="py-16 flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-tray text-3xl text-pup-maroon dark:text-red-400" />
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia><EmptyInboxIcon size="1em" /></EmptyMedia>
+                      <EmptyTitle>
                         No Document Requests Yet
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                      <EmptyDescription>
                         New student requests submitted via ODRS will appear here automatically.
                       </EmptyDescription>
                     </EmptyHeader>
@@ -370,7 +367,7 @@ export default function RegistrarODRSTab({ showToast }) {
                     </div>
                     <div className="text-xs text-gray-700 dark:text-zinc-300 space-y-0.5">
                       <div>Name: <strong>{selected.requester_name || "N/A"}</strong> ({selected.requester_relationship || "Legal Guardian"})</div>
-                      {selected.requester_contact && <div>Contact: <span className="font-mono">{selected.requester_contact}</span></div>}
+                      {selected.requester_contact && <div>Contact: <span className="font-sans tabular-nums">{selected.requester_contact}</span></div>}
                     </div>
                     <div className="pt-1 border-t border-amber-200/50 dark:border-amber-900/30 flex justify-end">
                       <Button
@@ -536,25 +533,20 @@ export default function RegistrarODRSTab({ showToast }) {
                     />
                   </div>
 
-                  <Button className="w-full btn-brand-red text-white font-semibold rounded-xl h-10 shadow-xs cursor-pointer active:scale-95 transition-all" onClick={save} disabled={status === "Deficient" && !message.trim()}>
+                  <Button className="w-full h-10 cursor-pointer" onClick={save} disabled={status === "Deficient" && !message.trim()}>
                     Publish
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center py-16 px-4">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon className="ph-duotone ph-cursor-click text-3xl text-pup-maroon dark:text-red-400" />
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+              <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center px-4">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia><EmptyCursor01Icon size="1em" /></EmptyMedia>
+                    <EmptyTitle>
                       No Request Selected
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    <EmptyDescription>
                       Select a request from the queue to view details and post updates.
                     </EmptyDescription>
                   </EmptyHeader>
@@ -569,16 +561,13 @@ export default function RegistrarODRSTab({ showToast }) {
       {/* Reopen Request Dialog Modal */}
       <Dialog open={reopenModalOpen} onOpenChange={setReopenModalOpen}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border">
-          <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0 text-left">
+          <DialogHeader className="p-6 pb-0 text-left">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
-                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-lg" />
-              </div>
               <div>
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                <DialogTitle>
                   Reopen Document Request
                 </DialogTitle>
-                <DialogDescription className="text-[13px] font-normal text-gray-600 dark:text-zinc-300 mt-1">
+                <DialogDescription className="mt-1">
                   Reopen closed request #{selected?.id} to reactivate workflow and notify the student.
                 </DialogDescription>
               </div>
@@ -620,15 +609,13 @@ export default function RegistrarODRSTab({ showToast }) {
               />
             </div>
 
-            <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">
-              <HugeIcon className="ph-fill ph-info text-sm shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-              <span>
-                Reopening adds an activity-history entry and posts an update on the student portal.
-              </span>
-            </div>
+
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <NoticeBanner tone="info" className="mb-6">
+            Reopening adds an activity-history entry and posts an update on the student portal.
+          </NoticeBanner>
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -640,7 +627,7 @@ export default function RegistrarODRSTab({ showToast }) {
             </Button>
             <Button
               type="button"
-              className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+              className="h-10 px-5 cursor-pointer disabled:opacity-50"
               onClick={handleConfirmReopen}
               disabled={reopenSubmitting || reopenReason.trim().length < 5}
             >

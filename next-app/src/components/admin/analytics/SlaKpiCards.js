@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from "react"
 import { Reorder } from "framer-motion"
 import HugeIcon from "@/components/shared/HugeIcon"
 import { cn } from "@/lib/utils"
+import { EmptyState } from "@/components/ui/empty"
+import { StarIcon } from "hugeicons-react"
 
 export default function SlaKpiCards({
   total = 0,
@@ -364,15 +366,12 @@ export default function SlaKpiCards({
                       </p>
                     </>
                   ) : (
-                    <div className="py-2 text-center">
-                      <div className="mx-auto w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center text-amber-500 mb-1.5">
-                        <HugeIcon className="ph-fill ph-star text-base" />
-                      </div>
-                      <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">No student ratings yet</p>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 leading-snug">
-                        Evaluations will populate automatically when requesters submit feedback on released documents.
-                      </p>
-                    </div>
+                    <EmptyState
+                      variant="compact"
+                      icon={StarIcon}
+                      title="No Student Ratings Yet"
+                      description="Evaluations will populate automatically when requesters submit feedback on released documents."
+                    />
                   )}
                 </div>
               </div>

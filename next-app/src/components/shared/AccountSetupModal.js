@@ -16,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars"
 import { formatErrorMessage } from "@/lib/errorUtils"
+import { EmptyState } from "@/components/ui/empty"
+import { HelpCircleIcon } from "hugeicons-react"
 
 function getCsrfToken() {
   if (typeof document === "undefined") return null
@@ -469,7 +471,7 @@ export default function AccountSetupModal({ authUser }) {
                 <Button
                   type="submit"
                   disabled={pwLoading}
-                  className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
+                  className="h-[36px] px-4 cursor-pointer flex items-center justify-center border-none"
                 >
                   {pwLoading ? "Saving..." : "Continue"}
                 </Button>
@@ -501,9 +503,12 @@ export default function AccountSetupModal({ authUser }) {
                       </div>
                     ))
                   ) : questions.length === 0 ? (
-                    <div className="text-[13px] font-normal text-gray-900 dark:text-zinc-300">
-                      No global security questions have been configured.
-                    </div>
+                    <EmptyState
+                      variant="compact"
+                      icon={HelpCircleIcon}
+                      title="No Recovery Questions Configured"
+                      description="No global security questions have been configured. Contact your system administrator to enable account recovery questions."
+                    />
                   ) : (
                     questions.map((q) => (
                       <div key={q.id} className="space-y-1">
@@ -537,7 +542,7 @@ export default function AccountSetupModal({ authUser }) {
                 <Button
                   type="submit"
                   disabled={secLoading || secSubmitting || questions.length === 0}
-                  className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
+                  className="h-[36px] px-4 cursor-pointer flex items-center justify-center border-none"
                 >
                   {secSubmitting ? "Saving..." : "Continue"}
                 </Button>
@@ -625,7 +630,7 @@ export default function AccountSetupModal({ authUser }) {
               </div>
 
               {/* Footer Actions */}
-              <div className="flex shrink-0 items-center justify-between p-6 bg-transparent border-t border-border/60">
+              <div className="flex shrink-0 items-center justify-between p-6 bg-transparent">
                 <Button
                   type="button"
                   variant="outline"
@@ -639,7 +644,7 @@ export default function AccountSetupModal({ authUser }) {
                   type="button"
                   disabled={avatarLoading || !selectedAvatarId}
                   onClick={submitAvatar}
-                  className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
+                  className="h-[36px] px-4 cursor-pointer flex items-center justify-center border-none"
                 >
                   {avatarLoading ? "Saving..." : "Complete"}
                 </Button>

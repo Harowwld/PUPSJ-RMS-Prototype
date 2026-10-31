@@ -14,7 +14,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
           : "bg-gradient-to-b from-white/90 via-zinc-50/80 to-zinc-100/75    border border-black/[0.08] [0.12] text-zinc-900  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_1px_1px_rgba(0,0,0,0.03)] hover:border-black/25 :border-white/30"
       }`}
       style={{
-        fontFamily: 'var(--font-jakarta), var(--font-jakarta), Helvetica, sans-serif',
+        fontFamily: 'var(--font-sans)',
       }}
     >
       {/* Liquid Glass Refraction Highlight (Apple-style subtle top gradient sheen) */}
@@ -44,7 +44,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             </div>
             <div>
               <div
-                className={`text-[9px] font-mono uppercase tracking-widest font-bold leading-none ${
+                className={`text-[9px] font-sans tabular-nums uppercase tracking-widest font-bold leading-none ${
                   isActive ? "text-red-200/90" : "text-zinc-400 "
                 }`}
               >
@@ -62,7 +62,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
 
           {item.code && (
             <span
-              className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider border ${
+              className={`px-2 py-0.5 rounded-lg text-[9px] font-sans tabular-nums font-bold uppercase tracking-wider border ${
                 isActive
                   ? "bg-white/15 border-white/25 text-white"
                   : "bg-black/[0.04] [0.06] border-black/[0.06] [0.08] text-zinc-600 "
@@ -76,7 +76,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
         {/* Document Title Banner */}
         <div className="mt-3.5">
           <div
-            className={`text-[9px] font-mono uppercase tracking-widest font-bold ${
+            className={`text-[9px] font-sans tabular-nums uppercase tracking-widest font-bold ${
               isActive ? "text-red-200" : "text-[#800000] "
             }`}
           >
@@ -110,7 +110,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`flex justify-between text-[9px] font-mono border-b pb-1.5 font-semibold ${
+                className={`flex justify-between text-[9px] font-sans tabular-nums border-b pb-1.5 font-semibold ${
                   isActive
                     ? "text-red-200/80 border-white/10"
                     : "text-zinc-400  border-black/[0.04] [0.05]"
@@ -119,7 +119,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 <span>SUBJECT / CODE</span>
                 <span>GRADE</span>
               </div>
-              <div className="mt-2 space-y-1.5 text-[10px] font-mono">
+              <div className="mt-2 space-y-1.5 text-[10px] font-sans tabular-nums">
                 <div className={`flex justify-between ${isActive ? "text-white" : "text-zinc-800 "}`}>
                   <span className="truncate pr-2 font-medium">COMP 20133 Data Struct.</span>
                   <span className={`font-bold ${isActive ? "text-amber-300" : "text-[#800000] "}`}>
@@ -144,7 +144,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             {/* Verification Capsule */}
             <div className="flex items-center justify-between px-1">
               <div
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-sans tabular-nums font-bold border ${
                   isActive
                     ? "bg-white/15 border-white/25 text-white"
                     : "bg-red-50/80  border-red-200/60  text-red-700 "
@@ -153,7 +153,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 
                 <span>REGISTRAR SEAL VERIFIED</span>
               </div>
-              <span className={`text-[10px] font-mono font-bold ${isActive ? "text-red-100" : "text-zinc-500 "}`}>
+              <span className={`text-[10px] font-sans tabular-nums font-bold ${isActive ? "text-red-100" : "text-zinc-500 "}`}>
                 GWA 1.25
               </span>
             </div>
@@ -171,7 +171,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[9px] font-mono font-bold uppercase tracking-wider ${
+                  className={`text-[9px] font-sans tabular-nums font-bold uppercase tracking-wider ${
                     isActive ? "text-emerald-300" : "text-emerald-800 "
                   }`}
                 >
@@ -182,7 +182,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               <div className={`text-[12px] font-bold mt-1 ${isActive ? "text-white" : "text-zinc-900 "}`}>
                 First Semester, A.Y. 2024–2025
               </div>
-              <div className="mt-2.5 grid grid-cols-2 gap-2 text-[9px] font-mono">
+              <div className="mt-2.5 grid grid-cols-2 gap-2 text-[9px] font-sans tabular-nums">
                 <div
                   className={`p-1.5 rounded-xl border ${
                     isActive
@@ -204,7 +204,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
             <div
-              className={`text-[9px] font-mono flex items-center justify-between px-1 ${
+              className={`text-[9px] font-sans tabular-nums flex items-center justify-between px-1 ${
                 isActive ? "text-red-200" : "text-zinc-500 "
               }`}
             >
@@ -227,14 +227,14 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[9px] font-mono uppercase font-semibold ${
+                  className={`text-[9px] font-sans tabular-nums uppercase font-semibold ${
                     isActive ? "text-red-200" : "text-zinc-400"
                   }`}
                 >
                   Enrolled Section
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ${
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-sans tabular-nums font-bold ${
                     isActive
                       ? "bg-white text-[#800000]"
                       : "bg-zinc-900 text-white  "
@@ -255,7 +255,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
             <div
-              className={`flex items-center justify-center p-2 rounded-xl border text-[9px] font-mono font-bold ${
+              className={`flex items-center justify-center p-2 rounded-xl border text-[9px] font-sans tabular-nums font-bold ${
                 isActive
                   ? "bg-white/15 border-white/20 text-white"
                   : "bg-emerald-50/80  border-emerald-200/60  text-emerald-800 "
@@ -276,21 +276,21 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`text-[9px] font-serif uppercase tracking-widest font-bold ${
+                className={`text-[9px] font-sans uppercase tracking-widest font-bold ${
                   isActive ? "text-amber-200" : "text-amber-900 "
                 }`}
               >
                 Republika ng Pilipinas
               </div>
               <div
-                className={`text-[14px] font-serif font-black mt-0.5 tracking-tight ${
+                className={`text-[14px] font-sans font-black mt-0.5 tracking-tight ${
                   isActive ? "text-white" : "text-zinc-900 "
                 }`}
               >
                 DIPLOMA
               </div>
               <div
-                className={`text-[9px] font-mono mt-1 ${
+                className={`text-[9px] font-sans tabular-nums mt-1 ${
                   isActive ? "text-red-100" : "text-zinc-500 "
                 }`}
               >
@@ -298,7 +298,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
             <div
-              className={`flex items-center justify-center gap-2 text-[9px] font-mono ${
+              className={`flex items-center justify-center gap-2 text-[9px] font-sans tabular-nums ${
                 isActive ? "text-amber-200" : "text-amber-800 "
               }`}
             >
@@ -318,7 +318,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`text-[9px] font-mono uppercase tracking-wider font-semibold ${
+                className={`text-[9px] font-sans tabular-nums uppercase tracking-wider font-semibold ${
                   isActive ? "text-red-200" : "text-zinc-400"
                 }`}
               >
@@ -339,7 +339,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 &ldquo;Zero derogatory records or infractions during academic tenure.&rdquo;
               </p>
             </div>
-            <div className="flex items-center justify-between text-[9px] font-mono px-1">
+            <div className="flex items-center justify-between text-[9px] font-sans tabular-nums px-1">
               <span className={isActive ? "text-red-200/80" : "text-zinc-400"}>Signed: OSAS Director</span>
               <span className={`font-bold ${isActive ? "text-emerald-300" : "text-emerald-600 "}`}>
                 Cleared
@@ -359,14 +359,14 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[9px] font-mono font-bold ${
+                  className={`text-[9px] font-sans tabular-nums font-bold ${
                     isActive ? "text-white" : "text-red-800 "
                   }`}
                 >
                   DFA / CHED CAV
                 </span>
                 <span
-                  className={`px-1.5 py-0.5 text-[8px] font-mono rounded ${
+                  className={`px-1.5 py-0.5 text-[8px] font-sans tabular-nums rounded ${
                     isActive ? "bg-white/20 text-white" : "bg-red-100  text-red-800 "
                   }`}
                 >
@@ -382,7 +382,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
             <div
-              className={`flex items-center justify-between text-[9px] font-mono px-1 ${
+              className={`flex items-center justify-between text-[9px] font-sans tabular-nums px-1 ${
                 isActive ? "text-red-200" : "text-zinc-500"
               }`}
             >
@@ -404,7 +404,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`text-[9px] font-mono uppercase font-bold ${
+                className={`text-[9px] font-sans tabular-nums uppercase font-bold ${
                   isActive ? "text-amber-300" : "text-amber-800 "
                 }`}
               >
@@ -418,7 +418,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 Honorable Dismissal
               </div>
               <div
-                className={`text-[9px] font-mono mt-1 ${
+                className={`text-[9px] font-sans tabular-nums mt-1 ${
                   isActive ? "text-red-100" : "text-zinc-600 "
                 }`}
               >
@@ -426,7 +426,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               </div>
             </div>
             <div
-              className={`flex items-center justify-between text-[9px] font-mono px-1 ${
+              className={`flex items-center justify-between text-[9px] font-sans tabular-nums px-1 ${
                 isActive ? "text-red-200" : "text-zinc-400"
               }`}
             >
@@ -448,7 +448,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`text-[9px] font-mono font-semibold ${
+                className={`text-[9px] font-sans tabular-nums font-semibold ${
                   isActive ? "text-red-200" : "text-zinc-400"
                 }`}
               >
@@ -462,7 +462,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 Certified True Copy (CTC)
               </div>
               <div
-                className={`text-[9px] font-mono mt-1 ${
+                className={`text-[9px] font-sans tabular-nums mt-1 ${
                   isActive ? "text-red-100" : "text-zinc-500"
                 }`}
               >
@@ -472,7 +472,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             {/* Rubber Stamp Badge */}
             <div className="flex items-center justify-center">
               <div
-                className={`inline-block border-2 border-dashed px-2.5 py-0.5 rounded-lg text-[9px] font-mono font-black tracking-wider rotate-[-3deg] shadow-xs ${
+                className={`inline-block border-2 border-dashed px-2.5 py-0.5 rounded-lg text-[9px] font-sans tabular-nums font-black tracking-wider rotate-[-3deg] shadow-xs ${
                   isActive
                     ? "border-white/80 text-white bg-white/10"
                     : "border-red-600/80 text-red-600 "
@@ -495,7 +495,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[9px] font-mono font-bold uppercase tracking-wider ${
+                  className={`text-[9px] font-sans tabular-nums font-bold uppercase tracking-wider ${
                     isActive ? "text-red-200" : "text-[#800000] "
                   }`}
                 >
@@ -511,7 +511,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 {item.title}
               </div>
               <div
-                className={`mt-2 pt-2 border-t text-[9px] font-mono leading-relaxed line-clamp-2 ${
+                className={`mt-2 pt-2 border-t text-[9px] font-sans tabular-nums leading-relaxed line-clamp-2 ${
                   isActive
                     ? "border-white/10 text-red-100/90"
                     : "border-black/[0.04] [0.04] text-zinc-600 "
@@ -522,7 +522,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             </div>
             <div className="flex items-center justify-between px-1">
               <div
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-sans tabular-nums font-bold border ${
                   isActive
                     ? "bg-white/15 border-white/25 text-white"
                     : "bg-emerald-50/80  border-emerald-200/60  text-emerald-800 "
@@ -531,7 +531,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
                 
                 <span>{item.sealTag || "REGISTRAR SEAL VERIFIED"}</span>
               </div>
-              <span className={`text-[9px] font-mono font-bold ${isActive ? "text-red-200" : "text-zinc-500 "}`}>
+              <span className={`text-[9px] font-sans tabular-nums font-bold ${isActive ? "text-red-200" : "text-zinc-500 "}`}>
                 {item.code || "PUPSJ"}
               </span>
             </div>
@@ -541,7 +541,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
 
       {/* Card Footer: Barcode & Status */}
       <div
-        className={`relative z-10 pt-3 border-t flex items-center justify-between text-[9px] font-mono ${
+        className={`relative z-10 pt-3 border-t flex items-center justify-between text-[9px] font-sans tabular-nums ${
           isActive ? "border-white/15" : "border-black/[0.05] [0.06]"
         }`}
       >
@@ -569,7 +569,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
         </div>
 
         <span
-          className={`text-[9px] font-mono font-semibold uppercase tracking-wider ${
+          className={`text-[9px] font-sans tabular-nums font-semibold uppercase tracking-wider ${
             isActive ? "text-red-200" : "text-zinc-400 "
           }`}
         >

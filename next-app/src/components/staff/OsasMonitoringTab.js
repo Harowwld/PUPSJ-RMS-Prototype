@@ -30,6 +30,7 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "@/components/ui/empty";
+import { CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, LayoutGridIcon as EmptyLayoutGridIcon } from "hugeicons-react";
 
 export function normalizeProposalStatus(status) {
   const s = String(status || "").toLowerCase().trim();
@@ -1287,7 +1288,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 }}
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-mono text-gray-400 dark:text-zinc-500">
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                 {activeFilteredList.length.toLocaleString()}
               </div>
             </div>
@@ -1372,19 +1373,14 @@ export default function OsasMonitoringTab({ showToast }) {
           <>
             {viewMode === "list" ? (
               filteredRows.length === 0 ? (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-calendar-check text-3xl text-pup-maroon dark:text-red-400" />
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia><EmptyCalendarCheckIn01Icon size="1em" /></EmptyMedia>
+                      <EmptyTitle>
                         No Event Proposals Found
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                      <EmptyDescription>
                         {hasActiveFilters
                           ? "Try adjusting your search criteria or resetting active filters."
                           : "Student organizations have not submitted any event proposals yet."}
@@ -1450,7 +1446,7 @@ export default function OsasMonitoringTab({ showToast }) {
                           className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                         >
                           <td className="py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[140px] min-w-[140px] max-w-[140px]">
-                            <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                               #{item.id}
                             </span>
                           </td>
@@ -1493,7 +1489,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 </span>
                               )}
                             </div>
-                            <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
+                            <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
                               {item.submitted_by_email || item.student_no}
                             </div>
                           </td>
@@ -1541,19 +1537,14 @@ export default function OsasMonitoringTab({ showToast }) {
                 </div>
               </div>
             )) : filteredRows.length === 0 ? (
-              <div className="w-full flex-1 flex flex-col items-center justify-center border-t border-border dark:border-border py-16 bg-gray-50/20 dark:bg-zinc-900/10 min-h-[420px]">
-                <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                      <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                        <HugeIcon className="ph-duotone ph-kanban text-3xl text-pup-maroon dark:text-red-400" />
-                      </EmptyMedia>
-                    </div>
-                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+              <div className="w-full flex-1 flex flex-col items-center justify-center border-t border-border dark:border-border bg-gray-50/20 dark:bg-zinc-900/10 min-h-[420px]">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia><EmptyLayoutGridIcon size="1em" /></EmptyMedia>
+                    <EmptyTitle>
                       No Proposals in Pipeline
                     </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                    <EmptyDescription>
                       {hasActiveFilters
                         ? "No proposals match your active search terms or filters."
                         : "There are currently no event proposals in the pipeline."}
@@ -1603,19 +1594,14 @@ export default function OsasMonitoringTab({ showToast }) {
           <>
             {viewMode === "list" ? (
               filteredPostEvents.length === 0 ? (
-                <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
-                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                        <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                          <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
-                        </EmptyMedia>
-                      </div>
-                      <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
+                      <EmptyTitle>
                         No Post-Event Reports Found
                       </EmptyTitle>
-                      <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                      <EmptyDescription>
                         {hasActiveFilters
                           ? "No reports match your active search or filter criteria."
                           : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
@@ -1685,7 +1671,7 @@ export default function OsasMonitoringTab({ showToast }) {
                             className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                           >
                             <td className="py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[140px] min-w-[140px] max-w-[140px]">
-                              <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 #{item.id}
                               </span>
                             </td>
@@ -1706,7 +1692,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
                                 {item.student_name}
                               </div>
-                              <div className="font-mono text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
+                              <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
                                 {item.submitted_by_email || item.student_no}
                               </div>
                             </td>
@@ -1766,19 +1752,14 @@ export default function OsasMonitoringTab({ showToast }) {
               /* KANBAN BOARD VIEW FOR POST-EVENTS */
               <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
                 {filteredPostEvents.length === 0 ? (
-                  <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-                    <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center text-gray-900 dark:text-zinc-300">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card" />
-                          <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-white shadow-md dark:border-border dark:bg-card dark:shadow-none">
-                            <HugeIcon className="ph-duotone ph-clipboard-text text-3xl text-pup-maroon dark:text-red-400" />
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+                  <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
+                        <EmptyTitle>
                           No Post-Event Reports Found
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-xs font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                        <EmptyDescription>
                           {hasActiveFilters
                             ? "No reports match your active search or filter criteria."
                             : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}

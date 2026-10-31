@@ -1,4 +1,5 @@
 "use client"
+import useCreateAnother from "@/hooks/useCreateAnother"
 
 import useUrlPage from "@/hooks/useUrlPage";
 import HugeIcon from "@/components/shared/HugeIcon";
@@ -228,6 +229,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   })
   const [createLoading, setCreateLoading] = useState(false)
   const [registerOpen, setRegisterOpen] = useState(false)
+  const { attachForm: attachAccountForm, ...accountRepeat } = useCreateAnother(registerOpen)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editOriginalId, setEditOriginalId] = useState("")
@@ -1267,6 +1269,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const handleCreate = async (e, totpToken = null) => {
     if (e && e.preventDefault) e.preventDefault()
     if (createLoading) return
+    if (!accountRepeat.beginSave()) return
     setCreateLoading(true)
     const office = authUser?.office_id || "registrar"
     const defaultSection = office === "osas" ? "Student Affairs" : office === "registrar" ? "Records" : "General"
@@ -1287,6 +1290,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     if (!staffCheck.success) {
       showToast(formatErrorMessage(staffCheck.error.issues[0]?.message || "Please check all fields.", "Validation Error"), true)
       setCreateLoading(false)
+      accountRepeat.endSave()
       return
     }
 
@@ -1325,20 +1329,21 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         title: "Account Created",
         description: `Staff account for ${createForm.fname} ${createForm.lname} has been created and is active. ${json.credentialEmail?.sent ? "Credentials were emailed to the account." : "Credentials can be shared securely with the user."}`,
       })
-      setCreateForm({
+      accountRepeat.complete(() => setCreateForm({
         id: "",
-        role: "",
+        role: accountRepeat.createAnother ? role : "",
+        section: accountRepeat.createAnother ? section : undefined,
         fname: "",
         lname: "",
         email: "",
         status: "Active",
-      })
-      setRegisterOpen(false)
+      }), () => setRegisterOpen(false))
     } catch (err) {
       if (typeof totpToken === "string") throw err
       showToast(formatErrorMessage(err, "Creation Failed"), true)
     } finally {
       setCreateLoading(false)
+      accountRepeat.endSave()
     }
   }
 
@@ -2179,7 +2184,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       <RegisterAccountTab
         open={registerOpen}
-        onClose={() => setRegisterOpen(false)}
+        onClose={() => { if (!createLoading) setRegisterOpen(false) }}
+        repeat={accountRepeat}
+        attachForm={attachAccountForm}
         authUser={authUser}
         officeId={authUser?.office_id || "registrar"}
         officeShortName={authUser?.office_short_name}
@@ -2383,14 +2390,14 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       {/* Global External Drive Detection Modal */}
       <Dialog open={extDriveModalOpen} onOpenChange={setExtDriveModalOpen}>
         <DialogContent className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card flex flex-col gap-0">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+          <DialogHeader className="p-6 pb-0 text-left">
             <div className="min-w-0">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              <DialogTitle>
                 {extDriveEvent?.type === "connected"
                   ? "External Drive Connected"
                   : "External Drive Disconnected"}
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+              <DialogDescription className="mt-1">
                 {extDriveEvent?.type === "connected"
                   ? "An authorized external backup volume has been detected and is ready for use."
                   : "The external backup volume is no longer reachable. Local server backups continue, but external synchronization is paused."}
@@ -2414,7 +2421,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   {extDriveEvent?.label || "PUPSJ_BACKUP"}
                 </p>
                 {extDriveEvent?.path && (
-                  <p className="mt-0.5 text-[11px] text-gray-400 truncate dark:text-zinc-500 font-mono">
+                  <p className="mt-0.5 text-[11px] text-gray-400 truncate dark:text-zinc-500 font-sans tabular-nums">
                     {extDriveEvent.path}
                   </p>
                 )}
@@ -2449,7 +2456,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -2464,7 +2471,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   setExtDriveModalOpen(false)
                   switchView("backup")
                 }}
-                className="h-10 px-5 text-xs font-semibold rounded-xl btn-brand-red text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 cursor-pointer"
               >
                 View Backups
               </Button>

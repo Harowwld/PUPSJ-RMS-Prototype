@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { getOfficePrefix } from "@/lib/roleUtils"
+import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle"
 
 export default function RegisterAccountTab({
   open,
@@ -28,6 +29,8 @@ export default function RegisterAccountTab({
   isLoading = false,
   onResetForm,
   onCreateAccount,
+  repeat,
+  attachForm,
 }) {
   const fnameRef = useRef(null)
   const [nextIdPreview, setNextIdPreview] = useState("")
@@ -40,7 +43,7 @@ export default function RegisterAccountTab({
     if (open) {
       const off = officeId || authUser?.office_id || "registrar"
       const r = createForm.role || "Staff"
-      fetch(`/api/staff/next-id?officeId=${encodeURIComponent(off)}&role=${encodeURIComponent(r)}`)
+      fetch(`/api/staff/next-id?officeId=${encodeURIComponent(off)}&role=${encodeURIComponent(r)}`, { cache: "no-store" })
         .then((res) => res.json())
         .then((json) => {
           if (active && json.ok && json.nextId) {
@@ -53,7 +56,7 @@ export default function RegisterAccountTab({
     return () => {
       active = false
     }
-  }, [open, officeId, authUser?.office_id, createForm.role, setCreateForm])
+  }, [open, officeId, authUser?.office_id, createForm.role, setCreateForm, repeat.savedCount])
 
   const suggestedEmail = useMemo(() => {
     if (!createForm.lname || !createForm.role) return ""
@@ -90,22 +93,22 @@ export default function RegisterAccountTab({
   return (
     <TooltipProvider delay={200}>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card">
-          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
+        <DialogContent className="w-full max-w-2xl max-h-[92dvh] flex flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-border dark:bg-card">
+          <DialogHeader className="p-6 pb-0 shrink-0">
             <div className="flex items-start gap-4">
               <div className="min-w-0">
-                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                <DialogTitle>
                   Register Account
                 </DialogTitle>
-                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+                <DialogDescription className="mt-1">
                   Create new user credentials for {officePrefix} personnel and administrators.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <form onSubmit={onCreateAccount}>
-            <div className="space-y-5 p-6 pb-4">
+          <form ref={attachForm} onSubmit={onCreateAccount} className="flex min-h-0 flex-col">
+            <div className="min-h-0 overflow-y-auto space-y-5 p-6 pb-4">
               {/* Row 1: Editable Full Name */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -201,7 +204,7 @@ export default function RegisterAccountTab({
                       Employee ID
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                         {nextIdPreview || `PUP${officePrefix.toUpperCase()}-[AUTO]`}
                       </span>
                     </div>
@@ -212,7 +215,7 @@ export default function RegisterAccountTab({
                       Official Email Address
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                         {createForm.email || suggestedEmail || `${(createForm.role || "staff").toLowerCase()}.[lastname]@pup.local`}
                       </span>
                     </div>
@@ -221,7 +224,8 @@ export default function RegisterAccountTab({
               </div>
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="mx-0 mb-0 p-6 pt-0 flex flex-wrap flex-row items-center justify-end gap-2.5 shrink-0">
+              <CreateAnotherToggle checked={repeat.createAnother} onCheckedChange={repeat.setCreateAnother} disabled={isLoading} savedCount={repeat.savedCount} />
               <Button
                 type="button"
                 variant="outline"
@@ -234,9 +238,9 @@ export default function RegisterAccountTab({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 transition-all border-0"
+                className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
               >
-                {isLoading ? "Registering..." : "Register Staff"}
+                {isLoading ? "Registering..." : "Register"}
               </Button>
             </DialogFooter>
           </form>

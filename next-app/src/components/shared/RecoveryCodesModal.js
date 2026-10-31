@@ -74,13 +74,13 @@ export default function RecoveryCodesModal({
         hideClose={true}
         className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-lg dark:border-border dark:bg-card gap-0 flex flex-col"
       >
-        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none text-left">
+        <DialogHeader className="p-6 pb-0 text-left">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+              <DialogTitle>
                 Recovery Codes
               </DialogTitle>
-              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+              <DialogDescription className="mt-1">
                 Emergency single-use codes for two-factor authentication recovery.
               </DialogDescription>
             </div>
@@ -126,10 +126,10 @@ export default function RecoveryCodesModal({
                   key={idx}
                   className="flex items-center justify-between px-3 py-2 bg-white dark:bg-card border border-border dark:border-white/10 rounded-lg shadow-2xs select-all group hover:border-gray-300 dark:hover:border-white/20 transition-colors"
                 >
-                  <span className="font-mono text-[11px] font-medium text-gray-400 dark:text-zinc-500 select-none">
+                  <span className="font-sans tabular-nums text-[11px] font-medium text-gray-400 dark:text-zinc-500 select-none">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
-                  <span className="font-mono text-xs font-semibold tracking-wider text-gray-900 dark:text-zinc-100 select-all">
+                  <span className="font-sans tabular-nums text-xs font-semibold tracking-wider text-gray-900 dark:text-zinc-100 select-all">
                     {code}
                   </span>
                 </div>
@@ -166,11 +166,11 @@ export default function RecoveryCodesModal({
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end">
+        <DialogFooter className="p-6 pt-0 flex items-center justify-end">
           <Button
             type="button"
             onClick={handleClose}
-            className="h-10 px-6 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-6 cursor-pointer"
           >
             Done
           </Button>

@@ -1,5 +1,7 @@
 "use client";
 import HugeIcon from "@/components/shared/HugeIcon";
+import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
+import useCreateAnother from "@/hooks/useCreateAnother";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -26,6 +28,7 @@ export default function RegisterStudentModal({
   showToast,
 }) {
   const currentYear = new Date().getFullYear();
+  const { attachForm, ...repeat } = useCreateAnother(open);
 
   const [studentNo, setStudentNo] = useState("");
   const [name, setName] = useState("");
@@ -144,6 +147,7 @@ export default function RegisterStudentModal({
       return;
     }
 
+    if (!repeat.beginSave()) return;
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/students", {
@@ -173,12 +177,15 @@ export default function RegisterStudentModal({
         description: `Student ${cleanNo} (${cleanName}) has been enrolled in the registry.`,
       });
 
-      // Reset form
-      setStudentNo("");
-      setName("");
-      setSection("");
-      onOpenChange(false);
-      onSuccess?.();
+      repeat.complete(() => {
+        setStudentNo("");
+        setName("");
+        setYearLevel(String(currentYear));
+        if (!repeat.createAnother) setSection("");
+      }, () => onOpenChange(false));
+      Promise.resolve().then(() => onSuccess?.()).catch(() => {
+        showToast?.({ title: "Refresh Failed", description: "Student registered. Refresh the directory to see the updated list." }, true);
+      });
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
@@ -189,23 +196,24 @@ export default function RegisterStudentModal({
       );
     } finally {
       setIsSubmitting(false);
+      repeat.endSave();
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader className="bg-white p-6 pb-2 dark:bg-card border-none text-left">
-            <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+    <Dialog open={open} onOpenChange={(value) => { if (!isSubmitting) onOpenChange(value); }}>
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[92dvh] flex flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
+        <form ref={attachForm} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
+          <DialogHeader className="p-6 pb-0 text-left shrink-0">
+            <DialogTitle>
               Register Student Record
             </DialogTitle>
-            <DialogDescription className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300">
+            <DialogDescription className="mt-1">
               Enroll a new student profile and allocate physical archive storage coordinates.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="p-6 pt-2 space-y-5">
+          <div className="min-h-0 overflow-y-auto p-6 pt-2 space-y-5">
 
           {/* Identification Section */}
           <div className="space-y-4">
@@ -223,7 +231,7 @@ export default function RegisterStudentModal({
                   placeholder="e.g. 2024-00123-SJ-0"
                   value={studentNo}
                   onChange={(e) => handleStudentNoChange(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-mono text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
                 />
               </div>
 
@@ -370,7 +378,8 @@ export default function RegisterStudentModal({
           </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+          <DialogFooter className="mx-0 mb-0 p-6 pt-0 flex flex-wrap flex-row items-center justify-end gap-2.5 shrink-0">
+            <CreateAnotherToggle checked={repeat.createAnother} onCheckedChange={repeat.setCreateAnother} disabled={isSubmitting} savedCount={repeat.savedCount} />
             <Button
               type="button"
               variant="outline"
@@ -383,7 +392,7 @@ export default function RegisterStudentModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex h-10 px-5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+              className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
@@ -391,7 +400,7 @@ export default function RegisterStudentModal({
                   Registering...
                 </span>
               ) : (
-                "Register Student"
+                "Register"
               )}
             </Button>
           </DialogFooter>

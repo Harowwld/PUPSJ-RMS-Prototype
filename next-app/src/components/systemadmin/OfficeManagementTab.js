@@ -44,6 +44,7 @@ import { fetchJsonOnce } from "@/lib/clientRequest"
 import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
 
 // Stored icons may use either the "ti ti-x" or "ph-bold ph-x" prefix, so compare by bare icon name.
 const iconKey = (value = "") => String(value).trim().split(/\s+/).pop().replace(/^(ti|ph)-/, "")
@@ -862,7 +863,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               {/* 4. Add Button */}
               <Button
                 onClick={handleOpenCreate}
-                className="flex h-10 items-center justify-center rounded-xl! btn-brand-red text-white font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs"
+                className="flex h-10 items-center justify-center cursor-pointer px-5"
               >
                 Add Department
               </Button>
@@ -1027,7 +1028,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <span>Active</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   statusFilter === "Active"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1049,7 +1050,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <span>Archived</span>
               <span
                 className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   statusFilter === "Inactive"
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1082,7 +1083,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 placeholder="Search departments by name, acronym, ID..."
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-mono">
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                 {filteredOffices.length}
               </div>
             </div>
@@ -1094,24 +1095,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           {loading ? (
             <OfficeGridSkeleton layoutView={layoutView} count={6} />
           ) : filteredOffices.length === 0 ? (
-            <div className="py-16 rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-border bg-white shadow-xl dark:border-border dark:bg-card dark:shadow-none">
-                      <HugeIcon className={cn(
-                        searchQuery ? "ph-magnifying-glass" : (statusFilter === "Inactive" ? "ph-archive" : "ph-buildings"),
-                        "ph-duotone text-3xl text-gray-400 dark:text-zinc-500"
-                      )}></HugeIcon>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>{searchQuery ? <EmptySearch01Icon size="1em" /> : statusFilter === "Inactive" ? <EmptyArchive01Icon size="1em" /> : <EmptyBuilding03Icon size="1em" />}</EmptyMedia>
+                  <EmptyTitle>
                     {searchQuery
                       ? "No Results Found"
                       : (statusFilter === "Inactive" ? "No Archived Departments Found" : "No Departments Found")}
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-900 dark:text-zinc-300 mt-1">
+                  <EmptyDescription>
                     {searchQuery
                       ? "We couldn't find any departments matching your search criteria. Try adjusting your keywords."
                       : (statusFilter === "Inactive"
@@ -1126,7 +1119,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         variant="outline"
                         onClick={() => setSearchQuery("")}
                         title="Reset Filters"
-                        className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         Reset Filters
                       </Button>
@@ -1134,7 +1127,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <Button
                         onClick={handleOpenCreate}
                         title="Create Department"
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-5 text-xs font-semibold shadow-xs dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer active:scale-95 transition-all"
+                        className="flex h-10 items-center justify-center px-5 cursor-pointer"
                       >
                         Create Department
                       </Button>
@@ -1187,7 +1180,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         >
                           {office.short_name}
                         </h3>
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
                           {office.id}
                         </span>
                       </div>
@@ -1239,7 +1232,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                             Department Actions
                           </span>
-                          <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
+                          <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
                             #{office.id}
                           </span>
                         </div>
@@ -1337,7 +1330,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span
-                            className="font-mono text-[11px] text-gray-700 dark:text-zinc-300"
+                            className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300"
                             title={storagePath}
                           >
                             {formatMiddleTruncate(storagePath, 24)}
@@ -1402,7 +1395,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             e.stopPropagation()
                             handleOpenEdit(office)
                           }}
-                          className="h-9 px-4 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs cursor-pointer active:scale-95 transition-all"
+                          className="h-9 px-4 cursor-pointer"
                         >
                           Configure Department
                         </Button>
@@ -1606,7 +1599,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             <HugeIcon  className="ph-bold ph-desktop text-gray-400 dark:text-zinc-500 text-xs shrink-0"></HugeIcon>
                             <span className="truncate">{office.station_name || "Unassigned"}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-mono">
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
                             <span title={office.storage_path || `.local/storage/${office.id}`}>
                               {formatMiddleTruncate(office.storage_path || `.local/storage/${office.id}`, 22)}
                             </span>
@@ -1737,7 +1730,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                                   Department Actions
                                 </span>
-                                <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
+                                <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
                                   #{office.id}
                                 </span>
                               </div>
@@ -1878,11 +1871,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         <DialogContent className="w-full max-w-4xl sm:max-w-4xl rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {/* Header: Clean title without icon as requested */}
-            <DialogHeader className="p-6 sm:px-8 pt-6 pb-0 bg-white dark:bg-card border-none text-left shrink-0">
-              <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+            <DialogHeader className="p-6 sm:px-8 pt-6 pb-0 text-left shrink-0">
+              <DialogTitle>
                 {isEditing ? "Edit Department Details" : "Add New Department"}
               </DialogTitle>
-              <DialogDescription className="text-[13px] font-normal text-gray-500 mt-1 dark:text-zinc-400">
+              <DialogDescription className="mt-1">
                 Set up department identity, scanning computer, and enabled services.
               </DialogDescription>
             </DialogHeader>
@@ -1966,7 +1959,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       Department Code / ID
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                         {form.id || "office-[auto]"}
                       </span>
                     </div>
@@ -1979,7 +1972,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           Default Admin ID
                         </label>
                         <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                          <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                          <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                             PUP{(form.id || "OFFICE").trim().toUpperCase()}-001
                           </span>
                         </div>
@@ -1990,7 +1983,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           Department Administrator Email
                         </label>
                         <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                          <span className="font-mono text-xs font-semibold tracking-wide truncate">
+                          <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
                             {form.adminEmail || `admin.${form.id || "[office]"}@pup.local`}
                           </span>
                         </div>
@@ -2051,7 +2044,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         value={form.storage_path}
                         onChange={(e) => setForm(prev => ({ ...prev, storage_path: e.target.value }))}
                         placeholder="Default: .local/storage/{id}/uploads"
-                        className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
+                        className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-sans tabular-nums text-[11px]"
                       />
                       <span className="text-[10px] text-gray-400 mt-1 block">
                         Server directory for storing uploaded archives.
@@ -2067,7 +2060,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           value={form.inbound_path}
                           onChange={(e) => setForm(prev => ({ ...prev, inbound_path: e.target.value }))}
                           placeholder="Default: .local/hot-folder/INBOUND"
-                          className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-mono text-[11px]"
+                          className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-sans tabular-nums text-[11px]"
                         />
                         <Button type="button" variant="outline" disabled={folderPickerLoading || !isEditing} onClick={handlePickInboundFolder} className="h-10 shrink-0 rounded-xl px-3 text-xs font-semibold">
                           {folderPickerLoading ? "Opening…" : "Browse Folder"}
@@ -2263,7 +2256,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                     Branding Theme Color
                   </label>
-                  <span className="font-mono text-[11px] font-medium text-gray-400 dark:text-zinc-500">
+                  <span className="font-sans tabular-nums text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                     {form.accent_color}
                   </span>
                 </div>
@@ -2321,7 +2314,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         value={form.accent_color}
                         onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
                         placeholder="#800000"
-                        className="h-10 w-32 rounded-xl bg-white border border-border font-mono text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                        className="h-10 w-32 rounded-xl bg-white border border-border font-sans tabular-nums text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
                       />
                     </div>
 
@@ -2348,7 +2341,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               </div>
             </div>
 
-            <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
+            <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -2360,7 +2353,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <Button
                 type="submit"
                 disabled={submitLoading}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl h-10 px-5 cursor-pointer dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 shadow-xs"
+                className="h-10 px-5 cursor-pointer"
               >
                 {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Department"}
               </Button>

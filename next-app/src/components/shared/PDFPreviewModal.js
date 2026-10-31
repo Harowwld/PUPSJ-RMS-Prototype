@@ -14,6 +14,8 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/errorUtils"
+import { EmptyState } from "@/components/ui/empty"
+import { FileRemoveIcon } from "hugeicons-react"
 
 function PDFFrame({ docId, url, preview, onFileReplaced, onLoadStateChange }) {
   const [loadState, setLoadState] = useState("loading")
@@ -140,7 +142,7 @@ function PDFFrame({ docId, url, preview, onFileReplaced, onLoadStateChange }) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isReuploading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl bg-pup-maroon hover:bg-pup-darkMaroon text-white dark:bg-red-600 dark:hover:bg-red-500 dark:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 cursor-pointer"
               >
                 {isReuploading ? (
                   <span className="flex items-center gap-1.5">
@@ -221,15 +223,15 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] flex-col overflow-hidden border border-border bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border dark:bg-muted z-[70] gap-0"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border z-[70] gap-0 bg-white dark:bg-card"
       >
-        <DialogHeader className="shrink-0 border-b border-border dark:border-border bg-gray-50 dark:bg-white/5 px-6 py-4">
+        <DialogHeader className="shrink-0 px-6 py-4">
           <div className="flex items-center justify-between w-full gap-4">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-left font-semibold text-gray-900 dark:text-zinc-50 text-[15px] tracking-[-0.01em] truncate">
+              <DialogTitle className="text-left">
                 Document Preview: {preview?.title || preview?.docType || preview?.originalFilename || "Preview"}
               </DialogTitle>
-              <p className="text-left font-normal text-gray-900 dark:text-zinc-300 text-xs mt-0.5">
+              <p className="text-left mt-0.5 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                 {preview?.subtitle ? (
                   preview.subtitle
                 ) : (
@@ -290,23 +292,17 @@ export default function PDFPreviewModal({ open, isOpen, onClose, preview, pdfUrl
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
-              <div className="max-w-lg text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
-                  <HugeIcon  className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></HugeIcon>
-                </div>
-                <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
-                  No digital file attached
-                </p>
-                <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
-                  This record has no attached digital file or its file was removed.
-                </p>
-              </div>
+              <EmptyState
+                icon={FileRemoveIcon}
+                title="No Digital File Attached"
+                description="This record has no attached digital file or its file was removed."
+              />
             </div>
           )}
         </div>
 
         <div 
-          className="flex shrink-0 justify-end items-center bg-white dark:bg-card px-6 py-4 border-t border-border dark:border-border gap-2.5"
+          className="flex shrink-0 justify-end items-center px-6 py-4 gap-2.5"
         >
           <DialogClose asChild>
             <Button
