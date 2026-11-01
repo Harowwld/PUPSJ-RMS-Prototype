@@ -7,15 +7,15 @@ This guide establishes the mandatory UI/UX standards, component blueprints, and 
 ## 1. Core Visual Principles & Hierarchy
 
 1. **Quiet, Apple-Inspired Clarity**: Avoid decorative clutter, artificial card glows, AI-generated purple/blue gradients, and unnecessary iconography.
-2. **Text-Only Primary Action Buttons**: Primary buttons must lead with clear action text (e.g. `Save`, `Register`, `Submit`). Never put static leading icons on primary action buttons.
+2. **Text-Only Primary Action Buttons**: Primary buttons must lead with clear action text that names the action and its target (e.g. `Save Changes`, `Register Student`, `Submit Request`). Never put static leading icons on primary action buttons.
 3. **No Icons in Modal Headers**: Dialog headers must be clean and typographic. Do not place decorative icon boxes (such as 48×48px squircles with duotone icons) in `DialogHeader`.
-4. **Action-Only Words for Buttons & Dialogs**: Use succinct, unambiguous verbs (`Save`, `Restore`, `Submit`, `Update`, `Cancel`, `Close`, `Done`). Do not use verbose phrases or sentences (`Skip for Now`, `Click here to save`, `Save Changes`, `Submit Feedback`).
+4. **Verb + Specific Noun for Actions**: Primary and context-dependent action labels name both the action and its target (e.g. `Save Changes`, `Register Student`, `Submit Feedback`). Keep dismissal and navigation labels concise (`Cancel`, `Close`, `Back`, `Done`).
 
 ---
 
 ## 2. Border Radius Token Hierarchy
 
-**Typography ownership:** Set font family and ordinary line height through body inheritance. Component utilities own sizes, weights, and line heights; do not add universal `!important` typography rules. Use Plus Jakarta Sans for all app text, including code, IDs, and timestamps. Use `tabular-nums` for stable numeric alignment; do not introduce monospace or serif text styles. Shared Input and Select default to 13px, with explicit caller sizes preserved for verification and other specialized fields. Heading/table defaults belong in Tailwind's base layer so utilities can override them.
+**Typography ownership:** Plus Jakarta Sans is the only app font. It is loaded in the root layout and inherited by all app text, controls, previews, print views, and code-like labels. Do not introduce monospace, serif, or separate system font families. Use `tabular-nums` to align numeric IDs and timestamps while keeping the same typeface. Component utilities own sizes, weights, and line heights; do not add universal `!important` typography rules. Shared Input and Select default to 13px and preserve explicit caller sizes. Heading/table defaults stay in Tailwind's base layer so utilities can override them.
 
 Follow this strict sizing hierarchy across all pages and components:
 
@@ -78,7 +78,7 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
           </div>
         </div>
 
-        {/* 4. Footer: Action-only words, outlined cancel, text-only primary confirm */}
+        {/* 4. Footer: Verb + specific noun for submit; outlined dismissal */}
         <DialogFooter className="p-6 pt-0 bg-white dark:bg-card border-none flex items-center justify-end gap-2.5">
           <Button
             type="button"
@@ -95,7 +95,7 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
             disabled={isLoading}
             className="h-10 px-5"
           >
-            {isLoading ? "Saving..." : "Save"}
+            {isLoading ? "Saving Changes…" : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -116,12 +116,55 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 ### 3.3 Modal & Sheet Golden Rules
 - **No Header or Footer Dividers**: Do not add separator borders, rules, or tinted bands between a modal/sheet header, body, and footer. Use spacing and typography to establish the sections. Keep functional borders inside forms, tables, notices, and previews where needed.
 - **Footer Layout**: `DialogFooter` has no default negative margins, border, background, or padding. A zero-padding shell supplies `p-6 pt-0` on the footer; a padded shell uses the neutral footer directly. Never compensate for footer layout with negative margins.
-- **NEVER** insert `<div className="w-12 h-12 rounded-xl border flex items-center justify-center ..."><HugeIcon ... /></div>` or any icon box wrapper into `DialogHeader` or `SheetHeader`.
-- **NEVER** prepend icons to `DialogTitle` or `SheetTitle` (e.g. `<HugeIcon className="ph-fill ph-warning" /> Alert Title`).
+- **NEVER** insert a decorative icon box or leading icon into `DialogHeader` or `SheetHeader`.
+- **NEVER** prepend icons to `DialogTitle` or `SheetTitle`.
 - Keep header titles between `15px` and `18px` (`text-[16px] font-semibold tracking-[-0.01em]` for Dialogs; `text-[17px]` to `text-[19px]` for Sheets).
 - Keep descriptions at `text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1`.
 - For global confirmation dialogs, always use `<ConfirmModal />`, which natively enforces Apple styling and icon-free headers.
-- Footers must always feature action-only buttons (e.g. `Cancel` / `Close` + single action verb: `Save`, `Register`, `Submit`, `Delete`, `Done`).
+- Footers use a specific action and target for primary actions (e.g. `Save Changes`, `Register Student`, `Submit Request`) with concise dismissal labels (`Cancel`, `Close`, `Done`).
+
+### 3.4 Form Field Sequence
+
+Arrange modal fields in the order a person provides or understands the information:
+
+1. Core identity fields (name, title, identifier where editable).
+2. Classification and status fields.
+3. Long-form description or purpose.
+4. Contact, ownership, or adviser details.
+5. Appearance, storage, and other optional configuration.
+6. Generated or read-only previews, grouped after the inputs that determine them.
+
+Keep related fields together in a responsive grid. On narrow screens, let the grid stack in the same reading and tab order. Do not place appearance/configuration controls before required record details.
+
+### 3.5 Sheet Pagination
+
+Use `SheetPagination` from `@/components/shared/SheetPagination` for every sheet pager. It matches the table controls: compact ghost `Prev` / `Next` buttons with a bordered current-page indicator. Keep the existing record callbacks, accessible entity-specific labels, and disabled conditions.
+
+- Record-detail sheets use `compact` with the current record index plus one and the record count. Header controls may wrap onto another line on narrow screens.
+- List sheets use the full layout with `Showing {displayCount} of {totalCount}`, `Rows: 10 / 20 / 50 / 100`, and page navigation. Reset to the first page when the row count changes.
+- Keep pagination outside the sheet's action footer. Do not copy table-container divider lines or tinted footer backgrounds into sheets.
+- Do not build separate arrow-button/zero-padded counters or outlined previous/next layouts for sheets.
+
+### 3.6 Generated Report Previews
+
+Use `ReportPreviewDialog` from `@/components/shared/ReportPreviewDialog` for generated reports. Its layout is extracted from the Compliance Analysis report preview and is shared by the compliance summary, individual student report, and incomplete-records list.
+
+- Use a specific title such as `Student Records Report Preview`, plus a short report description. The header uses `px-6 py-5` and a single close control.
+- Keep the PDF canvas edge to edge inside the full-inspection dialog. The common viewer supplies loading and retry states, the shared PDF zoom policy below, and fullscreen behavior.
+- Place the fullscreen control at the footer's left. Actions on the right are outlined `Close`, outlined `Print Report`, and primary `Download Report`. The footer uses `px-6 py-4` and wraps on narrow screens.
+- Printing waits for the active PDF frame to load. Downloads use the same PDF URL or the caller's existing download handler, preserving filenames, logging, and feedback.
+- The caller owns report generation and object-URL cleanup. Route every dismissal through its `onClose` handler so footer, header, Escape, and backdrop dismissal release the same resources.
+
+### 3.7 Document PDF Preview & Zoom
+
+All full document and report previews use `PDFPreview` from `@/components/shared/PDFPreview`. It owns the application's PDF iframe and opening zoom.
+
+- Open desktop previews at **100%**, rather than stretching the paper to the available width. Containers narrower than 820px fit the whole page so mobile views and embedded panels show the paper without horizontal clipping.
+- Use `PDFPreviewModal` for opening records, scanned documents, and attachments. It shares file loading, missing-file recovery, and replacement behavior with embedded `ResilientPDFViewer` panels.
+- Image attachments and scans are converted to a temporary PDF for viewing in the same preview. Original downloads retain the uploaded file and filename; conversion does not alter stored files. Unsupported formats receive an explicit download state.
+- Use `ReportPreviewDialog` for generated reports, with the same `PDFPreview` body. Preview, printing, and downloading must use the generated PDF rather than separate HTML print layouts.
+- Pass the source URL to the shared component. Do not create page-specific PDF iframes or append `view=FitH` / custom zoom fragments. The shared helper preserves page destinations and enforces the opening zoom.
+- Keep document thumbnails and OCR/template editing canvases in their existing editing or navigation roles. Their full document preview actions open the shared PDF preview.
 
 ---
 
@@ -133,35 +176,28 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 - **Styling**: The shared component owns colors, focus, press feedback, radius, and typography. Add layout classes only. Default height is 40px; `size="sm"` is 36px. Avoid local color overrides and `!important` utilities.
 - **Icons**: Permitted only during loading or processing states; use direct Hugeicons imports.
 ```jsx
-// Correct (Text-only, single action verb)
+// Correct (Text-only, action verb + specific noun)
 <Button disabled={isLoading}>
-  {isLoading ? "Registering…" : "Register Student"}
+  {isLoading ? "Registering Student…" : "Register Student"}
 </Button>
 
-// Incorrect (DO NOT ADD STATIC LEADING ICONS OR MULTI-WORD VERBOSE PHRASES)
+// Incorrect (DO NOT ADD STATIC LEADING ICONS OR VAGUE LABELS)
+import { Add01Icon } from "hugeicons-react";
+
 <Button ...>
-  <HugeIcon className="ph-bold ph-plus" /> Register Student
+  <Add01Icon size={16} aria-hidden="true" /> Register
 </Button>
 ```
 
-### 4.2 Action-Only Button Verb Convention (Golden Rule)
-All button labels in dialogs, sheets, toolbars, and cards must strictly use a **single action word (verb)**:
-- **Approved Primary Actions**: `Save`, `Register`, `Submit`, `Delete`, `Create`, `Update`, `Clear`, `Reset`, `Apply`, `Upload`, `Restore`, `Archive`, `Download`, `Copy`, `Retry`, `Dismiss`, `Review`, `Approve`, `Revise`, `Decline`, `Reopen`, `Revoke`, `Skip`, `Complete`, `Finish`, `Done`, `Import`, `Export`.
-- **Approved Secondary / Dismissal Actions**: `Cancel`, `Close`, `Back`.
-- **Strictly Forbidden Multi-Word Labels**:
-  - ❌ `Save Changes` ➔ Use **`Save`**
-  - ❌ `Submit Feedback` ➔ Use **`Submit`**
-  - ❌ `Register Student` ➔ Use **`Register`**
-  - ❌ `Create User` / `Register Staff` ➔ Use **`Register`** or **`Create`**
-  - ❌ `Skip for Now` ➔ Use **`Skip`**
-  - ❌ `Complete Setup` ➔ Use **`Complete`** or **`Finish`**
-  - ❌ `Clear All Failed` / `Clear All` ➔ Use **`Clear`**
-  - ❌ `Copy Codes` ➔ Use **`Copy`**
-  - ❌ `Download (.txt)` ➔ Use **`Download`**
+### 4.2 Action Label Convention (Golden Rule)
+- **Primary and context-dependent actions** use `[Action Verb] + [Specific Noun]` so users know what the action changes: `Save Changes`, `Register Student`, `Register Staff`, `Submit Request`, `Submit Feedback`, `Add Program`, `Restore Backup`.
+- Avoid vague action-only labels (`Save`, `Register`, `Submit`, `Add`, `Create`) when the target is not obvious from the surrounding interface.
+- **Dismissal and navigation** may use concise atomic labels: `Cancel`, `Close`, `Back`, `Done`.
+- Use natural loading text that retains the target, such as `Saving Changes…` or `Registering Student…`.
 
 ### 4.3 Secondary / Dismissal Buttons
 - **Style**: Outlined (`variant="outline"`), `rounded-xl`, clear border.
-- **Copy**: Single action-only word (`Cancel` or `Close`).
+- **Copy**: Concise dismissal word (`Cancel` or `Close`).
 ```jsx
 <Button
   variant="outline"
@@ -175,7 +211,7 @@ All button labels in dialogs, sheets, toolbars, and cards must strictly use a **
 ### 4.4 Universal Header Refresh Action
 Never use a text button that says "Refresh". Use the project's squircle `<RefreshButton />`:
 ```jsx
-import RefreshButton from "@/components/shared/RefreshButton";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 <RefreshButton onRefresh={fetchData} isLoading={isLoading} title="Refresh Records" />
 ```
@@ -184,13 +220,15 @@ Renders an accessible 40×40px `rounded-xl` icon-only squircle with hover feedba
 ### 4.5 Table / Row Inline Actions
 For row-level table actions, use compact `rounded-lg` buttons:
 ```jsx
+import { PencilEdit01Icon } from "hugeicons-react";
+
 <button
   type="button"
   onClick={() => handleEdit(row)}
   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
   title="Edit"
 >
-  <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
+  <PencilEdit01Icon size={16} aria-hidden="true" />
 </button>
 ```
 
@@ -317,7 +355,7 @@ Standardized 3-card stat grid with drag-and-drop reordering, squircle icon tile,
 
 ```jsx
 import { Reorder } from "framer-motion";
-import HugeIcon from "@/components/shared/HugeIcon";
+import { Analytics01Icon, DragDropIcon } from "hugeicons-react";
 
 export default function FeatureKpiCards({ data }) {
   const [selectedKpi, setSelectedKpi] = useState(null);
@@ -361,7 +399,7 @@ export default function FeatureKpiCards({ data }) {
                 </span>
               </div>
               <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-pup-maroon">
-                <HugeIcon className="ph-bold text-[15px] ph-chart-pie-slice" />
+                <Analytics01Icon size={15} aria-hidden="true" />
               </div>
             </div>
 
@@ -375,8 +413,10 @@ export default function FeatureKpiCards({ data }) {
                   Subtitle info
                 </span>
               </div>
-              <HugeIcon
-                className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 text-lg mb-0.5 shrink-0"
+              <DragDropIcon
+                size={18}
+                aria-hidden="true"
+                className="cursor-grab active:cursor-grabbing hover:text-gray-400 dark:hover:text-zinc-500 text-gray-300 dark:text-zinc-700 mb-0.5 shrink-0"
                 title="Drag to rearrange"
               />
             </div>
@@ -403,19 +443,21 @@ All search bars across table toolbars, master lists, directories, and archive sc
 
 - **Apple HIG & Visual Ergonomics**: Provides immediate visual confirmation of the search query scope, total matching count, and an effortless single-click clear action without leaving the keyboard or toolbar.
 - **Container**: `relative flex-1 sm:w-64 min-w-[200px] max-w-sm group` (or responsive fixed width `w-full sm:w-[260px] lg:w-[300px] relative group shrink-0`). Must include `group` so the leading search icon transitions color when the input is focused.
-- **Leading Search Icon**: Embedded at `absolute inset-y-0 left-3 flex items-center pointer-events-none` with `<HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />`.
+- **Leading Search Icon**: Embedded at `absolute inset-y-0 left-3 flex items-center pointer-events-none` with `<Search01Icon size={16} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />`.
 - **Input Geometry & Spacing**: Must use `h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all`.
   - **Crucial Padding Requirement**: Always specify `pl-8 pr-16` (or `pr-20` if large numbers/controls) so typed text never overlaps or clips under the trailing count badge or clear button.
 - **Trailing Control Cluster (Clear Button + Live Count Badge)**: Positioned at `absolute inset-y-0 right-3 flex items-center gap-1.5`:
-  - **Quick Clear Button**: Displayed conditionally whenever the search query is non-empty (`query !== ""`). Must use a borderless, transparent button with `<HugeIcon className="ph-bold ph-x-circle text-[13px]" />` and accessible tooltip/aria-label.
+  - **Quick Clear Button**: Displayed conditionally whenever the search query is non-empty (`query !== ""`). Must use a borderless, transparent button with `<CancelCircleIcon size={14} aria-hidden="true" />` and accessible tooltip/aria-label.
   - **Live Count Badge**: Shows pure numeric matching count using `text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500 pointer-events-none` formatted with `.toLocaleString()`.
 
 #### Code Blueprint: Standard Search Input
 ```jsx
+import { CancelCircleIcon, Search01Icon } from "hugeicons-react";
+
 <div className="relative w-full sm:w-64 group">
   {/* 1. Leading Search Icon with Brand Focus Transition */}
   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-    <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+    <Search01Icon size={16} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
   </div>
 
   {/* 2. Text Input with Standard Hairline Border & pl-8 pr-16 Padding */}
@@ -430,7 +472,7 @@ All search bars across table toolbars, master lists, directories, and archive sc
     className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
   />
 
-  {/* 3. Trailing Cluster: Quick Clear Button + Live Monospace Count Badge */}
+  {/* 3. Trailing Cluster: Quick Clear Button + Live Tabular Count Badge */}
   <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
     {searchQuery && (
       <button
@@ -443,7 +485,7 @@ All search bars across table toolbars, master lists, directories, and archive sc
         title="Clear search"
         aria-label="Clear search"
       >
-        <HugeIcon className="ph-bold ph-x-circle text-[13px]" />
+        <CancelCircleIcon size={14} aria-hidden="true" />
       </button>
     )}
     <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums pointer-events-none">
@@ -457,7 +499,7 @@ All search bars across table toolbars, master lists, directories, and archive sc
 1. **Never omit the count badge**: Every search input in toolbars and table headers must report its current scope or filtered result count.
 2. **Keep the same font with stable digits**: Use `font-sans tabular-nums text-[11px]` to prevent layout jitter when numeric values change.
 3. **Always ensure `pr-16` right padding**: Standard `pr-4` or `pr-8` causes text to type underneath the count badge.
-4. **Never use raw "×" characters**: Always render `<HugeIcon className="ph-bold ph-x-circle text-[13px]" />` for the clear button.
+4. **Never use raw "×" characters**: Always render `<CancelCircleIcon size={14} aria-hidden="true" />` for the clear button.
 
 ### 5.9 Standard Popovers (`Popover`) & The Three-Zone Architecture
 All popovers (filter drawers, contextual utility popups, color pickers, and detail cards) must follow the **Three-Zone Architecture (Header, Body, Footer)** established by the canonical Combine Filter (`MultiCriteriaFilter`):
@@ -556,13 +598,39 @@ import { EmptyState } from "@/components/ui/empty";
 </EmptyState>
 ```
 
-- Import icons directly from Hugeicons. Do not introduce Phosphor imports, `ph-*` names, or the legacy class-name adapter in empty states.
+- Import icons directly from Hugeicons. Use direct Hugeicons components in empty states; do not use Phosphor imports, `ph-*` names, or Tabler class aliases.
+- Hugeicons default to a fixed 24px size, so always pass `size`. Use `size="1em"` when a `text-*` class or parent typography should set the icon dimensions; use an explicit numeric size for fixed geometry. Ordinary inline icons without a typography size use 16px, with smaller sizes reserved for dense metadata and larger sizes for prominent standalone symbols. `AppIcon` already defaults to `1em`.
 - Keep the composition quiet: a standalone symbol, a clear title, a short explanation, and an optional action. Empty-state symbols must not sit in decorative boxes, badges, or elevated tiles.
 - When composing primitives, render icons with `size="1em"` inside `EmptyMedia`; the wrapper handles size and color and hides decorative media from assistive technology. Explicit child styles remain supported.
 - Use compact states for sheet lists, chart panels, account setup, and small cards. Dropdown no-results messages can remain single-line messages. Upload dropzones and loading skeletons retain their distinct behavior.
 - Preserve context-specific copy, action handlers, and permission checks. A filter miss should offer an outlined reset action; a first-use state may offer a permitted primary creation action. Do not turn these actions into borderless text links with global CSS.
 - The action slot constrains buttons and links to its width and wraps long labels on narrow screens. Keep empty action slots hidden.
 - No pulsing halos, oversized shadows, fixed content heights, or blanket descendant overrides. Functional borders, such as kanban drop targets, may remain on the containing surface.
+
+### 5.11 Standard Textarea
+
+Use `Textarea` from `@/components/ui/textarea` for descriptions, purposes, notes, explanations, and other multiline form values. It follows the shared Input border, radius, 13px typography, theme colors, disabled state, and one-pixel focus treatment. Keep only meaningful size or resize overrides at the callsite; do not restate border, background, text, or focus styling.
+
+```jsx
+import { Textarea } from "@/components/ui/textarea"
+
+<Textarea
+  id="office-description"
+  value={description}
+  onChange={(event) => setDescription(event.target.value)}
+  rows={3}
+  placeholder="Describe this office's purpose and responsibilities."
+/>
+```
+
+### 5.12 Shared Input Variants
+
+`Input` from `@/components/ui/input` is the standard single-line control. Use `variant="floating"` only inside the merged field shell where an overlaid label floats on focus or value; this variant owns its transparent, borderless field geometry so global CSS must not force its dimensions. Use `variant="verification"` for one-time codes that may also accept recovery codes or keys; it keeps the shared rounded geometry and one-pixel focus treatment while centering and spacing the value. Keep labels associated with their inputs and preserve the standard disabled and invalid states.
+
+```jsx
+<Input variant="floating" id="email" placeholder=" " />
+<Input variant="verification" id="verificationCode" autoComplete="one-time-code" />
+```
 
 ## 6. Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
 
@@ -576,26 +644,28 @@ Alert and warning banners must never float as disconnected island cards (`mx-5 m
 3. **Typography & Strong Lead**: Always lead with a bold category label (e.g., `Archived Department Notice:`, `Rescan / Replacement Mode Active:`, `Pending Post-Event Compliance:`) in high-contrast text (`text-amber-950 dark:text-amber-100 font-semibold`), followed by concise message copy (`text-[11.5px] sm:text-xs leading-normal`).
 4. **Leading Status Icon**: 16px Hugeicons component (`size={16}`, `shrink-0`) matching the banner theme.
 5. **Direct Micro-Actions**: When an immediate remedy is available (e.g. `Restore`, `Replace Document`, `View Copy`), provide a compact micro-button (`h-7 px-2.5 text-[11px] font-semibold rounded-lg shadow-2xs active:scale-95`).
-6. **Dismissable Interaction**: Dismissable alerts must render an accessible squircle dismiss button (`p-1 rounded-lg text-sm ph-x cursor-pointer`) with session persistence (`sessionStorage`) so dismissed notices stay dismissed for that entity during the user's active session.
+6. **Dismissable Interaction**: Use the shared `NoticeBanner` dismiss control, which includes an accessible Hugeicons cancel symbol and session persistence when given a `dismissKey`.
 
 ### 6.2 Color Palette Variants
 
 | Variant | Container Classes | Icon & Accent | Usage |
 |---|---|---|---|
-| **Warning / Amber** | `border-b border-amber-200/90 bg-amber-50/90 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200` | `ph-warning-circle text-amber-600 dark:text-amber-400` | Archived department notice, rescan replacement mode, ticket duplicates, missing compliance |
-| **Success / Emerald** | `border-b border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200` | `ph-shield-check text-emerald-600 dark:text-emerald-400` | Verified officer authorization, active system synchronization, verified credential status |
-| **Information / Blue** | `border-b border-blue-200/90 bg-blue-50/90 text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200` | `ph-info text-blue-600 dark:text-blue-400` | Operational advisories, maintenance schedules, read-only mode alerts |
-| **Destructive / Rose** | `border-b border-rose-200/90 bg-rose-50/90 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200` | `ph-warning-circle text-rose-600 dark:text-rose-400` | Rejection reasons, revoked credentials, severe security restriction warnings |
+| **Warning / Amber** | `border-b border-amber-200/90 bg-amber-50/90 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200` | `AlertCircleIcon` with amber foreground | Archived department notice, rescan replacement mode, ticket duplicates, missing compliance |
+| **Success / Emerald** | `border-b border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200` | `CheckmarkCircle02Icon` with emerald foreground | Verified officer authorization, active system synchronization, verified credential status |
+| **Information / Blue** | `border-b border-blue-200/90 bg-blue-50/90 text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200` | `InformationCircleIcon` with blue foreground | Operational advisories, maintenance schedules, read-only mode alerts |
+| **Destructive / Rose** | `border-b border-rose-200/90 bg-rose-50/90 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200` | `AlertCircleIcon` with rose foreground | Rejection reasons, revoked credentials, severe security restriction warnings |
 
 ### 6.3 Canonical Code Blueprint (Dismissable Line-Attached Alert)
 
 ```jsx
+import { AlertCircleIcon, Cancel01Icon } from "hugeicons-react";
+
 {/* Attached edge-to-edge dismissable alert taking the line */}
 {isNoticeActive && !isNoticeDismissed && (
   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
     {/* Left: Icon & Typographic Notice */}
     <div className="flex items-center gap-2.5 min-w-0">
-      <HugeIcon className="ph-bold ph-warning-circle text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+      <AlertCircleIcon size={16} aria-hidden="true" className="shrink-0 text-amber-600 dark:text-amber-400" />
       <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
         <strong className="font-semibold text-amber-950 dark:text-amber-100">
           Archived Department Notice:
@@ -622,7 +692,7 @@ Alert and warning banners must never float as disconnected island cards (`mx-5 m
         aria-label="Dismiss notice"
         title="Dismiss notice"
       >
-        <HugeIcon className="ph-bold ph-x text-sm" />
+        <Cancel01Icon size={16} aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -650,11 +720,11 @@ Alert and warning banners must never float as disconnected island cards (`mx-5 m
 Before finalizing any new page, tab, or modal, verify the following:
 
 - [ ] **No Header Icon in Dialogs**: Are `DialogHeader`s completely free of icon wrappers and decorative svgs?
-- [ ] **Action-Only Button Labels**: Are buttons labeled with single action words (`Save`, `Submit`, `Cancel`, `Done`, `Close`)?
+- [ ] **Clear Button Labels**: Do primary actions use a verb plus specific noun (`Save Changes`, `Submit Request`) while dismissal/navigation use concise labels (`Cancel`, `Close`, `Back`, `Done`)?
 - [ ] **No Static Icons on Primary Buttons**: Does the main action button have clean text without leading plus/trash icons?
 - [ ] **Border Radius Standards**: Outer cards are `rounded-2xl`, inputs & buttons are `rounded-xl`, small items are `rounded-lg`.
 - [ ] **Secondary Button Outlines**: Dismissal buttons use `variant="outline"` with a crisp border, not borderless ghost.
 - [ ] **Universal Refresh Squircle**: Is data refresh handled via `<RefreshButton />` instead of a text "Refresh" button?
-- [ ] **Standard Search Input with Live Count**: Does the search bar include a leading magnifying glass with focus color transition, generous padding (`pl-8 pr-16`), a trailing live count badge (`text-[11px] font-sans tabular-nums pointer-events-none`), and an inline clear button (`ph-x-circle`)?
+- [ ] **Standard Search Input with Live Count**: Does the search bar include a leading Hugeicons magnifying glass with focus color transition, generous padding (`pl-8 pr-16`), a trailing live count badge (`text-[11px] font-sans tabular-nums pointer-events-none`), and an inline Hugeicons clear button?
 - [ ] **Edge-to-Edge Line-Attached Alerts**: Are alert/warning banners attached directly to container divider lines (`border-b` / `border-t`, zero outer margins `mx-0`, no floating `rounded-xl` island cards) taking up the line space edge-to-edge?
 - [ ] **Dark Mode Parity**: Are dark variants (`dark:border-white/10`, `dark:bg-card`, `dark:text-zinc-50`) present on all containers?
