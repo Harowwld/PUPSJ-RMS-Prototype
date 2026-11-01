@@ -8,7 +8,9 @@ Replaced the custom click-only Select internals with the installed Base UI Selec
 
 ### Typography
 
-Removed the universal important font-family and line-height rules. Body owns ordinary defaults; component utilities own their type scale. Monospace text now uses a real system monospace stack. Heading, form, and table defaults sit in Tailwind's base layer instead of overriding component classes. Input keeps a 13px default and respects specialized caller sizes at every viewport width. The existing application font assets remain in use.
+Follow-up on 2026-11-01: the app uses Plus Jakarta Sans as its only typeface. All 84 former monospace/serif utility usages now use the app font, with tabular numerals retained for numeric alignment. The print view loads the same local font before printing; account emails declare the same family with a generic sans-serif fallback. No separate monospace or serif style remains in application UI.
+
+The typography ownership fix removed universal important font-family and line-height rules. Body owns ordinary defaults; component utilities own their type scale. Heading, form, and table defaults sit in Tailwind's base layer instead of overriding component classes. Input keeps a 13px default and respects specialized caller sizes at every viewport width.
 
 ### Notice banners
 
@@ -20,7 +22,7 @@ Guardian/SPA information panels, verification fields, document previews, and sel
 
 ## Validation
 
-- `node e2e/system-components.browser.mjs`: passed at 1440px and 320px in light and dark mode. Checks component size/line-height overrides, monospace, flat notice geometry, session dismissal across remounts, keyboard selection/typeahead, disabled-item protection, Escape/focus return, form submission values, disabled controls, inline popup mounting/outside dismissal, and bottom-edge viewport bounds. The inline fixture caught and verified a fix for closed inline menus remaining mounted.
+- `node e2e/system-components.browser.mjs`: passed at 1440px and 320px in light and dark mode before the single-font follow-up. It checks component size/line-height overrides, notice persistence, dropdown keyboard/form behavior, disabled controls, inline popup behavior, and viewport bounds. Its font assertion now verifies that the former monospace utility resolves to the app font.
 - Modal and role-themed button/switch browser regression fixtures passed in both themes at both widths.
 - Scoped ESLint: zero errors, one existing exhaustive-deps warning in ModuleConfigTab.
 - Final production build passed.
