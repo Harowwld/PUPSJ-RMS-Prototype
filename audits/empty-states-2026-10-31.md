@@ -13,7 +13,7 @@ The initial audit identified inconsistent caller markup. Implementation also unc
 | Finding | Implementation |
 |---|---|
 | Forced icon size/color | `EmptyMedia` no longer clones children or writes inline icon styles. Explicit sizes, classes, and styles remain intact. |
-| Legacy icon references | Empty-state media uses direct named imports from `hugeicons-react`. The app's legacy `HugeIcon` adapter remains for unrelated UI. |
+| Legacy icon references | Empty-state media uses direct named imports from `hugeicons-react`. The app-wide legacy `HugeIcon` adapter and Phosphor/Tabler class aliases were removed in the 2026-11-02 migration. |
 | Repeated geometry | Page symbols are 48px and compact symbols are 28px, with no enclosing tile, background, border, or shadow. |
 | Decorative pulses and large shadows | Empty-state halos and icon-tile shadows were removed. Loading indicators retain their existing behavior. |
 | Typography drift | Shared semibold titles and normal-weight secondary descriptions replace caller-level typography overrides. Both have light/dark colors and long-text wrapping. |

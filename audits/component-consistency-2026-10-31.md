@@ -2,7 +2,37 @@
 
 Date: 2026-10-31 (Asia/Manila)
 
-Implementation follow-up, 2026-11-01: modal findings 5 and 6 have been addressed, including the additional requirement for divider-free headers and footers. See [modal standardization](modal-standardization-2026-11-01.md) for scope and validation. The findings below preserve the original review; the other items are not marked resolved.
+## Cross-audit recheck — 2026-11-02
+
+Reviewed all seven audit reports and their referenced source/documentation. The component findings in the current matrix are marked addressed. The form-control finding was closed on 2026-11-02: shared `Textarea` and named `Input` variants now cover multiline, floating-label, and flexible verification-code fields; legacy global important dimensions were removed from `.field-wrapper`.
+
+The source recheck confirms Plus Jakarta Sans is the only declared application font family (the `font-mono`/`font-serif` aliases resolve to the same family), and no Phosphor/Tabler icon class aliases or `HugeIcon` calls remain in application source. The legacy names in historical SQL migrations are handled by migration `082_migrate_legacy_hugeicons_aliases.sql`. The icon migration's fixed 24px default was corrected: all 1,036 direct Hugeicons callsites now supply a size, typically `1em` so their existing typography classes determine SVG dimensions; 73 fixed-geometry icons retain explicit pixel values. `AppIcon` continues to default to `1em`.
+
+A fresh production build passed on 2026-11-02 after the form-control and icon-size updates. Remaining review limits are validation scope: there has not been a new browser sweep of every authenticated page/state, and no full-app screen-reader or contrast certification is claimed. The font-only change has build validation now, but has not received a fresh browser visual comparison.
+
+Audit script results: `pnpm audit:empty-states` reports only `DashboardShellSkeleton.js:59`, a detector false positive on `items.map(...)`; `pnpm audit:buttons` continues to emit heuristic matches for native tabs, tertiary controls, and semantic actions, so those matches are not treated as failures. This is a source and audit-script recheck, not a fresh visual review of every authenticated route or modal flow.
+
+## Fresh recheck — 2026-11-01
+
+The shared refresh control is restored, icon callsites now use named Hugeicons components or the data-driven Hugeicons registry, and button-label guidance agrees across the repo. The legacy icon adapter and Phosphor-style UI aliases have been removed from application source. This recheck is source-based and does not claim a visual pass of every authenticated page.
+
+| Finding | Recheck status | Evidence / remaining work |
+|---|---|---|
+| 1. RefreshButton | **Addressed — P1** | Shared component now renders a 40px outlined icon button using direct `RefreshIcon`/`Loading03Icon` imports. All 34 JSX call sites supply a handler, loading state, and accessible title. |
+| 2. Select | **Addressed** | Shared adapter uses Base UI Select; source includes keyboard/listbox and viewport positioning. Browser fixture previously passed keyboard, form, disabled, inline, and edge-placement checks. |
+| 3. High Contrast Mode | **Addressed** | Uses the shared Switch with `aria-label="High Contrast Mode"`. |
+| 4. Typography | **Addressed** | Global forced type rules were removed; all app text now uses Plus Jakarta Sans. Former monospace/serif utilities were migrated and numeric alignment uses tabular figures. |
+| 5–6. Modal layout and headers | **Addressed in shared patterns** | Dialog/sheet primitives no longer add header/footer separators, tinted bands, or negative footer margins; the modal layout fixture passed at 1440px and 320px. This is not an authenticated-page screenshot review. |
+| 7. Switch reuse | **Addressed** | Audited custom settings switches use the shared Switch; source search found 11 switch call sites and no custom `role="switch"` implementation. |
+| 8. Primary button styling | **Addressed in migrated actions** | Shared primary buttons consume role accent/foreground tokens; semantic variants remain distinct. Browser role-color checks passed. `audit:buttons` emits 142 heuristic matches, primarily native tabs, tertiary controls, and semantic actions; it is not a count of broken primary buttons. |
+| 9. Notice banners | **Addressed for audited cases** | Eight notices were moved to NoticeBanner across five consumers. Contextual form instructions, structured previews, and review-note content remain grouped with their related fields or records. |
+| 10. Form-control variants | **Addressed — P2** | Shared `Textarea` and named `Input` variants now cover multiline, floating-label, and flexible verification-code fields. Legacy `.field-wrapper` no longer forces input dimensions or typography with important declarations; merged fields retain a shared visible focus outline. |
+| 11. Icon API and sizing | **Addressed — P2** | Static icons use direct named Hugeicons imports with explicit `size` props; typography-sized icons use `1em` so utility classes control their dimensions. Dynamic/data-driven icons use the shared registry, which defaults to `1em`. The legacy adapter and Phosphor/Tabler aliases were removed from app source. |
+| 12. Button-label documentation | **Addressed — P2** | `AGENTS.md` and `COMPONENT_STANDARDS.md` now both require verb + specific noun for primary/context-dependent actions, while allowing concise dismissal/navigation labels. |
+
+`audit:empty-states` reports only `DashboardShellSkeleton.js:59`, where a skeleton maps `items`; this is a detector false positive rather than an empty-state regression. The button audit is heuristic and requires manual classification. The shared refresh button and standards/audit documentation were updated during this follow-up. A source scan after icon sizing found no direct Hugeicons callsite without `size`; the production build passed. This remains source/build evidence, not a fresh screenshot review of every route.
+
+Implementation follow-up, 2026-11-01: the findings below are the original 2026-10-31 baseline. Use the fresh status table above for their current state. Modal findings 5 and 6 were addressed, including the divider-free header and footer requirement; see [modal standardization](modal-standardization-2026-11-01.md).
 
 ## Executive summary
 
@@ -23,8 +53,8 @@ This is a cross-app source audit with verified representative locations, excludi
 | 7 | P2 | Switches / component reuse | Shared Switch uses maroon when enabled and a light track in dark mode (`ui/switch.jsx:16`). AutoBackupSchedule uses a separate green switch (`admin/backup/AutoBackupSchedule.js:293`) and a smaller blue retention switch (line 436). Account settings has a third checkbox/CSS implementation. | Consolidate into Switch, with a documented size and semantic accent API if distinct colors are needed. Prefer one enabled-state treatment for ordinary preferences; preserve labels, disabled state, and keyboard support. |
 | 8 | P2 | Primary buttons / visual priority | The Button default is maroon (`ui/button.jsx:14`); RegisterAccountTab uses slate/white (`admin/RegisterAccountTab.js:241`); OfficeManagementTab uses brand-red in the header (line 866) and slate/white for its empty-state action (line 1130). Global brand classes also force radius, shadow, and press behavior (`globals.css:993`). | Choose one default treatment for equivalent primary actions and express it as a shared variant. Keep semantic destructive/success variants purposeful. Migrate redundant caller class strings and important brand overrides gradually. |
 | 9 | P2 | Warning/notice banners / layout | `staff/DocumentRequestsTab.js:1784`, `staff/RegistrarODRSTab.js:349`, and `shared/RestoreModal.js:319` use inset rounded colored notice boxes. The standards require line-attached notices for this role. | Create a NoticeBanner with tone/action/dismissal slots, `px-5 sm:px-6 py-2.5`, no outer margins or radius, and a container divider. Keep actual input groups or document cards separate from banners. |
-| 10 | P2 | Form controls / radius and focus styling | The 2FA input (`app/login/page.js:1323`) requests a 10px radius and a two-pixel custom red ring; PromptModal's textarea (`shared/PromptModal.js:137`) uses rounded-brand and another two-pixel ring. Standard Input uses rounded-xl and a one-pixel focus treatment. | Add a shared Textarea and use named input variants for verification versus ordinary text. Keep rounded-xl geometry and the documented one-pixel border/ring pairing, while retaining a clearly visible keyboard focus indicator. |
-| 11 | P2 | Icon API / component consistency | `shared/HugeIcon.js:353` translates legacy ph-* names into Hugeicons and can fall back to a generic file/folder icon (line 395). New components import Hugeicons directly. The underlying adapter already renders Hugeicons; this is API and semantic drift, not proof of two icon libraries being displayed. | Prefer direct named imports as each component is updated. Audit fallback cases before removing the adapter; avoid silently replacing a missing semantic icon with a file symbol. |
+| 10 | P2 | Form controls / radius and focus styling | Resolved: the verification field uses the shared `verification` Input variant and the shared one-pixel focus styling. PromptModal and other multiline fields use shared `Textarea`. |
+| 11 | P2 | Icon API / component consistency | Original finding: the removed `shared/HugeIcon.js` adapter translated Phosphor-style class names to Hugeicons and could fall back to a generic file/folder icon. | Addressed in the 2026-11-02 follow-up: static icons use direct named imports, data-driven icons use an explicit Hugeicons export registry, and app source no longer contains icon class aliases. |
 | 12 | P2 | Documentation / consistency maintenance | `AGENTS.md:499` requires verb plus specific noun; `COMPONENT_STANDARDS.md:142` requires single verbs and explicitly forbids labels such as Register Student. This encourages conflicting future edits. | Align the component guide with the explicit action+noun rule for primary actions; keep atomic Cancel, Close, Back, and Done for dismissal/navigation. Update obsolete examples alongside it. |
 
 ## Recommended implementation order
@@ -38,11 +68,11 @@ This is a cross-app source audit with verified representative locations, excludi
 
 ### Dropdowns
 
-The Select already has a single inner scroll container; do not add another scroll container to menuClassName. Its positioning uses the trigger's bottom edge (`select.jsx:52`) and currently only clamps horizontally. Include vertical collision handling when replacing its interaction layer, especially for controls near the bottom of sheets.
+The Select uses Base UI positioning with viewport collision handling and a single inner scroll container. Do not add another scroll container to `menuClassName`.
 
 ### Typography
 
-This should be a shared-style fix before a page-by-page font adjustment. For example, `font-mono` currently selects Jakarta when its variable is defined, so IDs and timestamps do not receive the intended monospace face. Likewise, the verification input's requested text size cannot win against the global important input rule. Screenshots are necessary after removing these overrides because they currently mask caller differences.
+The universal font-family, line-height, and input-size overrides described in the original review have been removed. Plus Jakarta Sans is used throughout; numeric fields use tabular figures. Continue to check component-specific field wrappers if their important rules mask local sizes.
 
 ### Dialogs
 
@@ -50,7 +80,7 @@ Use one layout contract: zero-padding shell, typographic header, scrollable body
 
 ### Buttons and color
 
-For the requested restrained Apple direction, a neutral primary treatment is a reasonable default candidate, with maroon used deliberately for brand emphasis. This is a recommendation, not a claim that Apple's interfaces require a particular color. Centralize the chosen treatment before adjusting dozens of individual buttons.
+Primary buttons now inherit the authenticated role's accent and foreground colors. The role-token regression and its correction are recorded in [the button and switch report](buttons-switches-2026-11-01.md).
 
 ## What was not flagged automatically
 

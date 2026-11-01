@@ -115,7 +115,7 @@ All database access goes through `*Repo.js` files in `src/lib/`:
 | `next-app/src/components/layout/` | Header, Footer |
 | `next-app/src/components/ui/` | shadcn/ui primitives (Button, Dialog, Skeleton, etc.) |
 | `next-app/src/lib/` | Database repos, utilities, helpers |
-| `next-app/public/assets/` | Static assets (fonts, Phosphor icons) |
+| `next-app/public/assets/` | Static assets (self-hosted fonts and app assets) |
 | `next-app/scripts/` | Utility scripts (hot-folder-watcher, reset-db, seed scripts) |
 | `.local/` | Runtime data (SQLite, uploads, backups) |
 
@@ -463,14 +463,16 @@ const res = await fetch("/api/storage-layout", { cache: "no-store" });
 
 ### 8.2 Typography
 
-Typography defaults belong on body or in Tailwind's base layer. Component utilities must retain control of sizes, weights, and line heights. Do not reintroduce universal important font/line-height rules; all app text must use Plus Jakarta Sans. Shared Input/Select default to 13px and preserve explicit caller sizes.
+Typography defaults belong on body or in Tailwind's base layer. Component utilities must retain control of sizes, weights, and line heights. Do not reintroduce universal important font/line-height rules; all app text must use Plus Jakarta Sans. Shared Input/Select/Textarea default to 13px and preserve explicit caller sizes.
 
 - **Primary**: Plus Jakarta Sans (self-hosted from `public/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2`)
-- **Single-family policy**: IDs, timestamps, recovery codes, previews, and code text use the same family. Use `tabular-nums` for aligned digits; do not introduce monospace or serif styles.
+- **Single-family policy**: Plus Jakarta Sans is the only app font, including IDs, timestamps, recovery codes, previews, code text, and print views. Use `tabular-nums` for aligned digits; do not introduce monospace, serif, or separate system font families.
 
 ### 8.3 Icon System (Hugeicons)
 
-Use direct named Hugeicons imports from `hugeicons-react` for new and migrated UI. Do not introduce Phosphor icons or `ph-*` class names. Existing `HugeIcon` calls are a compatibility layer for legacy class names, not the pattern for new code.
+Use direct named Hugeicons imports from `hugeicons-react` for static UI icons. For data-driven icons stored by export name, use the shared `AppIcon` registry. Do not introduce Phosphor icons, `ph-*` classes, or `ti-*` aliases.
+
+- Hugeicons default to a fixed 24px size. Always pass an explicit `size` prop so `text-*` classes actually control the SVG dimensions: use `size="1em"` for icons sized by their font-size class or parent typography, and use a numeric size for fixed geometry. If no text size is present, use 16px for ordinary inline controls; choose smaller sizes only for dense metadata and larger sizes only for prominent standalone symbols.
 
 - Empty states: pass a Hugeicons component to `<EmptyState icon={Search01Icon} />`, or render `<Search01Icon size="1em" />` inside `<EmptyMedia>`.
 - The empty-state media wrapper supplies theme-aware color and icon sizing: 48px for page states, 28px for compact states. Use standalone symbols without decorative icon boxes, borders, backgrounds, or shadows. Decorative media is hidden from assistive technology.
@@ -499,7 +501,7 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 ```
 
 - **Sizing Standards**: Standard forms/headers use `h-10 px-5 text-xs font-semibold rounded-xl`. Compact tables/toolbars use `h-9 px-4 text-xs font-semibold rounded-xl` (or `h-8` for inline action badges).
-- **Icons on Buttons**: Keep primary action buttons text-only to maintain visual focus. Dynamic icons (e.g. `ph-spinner animate-spin`) are permitted only during loading/saving states.
+- **Icons on Buttons**: Keep primary action buttons text-only to maintain visual focus. Dynamic Hugeicons are permitted only during loading/saving states.
 - **Button Naming Convention (`[Action Verb] + [Specific Noun]`)**:
   - Always label primary action, header, and confirmation submit buttons explicitly using `[Action Verb] + [Specific Noun]` (e.g., `Register Student`, `Register Staff`, `Register Personnel`, `Register Organization`, `Add Program`, `Add Block`, `Add Document Type`, `Save Changes`, `Save Layout`, `Save Standards`, `Save Questions`, `Submit Request`, `Submit Proposal`, `Submit Post-Event Report`).
   - Avoid vague single-word action labels (e.g., never use a bare `Save`, `Register`, `Submit`, `Add`, `Create` on actions without its noun target), as they cause ambiguity and cognitive friction for non-technical users.
@@ -552,10 +554,12 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 
 - **Action Column Squircle Buttons**: Standardized to 28x28px squircle buttons with accessible `<Tooltip>`:
   ```jsx
+  import { ViewIcon } from "hugeicons-react";
+
   <Tooltip>
     <TooltipTrigger asChild>
       <button className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95">
-        <i className="ph-bold ph-eye text-[16px]" />
+        <ViewIcon size={16} aria-hidden="true" />
       </button>
     </TooltipTrigger>
     <TooltipContent>View Details</TooltipContent>
@@ -583,8 +587,9 @@ For complete copy-paste patterns and blueprints, refer to [`COMPONENT_STANDARDS.
 
 - **CRITICAL RULE ON MODAL HEADERS**: Dialog headers (`DialogHeader`) **MUST NOT** have decorative icon boxes or leading icons. Keep them strictly typographic (`DialogTitle` at `text-[16px] font-semibold tracking-[-0.01em]` and `DialogDescription` at `text-[13px] font-normal text-gray-500 mt-1`).
 - **NO MODAL SECTION DIVIDERS**: Dialog and sheet headers/footers must not use separator lines or tinted bands to divide them from the body. Use spacing instead. Keep functional field, table, notice, and preview borders inside the body. `DialogFooter` must not introduce negative margins.
-- **ACTION-ONLY BUTTON WORDS**: Action buttons in modals and toolbars must use single, unambiguous action words (`Save`, `Submit`, `Update`, `Restore`, `Cancel`, `Close`, `Done`). Avoid verbose phrases like `"Skip for Now"` or `"Submit Feedback"`.
+- **CLEAR ACTION LABELS**: Primary actions use a verb plus specific noun (`Save Changes`, `Submit Request`, `Restore Backup`); dismissal and navigation use concise labels (`Cancel`, `Close`, `Back`, `Done`).
 - **OUTLINED DISMISSAL BUTTONS**: Always use `variant="outline"` with `rounded-xl` for cancel/close buttons.
+- **FIELD ORDER**: Arrange form fields as identity, classification/status, description/purpose, contact/ownership, optional configuration, then generated/read-only previews. Keep the reading and keyboard order aligned when grids stack.
 
 ### 8.9 Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
 
@@ -592,12 +597,20 @@ Use `@/components/shared/NoticeBanner` for shared tones, direct Hugeicons, seman
 
 - **NEVER use floating alert boxes**: Alert banners must never float as island cards (`mx-5 my-3.5 rounded-xl border`) inside cards or forms.
 - **Edge-to-Edge Line Attachment**: Alerts must attach directly to container dividers / hairline borders (`border-b` underneath card/section headers, or `border-t border-b` between layout tiers), taking up the exact line/space where they are located (`px-5 sm:px-6 py-2.5`).
-- **Dismissable Interaction**: Dismissable alerts must provide an accessible squircle dismiss button (`ph-bold ph-x`) with session persistence (`sessionStorage`).
+- **Dismissable Interaction**: Dismissable alerts must use the shared `NoticeBanner` accessible Hugeicons dismiss control with session persistence (`sessionStorage`).
 - **Standard Color Tokens**:
   - **Warning / Amber**: `border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 text-amber-900 dark:text-amber-200`
   - **Success / Emerald**: `border-b border-emerald-200/90 bg-emerald-50/90 dark:border-emerald-900/40 dark:bg-emerald-950/25 text-emerald-950 dark:text-emerald-200`
   - **Information / Blue**: `border-b border-blue-200/90 bg-blue-50/90 dark:border-blue-900/40 dark:bg-blue-950/25 text-blue-900 dark:text-blue-200`
   - **Destructive / Rose**: `border-b border-rose-200/90 bg-rose-50/90 dark:border-rose-900/40 dark:bg-rose-950/25 text-rose-900 dark:text-rose-200`
+
+### 8.10 Standard Textarea
+
+Use `@/components/ui/textarea` for descriptions, purposes, notes, explanations, and other multiline values in dialogs, sheets, and forms. Keep the shared rounded-xl shape, 13px Plus Jakarta Sans text, theme-aware border/background, and one-pixel focus treatment. Callers may set meaningful height/resize behavior but should not restate the control's border, colors, typography, or focus styling.
+
+### 8.11 Shared Input Variants
+
+Use `@/components/ui/input` for single-line fields. Use `variant="floating"` only inside the merged field shell with an overlaid floating label, and `variant="verification"` for flexible one-time, recovery, or key codes. Variants own their field dimensions and alignment; do not force them through global important CSS. Keep associated labels and shared focus visibility.
 
 ---
 
@@ -762,6 +775,8 @@ Use `variant="compact"` for sheets, chart panels, and small cards. Keep no-recor
 ### 10.3 Pagination Pattern
 
 ```jsx
+import { ArrowLeft01Icon, ArrowRight01Icon } from "hugeicons-react";
+
 <div className="mt-4 flex items-center justify-between">
   <div className="text-xs font-medium text-gray-500">
     Showing {start}-{end} of <strong>{total.toLocaleString()}</strong> entries
@@ -769,7 +784,7 @@ Use `variant="compact"` for sheets, chart panels, and small cards. Keep no-recor
   <div className="flex items-center gap-2">
     <Button variant="outline" size="sm" disabled={page <= 1}
             onClick={() => setPage(p => p - 1)}>
-      <i className="ph-bold ph-caret-left"></i> Previous
+      <ArrowLeft01Icon size={16} aria-hidden="true" /> Previous
     </Button>
     <div className="px-3 text-xs font-bold text-gray-700 bg-white border
                     border-gray-200 rounded-md h-8 flex items-center justify-center">
@@ -777,7 +792,7 @@ Use `variant="compact"` for sheets, chart panels, and small cards. Keep no-recor
     </div>
     <Button variant="outline" size="sm" disabled={page >= totalPages}
             onClick={() => setPage(p => p + 1)}>
-      Next <i className="ph-bold ph-caret-right"></i>
+      Next <ArrowRight01Icon size={16} aria-hidden="true" />
     </Button>
   </div>
 </div>

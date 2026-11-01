@@ -2,6 +2,15 @@
 
 Date: 2026-11-01 (Asia/Manila)
 
+## Form follow-up — 2026-11-02
+
+- Added the shared shadcn-style `Textarea` primitive and migrated multiline modal, sheet, and editor fields to it. Description, purpose, notes, and explanations now share the same border, radius, typography, theme, and focus treatment; callsites retain only meaningful height/resize behavior or a validation border tone.
+- Reordered the organization form so its description follows identity/category/status and precedes adviser and visual-theme settings. Reordered student identification so the editable name comes before the read-only student number, with the name receiving the wider column.
+- Added field sequence and Textarea usage guidance to `COMPONENT_STANDARDS.md` and `AGENTS.md`.
+- Added shared `Input` variants for floating-label and flexible verification-code fields. Removed global important input sizing from `.field-wrapper`; merged fields retain a shared focus outline. These controls are now recorded as addressed in the component consistency audit.
+
+Validation for this follow-up: scoped ESLint found no new errors in changed components. The two findings in `src/app/student/page.js` are existing `react-hooks/set-state-in-effect` diagnostics. `git diff --check` passed. No tests or production build were run.
+
 ## Implemented
 
 - Removed header/footer separator borders and tinted bands across dialog and sheet consumers, including report previews, forms, confirmation dialogs, account setup, and search dialogs.
