@@ -12,7 +12,7 @@ export default function StaffDirectorySkeleton({ rowCount = 8 }) {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Header */}
         <PageHeader
-          icon="ph-users"
+          icon="UserSearch01Icon"
           title="Staff Directory"
           description="Manage office personnel and administrative access."
           showBorder={false}

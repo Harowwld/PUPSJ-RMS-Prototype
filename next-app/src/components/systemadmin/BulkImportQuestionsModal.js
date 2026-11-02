@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon } from "hugeicons-react";
+
 
 /**
  * Normalizes question text for deduplication comparison.
@@ -491,7 +493,7 @@ export default function BulkImportQuestionsModal({
                           className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95 shrink-0"
                           aria-label="Remove Question"
                         >
-                          <HugeIcon className="ph-bold ph-trash text-sm" />
+                          <Delete01Icon size="1em" className="text-sm" />
                         </button>
                       </div>
 
@@ -505,8 +507,8 @@ export default function BulkImportQuestionsModal({
                             isValid && "text-emerald-600 dark:text-emerald-400 font-medium"
                           )}
                         >
-                          {isInvalid && <HugeIcon className="ph-bold ph-warning-circle text-xs" />}
-                          {isValid && <HugeIcon className="ph-bold ph-check-circle text-xs" />}
+                          {isInvalid && <Alert01Icon size="1em" className="text-xs" />}
+                          {isValid && <CheckmarkCircle01Icon size="1em" className="text-xs" />}
                           {row.message}
                         </span>
 

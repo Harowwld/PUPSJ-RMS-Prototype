@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import {
   Card,
 } from "@/components/ui/card"
@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { RefreshIcon } from "hugeicons-react";
+
 
 function formatLastSync(val) {
   if (!val || val === "Never") return "Never"
@@ -93,7 +95,7 @@ export default function HealthSidebar({
       <Card className="flex flex-col p-0 gap-0 border border-border bg-white shadow-sm rounded-2xl overflow-hidden dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* Page Header */}
         <PageHeader
-          icon="ph-chart-pie-slice"
+          icon="PieChartIcon"
           title="System Status"
           description="Storage, memory, and system resources."
           showBorder={false}
@@ -236,7 +238,7 @@ export default function HealthSidebar({
                     className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5 flex-1 justify-center"
                     title="Rescan USB ports and mount points"
                   >
-                    {isRescanning && <HugeIcon className="ph-bold ph-arrows-clockwise text-xs animate-spin" />}
+                    {isRescanning && <RefreshIcon size="1em" className="text-xs animate-spin" />}
                     <span>{isRescanning ? "Scanning..." : "Detect"}</span>
                   </Button>
                 )}

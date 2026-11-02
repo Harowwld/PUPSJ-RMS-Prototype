@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,6 +12,8 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { Search01Icon } from "hugeicons-react";
+
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -97,7 +99,7 @@ export default function BackupFilters({
       {/* Search Bar: Placed on the left with standard count number */}
       <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+          <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
         </div>
         <Input
           type="text"

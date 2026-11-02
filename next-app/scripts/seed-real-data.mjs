@@ -6,6 +6,7 @@ dotenv.config({ path: ".env" });
 
 const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
 const { generateDocumentPdfByType } = await import("../src/lib/pdfDocumentGenerators.js");
+const { seedOsasOffice } = await import("./seed-osas-office.mjs");
 
 const CSV_TAXONOMY_PATH = fs.existsSync(path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv"))
   ? path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv")
@@ -338,6 +339,10 @@ async function main() {
   }
 
   console.log(`Seeded ${docCount} documents (${pendingCount} Pending, ${approvedCount} Approved, ${declinedCount} Declined).`);
+
+  // Populate OSAS Office (organizations, officers, CBLs, event proposals, post-event reports, documents)
+  await seedOsasOffice();
+
   console.log("Real data seeding completed successfully.");
 }
 

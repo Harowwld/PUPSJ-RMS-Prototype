@@ -13,7 +13,7 @@ export default function SystemBackupsSkeleton() {
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
           {/* Header */}
           <PageHeader
-            icon="ph-hard-drives"
+            icon="CloudServerIcon"
             title="Platform Governance Backups"
             description="Create and restore full system governance backups, manage scheduled snapshots, and sync to external hardware."
             showBorder={false}

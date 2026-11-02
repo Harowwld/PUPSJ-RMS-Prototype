@@ -2,7 +2,7 @@
 import NoticeBanner from "@/components/shared/NoticeBanner";
 
 import { useState, useEffect, useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { FileZipIcon, Loading01Icon } from "hugeicons-react";
+
 
 /**
  * Standard Restore Modal with Safe Merge vs Full Overwrite Strategy
@@ -130,7 +132,7 @@ export default function RestoreModal({
           {/* File Summary Badge */}
           <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border/80 bg-gray-50/70 dark:border-border dark:bg-zinc-900/40">
             <div className="flex items-center gap-2.5 min-w-0">
-              <HugeIcon className="ph-duotone ph-file-zip text-[18px] text-gray-400 dark:text-zinc-500 shrink-0" />
+              <FileZipIcon size="1em" className="text-[18px] text-gray-400 dark:text-zinc-500 shrink-0" />
               <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 truncate font-sans tabular-nums">
                 {displayFilename}
               </span>
@@ -201,7 +203,7 @@ export default function RestoreModal({
               </label>
               {previewLoading && (
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500 flex items-center gap-1 font-medium">
-                  <HugeIcon className="ph-bold ph-spinner animate-spin text-[12px]" />
+                  <Loading01Icon size="1em" className="animate-spin text-[12px]" />
                   Inspecting snapshot...
                 </span>
               )}
@@ -322,7 +324,7 @@ export default function RestoreModal({
           >
             {isLoading ? (
               <>
-                <HugeIcon className="ph-bold ph-spinner animate-spin text-xs mr-1.5" />
+                <Loading01Icon size="1em" className="animate-spin text-xs mr-1.5" />
                 <span>Restoring...</span>
               </>
             ) : (

@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,9 @@ import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingW
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
+import { ArrowDown01Icon, ArrowRight02Icon, ArrowUp01Icon, Cancel01Icon, CovidInfoIcon, Delete01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
+
 
 const DEFAULT_WORKFLOW = {
   eyebrow: "",
@@ -34,7 +38,7 @@ const DEFAULT_WORKFLOW = {
       actionLabel: "Open Portal",
       actionType: "link",
       actionTarget: "/login",
-      actionIcon: "ph-arrow-right",
+      actionIcon: "ArrowRight02Icon",
     },
     {
       num: "02",
@@ -44,7 +48,7 @@ const DEFAULT_WORKFLOW = {
       actionLabel: "View Catalog",
       actionType: "scroll",
       actionTarget: "catalog",
-      actionIcon: "ph-arrow-down",
+      actionIcon: "ArrowDown01Icon",
     },
     {
       num: "03",
@@ -320,7 +324,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-git-merge"
+          icon="GitMergeIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -399,7 +403,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
 
         {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
-          
+
           {/* TAB 1: WORKFLOW CONTENT (Editorial + Sequential Steps) */}
           {activeTab === "content" && (
             <div className="space-y-6">
@@ -472,7 +476,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         {workflowData.description.length}/320
                       </span>
                     </div>
-                    <textarea
+                    <Textarea
                       value={workflowData.description}
                       onChange={(e) =>
                         setWorkflowData((prev) => ({
@@ -483,7 +487,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       rows={3}
                       maxLength={320}
                       placeholder="A straightforward guide for students and alumni..."
-                      className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
+                      className="w-full"
                     />
                   </div>
                 </div>
@@ -592,7 +596,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             className="h-8 w-8 p-0 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                             title="Move Step Up"
                           >
-                            <HugeIcon  className="ph-bold ph-caret-up text-sm" />
+                            <ArrowUp01Icon size="1em"  className="text-sm" />
                           </Button>
 
                           <Button
@@ -604,7 +608,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             className="h-8 w-8 p-0 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                             title="Move Step Down"
                           >
-                            <HugeIcon  className="ph-bold ph-caret-down text-sm" />
+                            <ArrowDown01Icon size="1em"  className="text-sm" />
                           </Button>
 
                           <Button
@@ -616,15 +620,15 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             className="h-8 w-8 p-0 rounded-lg text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-30 cursor-pointer"
                             title={currentSteps.length <= MIN_STEPS ? `Minimum of ${MIN_STEPS} steps required` : "Delete Step"}
                           >
-                            <HugeIcon  className="ph-bold ph-trash text-sm" />
+                            <Delete01Icon size="1em"  className="text-sm" />
                           </Button>
 
                           <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
 
-                          <HugeIcon 
+                          <AppIcon
                             className={cn(
-                              "ph-bold text-gray-400 text-xs transition-transform duration-200",
-                              isExpanded ? "ph-caret-up" : "ph-caret-down"
+                              "text-gray-400 text-xs transition-transform duration-200",
+                              isExpanded ? "ArrowUp01Icon" : "ArrowDown01Icon"
                             )}
                           />
                         </div>
@@ -662,13 +666,13 @@ export default function LandingWorkflowCmsView({ showToast }) {
                                 {step.desc?.length || 0}/280
                               </span>
                             </div>
-                            <textarea
+                            <Textarea
                               value={step.desc}
                               onChange={(e) => updateStep(idx, "desc", e.target.value)}
                               rows={3}
                               maxLength={280}
                               placeholder="Explain what the student or personnel does at this phase..."
-                              className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 focus:outline-hidden"
+                              className="w-full"
                             />
                           </div>
 
@@ -691,7 +695,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                                     onClick={() => removeTagFromStep(idx, tIdx)}
                                     className="text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer ml-0.5"
                                   >
-                                    <HugeIcon  className="ph-bold ph-x text-[10px]" />
+                                    <Cancel01Icon size="1em"  className="text-[10px]" />
                                   </button>
                                 </span>
                               ))}
@@ -719,7 +723,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 </button>
               ) : (
                 <div className="w-full py-3.5 px-4 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">
-                  <HugeIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                  <CovidInfoIcon size={16}  className="text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_STEPS} of {MAX_STEPS} steps). Process workflows are capped at {MAX_STEPS} steps for optimal student readability and mobile layout stability.</span>
                 </div>
               )}
@@ -820,7 +824,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               {step.actionLabel && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 ml-2">
                                   <span>{step.actionLabel}</span>
-                                  <HugeIcon className="ph-bold ph-arrow-right text-[10px]" />
+                                  <ArrowRight02Icon size="1em" className="text-[10px]" />
                                 </span>
                               )}
                             </div>
@@ -846,8 +850,8 @@ export default function LandingWorkflowCmsView({ showToast }) {
         message="Are you sure you want to revert all workflow headlines, application steps, and requirement tags back to the official PUP San Juan institutional template?"
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-arrow-counter-clockwise"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        icon="ReloadIcon"
+        buttonIcon="ReloadIcon"
         selectedItems={[
           "Reset custom workflow headline, subtitle, and layout curvature",
           "Restore official 5-step PUP San Juan document application sequence",
@@ -875,8 +879,8 @@ export default function LandingWorkflowCmsView({ showToast }) {
         message="Are you sure you want to permanently remove this application step from the student portal workflow?"
         confirmLabel="Delete Step"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
+        icon="Delete01Icon"
+        buttonIcon="Delete01Icon"
         selectedItems={
           deleteStepIndex !== null && currentSteps[deleteStepIndex]
             ? [

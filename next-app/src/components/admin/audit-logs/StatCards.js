@@ -1,8 +1,10 @@
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useRef, useEffect } from "react"
 import { Reorder } from "framer-motion"
 import { cn } from "@/lib/utils"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import { Activity01Icon, DragDropIcon } from "hugeicons-react";
+
 
 export default function StatCards({ isLoading, logStats, sublabelOverrides }) {
 const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
@@ -38,7 +40,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       sublabel: sublabelOverrides?.total ?? `${activeActors.toLocaleString()} active ${activeActors === 1 ? "actor" : "actors"}`,
       color: "blue",
       trendData: trends.map(t => Number(t.total ?? t.count ?? 0)),
-      iconClass: "ph-database"
+      iconClass: "Database01Icon"
     },
     {
       key: "today",
@@ -47,7 +49,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       sublabel: sublabelOverrides?.today ?? `${systemChanges.toLocaleString()} system updates`,
       color: "emerald",
       trendData: trends.map(t => Number(t.total ?? t.count ?? 0)),
-      iconClass: "ph-calendar-check"
+      iconClass: "CalendarCheckIn01Icon"
     },
     {
       key: "auth",
@@ -56,7 +58,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
       sublabel: sublabelOverrides?.auth ?? `${criticalEvents.toLocaleString()} critical ${criticalEvents === 1 ? "flag" : "flags"}`,
       color: "amber",
       trendData: trends.map(t => Number(t.auth ?? t.authCount ?? t.authcount ?? 0)),
-      iconClass: "ph-fingerprint"
+      iconClass: "FingerPrintAddIcon"
     }
   ];
 
@@ -113,7 +115,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                         stat.color === "amber" ? "bg-[#f59e0b]" :
                         "bg-[#ef4444]"
                       )}>
-                        <HugeIcon className={cn("ph-bold text-[15px]", stat.iconClass || "ph-activity")} />
+                        <Activity01Icon size="1em" className={cn("text-[15px]", stat.iconClass || "")} />
                       </div>
                     </div>
                     
@@ -126,7 +128,7 @@ const [kpiOrder, setKpiOrder] = useState(["total", "today", "auth"]);
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 

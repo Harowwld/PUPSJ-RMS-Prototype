@@ -1,8 +1,9 @@
 "use client";
+import { Textarea } from "@/components/ui/textarea";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -55,8 +56,8 @@ import {
 import {
   getRequestCharterStatus,
 } from "@/lib/citizenCharter";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , Archive01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Attachment01Icon, Cancel01Icon, Clock01Icon, GraduationScrollIcon, Loading01Icon, StudentIcon, UserSearch01Icon, UserStatusIcon, ViewIcon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const STATUS_OPTIONS = [
   "Pending",
   "Deficient",
@@ -70,12 +71,12 @@ const STATUS_OPTIONS = [
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></HugeIcon>;
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></ArrowUpDownIcon>;
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></ArrowDown01Icon>
   );
 }
 
@@ -115,20 +116,20 @@ function getAttachmentIconConfig(filename = "", mimeType = "") {
   const mime = String(mimeType || "").toLowerCase();
   if (ext === "pdf" || mime.includes("pdf")) {
     return {
-      icon: "ph-bold ph-file-pdf",
+      icon: " File02Icon",
       color: "text-red-600 dark:text-red-400",
       badgeBg: "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300 border-red-200/60 dark:border-red-900/40",
     };
   }
   if (["png", "jpg", "jpeg", "webp"].includes(ext) || mime.includes("image")) {
     return {
-      icon: "ph-bold ph-file-image",
+      icon: " Image01Icon",
       color: "text-blue-600 dark:text-blue-400",
       badgeBg: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40",
     };
   }
   return {
-    icon: "ph-bold ph-file",
+    icon: " File01Icon",
     color: "text-gray-600 dark:text-zinc-400",
     badgeBg: "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border-gray-200 dark:border-zinc-700",
   };
@@ -727,7 +728,7 @@ export default function DocumentRequestsTab({
                     : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
                 )}
               >
-                <HugeIcon className={cn("text-[10px]", hasSpa ? "ph-bold ph-check" : "ph-bold ph-circle-dashed")} />
+                <AppIcon className={cn("text-[10px]", hasSpa ? " Tick01Icon" : " CircleIcon")} />
                 SPA Letter
               </span>
               <span
@@ -738,7 +739,7 @@ export default function DocumentRequestsTab({
                     : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
                 )}
               >
-                <HugeIcon className={cn("text-[10px]", hasValidId ? "ph-bold ph-check" : "ph-bold ph-circle-dashed")} />
+                <AppIcon className={cn("text-[10px]", hasValidId ? " Tick01Icon" : " CircleIcon")} />
                 Government ID
               </span>
             </div>
@@ -914,7 +915,7 @@ export default function DocumentRequestsTab({
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
-            icon="ph-tray"
+            icon="InboxIcon"
             title="Document Requests"
             description="Manage and track student document requests (ODRS)."
             showBorder={false}
@@ -987,7 +988,7 @@ export default function DocumentRequestsTab({
                 {/* Search Input */}
                 <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                    <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
                   </div>
                   <Input
                     value={q}
@@ -1125,7 +1126,7 @@ export default function DocumentRequestsTab({
                               title="Reset table scroll"
                               className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
                             </button>
                           )}
                         </div>
@@ -1227,7 +1228,7 @@ export default function DocumentRequestsTab({
                                     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
                                     title={`${r.attachment_count} attachment(s)`}
                                   >
-                                    <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
+                                    <Attachment01Icon size="1em" className="text-[11px]" />
                                     {r.attachment_count}
                                   </span>
                                 )}
@@ -1266,7 +1267,7 @@ export default function DocumentRequestsTab({
                                     {charter.tier.shortLabel}
                                   </span>
                                   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0", charter.badgeClass)}>
-                                    <HugeIcon  className={cn("ph-bold text-[10px]", charter.icon || "ph-clock")} />
+                                    <Clock01Icon size="1em"  className={cn("text-[10px]", charter.icon || "")} />
                                     {charter.label}
                                   </span>
                                 </div>
@@ -1288,7 +1289,7 @@ export default function DocumentRequestsTab({
                                       aria-label="Inspect Request Details"
                                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                     >
-                                      <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                                      <ViewIcon size="1em" className="text-[16px]" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Inspect Request</TooltipContent>
@@ -1452,7 +1453,7 @@ export default function DocumentRequestsTab({
                           : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-student text-base" />
+                      <StudentIcon size="1em" className="text-base" />
                       <span>Current Student</span>
                     </button>
                     <button
@@ -1465,7 +1466,7 @@ export default function DocumentRequestsTab({
                           : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-graduation-cap text-base" />
+                      <GraduationScrollIcon size="1em" className="text-base" />
                       <span>Alumni / Former Student</span>
                     </button>
                     {String(officeId).toLowerCase() === "registrar" && (
@@ -1479,7 +1480,7 @@ export default function DocumentRequestsTab({
                             : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
                         )}
                       >
-                        <HugeIcon className="ph-bold ph-users text-base" />
+                        <UserSearch01Icon size="1em" className="text-base" />
                         <span>Parent / Guardian</span>
                       </button>
                     )}
@@ -1499,11 +1500,11 @@ export default function DocumentRequestsTab({
                         }}
                         title="Change student"
                       >
-                        <HugeIcon className="ph-bold ph-x text-xs" />
+                        <Cancel01Icon size="1em" className="text-xs" />
                       </button>
                       <div className="flex items-start gap-3.5">
                         <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
-                          <HugeIcon className="ph-bold ph-user-focus text-xl" />
+                          <UserStatusIcon size="1em" className="text-xl" />
                         </div>
                         <div className="min-w-0 flex-1 pr-6">
                           <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
@@ -1514,7 +1515,7 @@ export default function DocumentRequestsTab({
                             <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "N/A"}</strong></span>
                           </div>
                           <div className="text-xs text-pup-maroon dark:text-red-400 font-semibold mt-2 flex items-center gap-1.5">
-                            <HugeIcon className="ph-bold ph-archive-tray text-sm" />
+                            <Archive01Icon size="1em" className="text-sm" />
                             <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
                           </div>
                         </div>
@@ -1527,7 +1528,7 @@ export default function DocumentRequestsTab({
                           Search Student (Name or Number)
                         </label>
                         <div className="relative group">
-                          <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
+                          <Search01Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
                           <Input
                             className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={studentSearch}
@@ -1640,7 +1641,7 @@ export default function DocumentRequestsTab({
                 {createClientType === "Parent" && String(officeId).toLowerCase() === "registrar" && (
                   <div className="space-y-3.5 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-shield-warning text-amber-700 dark:text-amber-400 text-base" />
+                      <AppIcon className=" Alert01Icon text-amber-700 dark:text-amber-400 text-base" />
                       <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
                         Parent or guardian requests require the requester&apos;s details and both an SPA / authorization letter and a valid government ID.
                       </p>
@@ -1718,9 +1719,9 @@ export default function DocumentRequestsTab({
                     <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                       Description / Purpose <span className="text-red-500">*</span>
                     </label>
-                    <textarea
+                    <Textarea
                       id="staff-request-description"
-                      className="w-full h-10 min-h-[40px] max-h-[100px] rounded-xl border border-border p-2.5 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all resize-none"
+                      className="w-full h-10 min-h-[40px] max-h-[100px] resize-none"
                       value={createNotes}
                       onChange={(e) => setCreateNotes(e.target.value)}
                       placeholder="Provide the purpose of this request (at least 5 characters)…"
@@ -1755,7 +1756,7 @@ export default function DocumentRequestsTab({
                 >
                   {submitting ? (
                     <>
-                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                      <Loading01Icon size="1em" className="animate-spin text-sm" />
                       Saving...
                     </>
                   ) : (
@@ -1876,8 +1877,8 @@ export default function DocumentRequestsTab({
                     {reopenReason.trim().length}/5 chars min
                   </span>
                 </div>
-                <textarea
-                  className="w-full min-h-[90px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-border rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                <Textarea
+                  className="w-full min-h-[90px] resize-none"
                   placeholder="State the official reason for reopening (e.g., student appeal granted, payment verified, clerical error correction)..."
                   value={reopenReason}
                   onChange={(e) => setReopenReason(e.target.value)}

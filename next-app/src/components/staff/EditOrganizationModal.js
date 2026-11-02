@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
 import {
   Dialog,
   DialogContent,

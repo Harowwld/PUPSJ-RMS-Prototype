@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +16,8 @@ import {
 } from "@/lib/storageLayoutUtils"
 import { getDefaultDoor } from "@/lib/storageLayoutDefaults"
 import { cn } from "@/lib/utils"
+import { Copy01Icon, Delete01Icon, Door01Icon, PencilEdit01Icon } from "hugeicons-react";
+
 
 const CabinetCanvas = memo(({
   canvasRef,
@@ -179,7 +181,7 @@ const CabinetCanvas = memo(({
             activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
             activeRoom?.door?.rotation === 270 && "rotate-90"  // Opposite flip for left
           )}>
-            <HugeIcon  className="ph-fill ph-door text-xs" />
+            <Door01Icon size="1em"  className="text-xs" />
             ENTRANCE
           </span>
         </div>
@@ -457,7 +459,7 @@ const CabinetElement = memo(({
                   className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={() => onOpenRenameCabinet?.(cab)}
                 >
-                  <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
+                  <PencilEdit01Icon size="1em" className="text-sm" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -476,7 +478,7 @@ const CabinetElement = memo(({
                   className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={duplicateSelectedCabinet}
                 >
-                  <HugeIcon  className="ph-bold ph-copy text-sm" />
+                  <Copy01Icon size="1em"  className="text-sm" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
@@ -495,7 +497,7 @@ const CabinetElement = memo(({
                   className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10 cursor-pointer"
                   onClick={() => setBulkConfirmOpen(true)}
                 >
-                  <HugeIcon  className="ph-bold ph-trash text-sm" />
+                  <Delete01Icon size="1em"  className="text-sm" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">Delete</TooltipContent>

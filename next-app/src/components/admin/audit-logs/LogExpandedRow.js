@@ -1,7 +1,9 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { formatLogDetails } from "@/lib/utils";
+import { AlignBoxBottomCenterIcon, Copy01Icon, File02Icon, WifiFullSignalIcon } from "hugeicons-react";
+
 
 export default function LogExpandedRow({ log, handleCopy }) {
   const formattedDescription = (() => {
@@ -25,7 +27,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
         {/* Details Section */}
         <div className="flex flex-col">
           <div className="flex items-center gap-[6px] mb-[12px]">
-            <HugeIcon  className="ph-bold ph-file-text text-[15px] text-[#8E8E93]"></HugeIcon>
+            <File02Icon size="1em"  className="text-[15px] text-[#8E8E93]"></File02Icon>
             <h5 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
               Details
             </h5>
@@ -42,7 +44,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
         {/* Network Section */}
         <div className="flex flex-col">
           <div className="flex items-center gap-[6px] mb-[12px]">
-            <HugeIcon  className="ph-bold ph-wifi-high text-[15px] text-[#8E8E93]"></HugeIcon>
+            <WifiFullSignalIcon size="1em"  className="text-[15px] text-[#8E8E93]"></WifiFullSignalIcon>
             <h5 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
               Network
             </h5>
@@ -59,7 +61,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                   aria-label="Copy IP Address"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <HugeIcon  className="ph-bold ph-copy text-[14px]"></HugeIcon>
+                  <Copy01Icon size="1em"  className="text-[14px]"></Copy01Icon>
                 </button>
               </div>
             </div>
@@ -75,7 +77,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
         {/* Reference Section */}
         <div className="flex flex-col">
           <div className="flex items-center gap-[6px] mb-[12px]">
-            <HugeIcon  className="ph-bold ph-cube text-[15px] text-[#8E8E93]"></HugeIcon>
+            <AlignBoxBottomCenterIcon size="1em"  className="text-[15px] text-[#8E8E93]"></AlignBoxBottomCenterIcon>
             <h5 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
               Reference
             </h5>
@@ -99,7 +101,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                     aria-label="Copy Reference ID"
                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                   >
-                    <HugeIcon  className="ph-bold ph-copy text-[14px]"></HugeIcon>
+                    <Copy01Icon size="1em"  className="text-[14px]"></Copy01Icon>
                   </button>
                 )}
               </div>

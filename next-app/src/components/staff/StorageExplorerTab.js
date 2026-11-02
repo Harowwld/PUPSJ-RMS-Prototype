@@ -1,5 +1,5 @@
 import useUrlPage from "@/hooks/useUrlPage"
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useMemo, useEffect } from "react"
 import RoomMap2D from "@/components/staff/RoomMap2D"
 import PageHeader from "@/components/shared/PageHeader"
@@ -17,7 +17,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton"
-
+import { Cancel01Icon, File02Icon, FolderOpenIcon, Target01Icon, ViewOffIcon, WarehouseIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function getStudentNoYear(studentNo) {
   const raw = String(studentNo || "").trim();
   const yearPart = raw.split("-")[0];
@@ -147,7 +148,7 @@ export default function StorageExplorerTab({
       {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-folder-open"
+          icon="FolderOpenIcon"
           title="Storage Explorer"
           description={
             isOsas
@@ -173,7 +174,7 @@ export default function StorageExplorerTab({
         {/* Navigation Toolbar / Location Breadcrumbs */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex flex-col gap-2 h-8 justify-center">
-            
+
             <div className="flex items-center gap-1.5 sm:gap-2">
               {/* Location Path Text (Breadcrumbs) */}
               <Breadcrumb className="flex items-center select-none">
@@ -224,7 +225,7 @@ export default function StorageExplorerTab({
               {activeStudent && (
                 <div className="flex items-center gap-[16px] sm:gap-[20px]">
                   <div className="flex flex-col text-left">
-                    <span 
+                    <span
                       className="text-[14px] font-bold tracking-tight leading-none"
                       style={{ color: activeTheme.frontStart }}
                     >
@@ -241,7 +242,7 @@ export default function StorageExplorerTab({
                     }}
                     className="h-8 px-2 font-semibold text-[13px] text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-brand shadow-none! border-0!"
                   >
-                    <HugeIcon  className="ph-bold ph-eye-slash text-[14px]" />
+                    <ViewOffIcon size="1em"  className="text-[14px]" />
                     Unfocus
                   </Button>
                 </div>
@@ -284,8 +285,8 @@ export default function StorageExplorerTab({
                               "group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.03)] dark:shadow-none p-5 select-none",
                               isClickable ? "cursor-pointer hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5" : "pointer-events-none",
                               !isClickable && !isTarget && "opacity-40",
-                              isTarget 
-                                ? "border-transparent text-white ring-2 ring-white/10 scale-[1.01] shadow-md" 
+                              isTarget
+                                ? "border-transparent text-white ring-2 ring-white/10 scale-[1.01] shadow-md"
                                 : "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] text-gray-900 dark:text-zinc-100"
                             )}
                             style={isTarget ? {
@@ -312,7 +313,7 @@ export default function StorageExplorerTab({
                                     )}>
                                       {r.name || `Room ${r.room}`}
                                     </h5>
-                                    
+
                                     {/* Status badge moved inline */}
                                     {isTarget ? (
                                       <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white animate-pulse shrink-0">
@@ -331,14 +332,14 @@ export default function StorageExplorerTab({
                                       "flex items-center text-xs font-medium truncate",
                                       isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
                                     )}>
-                                      <HugeIcon  className="ph-bold ph-warehouse text-sm mr-2 opacity-80 shrink-0" />
+                                      <WarehouseIcon size="1em"  className="text-sm mr-2 opacity-80 shrink-0" />
                                       <span className="truncate">{r.cabinetsCount} Cabinets installed</span>
                                     </div>
                                     <div className={cn(
                                       "flex items-center text-xs font-medium truncate",
                                       isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
                                     )}>
-                                      <HugeIcon  className="ph-bold ph-folder-open text-sm mr-2 opacity-80 shrink-0" />
+                                      <FolderOpenIcon size="1em"  className="text-sm mr-2 opacity-80 shrink-0" />
                                       <span className="truncate">{r.occupiedCount} {isOsas ? "Archived organization folders" : "Archived student folders"}</span>
                                     </div>
                                   </div>
@@ -370,8 +371,8 @@ export default function StorageExplorerTab({
                                   <div
                                     className={cn(
                                       "h-full rounded-full transition-all duration-500",
-                                      isTarget 
-                                        ? "bg-white" 
+                                      isTarget
+                                        ? "bg-white"
                                         : occupancyRate >= 90 ? "bg-[#ff3b30]" : occupancyRate >= 50 ? "bg-[#ff9500]" : "bg-[#34c759]"
                                     )}
                                     style={{ width: `${occupancyRate}%` }}
@@ -500,7 +501,7 @@ export default function StorageExplorerTab({
                     <div className="w-full lg:w-[320px] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
                       {/* Header */}
                       <div className="mb-4 flex items-center justify-between select-none">
-                        <h5 
+                        <h5
                           className={cn(
                             "font-bold text-[18px] tracking-tight font-sans pointer-events-none",
                             !activeStudent && "text-[#1C1C1E] dark:text-zinc-50"
@@ -524,7 +525,7 @@ export default function StorageExplorerTab({
                           className="rounded-full p-[6px] text-[#8E8E93] hover:bg-[#F5F5F7] hover:text-gray-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-all pointer-events-auto flex items-center justify-center cursor-pointer"
                           title={activeStudent ? "Unfocus student" : "Back to Cabinets"}
                         >
-                          <HugeIcon  className="ph-bold ph-x text-[16px]"></HugeIcon>
+                          <Cancel01Icon size="1em"  className="text-[16px]"></Cancel01Icon>
                         </button>
                       </div>
 
@@ -579,14 +580,14 @@ export default function StorageExplorerTab({
                                   }}
                                 >
                                   <div className="flex items-center gap-2">
-                                    <HugeIcon  className={cn(
-                                      "ph-bold text-[16px]",
+                                    <AppIcon  className={cn(
+                                      " text-[16px]",
                                       isDrawerTarget
-                                        ? "ph-map-pin"
+                                        ? "Location01Icon"
                                         : hasOccupants
-                                          ? "ph-folder-open text-[#0A84FF]"
-                                          : "ph-folder text-[#8E8E93]"
-                                    )}></HugeIcon>
+                                          ? "FolderOpenIcon text-[#0A84FF]"
+                                          : "Folder01Icon text-[#8E8E93]"
+                                    )}></AppIcon>
                                     <span className="text-[14px] font-bold">
                                       {String(d.drawer).toLowerCase().startsWith("drawer") ? d.drawer : `Drawer ${d.drawer}`}
                                     </span>
@@ -631,7 +632,7 @@ export default function StorageExplorerTab({
                                                       className="px-2 py-0.5 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-200/50 dark:hover:bg-zinc-700/50 rounded-md transition-colors cursor-pointer flex items-center gap-1 shrink-0"
                                                       title={isOsas ? "Focus organization archive" : "Focus student folder"}
                                                     >
-                                                      <HugeIcon className="ph-bold ph-crosshair text-[12px]" />
+                                                      <AppIcon className=" Target01Icon text-[12px]" />
                                                       Focus
                                                     </button>
                                                   )}
@@ -654,8 +655,8 @@ export default function StorageExplorerTab({
                                                 </div>
                                               </div>
                                               {isTargetPerson && (
-                                                <HugeIcon  
-                                                  className="ph-fill ph-target text-sm shrink-0 animate-pulse mt-0.5" 
+                                                <Target01Icon size="1em"
+                                                  className="text-sm shrink-0 animate-pulse mt-0.5"
                                                   style={{ color: theme.frontStart }}
                                                 />
                                               )}
@@ -681,7 +682,7 @@ export default function StorageExplorerTab({
                                                         className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-border rounded-[8px] cursor-pointer transition-colors group/doc"
                                                       >
                                                         <div className="flex items-center gap-1.5 min-w-0">
-                                                          <HugeIcon  className="ph-bold ph-file-pdf text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></HugeIcon>
+                                                          <File02Icon size="1em"  className="text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></File02Icon>
                                                           <span className="truncate font-bold text-[14px] text-[#1C1C1E] dark:text-zinc-300" title={doc.filename}>
                                                             {doc.docType}
                                                           </span>
@@ -708,7 +709,7 @@ export default function StorageExplorerTab({
                                       })
                                     ) : (
                                       <div className="flex flex-col items-center justify-center p-4 rounded-[12px] bg-[#F5F5F7] dark:bg-zinc-800/40 border border-dashed border-border dark:border-border text-center select-none">
-                                        <HugeIcon className="ph-duotone ph-folder-open text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
+                                        <FolderOpenIcon size="1em" className="text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
                                         <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                           Empty Drawer Slot
                                         </p>

@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -41,16 +41,16 @@ import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
 import PdfPreviewDialog from "../admin/audit-logs/PdfPreviewDialog"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Loading01Icon, ViewIcon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -691,7 +691,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
-            icon="ph-shield-check"
+            icon="Shield01Icon"
             title="Platform Activity History"
             description="Review administrative actions, office changes, and security-related activity across the platform."
             showBorder={false}
@@ -721,7 +721,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   >
                     {isExporting ? (
                       <span className="flex items-center gap-1.5">
-                        <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                        <Loading01Icon size="1em" className="animate-spin text-sm" />
                         <span>Exporting...</span>
                       </span>
                     ) : (
@@ -736,7 +736,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   >
                     {isGeneratingPdf ? (
                       <span className="flex items-center gap-1.5">
-                        <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                        <Loading01Icon size="1em" className="animate-spin text-sm" />
                         <span>Generating...</span>
                       </span>
                     ) : (
@@ -757,7 +757,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
             {/* Search Input with Pure Number Count (Left side) */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-              <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search logs by actor, action, details..."
@@ -779,7 +779,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     title="Clear search"
                     className="flex h-5 w-5 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                   >
-                    <HugeIcon className="ph-bold ph-x text-[11px]" />
+                    <Cancel01Icon size="1em" className="text-[11px]" />
                   </button>
                 )}
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums pointer-events-none">
@@ -1119,7 +1119,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
                               className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors"
                             >
-                              <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
+                              <AppIcon className={cn(" text-[14px]", isExpanded ? "MinusSignIcon" : "Add01Icon")}></AppIcon>
                             </button>
                           </td>
 
@@ -1204,7 +1204,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                                     aria-label="View Details"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
+                                    <ViewIcon size="1em"  className="text-[16px]"></ViewIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Details</TooltipContent>

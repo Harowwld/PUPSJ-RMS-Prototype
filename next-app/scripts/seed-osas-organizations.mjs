@@ -269,6 +269,9 @@ export async function seedOrganizations() {
     console.log(`  ${String(i + 1).padStart(2, " ")}. [${o.acronym.padEnd(14, " ")}] ${o.name} (${o.category}) -> ${o.storage_cabinet} D${o.storage_drawer}`);
   }
 
+  const { seedOsasOffice } = await import("./seed-osas-office.mjs");
+  await seedOsasOffice();
+
   return results;
 }
 

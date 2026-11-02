@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,8 +29,8 @@ import {
 } from "@/components/ui/sheet";
 import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
 import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
-import { Clock01Icon as EmptyClock01Icon, InboxIcon } from "hugeicons-react";
-
+import { Clock01Icon as EmptyClock01Icon, InboxIcon , ArrowRight01Icon, ArrowRight02Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, File02Icon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -45,7 +45,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -105,7 +105,7 @@ export default function StudentOverviewTab({
             onNavigate("odrs");
           }
         },
-        icon: "ph-bold ph-package",
+        icon: " PackageIcon",
         badge: "Registrar Window 2",
         theme: "emerald",
       });
@@ -130,7 +130,7 @@ export default function StudentOverviewTab({
             onNavigate("odrs");
           }
         },
-        icon: "ph-bold ph-receipt",
+        icon: " Invoice01Icon",
         badge: "Action Required",
         theme: "amber",
       });
@@ -152,7 +152,7 @@ export default function StudentOverviewTab({
         description: `You have ${missingDocs.length} unsubmitted enrollment requirement${missingDocs.length > 1 ? "s" : ""} (${topMissing}${extraText}). Submit physical hard copies to the Registrar Window to clear your hold.`,
         actionLabel: "View Requirements",
         action: () => onNavigate("compliance"),
-        icon: "ph-bold ph-clipboard-text",
+        icon: " ClipboardIcon",
         badge: "Enrollment Clearance",
         theme: "amber",
       });
@@ -178,7 +178,7 @@ export default function StudentOverviewTab({
             onNavigate("osas");
           }
         },
-        icon: "ph-bold ph-arrow-counter-clockwise",
+        icon: " ReloadIcon",
         badge: "OSAS Evaluation",
         theme: "amber",
       });
@@ -194,7 +194,7 @@ export default function StudentOverviewTab({
         description: `You have ${pendingPostEvents.length} completed event${pendingPostEvents.length > 1 ? "s" : ""} pending liquidation and post-activity reports.`,
         actionLabel: "Submit Report",
         action: () => onNavigate("osas"),
-        icon: "ph-bold ph-file-arrow-up",
+        icon: " FileUploadIcon",
         badge: "Liquidation Due",
         theme: "blue",
       });
@@ -263,38 +263,38 @@ export default function StudentOverviewTab({
     (data.requests || []).forEach((req) => {
       const s = normalizeStatus(req.status);
       let desc = `Document request for ${req.doc_type} was received.`;
-      let icon = "ph-bold ph-tray";
+      let icon = " InboxIcon";
       let tone = "default";
       let statusLabel = req.status || "Submitted";
 
       if (s === "ready") {
         desc = `Your ${req.doc_type} is approved and ready for claiming at Registrar Window 2. Bring a valid student ID.`;
-        icon = "ph-bold ph-check-circle";
+        icon = " CheckmarkCircle01Icon";
         tone = "emerald";
         statusLabel = "Ready for Pick-Up";
       } else if (s === "processing") {
         desc = `Registrar staff is currently printing and processing ${req.doc_type}.`;
-        icon = "ph-bold ph-gear";
+        icon = " Settings01Icon";
         tone = "blue";
         statusLabel = "Processing";
       } else if (s === "pendingpayment") {
         desc = `Payment verification pending. Please upload your official receipt.`;
-        icon = "ph-bold ph-receipt";
+        icon = " Invoice01Icon";
         tone = "amber";
         statusLabel = "Payment Required";
       } else if (s === "under review" || s === "inprogress") {
         desc = `Registrar staff is evaluating your request credentials.`;
-        icon = "ph-bold ph-eye";
+        icon = " ViewIcon";
         tone = "blue";
         statusLabel = "Under Review";
       } else if (s === "declined" || s === "rejected") {
         desc = `Request was declined${req.rejection_reason ? `: ${req.rejection_reason}` : "."}`;
-        icon = "ph-bold ph-x-circle";
+        icon = " CancelCircleIcon";
         tone = "rose";
         statusLabel = "Declined";
       } else if (s === "completed") {
         desc = `Official record ${req.doc_type} has been claimed and archived.`;
-        icon = "ph-bold ph-archive";
+        icon = " Archive01Icon";
         tone = "emerald";
         statusLabel = "Completed";
       }
@@ -326,23 +326,23 @@ export default function StudentOverviewTab({
     (data.proposals || []).forEach((prop) => {
       const s = normalizeStatus(prop.status);
       let desc = `Event proposal "${prop.title || prop.event_title}" was submitted for OSAS clearance.`;
-      let icon = "ph-bold ph-calendar-blank";
+      let icon = " Calendar01Icon";
       let tone = "blue";
       let statusLabel = prop.status || "Submitted";
 
       if (s === "approved" || s === "completed") {
         desc = `Event proposal "${prop.title || prop.event_title}" has been approved by Student Affairs.`;
-        icon = "ph-bold ph-check-circle";
+        icon = " CheckmarkCircle01Icon";
         tone = "emerald";
         statusLabel = "Approved";
       } else if (s === "needs revision" || s === "revisionsrequested") {
         desc = `Revisions requested: ${prop.evaluation_notes || "Please check evaluation feedback and resubmit."}`;
-        icon = "ph-bold ph-arrow-counter-clockwise";
+        icon = " ReloadIcon";
         tone = "amber";
         statusLabel = "Needs Revision";
       } else if (s === "declined" || s === "rejected") {
         desc = `Event proposal was declined by OSAS${prop.rejection_reason ? `: ${prop.rejection_reason}` : "."}`;
-        icon = "ph-bold ph-x-circle";
+        icon = " CancelCircleIcon";
         tone = "rose";
         statusLabel = "Declined";
       }
@@ -382,7 +382,7 @@ export default function StudentOverviewTab({
           description: `Document has been physically verified, digitized, and archived in the institutional registry.`,
           date: r.document?.createdAt,
           office: "Office of the Registrar",
-          icon: "ph-bold ph-file-check",
+          icon: " TaskDone01Icon",
           tone: "emerald",
           statusLabel: "Archived",
           actionLabel: "View Details",
@@ -401,7 +401,7 @@ export default function StudentOverviewTab({
         description: `Post-event report and financial liquidation statement filed.`,
         date: report.updated_at || report.created_at,
         office: "Student Affairs (OSAS)",
-        icon: "ph-bold ph-clipboard-text",
+        icon: " ClipboardIcon",
         tone: "blue",
         statusLabel: report.status || "Submitted",
         actionLabel: "View Details",
@@ -550,7 +550,7 @@ export default function StudentOverviewTab({
                         isBlue && "bg-blue-100/80 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/40"
                       )}
                     >
-                      <HugeIcon className={cn(item.icon, "text-lg")} />
+                      <AppIcon className={cn(item.icon, "text-lg")} />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -670,10 +670,10 @@ export default function StudentOverviewTab({
                       )}
                     />
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <HugeIcon
+                      <AppIcon
                         className={cn(
                           "text-xs shrink-0",
-                          step.done ? "ph-fill ph-check-circle text-pup-maroon dark:text-red-400" : "ph-bold ph-circle text-gray-300 dark:text-zinc-700"
+                          step.done ? " CheckmarkCircle01Icon text-pup-maroon dark:text-red-400" : " CircleIcon text-gray-300 dark:text-zinc-700"
                         )}
                       />
                       <span
@@ -694,7 +694,7 @@ export default function StudentOverviewTab({
               {/* Status Note or Next Step Callout */}
               <div className="mt-2 p-3 rounded-xl bg-white dark:bg-zinc-800/80 border border-border/80 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 text-gray-600 dark:text-zinc-300 min-w-0">
-                  <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400 text-sm shrink-0" />
+                  <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm shrink-0" />
                   <span className="truncate">
                     {normalizeStatus(activeRequest.status) === "ready"
                       ? "Your document is sealed and ready for release at Registrar Window 2. Bring a valid student ID."
@@ -740,7 +740,7 @@ export default function StudentOverviewTab({
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/40 dark:border-red-900/40 dark:text-red-400 group-hover:scale-105 transition-transform">
-                <HugeIcon className="ph-bold ph-tray-arrow-up text-xl" />
+                <FileUploadIcon size="1em" className="text-xl" />
               </div>
               <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-pup-maroon border border-red-100/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40">
                 {(data.requests || []).length} Records
@@ -754,7 +754,7 @@ export default function StudentOverviewTab({
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-pup-maroon dark:text-red-400">
               <span>View</span>
-              <HugeIcon className="ph-bold ph-arrow-right text-[10px] group-hover:translate-x-1 transition-transform" />
+              <ArrowRight02Icon size="1em" className="text-[10px] group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
 
@@ -766,7 +766,7 @@ export default function StudentOverviewTab({
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-                <HugeIcon className="ph-bold ph-clipboard-text text-xl" />
+                <ClipboardIcon size="1em" className="text-xl" />
               </div>
               {complianceSummary && (
                 <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40">
@@ -782,7 +782,7 @@ export default function StudentOverviewTab({
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
               <span>View</span>
-              <HugeIcon className="ph-bold ph-arrow-right text-[10px] group-hover:translate-x-1 transition-transform" />
+              <ArrowRight02Icon size="1em" className="text-[10px] group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
 
@@ -794,7 +794,7 @@ export default function StudentOverviewTab({
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900/40 dark:text-blue-400 group-hover:scale-105 transition-transform">
-                <HugeIcon className="ph-bold ph-student text-xl" />
+                <StudentIcon size="1em" className="text-xl" />
               </div>
               {isOfficer && (
                 <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/40">
@@ -810,7 +810,7 @@ export default function StudentOverviewTab({
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 dark:text-blue-400">
               <span>View</span>
-              <HugeIcon className="ph-bold ph-arrow-right text-[10px] group-hover:translate-x-1 transition-transform" />
+              <ArrowRight02Icon size="1em" className="text-[10px] group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
         </div>
@@ -882,7 +882,7 @@ export default function StudentOverviewTab({
                             !isEmerald && !isAmber && !isBlue && !isRose && "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
                           )}
                         >
-                          <HugeIcon className={cn(event.icon, "text-lg")} />
+                          <AppIcon className={cn(event.icon, "text-lg")} />
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -934,7 +934,7 @@ export default function StudentOverviewTab({
                           {event.actionLabel}
                         </Button>
 
-                        <HugeIcon className="ph-bold ph-caret-right text-xs text-gray-400 group-hover:translate-x-1 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-all md:hidden" />
+                        <ArrowRight01Icon size="1em" className="text-xs text-gray-400 group-hover:translate-x-1 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-all md:hidden" />
                       </div>
                     </div>
                   );
@@ -1115,14 +1115,14 @@ export default function StudentOverviewTab({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </SheetHeader>
 
           {/* Line-Attached Edge-to-Edge Status Notice */}
           <div className="flex items-center gap-2.5 px-6 py-2.5 text-xs border-b border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200 transition-colors shrink-0">
-            <HugeIcon className="ph-bold ph-shield-check text-[15px] shrink-0 text-blue-600 dark:text-blue-400" />
+            <Shield01Icon size="1em" className="text-[15px] shrink-0 text-blue-600 dark:text-blue-400" />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
               <strong className="font-semibold">
                 {selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
@@ -1139,7 +1139,7 @@ export default function StudentOverviewTab({
             {/* Unboxed Event Identity Block */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
               <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-lg shrink-0 font-bold border border-blue-500/20 dark:border-blue-900/40 mt-0.5 shadow-2xs">
-                <HugeIcon className="ph-bold ph-clipboard-text" />
+                <ClipboardIcon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
                 <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
@@ -1160,15 +1160,15 @@ export default function StudentOverviewTab({
                 Post-Event Specification
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="ph-buildings" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
-                <InfoRow icon="ph-chart-pie-slice" label="Clearance Status">
+                <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
+                <InfoRow icon="PieChartIcon" label="Clearance Status">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                     {selectedPostEventDetail?.status || "Submitted"}
                   </span>
                 </InfoRow>
-                <InfoRow icon="ph-users" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
-                <InfoRow icon="ph-currency-circle-dollar" label="Total Expenses" value={`₱${Number(selectedPostEventDetail?.total_expenses || 0).toLocaleString()}`} />
+                <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
+                <InfoRow icon="DollarCircleIcon" label="Total Expenses" value={`₱${Number(selectedPostEventDetail?.total_expenses || 0).toLocaleString()}`} />
               </div>
             </div>
 
@@ -1183,7 +1183,7 @@ export default function StudentOverviewTab({
                     <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
-                          <HugeIcon className="ph-bold ph-file-text text-base" />
+                          <File02Icon size="1em" className="text-base" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -1200,7 +1200,7 @@ export default function StudentOverviewTab({
                     <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-                          <HugeIcon className="ph-bold ph-receipt text-base" />
+                          <AppIcon className=" Invoice01Icon text-base" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">

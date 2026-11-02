@@ -1,9 +1,10 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-
+import { Building01Icon, Clock01Icon, CovidInfoIcon, LinkSquare01Icon, Location01Icon, UserSearch01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export default function OfficeDirectory() {
   const [copiedKey, setCopiedKey] = useState(null);
   const [manilaInfo, setManilaInfo] = useState({
@@ -97,8 +98,8 @@ export default function OfficeDirectory() {
   };
 
   return (
-    <section 
-      id="office" 
+    <section
+      id="office"
       className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-24 sm:pb-32 lg:pb-36 font-jakarta select-none scroll-mt-24"
     >
       {/* Subtle ambient divider & glow between DocumentCatalog and OfficeDirectory */}
@@ -109,9 +110,9 @@ export default function OfficeDirectory() {
           ASYMMETRIC EDITORIAL HEADER & REAL-TIME DESK STATUS WIDGET
           ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end mb-12 sm:mb-16">
-        
+
         {/* Left Column: Heading & Contextual Narrative */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
@@ -122,7 +123,7 @@ export default function OfficeDirectory() {
             <span className="text-[11px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
               Campus Archive &amp; Records
             </span>
-            
+
             <span className="text-[11px] font-sans tabular-nums text-zinc-500 ">
               San Juan Campus
             </span>
@@ -139,7 +140,7 @@ export default function OfficeDirectory() {
         </motion.div>
 
         {/* Right Column: Real-Time Operational Status Terminal */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
@@ -157,7 +158,7 @@ export default function OfficeDirectory() {
             </div>
 
             <div className="flex items-center gap-2.5">
-              
+
               <span className="text-xs font-bold text-gray-900  tracking-tight">
                 {manilaInfo.statusText}
               </span>
@@ -176,11 +177,11 @@ export default function OfficeDirectory() {
           ASYMMETRIC BENTO 2.0 GRID (7:5 SPLIT)
           ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-        
+
         {/* =======================================================================
             LEFT COLUMN (7 COLS): PHYSICAL LOCATION & SERVICE COUNTER WINDOWS
             ======================================================================= */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
@@ -189,14 +190,14 @@ export default function OfficeDirectory() {
         >
           {/* Subtle decorative watermark icon */}
           <div className="absolute top-6 right-6 pointer-events-none opacity-[0.03] [0.05] text-9xl">
-            <HugeIcon  className="ph-bold ph-buildings" />
+            <Building01Icon size={16}   />
           </div>
 
           <div>
             {/* Location Eyebrow & Badges */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50  border border-red-100  text-[11px] font-sans tabular-nums font-semibold text-[#800000] ">
-                <HugeIcon  className="ph-bold ph-map-pin text-xs" />
+                <Location01Icon size="1em"  className="text-xs" />
                 <span>Physical Campus Archive</span>
               </div>
               <span className="text-[10px] font-sans tabular-nums text-zinc-400 uppercase tracking-wider">
@@ -232,9 +233,9 @@ export default function OfficeDirectory() {
                   className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700  bg-white  border border-border  hover:bg-gray-50 :bg-zinc-800 transition-colors flex items-center gap-1.5 active:scale-[0.98] cursor-pointer shadow-2xs"
                   title="Copy physical address"
                 >
-                  <HugeIcon 
-                    className={`ph-bold ${
-                      copiedKey === "address" ? "ph-check text-emerald-600" : "ph-copy text-zinc-400"
+                  <AppIcon
+                    className={` ${
+                      copiedKey === "address" ? "Tick01Icon text-emerald-600" : "Copy01Icon text-zinc-400"
                     } text-xs`}
                   />
                   <span>{copiedKey === "address" ? "Copied" : "Copy"}</span>
@@ -247,7 +248,7 @@ export default function OfficeDirectory() {
                   className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#800000]  bg-red-50/80  border border-red-200/60  hover:bg-red-100/70 :bg-red-900/40 transition-colors flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
                 >
                   <span>Directions</span>
-                  <HugeIcon  className="ph-bold ph-arrow-square-out text-xs" />
+                  <LinkSquare01Icon size="1em"  className="text-xs" />
                 </a>
               </div>
             </div>
@@ -255,7 +256,7 @@ export default function OfficeDirectory() {
             {/* Service Counter Windows Showcase */}
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-3">
-                <HugeIcon  className="ph-bold ph-users-three text-[#800000]  text-sm" />
+                <UserSearch01Icon size="1em"  className="text-[#800000] text-sm" />
                 <span className="text-[11px] font-sans tabular-nums font-bold uppercase tracking-wider text-gray-900 ">
                   Designated Service Windows
                 </span>
@@ -270,7 +271,7 @@ export default function OfficeDirectory() {
                         WINDOW 01
                       </span>
                       <span className="text-[10px] font-sans tabular-nums text-emerald-600  font-semibold flex items-center gap-1">
-                        
+
                         Undergrad Desk
                       </span>
                     </div>
@@ -294,7 +295,7 @@ export default function OfficeDirectory() {
                         WINDOW 02
                       </span>
                       <span className="text-[10px] font-sans tabular-nums text-[#800000]  font-semibold flex items-center gap-1">
-                        
+
                         Alumni Desk
                       </span>
                     </div>
@@ -315,7 +316,7 @@ export default function OfficeDirectory() {
 
           {/* Transit & Access Advisory Footnote */}
           <div className="mt-6 pt-4 border-t border-border  flex items-center gap-2 text-[11px] text-zinc-500  font-normal">
-            <HugeIcon  className="ph-bold ph-info text-[#800000]  shrink-0 text-sm" />
+            <CovidInfoIcon size="1em"  className="text-[#800000] shrink-0 text-sm" />
             <span>Accessible via San Juan City Hall jeepney routes. Present valid ID at the university security gatehouse upon campus entry.</span>
           </div>
         </motion.div>
@@ -325,9 +326,9 @@ export default function OfficeDirectory() {
             RIGHT COLUMN (5 COLS): OPERATING SCHEDULE & OFFICIAL DESK TERMINAL
             ======================================================================= */}
         <div className="lg:col-span-5 flex flex-col gap-6">
-          
+
           {/* Card A: Weekly Operating Schedule */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
@@ -373,7 +374,7 @@ export default function OfficeDirectory() {
 
             {/* Cut-off Notification Box */}
             <div className="mt-5 p-3.5 rounded-2xl bg-amber-50/70  border border-amber-200/60  text-xs text-amber-900  leading-relaxed font-normal flex items-start gap-2.5">
-              <HugeIcon  className="ph-bold ph-clock text-amber-700  text-sm mt-0.5 shrink-0" />
+              <Clock01Icon size="1em"  className="text-amber-700 text-sm mt-0.5 shrink-0" />
               <span>
                 <strong>3:00 PM Evaluation Cut-off:</strong> Same-day verification filing closes at 3:00 PM. Applications filed thereafter are logged for next working day evaluation.
               </span>
@@ -382,7 +383,7 @@ export default function OfficeDirectory() {
 
 
           {/* Card B: Direct Communications & Official Desks */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
@@ -414,7 +415,7 @@ export default function OfficeDirectory() {
                     <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
                       Registrar Evaluation Desk
                     </span>
-                    <a 
+                    <a
                       href="mailto:registrar.sanjuan@pup.edu.ph"
                       className="font-bold text-[#800000]  hover:underline truncate block"
                     >
@@ -427,7 +428,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy Registrar email"
                   >
-                    <HugeIcon  className={`ph-bold ${copiedKey === "reg-email" ? "ph-check text-emerald-600" : "ph-copy"}`} />
+                    <AppIcon  className={` ${copiedKey === "reg-email" ? "Tick01Icon text-emerald-600" : "Copy01Icon"}`} />
                   </button>
                 </div>
 
@@ -437,7 +438,7 @@ export default function OfficeDirectory() {
                     <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
                       Student Affairs (OSAS Clearances)
                     </span>
-                    <a 
+                    <a
                       href="mailto:osas.sanjuan@pup.edu.ph"
                       className="font-bold text-gray-800  hover:underline truncate block"
                     >
@@ -450,7 +451,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy OSAS email"
                   >
-                    <HugeIcon  className={`ph-bold ${copiedKey === "osas-email" ? "ph-check text-emerald-600" : "ph-copy"}`} />
+                    <AppIcon  className={` ${copiedKey === "osas-email" ? "Tick01Icon text-emerald-600" : "Copy01Icon"}`} />
                   </button>
                 </div>
 
@@ -470,7 +471,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy trunkline phone"
                   >
-                    <HugeIcon  className={`ph-bold ${copiedKey === "trunkline" ? "ph-check text-emerald-600" : "ph-copy"}`} />
+                    <AppIcon  className={` ${copiedKey === "trunkline" ? "Tick01Icon text-emerald-600" : "Copy01Icon"}`} />
                   </button>
                 </div>
               </div>

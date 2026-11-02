@@ -1,5 +1,7 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
+import { Database01Icon, Shield01Icon, Timer01Icon } from "hugeicons-react";
+
 export default function LandingStats() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 w-full font-jakarta">
@@ -9,7 +11,7 @@ export default function LandingStats() {
         <div className="relative overflow-hidden rounded-xl border-none p-5 cursor-default bg-gradient-to-br select-none shadow-sm text-white" style={{ background: "linear-gradient(135deg, #14C8FF 0%, #007AFF 50%, #0055FF 100%)" }}>
           <div className="relative z-10">
             <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/95">
-              <HugeIcon  className="ph-bold ph-database text-white text-[16px]" />
+              <Database01Icon size="1em"  className="text-white text-[16px]" />
               <span>Academic Records Archive</span>
             </div>
             <div className="text-[42px] font-semibold text-white tracking-tight leading-none mt-2">
@@ -25,7 +27,7 @@ export default function LandingStats() {
         <div className="relative overflow-hidden rounded-xl border-none p-5 cursor-default bg-gradient-to-br select-none shadow-sm text-white" style={{ background: "linear-gradient(135deg, #34d399 0%, #059669 50%, #047857 100%)" }}>
           <div className="relative z-10">
             <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/95">
-              <HugeIcon  className="ph-bold ph-timer text-white text-[16px]" />
+              <Timer01Icon size="1em"  className="text-white text-[16px]" />
               <span>Fast Processing Time</span>
             </div>
             <div className="text-[42px] font-semibold text-white tracking-tight leading-none mt-2">
@@ -41,7 +43,7 @@ export default function LandingStats() {
         <div className="relative overflow-hidden rounded-xl border-none p-5 cursor-default bg-gradient-to-br select-none shadow-sm text-white" style={{ background: "linear-gradient(135deg, #fbbf24 0%, #d97706 50%, #b45309 100%)" }}>
           <div className="relative z-10">
             <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/95">
-              <HugeIcon  className="ph-bold ph-shield-check text-white text-[16px]" />
+              <Shield01Icon size="1em"  className="text-white text-[16px]" />
               <span>Privacy & Security</span>
             </div>
             <div className="text-[42px] font-semibold text-white tracking-tight leading-none mt-2">

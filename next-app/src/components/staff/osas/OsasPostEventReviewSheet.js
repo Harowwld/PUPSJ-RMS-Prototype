@@ -1,8 +1,10 @@
 "use client";
+import SheetPagination from "@/components/shared/SheetPagination";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -18,7 +20,8 @@ import {
   getPostEventStatusBadgeClass,
   getPostEventStatusDotClass,
 } from "@/components/staff/OsasMonitoringTab";
-
+import { Alert02Icon, Cancel01Icon, CovidInfoIcon, File02Icon, Loading01Icon, ViewIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -33,7 +36,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -108,9 +111,8 @@ export default function OsasPostEventReviewSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* TOP HEADER: Post-Event Clearance Details + < > 01 of XX + X button */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 Post-Event Clearance Details
@@ -120,33 +122,20 @@ export default function OsasPostEventReviewSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {typeof totalCount === "number" && totalCount > 1 && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={currentIndex <= 0}
-                    onClick={onNavigatePrev}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Previous Report"
-                    title="Previous Report"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIndex >= totalCount - 1}
-                    onClick={onNavigateNext}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Next Report"
-                    title="Next Report"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={Math.max(1, (currentIndex ?? 0) + 1)}
+                  totalPages={totalCount}
+                  onPrevious={onNavigatePrev}
+                  onNext={onNavigateNext}
+                  previousDisabled={currentIndex <= 0}
+                  nextDisabled={currentIndex >= totalCount - 1}
+                  previousLabel="Previous Report"
+                  nextLabel="Next Report"
+                />
               )}
 
               <button
@@ -156,7 +145,7 @@ export default function OsasPostEventReviewSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -175,16 +164,16 @@ export default function OsasPostEventReviewSheet({
               : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
           )}
         >
-          <HugeIcon
+          <AppIcon
             className={cn(
-              "ph-bold text-[15px] shrink-0",
+              " text-[15px] shrink-0",
               selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
-                ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                 : selectedPostEvent.status === "RevisionRequested"
-                ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                ? "Alert01Icon text-amber-600 dark:text-amber-400"
                 : selectedPostEvent.status === "Rejected"
-                ? "ph-x-circle text-rose-600 dark:text-rose-400"
-                : "ph-clock text-blue-600 dark:text-blue-400"
+                ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                : "Clock01Icon text-blue-600 dark:text-blue-400"
             )}
           />
           <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -212,7 +201,7 @@ export default function OsasPostEventReviewSheet({
           {/* Summary Strip */}
           <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center text-xl shrink-0 font-bold border border-purple-500/20 dark:border-purple-800/40 mt-0.5">
-              <HugeIcon className="ph-bold ph-receipt" />
+              <AppIcon className=" Invoice01Icon" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -266,7 +255,7 @@ export default function OsasPostEventReviewSheet({
               Clearance Specification
             </h4>
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-              <InfoRow icon="ph-buildings" label="Organization">
+              <InfoRow icon="Building01Icon" label="Organization">
                 <span>
                   {selectedPostEvent.organization_name}
                   {selectedPostEvent.organization_acronym && (
@@ -277,31 +266,31 @@ export default function OsasPostEventReviewSheet({
                 </span>
               </InfoRow>
 
-              <InfoRow icon="ph-user" label="Submitter" value={proponentName} />
+              <InfoRow icon="UserIcon" label="Submitter" value={proponentName} />
 
               {selectedPostEvent.submitted_by_email && (
-                <InfoRow icon="ph-envelope-simple" label="Email Address" value={selectedPostEvent.submitted_by_email} />
+                <InfoRow icon="Mail01Icon" label="Email Address" value={selectedPostEvent.submitted_by_email} />
               )}
 
-              <InfoRow icon="ph-barcode" label="Tracking Number">
+              <InfoRow icon="BarCode01Icon" label="Tracking Number">
                 <span className="font-sans tabular-nums text-xs">{trackingNo}</span>
               </InfoRow>
 
               <InfoRow
-                icon="ph-users"
+                icon="UserSearch01Icon"
                 label="Actual Attendance"
                 value={`${Number(attendeesCount).toLocaleString()} verified attendees`}
               />
 
               <InfoRow
-                icon="ph-coins"
+                icon="Coins01Icon"
                 label="Liquidated Spend"
                 value={`₱${expensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
               />
 
-              <InfoRow icon="ph-calendar" label="Date Submitted" value={dateSubmittedStr} />
+              <InfoRow icon="Calendar01Icon" label="Date Submitted" value={dateSubmittedStr} />
 
-              <InfoRow icon="ph-chart-pie-slice" label="Clearance Status">
+              <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
@@ -372,7 +361,7 @@ export default function OsasPostEventReviewSheet({
               <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
-                    <HugeIcon className="ph-bold ph-file-text" />
+                    <File02Icon size={16}  />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[220px]">
@@ -400,7 +389,7 @@ export default function OsasPostEventReviewSheet({
                     });
                   }}
                 >
-                  <HugeIcon className="ph-bold ph-eye mr-1.5 text-xs" />
+                  <ViewIcon size="1em" className="mr-1.5 text-xs" />
                   <span>Inspect Narrative</span>
                 </Button>
               </div>
@@ -409,7 +398,7 @@ export default function OsasPostEventReviewSheet({
               <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-emerald-100 dark:border-emerald-900/30">
-                    <HugeIcon className="ph-bold ph-receipt" />
+                    <AppIcon className=" Invoice01Icon" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[220px]">
@@ -438,7 +427,7 @@ export default function OsasPostEventReviewSheet({
                       });
                     }}
                   >
-                    <HugeIcon className="ph-bold ph-eye mr-1.5 text-xs" />
+                    <ViewIcon size="1em" className="mr-1.5 text-xs" />
                     <span>Inspect Liquidation</span>
                   </Button>
                 ) : (
@@ -506,7 +495,7 @@ export default function OsasPostEventReviewSheet({
             {/* Contextual Warning */}
             {isRevokingClearance && (
               <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300 flex items-start gap-2.5">
-                <HugeIcon className="ph-bold ph-warning text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <Alert02Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold text-amber-950 dark:text-amber-200">
                     Revoking Clearance
@@ -520,7 +509,7 @@ export default function OsasPostEventReviewSheet({
 
             {isRequestingRevision && (
               <div className="rounded-xl border border-sky-200 bg-sky-50/80 p-3 text-xs text-sky-900 dark:border-sky-800/40 dark:bg-sky-950/30 dark:text-sky-300 flex items-start gap-2.5">
-                <HugeIcon className="ph-bold ph-info text-base text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                <CovidInfoIcon size="1em" className="text-base text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold text-sky-950 dark:text-sky-200">
                     Revision Instructions Required
@@ -544,12 +533,10 @@ export default function OsasPostEventReviewSheet({
                   </span>
                 )}
               </div>
-              <textarea
+              <Textarea
                 className={cn(
-                  "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition-colors dark:bg-zinc-900 dark:text-zinc-100",
-                  isPostEventNoteRequired && !isPostEventNoteValid
-                    ? "border-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600"
-                    : "border-border focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-border"
+                  "min-h-24",
+                  isPostEventNoteRequired && !isPostEventNoteValid && "border-amber-400 dark:border-amber-600"
                 )}
                 placeholder={
                   isPostEventNoteRequired
@@ -580,7 +567,7 @@ export default function OsasPostEventReviewSheet({
           >
             {isSavingPostEvent ? (
               <>
-                <HugeIcon className="ph-bold ph-spinner animate-spin mr-2" />
+                <Loading01Icon size={16} className="animate-spin mr-2" />
                 Saving...
               </>
             ) : postEventStatus === "Cleared" ? (

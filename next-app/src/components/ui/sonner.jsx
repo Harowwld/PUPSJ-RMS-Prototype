@@ -1,9 +1,11 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { toast as hotToast, useToaster } from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
 import React, { useEffect } from "react";
+import { Alert02Icon, Cancel01Icon, CovidInfoIcon, Loading01Icon, Tick01Icon } from "hugeicons-react";
+
 
 // 1. Play Tone logic (warning/error digital beeps)
 const playTone = (type) => {
@@ -184,13 +186,13 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
               "bg-[#16a34a]"
             }`}>
               {type === "error" || type === "warning" ? (
-                <HugeIcon  className="ph-bold ph-warning text-[14px] text-white" />
+                <Alert02Icon size="1em"  className="text-[14px] text-white" />
               ) : type === "info" ? (
-                <HugeIcon  className="ph-bold ph-info text-[14px] text-white" />
+                <CovidInfoIcon size="1em"  className="text-[14px] text-white" />
               ) : type === "loading" ? (
-                <HugeIcon  className="ph-bold ph-spinner animate-spin text-[14px] text-white" />
+                <Loading01Icon size="1em"  className="animate-spin text-[14px] text-white" />
               ) : (
-                <HugeIcon  className="ph-bold ph-check text-[14px] text-white" />
+                <Tick01Icon size="1em"  className="text-[14px] text-white" />
               )}
             </div>
           )}
@@ -253,7 +255,7 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
               } border-none outline-none transition-colors`}
               aria-label="Dismiss notification"
             >
-              <HugeIcon  className="ph-bold ph-x text-gray-500 dark:text-zinc-400 text-xs" />
+              <Cancel01Icon size="1em"  className="text-gray-500 dark:text-zinc-400 text-xs" />
             </button>
           )}
         </div>

@@ -2,10 +2,10 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { Reorder } from "framer-motion"
-import HugeIcon from "@/components/shared/HugeIcon"
+
 import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/ui/empty"
-import { StarIcon } from "hugeicons-react"
+import { StarIcon , DragDropIcon, Files01Icon, PieChartIcon} from "hugeicons-react"
 
 export default function SlaKpiCards({
   total = 0,
@@ -106,7 +106,7 @@ export default function SlaKpiCards({
                     )}
                   </div>
                   <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                    <HugeIcon className="ph-bold text-[15px] ph-pie-chart" />
+                    <PieChartIcon size="1em" className="text-[15px]" />
                   </div>
                 </div>
                 <div className="flex justify-between items-end p-4 pt-1">
@@ -115,8 +115,8 @@ export default function SlaKpiCards({
                       ? `${charterComplianceRate}%`
                       : "N/A"}
                   </span>
-                  <HugeIcon
-                    className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5"
+                  <DragDropIcon size="1em"
+                    className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5"
                     title="Drag to rearrange"
                   />
                 </div>
@@ -263,7 +263,7 @@ export default function SlaKpiCards({
                     )}
                   </div>
                   <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
-                    <HugeIcon className="ph-fill text-[15px] ph-star" />
+                    <StarIcon size="1em" className="text-[15px]" />
                   </div>
                 </div>
                 <div className="flex justify-between items-end p-4 pt-1">
@@ -278,8 +278,8 @@ export default function SlaKpiCards({
                       <span className="text-[24px] text-gray-400">N/A</span>
                     )}
                   </span>
-                  <HugeIcon
-                    className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5"
+                  <DragDropIcon size="1em"
+                    className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5"
                     title="Drag to rearrange"
                   />
                 </div>
@@ -419,15 +419,15 @@ export default function SlaKpiCards({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                    <HugeIcon className="ph-bold text-[15px] ph-files" />
+                    <Files01Icon size="1em" className="text-[15px]" />
                   </div>
                 </div>
                 <div className="flex justify-between items-end p-4 pt-1">
                   <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                     {safeTotal.toLocaleString()}
                   </span>
-                  <HugeIcon
-                    className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5"
+                  <DragDropIcon size="1em"
+                    className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5"
                     title="Drag to rearrange"
                   />
                 </div>

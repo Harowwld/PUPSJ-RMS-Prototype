@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,11 @@ import OsasKanbanPipeline from "@/components/staff/OsasKanbanPipeline";
 import OsasProposalReviewSheet from "@/components/staff/osas/OsasProposalReviewSheet";
 import OsasPostEventReviewSheet from "@/components/staff/osas/OsasPostEventReviewSheet";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import PDFPreview from "@/components/shared/PDFPreview";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import {
   Tooltip,
@@ -29,8 +32,38 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyContent,
+  EmptyState,
 } from "@/components/ui/empty";
-import { CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, LayoutGridIcon as EmptyLayoutGridIcon } from "hugeicons-react";
+import { ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon, Loading01Icon, ReloadIcon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
+
+function SortIndicator({ column, sortBy, sortOrder }) {
+  if (sortBy !== column) {
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60" />;
+  }
+
+  return sortOrder === "ASC" ? (
+    <ArrowUp01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon dark:text-red-400" />
+  ) : (
+    <ArrowDown01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon dark:text-red-400" />
+  );
+}
+
+function SortableTableHeader({ column, label, sortBy, sortOrder, onSort, className = "" }) {
+  const ariaSort = sortBy !== column ? "none" : sortOrder === "ASC" ? "ascending" : "descending";
+
+  return (
+    <th className={className} aria-sort={ariaSort}>
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400"
+      >
+        <span>{label}</span>
+        <SortIndicator column={column} sortBy={sortBy} sortOrder={sortOrder} />
+      </button>
+    </th>
+  );
+}
 
 export function normalizeProposalStatus(status) {
   const s = String(status || "").toLowerCase().trim();
@@ -76,19 +109,19 @@ const POST_EVENT_STATUS_OPTIONS = [
 ];
 
 const KANBAN_COLUMNS = [
-  { key: "Submitted", label: "Submitted", icon: "ph-paper-plane-tilt" },
-  { key: "Under Review", label: "Under Review", icon: "ph-magnifying-glass" },
-  { key: "Needs Revision", label: "Needs Revision", icon: "ph-arrows-counter-clockwise" },
-  { key: "Approved", label: "Approved", icon: "ph-check-circle" },
-  { key: "Declined", label: "Declined", icon: "ph-x-circle" },
+  { key: "Submitted", label: "Submitted", icon: "SentIcon" },
+  { key: "Under Review", label: "Under Review", icon: "Search01Icon" },
+  { key: "Needs Revision", label: "Needs Revision", icon: "ReloadIcon" },
+  { key: "Approved", label: "Approved", icon: "CheckmarkCircle01Icon" },
+  { key: "Declined", label: "Declined", icon: "CancelCircleIcon" },
 ];
 
 export const POST_EVENT_KANBAN_COLUMNS = [
-  { key: "Submitted", label: "Submitted", icon: "ph-paper-plane-tilt" },
-  { key: "Under Review", label: "Under Review", icon: "ph-magnifying-glass" },
-  { key: "Needs Revision", label: "Needs Revision", icon: "ph-arrows-counter-clockwise" },
-  { key: "Cleared", label: "Cleared", icon: "ph-seal-check" },
-  { key: "Declined", label: "Declined", icon: "ph-x-circle" },
+  { key: "Submitted", label: "Submitted", icon: "SentIcon" },
+  { key: "Under Review", label: "Under Review", icon: "Search01Icon" },
+  { key: "Needs Revision", label: "Needs Revision", icon: "ReloadIcon" },
+  { key: "Cleared", label: "Cleared", icon: "CheckmarkBadge01Icon" },
+  { key: "Declined", label: "Declined", icon: "CancelCircleIcon" },
 ];
 
 export function getProposalStatusBadgeClass(status) {
@@ -150,151 +183,216 @@ export function getPostEventStatusDotClass(status) {
   return "bg-slate-400 dark:bg-zinc-400";
 }
 
-export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Page 1 of official submission" }) {
-  const containerRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [loading, setLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-
+export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Official submission PDF" }) {
+  const [previewOpen, setPreviewOpen] = useState(false);
   const previewUrl = fileUrl || (proposalId ? `/api/osas/event-proposals/${proposalId}?file=1` : null);
-
-  useEffect(() => {
-    let active = true;
-    let page = null;
-    let observer = null;
-
-    if (!previewUrl) {
-      const timer = setTimeout(() => setLoading(false), 0);
-      return () => {
-        active = false;
-        clearTimeout(timer);
-      };
-    }
-
-    const renderPage = async () => {
-      if (!active || !page || !containerRef.current || !canvasRef.current) return;
-      const container = containerRef.current;
-      const canvas = canvasRef.current;
-      const width = Math.max(container.clientWidth - 16, 1);
-      const baseViewport = page.getViewport({ scale: 1 });
-      const scale = width / baseViewport.width;
-      const viewport = page.getViewport({ scale });
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-      canvas.style.width = `${Math.floor(viewport.width)}px`;
-      canvas.style.height = `${Math.floor(viewport.height)}px`;
-      await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
-      if (active) setLoading(false);
-    };
-
-    const loadPreview = async () => {
-      try {
-        setLoading(true);
-        setHasError(false);
-        const response = await fetch(previewUrl);
-        if (!response.ok) {
-          console.warn(`PDF preview returned status ${response.status}`);
-          if (active) {
-            setLoading(false);
-            setHasError(true);
-          }
-          return;
-        }
-        const data = await response.arrayBuffer();
-        const pdfjs = await import("pdfjs-dist/build/pdf.mjs");
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
-        const pdf = await pdfjs.getDocument({ data }).promise;
-        page = await pdf.getPage(1);
-        if (!active) return;
-        await renderPage();
-        observer = new ResizeObserver(() => {
-          renderPage().catch(() => {});
-        });
-        observer.observe(containerRef.current);
-      } catch (error) {
-        console.warn("Could not render canvas preview:", error);
-        if (active) {
-          setLoading(false);
-          setHasError(true);
-        }
-      }
-    };
-
-    loadPreview();
-    return () => {
-      active = false;
-      observer?.disconnect();
-    };
-  }, [previewUrl]);
-
-  if (hasError) {
-    return (
+  return (
+    <>
       <div className="space-y-2">
-        <div
-          ref={containerRef}
-          className="relative flex min-h-[190px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-border bg-gray-50/80 p-5 text-center dark:border-border dark:bg-zinc-900/60"
-          aria-label={`Preview fallback for ${title}`}
-        >
-          <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-xl mb-2">
-            <HugeIcon className="ph-duotone ph-file-pdf"></HugeIcon>
-          </div>
-          <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Official Document On File</p>
-          <p className="text-[11px] text-gray-400 dark:text-zinc-500 max-w-xs mt-0.5 mb-3">
-            Canvas preview could not be rendered inline. You can preview or download the complete PDF document.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onOpenPreview || (() => previewUrl && window.open(previewUrl, "_blank"))}
-            title="Preview PDF Document"
-            className="h-8 px-3.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all"
-          >
+        <div className="relative h-[360px] w-full overflow-hidden rounded-xl border border-border bg-gray-50 dark:bg-zinc-900">
+          {previewUrl ? <PDFPreview src={previewUrl} title={title || "Official submission PDF"} /> : (
+            <EmptyState variant="compact" icon={File02Icon} title="No Document Attached" description="This submission has no attached PDF." />
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[11px] text-gray-500 dark:text-zinc-400">{subtext}</span>
+          <Button variant="outline" size="sm" disabled={!previewUrl} onClick={() => onOpenPreview ? onOpenPreview() : setPreviewOpen(true)}>
             Preview Document
           </Button>
         </div>
       </div>
-    );
-  }
+      <PDFPreviewModal open={previewOpen} onClose={() => setPreviewOpen(false)} preview={{ url: previewUrl, title: title || "Official submission PDF", subtitle: "Review the complete submitted document." }} />
+    </>
+  );
+}
+
+function OsasRecordList({ items, stream, onSelect, onReview }) {
+  const isPostEvent = stream === "post_events";
+  const columns = isPostEvent ? POST_EVENT_KANBAN_COLUMNS : KANBAN_COLUMNS;
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const groupedItems = useMemo(() => {
+    const groups = new Map(columns.map((column) => [column.key, { ...column, items: [] }]));
+
+    items.forEach((item) => {
+      const normalizedStatus = isPostEvent
+        ? item.status || "Submitted"
+        : normalizeProposalStatus(item.status);
+      const group = groups.get(normalizedStatus);
+      if (group) {
+        group.items.push(item);
+        return;
+      }
+
+      const unknownGroup = groups.get("Other") || {
+        key: "Other",
+        label: "Other",
+        items: [],
+      };
+      unknownGroup.items.push(item);
+      groups.set("Other", unknownGroup);
+    });
+
+    return [...groups.values()].filter((group) => group.items.length > 0);
+  }, [columns, isPostEvent, items]);
 
   return (
-    <div className="space-y-2">
-      <div
-        ref={containerRef}
-        onClick={onOpenPreview}
-        className={cn(
-          "relative flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-gray-50/80 p-2 dark:border-border dark:bg-zinc-900/60 transition-all",
-          onOpenPreview && "cursor-pointer hover:border-pup-maroon/40 hover:shadow-xs group"
-        )}
-        aria-label={`First-page preview of ${title}`}
-      >
-        {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 dark:bg-zinc-900/80 text-gray-400 dark:text-zinc-500">
-            <HugeIcon className="ph-bold ph-spinner animate-spin text-2xl mb-1.5 text-pup-maroon"></HugeIcon>
-            <span className="text-xs font-medium">Rendering document preview...</span>
+    <div className="border-t border-border dark:border-border">
+      {groupedItems.map((group) => {
+        const isExpanded = collapsedGroups[group.key] !== true;
+        const groupId = `osas-${stream}-list-${group.key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+        const groupDotClass = isPostEvent
+          ? getPostEventStatusDotClass(group.key)
+          : getProposalStatusDotClass(group.key);
+
+        return (
+          <section key={group.key} aria-labelledby={`${groupId}-heading`}>
+            <h3 id={`${groupId}-heading`} className="border-b border-border/70 bg-gray-50/80 dark:border-border dark:bg-zinc-900/70">
+              <button
+                type="button"
+                aria-expanded={isExpanded}
+                aria-controls={`${groupId}-items`}
+                onClick={() => setCollapsedGroups((current) => ({ ...current, [group.key]: !isExpanded }))}
+                className="flex min-h-11 w-full items-center gap-2.5 px-5 text-left transition-colors hover:bg-gray-100/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:hover:bg-zinc-800/80 dark:focus-visible:ring-red-400 sm:px-6"
+              >
+                <ArrowDown01Icon
+                  size="1em"
+                  className={cn("shrink-0 text-sm text-gray-500 transition-transform dark:text-zinc-400", !isExpanded && "-rotate-90")}
+                  aria-hidden="true"
+                />
+                <span className={cn("h-2 w-2 shrink-0 rounded-full", groupDotClass)} aria-hidden="true" />
+                <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100">{group.label}</span>
+                <span className="text-[11px] font-medium tabular-nums text-gray-500 dark:text-zinc-400">{group.items.length}</span>
+              </button>
+            </h3>
+            {isExpanded && (
+              <div id={`${groupId}-items`} role="list">
+                {group.items.map((item) => {
+        const title = isPostEvent ? item.event_title : item.title;
+        const organization = isPostEvent
+          ? item.organization_name
+          : item.verified_org_name || item.organization_name;
+        const submittedBy = item.student_name || item.submitted_by_name || "Unknown submitter";
+        const submitterId = item.submitted_by_email || item.student_no;
+        const status = item.status || (isPostEvent ? "Submitted" : "");
+        const statusClass = isPostEvent
+          ? getPostEventStatusBadgeClass(status)
+          : getProposalStatusBadgeClass(status);
+        const date = item.created_at
+          ? new Date(item.created_at).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "Date unavailable";
+        const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
+        const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
+
+        return (
+          <div
+            key={item.id}
+            role="listitem"
+            className="flex items-center gap-4 border-b border-border/70 px-5 py-4 last:border-b-0 dark:border-border sm:px-6"
+          >
+            <button
+              type="button"
+              onClick={() => onSelect(item)}
+              className="group min-w-0 flex-1 cursor-pointer text-left"
+              aria-label={`Open ${isPostEvent ? "report" : "proposal"} ${title || `#${item.id}`}`}
+            >
+              <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+                <span className="shrink-0 font-sans text-[11px] font-semibold tabular-nums text-gray-400 dark:text-zinc-500">
+                  #{item.id}
+                </span>
+                <span className="truncate text-[13px] font-semibold text-gray-900 transition-colors group-hover:text-pup-maroon dark:text-zinc-100 dark:group-hover:text-red-400">
+                  {title || "Untitled submission"}
+                </span>
+                <span className="truncate text-xs text-gray-600 dark:text-zinc-400">
+                  {item.org_acronym ? `${item.org_acronym} · ` : ""}{organization || "Organization unavailable"}
+                </span>
+              </div>
+              <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-zinc-500">
+                <span className="truncate">{submittedBy}{submitterId ? ` · ${submitterId}` : ""}</span>
+                {isPostEvent ? (
+                  <span className="tabular-nums">
+                    {Number(attendees).toLocaleString()} attendees · ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
+                  </span>
+                ) : (
+                  <>
+                    {item.officer_position && <span>{item.officer_position}</span>}
+                    {item.has_bylaws != null && <span>CBL {item.has_bylaws ? "active" : "missing"}</span>}
+                    {item.post_event_status && item.status === "Approved" && <span>Post-event: {item.post_event_status}</span>}
+                  </>
+                )}
+              </div>
+            </button>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", statusClass)}>
+                <span className={cn("h-1.5 w-1.5 rounded-full", isPostEvent ? getPostEventStatusDotClass(status) : getProposalStatusDotClass(status))} />
+                {status}
+              </span>
+              <span className="hidden text-[11px] text-gray-500 dark:text-zinc-500 sm:inline">{date}</span>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => onReview(item)}
+                  aria-label={`Review ${isPostEvent ? "report" : "proposal"} ${item.id}`}
+                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                >
+                  <ClipboardIcon size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{isPostEvent ? "Review Clearance" : "Review Proposal"}</TooltipContent>
+            </Tooltip>
           </div>
-        )}
-        <canvas ref={canvasRef} className="rounded shadow-xs max-h-[360px] object-contain group-hover:opacity-95 transition-opacity" />
-        {onOpenPreview && !loading && (
-          <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1 shadow-sm">
-            <HugeIcon className="ph-bold ph-magnifying-glass-plus"></HugeIcon>
-            <span>Click to Preview</span>
-          </div>
-        )}
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] text-gray-400 dark:text-zinc-500">{subtext}</span>
-        <button
-          type="button"
-          onClick={onOpenPreview || (() => previewUrl && window.open(previewUrl, "_blank"))}
-          title="Preview Full PDF"
-          className="text-xs font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
-        >
-          Preview
-        </button>
-      </div>
+        );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
+}
+
+function getTableSortValue(item, column, stream) {
+  const isPostEvent = stream === "post_events";
+
+  switch (column) {
+    case "id":
+      return Number(item.id) || 0;
+    case "event":
+      return `${(isPostEvent ? item.event_title : item.title) || ""} ${item.verified_org_name || item.organization_name || ""}`;
+    case "proponent":
+      return item.student_name || item.submitted_by_name || "";
+    case "status":
+      return isPostEvent ? item.status || "Submitted" : normalizeProposalStatus(item.status);
+    case "attendance":
+      return Number(item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0);
+    case "submitted": {
+      if (!item.created_at) return Number.NEGATIVE_INFINITY;
+      const submittedAt = new Date(item.created_at).getTime();
+      return Number.isFinite(submittedAt) ? submittedAt : Number.NEGATIVE_INFINITY;
+    }
+    default:
+      return "";
+  }
+}
+
+function sortTableRecords(items, stream, sortBy, sortOrder) {
+  if (!sortBy) return items;
+
+  const direction = sortOrder === "ASC" ? 1 : -1;
+  return [...items].sort((left, right) => {
+    const leftValue = getTableSortValue(left, sortBy, stream);
+    const rightValue = getTableSortValue(right, sortBy, stream);
+    const comparison = typeof leftValue === "number" && typeof rightValue === "number"
+      ? leftValue - rightValue
+      : String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true, sensitivity: "base" });
+    return comparison * direction;
+  });
 }
 
 export default function OsasMonitoringTab({ showToast }) {
@@ -320,12 +418,14 @@ export default function OsasMonitoringTab({ showToast }) {
   }, []);
 
   const [activeStream, setActiveStream] = useState("proposals"); // "proposals" | "post_events"
-  const [viewMode, setViewMode] = useState("list"); // "list" | "kanban"
+  const [viewMode, setViewMode] = useState("table"); // "list" | "table" | "kanban"
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
   const [statusFilters, setStatusFilters] = useState([]);
   const [orgFilters, setOrgFilters] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [tableSortBy, setTableSortBy] = useState("");
+  const [tableSortOrder, setTableSortOrder] = useState("ASC");
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [page, setPage] = useUrlPage();
@@ -334,15 +434,36 @@ export default function OsasMonitoringTab({ showToast }) {
   const [dragOverColumn, setDragOverColumn] = useState(null);
   const isDraggingRef = useRef(false);
 
-  // Horizontal scroll container ref & scroll helper for list/table view
+  // Table and Kanban board scroll containers
   const tableContainerRef = useRef(null);
+  const kanbanScrollRef = useRef(null);
   const [isScrolledX, setIsScrolledX] = useState(false);
+  const [kanbanCanScrollLeft, setKanbanCanScrollLeft] = useState(false);
 
-  const scrollTable = useCallback((direction) => {
-    if (tableContainerRef.current) {
-      const amount = direction === "left" ? -400 : 400;
-      tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
+  const handleTableSort = useCallback((column) => {
+    if (tableSortBy === column) {
+      setTableSortOrder((current) => (current === "ASC" ? "DESC" : "ASC"));
+    } else {
+      setTableSortBy(column);
+      setTableSortOrder("ASC");
     }
+    setPage(1);
+  }, [setPage, tableSortBy]);
+
+  const scrollActiveView = useCallback((direction, amount = 400) => {
+    const scrollRef = viewMode === "kanban" ? kanbanScrollRef : tableContainerRef;
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+    }
+  }, [viewMode]);
+
+  const resetActiveViewScroll = useCallback(() => {
+    const scrollRef = viewMode === "kanban" ? kanbanScrollRef : tableContainerRef;
+    scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+  }, [viewMode]);
+
+  const handleKanbanScrollBoundsChange = useCallback(({ canScrollLeft }) => {
+    setKanbanCanScrollLeft(canScrollLeft);
   }, []);
 
   const resetTableScroll = useCallback(() => {
@@ -365,8 +486,15 @@ export default function OsasMonitoringTab({ showToast }) {
   useEffect(() => {
     const timer = setTimeout(() => {
     try {
-      const saved = localStorage.getItem("pup_osas_view_mode");
-      if (saved === "list" || saved === "kanban") setViewMode(saved);
+      const saved = localStorage.getItem("pup_osas_view_mode_v2");
+      const legacySaved = localStorage.getItem("pup_osas_view_mode");
+      if (saved === "list" || saved === "table" || saved === "kanban") {
+        setViewMode(saved);
+      } else if (legacySaved === "list" || legacySaved === "kanban") {
+        const migratedMode = legacySaved === "list" ? "table" : "kanban";
+        setViewMode(migratedMode);
+        localStorage.setItem("pup_osas_view_mode_v2", migratedMode);
+      }
     } catch {}
     }, 0);
     return () => clearTimeout(timer);
@@ -376,7 +504,7 @@ export default function OsasMonitoringTab({ showToast }) {
     setViewMode(mode);
     setPage(1);
     try {
-      localStorage.setItem("pup_osas_view_mode", mode);
+      localStorage.setItem("pup_osas_view_mode_v2", mode);
     } catch {}
   };
 
@@ -831,39 +959,44 @@ export default function OsasMonitoringTab({ showToast }) {
     return filterTabs;
   }, [activeStream, postEventFilterTabs, filterTabs]);
 
-  const availableOrgs = useMemo(() => {
-    const orgs = new Set();
-    rows.forEach((r) => {
-      if (r.organization_name) orgs.add(r.organization_name);
-    });
-    postEventReports.forEach((r) => {
-      if (r.organization_name) orgs.add(r.organization_name);
-    });
-    return Array.from(orgs).sort();
-  }, [rows, postEventReports]);
+  const filterGroups = useMemo(() => {
+    const filterRecords = activeStream === "post_events" ? postEventReports : rows;
+    const statusColors = {
+      Submitted: "bg-blue-500",
+      "Under Review": "bg-amber-500",
+      "Needs Revision": "bg-purple-500",
+      Approved: "bg-emerald-500",
+      Cleared: "bg-emerald-500",
+      Declined: "bg-rose-500",
+    };
+    const organizations = Array.from(
+      new Set(filterRecords.map((record) => record.organization_name).filter(Boolean))
+    ).sort();
 
-  const filterGroups = useMemo(() => [
-    {
-      id: "status",
-      label: "Review Status",
-      options: [
-        { value: "Submitted", label: "Submitted", indicatorColor: "bg-blue-500", count: counts.Submitted },
-        { value: "Under Review", label: "Under Review", indicatorColor: "bg-amber-500", count: counts["Under Review"] },
-        { value: "Needs Revision", label: "Needs Revision", indicatorColor: "bg-purple-500", count: counts["Needs Revision"] },
-        { value: "Approved", label: "Approved", indicatorColor: "bg-emerald-500", count: counts.Approved },
-        { value: "Declined", label: "Declined", indicatorColor: "bg-rose-500", count: counts.Declined },
-      ],
-    },
-    {
-      id: "org",
-      label: "Organization",
-      options: availableOrgs.map((org) => ({
-        value: org,
-        label: org,
-        count: rows.filter((r) => r.organization_name === org).length,
-      })),
-    },
-  ], [counts, availableOrgs, rows]);
+    return [
+      {
+        id: "status",
+        label: "Review Status",
+        options: currentFilterTabs
+          .filter((tab) => tab.key !== "All")
+          .map((tab) => ({
+            value: tab.key,
+            label: tab.label,
+            count: tab.count,
+            indicatorColor: statusColors[tab.key],
+          })),
+      },
+      {
+        id: "org",
+        label: "Organization",
+        options: organizations.map((org) => ({
+          value: org,
+          label: org,
+          count: filterRecords.filter((record) => record.organization_name === org).length,
+        })),
+      },
+    ];
+  }, [activeStream, currentFilterTabs, rows, postEventReports]);
 
   const filterValues = useMemo(() => ({
     status: statusFilters,
@@ -941,7 +1074,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const filteredPostEvents = useMemo(() => {
     return postEventReports.filter((item) => {
       if (statusFilters.length > 0) {
-        const matches = statusFilters.some((sf) => String(sf).toLowerCase() === String(item.status || "").toLowerCase());
+        const matches = statusFilters.some((sf) => String(sf).toLowerCase() === String(item.status || "Submitted").toLowerCase());
         if (!matches) return false;
       }
       if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
@@ -958,6 +1091,15 @@ export default function OsasMonitoringTab({ showToast }) {
     });
   }, [postEventReports, statusFilters, orgFilters, searchQuery]);
 
+  const sortedRows = useMemo(
+    () => sortTableRecords(filteredRows, "proposals", tableSortBy, tableSortOrder),
+    [filteredRows, tableSortBy, tableSortOrder]
+  );
+  const sortedPostEvents = useMemo(
+    () => sortTableRecords(filteredPostEvents, "post_events", tableSortBy, tableSortOrder),
+    [filteredPostEvents, tableSortBy, tableSortOrder]
+  );
+
   const activeFilteredList = useMemo(() => {
     if (activeStream === "post_events") return filteredPostEvents;
     return filteredRows;
@@ -968,18 +1110,21 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const paginatedRows = useMemo(() => {
     const start = (safePage - 1) * itemsPerPage;
-    return filteredRows.slice(start, start + itemsPerPage);
-  }, [filteredRows, safePage, itemsPerPage]);
+    return sortedRows.slice(start, start + itemsPerPage);
+  }, [sortedRows, safePage, itemsPerPage]);
 
   const paginatedPostEvents = useMemo(() => {
     const start = (safePage - 1) * itemsPerPage;
-    return filteredPostEvents.slice(start, start + itemsPerPage);
-  }, [filteredPostEvents, safePage, itemsPerPage]);
+    return sortedPostEvents.slice(start, start + itemsPerPage);
+  }, [sortedPostEvents, safePage, itemsPerPage]);
 
   // Track horizontal scroll state on the table container
   useEffect(() => {
     const el = tableContainerRef.current;
-    if (!el) return;
+    if (!el) {
+      setIsScrolledX(false);
+      return;
+    }
     const handleScroll = () => {
       setIsScrolledX(el.scrollLeft > 20);
     };
@@ -990,9 +1135,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
   // Auto reset scroll to start when stream, view, page, search, or filters change
   useEffect(() => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
-    }
+    tableContainerRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    kanbanScrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
   }, [activeStream, viewMode, page, searchQuery, statusFilters, orgFilters]);
 
   const getProposalsForColumn = (columnKey) => {
@@ -1104,7 +1248,7 @@ export default function OsasMonitoringTab({ showToast }) {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Page Header */}
         <PageHeader
-          icon="ph-calendar-check"
+          icon="CalendarCheckIn01Icon"
           title="OSAS Monitoring"
           description="Review student organization event proposals and post-event liquidation reports."
           showBorder={false}
@@ -1119,30 +1263,47 @@ export default function OsasMonitoringTab({ showToast }) {
                   <button
                     type="button"
                     onClick={() => handleViewModeChange("list")}
+                    aria-pressed={viewMode === "list"}
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                       viewMode === "list"
                         ? "bg-pup-maroon text-white shadow-xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
-                    title="Show each item in its own row"
+                    title="Show submissions as compact rows"
                   >
-                    <HugeIcon className="ph-bold ph-list-dashes text-sm" />
+                    <ViewModeIcon mode="list" className="text-sm" />
                     <span>List</span>
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleViewModeChange("table")}
+                    aria-pressed={viewMode === "table"}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                      viewMode === "table"
+                        ? "bg-pup-maroon text-white shadow-xs"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    )}
+                    title="Show submissions in rows and columns"
+                  >
+                    <ViewModeIcon mode="table" className="text-sm" />
+                    <span>Table</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleViewModeChange("kanban")}
+                    aria-pressed={viewMode === "kanban"}
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                       viewMode === "kanban"
                         ? "bg-pup-maroon text-white shadow-xs"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                     )}
-                    title="Show items grouped by their current stage"
+                    title="Show submissions on a Kanban board, grouped by stage"
                   >
-                    <HugeIcon className="ph-bold ph-kanban text-sm" />
-                    <span>By Stage</span>
+                    <ViewModeIcon mode="kanban" className="text-sm" />
+                    <span>Kanban</span>
                   </button>
                 </div>
               )}
@@ -1152,125 +1313,61 @@ export default function OsasMonitoringTab({ showToast }) {
           }
         />
 
-        {/* 2. Stream Navigation Switcher */}
-        <div className="px-6 py-3 border-t border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 p-1 bg-gray-200/60 dark:bg-zinc-800/80 rounded-xl border border-border/80 dark:border-border w-full sm:w-fit overflow-x-auto scrollbar-none">
+        {/* 2. Stream, Search, Filter, and Horizontal Scroll Toolbar */}
+        <div className="border-t border-border dark:border-border bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex w-full items-center gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-gray-200/60 p-1 scrollbar-none dark:border-border dark:bg-zinc-800/80 xl:w-fit">
             <button
               type="button"
               onClick={() => {
                 setActiveStream("proposals");
                 setStatusFilters([]);
+                setOrgFilters([]);
                 setSearchQuery("");
                 setPage(1);
               }}
+              aria-pressed={activeStream === "proposals"}
               className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shrink-0",
+                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 activeStream === "proposals"
                   ? "bg-pup-maroon text-white shadow-xs"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                  : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
               )}
             >
-              <HugeIcon className="ph-bold ph-calendar-check text-sm" />
+              <CalendarCheckIn01Icon size="1em" className="text-sm" />
               <span>Pre-Event Proposals</span>
-              <span
-                className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4.5 text-center",
-                  activeStream === "proposals"
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                )}
-              >
+              <span className={cn("min-w-4.5 rounded-full px-1.5 py-0.2 text-center text-[10px] font-bold", activeStream === "proposals" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300")}>
                 {rows.length}
               </span>
             </button>
-
             <button
               type="button"
               onClick={() => {
                 setActiveStream("post_events");
                 setStatusFilters([]);
+                setOrgFilters([]);
                 setSearchQuery("");
                 setPage(1);
               }}
+              aria-pressed={activeStream === "post_events"}
               className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shrink-0",
+                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 activeStream === "post_events"
                   ? "bg-pup-maroon text-white shadow-xs"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                  : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
               )}
             >
-              <HugeIcon className="ph-bold ph-clipboard-text text-sm" />
+              <ClipboardIcon size="1em" className="text-sm" />
               <span>Post-Event & Liquidation</span>
-              <span
-                className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4.5 text-center",
-                  activeStream === "post_events"
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                )}
-              >
+              <span className={cn("min-w-4.5 rounded-full px-1.5 py-0.2 text-center text-[10px] font-bold", activeStream === "post_events" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300")}>
                 {postEventReports.length}
               </span>
             </button>
           </div>
-        </div>
 
-        {/* 3. Embedded Filter Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Status Filter Tabs */}
-          {viewMode === "list" ? (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-              {currentFilterTabs.map((tab) => {
-                const isActive =
-                  tab.key === "All"
-                    ? statusFilters.length === 0
-                    : statusFilters.length === 1 && statusFilters[0] === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => {
-                      setStatusFilters(tab.key === "All" ? [] : [tab.key]);
-                      setPage(1);
-                    }}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border shrink-0",
-                      isActive
-                        ? "bg-pup-maroon text-white border-pup-maroon shadow-xs"
-                        : "bg-white text-gray-600 border-border hover:bg-gray-50 hover:text-gray-900 dark:bg-zinc-900 dark:text-zinc-400 dark:border-border dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-                    )}
-                  >
-                    <span>{tab.label}</span>
-                    <span
-                      className={cn(
-                        "inline-flex items-center justify-center px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4.5",
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                      )}
-                    >
-                      {tab.count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-xs text-gray-900 dark:text-zinc-300 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 font-medium">
-                <HugeIcon className="ph-bold ph-kanban text-sm text-pup-maroon dark:text-red-400" />
-                <span>
-                  Pipeline: <strong className="text-gray-900 dark:text-zinc-100">{activeStream === "post_events" ? postEventReports.length : rows.length}</strong> total {activeStream === "post_events" ? "reports" : "proposals"} across stages
-                </span>
-              </span>
-            </div>
-          )}
-
-          {/* Search Input + Multi-Criteria Filter */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
-            <div className="relative w-full sm:w-64 md:w-72 shrink-0 group">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end xl:flex-1">
+            <div className="relative w-full shrink-0 group sm:w-60 md:w-64">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 text-xs transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 text-xs transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
               </div>
               <Input
                 type="text"
@@ -1293,21 +1390,30 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
             </div>
 
-            {activeStream === "proposals" && (
-              <MultiCriteriaFilter
-                title="Filter Proposals"
-                groups={filterGroups}
-                selectedValues={filterValues}
-                onChange={handleFilterChange}
-                onClearAll={handleClearFilters}
-                totalCount={rows.length}
-                filteredCount={filteredRows.length}
+            <MultiCriteriaFilter
+              title={activeStream === "proposals" ? "Filter Proposals" : "Filter Post-Event Reports"}
+              buttonLabel={activeStream === "proposals" ? "Filter Events" : "Filter Reports"}
+              headerTitle={activeStream === "proposals" ? "Filter Proposals" : "Filter Post-Event Reports"}
+              groups={filterGroups}
+              selectedValues={filterValues}
+              onChange={handleFilterChange}
+              onClearAll={handleClearFilters}
+            />
+
+            {(viewMode === "table" || viewMode === "kanban") && (
+              <TableScrollControls
+                isScrolledX={viewMode === "table" ? isScrolledX : kanbanCanScrollLeft}
+                label="Scroll columns:"
+                scrollTargetLabel={viewMode === "kanban" ? "Kanban board" : "table"}
+                onResetScroll={resetActiveViewScroll}
+                onScrollLeft={(amount) => scrollActiveView("left", amount)}
+                onScrollRight={(amount) => scrollActiveView("right", amount)}
               />
             )}
           </div>
         </div>
 
-        {/* 4. Active Filter Chips & Horizontal Scroll Controls */}
+        {/* 3. Active Filter Chips */}
         <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex-1 min-w-0">
             <ActiveFilterChips
@@ -1316,62 +1422,13 @@ export default function OsasMonitoringTab({ showToast }) {
               className="p-0 border-0"
             />
           </div>
-          {viewMode === "list" && (
-            <div className="flex items-center gap-2 shrink-0 select-none">
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-zinc-500 mr-1">
-                <HugeIcon className="ph-bold ph-arrows-left-right text-xs text-pup-maroon dark:text-red-400" />
-                <span>Scroll columns:</span>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetTableScroll}
-                disabled={!isScrolledX}
-                className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                title="Reset horizontal scroll to default"
-              >
-                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
-                <span>Reset Scroll</span>
-              </Button>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => scrollTable("left")}
-                    className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
-                    aria-label="Scroll table left"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Scroll Left</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => scrollTable("right")}
-                    className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
-                    aria-label="Scroll table right"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Scroll Right</TooltipContent>
-              </Tooltip>
-            </div>
-          )}
         </div>
 
-        {/* 5. Stream Content */}
+        {/* 4. Stream Content */}
         {/* STREAM 1: Pre-Event Proposals */}
         {activeStream === "proposals" && (
           <>
-            {viewMode === "list" ? (
+            {viewMode === "table" ? (
               filteredRows.length === 0 ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
                   <Empty>
@@ -1411,9 +1468,18 @@ export default function OsasMonitoringTab({ showToast }) {
                   <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                        <th
+                          aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
+                          className={cn(
+                            "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
+                        >
                           <div className="flex items-center justify-between gap-1">
-                            <span>Proposal ID</span>
+                            <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
+                              <span>Proposal ID</span>
+                              <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
+                            </button>
                             {isScrolledX && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1423,7 +1489,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
                                     aria-label="Reset scroll to start"
                                   >
-                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                    <ReloadIcon size="1em" className="text-xs" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
@@ -1431,10 +1497,10 @@ export default function OsasMonitoringTab({ showToast }) {
                             )}
                           </div>
                         </th>
-                        <th className="py-3.5 px-6 w-[36%] whitespace-nowrap">Event Proposal & Organization</th>
-                        <th className="py-3.5 px-6 w-[21%] whitespace-nowrap">Proponent</th>
-                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap">Status</th>
-                        <th className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                        <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[36%] whitespace-nowrap" />
+                        <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[21%] whitespace-nowrap" />
+                        <SortableTableHeader column="status" label="Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap" />
+                        <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell" />
                         <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
@@ -1445,8 +1511,11 @@ export default function OsasMonitoringTab({ showToast }) {
                           onClick={() => select(item)}
                           className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                         >
-                          <td className="py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[140px] min-w-[140px] max-w-[140px]">
-                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                          <td className={cn(
+                            "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}>
+                            <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
                               #{item.id}
                             </span>
                           </td>
@@ -1523,7 +1592,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     aria-label="Review Proposal"
                                     className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon className="ph-bold ph-clipboard-text text-[16px]" />
+                                    <ClipboardIcon size="1em" className="text-[16px]" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Review Proposal</TooltipContent>
@@ -1536,11 +1605,31 @@ export default function OsasMonitoringTab({ showToast }) {
                   </table>
                 </div>
               </div>
-            )) : filteredRows.length === 0 ? (
+            )) : viewMode === "list" ? (
+              filteredRows.length === 0 ? (
+              <div className="flex w-full flex-1 items-center justify-center border-t border-border dark:border-border">
+                  <EmptyState
+                    icon={hasActiveFilters ? Search01Icon : EmptyCalendarCheckIn01Icon}
+                    title={hasActiveFilters ? "No Proposals Found" : "No Event Proposals Yet"}
+                    description={hasActiveFilters
+                      ? "Adjust your search or reset your filters."
+                      : "Student organization event proposals will appear here after submission."}
+                  >
+                    {hasActiveFilters && (
+                      <Button type="button" variant="outline" onClick={handleClearFilters} className="h-10 rounded-xl px-5 text-xs font-semibold">
+                        Reset Filters
+                      </Button>
+                    )}
+                  </EmptyState>
+                </div>
+              ) : (
+                <OsasRecordList items={paginatedRows} stream="proposals" onSelect={select} onReview={select} />
+              )
+            ) : filteredRows.length === 0 ? (
               <div className="w-full flex-1 flex flex-col items-center justify-center border-t border-border dark:border-border bg-gray-50/20 dark:bg-zinc-900/10 min-h-[420px]">
                 <Empty>
                   <EmptyHeader>
-                    <EmptyMedia><EmptyLayoutGridIcon size="1em" /></EmptyMedia>
+                    <EmptyMedia><ViewModeIcon mode="kanban" /></EmptyMedia>
                     <EmptyTitle>
                       No Proposals in Pipeline
                     </EmptyTitle>
@@ -1580,6 +1669,8 @@ export default function OsasMonitoringTab({ showToast }) {
                 setDragOverColumn={setDragOverColumn}
                 allowedTransitions={ALLOWED_TRANSITIONS}
                 normalizeStatus={normalizeProposalStatus}
+                scrollRef={kanbanScrollRef}
+                onScrollBoundsChange={handleKanbanScrollBoundsChange}
                 isItemLocked={(item) => {
                   const s = normalizeProposalStatus(item.status);
                   return s === "Approved" || s === "Declined";
@@ -1592,7 +1683,7 @@ export default function OsasMonitoringTab({ showToast }) {
         {/* STREAM 2: Post-Event & Liquidation Reports */}
         {activeStream === "post_events" && (
           <>
-            {viewMode === "list" ? (
+            {viewMode === "table" ? (
               filteredPostEvents.length === 0 ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
                   <Empty>
@@ -1632,9 +1723,18 @@ export default function OsasMonitoringTab({ showToast }) {
                   <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th className="py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                        <th
+                          aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
+                          className={cn(
+                            "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
+                        >
                           <div className="flex items-center justify-between gap-1">
-                            <span>Report ID</span>
+                            <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
+                              <span>Report ID</span>
+                              <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
+                            </button>
                             {isScrolledX && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1644,7 +1744,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
                                     aria-label="Reset scroll to start"
                                   >
-                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                    <ReloadIcon size="1em" className="text-xs" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
@@ -1652,11 +1752,11 @@ export default function OsasMonitoringTab({ showToast }) {
                             )}
                           </div>
                         </th>
-                        <th className="py-3.5 px-6 w-[31%] whitespace-nowrap">Event Proposal & Organization</th>
-                        <th className="py-3.5 px-6 w-[19%] whitespace-nowrap">Proponent</th>
-                        <th className="py-3.5 px-6 w-[17%] whitespace-nowrap">Attendance & Spend</th>
-                        <th className="py-3.5 px-6 w-[13%] whitespace-nowrap">Clearance Status</th>
-                        <th className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell">Submitted</th>
+                        <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[31%] whitespace-nowrap" />
+                        <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[19%] whitespace-nowrap" />
+                        <SortableTableHeader column="attendance" label="Attendance & Spend" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[17%] whitespace-nowrap" />
+                        <SortableTableHeader column="status" label="Clearance Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[13%] whitespace-nowrap" />
+                        <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell" />
                         <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
@@ -1670,8 +1770,11 @@ export default function OsasMonitoringTab({ showToast }) {
                             onClick={() => selectPostEvent(item)}
                             className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                           >
-                            <td className="py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[140px] min-w-[140px] max-w-[140px]">
-                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                            <td className={cn(
+                              "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
+                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                            )}>
+                              <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
                                 #{item.id}
                               </span>
                             </td>
@@ -1734,7 +1837,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                       aria-label="Review Clearance"
                                       className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                     >
-                                      <HugeIcon className="ph-bold ph-clipboard-text text-[16px]" />
+                                      <ClipboardIcon size="1em" className="text-[16px]" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Review Clearance</TooltipContent>
@@ -1748,7 +1851,27 @@ export default function OsasMonitoringTab({ showToast }) {
                   </table>
                 </div>
               </div>
-            )) : (
+            )) : viewMode === "list" ? (
+              filteredPostEvents.length === 0 ? (
+              <div className="flex w-full flex-1 items-center justify-center border-t border-border dark:border-border">
+                  <EmptyState
+                    icon={hasActiveFilters ? Search01Icon : EmptyClipboardIcon}
+                    title={hasActiveFilters ? "No Reports Found" : "No Post-Event Reports Yet"}
+                    description={hasActiveFilters
+                      ? "Adjust your search or reset your filters."
+                      : "Post-event liquidation reports will appear here after submission."}
+                  >
+                    {hasActiveFilters && (
+                      <Button type="button" variant="outline" onClick={handleClearFilters} className="h-10 rounded-xl px-5 text-xs font-semibold">
+                        Reset Filters
+                      </Button>
+                    )}
+                  </EmptyState>
+                </div>
+              ) : (
+                <OsasRecordList items={paginatedPostEvents} stream="post_events" onSelect={selectPostEvent} onReview={selectPostEvent} />
+              )
+            ) : (
               /* KANBAN BOARD VIEW FOR POST-EVENTS */
               <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
                 {filteredPostEvents.length === 0 ? (
@@ -1795,6 +1918,8 @@ export default function OsasMonitoringTab({ showToast }) {
                     setDragOverColumn={setDragOverPostEventColumn}
                     allowedTransitions={POST_EVENT_ALLOWED_TRANSITIONS}
                     normalizeStatus={(s) => s || "Submitted"}
+                    scrollRef={kanbanScrollRef}
+                    onScrollBoundsChange={handleKanbanScrollBoundsChange}
                     isItemLocked={(item) => {
                       const s = item.status || "Submitted";
                       return s === "Cleared" || s === "Declined";
@@ -1806,15 +1931,15 @@ export default function OsasMonitoringTab({ showToast }) {
           </>
         )}
 
-        {/* 6. Apple HIG Pagination Footer (Unified for all streams) */}
-        {viewMode === "list" && activeFilteredList.length > 0 && (
+        {/* 5. Apple HIG Pagination Footer (Unified for both record views) */}
+        {viewMode !== "kanban" && activeFilteredList.length > 0 && (
           <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
             <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
               <span>
                 Showing {Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage)} of {activeFilteredList.length.toLocaleString()}
               </span>
               <div className="flex items-center gap-2">
-                <span>Rows:</span>
+                <span>{viewMode === "table" ? "Rows:" : "Items:"}</span>
                 {[10, 20, 50, 100].map((size) => (
                   <button
                     key={size}

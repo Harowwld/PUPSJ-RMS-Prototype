@@ -239,7 +239,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
         isCompliant: true,
         badgeClass:
           "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30",
-        icon: "ph-seal-check",
+        icon: "CheckmarkBadge01Icon",
       };
     }
 
@@ -257,7 +257,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isCompliant: false,
       badgeClass:
         "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30",
-      icon: "ph-clock-afternoon",
+      icon: "Clock01Icon",
     };
   }
 
@@ -273,7 +273,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isDueSoon: false,
       isCompliant: true,
       badgeClass: "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400",
-      icon: "ph-x-circle",
+      icon: "CancelCircleIcon",
     };
   }
 
@@ -297,7 +297,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isCompliant: false,
       badgeClass:
         "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200/50 dark:border-red-800/30",
-      icon: "ph-warning-circle",
+      icon: "Alert01Icon",
     };
   }
 
@@ -319,7 +319,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isCompliant: true,
       badgeClass:
         "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30",
-      icon: "ph-clock-countdown",
+      icon: "HourglassIcon",
     };
   }
 
@@ -335,6 +335,6 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
     isCompliant: true,
     badgeClass:
       "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30",
-    icon: "ph-clock",
+    icon: "Clock01Icon",
   };
 }

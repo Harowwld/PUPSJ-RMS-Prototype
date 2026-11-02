@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -18,7 +18,8 @@ import { isSystemAdminRole, isAdminRole, canAccessPage } from "@/lib/roleUtils";
 import { invalidateClientSession, getClientSession } from "@/lib/clientAuth";
 import { LoginIdentifierSchema, PersonNameSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
-
+import { Alert01Icon, ArrowRight02Icon, CovidInfoIcon, Loading01Icon, UserSearch01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const DEMO_ACCOUNTS = [
   {
     role: "SuperAdmin",
@@ -26,7 +27,7 @@ const DEMO_ACCOUNTS = [
     department: "Institutional IT & Systems",
     email: "superadmin@pup.local",
     badge: "Global",
-    icon: "ph-shield-check",
+    icon: "Shield01Icon",
     accent: "text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700",
     badgeColor: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
   },
@@ -36,7 +37,7 @@ const DEMO_ACCOUNTS = [
     department: "Academic Records & Approvals",
     email: "admin.registrar@pup.local",
     badge: "Registrar",
-    icon: "ph-identification-badge",
+    icon: "Contact01Icon",
     accent: "text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border-amber-200/80 dark:border-amber-900/60",
     badgeColor: "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300",
   },
@@ -46,7 +47,7 @@ const DEMO_ACCOUNTS = [
     department: "Archives, Scanning & Drawer Filing",
     email: "staff.registrar@pup.local",
     badge: "Records",
-    icon: "ph-folder",
+    icon: "Folder01Icon",
     accent: "text-orange-800 dark:text-orange-200 bg-orange-50 dark:bg-orange-950/40 border-orange-200/80 dark:border-orange-900/60",
     badgeColor: "bg-orange-100 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300",
   },
@@ -56,7 +57,7 @@ const DEMO_ACCOUNTS = [
     department: "Good Moral & Clearance Approvals",
     email: "admin.osas@pup.local",
     badge: "OSAS",
-    icon: "ph-users-three",
+    icon: "UserSearch01Icon",
     accent: "text-blue-800 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/40 border-blue-200/80 dark:border-blue-900/60",
     badgeColor: "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
   },
@@ -66,7 +67,7 @@ const DEMO_ACCOUNTS = [
     department: "Event Proposals & Organization Monitoring",
     email: "staff.osas@pup.local",
     badge: "OSAS",
-    icon: "ph-student",
+    icon: "StudentIcon",
     accent: "text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/40 border-sky-200/80 dark:border-sky-900/60",
     badgeColor: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300",
   },
@@ -77,7 +78,7 @@ const DEMO_ACCOUNTS = [
     email: "student@pup.local",
     password: "student123",
     badge: "Student",
-    icon: "ph-graduation-cap",
+    icon: "GraduationScrollIcon",
     accent: "text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-900/60",
     badgeColor: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
   },
@@ -88,7 +89,7 @@ const DEMO_ACCOUNTS = [
     email: "test.student@pup.local",
     password: "student123",
     badge: "Student",
-    icon: "ph-graduation-cap",
+    icon: "GraduationScrollIcon",
     accent: "text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-900/60",
     badgeColor: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
   },
@@ -689,7 +690,7 @@ export default function Home() {
                       {/* EMAIL FIELD (top half) */}
                       <div className={`field-wrapper email-wrapper ${emailFocused || username.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
                         <label htmlFor="username">Email Address or Student Number</label>
-                        <Input
+                        <Input variant="floating"
                           type="text"
                           id="username"
                           aria-label="Email Address or Student Number"
@@ -726,7 +727,7 @@ export default function Home() {
                       }`}>
                         <div className={`field-wrapper password-wrapper ${passwordFocused || password.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
                           <label htmlFor="password">Password</label>
-                          <Input
+                          <Input variant="floating"
                             ref={passwordRef}
                             type={showPassword ? "text" : "password"}
                             id="password"
@@ -751,7 +752,7 @@ export default function Home() {
                               onClick={() => setShowPassword(!showPassword)}
                               className="w-7 h-7 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
                             >
-                              <HugeIcon  className={`ph-bold ${showPassword ? "ph-eye-slash" : "ph-eye"} text-[16px]`}></HugeIcon>
+                              <AppIcon  className={` ${showPassword ? "ViewOffIcon" : "ViewIcon"} text-[16px]`}></AppIcon>
                             </button>
                           </div>
                         </div>
@@ -761,7 +762,7 @@ export default function Home() {
                     {/* Validation Errors displayed below the merged container (Step 1 only) */}
                     {loginStep === 1 && (emailError || passwordError || error) && (
                       <div role="alert" aria-live="polite" className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D]">
-                        <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
+                        <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
                         <p className="text-[12px] font-normal leading-none">
                           {emailError || passwordError || error}
                         </p>
@@ -773,7 +774,7 @@ export default function Home() {
                       <div className="flex items-center justify-between w-full mt-6 select-none animate-in fade-in duration-200">
                         {emailError || passwordError || error ? (
                           <div role="alert" aria-live="polite" className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
-                            <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
+                            <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
                             <p className="text-[12px] font-normal leading-none">
                               {emailError || passwordError || error}
                             </p>
@@ -821,7 +822,7 @@ export default function Home() {
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
                     <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
-                      <HugeIcon  className="ph-bold ph-users text-[23px] text-gray-800 mb-2"></HugeIcon>
+                      <UserSearch01Icon size="1em"  className="text-[23px] text-gray-800 mb-2"></UserSearch01Icon>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
                         Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
                       </p>
@@ -838,7 +839,7 @@ export default function Home() {
                       className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {isLoading ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
+                        <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                       ) : (
                         <span>{loginStep === 1 ? "Continue" : "Sign In"}</span>
                       )}
@@ -861,7 +862,7 @@ export default function Home() {
                       }`}>
                         <div className={`field-wrapper ${forgotIdentifierFocused || forgotIdentifier.length > 0 ? "active" : ""}`}>
                           <label htmlFor="forgotIdentifier">Email Address or Staff ID</label>
-                          <Input
+                          <Input variant="floating"
                             type="text"
                             id="forgotIdentifier"
                             disabled={forgotLoading}
@@ -897,7 +898,7 @@ export default function Home() {
 
                       {forgotError && (
                         <div role="alert" className="mt-1.5 text-left flex items-start gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                          <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
+                          <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
                           <p className="text-[12px] font-normal leading-snug">
                             {forgotError}
                           </p>
@@ -914,7 +915,7 @@ export default function Home() {
                         className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                       >
                         {forgotLoading ? (
-                          <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
+                          <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                         ) : (
                           <span>Request</span>
                         )}
@@ -968,7 +969,7 @@ export default function Home() {
                     </div>
                     <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                       <Button type="submit" disabled={forgotLoading || !forgotQuestionId || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword} className="w-full h-10 disabled:opacity-50">
-                        {forgotLoading ? <HugeIcon className="ph-bold ph-spinner animate-spin text-lg" /> : "Reset Password"}
+                        {forgotLoading ? <Loading01Icon size="1em" className="animate-spin text-lg" /> : "Reset Password"}
                       </Button>
                     </div>
                     <div className="absolute bottom-[38px] left-[52px] right-[52px] text-center">
@@ -1030,7 +1031,7 @@ export default function Home() {
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${firstNameFocused || studentSignup.firstName.length > 0 ? "active" : ""}`}>
                             <label>First Name</label>
-                            <Input
+                            <Input variant="floating"
                               type="text"
                               placeholder=" "
                               className="focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1048,7 +1049,7 @@ export default function Home() {
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${lastNameFocused || studentSignup.lastName.length > 0 ? "active" : ""}`}>
                             <label>Last Name</label>
-                            <Input
+                            <Input variant="floating"
                               type="text"
                               placeholder=" "
                               className="focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1068,7 +1069,7 @@ export default function Home() {
                       {/* Middle Name (Optional) */}
                       <div className={`field-wrapper border-b border-border dark:border-border/50 ${middleNameFocused || studentSignup.middleName.length > 0 ? "active" : ""}`}>
                         <label>Middle Name (Optional)</label>
-                        <Input
+                        <Input variant="floating"
                           type="text"
                           placeholder=" "
                           className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1085,7 +1086,7 @@ export default function Home() {
                       {/* Email Address */}
                       <div className={`field-wrapper border-b border-border dark:border-border/50 ${emailSignupFocused || studentSignup.email.length > 0 ? "active" : ""}`}>
                         <label>Email Address</label>
-                        <Input
+                        <Input variant="floating"
                           type="email"
                           placeholder=" "
                           className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1105,7 +1106,7 @@ export default function Home() {
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${signupPassFocused || studentSignup.password.length > 0 ? "active" : ""}`}>
                             <label>Password (8+ chars)</label>
-                            <Input
+                            <Input variant="floating"
                               type={showSignupPassword ? "text" : "password"}
                               placeholder=" "
                               className="pr-9 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1124,7 +1125,7 @@ export default function Home() {
                                 onClick={() => setShowSignupPassword(!showSignupPassword)}
                                 className="w-6 h-6 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
                               >
-                                <HugeIcon  className={`ph-bold ${showSignupPassword ? "ph-eye-slash" : "ph-eye"} text-[14px]`}></HugeIcon>
+                                <AppIcon  className={` ${showSignupPassword ? "ViewOffIcon" : "ViewIcon"} text-[14px]`}></AppIcon>
                               </button>
                             </div>
                           </div>
@@ -1132,7 +1133,7 @@ export default function Home() {
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${signupConfirmFocused || studentSignup.confirmPassword.length > 0 ? "active" : ""}`}>
                             <label>Confirm Password</label>
-                            <Input
+                            <Input variant="floating"
                               type={showSignupPassword ? "text" : "password"}
                               placeholder=" "
                               className="focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1160,7 +1161,7 @@ export default function Home() {
                     {/* Error message */}
                     {studentSignupError && (
                       <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                        <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
+                        <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
                         <p className="text-[12px] font-normal leading-none">
                           {studentSignupError}
                         </p>
@@ -1176,7 +1177,7 @@ export default function Home() {
                       className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {studentSignupLoading ? (
-                        <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
+                        <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                       ) : (
                         <span>Create eManage Account</span>
                       )}
@@ -1212,7 +1213,7 @@ export default function Home() {
                   <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 group-hover:text-gray-700 dark:group-hover:text-zinc-200 transition-colors">
                     {DEMO_ACCOUNTS.length}
                   </span>
-                  <HugeIcon  className={`ph-bold ph-caret-up text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></HugeIcon>
+                  <AppIcon  className={` ArrowUp01Icon text-[10px] text-gray-400 group-hover:text-gray-600 dark:group-hover:text-zinc-300 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`}></AppIcon>
                 </button>
               </PopoverTrigger>
 
@@ -1265,7 +1266,7 @@ export default function Home() {
                           {acc.email}
                         </p>
                       </div>
-                      <HugeIcon  className="ph-bold ph-arrow-right text-xs text-gray-300 dark:text-zinc-600 group-hover:text-gray-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all"></HugeIcon>
+                      <ArrowRight02Icon size="1em"  className="text-xs text-gray-300 dark:text-zinc-600 group-hover:text-gray-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all"></ArrowRight02Icon>
                     </button>
                   ))}
                 </div>
@@ -1273,7 +1274,7 @@ export default function Home() {
                 {/* Footer info tip */}
                 <div className="px-3.5 py-2 bg-gray-50/70 dark:bg-zinc-800/40 border-t-[0.5px] border-border dark:border-white/10 flex items-center justify-between text-[10px] text-gray-400 dark:text-zinc-400">
                   <span className="flex items-center gap-1">
-                    <HugeIcon  className="ph-bold ph-info text-xs"></HugeIcon>
+                    <CovidInfoIcon size="1em"  className="text-xs"></CovidInfoIcon>
                     1-click instant fill & sign in
                   </span>
                   <span className="font-sans tabular-nums text-[9px] text-gray-400">
@@ -1308,10 +1309,11 @@ export default function Home() {
 
             <form onSubmit={handle2FAVerify} className="space-y-4 mt-2">
               <div className="space-y-2">
-                <label className="block text-xs font-semibold text-gray-700 tracking-wide ml-1 dark:text-zinc-200">
+                <label htmlFor="twoFactorCode" className="block text-xs font-semibold text-gray-700 tracking-wide ml-1 dark:text-zinc-200">
                   Verification Code
                 </label>
                 <Input
+                  variant="verification"
                   type="text"
                   id="twoFactorCode"
                   name="twoFactorCode"
@@ -1320,7 +1322,6 @@ export default function Home() {
                   autoCapitalize="characters"
                   aria-label="Two-factor verification code"
                   placeholder="000000, Recovery Code, or Serial key"
-                  className="w-full bg-white border border-border rounded-[10px] text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5484D] focus-visible:border-border text-center tracking-widest font-semibold h-12 text-lg dark:bg-zinc-800 dark:border-border dark:focus-visible:ring-[#E5484D] dark:focus-visible:border-zinc-700 dark:text-zinc-100"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value)}
                   autoFocus
@@ -1337,7 +1338,7 @@ export default function Home() {
                 >
                   {twoFactorLoading ? (
                     <>
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin"></HugeIcon>
+                      <Loading01Icon size={16}  className="animate-spin"></Loading01Icon>
                       Verifying...
                     </>
                   ) : (

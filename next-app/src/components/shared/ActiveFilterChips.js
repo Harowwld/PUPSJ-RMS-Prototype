@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { cn } from "@/lib/utils";
+import { Cancel01Icon } from "hugeicons-react";
+
 
 /**
  * ActiveFilterChips
@@ -117,7 +119,7 @@ export default function ActiveFilterChips({
             className="w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer ml-0.5"
             aria-label={`Remove filter ${chip.label}`}
           >
-            <HugeIcon className="ph-bold ph-x text-[10px]" />
+            <Cancel01Icon size="1em" className="text-[10px]" />
           </button>
         </span>
       ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { format } from "date-fns";
@@ -36,8 +36,8 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Clock01Icon as EmptyClock01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Clock01Icon as EmptyClock01Icon, Search01Icon as EmptySearch01Icon , ViewIcon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function parseDateLocal(str) {
   if (!str) return undefined;
   const [y, m, d] = str.split("-").map(Number);
@@ -50,7 +50,7 @@ function getSeverityVisual(sev) {
   if (s === "CRITICAL") {
     return {
       label: "Critical",
-      icon: "ph-seal-warning",
+      icon: "Alert01Icon",
       avatarClass: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60",
       chipClass: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
     };
@@ -58,14 +58,14 @@ function getSeverityVisual(sev) {
   if (s === "WARNING") {
     return {
       label: "Warning",
-      icon: "ph-warning",
+      icon: "Alert02Icon",
       avatarClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60",
       chipClass: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     };
   }
   return {
     label: "Info",
-    icon: "ph-info",
+    icon: "CovidInfoIcon",
     avatarClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60",
     chipClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
   };
@@ -317,7 +317,7 @@ export default function MyActivityPanel({ embedded = false }) {
           </div>
         ) : (
           <PageHeader
-            icon="ph-clock-counter-clockwise"
+            icon="Time01Icon"
             title="My Activity"
             description="A personal audit trail of every action your account takes on the system."
             showBorder={false}
@@ -347,7 +347,7 @@ export default function MyActivityPanel({ embedded = false }) {
         <div className="px-6 py-4 border-t border-border dark:border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-wrap">
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+              <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
             </div>
             <Input
               type="text"
@@ -583,7 +583,7 @@ export default function MyActivityPanel({ embedded = false }) {
                               visuals.avatarClass
                             )}
                           >
-                            <HugeIcon className={cn("ph-bold text-base", visuals.icon)} />
+                            <AppIcon className={cn(" text-base", visuals.icon)} />
                           </div>
 
                           <div className="flex flex-col min-w-0 flex-1">
@@ -635,7 +635,7 @@ export default function MyActivityPanel({ embedded = false }) {
                                 className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                                 aria-label="View Details"
                               >
-                                <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                                <ViewIcon size="1em" className="text-[16px]" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>View Details</TooltipContent>

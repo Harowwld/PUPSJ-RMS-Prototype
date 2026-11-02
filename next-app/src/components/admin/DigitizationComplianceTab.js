@@ -1,12 +1,11 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import ComplianceCalcSkeleton from "@/components/admin/skeletons/ComplianceCalcSkeleton";
 import ComplianceTableSkeleton from "@/components/admin/skeletons/ComplianceTableSkeleton";
@@ -32,23 +31,8 @@ import {
   EmptyContent,
 } from "@/components/ui/empty";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import ReportPreviewDialog from "@/components/shared/ReportPreviewDialog";
+import ComplianceStudentsSheet from "@/components/shared/ComplianceStudentsSheet";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
@@ -56,47 +40,18 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import useTableScroll from "@/hooks/useTableScroll";
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
-import ProfileAvatar from "@/components/shared/ProfileAvatar";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Files01Icon as EmptyFiles01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Files01Icon as EmptyFiles01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, CovidInfoIcon, DragDropIcon, Loading01Icon, PieChartIcon, ReloadIcon, Target01Icon, UserSearch01Icon, Search01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
-      <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
     );
   }
   return sortOrder === "asc" ? (
-    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-pup-maroon dark:text-primary" />
   ) : (
-    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary" />
-  );
-}
-
-/**
- * Standard Information Row (label : value)
- * Clean metadata layout aligned with colons and icons.
- */
-function InfoRow({ icon, label, value, children, className }) {
-  return (
-    <div
-      className={cn(
-        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
-        className
-      )}
-    >
-      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
-        {icon && (
-          <span className="text-gray-400 dark:text-zinc-500 text-sm shrink-0 flex items-center">
-            {icon}
-          </span>
-        )}
-        <span className="truncate">{label}</span>
-      </div>
-      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
-      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
-        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
-      </div>
-    </div>
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-pup-maroon dark:text-primary" />
   );
 }
 
@@ -124,7 +79,6 @@ function DigitizationComplianceContent({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pdfPreviewFrameRef = useRef(null);
   const [page, setPage] = useUrlPage({ enabled: true });
 
   const [kpiOrder, setKpiOrder] = useState(["completeness","students","complete"]);
@@ -140,7 +94,7 @@ function DigitizationComplianceContent({
       .map((c) => c.trim())
       .filter(Boolean);
   });
-  const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") === "1");
+  const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") !== "0");
 
   const [courses, setCourses] = useState([]);
   const [data, setData] = useState(null);
@@ -149,16 +103,12 @@ function DigitizationComplianceContent({
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
-  const [previewFrameReady, setPreviewFrameReady] = useState(false);
-  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState(null);
   const statCardsRef = useRef(null);
   const [missingDialog, setMissingDialog] = useState(null);
-  const [missingStudentsData, setMissingStudentsData] = useState(null);
-  const [missingStudentsLoading, setMissingStudentsLoading] = useState(false);
-  const [missingStudentsError, setMissingStudentsError] = useState("");
+  const loadController = useRef(null);
 
   useEffect(() => {
     if (!selectedKpi) return;
@@ -226,26 +176,31 @@ function DigitizationComplianceContent({
     if (Array.isArray(courseFilter) && courseFilter.length > 0) {
       params.set("courseCode", courseFilter.join(","));
     }
-    if (requireApproved) params.set("requireApproved", "1");
+    params.set("requireApproved", requireApproved ? "1" : "0");
+    if (officeId) params.set("officeId", officeId);
     return params.toString();
-  }, [statusFilter, courseFilter, requireApproved]);
+  }, [statusFilter, courseFilter, requireApproved, officeId]);
 
   const load = useCallback(async (isManual = false) => {
+    loadController.current?.abort();
+    const controller = new AbortController();
+    loadController.current = controller;
     if (isManual) setManualLoading(true);
     setLoading(true);
     setError("");
     try {
       const qs = buildQueryString();
       const [res] = await Promise.all([
-        fetch(`/api/analytics/digitization-compliance?${qs}`, { cache: "no-store" }),
+        fetch(`/api/analytics/digitization-compliance?${qs}`, { cache: "no-store", signal: controller.signal }),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ]);
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load compliance data");
       }
-      setData(json.data);
+      if (!controller.signal.aborted) setData(json.data);
     } catch (e) {
+      if (controller.signal.aborted) return;
       setData(null);
       setError(e?.message || "Load failed");
       showToast?.(
@@ -255,79 +210,22 @@ function DigitizationComplianceContent({
         true
       );
     } finally {
-      setLoading(false);
-      setManualLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+        setManualLoading(false);
+      }
     }
   }, [buildQueryString, showToast]);
 
-  const loadMissingStudents = useCallback(async (documentType, offset = 0) => {
-    if (!documentType) return;
-    setMissingStudentsLoading(true);
-    setMissingStudentsError("");
-    try {
-      const params = new URLSearchParams({
-        documentTypeId: String(documentType.documentTypeId),
-        status: statusFilter,
-        limit: "20",
-        offset: String(offset),
-      });
-      if (Array.isArray(courseFilter) && courseFilter.length) {
-        params.set("courseCode", courseFilter.join(","));
-      }
-      if (requireApproved) params.set("requireApproved", "1");
-      if (officeId) params.set("officeId", officeId);
+  const openMissingStudents = useCallback((documentType) => setMissingDialog(documentType), []);
 
-      const response = await fetch(
-        `/api/analytics/digitization-compliance/missing-students?${params}`,
-        { cache: "no-store" },
-      );
-      const json = await response.json().catch(() => null);
-      if (!response.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to load students missing this document");
-      }
-      setMissingStudentsData(json.data);
-    } catch (loadError) {
-      setMissingStudentsData(null);
-      setMissingStudentsError(loadError?.message || "Failed to load students");
-    } finally {
-      setMissingStudentsLoading(false);
-    }
-  }, [courseFilter, officeId, requireApproved, statusFilter]);
-
-  const openMissingStudents = useCallback((documentType) => {
-    setMissingDialog(documentType);
-    setMissingStudentsData(null);
-    loadMissingStudents(documentType);
-  }, [loadMissingStudents]);
+  useEffect(() => () => loadController.current?.abort(), []);
 
   const docTypeItems = useMemo(() => {
     return [...(data?.missingByDocumentType || [])].sort(
       (a, b) => b.missingStudents - a.missingStudents || a.documentType.localeCompare(b.documentType),
     );
   }, [data?.missingByDocumentType]);
-
-  const currentDocIndex = useMemo(() => {
-    if (!missingDialog) return -1;
-    return docTypeItems.findIndex(
-      (item) => item.documentTypeId === missingDialog.documentTypeId || item.documentType === missingDialog.documentType
-    );
-  }, [docTypeItems, missingDialog]);
-
-  const totalDocCount = docTypeItems.length;
-
-  const handleNavigatePrevDoc = useCallback(() => {
-    if (currentDocIndex > 0) {
-      const prevDoc = docTypeItems[currentDocIndex - 1];
-      openMissingStudents(prevDoc);
-    }
-  }, [currentDocIndex, docTypeItems, openMissingStudents]);
-
-  const handleNavigateNextDoc = useCallback(() => {
-    if (currentDocIndex < totalDocCount - 1) {
-      const nextDoc = docTypeItems[currentDocIndex + 1];
-      openMissingStudents(nextDoc);
-    }
-  }, [currentDocIndex, totalDocCount, docTypeItems, openMissingStudents]);
 
   const firstLoadRef = useRef(true);
   useEffect(() => {
@@ -337,7 +235,7 @@ function DigitizationComplianceContent({
     const oldStatus = params.get("status") || "Active";
     const oldCourse = params.get("course") || "";
     const currentCourse = Array.isArray(courseFilter) ? courseFilter.join(",") : "";
-    const oldApproved = params.get("approved") || "0";
+    const oldApproved = params.get("approved") || "1";
     const currentView = params.get("view");
 
     // Only update if something actually changed
@@ -351,7 +249,7 @@ function DigitizationComplianceContent({
         params.set("view", "digitization");
         params.set("status", statusFilter);
         if (currentCourse) params.set("course", currentCourse); else params.delete("course");
-        if (requireApproved) params.set("approved", "1"); else params.delete("approved");
+        params.set("approved", requireApproved ? "1" : "0");
 
         const newUrl = `${window.location.pathname}?${params.toString()}`;
         router.replace(newUrl, { scroll: false });
@@ -362,7 +260,7 @@ function DigitizationComplianceContent({
     const id = setTimeout(() => {
       load();
     }, delay);
-    return () => clearTimeout(id);
+    return () => { clearTimeout(id); loadController.current?.abort(); };
   }, [statusFilter, courseFilter, requireApproved, load, router]);
 
   const summary = data?.summary;
@@ -482,26 +380,6 @@ function DigitizationComplianceContent({
     showToast?.({ title: "Report Downloaded", description: "The Compliance report has been successfully downloaded." });
   };
 
-  const handlePrintReport = () => {
-    const printWindow = pdfPreviewFrameRef.current?.contentWindow;
-    if (!printWindow || !previewFrameReady) {
-      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true);
-      return;
-    }
-
-    try {
-      printWindow.focus();
-      printWindow.print();
-      onLogAction?.({
-        action: "Print Report",
-        details: "opened print dialog for the physical record compliance report",
-        entityType: "Report",
-      });
-    } catch (e) {
-      console.error("Compliance report printing failed:", e);
-      showToast?.(formatErrorMessage(e, { defaultTitle: "Report Printing Failed" }), true);
-    }
-  };
 
   const downloadCsv = useCallback(async () => {
     if (!summary) return;
@@ -580,7 +458,7 @@ function DigitizationComplianceContent({
   const handleClearAll = useCallback(() => {
     setStatusFilter("Active");
     setCourseFilter([]);
-    setRequireApproved(false);
+    setRequireApproved(true);
     setTableSearch("");
   }, []);
 
@@ -629,14 +507,14 @@ function DigitizationComplianceContent({
   }, [courses, statusFilter, courseFilter, requireApproved]);
 
 
-  const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || requireApproved || tableSearch !== "";
+  const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || !requireApproved || tableSearch !== "";
 
   return (
     <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up font-jakarta">
       {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-chart-pie"
+          icon="PieChartIcon"
           title="Compliance Analysis"
           description="Monitor digitization completeness."
           showBorder={false}
@@ -662,7 +540,7 @@ function DigitizationComplianceContent({
                   className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isExportingCsv ? (
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                    <Loading01Icon size="1em"  className="animate-spin text-[16px]"></Loading01Icon>
                   ) : (
                     "Export CSV"
                   )}
@@ -675,7 +553,7 @@ function DigitizationComplianceContent({
                   className="h-10 px-5 cursor-pointer"
                 >
                   {isGeneratingPdf ? (
-                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
+                    <Loading01Icon size="1em"  className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
                   ) : (
                     "Export PDF Report"
                   )}
@@ -721,7 +599,7 @@ function DigitizationComplianceContent({
                         <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <HugeIcon  className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                              <CovidInfoIcon size="1em"  className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                             </TooltipTrigger>
                             <TooltipContent
                               side="right"
@@ -739,7 +617,7 @@ function DigitizationComplianceContent({
                         </TooltipProvider>
                       </div>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                        <HugeIcon className="ph-bold text-[15px] ph-pie-chart" />
+                        <PieChartIcon size="1em" className="text-[15px]" />
                       </div>
                     </div>
 
@@ -752,7 +630,7 @@ function DigitizationComplianceContent({
                           {(summary?.totalDigitizedDocsCount ?? 0).toLocaleString()} / {(summary?.totalExpectedDocsCount ?? 0).toLocaleString()} slots
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
@@ -819,7 +697,7 @@ function DigitizationComplianceContent({
                         Students
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                        <HugeIcon className="ph-bold text-[15px] ph-users" />
+                        <UserSearch01Icon size="1em" className="text-[15px]" />
                       </div>
                     </div>
 
@@ -827,7 +705,7 @@ function DigitizationComplianceContent({
                       <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
                         {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
                       </span>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
@@ -880,7 +758,7 @@ function DigitizationComplianceContent({
                         Students Fully Digitized
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                        <HugeIcon className="ph-bold text-[15px] ph-check-circle" />
+                        <CheckmarkCircle01Icon size="1em" className="text-[15px]" />
                       </div>
                     </div>
 
@@ -893,7 +771,7 @@ function DigitizationComplianceContent({
                           {summary?.fullyDigitizedRate ?? 0}% complete
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
@@ -939,7 +817,7 @@ function DigitizationComplianceContent({
         <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
           {/* Search Input (Left side) */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-            <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+            <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
             <Input
               type="text"
               placeholder="Search Program"
@@ -1062,7 +940,7 @@ function DigitizationComplianceContent({
                   {/* Context & Formula */}
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
-                      <HugeIcon  className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
+                      <Target01Icon size="1em"  className="text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
                       <div>
                         <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
                           Digitization Progress
@@ -1127,13 +1005,18 @@ function DigitizationComplianceContent({
                 </div>
 
                 <section className="mt-7 border-t border-border pt-5 dark:border-border" aria-labelledby="missing-documents-title">
-                  <div className="mb-3">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                    <div>
                     <h4 id="missing-documents-title" className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
                       Missing Documents by Type
                     </h4>
                     <p className="mt-1 text-[11px] text-gray-600 dark:text-zinc-300">
                       Each required type is counted once per student. Counts follow the selected status and approval filters.
                     </p>
+                    </div>
+                    <Button variant="outline" size="sm" disabled={!meta?.configured || !summary?.notDigitizedStudents} onClick={() => openMissingStudents({ documentType: "All compliance requirements" })}>
+                      View Incomplete Students
+                    </Button>
                   </div>
                   {summary?.totalStudents === 0 || !Array.isArray(data.missingByDocumentType) || data.missingByDocumentType.length === 0 || docTypeItems.length === 0 ? (
                     <div className="rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30">
@@ -1292,7 +1175,7 @@ function DigitizationComplianceContent({
                                   className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
                                   aria-label="Reset scroll to start"
                                 >
-                                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                  <ReloadIcon size="1em" className="text-xs" />
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
@@ -1530,448 +1413,32 @@ function DigitizationComplianceContent({
         ) : null}
       </Card>
 
-      <Sheet
+      <ComplianceStudentsSheet
         open={Boolean(missingDialog)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setMissingDialog(null);
-            setMissingStudentsData(null);
-            setMissingStudentsError("");
-          }
-        }}
-      >
-        <SheetContent
-          side="right"
-          size="default"
-          showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl p-0 flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border"
-        >
-          {/* Reference Header */}
-          <SheetHeader className="shrink-0 p-0">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <SheetTitle>
-                  Compliance Deficiency Details
-                </SheetTitle>
-                <SheetDescription className="sr-only">
-                  List of students missing {missingDialog?.documentType || "this document"}
-                </SheetDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                {totalDocCount > 1 && currentDocIndex !== -1 && (
-                  <div className="flex items-center gap-1.5 mr-1">
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        disabled={currentDocIndex <= 0}
-                        onClick={handleNavigatePrevDoc}
-                        aria-label="Previous document type"
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={currentDocIndex >= totalDocCount - 1}
-                        onClick={handleNavigateNextDoc}
-                        aria-label="Next document type"
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                      </button>
-                    </div>
-                    <span className="font-sans tabular-nums text-[11px] font-medium text-gray-500 dark:text-zinc-400 select-none px-1">
-                      {String(currentDocIndex + 1).padStart(2, "0")} of {String(totalDocCount).padStart(2, "0")}
-                    </span>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMissingDialog(null);
-                    setMissingStudentsData(null);
-                    setMissingStudentsError("");
-                  }}
-                  aria-label="Close"
-                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
-                >
-                  <HugeIcon className="ph-bold ph-x text-xs" />
-                  <span className="sr-only">Close</span>
-                </button>
-              </div>
-            </div>
-          </SheetHeader>
+        onClose={() => setMissingDialog(null)}
+        documentType={missingDialog}
+        filters={{ status: statusFilter, courseCode: courseFilter, requireApproved: requireApproved ? "1" : "0", officeId }}
+      />
 
-          {/* Line-Attached Edge-to-Edge Status Notice */}
-          {missingDialog && (
-            <div
-              className={cn(
-                "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                (missingDialog?.missingStudents || 0) === 0
-                  ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                  : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-              )}
-            >
-              <HugeIcon
-                className={cn(
-                  "ph-bold text-[15px] shrink-0",
-                  (missingDialog?.missingStudents || 0) === 0
-                    ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
-                    : "ph-warning-circle text-amber-600 dark:text-amber-400"
-                )}
-              />
-              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                <strong className="font-semibold">
-                  {(missingDialog?.missingStudents || 0) === 0
-                    ? "Full Compliance Achieved:"
-                    : "Compliance Deficiency Detected:"}
-                </strong>{" "}
-                {(missingDialog?.missingStudents || 0) === 0
-                  ? "All enrolled student records possess verified digitized files for this document type."
-                  : `${(missingDialog?.missingStudents || 0).toLocaleString()} student records require digitization and archival filing.`}
-              </span>
-            </div>
-          )}
-
-          {/* Unboxed Single-Column Body */}
-          <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-border/60 dark:divide-white/5">
-            {/* Summary Strip (Unboxed) */}
-            <div className="p-6 pb-4 border-b border-border/80 dark:border-border">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                  <HugeIcon className="ph-duotone ph-file-dashed text-2xl" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100 tracking-tight truncate">
-                      {missingDialog?.documentType || "Document Type"}
-                    </h2>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60">
-                      {(missingDialog?.missingStudents ?? 0).toLocaleString()} Missing
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                    {(missingDialog?.digitizedStudents ?? 0).toLocaleString()} of {(missingDialog?.totalStudents ?? 0).toLocaleString()} students digitized ({Math.round(((missingDialog?.digitizedStudents || 0) / (missingDialog?.totalStudents || 1)) * 100)}% compliance)
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Document Specification (Standard InfoRow list) */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-wider uppercase">
-                <HugeIcon className="ph-bold ph-info text-pup-maroon text-sm" />
-                Compliance Specification
-              </div>
-              <div className="space-y-2.5">
-                <InfoRow
-                  icon={<HugeIcon className="ph-bold ph-users text-gray-400 dark:text-zinc-500" />}
-                  label="Total Enrolled"
-                  value={<span className="font-semibold text-gray-900 dark:text-zinc-100">{(missingDialog?.totalStudents || 0).toLocaleString()} students</span>}
-                />
-                <InfoRow
-                  icon={<HugeIcon className="ph-bold ph-check-circle text-gray-400 dark:text-zinc-500" />}
-                  label="Digitized Records"
-                  value={<span className="font-semibold text-emerald-600 dark:text-emerald-400">{(missingDialog?.digitizedStudents || 0).toLocaleString()} archived</span>}
-                />
-                <InfoRow
-                  icon={<HugeIcon className="ph-bold ph-warning-circle text-gray-400 dark:text-zinc-500" />}
-                  label="Deficiency Gap"
-                  value={<span className="font-semibold text-amber-600 dark:text-amber-400">{(missingDialog?.missingStudents || 0).toLocaleString()} missing</span>}
-                />
-                <InfoRow
-                  icon={<HugeIcon className="ph-bold ph-chart-pie text-gray-400 dark:text-zinc-500" />}
-                  label="Institutional Rate"
-                  value={
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900 dark:text-zinc-100">
-                        {Math.round(((missingDialog?.digitizedStudents || 0) / (missingDialog?.totalStudents || 1)) * 100)}%
-                      </span>
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                        (Target: 100%)
-                      </span>
-                    </div>
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Non-Compliant Students Roster */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-wider uppercase">
-                  <HugeIcon className="ph-bold ph-user-list text-pup-maroon text-sm" />
-                  Non-Compliant Students
-                </div>
-                {missingStudentsData?.total > 0 && (
-                  <span className="text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400">
-                    {missingStudentsData.total.toLocaleString()} total
-                  </span>
-                )}
-              </div>
-
-              {missingStudentsLoading ? (
-                <div className="space-y-3" aria-label="Loading students missing this document">
-                  <Skeleton className="h-14 w-full rounded-xl" />
-                  <Skeleton className="h-14 w-full rounded-xl" />
-                  <Skeleton className="h-14 w-full rounded-xl" />
-                </div>
-              ) : missingStudentsError ? (
-                <div className="p-4 rounded-xl border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30 space-y-3" role="alert">
-                  <p className="text-xs text-red-800 dark:text-red-200">
-                    {missingStudentsError}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => loadMissingStudents(missingDialog)}
-                    className="h-9 px-4 rounded-xl text-xs font-semibold cursor-pointer"
-                  >
-                    Retry Loading
-                  </Button>
-                </div>
-              ) : missingStudentsData?.students?.length ? (
-                <div className="space-y-2">
-                  {missingStudentsData.students.map((student) => (
-                    <div
-                      key={student.student_no}
-                      className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/60 dark:bg-zinc-800/40 hover:bg-gray-100/70 dark:hover:bg-zinc-800/70 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <ProfileAvatar
-                          id={student.student_no}
-                          name={student.name}
-                          initials={student.name
-                            ? student.name.split(" ").map((part) => part[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
-                            : "ST"}
-                          className="size-8 border border-border"
-                          fallbackClassName="text-[10px] font-semibold"
-                        />
-                        <div className="min-w-0">
-                          <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                            {student.name || "Student"}
-                          </div>
-                          <div className="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
-                            {student.course_code || "N/A"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                        <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-lg border border-gray-200/60 dark:border-white/10">
-                          {student.student_no}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (typeof navigator !== "undefined" && navigator.clipboard) {
-                              navigator.clipboard.writeText(student.student_no);
-                              showToast?.("Copied student number", "success");
-                            }
-                          }}
-                          title="Copy student number"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-200/50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer"
-                        >
-                          <HugeIcon className="ph-bold ph-copy text-xs" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-zinc-800/20">
-                  <HugeIcon className="ph-duotone ph-check-circle text-3xl text-emerald-500 mx-auto mb-2" />
-                  <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                    All Students Compliant
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Zero missing documents found for this criteria.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sticky Footer */}
-          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
-            <div>
-              {missingStudentsData?.total > missingStudentsData?.limit ? (
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={missingStudentsLoading || missingStudentsData.offset <= 0}
-                    onClick={() => loadMissingStudents(
-                      missingDialog,
-                      Math.max(0, missingStudentsData.offset - missingStudentsData.limit)
-                    )}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl cursor-pointer"
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={missingStudentsLoading || missingStudentsData.offset + missingStudentsData.limit >= missingStudentsData.total}
-                    onClick={() => loadMissingStudents(
-                      missingDialog,
-                      missingStudentsData.offset + missingStudentsData.limit
-                    )}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl cursor-pointer"
-                  >
-                    Next
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setMissingDialog(null);
-                setMissingStudentsData(null);
-                setMissingStudentsError("");
-              }}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Close
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      {/* Report Preview Modal */}
-      <Dialog
+      <ReportPreviewDialog
         open={reportOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-            setPdfPreviewUrl(null);
-            setPreviewFrameReady(false);
-            setIsFullscreenPreview(false);
-          }
-          setReportOpen(open);
+        onClose={() => {
+          if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+          setPdfPreviewUrl(null);
+          setReportOpen(false);
         }}
-      >
-        <DialogContent
-          hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] rounded-2xl dark:border-border bg-white dark:bg-card"
-        >
-          <DialogHeader
-            className="shrink-0"
-            style={{ padding: '20px 24px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}
-          >
-            <div className="min-w-0">
-              <DialogTitle className="text-left">
-                Compliance Report Preview
-              </DialogTitle>
-              <DialogDescription className="text-left">
-                Review the generated document before downloading. Ensure all records and rates are correctly captured.
-              </DialogDescription>
-            </div>
-
-            <DialogClose asChild>
-              <button
-                type="button"
-                className="hover:text-[#111] dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-0"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#8E8E93',
-                  cursor: 'pointer'
-                }}
-              >
-                <HugeIcon  className="ti ti-x" style={{ fontSize: '16px' }}></HugeIcon>
-              </button>
-            </DialogClose>
-          </DialogHeader>
-
-          <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
-            {pdfBlobUrl ? (
-              <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
-                {isFullscreenPreview && (
-                  <div className="absolute top-4 right-4 z-[10000]">
-                    <Button
-                      variant="default"
-                      size="icon"
-                      onClick={() => setIsFullscreenPreview(false)}
-                      className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
-                    >
-                      <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
-                    </Button>
-                  </div>
-                )}
-                {!previewFrameReady && (
-                  <div className="absolute inset-0 z-10 bg-white p-6 dark:bg-card">
-                    <div className="space-y-4">
-                      <Skeleton className="h-6 w-56 dark:bg-muted" />
-                      <Skeleton className="h-4 w-80 dark:bg-muted" />
-                      <Skeleton className="h-[55vh] w-full dark:bg-muted" />
-                    </div>
-                  </div>
-                )}
-                <iframe
-                  ref={pdfPreviewFrameRef}
-                  src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
-                  className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
-                  title="PDF Report Preview"
-                  onLoad={() => setPreviewFrameReady(true)}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
-                <div className="max-w-lg text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
-                    <HugeIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></HugeIcon>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
-                    Generating...
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex shrink-0 items-center px-6 py-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-              aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
-              title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
-              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
-            >
-              <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"}></HugeIcon>
-            </Button>
-
-            <div className="flex items-center gap-2.5 ml-auto">
-              <Button
-                variant="outline"
-                onClick={() => setReportOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-              >
-                Close
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handlePrintReport}
-                disabled={!pdfBlobUrl || !previewFrameReady || isGeneratingPdf}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-              >
-                Print Report
-              </Button>
-              <Button
-                onClick={handlePrint}
-                disabled={!pdfBlobUrl || isGeneratingPdf}
-                className="h-10 px-5 disabled:opacity-50 cursor-pointer"
-              >
-                Download Report
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title="Compliance Report Preview"
+        description="Review the generated document before downloading. Ensure all records and rates are correctly captured."
+        pdfUrl={pdfBlobUrl}
+        isPreparing={isGeneratingPdf}
+        onDownload={handlePrint}
+        onPrint={() => onLogAction?.({
+          action: "Print Report",
+          details: "opened print dialog for the physical record compliance report",
+          entityType: "Report",
+        })}
+        onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}
+      />
     </div>
   );
 }

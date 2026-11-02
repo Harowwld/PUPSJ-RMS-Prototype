@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,6 +12,8 @@ import LandingFaqSkeleton from "@/components/systemadmin/skeletons/LandingFaqSke
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
+import { Add01Icon, ArrowDown01Icon, ArrowUp01Icon, Copy01Icon, CovidInfoIcon, Delete01Icon, LayoutGridIcon, MinusSignIcon } from "hugeicons-react";
+
 
 export const MAX_FAQ_ITEMS = 16
 export const MIN_FAQ_ITEMS = 2
@@ -306,7 +309,7 @@ export default function LandingFaqCmsView({ showToast }) {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Page Header */}
         <PageHeader
-          icon="ph-bold ph-question"
+          icon=" HelpCircleIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -432,7 +435,7 @@ export default function LandingFaqCmsView({ showToast }) {
                         {(faqData.description || "").length}/200
                       </span>
                     </div>
-                    <textarea
+                    <Textarea
                       rows={3}
                       value={faqData.description || ""}
                       onChange={(e) =>
@@ -443,7 +446,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       }
                       placeholder="Quick answers on requesting, tracking, and claiming your official school records."
                       maxLength={200}
-                      className="w-full min-h-[72px] rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed text-gray-900 dark:border-border dark:bg-card dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 resize-y transition-all shadow-xs"
+                      className="w-full min-h-[72px] resize-y"
                     />
                   </div>
                 </div>
@@ -558,7 +561,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Move Earlier"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
-                            <HugeIcon  className="ph-bold ph-caret-up text-xs" />
+                            <ArrowUp01Icon size="1em"  className="text-xs" />
                           </button>
 
                           <button
@@ -568,7 +571,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Move Later"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
-                            <HugeIcon  className="ph-bold ph-caret-down text-xs" />
+                            <ArrowDown01Icon size="1em"  className="text-xs" />
                           </button>
 
                           <button
@@ -577,7 +580,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Duplicate Question"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
-                            <HugeIcon  className="ph-bold ph-copy text-xs" />
+                            <Copy01Icon size="1em"  className="text-xs" />
                           </button>
 
                           <button
@@ -586,14 +589,14 @@ export default function LandingFaqCmsView({ showToast }) {
                             title="Delete Question"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-0.5"
                           >
-                            <HugeIcon  className="ph-bold ph-trash text-xs" />
+                            <Delete01Icon size="1em"  className="text-xs" />
                           </button>
 
                           <div className="w-[1px] h-4 bg-gray-200 dark:bg-white/10 mx-1" />
 
-                          <HugeIcon 
+                          <ArrowDown01Icon size="1em"
                             className={cn(
-                              "ph-bold ph-caret-down text-xs text-gray-400 transition-transform duration-200",
+                              "text-xs text-gray-400 transition-transform duration-200",
                               isExpanded && "rotate-180 text-gray-700 dark:text-zinc-200"
                             )}
                           />
@@ -632,13 +635,13 @@ export default function LandingFaqCmsView({ showToast }) {
                                 {item.a.length}/400
                               </span>
                             </div>
-                            <textarea
+                            <Textarea
                               value={item.a}
                               onChange={(e) => updateFaqItem(originalIdx, "a", e.target.value)}
                               rows={3}
                               maxLength={400}
                               placeholder="Provide clear, direct guidance for this inquiry..."
-                              className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
+                              className="w-full"
                             />
                           </div>
 
@@ -739,7 +742,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 </button>
               ) : (
                 <div className="w-full py-3 px-3.5 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">
-                  <HugeIcon  className="ph-bold ph-info text-pup-maroon dark:text-red-400" />
+                  <CovidInfoIcon size={16}  className="text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_FAQ_ITEMS} of {MAX_FAQ_ITEMS} questions). FAQ section is capped at {MAX_FAQ_ITEMS} questions for layout stability and concise reading.</span>
                 </div>
               )}
@@ -793,7 +796,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
                           )}
                         >
-                          <HugeIcon className={cn("text-sm ph-bold ph-squares-four", previewFilter === "all" ? "text-white" : "text-gray-400")} />
+                          <LayoutGridIcon size="1em" className={cn("text-sm", previewFilter === "all" ? "text-white" : "text-gray-400")} />
                           All Questions
                         </button>
                         {uniqueCategories.map((cat) => {
@@ -846,9 +849,9 @@ export default function LandingFaqCmsView({ showToast }) {
 
                               <div className="shrink-0 ml-4">
                                 {isOpen ? (
-                                  <HugeIcon className="ph-bold ph-minus text-white text-base" />
+                                  <MinusSignIcon size="1em" className="text-white text-base" />
                                 ) : (
-                                  <HugeIcon className="ph-bold ph-plus text-gray-900 dark:text-zinc-300 text-base" />
+                                  <Add01Icon size="1em" className="text-gray-900 dark:text-zinc-300 text-base" />
                                 )}
                               </div>
                             </button>
@@ -890,8 +893,8 @@ export default function LandingFaqCmsView({ showToast }) {
         message="Are you sure you want to revert the Frequently Asked Questions to PUP institutional defaults? All custom questions and section narrative copy will be replaced."
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-arrow-counter-clockwise"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        icon=" ReloadIcon"
+        buttonIcon=" ReloadIcon"
         selectedItems={[
           "Reset all questions to standard institutional records inquiries",
           "Reset section heading and descriptive copy",
@@ -911,8 +914,8 @@ export default function LandingFaqCmsView({ showToast }) {
         message="Are you sure you want to remove this question from the public landing page FAQ list?"
         confirmLabel="Remove Question"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
+        icon=" Delete01Icon"
+        buttonIcon=" Delete01Icon"
         selectedItems={
           deleteFaqIdx !== null && faqData?.faqs?.[deleteFaqIdx]
             ? [

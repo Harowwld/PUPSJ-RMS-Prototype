@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 import { useState, useEffect } from "react";
@@ -17,6 +17,8 @@ import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { StudentRegistrationSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { Loading01Icon } from "hugeicons-react";
+
 
 export default function RegisterStudentModal({
   open,
@@ -396,7 +398,7 @@ export default function RegisterStudentModal({
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
-                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                  <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
                   Registering...
                 </span>
               ) : (

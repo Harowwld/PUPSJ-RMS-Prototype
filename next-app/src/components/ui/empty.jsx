@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import AppIcon from "@/components/ui/app-icon"
 
 function Empty({ className, variant = "page", ...props }) {
   return (
@@ -84,7 +85,7 @@ function EmptyState({ icon: Icon, title, description, children, variant = "page"
   return (
     <Empty variant={variant} className={className}>
       <EmptyHeader>
-        {Icon && <EmptyMedia><Icon size="1em" /></EmptyMedia>}
+        {Icon && <EmptyMedia>{typeof Icon === "string" ? <AppIcon name={Icon} size="1em" /> : <Icon size="1em" />}</EmptyMedia>}
         <EmptyTitle>{title}</EmptyTitle>
         {description && <EmptyDescription>{description}</EmptyDescription>}
       </EmptyHeader>

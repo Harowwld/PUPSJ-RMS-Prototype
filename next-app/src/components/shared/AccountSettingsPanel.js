@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -36,9 +36,9 @@ import {
 import { getRoleBranding } from "@/lib/roleBranding";
 import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom";
 import { setHighContrastPreference } from "@/lib/accessibility";
-import { HelpCircleIcon as EmptyHelpCircleIcon } from "hugeicons-react";
+import { HelpCircleIcon as EmptyHelpCircleIcon , ArrowRight01Icon, CovidInfoIcon, Loading01Icon, Shield01Icon, SmartPhone01Icon, Tick01Icon, UserIcon} from "hugeicons-react";
 import { Switch } from "@/components/ui/switch";
-
+import AppIcon from "@/components/ui/app-icon";
 const getNowTimestamp = () => Date.now();
 
 export default function AccountSettingsPanel() {
@@ -721,7 +721,7 @@ export default function AccountSettingsPanel() {
     >
             {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
             <PageHeader
-              icon="ph-user-gear"
+              icon="UserSettings01Icon"
               title="Account Settings"
               description="Update your personal info and security settings."
               showBorder={false}
@@ -760,7 +760,7 @@ export default function AccountSettingsPanel() {
                             />
                             {!avatarLoaded && (
                               <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
-                                <HugeIcon  className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
+                                <UserIcon size="1em"  className="text-[24px] text-gray-400 dark:text-zinc-500" />
                               </div>
                             )}
                           </>
@@ -795,23 +795,23 @@ export default function AccountSettingsPanel() {
                   {/* Navigation Menu */}
                   <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1.5">
                     {[
-                      { id: "profile", label: "Profile", icon: "ph-user-circle" },
-                      { id: "security", label: "Security", icon: "ph-shield-star" },
-                      { id: "preferences", label: "Preferences", icon: "ph-gear-six" }
+                      { id: "profile", label: "Profile", icon: "UserCircleIcon" },
+                      { id: "security", label: "Security", icon: "Shield01Icon" },
+                      { id: "preferences", label: "Preferences", icon: "Settings01Icon" }
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
                         className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-[14px] font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-gray-200/60 dark:data-[state=active]:bg-white/10 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent"
                       >
-                        <HugeIcon  className={cn(
-                          "ph-bold text-lg shrink-0 transition-colors",
+                        <AppIcon  className={cn(
+                          " text-lg shrink-0 transition-colors",
                           "text-gray-400 group-data-[state=active]:text-gray-900 dark:text-zinc-500 dark:group-data-[state=active]:text-white",
                           tab.icon
-                        )}></HugeIcon>
+                        )}></AppIcon>
                         <span className="truncate text-left">{tab.label}</span>
                         <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                          <HugeIcon  className="ph-bold ph-caret-right text-sm text-gray-400 dark:text-zinc-400"></HugeIcon>
+                          <ArrowRight01Icon size="1em"  className="text-sm text-gray-400 dark:text-zinc-400"></ArrowRight01Icon>
                         </div>
                       </TabsTrigger>
                     ))}
@@ -838,9 +838,10 @@ export default function AccountSettingsPanel() {
                       <div className="flex flex-col md:flex-row w-full border-b border-border dark:border-border/50 md:divide-x divide-y md:divide-y-0 divide-border dark:divide-border/50">
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${fname ? "active" : ""}`}>
-                            <label>First Name</label>
-                            <Input
+                            <label htmlFor="profileFirstName">First Name</label>
+                            <Input variant="floating"
                               type="text"
+                              id="profileFirstName"
                               placeholder=" "
                               className="focus-visible:ring-0 focus-visible:ring-offset-0"
                               value={fname}
@@ -852,9 +853,10 @@ export default function AccountSettingsPanel() {
                         {authUser?.role === "Student" && (
                           <div className="flex-1 min-w-0">
                             <div className={`field-wrapper ${mname ? "active" : ""}`}>
-                              <label>Middle Name (Optional)</label>
-                              <Input
+                              <label htmlFor="profileMiddleName">Middle Name (Optional)</label>
+                              <Input variant="floating"
                                 type="text"
+                                id="profileMiddleName"
                                 placeholder=" "
                                 className="focus-visible:ring-0 focus-visible:ring-offset-0"
                                 value={mname}
@@ -865,9 +867,10 @@ export default function AccountSettingsPanel() {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className={`field-wrapper ${lname ? "active" : ""}`}>
-                            <label>Last Name</label>
-                            <Input
+                            <label htmlFor="profileLastName">Last Name</label>
+                            <Input variant="floating"
                               type="text"
+                              id="profileLastName"
                               placeholder=" "
                               className="focus-visible:ring-0 focus-visible:ring-offset-0"
                               value={lname}
@@ -879,9 +882,10 @@ export default function AccountSettingsPanel() {
                       </div>
 
                       <div className={`field-wrapper active`}>
-                        <label>Email Address</label>
-                        <Input
+                        <label htmlFor="profileEmail">Email Address</label>
+                        <Input variant="floating"
                           type="email"
+                          id="profileEmail"
                           placeholder=" "
                           className="focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-400 cursor-not-allowed select-none bg-gray-50/50 dark:bg-white/5"
                           value={username}
@@ -924,9 +928,10 @@ export default function AccountSettingsPanel() {
 
                             <div className="flex-1 min-w-0">
                               <div className={`field-wrapper ${studentNo ? "active" : ""}`}>
-                                <label>Student Number (Optional)</label>
-                                <Input
+                                <label htmlFor="profileStudentNumber">Student Number (Optional)</label>
+                                <Input variant="floating"
                                   type="text"
+                                  id="profileStudentNumber"
                                   placeholder=" "
                                   className="focus-visible:ring-0 focus-visible:ring-offset-0 font-sans tabular-nums"
                                   value={studentNo}
@@ -949,7 +954,7 @@ export default function AccountSettingsPanel() {
                         className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {profileLoading && (
-                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <Loading01Icon size="1em" className="animate-spin text-xs" />
                         )}
                         {profileLoading ? "Saving..." : "Save Changes"}
                       </Button>
@@ -981,9 +986,10 @@ export default function AccountSettingsPanel() {
                     <form onSubmit={submitPassword} className="space-y-6">
                       <div className="merged-container bg-white dark:bg-zinc-800">
                         <div className={`field-wrapper border-b border-border dark:border-border/50 ${pwCurrent ? "active" : ""}`}>
-                          <label>Current Password</label>
-                          <Input
+                          <label htmlFor="currentPassword">Current Password</label>
+                          <Input variant="floating"
                             type={showPw.current ? "text" : "password"}
+                            id="currentPassword"
                             placeholder=" "
                             className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0 tracking-widest"
                             value={pwCurrent}
@@ -995,16 +1001,17 @@ export default function AccountSettingsPanel() {
                             onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-zinc-500 z-10"
                           >
-                            <HugeIcon  className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
+                            <AppIcon  className={cn("", showPw.current ? "ViewOffIcon" : "ViewIcon")}></AppIcon>
                           </button>
                         </div>
 
                         <div className="flex flex-col md:flex-row w-full divide-y md:divide-y-0 md:divide-x divide-border dark:divide-border/50">
                           <div className="flex-1 min-w-0">
                             <div className={`field-wrapper ${pwNext ? "active" : ""}`}>
-                              <label>New Password</label>
-                              <Input
+                              <label htmlFor="newPassword">New Password</label>
+                              <Input variant="floating"
                                 type={showPw.next ? "text" : "password"}
+                                id="newPassword"
                                 placeholder=" "
                                 className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0 tracking-widest"
                                 value={pwNext}
@@ -1016,16 +1023,17 @@ export default function AccountSettingsPanel() {
                                 onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-zinc-500 z-10"
                               >
-                                <HugeIcon  className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
+                                <AppIcon  className={cn("", showPw.next ? "ViewOffIcon" : "ViewIcon")}></AppIcon>
                               </button>
                             </div>
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className={`field-wrapper ${pwConfirm ? "active" : ""}`}>
-                              <label>Confirm Password</label>
-                              <Input
+                              <label htmlFor="confirmPassword">Confirm Password</label>
+                              <Input variant="floating"
                                 type={showPw.confirm ? "text" : "password"}
+                                id="confirmPassword"
                                 placeholder=" "
                                 className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0 tracking-widest"
                                 value={pwConfirm}
@@ -1037,7 +1045,7 @@ export default function AccountSettingsPanel() {
                                 onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-zinc-500 z-10"
                               >
-                                <HugeIcon  className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
+                                <AppIcon  className={cn("", showPw.confirm ? "ViewOffIcon" : "ViewIcon")}></AppIcon>
                               </button>
                             </div>
                           </div>
@@ -1054,7 +1062,7 @@ export default function AccountSettingsPanel() {
                           className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {pwLoading && (
-                            <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                            <Loading01Icon size="1em" className="animate-spin text-xs" />
                           )}
                           {pwLoading ? "Updating..." : "Update Password"}
                         </Button>
@@ -1162,7 +1170,7 @@ export default function AccountSettingsPanel() {
                             className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {secLoading && (
-                              <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                              <Loading01Icon size="1em" className="animate-spin text-xs" />
                             )}
                             {secLoading ? "Saving..." : "Save Security Questions"}
                           </Button>
@@ -1247,7 +1255,7 @@ export default function AccountSettingsPanel() {
                             className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {totpLoading && (
-                              <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                              <Loading01Icon size="1em" className="animate-spin text-xs" />
                             )}
                             Activate 2FA
                           </Button>
@@ -1259,7 +1267,7 @@ export default function AccountSettingsPanel() {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
                             <div className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-zinc-500 shrink-0">
-                              <HugeIcon  className="ph-bold ph-device-mobile text-[16px]"></HugeIcon>
+                              <SmartPhone01Icon size="1em"  className="text-[16px]"></SmartPhone01Icon>
                             </div>
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
@@ -1293,7 +1301,7 @@ export default function AccountSettingsPanel() {
                                  className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                                >
                                  {totpSetupLoading && (
-                                   <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                                   <Loading01Icon size="1em" className="animate-spin text-xs" />
                                  )}
                                  Configure 2FA
                                </Button>
@@ -1338,7 +1346,7 @@ export default function AccountSettingsPanel() {
                                   className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {totpLoading && (
-                                    <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                                    <Loading01Icon size="1em" className="animate-spin text-xs" />
                                   )}
                                   Disable 2FA
                                 </Button>
@@ -1350,7 +1358,7 @@ export default function AccountSettingsPanel() {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
                             <div className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-zinc-500 shrink-0">
-                              <HugeIcon  className="ph-bold ph-shield-check text-[16px]"></HugeIcon>
+                              <Shield01Icon size="1em"  className="text-[16px]"></Shield01Icon>
                             </div>
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
@@ -1410,7 +1418,7 @@ export default function AccountSettingsPanel() {
                               className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {recoveryCodesLoading && (
-                                <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                                <Loading01Icon size="1em" className="animate-spin text-xs" />
                               )}
                               {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
                             </Button>
@@ -1478,7 +1486,7 @@ export default function AccountSettingsPanel() {
 
                             {isSelected && (
                               <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs">
-                                <HugeIcon className="ph-bold ph-check text-[11px]" />
+                                <Tick01Icon size="1em" className="text-[11px]" />
                               </div>
                             )}
                           </button>
@@ -1540,7 +1548,7 @@ export default function AccountSettingsPanel() {
                     </div>
 
                     <p className="text-[12px] text-gray-400 font-normal mt-3 ml-1 dark:text-zinc-500 flex items-center gap-1.5">
-                      <HugeIcon className="ph-bold ph-info text-sm" />
+                      <CovidInfoIcon size="1em" className="text-sm" />
                       <span>You can also dynamically adjust this scale at any time from the zoom slider in the sidebar.</span>
                     </p>
                   </div>

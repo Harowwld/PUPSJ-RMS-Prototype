@@ -1,16 +1,17 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
-
+import { ArrowDown01Icon, Cursor01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export default function LandingBentoSkeleton() {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-squares-four"
+          icon=" LayoutGridIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -55,7 +56,7 @@ export default function LandingBentoSkeleton() {
               <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-pup-maroon text-white flex items-center justify-center shrink-0">
-                    <HugeIcon className="ph-bold ph-cursor-click text-sm" />
+                    <Cursor01Icon size="1em" className="text-sm" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -66,7 +67,7 @@ export default function LandingBentoSkeleton() {
                     </p>
                   </div>
                 </div>
-                <HugeIcon className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0 rotate-180" />
+                <ArrowDown01Icon size="1em" className="text-gray-400 text-sm shrink-0 rotate-180" />
               </div>
 
               {/* Expanded Form Content */}
@@ -102,22 +103,22 @@ export default function LandingBentoSkeleton() {
             {/* ACCORDION CARDS 2-5: COLLAPSED */}
             {[
               {
-                icon: "ph-bold ph-calendar-check",
+                icon: " CalendarCheckIn01Icon",
                 title: "Card 2: Processing Schedule & Milestones",
                 desc: "Large card showing document pickup schedule, notifications, and counter visit.",
               },
               {
-                icon: "ph-bold ph-archive",
+                icon: " Archive01Icon",
                 title: "Card 3: Direct from Campus Archives",
                 desc: "Flow diagram connecting online request to Room 1 archive cabinets and staff.",
               },
               {
-                icon: "ph-bold ph-check-square-offset",
+                icon: " Task01Icon",
                 title: "Card 4: What You Need to Prepare",
                 desc: "Preparation checklist items required from students and alumni.",
               },
               {
-                icon: "ph-bold ph-shield-check",
+                icon: " Shield01Icon",
                 title: "Card 5: Protected by Law (RA 11032)",
                 desc: "Ease of Doing Business Act guarantees and anti-red tape commitments.",
               },
@@ -129,7 +130,7 @@ export default function LandingBentoSkeleton() {
                 <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300 flex items-center justify-center shrink-0">
-                      <HugeIcon className={`${card.icon} text-sm`} />
+                      <AppIcon className={`${card.icon} text-sm`} />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -140,7 +141,7 @@ export default function LandingBentoSkeleton() {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon className="ph-bold ph-caret-down text-gray-400 text-sm shrink-0" />
+                  <ArrowDown01Icon size="1em" className="text-gray-400 text-sm shrink-0" />
                 </div>
               </div>
             ))}

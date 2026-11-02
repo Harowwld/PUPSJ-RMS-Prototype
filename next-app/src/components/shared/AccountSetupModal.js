@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback } from "react"
 import {
   Dialog,
@@ -17,8 +17,8 @@ import { cn } from "@/lib/utils"
 import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { EmptyState } from "@/components/ui/empty"
-import { HelpCircleIcon } from "hugeicons-react"
-
+import { HelpCircleIcon , CircleIcon, Tick01Icon} from "hugeicons-react"
+import AppIcon from "@/components/ui/app-icon";
 function getCsrfToken() {
   if (typeof document === "undefined") return null
   const match = document.cookie.match(/(?:^|;\s*)pup_csrf=([^;]+)/)
@@ -303,9 +303,9 @@ export default function AccountSetupModal({ authUser }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {needsPassword && step > 1 ? (
-                    <HugeIcon  className="ph-bold ph-check text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></HugeIcon>
+                    <Tick01Icon size="1em"  className="text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></Tick01Icon>
                   ) : (
-                    <HugeIcon  className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></HugeIcon>
+                    <CircleIcon size="1em"  className="text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></CircleIcon>
                   )}
                   <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
                     Step 1
@@ -340,9 +340,9 @@ export default function AccountSetupModal({ authUser }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {step > 2 ? (
-                    <HugeIcon  className="ph-bold ph-check text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></HugeIcon>
+                    <Tick01Icon size="1em"  className="text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></Tick01Icon>
                   ) : step === 2 ? (
-                    <HugeIcon  className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></HugeIcon>
+                    <CircleIcon size="1em"  className="text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></CircleIcon>
                   ) : (
                     <div className="w-[14px] h-[14px] shrink-0" />
                   )}
@@ -379,7 +379,7 @@ export default function AccountSetupModal({ authUser }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {step === 3 ? (
-                    <HugeIcon  className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></HugeIcon>
+                    <CircleIcon size="1em"  className="text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></CircleIcon>
                   ) : (
                     <div className="w-[14px] h-[14px] shrink-0" />
                   )}
@@ -434,7 +434,7 @@ export default function AccountSetupModal({ authUser }) {
                         onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
                       >
-                        <HugeIcon  className={cn("ph-bold text-[16px]", showPw.next ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
+                        <AppIcon  className={cn(" text-[16px]", showPw.next ? "ViewOffIcon" : "ViewIcon")}></AppIcon>
                       </button>
                     </div>
                     <p className="mt-1 text-[11px] text-gray-400 dark:text-zinc-500">
@@ -460,7 +460,7 @@ export default function AccountSetupModal({ authUser }) {
                         onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
                       >
-                        <HugeIcon  className={cn("ph-bold text-[16px]", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></HugeIcon>
+                        <AppIcon  className={cn(" text-[16px]", showPw.confirm ? "ViewOffIcon" : "ViewIcon")}></AppIcon>
                       </button>
                     </div>
                   </div>
@@ -609,7 +609,7 @@ export default function AccountSetupModal({ authUser }) {
                           </div>
                           {isSelected && (
                             <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs ring-1 ring-white dark:ring-card">
-                              <HugeIcon className="ph-bold ph-check text-[10px]" />
+                              <Tick01Icon size="1em" className="text-[10px]" />
                             </div>
                           )}
                         </button>

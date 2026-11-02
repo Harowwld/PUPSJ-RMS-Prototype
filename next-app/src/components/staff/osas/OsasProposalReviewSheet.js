@@ -1,8 +1,10 @@
 "use client";
+import SheetPagination from "@/components/shared/SheetPagination";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -20,7 +22,8 @@ import {
   getPostEventStatusBadgeClass,
   FirstPagePreview,
 } from "@/components/staff/OsasMonitoringTab";
-
+import { Alert02Icon, ArrowRight02Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, HourglassIcon, JusticeScale01Icon, Loading01Icon, ReloadIcon, Shield01Icon, ViewIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -35,7 +38,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -117,9 +120,8 @@ export default function OsasProposalReviewSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* TOP HEADER: Event Proposal Details + < > 01 of XX + X button */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 Event Proposal Details
@@ -129,33 +131,20 @@ export default function OsasProposalReviewSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {typeof totalCount === "number" && totalCount > 1 && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={currentIndex <= 0}
-                    onClick={onNavigatePrev}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Previous Proposal"
-                    title="Previous Proposal"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIndex >= totalCount - 1}
-                    onClick={onNavigateNext}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Next Proposal"
-                    title="Next Proposal"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={Math.max(1, (currentIndex ?? 0) + 1)}
+                  totalPages={totalCount}
+                  onPrevious={onNavigatePrev}
+                  onNext={onNavigateNext}
+                  previousDisabled={currentIndex <= 0}
+                  nextDisabled={currentIndex >= totalCount - 1}
+                  previousLabel="Previous Proposal"
+                  nextLabel="Next Proposal"
+                />
               )}
 
               <button
@@ -168,7 +157,7 @@ export default function OsasProposalReviewSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -187,16 +176,16 @@ export default function OsasProposalReviewSheet({
               : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
           )}
         >
-          <HugeIcon
+          <AppIcon
             className={cn(
-              "ph-bold text-[15px] shrink-0",
+              " text-[15px] shrink-0",
               selected.status === "Approved"
-                ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                 : selected.status === "RevisionRequested"
-                ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                ? "Alert01Icon text-amber-600 dark:text-amber-400"
                 : selected.status === "Rejected"
-                ? "ph-x-circle text-rose-600 dark:text-rose-400"
-                : "ph-clock text-blue-600 dark:text-blue-400"
+                ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                : "Clock01Icon text-blue-600 dark:text-blue-400"
             )}
           />
           <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -224,7 +213,7 @@ export default function OsasProposalReviewSheet({
           {/* Summary Strip */}
           <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
             <div className="w-12 h-12 rounded-2xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
-              <HugeIcon className="ph-bold ph-calendar-check" />
+              <CalendarCheckIn01Icon size={16}  />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -234,7 +223,7 @@ export default function OsasProposalReviewSheet({
                 </span>
                 {selected.is_verified_officer && (
                   <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
-                    <HugeIcon className="ph-bold ph-shield-check text-xs text-emerald-600" />
+                    <Shield01Icon size="1em" className="text-xs text-emerald-600" />
                     Verified Officer
                   </span>
                 )}
@@ -278,7 +267,7 @@ export default function OsasProposalReviewSheet({
               Proposal Specification
             </h4>
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-              <InfoRow icon="ph-buildings" label="Organization">
+              <InfoRow icon="Building01Icon" label="Organization">
                 <span>
                   {selected.organization_name}
                   {selected.org_acronym && (
@@ -287,7 +276,7 @@ export default function OsasProposalReviewSheet({
                 </span>
               </InfoRow>
 
-              <InfoRow icon="ph-user" label="Proponent">
+              <InfoRow icon="UserIcon" label="Proponent">
                 <span>
                   {selected.student_name}
                   {selected.officer_position && (
@@ -298,20 +287,20 @@ export default function OsasProposalReviewSheet({
                 </span>
               </InfoRow>
 
-              <InfoRow icon="ph-identification-badge" label="Student Number" value={selected.student_no} />
+              <InfoRow icon="Contact01Icon" label="Student Number" value={selected.student_no} />
 
-              <InfoRow icon="ph-envelope-simple" label="Email Address" value={selected.submitted_by_email || "N/A"} />
+              <InfoRow icon="Mail01Icon" label="Email Address" value={selected.submitted_by_email || "N/A"} />
 
-              <InfoRow icon="ph-calendar" label="Target Date" value={eventDateStr || "To Be Announced"} />
+              <InfoRow icon="Calendar01Icon" label="Target Date" value={eventDateStr || "To Be Announced"} />
 
               <InfoRow
-                icon="ph-users"
+                icon="UserSearch01Icon"
                 label="Target Attendance"
                 value={selected.target_attendance ? `${Number(selected.target_attendance).toLocaleString()} attendees` : "—"}
               />
 
               <InfoRow
-                icon="ph-coins"
+                icon="Coins01Icon"
                 label="Proposed Budget"
                 value={
                   selected.estimated_budget
@@ -320,11 +309,11 @@ export default function OsasProposalReviewSheet({
                 }
               />
 
-              <InfoRow icon="ph-map-pin" label="Venue" value={selected.venue || "None specified"} />
+              <InfoRow icon="Location01Icon" label="Venue" value={selected.venue || "None specified"} />
 
-              <InfoRow icon="ph-clock" label="Date Submitted" value={submittedDateStr} />
+              <InfoRow icon="Clock01Icon" label="Date Submitted" value={submittedDateStr} />
 
-              <InfoRow icon="ph-chart-pie-slice" label="Current Stage">
+              <InfoRow icon="PieChartIcon" label="Current Stage">
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
@@ -361,7 +350,7 @@ export default function OsasProposalReviewSheet({
               <div className="flex items-center justify-between rounded-xl border border-emerald-200/80 dark:border-emerald-900/30 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
-                    <HugeIcon className="ph-bold ph-scales text-lg" />
+                    <JusticeScale01Icon size="1em" className="text-lg" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -403,7 +392,7 @@ export default function OsasProposalReviewSheet({
             ) : (
               <div className="flex items-center gap-3 rounded-xl border border-amber-200/80 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-950/20 p-3.5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shadow-2xs">
-                  <HugeIcon className="ph-bold ph-warning text-lg" />
+                  <Alert02Icon size="1em" className="text-lg" />
                 </div>
                 <div>
                   <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
@@ -421,7 +410,7 @@ export default function OsasProposalReviewSheet({
               <div className="rounded-xl border border-purple-200 dark:border-purple-900/40 bg-purple-50/40 dark:bg-purple-950/20 p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <HugeIcon className="ph-bold ph-clock-countdown text-purple-700 dark:text-purple-400" />
+                    <HourglassIcon size={16} className="text-purple-700 dark:text-purple-400" />
                     <span className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200">
                       Post-Event Compliance
                     </span>
@@ -459,7 +448,7 @@ export default function OsasProposalReviewSheet({
                     className="text-xs font-semibold text-purple-700 dark:text-purple-300 hover:underline cursor-pointer flex items-center gap-1"
                   >
                     <span>Open Tracker</span>
-                    <HugeIcon className="ph-bold ph-arrow-right text-[10px]" />
+                    <ArrowRight02Icon size="1em" className="text-[10px]" />
                   </button>
                 </div>
               </div>
@@ -482,7 +471,7 @@ export default function OsasProposalReviewSheet({
               <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
-                    <HugeIcon className="ph-bold ph-file-pdf" />
+                    <File02Icon size={16}  />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[220px]">
@@ -501,7 +490,7 @@ export default function OsasProposalReviewSheet({
                   onClick={() => handleOpenPdfPreview?.(selected)}
                   className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs shrink-0"
                 >
-                  <HugeIcon className="ph-bold ph-eye mr-1.5 text-xs" />
+                  <ViewIcon size="1em" className="mr-1.5 text-xs" />
                   <span>Inspect PDF</span>
                 </Button>
               </div>
@@ -566,7 +555,7 @@ export default function OsasProposalReviewSheet({
             {/* Contextual Warning / Guidance Callouts */}
             {isRevokingApproval && (
               <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300 flex items-start gap-2.5">
-                <HugeIcon className="ph-bold ph-warning text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <Alert02Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold text-amber-950 dark:text-amber-200">
                     Revoking Official Approval
@@ -580,7 +569,7 @@ export default function OsasProposalReviewSheet({
 
             {isReopeningDeclined && (
               <div className="rounded-xl border border-purple-200 bg-purple-50/80 p-3 text-xs text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/30 dark:text-purple-300 flex items-start gap-2.5">
-                <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-base text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+                <ReloadIcon size="1em" className="text-base text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold text-purple-950 dark:text-purple-200">
                     Reopening Declined Proposal
@@ -594,7 +583,7 @@ export default function OsasProposalReviewSheet({
 
             {isRequestingRevision && (
               <div className="rounded-xl border border-sky-200 bg-sky-50/80 p-3 text-xs text-sky-900 dark:border-sky-800/40 dark:bg-sky-950/30 dark:text-sky-300 flex items-start gap-2.5">
-                <HugeIcon className="ph-bold ph-info text-base text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                <CovidInfoIcon size="1em" className="text-base text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold text-sky-950 dark:text-sky-200">
                     Revision Instructions Required
@@ -618,12 +607,10 @@ export default function OsasProposalReviewSheet({
                   </span>
                 )}
               </div>
-              <textarea
+              <Textarea
                 className={cn(
-                  "min-h-24 w-full rounded-xl border bg-white p-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition-colors dark:bg-zinc-900 dark:text-zinc-100",
-                  isNoteRequired && note.trim().length < 5
-                    ? "border-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600"
-                    : "border-border focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:border-border"
+                  "min-h-24",
+                  isNoteRequired && note.trim().length < 5 && "border-amber-400 dark:border-amber-600"
                 )}
                 placeholder={
                   isNoteRequired
@@ -711,7 +698,7 @@ export default function OsasProposalReviewSheet({
           >
             {isSaving ? (
               <>
-                <HugeIcon className="ph-bold ph-spinner animate-spin mr-2" />
+                <Loading01Icon size={16} className="animate-spin mr-2" />
                 Saving...
               </>
             ) : isRevokingApproval ? (

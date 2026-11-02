@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -9,6 +9,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ArrowDown01Icon, Tick01Icon } from "hugeicons-react";
+
 
 /**
  * MultiCriteriaFilter
@@ -165,7 +167,7 @@ export default function MultiCriteriaFilter({
                 </span>
               )}
             </div>
-            <HugeIcon className="ph-bold ph-caret-down text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-1" />
+            <ArrowDown01Icon size="1em" className="text-[10px] text-gray-400 dark:text-zinc-500 shrink-0 ml-1" />
           </Button>
         </PopoverTrigger>
 
@@ -243,7 +245,7 @@ export default function MultiCriteriaFilter({
                               )}
                             >
                               {isChecked && (
-                                <HugeIcon className="ph-bold ph-check text-[9px]" />
+                                <Tick01Icon size="1em" className="text-[9px]" />
                               )}
                             </div>
 

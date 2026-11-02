@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Loading01Icon } from "hugeicons-react";
+
 
 export function TOTPChallengeModal({
   open,
@@ -112,7 +114,7 @@ export function TOTPChallengeModal({
             >
               {isLoading ? (
                 <>
-                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm mr-1.5"></HugeIcon>
+                  <Loading01Icon size="1em"  className="animate-spin text-sm mr-1.5"></Loading01Icon>
                   Verifying...
                 </>
               ) : (

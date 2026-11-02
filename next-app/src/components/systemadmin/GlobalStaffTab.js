@@ -1,8 +1,9 @@
 "use client"
+import SheetPagination from "@/components/shared/SheetPagination";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle"
 import useCreateAnother from "@/hooks/useCreateAnother"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -50,16 +51,16 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon } from "hugeicons-react";
-
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Clock01Icon, Copy01Icon, DragDropIcon, Loading01Icon, PencilEdit01Icon, Settings01Icon, ViewIcon, Search01Icon, Archive01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -839,7 +840,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-users"
+          icon="UserSearch01Icon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Global Personnel Directory</span>
@@ -900,7 +901,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         </span>
                       </div>
                       <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : stat.color === "emerald" ? "bg-[#10b981]" : "bg-[#f59e0b]")}>
-                        <HugeIcon className={cn("ph-bold text-[15px]", stat.color === "blue" ? "ph-users-three" : stat.color === "emerald" ? "ph-user-focus" : "ph-building")} />
+                        <AppIcon className={cn(" text-[15px]", stat.color === "blue" ? "UserSearch01Icon" : stat.color === "emerald" ? "UserStatusIcon" : "Building02Icon")} />
                       </div>
                     </div>
                     
@@ -913,7 +914,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
@@ -1047,7 +1048,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
             <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
               </div>
               <Input
                 value={search}
@@ -1334,7 +1335,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               aria-label="View Personnel Profile"
                               className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                             >
-                              <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                              <ViewIcon size="1em" className="text-[16px]" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>View Profile</TooltipContent>
@@ -1354,7 +1355,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                 aria-label="My Account Settings"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
-                                <HugeIcon className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
+                                <Settings01Icon size="1em" className="text-[16px]"></Settings01Icon>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>My Account Settings</TooltipContent>
@@ -1369,7 +1370,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Edit Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
+                                    <PencilEdit01Icon size="1em" className="text-[16px]"></PencilEdit01Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Staff</TooltipContent>
@@ -1384,7 +1385,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Restore Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
+                                    <Archive02Icon size="1em" className="text-[16px]"></Archive02Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Restore</TooltipContent>
@@ -1397,7 +1398,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                     aria-label="Archive Staff Member"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                                   >
-                                    <HugeIcon className="ph-bold ph-archive text-[16px]"></HugeIcon>
+                                    <Archive01Icon size="1em" className="text-[16px]"></Archive01Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Archive</TooltipContent>
@@ -1628,7 +1629,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               >
                 {submitLoading ? (
                   <span className="flex items-center gap-1.5">
-                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                    <Loading01Icon size="1em" className="animate-spin text-sm" />
                     <span>Saving Changes...</span>
                   </span>
                 ) : isEditing ? (
@@ -1695,8 +1696,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         confirmLabel="Archive Personnel"
         cancelLabel="Cancel"
         variant="warning"
-        icon="ph-duotone ph-archive"
-        buttonIcon="ph-bold ph-archive"
+        icon=" Archive01Icon"
+        buttonIcon=" Archive01Icon"
         selectedItems={[
           archiveTarget ? getStaffCleanName(archiveTarget) : "",
         ]}
@@ -1716,8 +1717,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         confirmLabel="Restore Personnel"
         cancelLabel="Cancel"
         variant="success"
-        icon="ph-duotone ph-archive-restore"
-        buttonIcon="ph-bold ph-archive-restore"
+        icon=" Archive02Icon"
+        buttonIcon=" Archive02Icon"
         selectedItems={[
           restoreTarget ? getStaffCleanName(restoreTarget) : "",
         ]}
@@ -1737,8 +1738,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         confirmLabel="Archive Selected"
         cancelLabel="Cancel"
         variant="warning"
-        icon="ph-duotone ph-archive"
-        buttonIcon="ph-bold ph-archive"
+        icon=" Archive01Icon"
+        buttonIcon=" Archive01Icon"
         selectedItems={Array.from(selectedIds).map((id) => {
           const s = staff.find((x) => x.id === id)
           return s ? `${s.fname} ${s.lname}` : id
@@ -1759,8 +1760,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         confirmLabel="Restore Selected"
         cancelLabel="Cancel"
         variant="success"
-        icon="ph-duotone ph-archive-restore"
-        buttonIcon="ph-bold ph-archive-restore"
+        icon=" Archive02Icon"
+        buttonIcon=" Archive02Icon"
         selectedItems={Array.from(selectedIds).map((id) => {
           const s = staff.find((x) => x.id === id)
           return s ? `${s.fname} ${s.lname}` : id
@@ -1790,7 +1791,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             return (
               <>
                 <SheetHeader className="shrink-0 p-0">
-                  <div className="flex items-center justify-between px-6 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
                       <SheetTitle>
                         Personnel Details
@@ -1800,33 +1801,20 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       </SheetDescription>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="ml-auto flex items-center gap-3">
                       {filteredStaff.length > 1 && currentMemberIndex !== -1 && (
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                          <button
-                            type="button"
-                            disabled={!hasPrevMember}
-                            onClick={() => hasPrevMember && setInspectMember(filteredStaff[currentMemberIndex - 1])}
-                            className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                            aria-label="Previous Personnel"
-                            title="Previous Personnel"
-                          >
-                            <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={!hasNextMember}
-                            onClick={() => hasNextMember && setInspectMember(filteredStaff[currentMemberIndex + 1])}
-                            className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                            aria-label="Next Personnel"
-                            title="Next Personnel"
-                          >
-                            <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                          </button>
-                          <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                            {String(currentMemberIndex + 1).padStart(2, "0")} of {String(filteredStaff.length).padStart(2, "0")}
-                          </span>
-                        </div>
+                        <SheetPagination
+                          compact
+                          label="Record navigation"
+                          page={currentMemberIndex + 1}
+                          totalPages={filteredStaff.length}
+                          onPrevious={() => hasPrevMember && setInspectMember(filteredStaff[currentMemberIndex - 1])}
+                          onNext={() => hasNextMember && setInspectMember(filteredStaff[currentMemberIndex + 1])}
+                          previousDisabled={!hasPrevMember}
+                          nextDisabled={!hasNextMember}
+                          previousLabel="Previous Personnel"
+                          nextLabel="Next Personnel"
+                        />
                       )}
 
                       <button
@@ -1836,7 +1824,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         aria-label="Close Personnel Details"
                         title="Close"
                       >
-                        <HugeIcon className="ph-bold ph-x text-sm" />
+                        <Cancel01Icon size="1em" className="text-sm" />
                       </button>
                     </div>
                   </div>
@@ -1851,12 +1839,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
                   )}
                 >
-                  <HugeIcon
+                  <AppIcon
                     className={cn(
-                      "ph-bold text-[15px] shrink-0",
+                      " text-[15px] shrink-0",
                       inspectMember.status === "Active"
-                        ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
-                        : "ph-warning-circle text-amber-600 dark:text-amber-400"
+                        ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
+                        : "Alert01Icon text-amber-600 dark:text-amber-400"
                     )}
                   />
                   <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -1922,7 +1910,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {/* Profile & Credentials Section (Unboxed) */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <HugeIcon className="ph-bold ph-identification-card text-pup-maroon dark:text-red-400 text-sm" />
+                      <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                         Identity & Access Metadata
                       </h4>
@@ -1949,7 +1937,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                             title="Copy Email"
                           >
-                            <HugeIcon className="ph-bold ph-copy text-xs" />
+                            <Copy01Icon size="1em" className="text-xs" />
                           </button>
                         </div>
                       </div>
@@ -1971,7 +1959,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {/* Timestamps & Lifecycle (Unboxed) */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <HugeIcon className="ph-bold ph-clock text-pup-maroon dark:text-red-400 text-sm" />
+                      <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                         System Activity & Registration
                       </h4>

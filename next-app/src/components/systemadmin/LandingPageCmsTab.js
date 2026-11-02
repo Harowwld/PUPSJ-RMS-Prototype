@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon"
+
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,8 @@ import LandingFaqCmsView from "./LandingFaqCmsView"
 import LandingFooterCmsView from "./LandingFooterCmsView"
 import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import { cn } from "@/lib/utils"
+import { Add01Icon, Alert01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, Camera01Icon, Delete01Icon, DragDropIcon, GitMergeIcon, HelpCircleIcon, Image01Icon, LayoutBottomIcon, LibraryIcon, Loading01Icon, Timer01Icon } from "hugeicons-react";
+
 
 export default function LandingPageCmsTab({ showToast }) {
   const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'workflow' | 'catalog' | 'faq' | 'footer'
@@ -329,7 +332,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon className="ph-bold ph-image text-sm" />
+          <Image01Icon size="1em" className="text-sm" />
           <span>Hero Section</span>
         </button>
 
@@ -343,7 +346,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon className="ph-bold ph-git-merge text-sm" />
+          <GitMergeIcon size="1em" className="text-sm" />
           <span>Workflow &amp; Steps</span>
         </button>
 
@@ -357,7 +360,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon className="ph-bold ph-books text-sm" />
+          <LibraryIcon size="1em" className="text-sm" />
           <span>Academic Catalog</span>
         </button>
 
@@ -371,7 +374,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon className="ph-bold ph-question text-sm" />
+          <HelpCircleIcon size="1em" className="text-sm" />
           <span>FAQ Section</span>
         </button>
 
@@ -385,7 +388,7 @@ export default function LandingPageCmsTab({ showToast }) {
               : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           )}
         >
-          <HugeIcon className="ph-bold ph-panel-bottom text-sm" />
+          <LayoutBottomIcon size="1em" className="text-sm" />
           <span>Footer Section</span>
         </button>
       </div>
@@ -397,7 +400,7 @@ export default function LandingPageCmsTab({ showToast }) {
       {currentSection === "hero" && (
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
-            icon="ph-bold ph-layout"
+            icon=" DashboardSquare01Icon"
             title={
               <div className="flex items-center gap-[6px]">
                 <span>Landing Page CMS</span>
@@ -555,7 +558,7 @@ export default function LandingPageCmsTab({ showToast }) {
                           {heroData.description.length}/280
                         </span>
                       </div>
-                      <textarea
+                      <Textarea
                         value={heroData.description}
                         onChange={(e) =>
                           setHeroData((prev) => ({
@@ -566,7 +569,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         rows={3}
                         maxLength={280}
                         placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
-                        className="w-full rounded-xl border border-border bg-white p-3.5 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        className="w-full"
                       />
                     </div>
                   </div>
@@ -586,7 +589,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   <div className="flex items-center gap-3 flex-wrap">
                     {/* Rotation pace selector */}
                     <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                      <HugeIcon className="ph-bold ph-timer text-gray-400 text-sm" />
+                      <Timer01Icon size="1em" className="text-gray-400 text-sm" />
                       <span>Slide Pace:</span>
                       <div className="w-[145px]">
                         <Select
@@ -700,7 +703,7 @@ export default function LandingPageCmsTab({ showToast }) {
                     className="rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none shadow-2xs"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-2xs">
-                      <HugeIcon className="ph-bold ph-plus text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                      <Add01Icon size={16} className="text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
                     </div>
                     <div className="text-center">
                       <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
@@ -745,7 +748,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         }
                         className="h-8 w-8 p-0 rounded-xl border border-border dark:border-border shadow-2xs cursor-pointer active:scale-95"
                       >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                        <ArrowLeft01Icon size="1em" className="text-xs" />
                       </Button>
                       <Button
                         type="button"
@@ -758,7 +761,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         }
                         className="h-8 w-8 p-0 rounded-xl border border-border dark:border-border shadow-2xs cursor-pointer active:scale-95"
                       >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                        <ArrowRight01Icon size="1em" className="text-xs" />
                       </Button>
                     </div>
                   </div>
@@ -869,7 +872,7 @@ export default function LandingPageCmsTab({ showToast }) {
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
         variant="warning"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        buttonIcon=" ReloadIcon"
       />
 
       {/* Delete Slide Confirmation Modal */}
@@ -975,7 +978,7 @@ function SlideCard({
       {/* Drop Target Position Notice */}
       {isDragTarget && (
         <div className="bg-pup-maroon text-white text-[11px] font-semibold py-1.5 px-3 text-center flex items-center justify-center gap-1.5 animate-pulse shadow-inner">
-          <HugeIcon className="ph-bold ph-arrows-left-right text-xs" />
+          <ArrowLeftRightIcon size="1em" className="text-xs" />
           <span>Drop to move photo to Position #{index + 1}</span>
         </div>
       )}
@@ -986,7 +989,7 @@ function SlideCard({
           className="flex items-center gap-2 cursor-grab active:cursor-grabbing group/drag"
           title="Drag card to reorder photos"
         >
-          <HugeIcon className="ph-bold ph-dots-six-vertical text-gray-500 group-hover/drag:text-pup-maroon dark:text-zinc-400 dark:group-hover/drag:text-red-400 text-lg transition-colors" />
+          <DragDropIcon size="1em" className="text-gray-500 group-hover/drag:text-pup-maroon dark:text-zinc-400 dark:group-hover/drag:text-red-400 text-lg transition-colors" />
           <span className="w-5 h-5 rounded-full bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-bold flex items-center justify-center shadow-2xs">
             {index + 1}
           </span>
@@ -1005,7 +1008,7 @@ function SlideCard({
             title="Move earlier"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
           >
-            <HugeIcon className="ph-bold ph-caret-left text-xs" />
+            <ArrowLeft01Icon size="1em" className="text-xs" />
           </button>
 
           <button
@@ -1016,7 +1019,7 @@ function SlideCard({
             title="Move later"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
           >
-            <HugeIcon className="ph-bold ph-caret-right text-xs" />
+            <ArrowRight01Icon size="1em" className="text-xs" />
           </button>
 
           <button
@@ -1026,7 +1029,7 @@ function SlideCard({
             title="Remove photo"
             className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1 shadow-2xs"
           >
-            <HugeIcon className="ph-bold ph-trash text-xs" />
+            <Delete01Icon size="1em" className="text-xs" />
           </button>
         </div>
       </div>
@@ -1068,12 +1071,12 @@ function SlideCard({
       >
         {isUploading ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 text-white gap-2 z-20">
-            <HugeIcon className="ph-bold ph-spinner animate-spin text-2xl text-pup-maroon" />
+            <Loading01Icon size="1em" className="animate-spin text-2xl text-pup-maroon" />
             <span className="text-xs font-semibold">Uploading photo...</span>
           </div>
         ) : imageError ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-rose-400 p-4 text-center z-10">
-            <HugeIcon className="ph-bold ph-warning-circle text-2xl mb-1" />
+            <Alert01Icon size="1em" className="text-2xl mb-1" />
             <span className="text-xs font-semibold">Photo unavailable</span>
           </div>
         ) : (
@@ -1111,7 +1114,7 @@ function SlideCard({
         {/* Hover overlay hint */}
         <div className="absolute inset-0 bg-zinc-950/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10 pointer-events-none select-none">
           <span className="h-8 px-3 rounded-lg bg-white text-gray-900 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-            <HugeIcon className="ph-bold ph-camera text-xs" />
+            <Camera01Icon size="1em" className="text-xs" />
             Click to Change Photo
           </span>
         </div>

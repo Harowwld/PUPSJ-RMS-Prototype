@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState } from "react"
 import {
   Dialog,
@@ -11,7 +11,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-
+import { Alert01Icon, UserIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export default function DefaultPasswordModal({
   open,
   onClose,
@@ -51,7 +52,7 @@ export default function DefaultPasswordModal({
           {/* User info */}
           <div className="flex items-center gap-3 rounded-brand border border-border bg-transparent p-3 dark:border-border dark:bg-transparent">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10">
-              <HugeIcon  className="ph-bold ph-user text-lg text-pup-maroon dark:text-primary"></HugeIcon>
+              <UserIcon size="1em"  className="text-lg text-pup-maroon dark:text-primary"></UserIcon>
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold tracking-wider text-gray-900 dark:text-zinc-300">
@@ -79,14 +80,14 @@ export default function DefaultPasswordModal({
                 onClick={handleCopy}
                 className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-semibold transition-all ${ copied ? "border-2 border-green-200 bg-green-100 text-green-700" : "border-red-200 bg-white text-pup-maroon dark:text-primary shadow-sm hover:bg-red-50" } dark:bg-card`}
               >
-                <HugeIcon 
-                  className={`ph-bold ${copied ? "ph-check" : "ph-copy"} text-sm`}
-                ></HugeIcon>
+                <AppIcon
+                  className={` ${copied ? "Tick01Icon" : "Copy01Icon"} text-sm`}
+                ></AppIcon>
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
             <p className="text-xs font-medium text-amber-700">
-              <HugeIcon  className="ph-bold ph-warning-circle mr-1"></HugeIcon>
+              <Alert01Icon size={16}  className="mr-1"></Alert01Icon>
               User must change this password on first login.
             </p>
           </div>

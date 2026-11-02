@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import {
@@ -11,6 +11,7 @@ import {
   LockIcon,
   SquareUnlock01Icon,
   DashboardSpeed01Icon,
+  PencilEdit01Icon,
 } from "hugeicons-react"
 import { EmptyState } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -166,7 +167,7 @@ export default function RateLimitingTab() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-pup-maroon dark:text-primary shrink-0">
-              <Shield01Icon className="h-5 w-5" />
+              <Shield01Icon size={16} className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -183,7 +184,7 @@ export default function RateLimitingTab() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-pup-maroon dark:text-primary shrink-0">
-              <Analytics01Icon className="h-5 w-5" />
+              <Analytics01Icon size={16} className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -197,7 +198,7 @@ export default function RateLimitingTab() {
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-              <AlertCircleIcon className="h-5 w-5" />
+              <AlertCircleIcon size={16} className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -291,7 +292,7 @@ export default function RateLimitingTab() {
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-primary transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                 aria-label="Clear violation"
                               >
-                                <SquareUnlock01Icon className="h-4 w-4" />
+                                <SquareUnlock01Icon size={16} className="h-4 w-4" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Clear</TooltipContent>
@@ -362,7 +363,7 @@ export default function RateLimitingTab() {
                           className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                           aria-label="Edit configuration"
                         >
-                          <HugeIcon className="ph-bold ph-pencil-simple text-sm" />
+                          <PencilEdit01Icon size="1em" className="text-sm" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>Edit</TooltipContent>

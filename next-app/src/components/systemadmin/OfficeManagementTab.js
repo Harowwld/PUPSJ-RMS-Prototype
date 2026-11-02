@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
@@ -24,6 +25,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import PageHeader from "@/components/shared/PageHeader"
+import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
@@ -44,61 +46,61 @@ import { fetchJsonOnce } from "@/lib/clientRequest"
 import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
-import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
-// Stored icons may use either the "ti ti-x" or "ph-bold ph-x" prefix, so compare by bare icon name.
-const iconKey = (value = "") => String(value).trim().split(/\s+/).pop().replace(/^(ti|ph)-/, "")
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ComputerIcon, Copy01Icon, CovidInfoIcon, DragDropIcon, Folder01Icon, LayoutGridIcon, MoreVerticalIcon, ReloadIcon, Settings01Icon, UserSearch01Icon, ViewIcon, Search01Icon, Archive01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
+// Stored icons may use either the " Cancel01Icon" or " Cancel01Icon" prefix, so compare by bare icon name.
+const iconKey = (value = "") => String(value).trim().split(/\s+/).pop().replace(/^(|ph)-/, "")
 
 // Expanded predefined icon palette so SuperAdmins have rich choices for campus offices
 const PRESET_ICONS = [
-  { value: "ti ti-building", label: "Building" },
-  { value: "ti ti-landmark", label: "Institution" },
-  { value: "ti ti-school", label: "College" },
-  { value: "ti ti-graduation-cap", label: "Graduation" },
-  { value: "ti ti-certificate", label: "Registrar" },
-  { value: "ti ti-scroll", label: "Diploma" },
-  { value: "ti ti-passport", label: "Credentials" },
-  { value: "ti ti-award", label: "Honors" },
-  { value: "ti ti-shield-check", label: "Clearance" },
-  { value: "ti ti-users", label: "Personnel" },
-  { value: "ti ti-user-check", label: "Admissions" },
-  { value: "ti ti-user", label: "Student Affairs" },
-  { value: "ti ti-clipboard-list", label: "Records" },
-  { value: "ti ti-clipboard-check", label: "Evaluations" },
-  { value: "ti ti-file-text", label: "Documents" },
-  { value: "ti ti-folder", label: "Folders" },
-  { value: "ti ti-archive-02", label: "Archive Folder" },
-  { value: "ti ti-archive", label: "Archives" },
-  { value: "ti ti-book", label: "Library" },
-  { value: "ti ti-book-open", label: "Textbooks" },
-  { value: "ti ti-library", label: "Catalog" },
-  { value: "ti ti-calendar", label: "Schedules" },
-  { value: "ti ti-mail", label: "Communications" },
-  { value: "ti ti-banknote", label: "Accounting" },
-  { value: "ti ti-wallet", label: "Cashier" },
-  { value: "ti ti-credit-card", label: "Finance" },
-  { value: "ti ti-calculator", label: "Budget" },
-  { value: "ti ti-stethoscope", label: "Clinic" },
-  { value: "ti ti-heart-pulse", label: "Health Services" },
-  { value: "ti ti-flask-conical", label: "Laboratory" },
-  { value: "ti ti-database", label: "IT & Systems" },
-  { value: "ti ti-server", label: "Infrastructure" },
-  { value: "ti ti-laptop", label: "Computing" },
-  { value: "ti ti-briefcase", label: "Career & Placement" },
-  { value: "ti ti-message-square", label: "Guidance & Counseling" },
-  { value: "ti ti-teacher", label: "Faculty" },
-  { value: "ti ti-presentation-01", label: "Seminars" },
-  { value: "ti ti-customer-service-01", label: "Help Desk" },
-  { value: "ti ti-megaphone-01", label: "Announcements" },
-  { value: "ti ti-printer", label: "Printing" },
-  { value: "ti ti-stamp-01", label: "Authentication" },
-  { value: "ti ti-id", label: "ID Services" },
-  { value: "ti ti-hospital-01", label: "Medical" },
-  { value: "ti ti-bus-01", label: "Transport" },
-  { value: "ti ti-store-01", label: "Supply" },
-  { value: "ti ti-key-01", label: "Access Keys" },
-  { value: "ti ti-globe", label: "International Affairs" },
-  { value: "ti ti-security-check", label: "Safety & Security" },
+  { value: " Building02Icon", label: "Building" },
+  { value: " Building01Icon", label: "Institution" },
+  { value: " SchoolIcon", label: "College" },
+  { value: " GraduationScrollIcon", label: "Graduation" },
+  { value: " Certificate01Icon", label: "Registrar" },
+  { value: " ScrollIcon", label: "Diploma" },
+  { value: " PassportIcon", label: "Credentials" },
+  { value: " Award01Icon", label: "Honors" },
+  { value: " Shield01Icon", label: "Clearance" },
+  { value: " UserSearch01Icon", label: "Personnel" },
+  { value: " UserCheck01Icon", label: "Admissions" },
+  { value: " UserIcon", label: "Student Affairs" },
+  { value: " ClipboardIcon", label: "Records" },
+  { value: " CheckListIcon", label: "Evaluations" },
+  { value: " File02Icon", label: "Documents" },
+  { value: " Folder01Icon", label: "Folders" },
+  { value: " Archive02Icon", label: "Archive Folder" },
+  { value: " Archive01Icon", label: "Archives" },
+  { value: " Book01Icon", label: "Library" },
+  { value: " BookOpen01Icon", label: "Textbooks" },
+  { value: " LibraryIcon", label: "Catalog" },
+  { value: " Calendar01Icon", label: "Schedules" },
+  { value: " Mail01Icon", label: "Communications" },
+  { value: " BankIcon", label: "Accounting" },
+  { value: " Wallet01Icon", label: "Cashier" },
+  { value: " CreditCardIcon", label: "Finance" },
+  { value: " CalculatorIcon", label: "Budget" },
+  { value: " StethoscopeIcon", label: "Clinic" },
+  { value: " HeartCheckIcon", label: "Health Services" },
+  { value: " Chemistry01Icon", label: "Laboratory" },
+  { value: " Database01Icon", label: "IT & Systems" },
+  { value: " CloudServerIcon", label: "Infrastructure" },
+  { value: " LaptopIcon", label: "Computing" },
+  { value: " Briefcase01Icon", label: "Career & Placement" },
+  { value: " Message01Icon", label: "Guidance & Counseling" },
+  { value: " TeacherIcon", label: "Faculty" },
+  { value: " Presentation01Icon", label: "Seminars" },
+  { value: " CustomerService01Icon", label: "Help Desk" },
+  { value: " Megaphone01Icon", label: "Announcements" },
+  { value: " PrinterIcon", label: "Printing" },
+  { value: " Stamp01Icon", label: "Authentication" },
+  { value: " IdIcon", label: "ID Services" },
+  { value: " Hospital01Icon", label: "Medical" },
+  { value: " Bus01Icon", label: "Transport" },
+  { value: " Store01Icon", label: "Supply" },
+  { value: " Key01Icon", label: "Access Keys" },
+  { value: " GlobeIcon", label: "International Affairs" },
+  { value: " SecurityCheckIcon", label: "Safety & Security" },
 ]
 
 // Expanded institutional branding colors palette
@@ -125,12 +127,12 @@ const PRESET_COLORS = [
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -240,7 +242,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     name: "",
     short_name: "",
     description: "",
-    icon: "ph-bold ph-building",
+    icon: " Building02Icon",
     accent_color: "#800000",
     status: "Active",
     station_name: "",
@@ -340,7 +342,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       name: "",
       short_name: "",
       description: "",
-      icon: "ph-bold ph-building",
+      icon: " Building02Icon",
       accent_color: "#800000",
       status: "Active",
       station_name: "",
@@ -356,7 +358,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     if (office.status !== "Active") return
     setIsEditing(true)
     setSelectedOfficeId(office.id)
-    const icon = office.icon || "ph-bold ph-building"
+    const icon = office.icon || " Building02Icon"
     setModulesAccordionOpen(false)
     setShowAdvancedStorage(Boolean(office.storage_path || office.inbound_path))
     setForm({
@@ -806,7 +808,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-buildings"
+          icon=" Building01Icon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Departments & Offices</span>
@@ -820,11 +822,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              {/* 1. View Switcher: Grid vs Table */}
+              {/* 1. View Switcher: Cards vs Table */}
               <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border dark:border-border">
                 <button
                   type="button"
                   onClick={() => setLayoutView("grid")}
+                  aria-pressed={layoutView === "grid"}
                   title="Show each office as a card"
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
@@ -833,12 +836,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-squares-four text-sm" />
+                  <ViewModeIcon mode="cards" className="text-sm" />
                   <span>Cards</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setLayoutView("table")}
+                  aria-pressed={layoutView === "table"}
                   title="Show offices in rows and columns"
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
@@ -847,7 +851,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-list-dashes text-sm" />
+                  <ViewModeIcon mode="table" className="text-sm" />
                   <span>Table</span>
                 </button>
               </div>
@@ -900,7 +904,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </span>
                       </div>
                       <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : stat.color === "emerald" ? "bg-[#10b981]" : "bg-[#f59e0b]")}>
-                        <HugeIcon className={cn("ph-bold text-[15px]", stat.color === "blue" ? "ph-buildings" : stat.color === "emerald" ? "ph-briefcase" : "ph-users")} />
+                        <AppIcon className={cn(" text-[15px]", stat.color === "blue" ? "Building01Icon" : stat.color === "emerald" ? "Briefcase01Icon" : "UserSearch01Icon")} />
                       </div>
                     </div>
                     
@@ -913,7 +917,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           {stat.sublabel}
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
                   </div>
 
@@ -1075,7 +1079,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             )}
             <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
               </div>
               <Input
                 value={searchQuery}
@@ -1169,7 +1173,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         color: isActive ? accent : undefined,
                       }}
                     >
-                      <HugeIcon className={cn(office.icon || "ti ti-building", "text-xl")} />
+                      <AppIcon className={cn(office.icon || " Building02Icon", "text-xl")} />
                     </div>
 
                     <div className="flex flex-col min-w-0">
@@ -1219,7 +1223,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           title="More department actions"
                           aria-label={`More options for ${office.short_name}`}
                         >
-                          <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
+                          <MoreVerticalIcon size="1em" className="text-[15px]" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -1246,7 +1250,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             }}
                             className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                           >
-                            <HugeIcon className="ph-bold ph-info text-sm text-gray-500 dark:text-zinc-400" />
+                            <CovidInfoIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
                             <span>View Details</span>
                           </DropdownMenuItem>
                           {isActive && (
@@ -1257,7 +1261,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               }}
                               className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-sliders text-sm text-gray-500 dark:text-zinc-400" />
+                              <AppIcon className=" SlidersHorizontalIcon text-sm text-gray-500 dark:text-zinc-400" />
                               <span>Configure Department</span>
                             </DropdownMenuItem>
                           )}
@@ -1271,7 +1275,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             }}
                             className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                           >
-                            <HugeIcon className="ph-bold ph-copy text-sm text-gray-500 dark:text-zinc-400" />
+                            <Copy01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
                             <span>Copy Storage Path</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
@@ -1284,7 +1288,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               }}
                               className="cursor-pointer text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
                             >
-                              <HugeIcon className="ph-bold ph-archive text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
+                              <Archive01Icon size="1em" className="text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
                               <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Archive Department</span>
                             </DropdownMenuItem>
                           ) : (
@@ -1295,7 +1299,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               }}
                               className="cursor-pointer text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:bg-emerald-50 dark:focus:bg-emerald-950/30 focus:text-emerald-600 dark:focus:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 data-highlighted:bg-emerald-50 dark:data-highlighted:bg-emerald-950/30 data-highlighted:text-emerald-600 dark:data-highlighted:text-emerald-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
                             >
-                              <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
+                              <ReloadIcon size="1em" className="text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
                               <span className="text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400">Restore Department</span>
                             </DropdownMenuItem>
                           )}
@@ -1315,7 +1319,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     <div className="rounded-xl bg-gray-50/80 dark:bg-zinc-800/50 p-2.5 space-y-1.5 border border-border text-xs">
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
-                          <HugeIcon className="ph-bold ph-desktop text-xs" />
+                          <ComputerIcon size="1em" className="text-xs" />
                           <span>Scanning Computer:</span>
                         </span>
                         <span className="font-semibold text-gray-900 dark:text-zinc-100 text-[11px]">
@@ -1325,7 +1329,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
-                          <HugeIcon className="ph-bold ph-folder text-xs" />
+                          <Folder01Icon size="1em" className="text-xs" />
                           <span>Storage Folder:</span>
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -1347,7 +1351,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                             title="Copy path"
                           >
-                            <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                            <Copy01Icon size="1em" className="text-[11px]" />
                           </button>
                         </div>
                       </div>
@@ -1368,7 +1372,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           title="View assigned personnel in Global Directory"
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
                         >
-                          <HugeIcon className="ph-bold ph-users text-xs text-gray-400" />
+                          <UserSearch01Icon size="1em" className="text-xs text-gray-400" />
                           <span>Staff</span>
                           <span className="font-bold text-gray-900 dark:text-zinc-100">{office.staff_count || 0}</span>
                         </button>
@@ -1382,7 +1386,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           title={`Configure workspace modules for ${office.short_name}`}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
                         >
-                          <HugeIcon className="ph-bold ph-squares-four text-xs text-gray-400" />
+                          <LayoutGridIcon size="1em" className="text-xs text-gray-400" />
                           <span>Modules</span>
                           <span className="font-bold text-gray-900 dark:text-zinc-100">{office.module_count || 0}</span>
                         </button>
@@ -1569,7 +1573,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
                             } : undefined}
                           >
-                            <HugeIcon className={office.icon || "ti ti-building"} />
+                            <AppIcon className={office.icon || " Building02Icon"} />
                           </div>
                           <div>
                             <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight group-hover/dept:text-pup-maroon dark:group-hover/dept:text-red-400 transition-colors">
@@ -1596,7 +1600,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       <td className="p-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
                         <div className="text-[11px] space-y-1">
                           <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
-                            <HugeIcon  className="ph-bold ph-desktop text-gray-400 dark:text-zinc-500 text-xs shrink-0"></HugeIcon>
+                            <ComputerIcon size="1em"  className="text-gray-400 dark:text-zinc-500 text-xs shrink-0"></ComputerIcon>
                             <span className="truncate">{office.station_name || "Unassigned"}</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
@@ -1615,7 +1619,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                               title="Copy storage path"
                             >
-                              <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                              <Copy01Icon size="1em" className="text-[11px]" />
                             </button>
                           </div>
                         </div>
@@ -1631,7 +1635,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           title="View assigned personnel in Global Directory"
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
                         >
-                          <HugeIcon  className="ph-bold ph-users text-xs text-gray-500"></HugeIcon>
+                          <UserSearch01Icon size="1em"  className="text-xs text-gray-500"></UserSearch01Icon>
                           <span>{office.staff_count || 0}</span>
                         </button>
                       </td>
@@ -1646,7 +1650,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           title={`Configure workspace modules for ${office.short_name}`}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
                         >
-                          <HugeIcon  className="ph-bold ph-squares-four text-xs text-gray-500"></HugeIcon>
+                          <LayoutGridIcon size="1em"  className="text-xs text-gray-500"></LayoutGridIcon>
                           <span>{office.module_count || 0}</span>
                         </button>
                       </td>
@@ -1683,7 +1687,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                 aria-label="View Details"
                                 className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
-                                <HugeIcon className="ph-bold ph-eye text-[15px]" />
+                                <ViewIcon size="1em" className="text-[15px]" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>View Details</TooltipContent>
@@ -1701,7 +1705,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   aria-label="Configure Department"
                                   className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                 >
-                                  <HugeIcon className="ph-bold ph-gear-six text-[15px]" />
+                                  <Settings01Icon size="1em" className="text-[15px]" />
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>Configure Department</TooltipContent>
@@ -1717,7 +1721,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                 aria-label="More department actions"
                                 className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
-                                <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
+                                <MoreVerticalIcon size="1em" className="text-[15px]" />
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -1744,7 +1748,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   }}
                                   className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                                 >
-                                  <HugeIcon className="ph-bold ph-info text-sm text-gray-500 dark:text-zinc-400" />
+                                  <CovidInfoIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
                                   <span>View Details</span>
                                 </DropdownMenuItem>
                                 {isActive && (
@@ -1755,7 +1759,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                     }}
                                     className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                                   >
-                                    <HugeIcon className="ph-bold ph-sliders text-sm text-gray-500 dark:text-zinc-400" />
+                                    <AppIcon className=" SlidersHorizontalIcon text-sm text-gray-500 dark:text-zinc-400" />
                                     <span>Configure Department</span>
                                   </DropdownMenuItem>
                                 )}
@@ -1769,7 +1773,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   }}
                                   className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                                 >
-                                  <HugeIcon className="ph-bold ph-copy text-sm text-gray-500 dark:text-zinc-400" />
+                                  <Copy01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
                                   <span>Copy Storage Path</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
@@ -1782,7 +1786,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                     }}
                                     className="cursor-pointer text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
                                   >
-                                    <HugeIcon className="ph-bold ph-archive text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
+                                    <Archive01Icon size="1em" className="text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
                                     <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Archive Department</span>
                                   </DropdownMenuItem>
                                 ) : (
@@ -1793,7 +1797,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                     }}
                                     className="cursor-pointer text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:bg-emerald-50 dark:focus:bg-emerald-950/30 focus:text-emerald-600 dark:focus:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 data-highlighted:bg-emerald-50 dark:data-highlighted:bg-emerald-950/30 data-highlighted:text-emerald-600 dark:data-highlighted:text-emerald-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
                                   >
-                                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
+                                    <ReloadIcon size="1em" className="text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
                                     <span className="text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400">Restore Department</span>
                                   </DropdownMenuItem>
                                 )}
@@ -1930,15 +1934,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
               {/* Row 2: Description */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                <label htmlFor="office-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                   Description
                 </label>
-                <textarea
+                <Textarea
+                  id="office-description"
                   rows={2}
                   value={form.description}
                   onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe the department's institutional role and functions..."
-                  className="w-full min-h-[72px] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 transition-all resize-y shadow-xs"
+                  className="w-full min-h-[72px] resize-y"
                 />
               </div>
 
@@ -1998,7 +2003,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 <div className="flex items-center justify-between pb-2.5 border-b border-border dark:border-border">
                   <div className="flex items-center gap-2.5">
                     <div className="h-7 w-7 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
-                      <HugeIcon  className="ph-bold ph-desktop"></HugeIcon>
+                      <ComputerIcon size={16}  ></ComputerIcon>
                     </div>
                     <div>
                       <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50">
@@ -2015,7 +2020,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     className="text-[11px] font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <span>{showAdvancedStorage ? "Hide Storage Paths" : "Advanced Storage Paths"}</span>
-                    <HugeIcon  className={cn("text-[10px] ph-bold", showAdvancedStorage ? "ph-caret-up" : "ph-caret-down")}></HugeIcon>
+                    <AppIcon  className={cn("text-[10px] ", showAdvancedStorage ? "ArrowUp01Icon" : "ArrowDown01Icon")}></AppIcon>
                   </button>
                 </div>
 
@@ -2085,7 +2090,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                          <HugeIcon  className="ti ti-layout-grid text-base"></HugeIcon>
+                          <AppIcon  className=" LayoutGridIcon text-base"></AppIcon>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -2106,10 +2111,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                           {modulesAccordionOpen ? "Collapse" : "Expand"}
                         </span>
-                        <HugeIcon  className={cn(
-                          "ti ti-chevron-down text-gray-400 text-sm transition-transform duration-200",
+                        <AppIcon  className={cn(
+                          " ArrowDown01Icon text-gray-400 text-sm transition-transform duration-200",
                           modulesAccordionOpen && "rotate-180 text-pup-maroon dark:text-red-400"
-                        )}></HugeIcon>
+                        )}></AppIcon>
                       </div>
                     </button>
 
@@ -2192,7 +2197,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                        <HugeIcon  className="ti ti-layout-grid text-base"></HugeIcon>
+                        <AppIcon  className=" LayoutGridIcon text-base"></AppIcon>
                       </div>
                       <div>
                         <span className="font-semibold text-gray-900 dark:text-zinc-100 block leading-tight">
@@ -2242,7 +2247,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                           )}
                         >
-                          <HugeIcon  className={opt.value}></HugeIcon>
+                          <AppIcon  className={opt.value}></AppIcon>
                         </button>
                       )
                     })}
@@ -2284,7 +2289,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           )}
                         >
                           {isSelected && (
-                            <HugeIcon  className="ti ti-check text-white text-xs drop-shadow-sm font-bold"></HugeIcon>
+                            <AppIcon  className=" Tick01Icon text-white text-xs drop-shadow-sm font-bold"></AppIcon>
                           )}
                         </button>
                       )
@@ -2307,7 +2312,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             title="Choose custom color"
                             aria-label="Custom color picker"
                           />
-                          <HugeIcon className="ti ti-palette text-white text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></HugeIcon>
+                          <AppIcon className=" PaintBoardIcon text-white text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></AppIcon>
                         </div>
                       </div>
                       <Input
@@ -2332,7 +2337,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           borderColor: `color-mix(in srgb, ${form.accent_color || "#800000"} 25%, transparent)`,
                         }}
                       >
-                        <HugeIcon  className={cn(form.icon || "ti ti-building", "text-sm")}></HugeIcon>
+                        <AppIcon  className={cn(form.icon || " Building02Icon", "text-sm")}></AppIcon>
                         <span>{form.short_name || "Department"}</span>
                       </div>
                     </div>

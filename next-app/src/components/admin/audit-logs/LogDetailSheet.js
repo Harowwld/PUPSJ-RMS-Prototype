@@ -1,6 +1,7 @@
 "use client";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
+import SheetPagination from "@/components/shared/SheetPagination";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,7 +13,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
-
+import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
  * Clean metadata layout aligned with colons and icons.
@@ -27,7 +29,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -138,9 +140,8 @@ export default function LogDetailSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* Top Header matching reference design: Audit Event Details < > 01 of 100 X */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 Audit Event Details
@@ -150,33 +151,20 @@ export default function LogDetailSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {isNavigable && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={!hasPrev && (typeof currentIndex === "number" ? currentIndex <= 0 : false)}
-                    onClick={onPrev}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Previous Log"
-                    title="Previous Log"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!hasNext && (typeof currentIndex === "number" ? currentIndex >= totalCount - 1 : false)}
-                    onClick={onNext}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Next Log"
-                    title="Next Log"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={Math.max(1, (currentIndex ?? 0) + 1)}
+                  totalPages={totalCount}
+                  onPrevious={onPrev}
+                  onNext={onNext}
+                  previousDisabled={!hasPrev && (typeof currentIndex === "number" ? currentIndex <= 0 : false)}
+                  nextDisabled={!hasNext && (typeof currentIndex === "number" ? currentIndex >= totalCount - 1 : false)}
+                  previousLabel="Previous Log"
+                  nextLabel="Next Log"
+                />
               )}
 
               <button
@@ -186,7 +174,7 @@ export default function LogDetailSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -204,14 +192,14 @@ export default function LogDetailSheet({
                 : "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
             )}
           >
-            <HugeIcon
+            <AppIcon
               className={cn(
-                "ph-bold text-[15px] shrink-0",
+                " text-[15px] shrink-0",
                 severityInfo?.label === "Critical" || severityInfo?.label === "Security"
-                  ? "ph-shield-warning text-rose-600 dark:text-rose-400"
+                  ? "Alert01Icon text-rose-600 dark:text-rose-400"
                   : severityInfo?.label === "Warning"
-                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
-                  : "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
+                  : "Shield01Icon text-emerald-600 dark:text-emerald-400"
               )}
             />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -269,7 +257,7 @@ export default function LogDetailSheet({
             {/* 1. Event Specification (Standard Information Rows) */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-sm" />
+                <Shield01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                   Event Specification
                 </h3>
@@ -277,7 +265,7 @@ export default function LogDetailSheet({
 
               <div className="divide-y-0">
                 <InfoRow
-                  icon="ph-bold ph-hash"
+                  icon=" Tag01Icon"
                   label="Log Sequence ID"
                 >
                   <div className="flex items-center gap-2">
@@ -290,19 +278,19 @@ export default function LogDetailSheet({
                       className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy Log ID"
                     >
-                      <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                      <Copy01Icon size="1em" className="text-[11px]" />
                     </button>
                   </div>
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-lightning"
+                  icon=" EnergyIcon"
                   label="Action Type"
                   value={selectedLog.action === "Rotate Password" ? "Password Rotated" : selectedLog.action}
                 />
 
                 <InfoRow
-                  icon="ph-bold ph-warning-circle"
+                  icon=" Alert01Icon"
                   label="Security Severity"
                 >
                   {severityInfo && (
@@ -319,7 +307,7 @@ export default function LogDetailSheet({
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-clock"
+                  icon=" Clock01Icon"
                   label="Timestamp"
                 >
                   <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
@@ -329,7 +317,7 @@ export default function LogDetailSheet({
 
                 {!hideActor && (
                   <InfoRow
-                    icon="ph-bold ph-user"
+                    icon=" UserIcon"
                     label="Responsible Actor"
                   >
                     <span>
@@ -344,14 +332,14 @@ export default function LogDetailSheet({
                 {(selectedLog.entityType || selectedLog.entityId) && (
                   <>
                     <InfoRow
-                      icon="ph-bold ph-cube"
+                      icon=" AlignBoxBottomCenterIcon"
                       label="Target Entity"
                       value={selectedLog.entityType || "N/A"}
                     />
 
                     {selectedLog.entityId && (
                       <InfoRow
-                        icon="ph-bold ph-identification-card"
+                        icon=" Contact01Icon"
                         label="Reference ID"
                       >
                         <div className="flex items-center gap-2">
@@ -364,7 +352,7 @@ export default function LogDetailSheet({
                             className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                             title="Copy Reference ID"
                           >
-                            <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                            <Copy01Icon size="1em" className="text-[11px]" />
                           </button>
                         </div>
                       </InfoRow>
@@ -374,14 +362,14 @@ export default function LogDetailSheet({
 
                 {(selectedLog.officeName || selectedLog.scope) && (
                   <InfoRow
-                    icon="ph-bold ph-buildings"
+                    icon=" Building01Icon"
                     label="Office / Scope"
                     value={selectedLog.officeName || selectedLog.scope}
                   />
                 )}
 
                 <InfoRow
-                  icon="ph-bold ph-text-align-left"
+                  icon=" TextAlignLeftIcon"
                   label="Narrative Details"
                 >
                   <div className="space-y-1">
@@ -394,7 +382,7 @@ export default function LogDetailSheet({
                         onClick={() => handleCopy?.(formatLogDetails(selectedLog.details), "Description")}
                         className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer pt-0.5"
                       >
-                        <HugeIcon className="ph-bold ph-copy text-xs" />
+                        <Copy01Icon size="1em" className="text-xs" />
                         <span>Copy full narrative</span>
                       </button>
                     )}
@@ -406,7 +394,7 @@ export default function LogDetailSheet({
             {/* 2. Network & Forensic Origin (Standard Information Rows) */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <HugeIcon className="ph-bold ph-globe text-pup-maroon dark:text-red-400 text-sm" />
+                <GlobeIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                   Forensic & Network Origin
                 </h3>
@@ -414,7 +402,7 @@ export default function LogDetailSheet({
 
               <div className="divide-y-0">
                 <InfoRow
-                  icon="ph-bold ph-map-pin"
+                  icon=" Location01Icon"
                   label="IP Address"
                 >
                   <div className="flex items-center gap-2 flex-wrap">
@@ -440,14 +428,14 @@ export default function LogDetailSheet({
                         className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                         title="Copy IP"
                       >
-                        <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                        <Copy01Icon size="1em" className="text-[11px]" />
                       </button>
                     </div>
                   </div>
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-desktop"
+                  icon=" ComputerIcon"
                   label="Client Environment"
                 >
                   <span className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed font-sans tabular-nums break-all font-normal">
@@ -470,7 +458,7 @@ export default function LogDetailSheet({
                 className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
                 title="Copy activity record data"
               >
-                <HugeIcon className="ph-bold ph-copy text-sm" />
+                <Copy01Icon size="1em" className="text-sm" />
                 <span>Copy Record Data</span>
               </Button>
             )}

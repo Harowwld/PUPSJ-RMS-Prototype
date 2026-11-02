@@ -1,321 +1,402 @@
-import { dbAll, dbGet } from "./postgresCompat.js";
-import { query, queryOne } from "./postgres.js";
-import { decryptStudentRow } from "./studentAuth.js";
+import { queryOne } from "./postgres.js"
+import { decryptStudentRow } from "./studentAuth.js"
 
-function buildDocQualifiesSql(requireApproved) {
-  if (requireApproved) {
-    return "d.approval_status = 'Approved'";
-  }
-  return "(d.approval_status IS NULL OR d.approval_status != 'Declined')";
-}
+const normalizeList = (value) => [
+  ...new Set(
+    (Array.isArray(value) ? value : String(value || "").split(","))
+      .map((entry) => String(entry).trim())
+      .filter(Boolean)
+  ),
+]
 
-function buildStudentWhere({ studentStatus, courseCode, courseCodes, officeId }) {
-  const filters = [];
-  const params = [];
-
-  if (officeId) {
-    filters.push(`EXISTS (
-      SELECT 1
-      FROM student_office_memberships som
-      WHERE som.student_no = s.student_no
-        AND som.office_id = ?
-        AND som.status = 'Active'
-    )`);
-    params.push(officeId);
-  }
-
-  // Support multiple courses via courseCodes (array or comma-separated) or courseCode
-  const rawList = Array.isArray(courseCodes)
-    ? courseCodes
-    : typeof courseCodes === "string"
-    ? courseCodes.split(",")
-    : typeof courseCode === "string"
-    ? courseCode.split(",")
-    : [];
-
-  const cleanedCourses = rawList
-    .map((c) => String(c || "").trim().toUpperCase())
-    .filter(Boolean);
-
-  if (cleanedCourses.length === 1) {
-    filters.push("s.course_code = ?");
-    params.push(cleanedCourses[0]);
-  } else if (cleanedCourses.length > 1) {
-    filters.push(`s.course_code IN (${cleanedCourses.map(() => "?").join(", ")})`);
-    params.push(...cleanedCourses);
-  }
-
-  const st = String(studentStatus || "").trim();
-  if (st && st.toLowerCase() !== "all") {
-    if (st === "Active") {
-      filters.push("s.status = 'Active'");
-    } else if (st === "Archived") {
-      // Treat 'Archived' as a category for all non-active records
-      filters.push("s.status != 'Active'");
-    } else {
-      filters.push("s.status = ?");
-      params.push(st);
+export function calculateStudentCompliance(students, requireApproved = true) {
+  return students.map((student) => {
+    const requirements = (student.requirements || []).map((requirement) => {
+      const approval = requirement.doc?.approval_status
+      const status =
+        approval === "Approved"
+          ? "verified"
+          : approval === "Pending"
+            ? "pending"
+            : approval === "Declined"
+              ? "declined"
+              : "missing"
+      return {
+        ...requirement,
+        status,
+        satisfied:
+          status === "verified" || (!requireApproved && status === "pending"),
+      }
+    })
+    const verifiedCount = requirements.filter(
+      (r) => r.status === "verified"
+    ).length
+    const pendingCount = requirements.filter(
+      (r) => r.status === "pending"
+    ).length
+    const missingCount = requirements.filter(
+      (r) => r.status === "missing"
+    ).length
+    const declinedCount = requirements.filter(
+      (r) => r.status === "declined"
+    ).length
+    const satisfiedCount = requirements.filter((r) => r.satisfied).length
+    const totalCount = requirements.length
+    const { requirements: ignoredRequirements, ...identity } = student
+    return {
+      student: {
+        ...identity,
+        studentNo: student.student_no,
+        courseCode: student.course_code,
+        yearLevel: student.year_level,
+      },
+      requirements,
+      verifiedCount,
+      pendingCount,
+      missingCount,
+      declinedCount,
+      uploadedCount: verifiedCount + pendingCount,
+      satisfiedCount,
+      totalCount,
+      isCompliant: totalCount > 0 && satisfiedCount === totalCount,
+      completionPercent: totalCount
+        ? Math.round((satisfiedCount / totalCount) * 100)
+        : 0,
     }
-  }
-
-  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-  return { where, params, selectedCourses: cleanedCourses };
+  })
 }
 
-function roundPercent(ratio) {
-  if (!Number.isFinite(ratio)) return null;
-  return Math.round(ratio * 100);
-}
-
-export async function getDigitizationComplianceSummary({
+async function loadComplianceSnapshot({
   studentStatus = "Active",
   courseCode,
   courseCodes,
-  requireApproved = false,
+  requireApproved = true,
   officeId,
+  studentNo,
+  includeDigitizedDocuments = false,
 } = {}) {
-  const normalizedOfficeId = String(officeId || "").trim().toLowerCase() || null;
-  // 1. Get all doc types currently configured in the system
-  // Read lookup data from PostgreSQL directly; document_types is part of the
-  // migrated schema and the legacy docTypesRepo still targets SQLite.
-  const typeRows = await query(
-    `SELECT id, name FROM document_types
-      WHERE status = 'Active' AND is_compliance = TRUE AND is_requestable = FALSE${normalizedOfficeId ? " AND office_id = $1" : ""}
-      ORDER BY LOWER(name) ASC`,
-    normalizedOfficeId ? [normalizedOfficeId] : [],
-  );
-  const allDocTypes = typeRows.map((row) => String(row?.name || ""));
-  const expectedCountPerStudent = allDocTypes.length;
-
-  const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
-  const { where, params, selectedCourses } = buildStudentWhere({
+  const office =
+    String(officeId || "")
+      .trim()
+      .toLowerCase() || null
+  const courses = normalizeList(courseCodes ?? courseCode).map((code) =>
+    code.toUpperCase()
+  )
+  // One statement keeps requirements, evidence and population on the same database snapshot.
+  const snapshot = await queryOne(
+    `
+    WITH types AS (
+      SELECT id, name, office_id FROM document_types
+      WHERE status = 'Active' AND is_compliance = TRUE AND is_requestable = FALSE
+        AND ($1::text IS NULL OR office_id = $1)
+    ), population AS (
+      SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
+        s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer
+      FROM students s
+      WHERE ($2 = 'all' OR ($2 = 'Archived' AND s.status != 'Active') OR s.status = $2)
+        ${studentNo ? "AND s.student_no = $4" : ""}
+        AND (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
+        AND ($1::text IS NULL OR EXISTS (
+          SELECT 1 FROM student_office_memberships som
+          WHERE som.student_no = s.student_no AND som.office_id = $1 AND som.status = 'Active'
+        ))
+    )
+    SELECT
+      (SELECT coalesce(jsonb_agg(t ORDER BY lower(t.name), t.id), '[]'::jsonb) FROM types t) AS types,
+      (SELECT coalesce(jsonb_agg(record ORDER BY record.student_no), '[]'::jsonb) FROM (
+        SELECT s.*, (SELECT coalesce(jsonb_agg(jsonb_build_object(
+          'documentTypeId', t.id, 'docType', t.name, 'officeId', t.office_id,
+          'doc', (SELECT jsonb_build_object(
+            'id', d.id, 'student_no', d.student_no, 'doc_type', d.doc_type,
+            'office_id', d.office_id, 'approval_status', d.approval_status,
+            'original_filename', d.original_filename, 'mime_type', d.mime_type, 'size_bytes', d.size_bytes,
+            'created_at', d.created_at, 'review_note', d.review_note, 'reviewed_at', d.reviewed_at
+          ) FROM documents d
+            WHERE d.student_no = s.student_no AND d.office_id = t.office_id AND d.doc_type = t.name
+            ORDER BY CASE d.approval_status WHEN 'Approved' THEN 0 WHEN 'Pending' THEN 1 ELSE 2 END, d.id DESC
+            LIMIT 1)
+        ) ORDER BY lower(t.name), t.id), '[]'::jsonb) FROM types t
+          WHERE EXISTS (SELECT 1 FROM student_office_memberships som
+            WHERE som.student_no = s.student_no AND som.office_id = t.office_id AND som.status = 'Active')
+        ) AS requirements
+        ${
+          includeDigitizedDocuments
+            ? `, (
+          SELECT coalesce(jsonb_agg(jsonb_build_object(
+            'id', d.id, 'doc_type', d.doc_type, 'created_at', d.created_at,
+            'original_filename', d.original_filename
+          ) ORDER BY lower(d.doc_type), d.created_at, d.id), '[]'::jsonb)
+          FROM documents d
+          WHERE d.student_no = s.student_no AND d.office_id = $1 AND d.approval_status = 'Approved'
+        ) AS digitized_documents`
+            : ""
+        }
+        FROM population s
+      ) record) AS students`,
+    [
+      office,
+      studentStatus || "Active",
+      courses,
+      ...(studentNo ? [studentNo] : []),
+    ]
+  )
+  const types = snapshot?.types || []
+  const records = calculateStudentCompliance(
+    (snapshot?.students || []).map(decryptStudentRow),
+    requireApproved
+  )
+  return {
+    types,
+    records,
+    office,
+    courses,
     studentStatus,
-    courseCode,
-    courseCodes,
-    officeId: normalizedOfficeId,
-  });
-  const documentOfficeFilter = normalizedOfficeId ? "AND d.office_id = ?" : "";
+    requireApproved,
+    generatedAt: new Date().toISOString(),
+  }
+}
 
-  // 2. Fetch course aggregation stats
-  const courseRows = await dbAll(
-    `
-    SELECT
-      s.course_code,
-      COUNT(s.student_no) AS total_students,
-      SUM(CASE WHEN COALESCE(d_counts.actual_count, 0) >= ? THEN 1 ELSE 0 END) AS fully_digitized_count,
-      SUM(COALESCE(d_counts.actual_count, 0)) AS total_digitized_docs
-    FROM students s
-    LEFT JOIN (
-      SELECT student_no, COUNT(DISTINCT doc_type) AS actual_count
-      FROM documents d
-      WHERE ${docQualifies}
-        ${documentOfficeFilter}
-        AND d.doc_type IN (${allDocTypes.length ? allDocTypes.map(() => "?").join(",") : "NULL"})
-      GROUP BY student_no
-    ) d_counts ON s.student_no = d_counts.student_no
-    ${where}
-    GROUP BY s.course_code
-    `,
-    [
-      expectedCountPerStudent,
-      ...(normalizedOfficeId ? [normalizedOfficeId] : []),
-      ...(allDocTypes.length ? allDocTypes : []),
-      ...params,
-    ]
-  );
-
-  // 3. Fetch year aggregation stats
-  const yearRows = await dbAll(
-    `
-    SELECT
-      s.year_level,
-      COUNT(s.student_no) AS count
-    FROM students s
-    ${where}
-    GROUP BY s.year_level
-    `,
-    params
-  );
-
-  const missingByDocumentTypeRows = await dbAll(
-    `
-    SELECT
-      dt.id AS document_type_id,
-      dt.name AS document_type,
-      COUNT(DISTINCT s.student_no) AS total_students,
-      COUNT(DISTINCT CASE WHEN d.student_no IS NOT NULL THEN s.student_no END) AS digitized_students,
-      COUNT(DISTINCT CASE WHEN d.student_no IS NULL THEN s.student_no END) AS missing_students
-    FROM document_types dt
-    CROSS JOIN students s
-    LEFT JOIN documents d
-      ON d.student_no = s.student_no
-      AND d.doc_type = dt.name
-      AND ${docQualifies}
-      ${documentOfficeFilter}
-    WHERE dt.status = 'Active'
-      AND dt.is_compliance = TRUE
-      AND dt.is_requestable = FALSE
-      ${normalizedOfficeId ? "AND dt.office_id = ?" : ""}
-      ${where ? `AND ${where.slice(6)}` : ""}
-    GROUP BY dt.id, dt.name
-    ORDER BY LOWER(dt.name) ASC
-    `,
-    [
-      ...(normalizedOfficeId ? [normalizedOfficeId] : []),
-      ...(normalizedOfficeId ? [normalizedOfficeId] : []),
-      ...params,
-    ]
-  );
-
-  let totalStudents = 0;
-  let fullyDigitizedCount = 0;
-  let totalDigitizedDocsCount = 0;
-
-  const byCourse = courseRows.map((row) => {
-    const total = Number(row.total_students) || 0;
-    const digitized = Number(row.fully_digitized_count) || 0;
-    const digitizedDocs = Number(row.total_digitized_docs) || 0;
-
-    totalStudents += total;
-    fullyDigitizedCount += digitized;
-    totalDigitizedDocsCount += digitizedDocs;
-
-    const courseCompleteness = expectedCountPerStudent > 0 ? (digitizedDocs / expectedCountPerStudent) : total;
-
+function summarize(snapshot) {
+  const {
+    records,
+    types,
+    office,
+    courses,
+    studentStatus,
+    requireApproved,
+    generatedAt,
+  } = snapshot
+  const configured = types.length > 0
+  const totalStudents = records.length
+  const complete = records.filter((r) => r.isCompliant).length
+  const expected = records.reduce((sum, r) => sum + r.totalCount, 0)
+  const satisfied = records.reduce((sum, r) => sum + r.satisfiedCount, 0)
+  const byCourse = new Map()
+  const byYear = new Map()
+  for (const record of records) {
+    const code = record.student.courseCode
+    const course = byCourse.get(code) || {
+      courseCode: code,
+      total: 0,
+      digitized: 0,
+      satisfied: 0,
+      expected: 0,
+    }
+    course.total++
+    course.digitized += Number(record.isCompliant)
+    course.satisfied += record.satisfiedCount
+    course.expected += record.totalCount
+    byCourse.set(code, course)
+    const year = Number(record.student.yearLevel)
+    if (year > 0) byYear.set(year, (byYear.get(year) || 0) + 1)
+  }
+  const missingByDocumentType = types.map((type) => {
+    const eligible = records.flatMap((record) =>
+      record.requirements.filter((r) => r.documentTypeId === type.id)
+    )
+    const digitizedStudents = eligible.filter((r) => r.satisfied).length
     return {
-      courseCode: String(row.course_code || "").trim(),
-      total,
-      digitized,
-      percent: total > 0 ? roundPercent(courseCompleteness / total) : null,
-      fullyDigitizedRate: total > 0 ? roundPercent(digitized / total) : null
-    };
-  }).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
-
-  const totalCompletenessRatio = expectedCountPerStudent > 0 ? (totalDigitizedDocsCount / expectedCountPerStudent) : totalStudents;
-  const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : 0;
-  const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : 0;
-  const totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
-  const missingByDocumentType = totalStudents === 0
-    ? typeRows.map((row) => ({
-        documentTypeId: Number(row.id),
-        documentType: String(row.name || ""),
-        totalStudents: 0,
-        digitizedStudents: 0,
-        missingStudents: 0,
-      }))
-    : missingByDocumentTypeRows.map((row) => ({
-        documentTypeId: Number(row.document_type_id),
-        documentType: String(row.document_type || ""),
-        totalStudents: Number(row.total_students) || 0,
-        digitizedStudents: Number(row.digitized_students) || 0,
-        missingStudents: Number(row.missing_students) || 0,
-      }));
-
-  const byYear = yearRows.map((row) => ({
-    year: Number(row.year_level) || 0,
-    count: Number(row.count) || 0
-  })).filter((x) => x.year > 0)
-    .sort((a, b) => b.year - a.year);
-
-  const generatedAt = new Date().toISOString();
-
+      documentTypeId: type.id,
+      documentType: type.name,
+      officeId: type.office_id,
+      totalStudents: eligible.length,
+      digitizedStudents,
+      missingStudents: eligible.length - digitizedStudents,
+    }
+  })
   return {
     summary: {
       totalStudents,
-      digitizedStudents: fullyDigitizedCount,
-      fullyDigitizedStudents: fullyDigitizedCount,
-      notDigitizedStudents: Math.max(0, totalStudents - fullyDigitizedCount),
-      percentDigitized: avgCompleteness ?? 0,
-      fullyDigitizedRate: fullyDigitizedRate ?? 0,
-      totalDigitizedDocsCount,
-      totalExpectedDocsCount,
+      digitizedStudents: complete,
+      fullyDigitizedStudents: complete,
+      notDigitizedStudents: records.filter(
+        (r) => r.totalCount > 0 && !r.isCompliant
+      ).length,
+      percentDigitized: expected ? Math.round((satisfied / expected) * 100) : 0,
+      fullyDigitizedRate:
+        totalStudents && configured
+          ? Math.round((complete / totalStudents) * 100)
+          : 0,
+      totalDigitizedDocsCount: satisfied,
+      totalExpectedDocsCount: expected,
+      verifiedCount: records.reduce((sum, r) => sum + r.verifiedCount, 0),
+      pendingCount: records.reduce((sum, r) => sum + r.pendingCount, 0),
+      missingCount: records.reduce((sum, r) => sum + r.missingCount, 0),
+      declinedCount: records.reduce((sum, r) => sum + r.declinedCount, 0),
     },
-    byCourse,
-    byYear,
+    byCourse: [...byCourse.values()]
+      .map((c) => ({
+        courseCode: c.courseCode,
+        total: c.total,
+        digitized: c.digitized,
+        percent: c.expected ? Math.round((c.satisfied / c.expected) * 100) : 0,
+        fullyDigitizedRate: c.total
+          ? Math.round((c.digitized / c.total) * 100)
+          : 0,
+      }))
+      .sort((a, b) => String(a.courseCode).localeCompare(String(b.courseCode))),
+    byYear: [...byYear]
+      .map(([year, count]) => ({ year, count }))
+      .sort((a, b) => b.year - a.year),
     missingByDocumentType,
     meta: {
-      studentStatus: String(studentStatus || "").trim() || "Active",
-      courseCode: selectedCourses.length === 1 ? selectedCourses[0] : (selectedCourses.length > 1 ? selectedCourses.join(", ") : null),
-      courseCodes: selectedCourses,
-      requireApproved: Boolean(requireApproved),
-      definitions: {
-        population: normalizedOfficeId
-          ? "students table rows with an active student-office membership matching status and optional course filter"
-          : "students table rows matching status and optional course filter",
-        digitizedStudent: "Student who has uploaded all configured document types.",
-        expectedCountFormula: `Requirement: All ${expectedCountPerStudent} document types defined in system settings.`,
-        completenessMetric: "Average ratio of (Unique Uploaded Types / Total System Types) across all students.",
-        configuredDocTypes: allDocTypes
-      },
+      officeId: office,
+      studentStatus,
+      courseCode: courses.join(", ") || null,
+      courseCodes: courses,
+      requireApproved,
+      configured,
       generatedAt,
+      definitions: {
+        population:
+          "Students with active membership in the authorized office and matching filters.",
+        digitizedStudent: requireApproved
+          ? "Every applicable requirement has approved evidence."
+          : "Every applicable requirement has an approved or pending upload.",
+        expectedCountFormula: `Requirement: All ${types.length} applicable compliance document types.`,
+        completenessMetric: requireApproved
+          ? "Approved requirements / applicable requirements."
+          : "Uploaded requirements / applicable requirements.",
+        configuredDocTypes: types.map((t) => t.name),
+      },
     },
-  };
+  }
 }
 
-export async function getMissingStudentsForDocumentType({
-  documentTypeId,
-  studentStatus = "Active",
-  courseCodes,
-  requireApproved = false,
-  officeId,
-  limit = 20,
-  offset = 0,
-} = {}) {
-  const normalizedOfficeId = String(officeId || "").trim().toLowerCase() || null;
-  const parsedTypeId = Number.parseInt(documentTypeId, 10);
-  if (!Number.isInteger(parsedTypeId) || parsedTypeId < 1) return null;
+export async function getDigitizationComplianceSummary(options = {}) {
+  return summarize(await loadComplianceSnapshot(options))
+}
 
-  const typeRow = await queryOne(
-    `SELECT id, name FROM document_types
-      WHERE id = $1 AND status = 'Active' AND is_compliance = TRUE AND is_requestable = FALSE${normalizedOfficeId ? " AND office_id = $2" : ""}`,
-    normalizedOfficeId ? [parsedTypeId, normalizedOfficeId] : [parsedTypeId],
-  );
-  if (!typeRow) return null;
-
-  const { where, params } = buildStudentWhere({
-    studentStatus,
-    courseCodes,
-    officeId: normalizedOfficeId,
-  });
-  const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
-  const documentOfficeFilter = normalizedOfficeId ? "AND d.office_id = ?" : "";
-  const missingClause = `NOT EXISTS (
-    SELECT 1 FROM documents d
-    WHERE d.student_no = s.student_no
-      AND d.doc_type = ?
-      AND ${docQualifies}
-      ${documentOfficeFilter}
-  )`;
-  const missingParams = [
-    ...params,
-    String(typeRow.name || ""),
-    ...(normalizedOfficeId ? [normalizedOfficeId] : []),
-  ];
-  const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 100);
-  const safeOffset = Math.max(Number.parseInt(offset, 10) || 0, 0);
-  const filterSql = where ? `${where} AND ${missingClause}` : `WHERE ${missingClause}`;
-
-  const countRow = await dbGet(
-    `SELECT COUNT(s.student_no) AS total
-      FROM students s
-      ${filterSql}`,
-    missingParams,
-  );
-  const rows = await dbAll(
-    `SELECT s.student_no, s.name, s.course_code
-      FROM students s
-      ${filterSql}
-      ORDER BY s.student_no ASC
-      LIMIT ? OFFSET ?`,
-    [...missingParams, safeLimit, safeOffset],
-  );
-
+export async function getStudentRecordsReport({ studentNo, officeId } = {}) {
+  const identifier = String(studentNo || "").trim()
+  const office = String(officeId || "")
+    .trim()
+    .toLowerCase()
+  if (!identifier || !office) return null
+  const snapshot = await loadComplianceSnapshot({
+    studentNo: identifier,
+    officeId: office,
+    studentStatus: "all",
+    requireApproved: true,
+    includeDigitizedDocuments: true,
+  })
+  const record = snapshot.records[0]
+  if (!record) return null
+  const { digitized_documents = [], ...student } = record.student
   return {
-    documentTypeId: parsedTypeId,
-    documentType: String(typeRow.name || ""),
-    total: Number(countRow?.total) || 0,
-    students: rows.map((row) => decryptStudentRow(row)),
-    limit: safeLimit,
-    offset: safeOffset,
-  };
+    student,
+    digitizedDocuments: digitized_documents,
+    outstandingRequirements: record.requirements.filter(
+      (requirement) => !requirement.satisfied
+    ),
+    meta: {
+      officeId: snapshot.office,
+      generatedAt: snapshot.generatedAt,
+      configured: snapshot.types.length > 0,
+      requiredCount: record.totalCount,
+      verifiedCount: record.verifiedCount,
+    },
+  }
 }
+
+export async function getStudentComplianceReport(options = {}) {
+  const typeId =
+    options.documentTypeId == null || options.documentTypeId === ""
+      ? null
+      : Number(options.documentTypeId)
+  if (typeId !== null && (!Number.isSafeInteger(typeId) || typeId < 1))
+    return null
+  const snapshot = await loadComplianceSnapshot(options)
+  const type =
+    typeId === null ? null : snapshot.types.find((t) => t.id === typeId)
+  if (typeId !== null && !type) return null
+  const summary = summarize(snapshot)
+  const search = String(options.search || "")
+    .trim()
+    .toLowerCase()
+  const missingTypes = normalizeList(options.missingDocTypes)
+  let records = snapshot.records.filter((r) => {
+    if (!r.totalCount) return false
+    if (options.complianceStatus === "compliant" && !r.isCompliant) return false
+    if (
+      options.complianceStatus !== "all" &&
+      options.complianceStatus !== "compliant" &&
+      r.isCompliant
+    )
+      return false
+    if (
+      type &&
+      !r.requirements.some(
+        (req) => req.documentTypeId === typeId && !req.satisfied
+      )
+    )
+      return false
+    if (
+      missingTypes.length &&
+      !r.requirements.some(
+        (req) => missingTypes.includes(req.docType) && !req.satisfied
+      )
+    )
+      return false
+    return (
+      !search ||
+      [
+        r.student.studentNo,
+        r.student.name,
+        r.student.courseCode,
+        r.student.section,
+        `${r.student.courseCode} ${r.student.section}`,
+      ].some((value) =>
+        String(value || "")
+          .toLowerCase()
+          .includes(search)
+      )
+    )
+  })
+  const sortBy = options.sortBy || "student_no"
+  records.sort((a, b) => {
+    const value = (r) =>
+      sortBy === "progress"
+        ? r.completionPercent
+        : sortBy === "name"
+          ? r.student.name
+          : sortBy === "course"
+            ? `${r.student.courseCode} ${r.student.section}`
+            : r.student.studentNo
+    const left = value(a),
+      right = value(b)
+    const result =
+      typeof left === "number"
+        ? left - right
+        : String(left || "").localeCompare(String(right || ""))
+    return (
+      (result || a.student.studentNo.localeCompare(b.student.studentNo)) *
+      (options.sortOrder === "DESC" ? -1 : 1)
+    )
+  })
+  const total = records.length
+  const limit = Math.min(
+    Math.max(Number.parseInt(options.limit, 10) || 20, 1),
+    100
+  )
+  const offset = Math.max(Number.parseInt(options.offset, 10) || 0, 0)
+  if (!options.exportAll) records = records.slice(offset, offset + limit)
+  return {
+    ...summary,
+    documentTypeId: typeId,
+    documentType: type?.name || null,
+    total,
+    limit,
+    offset,
+    records,
+    students: records.map((r) => ({
+      ...r.student,
+      outstandingRequirements: r.requirements
+        .filter((req) => !req.satisfied)
+        .filter((req) => typeId === null || req.documentTypeId === typeId),
+    })),
+  }
+}
+
+// Keep the existing drill-down on the same population and evidence rules as the matrix.
+export const getMissingStudentsForDocumentType = getStudentComplianceReport

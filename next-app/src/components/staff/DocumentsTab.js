@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Reorder } from "framer-motion";
@@ -28,6 +28,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import {
@@ -36,48 +37,35 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon , Alert01Icon, ArrowDown01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, DragDropIcon, File01Icon, FingerPrintScanIcon, PieChartIcon, ReloadIcon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
+import ComplianceStudentsSheet from "@/components/shared/ComplianceStudentsSheet";
 const DEFAULT_KPI_ORDER = ["compliant", "incomplete", "rate"];
 const STORAGE_KEY = "pupsj_staff_docs_matrix_kpi_order";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
-    return <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60" />;
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60" />;
   return sortOrder === "ASC" ? (
-    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary" />
+    <ArrowUp01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary" />
   ) : (
-    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary" />
+    <ArrowDown01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary" />
   );
 }
 
 
 
 export default function DocumentsTab({
-  docsForm,
-  setDocsForm,
-  refreshDocuments,
-  onRefreshDocuments,
-  docTypes = [],
   courses = [],
-  sections = [],
-  storageLayout,
-  docsLoading,
-  docsError,
-  docsRows = [],
-  students = [],
   staffDocs = [],
-  isOsas = false,
   onPreviewDocument,
   onRescan,
-  onUpdateStudent,
-  onArchiveStudent,
-  currentStudent,
 }) {
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [docFrameStatus, setDocFrameStatus] = useState("loading");
+  const [pdfPreview, setPdfPreview] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Standardized Draggable KPI Stat Cards & Popover State
@@ -189,200 +177,72 @@ export default function DocumentsTab({
     }
   };
 
-  // Derive compliance document types for matrix columns
-  const complianceDocTypes = useMemo(() => {
-    if (Array.isArray(docTypes) && docTypes.length > 0) {
-      return docTypes.map((d) => (typeof d === "object" ? d.name : d)).filter(Boolean);
-    }
-    const distinct = Array.from(new Set(staffDocs.map((d) => d.doc_type).filter(Boolean)));
-    if (distinct.length > 0) return distinct;
-    return ["PSA Birth Certificate", "Form 137", "Certificate of Good Moral Character", "Health Information Sheet"];
-  }, [docTypes, staffDocs]);
+  const [matrixReport, setMatrixReport] = useState(null);
+  const [docsLoading, setMatrixLoading] = useState(true);
+  const [docsError, setMatrixError] = useState("");
+  const [rosterOpen, setRosterOpen] = useState(false);
+  const matrixController = useRef(null);
+  const matrixQuery = useMemo(() => {
+    const params = new URLSearchParams({
+      complianceStatus: matrixStatusFilter,
+      requireApproved: "1",
+      search: matrixSearch,
+      sortBy: matrixSortBy,
+      sortOrder: matrixSortOrder,
+      limit: String(matrixItemsPerPage),
+      offset: String((matrixPage - 1) * matrixItemsPerPage),
+    });
+    matrixCourseFilters.forEach((course) => params.append("courseCode", course));
+    matrixMissingDocFilters.forEach((type) => params.append("missingDocType", type));
+    return params.toString();
+  }, [matrixStatusFilter, matrixSearch, matrixSortBy, matrixSortOrder, matrixItemsPerPage, matrixPage, matrixCourseFilters, matrixMissingDocFilters]);
 
-  // Compute Batch Compliance Matrix data
-  const matrixRecords = useMemo(() => {
-    const activeStudents = (students || []).filter(
-      (s) => s.status !== "Inactive" && s.status !== "Archived"
-    );
-
-    const allOfficeDocs =
-      staffDocs && staffDocs.length > 0
-        ? staffDocs
-        : (docsRows || []).map((r) => r.doc).filter(Boolean);
-
-    // Group docs by student_no
-    const docsByStudent = new Map();
-    for (const doc of allOfficeDocs) {
-      const sn = String(doc.student_no || "").trim().toLowerCase();
-      if (!sn) continue;
-      if (!docsByStudent.has(sn)) docsByStudent.set(sn, []);
-      docsByStudent.get(sn).push(doc);
-    }
-
-    return activeStudents.map((student) => {
-      const sn = String(student.studentNo || "").trim().toLowerCase();
-      const studentFiles = docsByStudent.get(sn) || [];
-
-      const requirements = complianceDocTypes.map((type) => {
-        const normType = type.toLowerCase().replace(/[\s\-_]+/g, " ").trim();
-        const matched = studentFiles.find((d) => {
-          const dType = String(d.doc_type || "").toLowerCase().replace(/[\s\-_]+/g, " ").trim();
-          return dType === normType;
-        });
-
-        if (matched) {
-          const isApproved = matched.approval_status === "Approved";
-          return {
-            docType: type,
-            status: isApproved ? "verified" : "pending",
-            doc: matched,
-          };
-        }
-
-        return {
-          docType: type,
-          status: "missing",
-          doc: null,
-        };
+  const loadMatrix = useCallback(async () => {
+    matrixController.current?.abort();
+    const controller = new AbortController();
+    matrixController.current = controller;
+    setMatrixLoading(true);
+    setMatrixError("");
+    try {
+      const response = await fetch(`/api/analytics/digitization-compliance/missing-students?${matrixQuery}`, {
+        cache: "no-store", signal: controller.signal,
       });
+      const json = await response.json();
+      if (!response.ok || !json.ok) throw new Error(json.error || "Unable to load the compliance matrix");
+      if (!controller.signal.aborted) setMatrixReport(json.data);
+    } catch (failure) {
+      if (!controller.signal.aborted) { setMatrixReport(null); setMatrixError(failure.message); }
+    } finally { if (!controller.signal.aborted) setMatrixLoading(false); }
+  }, [matrixQuery]);
 
-      const verifiedCount = requirements.filter((r) => r.status === "verified").length;
-      const pendingCount = requirements.filter((r) => r.status === "pending").length;
-      const missingCount = requirements.filter((r) => r.status === "missing").length;
-      const uploadedCount = verifiedCount + pendingCount;
-      const totalCount = requirements.length;
-      const isCompliant = totalCount > 0 && verifiedCount === totalCount;
-      const completionPercent = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
+  useEffect(() => {
+    const timer = setTimeout(loadMatrix, 150);
+    return () => { clearTimeout(timer); matrixController.current?.abort(); };
+  }, [loadMatrix, staffDocs]);
 
-      return {
-        student,
-        requirements,
-        verifiedCount,
-        pendingCount,
-        missingCount,
-        uploadedCount,
-        totalCount,
-        isCompliant,
-        completionPercent,
-      };
-    });
-  }, [students, staffDocs, docsRows, complianceDocTypes]);
-
-  // Overall KPI statistics
-  const kpiStats = useMemo(() => {
-    const total = matrixRecords.length;
-    const compliant = matrixRecords.filter((m) => m.isCompliant).length;
-    const incomplete = total - compliant;
-    const totalSlots = total * complianceDocTypes.length;
-    const totalVerified = matrixRecords.reduce((acc, m) => acc + m.verifiedCount, 0);
-    const totalPending = matrixRecords.reduce((acc, m) => acc + m.pendingCount, 0);
-    const totalMissing = matrixRecords.reduce((acc, m) => acc + m.missingCount, 0);
-    const overallRate = totalSlots > 0 ? Math.round((totalVerified / totalSlots) * 100) : 0;
-    const compliantRate = total > 0 ? Math.round((compliant / total) * 100) : 0;
-
-    const missingCounts = {};
-    complianceDocTypes.forEach((t) => {
-      missingCounts[t] = 0;
-    });
-    for (const record of matrixRecords) {
-      for (const req of record.requirements) {
-        if (req.status === "missing") {
-          missingCounts[req.docType] = (missingCounts[req.docType] || 0) + 1;
-        }
-      }
-    }
-    const topMissing = Object.entries(missingCounts)
-      .map(([docType, count]) => ({ docType, count }))
-      .sort((a, b) => b.count - a.count);
-
-    return {
-      totalStudents: total,
-      fullyCompliant: compliant,
-      incomplete,
-      overallRate,
-      compliantRate,
-      totalSlots,
-      totalVerified,
-      totalPending,
-      totalMissing,
-      topMissing,
-    };
-  }, [matrixRecords, complianceDocTypes]);
-
-  // Matrix Filtered Records
-  const filteredMatrixRecords = useMemo(() => {
-    return matrixRecords.filter((item) => {
-      // 1. Status Filter Tab
-      if (matrixStatusFilter === "incomplete" && item.isCompliant) return false;
-      if (matrixStatusFilter === "compliant" && !item.isCompliant) return false;
-
-      // 2. Search Query
-      if (matrixSearch.trim()) {
-        const q = matrixSearch.trim().toLowerCase();
-        const sn = String(item.student.studentNo || "").toLowerCase();
-        const name = String(item.student.name || "").toLowerCase();
-        const course = String(item.student.courseCode || "").toLowerCase();
-        const section = String(item.student.section || "").toLowerCase();
-        const combined = `${course} ${section}`.toLowerCase();
-        if (
-          !sn.includes(q) &&
-          !name.includes(q) &&
-          !course.includes(q) &&
-          !section.includes(q) &&
-          !combined.includes(q)
-        ) {
-          return false;
-        }
-      }
-
-      // 3. Course Filter
-      if (matrixCourseFilters.length > 0) {
-        const course = String(item.student.courseCode || "").toUpperCase();
-        if (!matrixCourseFilters.some((c) => c.toUpperCase() === course)) return false;
-      }
-
-      // 4. Missing Doc Filter
-      if (matrixMissingDocFilters.length > 0) {
-        const normFilters = matrixMissingDocFilters.map((f) =>
-          f.toLowerCase().replace(/[\s\-_]+/g, " ").trim()
-        );
-        const hasMissing = item.requirements.some((r) => {
-          const normType = r.docType.toLowerCase().replace(/[\s\-_]+/g, " ").trim();
-          return normFilters.includes(normType) && r.status === "missing";
-        });
-        if (!hasMissing) return false;
-      }
-
-      return true;
-    });
-  }, [matrixRecords, matrixStatusFilter, matrixSearch, matrixCourseFilters, matrixMissingDocFilters]);
-
-  // Matrix Sorting
-  const sortedMatrixRecords = useMemo(() => {
-    return [...filteredMatrixRecords].sort((a, b) => {
-      let cmp = 0;
-      if (matrixSortBy === "student_no") {
-        cmp = String(a.student.studentNo || "").localeCompare(String(b.student.studentNo || ""));
-      } else if (matrixSortBy === "name") {
-        cmp = String(a.student.name || "").localeCompare(String(b.student.name || ""));
-      } else if (matrixSortBy === "course") {
-        const cA = `${a.student.courseCode || ""} ${a.student.section || ""}`;
-        const cB = `${b.student.courseCode || ""} ${b.student.section || ""}`;
-        cmp = cA.localeCompare(cB);
-      } else if (matrixSortBy === "progress") {
-        cmp = a.completionPercent - b.completionPercent;
-      }
-      return matrixSortOrder === "ASC" ? cmp : -cmp;
-    });
-  }, [filteredMatrixRecords, matrixSortBy, matrixSortOrder]);
-
-  const totalMatrixPages = Math.max(1, Math.ceil(sortedMatrixRecords.length / matrixItemsPerPage));
+  const complianceDocTypes = matrixReport?.meta.definitions.configuredDocTypes || [];
+  const stats = matrixReport?.summary;
+  const kpiStats = {
+    totalStudents: stats?.totalStudents || 0,
+    fullyCompliant: stats?.fullyDigitizedStudents || 0,
+    incomplete: stats?.notDigitizedStudents || 0,
+    overallRate: stats?.percentDigitized || 0,
+    compliantRate: stats?.fullyDigitizedRate || 0,
+    totalSlots: stats?.totalExpectedDocsCount || 0,
+    totalVerified: stats?.verifiedCount || 0,
+    totalPending: stats?.pendingCount || 0,
+    totalMissing: stats?.missingCount || 0,
+    topMissing: (matrixReport?.missingByDocumentType || []).map((type) => ({
+      docType: type.documentType, count: type.missingStudents,
+    })).sort((left, right) => right.count - left.count),
+  };
+  const matrixTotal = matrixReport?.total || 0;
+  const totalMatrixPages = Math.max(1, Math.ceil(matrixTotal / matrixItemsPerPage));
   const currentMatrixPage = Math.min(Math.max(1, matrixPage), totalMatrixPages);
-
-  const paginatedMatrixRecords = useMemo(() => {
-    const start = (currentMatrixPage - 1) * matrixItemsPerPage;
-    return sortedMatrixRecords.slice(start, start + matrixItemsPerPage);
-  }, [sortedMatrixRecords, currentMatrixPage, matrixItemsPerPage]);
+  const paginatedMatrixRecords = matrixReport?.records || [];
+  useEffect(() => {
+    if (matrixReport && matrixPage > totalMatrixPages) setMatrixPage(totalMatrixPages);
+  }, [matrixReport, matrixPage, totalMatrixPages, setMatrixPage]);
 
   const handleMatrixSort = (col) => {
     if (matrixSortBy === col) {
@@ -413,46 +273,22 @@ export default function DocumentsTab({
     }
   }, [matrixPage, matrixStatusFilter, matrixSearch, matrixCourseFilters, matrixMissingDocFilters]);
 
-  // Matrix Filter Groups for MultiCriteriaFilter
-  const matrixFilterGroups = useMemo(() => {
-    const courseOptions = (courses || []).map((c) => ({
-      value: c.code,
-      label: `${c.code} - ${c.name || c.code}`,
-      count: matrixRecords.filter(
-        (m) => String(m.student.courseCode || "").toUpperCase() === String(c.code).toUpperCase()
-      ).length,
-    }));
-
-    const missingDocOptions = complianceDocTypes.map((docType) => {
-      const normType = docType.toLowerCase().replace(/[\s\-_]+/g, " ").trim();
-      const count = matrixRecords.filter((m) => {
-        const r = m.requirements.find(
-          (req) => req.docType.toLowerCase().replace(/[\s\-_]+/g, " ").trim() === normType
-        );
-        return r && r.status === "missing";
-      }).length;
-
-      return {
-        value: docType,
-        label: docType,
-        count,
+  const matrixFilterGroups = useMemo(() => [
+    {
+      id: "course", label: "Degree Program",
+      options: (courses || []).map((course) => ({
+        value: course.code, label: `${course.code} - ${course.name || course.code}`,
+        count: matrixReport?.byCourse.find((item) => item.courseCode === course.code)?.total || 0,
+      })),
+    },
+    {
+      id: "missingDoc", label: "Outstanding Requirement",
+      options: (matrixReport?.missingByDocumentType || []).map((type) => ({
+        value: type.documentType, label: type.documentType, count: type.missingStudents,
         indicatorColor: "bg-rose-500",
-      };
-    });
-
-    return [
-      {
-        id: "course",
-        label: "Degree Program",
-        options: courseOptions,
-      },
-      {
-        id: "missingDoc",
-        label: "Missing Requirement",
-        options: missingDocOptions,
-      },
-    ];
-  }, [courses, matrixRecords, complianceDocTypes]);
+      })),
+    },
+  ], [courses, matrixReport]);
 
   const matrixFilterValues = useMemo(
     () => ({
@@ -505,7 +341,7 @@ export default function DocumentsTab({
     matrixMissingDocFilters.forEach((d) => {
       chips.push({
         id: `missing-${d}`,
-        label: `Missing: ${d}`,
+        label: `Outstanding: ${d}`,
         onRemove: () => {
           setMatrixMissingDocFilters((prev) => prev.filter((x) => x !== d));
           setMatrixPage(1);
@@ -521,6 +357,11 @@ export default function DocumentsTab({
 
   return (
     <TooltipProvider delayDuration={200}>
+      <ComplianceStudentsSheet
+        open={rosterOpen}
+        onClose={() => setRosterOpen(false)}
+        filters={{ requireApproved: "1", courseCode: matrixCourseFilters, missingDocType: matrixMissingDocFilters, search: matrixSearch }}
+      />
       <div
         id="view-documents"
         className="flex flex-[1_0_auto] flex-col w-full h-auto focus:outline-none animate-fade-up font-jakarta"
@@ -530,7 +371,7 @@ export default function DocumentsTab({
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
           {/* 1. Page Header */}
           <PageHeader
-            icon="ph-files"
+            icon="Files01Icon"
             title="Batch Compliance Matrix"
             description="Track required document compliance across students, sections, and degree programs."
             showBorder={false}
@@ -538,15 +379,14 @@ export default function DocumentsTab({
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
+              <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" disabled={!matrixReport?.meta.configured || !kpiStats.incomplete || docsLoading} onClick={() => setRosterOpen(true)}>View Incomplete Students</Button>
               <RefreshButton
                 onRefresh={async () => {
                   setIsManualRefreshing(true);
                   const startTime = Date.now();
                   try {
-                    if (onRefreshDocuments) {
-                      await onRefreshDocuments();
-                    }
-                    await refreshDocuments(docsForm);
+                    await loadMatrix();
                     const elapsed = Date.now() - startTime;
                     if (elapsed < 600) {
                       await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
@@ -558,6 +398,7 @@ export default function DocumentsTab({
                 isLoading={docsLoading || isManualRefreshing}
                 title="Refresh Records"
               />
+              </div>
             }
           />
 
@@ -598,7 +439,7 @@ export default function DocumentsTab({
                           Fully Compliant
                         </span>
                         <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                          <HugeIcon className="ph-fill text-[15px] ph-check-circle" />
+                          <CheckmarkCircle01Icon size="1em" className="text-[15px]" />
                         </div>
                       </div>
 
@@ -611,7 +452,7 @@ export default function DocumentsTab({
                             100% Verified
                           </span>
                         </div>
-                        <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
+                        <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
                       </div>
                     </div>
 
@@ -694,7 +535,7 @@ export default function DocumentsTab({
                           Incomplete Folders
                         </span>
                         <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                          <HugeIcon className="ph-fill text-[15px] ph-warning-circle" />
+                          <Alert01Icon size="1em" className="text-[15px]" />
                         </div>
                       </div>
 
@@ -707,7 +548,7 @@ export default function DocumentsTab({
                             Missing Files
                           </span>
                         </div>
-                        <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
+                        <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
                       </div>
                     </div>
 
@@ -743,12 +584,12 @@ export default function DocumentsTab({
 
                         <div>
                           <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                            Top Missing Requirements
+                            Top Outstanding Requirements
                           </h4>
                           <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
                             {kpiStats.topMissing.filter((m) => m.count > 0).length === 0 ? (
                               <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                No missing documents
+                                No outstanding requirements
                               </p>
                             ) : (
                               kpiStats.topMissing
@@ -762,7 +603,7 @@ export default function DocumentsTab({
                                       {docType}
                                     </span>
                                     <span className="font-bold text-rose-600 dark:text-rose-400">
-                                      {count} missing
+                                      {count} outstanding
                                     </span>
                                   </div>
                                 ))
@@ -813,7 +654,7 @@ export default function DocumentsTab({
                           Digitization Rate
                         </span>
                         <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-pup-maroon">
-                          <HugeIcon className="ph-bold text-[15px] ph-chart-pie-slice" />
+                          <PieChartIcon size="1em" className="text-[15px]" />
                         </div>
                       </div>
 
@@ -826,7 +667,7 @@ export default function DocumentsTab({
                             Overall Rate
                           </span>
                         </div>
-                        <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
+                        <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
                       </div>
                     </div>
 
@@ -986,7 +827,7 @@ export default function DocumentsTab({
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
                   <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                      <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                     </div>
                     <Input
                       value={matrixSearch}
@@ -998,8 +839,8 @@ export default function DocumentsTab({
                       className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                      {filteredMatrixRecords.length > 0
-                        ? filteredMatrixRecords.length.toLocaleString()
+                      {matrixTotal > 0
+                        ? matrixTotal.toLocaleString()
                         : "0"}
                     </div>
                   </div>
@@ -1010,8 +851,8 @@ export default function DocumentsTab({
                     selectedValues={matrixFilterValues}
                     onChange={handleMatrixFilterChange}
                     onClearAll={handleClearMatrixFilters}
-                    totalCount={matrixRecords.length}
-                    filteredCount={filteredMatrixRecords.length}
+                    totalCount={kpiStats.totalStudents}
+                    filteredCount={matrixTotal}
                   />
                 </div>
               </div>
@@ -1027,7 +868,7 @@ export default function DocumentsTab({
                 </div>
                 <div className="flex items-center gap-2 shrink-0 select-none">
                   <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-zinc-500 mr-1">
-                    <HugeIcon className="ph-bold ph-arrows-left-right text-xs text-pup-maroon dark:text-red-400" />
+                    <ArrowLeftRightIcon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     <span>Scroll columns:</span>
                   </div>
                   <Button
@@ -1038,7 +879,7 @@ export default function DocumentsTab({
                     className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     title="Reset horizontal scroll to default"
                   >
-                    <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                    <ReloadIcon size="1em" className="text-xs" />
                     <span>Reset Scroll</span>
                   </Button>
                   <Tooltip>
@@ -1051,7 +892,7 @@ export default function DocumentsTab({
                         className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
                         aria-label="Scroll table left"
                       >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                        <ArrowLeft01Icon size="1em" className="text-xs" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Scroll Left</TooltipContent>
@@ -1066,7 +907,7 @@ export default function DocumentsTab({
                         className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
                         aria-label="Scroll table right"
                       >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                        <ArrowRight01Icon size="1em" className="text-xs" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Scroll Right</TooltipContent>
@@ -1092,7 +933,9 @@ export default function DocumentsTab({
                       </EmptyHeader>
                     </Empty>
                   </div>
-                ) : filteredMatrixRecords.length === 0 ? (
+                ) : matrixReport && !matrixReport.meta.configured ? (
+                  <EmptyState icon={EmptySearch01Icon} title="No Requirements Configured" description="Configure compliance document types before evaluating student records." />
+                ) : matrixTotal === 0 ? (
                   <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[460px] w-full">
                     <Empty>
                       <EmptyHeader>
@@ -1165,7 +1008,7 @@ export default function DocumentsTab({
                                       className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
                                       aria-label="Reset scroll to start"
                                     >
-                                      <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                      <ReloadIcon size="1em" className="text-xs" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
@@ -1295,7 +1138,7 @@ export default function DocumentsTab({
                                         onClick={() => handleMatrixCellClick(item.student, req)}
                                         className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/80 dark:hover:bg-emerald-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
                                       >
-                                        <HugeIcon className="ph-fill ph-check-circle text-xs text-emerald-600 dark:text-emerald-400" />
+                                        <CheckmarkCircle01Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
                                         <span>Verified</span>
                                       </button>
                                     </TooltipTrigger>
@@ -1317,7 +1160,7 @@ export default function DocumentsTab({
                                         onClick={() => handleMatrixCellClick(item.student, req)}
                                         className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/80 dark:hover:bg-amber-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
                                       >
-                                        <HugeIcon className="ph-fill ph-clock text-xs text-amber-600 dark:text-amber-400" />
+                                        <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
                                         <span>Pending</span>
                                       </button>
                                     </TooltipTrigger>
@@ -1336,16 +1179,16 @@ export default function DocumentsTab({
                                     <TooltipTrigger asChild>
                                       <button
                                         type="button"
-                                        onClick={() => onRescan?.(item.student.studentNo, req.docType)}
+                                        onClick={() => onRescan?.(item.student.studentNo, req.docType, req.doc?.id, req.doc?.original_filename, req.doc?.mime_type)}
                                         className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/80 hover:bg-rose-100 hover:border-rose-300 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/80 dark:hover:bg-rose-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
                                       >
-                                        <HugeIcon className="ph-bold ph-scan text-xs text-rose-600 dark:text-rose-400" />
-                                        <span>Missing</span>
+                                        <FingerPrintScanIcon size="1em" className="text-xs text-rose-600 dark:text-rose-400" />
+                                        <span>{req.status === "declined" ? "Needs correction" : "Missing"}</span>
                                       </button>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <p className="font-semibold text-rose-300">
-                                        Missing Requirement
+                                        {req.status === "declined" ? "Correction Required" : "Missing Requirement"}
                                       </p>
                                       <p className="text-[11px] text-gray-200">{req.docType}</p>
                                       <p className="text-[10px] text-gray-400 mt-0.5">
@@ -1364,12 +1207,12 @@ export default function DocumentsTab({
                 )}
 
                 {/* Matrix Pagination */}
-                {filteredMatrixRecords.length > 0 && (
+                {matrixTotal > 0 && (
                   <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none rounded-b-2xl">
                     <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
                       <span>
                         Showing {paginatedMatrixRecords.length} of{" "}
-                        {filteredMatrixRecords.length.toLocaleString()}
+                        {matrixTotal.toLocaleString()}
                       </span>
                       <div className="flex items-center gap-2">
                         <span>Rows:</span>
@@ -1466,7 +1309,7 @@ export default function DocumentsTab({
                       onClick={() => setIsFullscreen(false)}
                       className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0 active:scale-95 transition-all"
                     >
-                      <HugeIcon className="ph-bold ph-x text-lg" />
+                      <Cancel01Icon size="1em" className="text-lg" />
                     </Button>
                   </div>
                   <ResilientPDFViewer
@@ -1539,7 +1382,7 @@ export default function DocumentsTab({
                       </label>
                       <div className="mt-1.5">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
-                          <HugeIcon className="ph-bold ph-file text-[11px]" />
+                          <File01Icon size="1em" className="text-[11px]" />
                           {selectedDoc?.doc_type}
                         </span>
                       </div>
@@ -1560,18 +1403,18 @@ export default function DocumentsTab({
                         {selectedDoc?.status === "uploaded" ? (
                           selectedDoc.verificationStatus === "unverified" ? (
                             <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
-                              <HugeIcon className="ph-fill ph-warning-circle text-[11px]" />
+                              <Alert01Icon size="1em" className="text-[11px]" />
                               Unverified
                             </div>
                           ) : (
                             <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
-                              <HugeIcon className="ph-fill ph-check-circle text-[11px]" />
+                              <CheckmarkCircle01Icon size="1em" className="text-[11px]" />
                               Uploaded
                             </div>
                           )
                         ) : (
                           <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
-                            <HugeIcon className="ph-fill ph-x-circle text-[11px]" />
+                            <CancelCircleIcon size="1em" className="text-[11px]" />
                             Missing
                           </div>
                         )}
@@ -1638,10 +1481,10 @@ export default function DocumentsTab({
                           "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
                       )}
                     >
-                      <HugeIcon
+                      <AppIcon
                         className={cn(
-                          "ph-bold text-xl",
-                          isFullscreen ? "ph-corners-in" : "ph-corners-out"
+                          " text-xl",
+                          isFullscreen ? "ArrowShrink01Icon" : "ArrowExpand01Icon"
                         )}
                       />
                     </Button>
@@ -1654,14 +1497,17 @@ export default function DocumentsTab({
 
                 {(selectedDoc?.doc?.file_url || selectedDoc?.doc?.id) &&
                   docFrameStatus === "ready" && (
-                    <a
-                      href={selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex h-10 items-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 px-4 text-xs font-semibold shadow-xs cursor-pointer active:scale-95 transition-all"
+                    <Button
+                      variant="outline"
+                      onClick={() => setPdfPreview({
+                        url: selectedDoc.doc.file_url || `/api/documents/${selectedDoc.doc.id}`,
+                        docId: selectedDoc.doc.id,
+                        title: selectedDoc.doc_type,
+                        studentName: selectedDoc.student?.name,
+                      })}
                     >
-                      Open
-                    </a>
+                      Open PDF Preview
+                    </Button>
                   )}
               </div>
 
@@ -1696,6 +1542,7 @@ export default function DocumentsTab({
             </div>
           </DialogContent>
         </Dialog>
+        <PDFPreviewModal open={!!pdfPreview} onClose={() => setPdfPreview(null)} preview={pdfPreview} />
       </div>
     </TooltipProvider>
   );

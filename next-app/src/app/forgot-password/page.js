@@ -1,11 +1,13 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Alert01Icon, Loading01Icon } from "hugeicons-react";
+
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -263,7 +265,7 @@ export default function ForgotPasswordPage() {
                   }`}>
                     <div className={`field-wrapper ${forgotIdentifierFocused || forgotIdentifier.length > 0 ? "active" : ""}`}>
                       <label htmlFor="forgotIdentifier">Email Address or Staff ID</label>
-                      <Input
+                      <Input variant="floating"
                         type="text"
                         id="forgotIdentifier"
                         disabled={forgotLoading}
@@ -299,7 +301,7 @@ export default function ForgotPasswordPage() {
 
                   {forgotError && (
                     <div role="alert" className="mt-1.5 text-left flex items-start gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                      <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
+                      <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
                       <p className="text-[12px] font-normal leading-snug">
                         {forgotError}
                       </p>
@@ -316,7 +318,7 @@ export default function ForgotPasswordPage() {
                     className="w-full h-11 disabled:opacity-50 flex items-center justify-center"
                   >
                     {forgotLoading ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
+                      <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                     ) : (
                       <span>Request</span>
                     )}
@@ -389,7 +391,7 @@ export default function ForgotPasswordPage() {
                     {/* New Password input */}
                     <div className={`field-wrapper border-b border-border dark:border-border/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
                       <label htmlFor="forgotNewPassword">New Password</label>
-                      <Input
+                      <Input variant="floating"
                         type="password"
                         placeholder=" "
                         className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -410,7 +412,7 @@ export default function ForgotPasswordPage() {
                     {/* Confirm Password input */}
                     <div className={`field-wrapper ${confirmPassFocused || forgotConfirmPassword.length > 0 ? "active" : ""}`}>
                       <label htmlFor="forgotConfirmPassword">Confirm Password</label>
-                      <Input
+                      <Input variant="floating"
                         type="password"
                         placeholder=" "
                         className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -431,7 +433,7 @@ export default function ForgotPasswordPage() {
 
                   {forgotError && (
                     <div role="alert" className="mt-1.5 text-left flex items-start gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
-                      <HugeIcon  className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></HugeIcon>
+                      <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
                       <p className="text-[12px] font-normal leading-snug">
                         {forgotError}
                       </p>
@@ -448,7 +450,7 @@ export default function ForgotPasswordPage() {
                     className="w-full h-11 disabled:opacity-50 flex items-center justify-center"
                   >
                     {forgotLoading ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></HugeIcon>
+                      <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                     ) : (
                       <span>Reset Password</span>
                     )}

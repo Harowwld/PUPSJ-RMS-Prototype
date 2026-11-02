@@ -10,7 +10,7 @@ export default function SecurityQuestionsSkeleton() {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Header */}
         <PageHeader
-          icon="ph-bold ph-shield-check"
+          icon=" Shield01Icon"
           title="Global Security Questions"
           description="Define institutional verification challenges for staff account recovery. Mark mandatory challenges as Required (minimum 10 characters)."
           showBorder={true}

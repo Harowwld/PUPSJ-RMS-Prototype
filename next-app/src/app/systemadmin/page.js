@@ -27,23 +27,23 @@ import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 
 const SYSTEMADMIN_NAV_ITEMS = [
   { type: "header", label: "Institutional Governance" },
-  { key: "offices", label: "Departments & Stations", iconClass: "ph-bold ph-buildings" },
-  { key: "modules", label: "Department Features", iconClass: "ph-bold ph-squares-four" },
+  { key: "offices", label: "Departments & Stations", iconClass: " Building01Icon" },
+  { key: "modules", label: "Department Features", iconClass: " LayoutGridIcon" },
 
   { type: "header", label: "Campus Operations" },
-  { key: "health", label: "Campus Operations", iconClass: "ph-bold ph-activity" },
+  { key: "health", label: "Campus Operations", iconClass: " Activity01Icon" },
 
   { type: "header", label: "Public Portal & Identity" },
-  { key: "branding", label: "Institutional Identity", iconClass: "ph-bold ph-certificate" },
-  { key: "landing", label: "Landing Page CMS", iconClass: "ph-bold ph-layout" },
+  { key: "branding", label: "Institutional Identity", iconClass: " Certificate01Icon" },
+  { key: "landing", label: "Landing Page CMS", iconClass: " DashboardSquare01Icon" },
 
   { type: "header", label: "Personnel & Access" },
-  { key: "staff", label: "Global Directory", iconClass: "ph-bold ph-users" },
-  { key: "security", label: "Security Questions", iconClass: "ph-bold ph-shield-check" },
+  { key: "staff", label: "Global Directory", iconClass: " UserSearch01Icon" },
+  { key: "security", label: "Security Questions", iconClass: " Shield01Icon" },
 
   { type: "header", label: "System & Security" },
-  { key: "logs", label: "Platform Activity History", iconClass: "ph-bold ph-history" },
-  { key: "backups", label: "Platform Backups", iconClass: "ph-bold ph-cloud-arrow-up" },
+  { key: "logs", label: "Platform Activity History", iconClass: " Time01Icon" },
+  { key: "backups", label: "Platform Backups", iconClass: " CloudUploadIcon" },
 ]
 
 function TabLoadingSkeleton() {

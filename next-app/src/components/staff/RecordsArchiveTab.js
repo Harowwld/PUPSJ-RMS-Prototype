@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect, useMemo } from "react"
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion"
@@ -69,9 +69,8 @@ function getStudentFolderYear(s) {
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import OfficeDocumentsTable from "@/components/staff/OfficeDocumentsTable"
 import { cn, formatTitleCase } from "@/lib/utils"
-import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, UserGroupIcon as EmptyUserGroupIcon } from "hugeicons-react";
-
-
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, UserGroupIcon as EmptyUserGroupIcon , Alert01Icon, ArrowDown01Icon, ArrowRight01Icon, Calendar01Icon, File02Icon, Files01Icon, FolderOpenIcon, LayoutGridIcon, Location01Icon, Menu01Icon, PaintBoardIcon, Search01Icon, Tick01Icon, UserIcon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -125,7 +124,7 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
               )}
               title={`Change Folder Color (${currentColorVal.name})`}
             >
-              <HugeIcon className="ph-bold ph-palette text-sm" />
+              <PaintBoardIcon size="1em" className="text-sm" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 
@@ -177,7 +176,7 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
                       title={colorVal.name}
                     >
                       {isSelected && (
-                        <HugeIcon className="ph-bold ph-check text-xs text-white drop-shadow-xs" />
+                        <Tick01Icon size="1em" className="text-xs text-white drop-shadow-xs" />
                       )}
                     </button>
                   );
@@ -705,7 +704,7 @@ export default function RecordsArchiveTab({
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-archive"
+          icon="Archive01Icon"
           title="Records & Archive"
           description={
             isOsas
@@ -729,7 +728,7 @@ export default function RecordsArchiveTab({
                 )}
                 title="Browse records by folder"
               >
-                <HugeIcon className="ph-bold ph-folder-open text-xs" />
+                <FolderOpenIcon size="1em" className="text-xs" />
                 <span>Browse Folders</span>
               </button>
               <button
@@ -743,7 +742,7 @@ export default function RecordsArchiveTab({
                 )}
                 title="View all documents in a table"
               >
-                <HugeIcon className="ph-bold ph-files text-xs" />
+                <Files01Icon size="1em" className="text-xs" />
                 <span>All Documents</span>
               </button>
             </div>
@@ -817,7 +816,7 @@ export default function RecordsArchiveTab({
             <div className="w-full sm:w-64 md:w-72 relative group shrink-0">
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   type="text"
@@ -883,12 +882,12 @@ export default function RecordsArchiveTab({
                                 className="w-7 h-7 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                 title="Locate in Storage"
                               >
-                                <HugeIcon className="ph-bold ph-map-pin text-[14px]" />
+                                <Location01Icon size="1em" className="text-[14px]" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Locate in Archive</TooltipContent>
                           </Tooltip>
-                          <HugeIcon className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></HugeIcon>
+                          <ArrowRight01Icon size="1em" className="text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></ArrowRight01Icon>
                         </div>
                       </div>
                     ))
@@ -917,7 +916,7 @@ export default function RecordsArchiveTab({
                     {folderSortBy === "name-desc" && "Sort: Name (Z-A)"}
                     {folderSortBy === "count-desc" && "Sort: Most Records"}
                   </span>
-                  <HugeIcon className="ph-bold ph-caret-down text-[10px] text-gray-400 ml-0.5" />
+                  <ArrowDown01Icon size="1em" className="text-[10px] text-gray-400 ml-0.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -950,11 +949,11 @@ export default function RecordsArchiveTab({
                         className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <div className="flex items-center gap-2">
-                          <HugeIcon className="ph-bold ph-calendar text-sm text-pup-maroon dark:text-red-400" />
+                          <Calendar01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                           <span>Newest Year First</span>
                         </div>
                         {folderSortBy === "year-desc" && (
-                          <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                          <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -962,11 +961,11 @@ export default function RecordsArchiveTab({
                         className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
                         <div className="flex items-center gap-2">
-                          <HugeIcon className="ph-bold ph-calendar-blank text-sm text-pup-maroon dark:text-red-400" />
+                          <Calendar01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                           <span>Oldest Year First</span>
                         </div>
                         {folderSortBy === "year-asc" && (
-                          <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                          <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                         )}
                       </DropdownMenuItem>
                     </>
@@ -976,11 +975,11 @@ export default function RecordsArchiveTab({
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-sort-ascending text-sm text-pup-maroon dark:text-red-400" />
+                      <AppIcon className=" SortingUpIcon text-sm text-pup-maroon dark:text-red-400" />
                       <span>Alphabetical (A to Z)</span>
                     </div>
                     {folderSortBy === "name-asc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -988,11 +987,11 @@ export default function RecordsArchiveTab({
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-sort-descending text-sm text-pup-maroon dark:text-red-400" />
+                      <AppIcon className=" SortingDownIcon text-sm text-pup-maroon dark:text-red-400" />
                       <span>Alphabetical (Z to A)</span>
                     </div>
                     {folderSortBy === "name-desc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
                   {!isLeafLevel && (
@@ -1001,11 +1000,11 @@ export default function RecordsArchiveTab({
                       className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     >
                       <div className="flex items-center gap-2">
-                        <HugeIcon className="ph-bold ph-files text-sm text-pup-maroon dark:text-red-400" />
+                        <Files01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                         <span>Most Records First</span>
                       </div>
                       {folderSortBy === "count-desc" && (
-                        <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                        <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                       )}
                     </DropdownMenuItem>
                   )}
@@ -1046,7 +1045,7 @@ export default function RecordsArchiveTab({
                   )}
                   title="Show each record as a card"
                 >
-                  <HugeIcon className="ph-bold ph-squares-four text-xs" />
+                  <LayoutGridIcon size="1em" className="text-xs" />
                   <span>Cards</span>
                 </button>
                 <button
@@ -1060,7 +1059,7 @@ export default function RecordsArchiveTab({
                   )}
                   title="Show records in rows and columns"
                 >
-                  <HugeIcon className="ph-bold ph-list-dashes text-xs" />
+                  <Menu01Icon size="1em" className="text-xs" />
                   <span>Table</span>
                 </button>
               </div>
@@ -1255,7 +1254,7 @@ export default function RecordsArchiveTab({
                                ? "bg-white border-white text-[#0A84FF]" 
                                : "border-white/40 bg-white/10 hover:border-white/80"
                            )}>
-                             {isSelected && <HugeIcon  className="ph-bold ph-check text-[10px]" />}
+                             {isSelected && <Tick01Icon size="1em"  className="text-[10px]" />}
                            </div>
                         </div>
 
@@ -1282,18 +1281,18 @@ export default function RecordsArchiveTab({
 
                               {row.student.adviser && (
                                 <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-white/85 font-medium">
-                                  <HugeIcon className="ph-bold ph-user text-[13px] opacity-80" />
+                                  <UserIcon size="1em" className="text-[13px] opacity-80" />
                                   <span className="truncate">Adviser: {row.student.adviser}</span>
                                 </div>
                               )}
 
                               <div className="mt-2.5 flex items-center gap-2 text-[11px] text-white/80">
                                 <span className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-md">
-                                  <HugeIcon className="ph-bold ph-users text-[12px]" />
+                                  <UserSearch01Icon size="1em" className="text-[12px]" />
                                   {row.student.activeOfficerCount ?? 0} Officers
                                 </span>
                                 <span className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-md">
-                                  <HugeIcon className="ph-bold ph-file-text text-[12px]" />
+                                  <File02Icon size="1em" className="text-[12px]" />
                                   {row.student.proposalCount ?? 0} Proposals
                                 </span>
                               </div>
@@ -1316,13 +1315,13 @@ export default function RecordsArchiveTab({
                                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-white bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                                     title="Click to preview Constitution and By-Laws"
                                   >
-                                    <HugeIcon className="ph-bold ph-file-pdf text-[13px]" />
+                                    <File02Icon size="1em" className="text-[13px]" />
                                     <span>CBL On File</span>
-                                    <HugeIcon className="ph-bold ph-eye text-[11px] opacity-75 ml-0.5" />
+                                    <ViewIcon size="1em" className="text-[11px] opacity-75 ml-0.5" />
                                   </button>
                                 ) : (
                                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white/60">
-                                    <HugeIcon className="ph-bold ph-warning-circle text-[13px]" />
+                                    <Alert01Icon size="1em" className="text-[13px]" />
                                     <span>No CBL Filed</span>
                                   </span>
                                 )}
@@ -1363,7 +1362,7 @@ export default function RecordsArchiveTab({
                               </div>
 
                               <div className="flex items-center gap-1.5 text-white/80">
-                                <HugeIcon className="ph-bold ph-map-pin text-[13px]" />
+                                <Location01Icon size="1em" className="text-[13px]" />
                                 <span className="text-[12px] font-medium text-white/85 select-none truncate">
                                   Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                 </span>
@@ -1390,7 +1389,7 @@ export default function RecordsArchiveTab({
                               </div>
                               <div className="mt-2.5 flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-1.5 text-white/80">
-                                  <HugeIcon  className="ph-bold ph-map-pin text-[14px]"></HugeIcon>
+                                  <Location01Icon size="1em"  className="text-[14px]"></Location01Icon>
                                   <span className="text-[13px] font-medium text-white/80 select-none whitespace-nowrap">
                                     Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
                                   </span>
@@ -1540,7 +1539,7 @@ export default function RecordsArchiveTab({
                                      title="Preview Constitution and By-Laws"
                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                    >
-                                     <HugeIcon className="ph-bold ph-file-pdf text-[15px]"></HugeIcon>
+                                     <File02Icon size="1em" className="text-[15px]"></File02Icon>
                                    </button>
                                  )}
                                  <Tooltip>
@@ -1551,7 +1550,7 @@ export default function RecordsArchiveTab({
                                        title={isOsas ? "View Organization Details" : "View Student Details"}
                                        className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                      >
-                                       <HugeIcon className="ph-bold ph-eye text-[15px]"></HugeIcon>
+                                       <ViewIcon size="1em" className="text-[15px]"></ViewIcon>
                                      </button>
                                    </TooltipTrigger>
                                    <TooltipContent>{isOsas ? "View Organization Details" : "View Student Details"}</TooltipContent>
@@ -1564,7 +1563,7 @@ export default function RecordsArchiveTab({
                                        title="Locate Archive Drawer"
                                        className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                      >
-                                       <HugeIcon className="ph-bold ph-map-pin text-[15px]"></HugeIcon>
+                                       <Location01Icon size="1em" className="text-[15px]"></Location01Icon>
                                      </button>
                                    </TooltipTrigger>
                                    <TooltipContent>Locate Drawer</TooltipContent>

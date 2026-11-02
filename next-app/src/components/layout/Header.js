@@ -1,7 +1,7 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { EmptyState } from "@/components/ui/empty";
-import { Search01Icon } from "hugeicons-react";
+import { Search01Icon , ArrowDown01Icon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon} from "hugeicons-react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -33,12 +33,12 @@ import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, ha
 import { getRoleBranding } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
 import { matchesSearchQuery } from "@/lib/searchUtils";
+import AppIcon from "@/components/ui/app-icon";
 import {
   getHighContrastPreference,
   toggleHighContrastPreference,
   HIGH_CONTRAST_EVENT,
 } from "@/lib/accessibility";
-
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -408,14 +408,14 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Departments & Stations",
               view: "offices",
-              icon: "ph-bold ph-buildings",
+              icon: " Building01Icon",
               breadcrumb: "Institutional Governance • View",
               keywords: "offices departments stations campus registry osas admissions library accounting admin governance units colleges add department new office",
             },
             {
               label: "Department Features",
               view: "modules",
-              icon: "ph-bold ph-squares-four",
+              icon: " LayoutGridIcon",
               breadcrumb: "Institutional Governance • View",
               keywords: "features matrix permissions feature flags modules config toggle access roles supervisor staff tools category registrar osas",
             },
@@ -429,14 +429,14 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Processing Time Standards",
               view: "standards",
-              icon: "ph-bold ph-clock-countdown",
+              icon: " HourglassIcon",
               breadcrumb: "Campus Operations • View",
               keywords: "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
             },
             {
               label: "Campus Operations",
               view: "health",
-              icon: "ph-bold ph-activity",
+              icon: " Activity01Icon",
               breadcrumb: "Campus Operations • View",
               keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
             },
@@ -450,14 +450,14 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Institutional Identity",
               view: "branding",
-              icon: "ph-bold ph-certificate",
+              icon: " Certificate01Icon",
               breadcrumb: "Public Portal & Identity • View",
               keywords: "institutional identity branding logo seal university school credentials jurisdiction prefix name color pdf header letterhead institution identity accent white label report style",
             },
             {
               label: "Landing Page CMS",
               view: "landing",
-              icon: "ph-bold ph-layout",
+              icon: " DashboardSquare01Icon",
               breadcrumb: "Public Portal & Identity • View",
               keywords: "landing page cms public portal content website builder customization homepage portal editor",
             },
@@ -465,7 +465,7 @@ export default function Header({ authUser, onLogout, children }) {
               label: "Landing CMS: Hero Section",
               view: "landing",
               section: "hero",
-              icon: "ph-bold ph-image",
+              icon: " Image01Icon",
               breadcrumb: "Landing CMS • Section",
               keywords: "landing cms hero section banner headline slides background photos rotation",
             },
@@ -473,7 +473,7 @@ export default function Header({ authUser, onLogout, children }) {
               label: "Landing CMS: Workflow & Steps",
               view: "landing",
               section: "workflow",
-              icon: "ph-bold ph-git-merge",
+              icon: " GitMergeIcon",
               breadcrumb: "Landing CMS • Section",
               keywords: "landing cms workflow steps how it works pipeline guide process",
             },
@@ -481,7 +481,7 @@ export default function Header({ authUser, onLogout, children }) {
               label: "Landing CMS: Academic Catalog",
               view: "landing",
               section: "catalog",
-              icon: "ph-bold ph-books",
+              icon: " LibraryIcon",
               breadcrumb: "Landing CMS • Section",
               keywords: "landing cms academic catalog courses degrees document types requirements",
             },
@@ -489,7 +489,7 @@ export default function Header({ authUser, onLogout, children }) {
               label: "Landing CMS: FAQ Section",
               view: "landing",
               section: "faq",
-              icon: "ph-bold ph-question",
+              icon: " HelpCircleIcon",
               breadcrumb: "Landing CMS • Section",
               keywords: "landing cms faq accordion questions answers help support common inquiries",
             },
@@ -497,7 +497,7 @@ export default function Header({ authUser, onLogout, children }) {
               label: "Landing CMS: Institutional Footer",
               view: "landing",
               section: "footer",
-              icon: "ph-bold ph-panel-bottom",
+              icon: " LayoutBottomIcon",
               breadcrumb: "Landing CMS • Section",
               keywords: "landing cms footer credentials address contact copyright socials links",
             },
@@ -511,14 +511,14 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Global Directory",
               view: "staff",
-              icon: "ph-bold ph-users",
+              icon: " UserSearch01Icon",
               breadcrumb: "Personnel & Access • View",
               keywords: "directory personnel users accounts staff global roles administrators employees add user invite staff",
             },
             {
               label: "Security Questions",
               view: "security",
-              icon: "ph-bold ph-shield-check",
+              icon: " Shield01Icon",
               breadcrumb: "Personnel & Access • View",
               keywords: "security questions password reset recovery verification questions authentication default security questions",
             },
@@ -532,14 +532,14 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Platform Activity History",
               view: "logs",
-              icon: "ph-bold ph-history",
+              icon: " Time01Icon",
               breadcrumb: "System & Security • View",
               keywords: "audit logs security platform activity history transactions compliance events logs export audit trail",
             },
             {
               label: "Platform Backups",
               view: "backups",
-              icon: "ph-bold ph-cloud-arrow-up",
+              icon: " CloudUploadIcon",
               breadcrumb: "System & Security • View",
               keywords: "platform backups database snapshots postgres dump restore export recovery archive maintenance automated schedule cloud backup restore download",
             },
@@ -556,7 +556,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Records Review",
               view: "review",
-              icon: "ph-bold ph-seal-check",
+              icon: " CheckmarkBadge01Icon",
               module: "records_review",
               breadcrumb: "Records & Verification • View",
               keywords: "approve decline pending documents review scans verify verification records review queue",
@@ -564,7 +564,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Compliance Analytics",
               view: "digitization",
-              icon: "ph-bold ph-chart-bar",
+              icon: " Analytics01Icon",
               module: "compliance_analytics",
               breadcrumb: "Records & Verification • View",
               keywords: "metrics compliance digitization statistics kpi analytics progress monitoring",
@@ -579,7 +579,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "SLA Analytics",
               view: "request_analytics",
-              icon: "ph-bold ph-trend-up",
+              icon: " Analytics01Icon",
               module: "request_analytics",
               breadcrumb: "Operations & Fulfillment • View",
               keywords: "sla analytics turnaround duration requests fulfillment speed document requests",
@@ -587,7 +587,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Storage Room Layout",
               view: "storage_layout",
-              icon: "ph-bold ph-warehouse",
+              icon: " WarehouseIcon",
               module: "storage_layout",
               breadcrumb: "Operations & Fulfillment • View",
               keywords: "storage room cabinet drawer layout 2d map archive physical locator storage editor",
@@ -602,7 +602,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Staff Directory",
               view: "directory",
-              icon: "ph-bold ph-users",
+              icon: " UserSearch01Icon",
               module: "staff_directory",
               breadcrumb: "Personnel & Governance • View",
               keywords: "directory staff users personnel accounts team members roles active inactive",
@@ -610,7 +610,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Activity History",
               view: "logs",
-              icon: "ph-bold ph-history",
+              icon: " Time01Icon",
               module: "audit_logs",
               breadcrumb: "Personnel & Governance • View",
               keywords: "audit trail history logs security compliance user activity events",
@@ -625,7 +625,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "System Configuration",
               view: "system_data",
-              icon: "ph-bold ph-gear",
+              icon: " Settings01Icon",
               module: "system_config",
               breadcrumb: "System & Maintenance • View",
               keywords: "courses sections doc types document types config system data institutional",
@@ -633,7 +633,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Backup & Recovery",
               view: "system",
-              icon: "ph-bold ph-cloud-arrow-up",
+              icon: " CloudUploadIcon",
               module: "backup",
               breadcrumb: "System & Maintenance • View",
               keywords: "backup maintenance database restore export encrypted snapshots recovery snapshots",
@@ -658,7 +658,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Document Requests",
               view: "requests",
-              icon: "ph-bold ph-tray-arrow-up",
+              icon: " FileUploadIcon",
               module: "document_requests",
               breadcrumb: "Service & Requests • View",
               keywords: "document requests odrs transcript diploma certification operations processing client requests",
@@ -666,7 +666,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "OSAS Monitoring",
               view: "osas_monitoring",
-              icon: "ph-bold ph-student",
+              icon: " StudentIcon",
               module: "osas_monitoring",
               breadcrumb: "Service & Requests • View",
               keywords: "osas student affairs proposals events monitoring activities organizations student submissions",
@@ -681,7 +681,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Scan & Upload",
               view: "upload",
-              icon: "ph-bold ph-scan",
+              icon: " FingerPrintScanIcon",
               module: "scan_upload",
               breadcrumb: "Scanning & Document Upload • View",
               keywords: "scan upload ocr document new ingest single upload file scanner digitization",
@@ -689,7 +689,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Batch Review",
               view: "batch_review",
-              icon: "ph-bold ph-check-square",
+              icon: " Task01Icon",
               module: "scan_upload",
               breadcrumb: "Scanning & Document Upload • View",
               keywords: "batch review scan queue bulk verification inspect documents approve decline scans",
@@ -704,7 +704,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Student Directory",
               view: "students",
-              icon: "ph-bold ph-users",
+              icon: " UserSearch01Icon",
               module: "student_directory",
               breadcrumb: "Student & Organization Roster • View",
               keywords: "student directory students profiles records directory list search archive",
@@ -712,7 +712,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Student Organizations",
               view: "organizations",
-              icon: "ph-bold ph-buildings",
+              icon: " Building01Icon",
               module: "student_organizations",
               breadcrumb: "Student & Organization Roster • View",
               keywords: "student organizations osas cbl bylaws officers authorized student leaders roster accreditation",
@@ -727,7 +727,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Records & Archive",
               view: "search",
-              icon: "ph-bold ph-archive-box",
+              icon: " Archive01Icon",
               module: "records_archive",
               breadcrumb: "Archive & Storage • View",
               keywords: "records archive search students repository files folders year levels browse files",
@@ -735,7 +735,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Storage Explorer",
               view: "storage",
-              icon: "ph-bold ph-folder-open",
+              icon: " FolderOpenIcon",
               module: "storage_explorer",
               breadcrumb: "Archive & Storage • View",
               keywords: "physical archive explorer room cabinet drawer storage 2d locator map locator",
@@ -750,7 +750,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Student Documents",
               view: "documents",
-              icon: "ph-bold ph-file-text",
+              icon: " File02Icon",
               module: "documents",
               breadcrumb: "Records & Communications • View",
               keywords: "documents student records files matrix status table repository search documents",
@@ -758,7 +758,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Notifications",
               view: "notifications",
-              icon: "ph-bold ph-bell",
+              icon: " Notification01Icon",
               module: "notifications",
               breadcrumb: "Records & Communications • View",
               keywords: "notifications alerts messages unread updates inbox reminders",
@@ -786,7 +786,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Overview & Status Hub",
               view: "overview",
-              icon: "ph-bold ph-squares-four",
+              icon: " LayoutGridIcon",
               breadcrumb: "Student Portal • Home",
               keywords: "overview dashboard home status recent activities tracking quick actions summary blockers alerts",
             },
@@ -800,14 +800,14 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "Document Requests",
               view: "odrs",
-              icon: "ph-bold ph-tray-arrow-up",
+              icon: " FileUploadIcon",
               breadcrumb: "Academic Records • View",
               keywords: "document requests odrs transcript diploma certificate grades official records tracking new request status",
             },
             {
               label: "Document Checklist & Compliance",
               view: "compliance",
-              icon: "ph-bold ph-clipboard-text",
+              icon: " ClipboardIcon",
               breadcrumb: "Academic Records • View",
               keywords: "document checklist compliance requirements missing documents submitted documents compliance status form 137 psa birth certificate unsubmitted pending",
             },
@@ -821,7 +821,7 @@ export default function Header({ authUser, onLogout, children }) {
             {
               label: "OSAS Submissions",
               view: "osas",
-              icon: "ph-bold ph-student",
+              icon: " StudentIcon",
               breadcrumb: "Student Affairs • View",
               keywords: "osas submissions event proposals activity student affairs organizations clearance submit proposal",
             },
@@ -839,7 +839,7 @@ export default function Header({ authUser, onLogout, children }) {
         {
           label: "Toggle Sidebar",
           action: "toggle-sidebar",
-          icon: "ph-bold ph-sidebar-simple",
+          icon: " LayoutLeftIcon",
           shortcut: isMac ? "⌘B" : "CTRL B",
           breadcrumb: "Navigation • Action",
           keywords: "toggle sidebar collapse expand hide show drawer panel navigation view hide sidebar",
@@ -847,7 +847,7 @@ export default function Header({ authUser, onLogout, children }) {
         {
           label: isHighContrast ? "Disable High Contrast Mode" : "Enable High Contrast Mode",
           action: "toggle-contrast",
-          icon: "ph-bold ph-circle-half",
+          icon: " CircleIcon",
           breadcrumb: "Accessibility • Display",
           keywords: "high contrast accessibility display contrast black white theme readability toggle colors",
         },
@@ -855,21 +855,21 @@ export default function Header({ authUser, onLogout, children }) {
           {
             label: "Reset Scale / Zoom (100%)",
             action: "zoom-reset",
-            icon: "ph-bold ph-arrows-out-line-horizontal",
+            icon: " ArrowLeftRightIcon",
             breadcrumb: "Layout Scale • Action",
             keywords: "reset scale zoom default 100% normal view layout size restore",
           },
           {
             label: "Zoom In (+8%)",
             action: "zoom-in",
-            icon: "ph-bold ph-magnifying-glass-plus",
+            icon: " ZoomInAreaIcon",
             breadcrumb: "Layout Scale • Action",
             keywords: "zoom in enlarge scale increase size bigger larger view",
           },
           {
             label: "Zoom Out (-8%)",
             action: "zoom-out",
-            icon: "ph-bold ph-magnifying-glass-minus",
+            icon: " ZoomOutAreaIcon",
             breadcrumb: "Layout Scale • Action",
             keywords: "zoom out shrink scale decrease size smaller view",
           },
@@ -879,14 +879,14 @@ export default function Header({ authUser, onLogout, children }) {
             label: "Switch to Staff View",
             action: "switch-role",
             targetRole: "staff",
-            icon: "ph-bold ph-users",
+            icon: " UserSearch01Icon",
             breadcrumb: "Role Mode • Action",
             keywords: "switch to staff view operations portal toggle role personnel",
           } : {
             label: "Switch to Admin View",
             action: "switch-role",
             targetRole: "admin",
-            icon: "ph-bold ph-shield-check",
+            icon: " Shield01Icon",
             breadcrumb: "Role Mode • Action",
             keywords: "switch to admin view administrator management toggle role governance",
           }
@@ -895,7 +895,7 @@ export default function Header({ authUser, onLogout, children }) {
           {
             label: "Return to Dashboard",
             action: "return-dashboard",
-            icon: "ph-bold ph-layout",
+            icon: " DashboardSquare01Icon",
             breadcrumb: "Navigation • Action",
             keywords: "return back dashboard home main view exit settings leave",
           }
@@ -912,21 +912,21 @@ export default function Header({ authUser, onLogout, children }) {
         {
           label: "Account Settings",
           view: "settings",
-          icon: "ph-bold ph-gear",
+          icon: " Settings01Icon",
           breadcrumb: "Preferences • Settings",
           keywords: "account settings my profile password credentials preferences security 2fa totp edit profile",
         },
         {
           label: "My Activity",
           view: "activity",
-          icon: "ph-bold ph-clock-counter-clockwise",
+          icon: " Time01Icon",
           breadcrumb: "Activity History • Personal",
           keywords: "my activity history personal audit logs login sessions timeline recent actions",
         },
         {
           label: "Sign Out",
           action: "logout",
-          icon: "ph-bold ph-sign-out",
+          icon: " Logout01Icon",
           breadcrumb: "Session • Sign Out",
           keywords: "sign out log out exit disconnect leave session terminate end",
         },
@@ -1076,7 +1076,7 @@ export default function Header({ authUser, onLogout, children }) {
               className="md:hidden flex h-10 w-10 min-w-[40px] min-h-[40px] items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 shrink-0"
               aria-label="Open portal navigation menu"
             >
-              <HugeIcon className="ph-bold ph-list text-xl" />
+              <ListViewIcon size="1em" className="text-xl" />
             </button>
           )}
           <div 
@@ -1125,7 +1125,7 @@ export default function Header({ authUser, onLogout, children }) {
                       />
                       {!imageLoaded && (
                         <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-zinc-800 animate-pulse">
-                          <HugeIcon  className="ph-bold ph-user text-[14px] text-gray-400 dark:text-zinc-550" />
+                          <UserIcon size="1em"  className="text-[14px] text-gray-400 dark:text-zinc-550" />
                         </div>
                       )}
                     </>
@@ -1143,7 +1143,7 @@ export default function Header({ authUser, onLogout, children }) {
                   </span>
                 </div>
 
-                <HugeIcon  className="ph-bold ph-caret-down text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></HugeIcon>
+                <ArrowDown01Icon size="1em"  className="text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></ArrowDown01Icon>
               </div>
             </DropdownMenuTrigger>
             
@@ -1188,7 +1188,7 @@ export default function Header({ authUser, onLogout, children }) {
                   )}
                     onClick={openAccountSettings}
                 >
-                  <HugeIcon className="ph-bold ph-gear text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                  <Settings01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
                   <span>Account Settings</span>
                 </DropdownMenuItem>
 
@@ -1200,7 +1200,7 @@ export default function Header({ authUser, onLogout, children }) {
                     )}
                     onClick={openMyActivity}
                     >
-                     <HugeIcon className="ph-bold ph-clock-counter-clockwise text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                     <Time01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
                      <span>My Activity</span>
                   </DropdownMenuItem>
                 )}
@@ -1210,9 +1210,9 @@ export default function Header({ authUser, onLogout, children }) {
                     onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
                     className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 transition-colors outline-none"
                   >
-                    <HugeIcon className={cn(
+                    <AppIcon className={cn(
                       "text-sm shrink-0",
-                      activeView === "admin" ? "ph-bold ph-users text-blue-600 dark:text-blue-400" : "ph-bold ph-shield-check text-purple-600 dark:text-purple-400"
+                      activeView === "admin" ? " UserSearch01Icon text-blue-600 dark:text-blue-400" : " Shield01Icon text-purple-600 dark:text-purple-400"
                     )} />
                     <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
                   </DropdownMenuItem>
@@ -1226,7 +1226,7 @@ export default function Header({ authUser, onLogout, children }) {
                   onClick={handleLogoutAction}
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none"
                 >
-                  <HugeIcon className="ph-bold ph-sign-out text-sm" />
+                  <Logout01Icon size="1em" className="text-sm" />
                   <span>Sign Out</span>
                 </button>
               </div>
@@ -1245,7 +1245,7 @@ export default function Header({ authUser, onLogout, children }) {
         >
           {/* Top Search Input Section */}
           <div className="flex items-center gap-3 px-5 py-4">
-            <HugeIcon  className="ph-bold ph-magnifying-glass text-xl text-pup-maroon dark:text-red-400 shrink-0"></HugeIcon>
+            <Search01Icon size="1em"  className="text-xl text-pup-maroon dark:text-red-400 shrink-0"></Search01Icon>
             <input
               ref={commandInputRef}
               type="text"
@@ -1324,7 +1324,7 @@ export default function Header({ authUser, onLogout, children }) {
                                     : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                                 )}
                               >
-                                <HugeIcon className={cn(item.icon, "text-[16px]")} title={item.label}></HugeIcon>
+                                <AppIcon className={cn(item.icon, "text-[16px]")} title={item.label}></AppIcon>
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
@@ -1439,7 +1439,7 @@ export default function Header({ authUser, onLogout, children }) {
               className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl bg-gray-100/80 hover:bg-gray-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 dark:text-zinc-400 text-xs border border-gray-200/80 dark:border-white/10 transition-colors cursor-pointer select-none"
             >
               <div className="flex items-center gap-2.5">
-                <HugeIcon className="ph-bold ph-magnifying-glass text-sm text-pup-maroon dark:text-red-400" />
+                <Search01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                 <span className="font-medium text-gray-700 dark:text-zinc-200">Search views, actions...</span>
               </div>
               <kbd className="inline-flex items-center justify-center px-1.5 h-5 text-[9px] font-bold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none">
@@ -1495,7 +1495,7 @@ export default function Header({ authUser, onLogout, children }) {
                                 : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
                             )}
                           >
-                            <HugeIcon className={cn(item.icon, "text-[16px]")} title={item.label} />
+                            <AppIcon className={cn(item.icon, "text-[16px]")} title={item.label} />
                           </div>
                           <span className="truncate">{item.label}</span>
                         </div>

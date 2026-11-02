@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { transaction } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
 
 function decryptDocumentRow(row) {
@@ -543,18 +544,50 @@ export async function replaceDocumentFile(
 export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNote }, { officeId } = {}) {
   await ensureReviewColumns();
   const scopedOfficeId = requireOfficeId(officeId);
-  const existing = await getDocumentById(id, { officeId: scopedOfficeId });
-  if (!existing) return null;
+  const reviewed = await transaction(async ({ query, queryOne }) => {
+    const existing = await queryOne(
+      "SELECT * FROM documents WHERE id = $1 AND office_id = $2 FOR UPDATE",
+      [id, scopedOfficeId],
+    );
+    if (!existing) return null;
 
-  await dbRun(
-    `UPDATE documents
-     SET approval_status = ?,
-         reviewed_by = ?,
-         reviewed_at = datetime('now'),
-         review_note = ?
-     WHERE id = ? AND office_id = ?`,
-    [approvalStatus, reviewedBy || null, reviewNote || null, id, scopedOfficeId]
-  );
+    if (approvalStatus === "Approved" && (existing.student_no || existing.organization_id)) {
+      const entityColumn = existing.student_no ? "student_no" : "organization_id";
+      const entityId = existing.student_no || existing.organization_id;
+      // Sibling rows need a shared lock: locking only this document permits concurrent duplicate approvals.
+      await query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
+        JSON.stringify(["document-approval", scopedOfficeId, entityColumn, entityId]),
+      ]);
+      const duplicate = await queryOne(
+        `SELECT id, approval_status FROM documents
+          WHERE office_id = $1 AND ${entityColumn} = $2
+            AND lower(trim(doc_type)) = lower(trim($3))
+            AND approval_status = 'Approved' AND id != $4
+          ORDER BY id LIMIT 1`,
+        [scopedOfficeId, entityId, existing.doc_type, id],
+      );
+      if (duplicate) {
+        const entityLabel = existing.student_no ? "student" : "organization";
+        const error = new Error(
+          `A '${existing.doc_type}' record is already approved for this ${entityLabel} (record #${duplicate.id}). Decline this duplicate or return the approved record to Pending before approving a replacement.`,
+        );
+        error.code = "DUPLICATE_DOCUMENT";
+        error.isDuplicate = true;
+        error.duplicateId = duplicate.id;
+        error.existingStatus = duplicate.approval_status;
+        throw error;
+      }
+    }
+
+    return await queryOne(
+      `UPDATE documents
+          SET approval_status = $1, reviewed_by = $2,
+              reviewed_at = CURRENT_TIMESTAMP, review_note = $3
+        WHERE id = $4 AND office_id = $5 RETURNING id`,
+      [approvalStatus, reviewedBy || null, reviewNote || null, id, scopedOfficeId],
+    );
+  });
+  if (!reviewed) return null;
 
   const updated = await getDocumentById(id, { officeId: scopedOfficeId });
   if (updated && ["Approved", "Declined"].includes(approvalStatus)) {

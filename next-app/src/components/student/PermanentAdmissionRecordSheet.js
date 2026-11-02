@@ -1,7 +1,8 @@
 "use client";
 
+import SheetPagination from "@/components/shared/SheetPagination";
 import React, { useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import {
   Sheet,
   SheetContent,
@@ -13,7 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-
+import { Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -28,7 +30,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -44,18 +46,18 @@ function InfoRow({ icon, label, value, children, className }) {
 function getCategoryIcon(category = "") {
   const cat = String(category).toLowerCase();
   if (cat.includes("admission") || cat.includes("identity") || cat.includes("birth")) {
-    return "ph-identification-card";
+    return "Contact01Icon";
   }
   if (cat.includes("academic") || cat.includes("record") || cat.includes("137") || cat.includes("grade")) {
-    return "ph-graduation-cap";
+    return "GraduationScrollIcon";
   }
   if (cat.includes("graduation") || cat.includes("exit") || cat.includes("diploma") || cat.includes("transcript")) {
-    return "ph-certificate";
+    return "Certificate01Icon";
   }
   if (cat.includes("certificate") || cat.includes("clearance") || cat.includes("moral")) {
-    return "ph-shield-check";
+    return "Shield01Icon";
   }
-  return "ph-file-text";
+  return "File02Icon";
 }
 
 export default function PermanentAdmissionRecordSheet({
@@ -100,9 +102,8 @@ export default function PermanentAdmissionRecordSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* 1. TOP HEADER: Title + Sequential Navigation (< > 01 of XX) + Squircle Close */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 Permanent Admission Record
@@ -112,33 +113,20 @@ export default function PermanentAdmissionRecordSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {hasMultiple && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={currentIndex <= 0}
-                    onClick={onNavigatePrev}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Previous Record"
-                    title="Previous Record"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIndex >= totalCount - 1}
-                    onClick={onNavigateNext}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Next Record"
-                    title="Next Record"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(currentIndex + 1).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={currentIndex + 1}
+                  totalPages={totalCount}
+                  onPrevious={onNavigatePrev}
+                  onNext={onNavigateNext}
+                  previousDisabled={currentIndex <= 0}
+                  nextDisabled={currentIndex >= totalCount - 1}
+                  previousLabel="Previous Record"
+                  nextLabel="Next Record"
+                />
               )}
 
               <button
@@ -148,7 +136,7 @@ export default function PermanentAdmissionRecordSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -163,12 +151,12 @@ export default function PermanentAdmissionRecordSheet({
               : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
           )}
         >
-          <HugeIcon
+          <AppIcon
             className={cn(
-              "ph-bold text-[15px] shrink-0",
+              " text-[15px] shrink-0",
               isSubmitted
-                ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
-                : "ph-warning-circle text-amber-600 dark:text-amber-400"
+                ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
+                : "Alert01Icon text-amber-600 dark:text-amber-400"
             )}
           />
           <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -193,10 +181,10 @@ export default function PermanentAdmissionRecordSheet({
                   : "bg-amber-500/10 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-500/20 dark:border-amber-900/40"
               )}
             >
-              <HugeIcon
+              <TaskDone01Icon size={16}
                 className={cn(
-                  "ph-bold",
-                  isSubmitted ? "ph-file-check" : getCategoryIcon(docCategory)
+                  "",
+                  isSubmitted ? "" : getCategoryIcon(docCategory)
                 )}
               />
             </div>
@@ -222,11 +210,11 @@ export default function PermanentAdmissionRecordSheet({
             </h4>
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow
-                icon="ph-buildings"
+                icon="Building01Icon"
                 label="Verifying Office"
                 value="Office of the Campus Registrar"
               />
-              <InfoRow icon="ph-chart-pie-slice" label="Clearance Status">
+              <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border",
@@ -246,28 +234,28 @@ export default function PermanentAdmissionRecordSheet({
               </InfoRow>
               {isSubmitted && archiveDate && (
                 <InfoRow
-                  icon="ph-calendar-check"
+                  icon="CalendarCheckIn01Icon"
                   label="Archived On"
                   value={formatPHDateTime(archiveDate)}
                 />
               )}
               {isSubmitted && (
                 <InfoRow
-                  icon="ph-shield-check"
+                  icon="Shield01Icon"
                   label="Clearance Standing"
                   value="Good Standing · No Records Hold"
                 />
               )}
               {!isSubmitted && (
                 <InfoRow
-                  icon="ph-door"
+                  icon="Door01Icon"
                   label="Submission Window"
                   value="Window 2 — Admissions & Archives (Room 102)"
                 />
               )}
               {!isSubmitted && (
                 <InfoRow
-                  icon="ph-clock"
+                  icon="Clock01Icon"
                   label="Window Hours"
                   value="Mon – Fri, 8:00 AM – 5:00 PM (PST)"
                 />
@@ -285,7 +273,7 @@ export default function PermanentAdmissionRecordSheet({
                 {docInstructions}
               </p>
               <div className="flex items-center gap-2 text-[11.5px] text-gray-500 dark:text-zinc-400 pt-0.5">
-                <HugeIcon className="ph-bold ph-envelope-simple text-xs text-gray-400 shrink-0" />
+                <Mail01Icon size="1em" className="text-xs text-gray-400 shrink-0" />
                 <span>Place in a long brown envelope labeled with your full name and student number.</span>
               </div>
             </div>
@@ -300,7 +288,7 @@ export default function PermanentAdmissionRecordSheet({
               <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-                    <HugeIcon className="ph-bold ph-file-text text-base" />
+                    <File02Icon size="1em" className="text-base" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate" title={originalFilename}>
@@ -322,7 +310,7 @@ export default function PermanentAdmissionRecordSheet({
                     onClick={() => onPreviewDocument(item)}
                     className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <HugeIcon className="ph-bold ph-eye text-xs mr-1" />
+                    <ViewIcon size="1em" className="text-xs mr-1" />
                     <span>View Digital Copy</span>
                   </Button>
                 )}

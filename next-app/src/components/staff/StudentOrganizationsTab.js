@@ -1,4 +1,6 @@
 "use client";
+import SheetPagination from "@/components/shared/SheetPagination";
+import { Textarea } from "@/components/ui/textarea";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
@@ -6,7 +8,7 @@ import useCreateAnother from "@/hooks/useCreateAnother";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { cn } from "@/lib/utils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
@@ -112,7 +115,8 @@ const getBannerStatusDotClass = (status) => {
 };
 
 import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon } from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, BookBookmark01Icon, Building01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
 const getBylawsStatusBadgeClass = (status) => {
@@ -140,7 +144,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-[#800000] via-[#991b1b] to-[#b91c1c] text-white",
       ring: "ring-red-500/30 dark:ring-red-400/30",
       badge: "bg-red-50 text-pup-maroon border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900/50",
-      icon: "ph-fill ph-crown",
+      icon: " CrownIcon",
     };
   }
   if (pos.includes("vice")) {
@@ -148,7 +152,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-indigo-800 via-indigo-600 to-blue-600 text-white",
       ring: "ring-indigo-500/30 dark:ring-indigo-400/30",
       badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/50",
-      icon: "ph-bold ph-shield-check",
+      icon: " Shield01Icon",
     };
   }
   if (pos.includes("secretary")) {
@@ -156,7 +160,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-emerald-800 via-emerald-600 to-teal-600 text-white",
       ring: "ring-emerald-500/30 dark:ring-emerald-400/30",
       badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
-      icon: "ph-bold ph-notepad",
+      icon: " Notebook01Icon",
     };
   }
   if (pos.includes("treasurer") || pos.includes("finance")) {
@@ -164,7 +168,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-amber-700 via-amber-600 to-yellow-600 text-white",
       ring: "ring-amber-500/30 dark:ring-amber-400/30",
       badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
-      icon: "ph-bold ph-coins",
+      icon: " Coins01Icon",
     };
   }
   if (pos.includes("auditor")) {
@@ -172,14 +176,14 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-purple-800 via-purple-600 to-violet-600 text-white",
       ring: "ring-purple-500/30 dark:ring-purple-400/30",
       badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/50",
-      icon: "ph-bold ph-scales",
+      icon: " JusticeScale01Icon",
     };
   }
   return {
     gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
     ring: "ring-gray-300/30 dark:ring-white/10",
     badge: "bg-gray-100 text-gray-700 border-border dark:bg-zinc-800 dark:text-zinc-300 dark:border-border",
-    icon: "ph-bold ph-user-check",
+    icon: " UserCheck01Icon",
   };
 }
 
@@ -1015,7 +1019,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
-            icon="ph-buildings"
+            icon="Building01Icon"
             title="Student Organizations"
             description="Manage recognized campus student organizations, their Constitution and By-Laws, and authorized officers."
             showBorder={false}
@@ -1024,11 +1028,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
-                {/* Segmented View Mode Toggle: Grid vs Table */}
+                {/* Segmented View Mode Toggle: Cards vs Table */}
                 <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
                   <button
                     type="button"
                     onClick={() => setViewMode("grid")}
+                    aria-pressed={viewMode === "grid"}
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                       viewMode === "grid"
@@ -1037,12 +1042,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     )}
                     title="Show each organization as a card"
                   >
-                    <HugeIcon className="ph-bold ph-squares-four text-sm" />
+                    <ViewModeIcon mode="cards" className="text-sm" />
                     <span>Cards</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewMode("table")}
+                    aria-pressed={viewMode === "table"}
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                       viewMode === "table"
@@ -1051,7 +1057,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     )}
                     title="Show organization details in columns"
                   >
-                    <HugeIcon className="ph-bold ph-list-dashes text-sm" />
+                    <ViewModeIcon mode="table" className="text-sm" />
                     <span>Table</span>
                   </button>
                 </div>
@@ -1132,7 +1138,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </span>
                             </div>
                             <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-pup-maroon">
-                              <HugeIcon className="ph-bold text-[15px] ph-buildings" />
+                              <Building01Icon size="1em" className="text-[15px]" />
                             </div>
                           </div>
 
@@ -1145,8 +1151,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 Campus Active
                               </span>
                             </div>
-                            <HugeIcon
-                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
+                            <DragDropIcon size="1em"
+                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                               title="Drag to rearrange"
                             />
                           </div>
@@ -1259,7 +1265,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </span>
                             </div>
                             <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                              <HugeIcon className="ph-bold text-[15px] ph-shield-check" />
+                              <Shield01Icon size="1em" className="text-[15px]" />
                             </div>
                           </div>
 
@@ -1276,8 +1282,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 Authorized Submitters
                               </span>
                             </div>
-                            <HugeIcon
-                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
+                            <DragDropIcon size="1em"
+                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                               title="Drag to rearrange"
                             />
                           </div>
@@ -1391,7 +1397,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </span>
                             </div>
                             <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                              <HugeIcon className="ph-bold text-[15px] ph-calendar-check" />
+                              <CalendarCheckIn01Icon size="1em" className="text-[15px]" />
                             </div>
                           </div>
 
@@ -1408,8 +1414,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 Activity Proposals
                               </span>
                             </div>
-                            <HugeIcon
-                              className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
+                            <DragDropIcon size="1em"
+                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                               title="Drag to rearrange"
                             />
                           </div>
@@ -1512,7 +1518,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     title="Slide left"
                     aria-label="Slide categories left"
                   >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                    <ArrowLeft01Icon size="1em" className="text-xs" />
                   </button>
                 </div>
               )}
@@ -1584,7 +1590,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     title="Slide right"
                     aria-label="Slide categories right"
                   >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                    <ArrowRight01Icon size="1em" className="text-xs" />
                   </button>
                 </div>
               )}
@@ -1595,7 +1601,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               {/* Search Bar with live count badge */}
               <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   value={search}
@@ -1741,7 +1747,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               title="Reset table scroll"
                               className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
                             </button>
                           )}
                         </div>
@@ -1830,7 +1836,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
                               title="Manage authorized officers"
                             >
-                              <HugeIcon className="ph-bold ph-shield-check text-xs" />
+                              <Shield01Icon size="1em" className="text-xs" />
                               <span>
                                 {officerCount} {officerCount === 1 ? "Officer" : "Officers"}
                               </span>
@@ -1852,7 +1858,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             ) : hasCbl ? (
                               <div className="flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-                                  <HugeIcon className="ph-bold ph-file-pdf text-xs" />
+                                  <File02Icon size="1em" className="text-xs" />
                                   <span>Archived</span>
                                 </span>
                                 <div className="flex items-center gap-1">
@@ -1864,7 +1870,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                         aria-label="Preview Official CBL"
                                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
                                       >
-                                        <HugeIcon className="ph-bold ph-eye text-xs" />
+                                        <ViewIcon size="1em" className="text-xs" />
                                       </button>
                                     </TooltipTrigger>
                                     <TooltipContent>Preview CBL (PDF)</TooltipContent>
@@ -1880,7 +1886,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                         aria-label="Replace Archival CBL"
                                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
                                       >
-                                        <HugeIcon className="ph-bold ph-upload-simple text-xs" />
+                                        <Upload01Icon size="1em" className="text-xs" />
                                       </button>
                                     </TooltipTrigger>
                                     <TooltipContent>Replace CBL</TooltipContent>
@@ -1900,7 +1906,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                       aria-label="Upload Archival CBL"
                                       className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
                                     >
-                                      <HugeIcon className="ph-bold ph-upload-simple text-xs" />
+                                      <Upload01Icon size="1em" className="text-xs" />
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Upload Archival CBL</TooltipContent>
@@ -1938,7 +1944,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     aria-label="Manage Organization Info"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                   >
-                                    <HugeIcon className="ph-bold ph-pencil-simple text-[16px]" />
+                                    <PencilEdit01Icon size="1em" className="text-[16px]" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Organization Details</TooltipContent>
@@ -1952,7 +1958,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     aria-label="Manage authorized officers"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
                                   >
-                                    <HugeIcon className="ph-bold ph-users text-[16px]" />
+                                    <UserSearch01Icon size="1em" className="text-[16px]" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Manage Officers</TooltipContent>
@@ -1987,7 +1993,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       >
                         {/* Ambient watermark */}
                         <div className="absolute -right-2 -bottom-2 text-white/10 pointer-events-none select-none transition-transform duration-300 group-hover:scale-105">
-                          <HugeIcon className="ph-duotone ph-buildings text-5xl" />
+                          <Building01Icon size="1em" className="text-5xl" />
                         </div>
 
                         {/* Top Meta Chips */}
@@ -2037,7 +2043,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="flex items-center justify-between gap-2 text-xs py-0.5">
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
-                                <HugeIcon className="ph-bold ph-chalkboard-teacher text-xs" />
+                                <AppIcon className=" TeacherIcon text-xs" />
                               </span>
                               <div className="min-w-0">
                                 <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider block leading-tight">
@@ -2066,7 +2072,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="grid grid-cols-2 divide-x divide-border dark:divide-border rounded-xl bg-gray-50/80 dark:bg-zinc-800/40 border border-border/80 dark:border-border p-2">
                             <div className="flex items-center gap-2 px-2 min-w-0">
                               <span className="w-7 h-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center shrink-0">
-                                <HugeIcon className="ph-bold ph-shield-check text-sm" />
+                                <Shield01Icon size="1em" className="text-sm" />
                               </span>
                               <div className="min-w-0">
                                 <div className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider">
@@ -2080,7 +2086,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                             <div className="flex items-center gap-2 px-2 min-w-0">
                               <span className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 flex items-center justify-center shrink-0">
-                                <HugeIcon className="ph-bold ph-calendar-check text-sm" />
+                                <CalendarCheckIn01Icon size="1em" className="text-sm" />
                               </span>
                               <div className="min-w-0">
                                 <div className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider">
@@ -2106,10 +2112,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     : "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
                                 )}
                               >
-                                <HugeIcon
+                                <AppIcon
                                   className={cn(
-                                    "ph-bold text-sm",
-                                    hasCbl ? "ph-file-pdf" : "ph-file-dashed"
+                                    " text-sm",
+                                    hasCbl ? "File02Icon" : "FileAddIcon"
                                   )}
                                 />
                               </span>
@@ -2156,7 +2162,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     title="Preview Official CBL"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
                                   >
-                                    <HugeIcon className="ph-bold ph-eye text-xs" />
+                                    <ViewIcon size="1em" className="text-xs" />
                                   </button>
                                   <button
                                     type="button"
@@ -2167,7 +2173,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     title="Replace Archival CBL"
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
                                   >
-                                    <HugeIcon className="ph-bold ph-upload-simple text-xs" />
+                                    <Upload01Icon size="1em" className="text-xs" />
                                   </button>
                                 </>
                               ) : (
@@ -2233,9 +2239,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             showCloseButton={false}
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
-            {/* TOP HEADER: Manage Organization + < > 01 of XX + X button */}
             <SheetHeader className="shrink-0 p-0">
-              <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle>
                     Manage Organization
@@ -2245,33 +2250,20 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </SheetDescription>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="ml-auto flex items-center gap-3">
                   {filteredOrganizations.length > 1 && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                      <button
-                        type="button"
-                        disabled={currentOrgIndex <= 0}
-                        onClick={handlePrevOrg}
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                        aria-label="Previous Organization"
-                        title="Previous Organization"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={currentOrgIndex >= filteredOrganizations.length - 1}
-                        onClick={handleNextOrg}
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                        aria-label="Next Organization"
-                        title="Next Organization"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                      </button>
-                      <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                        {String(Math.max(1, currentOrgIndex + 1)).padStart(2, "0")} of {String(filteredOrganizations.length).padStart(2, "0")}
-                      </span>
-                    </div>
+                    <SheetPagination
+                      compact
+                      label="Record navigation"
+                      page={Math.max(1, currentOrgIndex + 1)}
+                      totalPages={filteredOrganizations.length}
+                      onPrevious={handlePrevOrg}
+                      onNext={handleNextOrg}
+                      previousDisabled={currentOrgIndex <= 0}
+                      nextDisabled={currentOrgIndex >= filteredOrganizations.length - 1}
+                      previousLabel="Previous Organization"
+                      nextLabel="Next Organization"
+                    />
                   )}
 
                   <button
@@ -2284,7 +2276,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     aria-label="Close"
                     title="Close"
                   >
-                    <HugeIcon className="ph-bold ph-x text-sm" />
+                    <Cancel01Icon size="1em" className="text-sm" />
                   </button>
                 </div>
               </div>
@@ -2347,7 +2339,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-identification-card text-xs" />
+                  <AppIcon className=" Contact01Icon text-xs" />
                   <span>Organization Info</span>
                 </button>
 
@@ -2361,7 +2353,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-users text-xs" />
+                  <UserSearch01Icon size="1em" className="text-xs" />
                   <span>Authorized Officers</span>
                   <span
                     className={cn(
@@ -2385,7 +2377,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-book-bookmark text-xs" />
+                  <BookBookmark01Icon size="1em" className="text-xs" />
                   <span>Constitution & By-Laws</span>
                   <span
                     className={cn(
@@ -2555,7 +2547,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 className="w-7 h-7 rounded-lg shrink-0 shadow-xs border border-white/20 flex items-center justify-center text-white"
                                 style={{ background: preset.previewGradient }}
                               >
-                                {isSelected && <HugeIcon className="ph-bold ph-check text-xs" />}
+                                {isSelected && <Tick01Icon size="1em" className="text-xs" />}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <span className="block text-[11px] font-semibold text-gray-900 dark:text-zinc-100 truncate leading-tight">
@@ -2572,15 +2564,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                      <label htmlFor="org-sheet-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                         Description & Mission
                       </label>
-                      <textarea
+                      <Textarea
+                        id="org-sheet-description"
                         rows={3}
                         placeholder="Brief description of the organization's goals, objectives, and scope..."
                         value={orgForm.description}
                         onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
-                        className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none resize-none text-gray-900 dark:text-zinc-100"
+                        className="w-full resize-none"
                       />
                     </div>
                   </div>
@@ -2590,7 +2583,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   {/* Authorize Student Officer Section */}
                   <div className="space-y-3 pb-5 border-b border-border/80 dark:border-border">
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-user-plus text-pup-maroon dark:text-red-400 text-sm" />
+                      <UserAdd01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Authorize Student Officer
                       </h4>
@@ -3048,6 +3041,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </div>
                 </div>
 
+                <div>
+                  <label htmlFor="org-modal-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                    Description & Mission
+                  </label>
+                  <Textarea
+                    id="org-modal-description"
+                    rows={3}
+                    placeholder="Brief description of the organization's goals and scope..."
+                    value={orgForm.description}
+                    onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
+                    className="w-full resize-none"
+                  />
+                </div>
+
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
@@ -3099,7 +3107,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             className="w-7 h-7 rounded-lg shrink-0 shadow-xs border border-white/20 flex items-center justify-center text-white"
                             style={{ background: preset.previewGradient }}
                           >
-                            {isSelected && <HugeIcon className="ph-bold ph-check text-xs" />}
+                            {isSelected && <Tick01Icon size="1em" className="text-xs" />}
                           </div>
                           <div className="min-w-0 flex-1">
                             <span className="block text-[11px] font-semibold text-gray-900 dark:text-zinc-100 truncate leading-tight">
@@ -3115,18 +3123,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                    Description & Mission
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Brief description of the organization's goals and scope..."
-                    value={orgForm.description}
-                    onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
-                    className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none resize-none text-gray-900 dark:text-zinc-100"
-                  />
-                </div>
               </div>
 
               <DialogFooter className="mx-0 mb-0 p-6 pt-0 flex flex-wrap flex-row items-center justify-end gap-2.5 shrink-0">
@@ -3240,7 +3236,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     {cblReviewAction === "Approved" ? "Approval Remarks / Notes (Optional)" : "Review Feedback & Instructions"}
                     {cblReviewAction !== "Approved" && <span className="text-red-500"> *</span>}
                   </label>
-                  <textarea
+                  <Textarea
                     rows={4}
                     required={cblReviewAction !== "Approved"}
                     placeholder={
@@ -3250,7 +3246,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     }
                     value={cblReviewNote}
                     onChange={(e) => setCblReviewNote(e.target.value)}
-                    className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -3285,7 +3281,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 >
                   {cblReviewSubmitting ? (
                     <>
-                      <HugeIcon className="ph ph-spinner animate-spin text-sm" />
+                      <Loading01Icon size="1em" className="ph animate-spin text-sm" />
                       <span>Saving...</span>
                     </>
                   ) : (

@@ -249,11 +249,23 @@ export async function PATCH(req, ctx) {
       });
     }
 
-    const row = await reviewDocument(id, {
-      approvalStatus,
-      reviewedBy: reviewer.id || null,
-      reviewNote: reviewNote || null,
-    }, { officeId: accessRow.office_id });
+    let row;
+    try {
+      row = await reviewDocument(id, {
+        approvalStatus,
+        reviewedBy: reviewer.id || null,
+        reviewNote: reviewNote || null,
+      }, { officeId: accessRow.office_id });
+    } catch (error) {
+      if (error.code !== "DUPLICATE_DOCUMENT") throw error;
+      return NextResponse.json({
+        ok: false,
+        error: error.message,
+        isDuplicate: true,
+        duplicateId: error.duplicateId,
+        existingStatus: error.existingStatus,
+      }, { status: 409 });
+    }
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }

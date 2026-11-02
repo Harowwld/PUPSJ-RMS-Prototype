@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import { cn, formatTitleCase } from "@/lib/utils"
@@ -26,8 +26,8 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
-import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, ArrowUp01Icon, CheckmarkCircle01Icon, Delete01Icon, FolderOpenIcon, Loading01Icon, ReloadIcon, Upload01Icon, ViewIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const COORDINATE_REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
   middleName: { label: "Middle name", color: "#9333ea" },
@@ -533,7 +533,7 @@ export default function ScanUploadTab({
       >
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
-            icon="ph-scan"
+            icon="FingerPrintScanIcon"
             title="Scan & Upload"
             description={isOsas ? "Scan organization records or import files to save them digitally." : "Scan student records or import files to save them digitally."}
             showBorder={false}
@@ -556,7 +556,7 @@ export default function ScanUploadTab({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2 bg-slate-50/70 dark:bg-zinc-900/60 border-t border-b border-border dark:border-border text-xs">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
-                
+
                 <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
                   Workstation:
                 </span>
@@ -570,7 +570,7 @@ export default function ScanUploadTab({
               <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
                 Digitization Save Path:
               </span>
-              <span 
+              <span
                 className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
                 title={authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
               >
@@ -581,7 +581,7 @@ export default function ScanUploadTab({
               <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
                 Scanner Inbound:
               </span>
-              <span 
+              <span
                 className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
                 title={authUser?.inbound_path || ".local/hot-folder/INBOUND"}
               >
@@ -688,7 +688,7 @@ export default function ScanUploadTab({
                           <div className="flex shrink-0 items-center gap-2">
                             {(hf.ocrLoading || ocrLoading) && (
                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 font-semibold text-[10px] tracking-wider animate-pulse dark:bg-amber-950/20 dark:border-amber-900/30">
-                                <HugeIcon  className="ph-bold ph-spinner animate-spin" />
+                                <Loading01Icon size={16}  className="animate-spin" />
                                 OCR Active
                               </div>
                             )}
@@ -711,7 +711,7 @@ export default function ScanUploadTab({
                               className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 flex items-center gap-1.5"
                               title="Choose or drop a different file"
                             >
-                              <HugeIcon className="ph-bold ph-upload-simple text-xs" />
+                              <Upload01Icon size="1em" className="text-xs" />
                               <span>Replace File</span>
                             </Button>
                             <button
@@ -720,7 +720,7 @@ export default function ScanUploadTab({
                               onClick={() => setRotation((r) => r - 90)}
                               title="Rotate Left"
                             >
-                              <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                              <ReloadIcon size="1em"  className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -728,7 +728,7 @@ export default function ScanUploadTab({
                               onClick={() => setRotation((r) => r + 90)}
                               title="Rotate Right"
                             >
-                              <HugeIcon  className="ph-bold ph-arrow-clockwise text-xs" />
+                              <ReloadIcon size="1em"  className="text-xs" />
                             </button>
                             <Button
                               type="button"
@@ -789,7 +789,7 @@ export default function ScanUploadTab({
                                             className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200 cursor-pointer"
                                             title="Move Up"
                                           >
-                                            <HugeIcon  className="ph-bold ph-caret-up text-xs" />
+                                            <ArrowUp01Icon size="1em"  className="text-xs" />
                                           </button>
                                           <button
                                             type="button"
@@ -801,7 +801,7 @@ export default function ScanUploadTab({
                                             className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200 cursor-pointer"
                                             title="Move Down"
                                           >
-                                            <HugeIcon  className="ph-bold ph-caret-down text-xs" />
+                                            <ArrowDown01Icon size="1em"  className="text-xs" />
                                           </button>
                                           <button
                                             type="button"
@@ -812,7 +812,7 @@ export default function ScanUploadTab({
                                             className="p-0.5 text-red-500 hover:text-red-700 cursor-pointer"
                                             title="Remove Page"
                                           >
-                                            <HugeIcon  className="ph-bold ph-trash text-xs" />
+                                            <Delete01Icon size="1em"  className="text-xs" />
                                           </button>
                                         </div>
                                       </div>
@@ -913,7 +913,7 @@ export default function ScanUploadTab({
                             >
                               <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-border shadow-xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card dark:border-border">
                                 <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mb-3 dark:bg-red-950/40 dark:border-red-900">
-                                  <HugeIcon className="ph-bold ph-upload-simple text-2xl text-pup-maroon dark:text-red-400 animate-bounce" />
+                                  <Upload01Icon size="1em" className="text-2xl text-pup-maroon dark:text-red-400 animate-bounce" />
                                 </div>
                                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                                   Drop file here to replace preview
@@ -938,7 +938,7 @@ export default function ScanUploadTab({
                               onChange={(e) => handlePdfFileSelect(e.target.files)}
                             />
                             <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                              <HugeIcon className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
+                              <Upload01Icon size="1em" className={cn("text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
                               <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                                 {isReplaceMode || rescanContext
                                   ? "Drop Replacement Document Or Image Here"
@@ -1012,7 +1012,7 @@ export default function ScanUploadTab({
                   {(isReplaceMode || rescanContext || existingDocOnRecord) && (
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all select-none">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <HugeIcon className={cn(isReplaceMode || rescanContext ? "ph-bold ph-arrows-counter-clockwise text-[16px] text-amber-600 dark:text-amber-400 shrink-0" : "ph-bold ph-warning text-[16px] text-amber-600 dark:text-amber-400 shrink-0")} />
+                        <AppIcon className={cn(isReplaceMode || rescanContext ? " ReloadIcon text-[16px] text-amber-600 dark:text-amber-400 shrink-0" : " Alert02Icon text-[16px] text-amber-600 dark:text-amber-400 shrink-0")} />
                         <div className="min-w-0">
                           <span className="font-semibold text-amber-950 dark:text-amber-100 mr-1.5">
                             {isReplaceMode || rescanContext ? "Rescan / Replacement Mode Active:" : "Existing Document On Record:"}
@@ -1034,7 +1034,7 @@ export default function ScanUploadTab({
                             className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer flex items-center gap-1 shadow-2xs"
                             title="View current on-file version in modal"
                           >
-                            <HugeIcon className="ph-bold ph-eye text-xs" />
+                            <ViewIcon size="1em" className="text-xs" />
                             <span>View Copy</span>
                           </Button>
                         )}
@@ -1111,8 +1111,8 @@ export default function ScanUploadTab({
                                 {newRec.organizationId && (
                                   <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
                                     <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
-                                      <HugeIcon 
-                                        className="ph-bold ph-check-circle mt-0.5 shrink-0"
+                                      <CheckmarkCircle01Icon size={16}
+                                        className="mt-0.5 shrink-0"
                                         aria-hidden
                                       />
                                       <span>
@@ -1368,8 +1368,8 @@ export default function ScanUploadTab({
                             {uploadStudentIsExisting && (
                               <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
                                 <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
-                                  <HugeIcon 
-                                    className="ph-bold ph-check-circle mt-0.5 shrink-0"
+                                  <CheckmarkCircle01Icon size={16}
+                                    className="mt-0.5 shrink-0"
                                     aria-hidden
                                   />
                                   <span>
@@ -1813,7 +1813,7 @@ export default function ScanUploadTab({
                             Scanned document will be saved directly into this station&apos;s isolated directory:
                           </p>
                           <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-border dark:border-border rounded-lg px-2.5 py-1.5 text-[11px] text-gray-700 dark:text-zinc-300 break-all">
-                            <HugeIcon  className="ph-bold ph-folder-notch-open text-amber-600 dark:text-amber-400 shrink-0"></HugeIcon>
+                            <FolderOpenIcon size={16}  className="text-amber-600 dark:text-amber-400 shrink-0"></FolderOpenIcon>
                             <span>{authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}</span>
                           </div>
                         </div>

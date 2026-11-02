@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,18 +39,18 @@ import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { hasAdminPrivileges } from "@/lib/roleUtils";
 import { generateExportFilename } from "@/lib/exportHelpers";
-import { StudentIcon as EmptyStudentIcon } from "hugeicons-react";
-
+import { StudentIcon as EmptyStudentIcon , Archive01Icon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CompassIcon, DragDropIcon, File02Icon, LibraryIcon, Location01Icon, PencilEdit01Icon, Search01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
-      <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30"></HugeIcon>
+      <ArrowUpDownIcon size="1em"  className="ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30"></ArrowUpDownIcon>
     );
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[11px] text-pup-maroon dark:text-red-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[11px] text-pup-maroon dark:text-red-400"></ArrowDown01Icon>
   );
 }
 
@@ -669,7 +669,7 @@ export default function StudentDirectoryTab({
         >
           {/* 1. Page Header */}
           <PageHeader
-            icon="ph-users"
+            icon="UserSearch01Icon"
             title="Student Directory"
             description="Browse, filter, and manage student master records, academic profiles, and physical archive assignments."
             showBorder={false}
@@ -742,7 +742,7 @@ export default function StudentDirectoryTab({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                    <HugeIcon className="ph-bold text-[15px] ph-users" />
+                    <UserSearch01Icon size="1em" className="text-[15px]" />
                   </div>
                 </div>
                 
@@ -755,7 +755,7 @@ export default function StudentDirectoryTab({
                       Enrolled
                     </span>
                   </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                  <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                 </div>
               </div>
 
@@ -839,7 +839,7 @@ export default function StudentDirectoryTab({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                    <HugeIcon className="ph-bold text-[15px] ph-books" />
+                    <LibraryIcon size="1em" className="text-[15px]" />
                   </div>
                 </div>
                 
@@ -852,7 +852,7 @@ export default function StudentDirectoryTab({
                       Degree Tracks
                     </span>
                   </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                  <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                 </div>
               </div>
 
@@ -943,7 +943,7 @@ export default function StudentDirectoryTab({
                     </span>
                   </div>
                   <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                    <HugeIcon className="ph-bold text-[15px] ph-file-pdf" />
+                    <File02Icon size="1em" className="text-[15px]" />
                   </div>
                 </div>
                 
@@ -956,7 +956,7 @@ export default function StudentDirectoryTab({
                       Repository
                     </span>
                   </div>
-                  <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                  <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                 </div>
               </div>
 
@@ -1086,7 +1086,7 @@ export default function StudentDirectoryTab({
               {/* Search Bar */}
               <div className="relative w-full sm:w-64 group">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   type="text"
@@ -1211,7 +1211,7 @@ export default function StudentDirectoryTab({
                               title="Reset table scroll"
                               className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
                             </button>
                           )}
                         </div>
@@ -1349,7 +1349,7 @@ export default function StudentDirectoryTab({
 
                           <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
-                              <HugeIcon  className="ph-bold ph-map-pin text-gray-400 text-xs shrink-0"></HugeIcon>
+                              <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
                               <span>
                                 Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
                               </span>
@@ -1397,7 +1397,7 @@ export default function StudentDirectoryTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-eye text-[14px]"></HugeIcon>
+                                    <ViewIcon size="1em"  className="text-[14px]"></ViewIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>View Student Details</TooltipContent>
@@ -1414,7 +1414,7 @@ export default function StudentDirectoryTab({
                                     }}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-pencil-simple text-[14px]"></HugeIcon>
+                                    <PencilEdit01Icon size="1em"  className="text-[14px]"></PencilEdit01Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Edit Student</TooltipContent>
@@ -1428,7 +1428,7 @@ export default function StudentDirectoryTab({
                                     onClick={() => onLocateStudent?.(s)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-compass text-[14px]"></HugeIcon>
+                                    <CompassIcon size="1em"  className="text-[14px]"></CompassIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Locate in Archive Map</TooltipContent>
@@ -1446,7 +1446,7 @@ export default function StudentDirectoryTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                     >
-                                      <HugeIcon  className="ph-bold ph-archive-restore text-[14px]"></HugeIcon>
+                                      <Archive02Icon size="1em"  className="text-[14px]"></Archive02Icon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Restore Student</TooltipContent>
@@ -1462,7 +1462,7 @@ export default function StudentDirectoryTab({
                                       }}
                                       className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                     >
-                                      <HugeIcon  className="ph-bold ph-archive text-[14px]"></HugeIcon>
+                                      <Archive01Icon size="1em"  className="text-[14px]"></Archive01Icon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>Archive Student</TooltipContent>
