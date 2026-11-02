@@ -1,6 +1,7 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon"
+
+import SheetPagination from "@/components/shared/SheetPagination";
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
@@ -35,16 +36,16 @@ import { getCachedData, setCachedData } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
-import { InboxIcon as EmptyInboxIcon } from "hugeicons-react";
-
+import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-red-400 animate-in fade-in zoom-in duration-normal" />
+    <ArrowUp01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon dark:text-red-400 animate-in fade-in zoom-in duration-normal" />
   ) : (
-    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-red-400 animate-in fade-in zoom-in duration-normal" />
+    <ArrowDown01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon dark:text-red-400 animate-in fade-in zoom-in duration-normal" />
   )
 }
 
@@ -112,7 +113,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -474,7 +475,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* Header */}
         <PageHeader
-          icon="ph-bold ph-activity"
+          icon=" Activity01Icon"
           title="Campus Services & Operations Monitor"
           description="Live tracking of student document requests and student organization proposals across campus departments."
           showBorder={false}
@@ -496,7 +497,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 text-xs transition-colors">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon border border-pup-maroon/20 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40 shadow-2xs">
-              <HugeIcon className="ph-bold ph-timer text-lg" />
+              <Timer01Icon size="1em" className="text-lg" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -523,7 +524,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               onClick={() => setStandardsSheetOpen(true)}
               className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
             >
-              <HugeIcon className="ph-bold ph-sliders text-xs" />
+              <AppIcon className=" SlidersHorizontalIcon text-xs" />
               <span>Configure Standards</span>
             </Button>
           </div>
@@ -534,7 +535,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           {/* Search Input with Clear Button & Record Count */}
           <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+              <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
             </div>
             <Input
               value={search}
@@ -773,12 +774,12 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           {isRegistrar ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                              <HugeIcon className="ph-bold ph-certificate text-xs" />
+                              <Certificate01Icon size="1em" className="text-xs" />
                               Registrar
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">
-                              <HugeIcon className="ph-bold ph-student text-xs" />
+                              <StudentIcon size="1em" className="text-xs" />
                               OSAS
                             </span>
                           )}
@@ -807,7 +808,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             </div>
                             {tx.originalFilename && (
                               <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 flex items-center gap-1 mt-0.5 min-w-0">
-                                <HugeIcon className="ph-bold ph-file-pdf text-red-500 shrink-0" />
+                                <File02Icon size={16} className="text-red-500 shrink-0" />
                                 <span className="truncate block" title={tx.originalFilename}>{tx.originalFilename}</span>
                               </div>
                             )}
@@ -861,7 +862,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                                   aria-label="View Details"
                                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border-0 bg-transparent shadow-2xs"
                                 >
-                                  <HugeIcon className="ph-bold ph-eye text-[15px]" />
+                                  <ViewIcon size="1em" className="text-[15px]" />
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>View Details</TooltipContent>
@@ -946,9 +947,8 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           showCloseButton={false}
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          {/* TOP HEADER: Operation Record Details + < > 01 of XX + X button */}
           <SheetHeader className="shrink-0 p-0">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <SheetTitle>
                   Operation Record Details
@@ -958,43 +958,20 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 </SheetDescription>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="ml-auto flex items-center gap-3">
                 {sortedTransactions.length > 1 && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          disabled={currentTxIndex <= 0}
-                          onClick={handlePrevTx}
-                          className="w-7 h-7 rounded-lg border border-border dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer shadow-2xs"
-                          aria-label="Previous Record"
-                        >
-                          <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Previous Record</TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          disabled={currentTxIndex >= sortedTransactions.length - 1}
-                          onClick={handleNextTx}
-                          className="w-7 h-7 rounded-lg border border-border dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer shadow-2xs"
-                          aria-label="Next Record"
-                        >
-                          <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Next Record</TooltipContent>
-                    </Tooltip>
-
-                    <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                      {String(Math.max(1, currentTxIndex + 1)).padStart(2, "0")} of {String(sortedTransactions.length).padStart(2, "0")}
-                    </span>
-                  </div>
+                  <SheetPagination
+                    compact
+                    label="Record navigation"
+                    page={Math.max(1, currentTxIndex + 1)}
+                    totalPages={sortedTransactions.length}
+                    onPrevious={handlePrevTx}
+                    onNext={handleNextTx}
+                    previousDisabled={currentTxIndex <= 0}
+                    nextDisabled={currentTxIndex >= sortedTransactions.length - 1}
+                    previousLabel="Previous Record"
+                    nextLabel="Next Record"
+                  />
                 )}
 
                 <button
@@ -1004,7 +981,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   aria-label="Close"
                   title="Close"
                 >
-                  <HugeIcon className="ph-bold ph-x text-sm" />
+                  <Cancel01Icon size="1em" className="text-sm" />
                 </button>
               </div>
             </div>
@@ -1024,16 +1001,16 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
               )}
             >
-              <HugeIcon
+              <AppIcon
                 className={cn(
-                  "ph-bold text-[15px] shrink-0",
+                  " text-[15px] shrink-0",
                   sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
-                    ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                    ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                     : sheetItem?.status === "InProgress"
-                    ? "ph-clock text-blue-600 dark:text-blue-400"
+                    ? "Clock01Icon text-blue-600 dark:text-blue-400"
                     : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
-                    ? "ph-x-circle text-rose-600 dark:text-rose-400"
-                    : "ph-warning-circle text-amber-600 dark:text-amber-400"
+                    ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                    : "Alert01Icon text-amber-600 dark:text-amber-400"
                 )}
               />
               <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -1070,11 +1047,11 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40"
                   )}
                 >
-                  <HugeIcon
+                  <AppIcon
                     className={
                       sheetItem?.officeId === "registrar"
-                        ? "ph-bold ph-certificate"
-                        : "ph-bold ph-student"
+                        ? " Certificate01Icon"
+                        : " StudentIcon"
                     }
                   />
                 </div>
@@ -1108,7 +1085,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             {/* SECTION 1: Transaction Specification */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <HugeIcon className="ph-bold ph-sliders text-pup-maroon dark:text-red-400 text-sm" />
+                <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                   Transaction Specification
                 </h3>
@@ -1116,7 +1093,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
               <div className="divide-y-0">
                 <InfoRow
-                  icon="ph-bold ph-hash"
+                  icon=" Tag01Icon"
                   label="Transaction ID"
                 >
                   <div className="flex items-center gap-2">
@@ -1129,30 +1106,30 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy Transaction ID"
                     >
-                      <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                      <Copy01Icon size="1em" className="text-[11px]" />
                     </button>
                   </div>
                 </InfoRow>
 
                 <InfoRow
-                  icon={sheetItem?.officeId === "registrar" ? "ph-bold ph-certificate" : "ph-bold ph-student"}
+                  icon={sheetItem?.officeId === "registrar" ? " Certificate01Icon" : " StudentIcon"}
                   label="Department"
                 >
                   {sheetItem?.officeId === "registrar" ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300 border border-pup-maroon/20">
-                      <HugeIcon className="ph-bold ph-certificate text-xs" />
+                      <Certificate01Icon size="1em" className="text-xs" />
                       University Registrar
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">
-                      <HugeIcon className="ph-bold ph-student text-xs" />
+                      <StudentIcon size="1em" className="text-xs" />
                       Student Affairs (OSAS)
                     </span>
                   )}
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-chart-pie-slice"
+                  icon=" PieChartIcon"
                   label="Current Stage"
                 >
                   <div className="flex items-center gap-2">
@@ -1172,7 +1149,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-user"
+                  icon=" UserIcon"
                   label="Student Requester"
                 >
                   <div className="flex items-center gap-2">
@@ -1184,14 +1161,14 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                         title="Copy Requester Name"
                       >
-                        <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                        <Copy01Icon size="1em" className="text-[11px]" />
                       </button>
                     )}
                   </div>
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-identification-badge"
+                  icon=" Contact01Icon"
                   label="Student Number"
                 >
                   <div className="flex items-center gap-2">
@@ -1205,14 +1182,14 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                         title="Copy Student Number"
                       >
-                        <HugeIcon className="ph-bold ph-copy text-[11px]" />
+                        <Copy01Icon size="1em" className="text-[11px]" />
                       </button>
                     )}
                   </div>
                 </InfoRow>
 
                 <InfoRow
-                  icon="ph-bold ph-clock"
+                  icon=" Clock01Icon"
                   label="Submitted At"
                 >
                   <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
@@ -1222,7 +1199,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                 {sheetItem?.organizationName && (
                   <InfoRow
-                    icon="ph-bold ph-buildings"
+                    icon=" Building01Icon"
                     label="Organization"
                     value={sheetItem.organizationName}
                   />
@@ -1230,7 +1207,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                 {sheetItem?.eventDate && (
                   <InfoRow
-                    icon="ph-bold ph-calendar"
+                    icon=" Calendar01Icon"
                     label="Event Schedule"
                     value={sheetItem.eventDate.substring(0, 10)}
                   />
@@ -1241,7 +1218,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             {/* SECTION 2: Purpose & Remarks */}
             <div className="space-y-2 pt-2">
               <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <HugeIcon className="ph-bold ph-chat-text text-pup-maroon dark:text-red-400 text-sm" />
+                <AppIcon className=" Message01Icon text-pup-maroon dark:text-red-400 text-sm" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                   Purpose & Remarks
                 </h3>
@@ -1255,7 +1232,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             {sheetItem?.originalFilename && (
               <div className="space-y-2 pt-2">
                 <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <HugeIcon className="ph-bold ph-file-pdf text-pup-maroon dark:text-red-400 text-sm" />
+                  <File02Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Attached Document
                   </h3>
@@ -1263,7 +1240,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <div className="p-3.5 rounded-xl border border-border dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                      <HugeIcon className="ph-bold ph-file-pdf text-base" />
+                      <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="min-w-0">
                       <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate max-w-[200px]">
@@ -1302,7 +1279,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
                   title="Copy operation record data"
                 >
-                  <HugeIcon className="ph-bold ph-copy text-sm" />
+                  <Copy01Icon size="1em" className="text-sm" />
                   <span>Copy Record Data</span>
                 </Button>
               )}

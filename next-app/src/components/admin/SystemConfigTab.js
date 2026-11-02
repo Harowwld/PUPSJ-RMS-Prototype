@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -25,7 +25,7 @@ import SectionsTab from "./system-config/SectionsTab"
 import BulkImportTab from "./system-config/BulkImportTab"
 import RecognitionTemplatesTab from "./system-config/RecognitionTemplatesTab"
 import { formatErrorMessage } from "@/lib/errorUtils"
-import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon , FileUploadIcon, Files01Icon, FingerPrintScanIcon, GraduationScrollIcon, UserSearch01Icon} from "hugeicons-react";
 
 const SYSTEM_CONFIG_SUB_TABS = ["document-types", "degree-programs", "course-blocks", "bulk-import", "recognition-templates"]
 
@@ -1031,7 +1031,7 @@ export default function SystemConfigTab({
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-files text-sm" />
+                  <Files01Icon size="1em" className="text-sm" />
                   <span>Document Types</span>
                 </button>
 
@@ -1045,7 +1045,7 @@ export default function SystemConfigTab({
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-graduation-cap text-sm" />
+                  <GraduationScrollIcon size="1em" className="text-sm" />
                   <span>Degree Programs</span>
                 </button>
 
@@ -1060,7 +1060,7 @@ export default function SystemConfigTab({
                         : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
                     )}
                   >
-                    <HugeIcon className="ph-bold ph-users-three text-sm" />
+                    <UserSearch01Icon size="1em" className="text-sm" />
                     <span>Course Blocks</span>
                   </button>
                 )}
@@ -1075,7 +1075,7 @@ export default function SystemConfigTab({
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-file-arrow-up text-sm" />
+                  <FileUploadIcon size="1em" className="text-sm" />
                   <span>Imports</span>
                 </button>
 
@@ -1089,7 +1089,7 @@ export default function SystemConfigTab({
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-scan text-sm" />
+                  <FingerPrintScanIcon size="1em" className="text-sm" />
                   <span>OCR Configuration</span>
                 </button>
               </div>

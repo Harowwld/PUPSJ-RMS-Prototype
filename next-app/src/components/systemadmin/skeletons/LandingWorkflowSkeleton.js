@@ -1,16 +1,18 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
+import { ArrowDown01Icon } from "hugeicons-react";
+
 
 export default function LandingWorkflowSkeleton() {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-git-merge"
+          icon=" GitMergeIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -113,7 +115,7 @@ export default function LandingWorkflowSkeleton() {
                     <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                     <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                     <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
-                    <HugeIcon  className="ph-bold ph-caret-down text-gray-400 text-sm rotate-180" />
+                    <ArrowDown01Icon size="1em"  className="text-gray-400 text-sm rotate-180" />
                   </div>
                 </div>
 
@@ -151,7 +153,7 @@ export default function LandingWorkflowSkeleton() {
                       <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                       <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
                       <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
-                      <HugeIcon  className="ph-bold ph-caret-down text-gray-400 text-sm" />
+                      <ArrowDown01Icon size="1em"  className="text-gray-400 text-sm" />
                     </div>
                   </div>
                 </div>

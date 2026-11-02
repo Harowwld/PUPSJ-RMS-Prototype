@@ -22,12 +22,12 @@ export async function GET(req) {
     const sanitizedOffices = offices.map((o) => {
       if (!o.icon || !o.icon.trim()) {
         const id = (o.id || o.short_name || "").toLowerCase();
-        let icon = "ph-bold ph-building";
-        if (id.includes("reg")) icon = "ph-bold ph-certificate";
-        else if (id.includes("osas") || id.includes("student")) icon = "ph-bold ph-student";
-        else if (id.includes("admiss")) icon = "ph-bold ph-user-check";
-        else if (id.includes("lib")) icon = "ph-bold ph-books";
-        else if (id.includes("acc") || id.includes("cash") || id.includes("fin")) icon = "ph-bold ph-banknote";
+        let icon = " Building02Icon";
+        if (id.includes("reg")) icon = " Certificate01Icon";
+        else if (id.includes("osas") || id.includes("student")) icon = " StudentIcon";
+        else if (id.includes("admiss")) icon = " UserCheck01Icon";
+        else if (id.includes("lib")) icon = " LibraryIcon";
+        else if (id.includes("acc") || id.includes("cash") || id.includes("fin")) icon = " BankIcon";
         return { ...o, icon };
       }
       return o;
@@ -35,24 +35,24 @@ export async function GET(req) {
 
     const sanitizedModules = modules.map((m) => {
       if (!m.icon || !m.icon.trim()) {
-        if (m.id === "osas_monitoring") return { ...m, icon: "ph-bold ph-student" };
-        if (m.id === "records_review") return { ...m, icon: "ph-bold ph-seal-check" };
-        if (m.id === "compliance_analytics") return { ...m, icon: "ph-bold ph-chart-bar" };
-        if (m.id === "request_analytics") return { ...m, icon: "ph-bold ph-trend-up" };
-        if (m.id === "staff_directory") return { ...m, icon: "ph-bold ph-users" };
-        if (m.id === "storage_layout") return { ...m, icon: "ph-bold ph-warehouse" };
-        if (m.id === "system_config") return { ...m, icon: "ph-bold ph-gear" };
-        if (m.id === "backup") return { ...m, icon: "ph-bold ph-database-backup" };
-        if (m.id === "audit_logs") return { ...m, icon: "ph-bold ph-shield-check" };
-        if (m.id === "document_requests") return { ...m, icon: "ph-bold ph-tray-arrow-up" };
-        if (m.id === "student_directory") return { ...m, icon: "ph-bold ph-users" };
-        if (m.id === "scan_upload") return { ...m, icon: "ph-bold ph-scan" };
-        if (m.id === "documents") return { ...m, icon: "ph-bold ph-file-text" };
-        if (m.id === "notifications") return { ...m, icon: "ph-bold ph-bell" };
-        if (m.id === "records_archive") return { ...m, icon: "ph-bold ph-archive-box" };
-        if (m.id === "storage_explorer") return { ...m, icon: "ph-bold ph-folder-open" };
-        if (m.id === "student_organizations") return { ...m, icon: "ph-bold ph-buildings" };
-        return { ...m, icon: "ph-bold ph-cube" };
+        if (m.id === "osas_monitoring") return { ...m, icon: " StudentIcon" };
+        if (m.id === "records_review") return { ...m, icon: " CheckmarkBadge01Icon" };
+        if (m.id === "compliance_analytics") return { ...m, icon: " Analytics01Icon" };
+        if (m.id === "request_analytics") return { ...m, icon: " Analytics01Icon" };
+        if (m.id === "staff_directory") return { ...m, icon: " UserSearch01Icon" };
+        if (m.id === "storage_layout") return { ...m, icon: " WarehouseIcon" };
+        if (m.id === "system_config") return { ...m, icon: " Settings01Icon" };
+        if (m.id === "backup") return { ...m, icon: " DatabaseIcon" };
+        if (m.id === "audit_logs") return { ...m, icon: " Shield01Icon" };
+        if (m.id === "document_requests") return { ...m, icon: " FileUploadIcon" };
+        if (m.id === "student_directory") return { ...m, icon: " UserSearch01Icon" };
+        if (m.id === "scan_upload") return { ...m, icon: " FingerPrintScanIcon" };
+        if (m.id === "documents") return { ...m, icon: " File02Icon" };
+        if (m.id === "notifications") return { ...m, icon: " Notification01Icon" };
+        if (m.id === "records_archive") return { ...m, icon: " Archive01Icon" };
+        if (m.id === "storage_explorer") return { ...m, icon: " FolderOpenIcon" };
+        if (m.id === "student_organizations") return { ...m, icon: " Building01Icon" };
+        return { ...m, icon: " AlignBoxBottomCenterIcon" };
       }
       return m;
     });

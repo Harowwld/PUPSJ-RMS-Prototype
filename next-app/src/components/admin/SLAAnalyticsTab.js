@@ -1,6 +1,7 @@
 "use client"
+import PDFPreview from "@/components/shared/PDFPreview"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import {
   Card,
@@ -50,8 +51,8 @@ import {
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
-import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, Cancel01Icon, File02Icon, Files01Icon, HourglassIcon, Loading01Icon, StarIcon, TableIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
@@ -271,7 +272,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         <PageHeader
-          icon="ph-chart-line-up"
+          icon="Analytics01Icon"
           title="Request Analysis"
           description={pageDescription}
           showBorder={false}
@@ -297,11 +298,11 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                       className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
                     >
                       {isExportingCsv ? (
-                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
+                        <Loading01Icon size="1em" className="animate-spin text-[16px]" />
                       ) : (
                         <>
                           <span>Export CSV</span>
-                          <HugeIcon className="ph-bold ph-caret-down text-[10px] opacity-70" />
+                          <ArrowDown01Icon size="1em" className="text-[10px] opacity-70" />
                         </>
                       )}
                     </Button>
@@ -328,14 +329,14 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         onClick={() => handleCsvExport("sla")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <HugeIcon className="ph-bold ph-clock-countdown text-sm text-pup-maroon dark:text-red-400" />
+                        <HourglassIcon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                         <span>On-Time Processing Data</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handleCsvExport("csm")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
+                        <StarIcon size="1em" className="text-sm text-amber-500" />
                         <span>CSM Ratings Data</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
@@ -343,7 +344,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         onClick={() => handleCsvExport("comprehensive")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <HugeIcon className="ph-bold ph-table text-sm text-gray-400" />
+                        <TableIcon size="1em" className="text-sm text-gray-400" />
                         <span>Complete Combined Dataset</span>
                       </DropdownMenuItem>
                     </div>
@@ -359,11 +360,11 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                       className="h-10 px-5 cursor-pointer gap-1.5"
                     >
                       {isGeneratingPdf ? (
-                        <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
+                        <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
                       ) : (
                         <>
                           <span>Export PDF Report</span>
-                          <HugeIcon className="ph-bold ph-caret-down text-[10px] text-white/80 dark:text-zinc-900/80" />
+                          <ArrowDown01Icon size="1em" className="text-[10px] text-white/80 dark:text-zinc-900/80" />
                         </>
                       )}
                     </Button>
@@ -390,14 +391,14 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         onClick={() => handlePreview("sla")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <HugeIcon className="ph-bold ph-file-text text-sm text-pup-maroon dark:text-red-400" />
+                        <File02Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                         <span>Citizen&apos;s Charter Processing Time Report</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handlePreview("csm")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <HugeIcon className="ph-fill ph-star text-sm text-amber-500" />
+                        <StarIcon size="1em" className="text-sm text-amber-500" />
                         <span>Client Satisfaction (CSM) Report</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
@@ -405,7 +406,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         onClick={() => handlePreview("comprehensive")} 
                         className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <HugeIcon className="ph-bold ph-files text-sm text-gray-400" />
+                        <Files01Icon size="1em" className="text-sm text-gray-400" />
                         <span>Combined Report</span>
                       </DropdownMenuItem>
                     </div>
@@ -602,7 +603,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
                 className="h-10 w-10 rounded-xl border-0 p-0 text-gray-500 shadow-none transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
               >
-                <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"} />
+                <AppIcon className={isFullscreenPreview ? " ArrowShrink01Icon text-[16px]" : " ArrowExpand01Icon text-[16px]"} />
               </Button>
               <DialogClose asChild>
                 <button
@@ -610,7 +611,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   aria-label="Close report preview"
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-0 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:text-gray-400 dark:hover:bg-zinc-800 dark:hover:text-white cursor-pointer"
                 >
-                  <HugeIcon className="ph-bold ph-x text-base" />
+                  <Cancel01Icon size="1em" className="text-base" />
                 </button>
               </DialogClose>
             </div>
@@ -627,7 +628,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                       onClick={() => setIsFullscreenPreview(false)}
                       className="h-11 w-11 rounded-full border-0 bg-black/50 text-white hover:bg-black/70"
                     >
-                      <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
+                      <Cancel01Icon size="1em"  className="text-lg"></Cancel01Icon>
                     </Button>
                   </div>
                 )}
@@ -640,18 +641,18 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     </div>
                   </div>
                 )}
-                <iframe
+                <PDFPreview
                   ref={pdfPreviewFrameRef}
-                  src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
+                  src={pdfBlobUrl}
                   className="h-full w-full border-none"
-                  onLoad={() => setPreviewFrameReady(true)}
+                  onReadyChange={setPreviewFrameReady}
                   title="Processing Time Report Preview"
                 />
               </div>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
+                  <Loading01Icon size="1em"  className="animate-spin text-xl text-pup-maroon dark:text-primary" />
                   <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
                     Generating Report Preview...
                   </p>

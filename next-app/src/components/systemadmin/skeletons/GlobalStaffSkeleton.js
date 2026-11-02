@@ -13,7 +13,7 @@ export default function GlobalStaffSkeleton() {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Header */}
         <PageHeader
-          icon="ph-bold ph-users"
+          icon=" UserSearch01Icon"
           title="Global Personnel Directory"
           description="Manage system access, office assignments, and authorization settings for all administrators and records staff."
           showBorder={false}

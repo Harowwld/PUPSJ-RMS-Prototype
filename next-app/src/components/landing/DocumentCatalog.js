@@ -1,8 +1,8 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty";
-import { Files01Icon } from "hugeicons-react";
+import { Files01Icon , Shield01Icon, Tick01Icon} from "hugeicons-react";
 
 export const CATALOG_ITEMS = [
   {
@@ -389,14 +389,14 @@ export default function DocumentCatalog() {
                       
                       <div className="pt-5 border-t border-black/5 mt-auto">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-3 flex items-center gap-1.5">
-                          <HugeIcon  className="ph-bold ph-shield-check text-sm" />
+                          <Shield01Icon size="1em"  className="text-sm" />
                           Filing Requirements
                         </div>
                         <ul className="space-y-3 text-xs text-gray-600">
                           {doc.requirements?.slice(0, 2).map((req, i) => (
                             <li key={i} className="flex items-start gap-2.5 leading-relaxed">
                               <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[8px] font-bold">
-                                <HugeIcon  className="ph-bold ph-check" />
+                                <Tick01Icon size={16}   />
                               </span>
                               <span className="line-clamp-2">{req}</span>
                             </li>

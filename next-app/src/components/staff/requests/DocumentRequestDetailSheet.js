@@ -1,7 +1,9 @@
 "use client";
+import SheetPagination from "@/components/shared/SheetPagination";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,8 +22,8 @@ import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
 import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { EmptyState } from "@/components/ui/empty";
-import { Attachment01Icon, Clock01Icon } from "hugeicons-react";
-
+import { Attachment01Icon, Clock01Icon, Alert02Icon, Calendar01Icon, Cancel01Icon, CheckmarkCircle01Icon, File02Icon, LockIcon, Time01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export function getRequestStatusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
   if (s === "PENDING") {
@@ -68,7 +70,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -155,9 +157,8 @@ export default function DocumentRequestDetailSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* Top Header matching reference design: Request Details < > 01 of 100 X */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 Request Details
@@ -167,33 +168,20 @@ export default function DocumentRequestDetailSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {typeof totalCount === "number" && totalCount > 1 && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={currentIndex <= 0}
-                    onClick={onNavigatePrev}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Previous Request"
-                    title="Previous Request"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIndex >= totalCount - 1}
-                    onClick={onNavigateNext}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label="Next Request"
-                    title="Next Request"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={Math.max(1, (currentIndex ?? 0) + 1)}
+                  totalPages={totalCount}
+                  onPrevious={onNavigatePrev}
+                  onNext={onNavigateNext}
+                  previousDisabled={currentIndex <= 0}
+                  nextDisabled={currentIndex >= totalCount - 1}
+                  previousLabel="Previous Request"
+                  nextLabel="Next Request"
+                />
               )}
 
               <button
@@ -203,7 +191,7 @@ export default function DocumentRequestDetailSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -225,16 +213,16 @@ export default function DocumentRequestDetailSheet({
                 : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
             )}
           >
-            <HugeIcon
+            <AppIcon
               className={cn(
-                "ph-bold text-[15px] shrink-0",
+                " text-[15px] shrink-0",
                 detail.status === "Ready" || detail.status === "Completed"
-                  ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                   : detail.status === "PendingPayment" || detail.status === "Deficient"
-                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
                   : detail.status === "Cancelled" || detail.status === "Declined"
-                  ? "ph-x-circle text-rose-600 dark:text-rose-400"
-                  : "ph-clock text-blue-600 dark:text-blue-400"
+                  ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                  : "Clock01Icon text-blue-600 dark:text-blue-400"
               )}
             />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -329,7 +317,7 @@ export default function DocumentRequestDetailSheet({
               {/* 1. Candidate / Requester Information (Standard Info List) */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <HugeIcon className="ph-bold ph-identification-card text-pup-maroon dark:text-red-400 text-sm" />
+                  <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Requester Information
                   </h3>
@@ -337,13 +325,13 @@ export default function DocumentRequestDetailSheet({
 
                 <div className="divide-y-0">
                   <InfoRow
-                    icon="ph-bold ph-user"
+                    icon=" UserIcon"
                     label="Requester Name"
                     value={displayName}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-tag"
+                    icon=" Tag01Icon"
                     label="Classification"
                   >
                     <span
@@ -362,7 +350,7 @@ export default function DocumentRequestDetailSheet({
 
                   {detail.student_no && (
                     <InfoRow
-                      icon="ph-bold ph-hash"
+                      icon=" Tag01Icon"
                       label="Student Number"
                     >
                       <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
@@ -372,7 +360,7 @@ export default function DocumentRequestDetailSheet({
                   )}
 
                   <InfoRow
-                    icon="ph-bold ph-graduation-cap"
+                    icon=" GraduationScrollIcon"
                     label="Academic Program"
                     value={
                       detail.course_code
@@ -382,13 +370,13 @@ export default function DocumentRequestDetailSheet({
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-phone"
+                    icon=" CallIcon"
                     label="Contact Number"
                     value={detail.requester_contact || "N/A"}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-envelope"
+                    icon=" Mail01Icon"
                     label="Email Address"
                     value={detail.requester_email || detail.email || "N/A"}
                   />
@@ -397,28 +385,28 @@ export default function DocumentRequestDetailSheet({
                   {isParent && (
                     <>
                       <InfoRow
-                        icon="ph-bold ph-user-circle"
+                        icon=" UserCircleIcon"
                         label="Representative"
                         value={detail.requester_name || "N/A"}
                       />
                       <InfoRow
-                        icon="ph-bold ph-users"
+                        icon=" UserSearch01Icon"
                         label="Relationship"
                         value={detail.requester_relationship || "Legal Guardian"}
                       />
                       <InfoRow
-                        icon="ph-bold ph-shield-check"
+                        icon=" Shield01Icon"
                         label="SPA Status"
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           {detail.spa_verified ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                              <HugeIcon className="ph-fill ph-check-circle text-xs" />
+                              <CheckmarkCircle01Icon size="1em" className="text-xs" />
                               SPA Verified
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                              <HugeIcon className="ph-fill ph-clock text-xs" />
+                              <Clock01Icon size="1em" className="text-xs" />
                               Verification Pending
                             </span>
                           )}
@@ -437,7 +425,7 @@ export default function DocumentRequestDetailSheet({
                   )}
 
                   <InfoRow
-                    icon="ph-bold ph-chat-text"
+                    icon=" Message01Icon"
                     label="Stated Purpose"
                     value={detail.notes || "No stated purpose entered."}
                   />
@@ -447,7 +435,7 @@ export default function DocumentRequestDetailSheet({
               {/* 2. Document & Archival Information (Standard Info List) */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <HugeIcon className="ph-bold ph-file-text text-pup-maroon dark:text-red-400 text-sm" />
+                  <File02Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Request & Archival Details
                   </h3>
@@ -455,13 +443,13 @@ export default function DocumentRequestDetailSheet({
 
                 <div className="divide-y-0">
                   <InfoRow
-                    icon="ph-bold ph-files"
+                    icon=" Files01Icon"
                     label="Document Requested"
                     value={detail.doc_type || "N/A"}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-calendar-blank"
+                    icon=" Calendar01Icon"
                     label="Date Submitted"
                     value={formatPHDateTime(detail.created_at)}
                   />
@@ -469,7 +457,7 @@ export default function DocumentRequestDetailSheet({
                   {charter && (
                     <>
                       <InfoRow
-                        icon="ph-bold ph-hourglass-high"
+                        icon=" HourglassIcon"
                         label="Target Deadline"
                       >
                         <div className="flex items-center gap-2 flex-wrap">
@@ -477,14 +465,14 @@ export default function DocumentRequestDetailSheet({
                             {charter.deadlineFormatted}
                           </span>
                           <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold", charter.badgeClass)}>
-                            <HugeIcon className={cn("ph-bold", charter.icon || "ph-clock")} />
+                            <Clock01Icon size={16} className={cn("", charter.icon || "")} />
                             {charter.label}
                           </span>
                         </div>
                       </InfoRow>
 
                       <InfoRow
-                        icon="ph-bold ph-gauge"
+                        icon=" DashboardSpeed01Icon"
                         label="Service Standard"
                       >
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold", charter.tier.badgeClass)}>
@@ -495,7 +483,7 @@ export default function DocumentRequestDetailSheet({
                   )}
 
                   <InfoRow
-                    icon="ph-bold ph-warehouse"
+                    icon=" WarehouseIcon"
                     label="Archive Location"
                   >
                     {studentForRequest || detail.room ? (
@@ -520,7 +508,7 @@ export default function DocumentRequestDetailSheet({
                   </InfoRow>
 
                   <InfoRow
-                    icon="ph-bold ph-check-circle"
+                    icon=" CheckmarkCircle01Icon"
                     label="Current Status"
                   >
                     <span
@@ -540,7 +528,7 @@ export default function DocumentRequestDetailSheet({
               <div className="space-y-2">
                 <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
                   <div className="flex items-center gap-2">
-                    <HugeIcon className="ph-bold ph-paperclip text-pup-maroon dark:text-red-400 text-sm" />
+                    <Attachment01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Supporting Attachments ({attachments.length})
                     </h3>
@@ -558,7 +546,6 @@ export default function DocumentRequestDetailSheet({
                 ) : (
                   <div className="flex flex-wrap items-start gap-3 pt-1">
                     {attachments.map((att) => {
-                      const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
                       const fileUrl = att.url || `/api/document-requests/${detail.id}/attachments/${att.id}`;
                       const typeLabel =
                         att.attachment_type === "spa"
@@ -577,7 +564,6 @@ export default function DocumentRequestDetailSheet({
                           item={{ ...att, url: fileUrl }}
                           readOnly={true}
                           onPreview={() => {
-                            if (isPdf) {
                               setPdfPreviewData?.({
                                 url: fileUrl,
                                 title: att.original_filename,
@@ -587,9 +573,6 @@ export default function DocumentRequestDetailSheet({
                                 originalFilename: att.original_filename,
                               });
                               setPdfPreviewOpen?.(true);
-                            } else if (fileUrl) {
-                              window.open(fileUrl, "_blank");
-                            }
                           }}
                         />
                       );
@@ -601,7 +584,7 @@ export default function DocumentRequestDetailSheet({
               {/* 4. Workflow Stage Progression & Action */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <HugeIcon className="ph-bold ph-sliders text-pup-maroon dark:text-red-400 text-sm" />
+                  <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     {isTerminalStatus ? "Request Lifecycle State" : "Workflow Stage Progression"}
                   </h3>
@@ -611,7 +594,7 @@ export default function DocumentRequestDetailSheet({
                   <div className="space-y-2 p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40">
                     <div className="flex items-center justify-between gap-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       <span className="flex items-center gap-1.5">
-                        <HugeIcon className="ph-bold ph-lock-simple text-gray-400 text-xs" />
+                        <LockIcon size="1em" className="text-gray-400 text-xs" />
                         <span>{detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}</span>
                       </span>
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
@@ -668,8 +651,8 @@ export default function DocumentRequestDetailSheet({
                         </label>
                         <span className="text-[10px] text-gray-400">Visible in tracking portal</span>
                       </div>
-                      <textarea
-                        className="w-full min-h-[72px] p-3 text-xs text-gray-900 dark:text-zinc-100 bg-gray-50/60 dark:bg-zinc-800/50 border border-border dark:border-border rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                      <Textarea
+                        className="w-full min-h-[72px] resize-none"
                         value={editUpdateMessage}
                         onChange={(e) => setEditUpdateMessage?.(e.target.value)}
                         placeholder={
@@ -687,7 +670,7 @@ export default function DocumentRequestDetailSheet({
               {detail.status === "Ready" && retentionExpiryDate && (
                 <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/15">
                   <div className="flex gap-2.5">
-                    <HugeIcon className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5" />
+                    <Calendar01Icon size="1em" className="text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5" />
                     <div className="text-xs">
                       <span className="font-bold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px] uppercase">
                         PUP ODRS Retention Policy
@@ -696,7 +679,7 @@ export default function DocumentRequestDetailSheet({
                         Unclaimed documents are shredded after 90 days according to ODRS policy.
                       </span>
                       <span className="text-amber-800 dark:text-amber-400 font-bold block mt-1 flex items-center gap-1.5">
-                        <HugeIcon className="ph-bold ph-warning" />
+                        <Alert02Icon size={16}  />
                         Shred Schedule: {retentionExpiryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         {daysRemaining !== null && (
                           <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
@@ -710,7 +693,7 @@ export default function DocumentRequestDetailSheet({
               {/* 6. Activity History / Timeline */}
               <div className="space-y-2 pt-2">
                 <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <HugeIcon className="ph-bold ph-clock-counter-clockwise text-pup-maroon dark:text-red-400 text-sm" />
+                  <Time01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Activity History ({detail.updates?.length || 0})
                   </h3>

@@ -1,6 +1,8 @@
 "use client";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
+import SheetPagination from "@/components/shared/SheetPagination";
+import StudentRecordsReportDialog from "@/components/shared/StudentRecordsReportDialog";
 import { useState, useEffect, useMemo } from "react";
 import {
   Sheet,
@@ -18,8 +20,8 @@ import { cn, formatTitleCase } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { EmptyState } from "@/components/ui/empty";
-import { Files01Icon, InboxIcon } from "hugeicons-react";
-
+import { Files01Icon, InboxIcon, Calendar01Icon, Cancel01Icon, File02Icon, Loading01Icon, ReloadIcon, Time01Icon, ViewIcon, WarehouseIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
  * Clean metadata layout aligned with colons and icons.
@@ -34,7 +36,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -67,6 +69,7 @@ export default function StudentProfileSheet({
   const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
   const [requests, setRequests] = useState([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const isOrg = Boolean(student?.category || student?.rawOrg);
 
@@ -232,6 +235,7 @@ export default function StudentProfileSheet({
     .join("") || "ST";
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
@@ -239,9 +243,8 @@ export default function StudentProfileSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* Top Header matching reference design: Student Profile < > 01 of 100 X */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 {student?.category || student?.rawOrg ? "Organization Details" : "Student Details"}
@@ -251,33 +254,20 @@ export default function StudentProfileSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3">
               {typeof totalCount === "number" && totalCount > 1 && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={currentIndex <= 0}
-                    onClick={onNavigatePrev}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label={student?.category || student?.rawOrg ? "Previous Organization" : "Previous Student"}
-                    title={student?.category || student?.rawOrg ? "Previous Organization" : "Previous Student"}
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIndex >= totalCount - 1}
-                    onClick={onNavigateNext}
-                    className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                    aria-label={student?.category || student?.rawOrg ? "Next Organization" : "Next Student"}
-                    title={student?.category || student?.rawOrg ? "Next Organization" : "Next Student"}
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={Math.max(1, (currentIndex ?? 0) + 1)}
+                  totalPages={totalCount}
+                  onPrevious={onNavigatePrev}
+                  onNext={onNavigateNext}
+                  previousDisabled={currentIndex <= 0}
+                  nextDisabled={currentIndex >= totalCount - 1}
+                  previousLabel={student?.category || student?.rawOrg ? "Previous Organization" : "Previous Student"}
+                  nextLabel={student?.category || student?.rawOrg ? "Next Organization" : "Next Student"}
+                />
               )}
 
               <button
@@ -287,7 +277,7 @@ export default function StudentProfileSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -302,10 +292,10 @@ export default function StudentProfileSheet({
               : "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
           )}
         >
-          <HugeIcon
+          <AppIcon
             className={cn(
-              "ph-bold text-[15px] shrink-0",
-              isArchived ? "ph-archive text-amber-600 dark:text-amber-400" : "ph-check-circle text-emerald-600 dark:text-emerald-400"
+              " text-[15px] shrink-0",
+              isArchived ? "Archive01Icon text-amber-600 dark:text-amber-400" : "CheckmarkCircle01Icon text-emerald-600 dark:text-emerald-400"
             )}
           />
           <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -380,10 +370,10 @@ export default function StudentProfileSheet({
           {/* 1. Academic & Enrollment Details (Standard Info List) */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-              <HugeIcon
+              <AppIcon
                 className={cn(
                   "text-pup-maroon dark:text-red-400 text-sm",
-                  student?.category || student?.rawOrg ? "ph-bold ph-buildings" : "ph-bold ph-graduation-cap"
+                  student?.category || student?.rawOrg ? " Building01Icon" : " GraduationScrollIcon"
                 )}
               />
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
@@ -395,7 +385,7 @@ export default function StudentProfileSheet({
               {student?.category || student?.rawOrg ? (
                 <>
                   <InfoRow
-                    icon="ph-bold ph-hash"
+                    icon=" Tag01Icon"
                     label="Organization Acronym"
                   >
                     <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
@@ -404,25 +394,25 @@ export default function StudentProfileSheet({
                   </InfoRow>
 
                   <InfoRow
-                    icon="ph-bold ph-buildings"
+                    icon=" Building01Icon"
                     label="Organization Name"
                     value={displayName}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-tag"
+                    icon=" Tag01Icon"
                     label="Category"
                     value={student.category || "Academic"}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-user-circle"
+                    icon=" UserCircleIcon"
                     label="Faculty Adviser"
                     value={student.adviser || student.rawOrg?.adviser_name || "N/A"}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-info"
+                    icon=" CovidInfoIcon"
                     label="Registry Status"
                   >
                     <Badge
@@ -442,7 +432,7 @@ export default function StudentProfileSheet({
               ) : (
                 <>
                   <InfoRow
-                    icon="ph-bold ph-hash"
+                    icon=" Tag01Icon"
                     label="Student Number"
                   >
                     <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
@@ -451,13 +441,13 @@ export default function StudentProfileSheet({
                   </InfoRow>
 
                   <InfoRow
-                    icon="ph-bold ph-user"
+                    icon=" UserIcon"
                     label="Full Name"
                     value={displayName}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-book-open"
+                    icon=" BookOpen01Icon"
                     label="Degree Program"
                     value={
                       courseInfo
@@ -467,19 +457,19 @@ export default function StudentProfileSheet({
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-users"
+                    icon=" UserSearch01Icon"
                     label="Section"
                     value={student.section ? `Section ${student.section}` : "N/A"}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-calendar-blank"
+                    icon=" Calendar01Icon"
                     label="Entry Year / Batch"
                     value={student.yearLevel ? `Batch ${student.yearLevel}` : "N/A"}
                   />
 
                   <InfoRow
-                    icon="ph-bold ph-info"
+                    icon=" CovidInfoIcon"
                     label="Registry Status"
                   >
                     <Badge
@@ -503,7 +493,7 @@ export default function StudentProfileSheet({
           {/* 2. Physical Archive Filing Location (Standard Info List) */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-              <HugeIcon className="ph-bold ph-warehouse text-pup-maroon dark:text-red-400 text-sm" />
+              <WarehouseIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                 Physical Archive Location
               </h3>
@@ -511,19 +501,19 @@ export default function StudentProfileSheet({
 
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow
-                icon="ph-bold ph-door"
+                icon=" Door01Icon"
                 label="Archive Vault"
                 value={`Room ${student.room}`}
               />
 
               <InfoRow
-                icon="ph-bold ph-archive"
+                icon=" Archive01Icon"
                 label="Cabinet & Drawer"
                 value={`Cabinet ${student.cabinet} · Drawer ${student.drawer}`}
               />
 
               <InfoRow
-                icon="ph-bold ph-map-pin"
+                icon=" Location01Icon"
                 label="Full Coordinates"
               >
                 <div className="flex items-center gap-2 flex-wrap">
@@ -551,7 +541,7 @@ export default function StudentProfileSheet({
             <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border flex-wrap gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <HugeIcon className="ph-bold ph-files text-pup-maroon dark:text-red-400 text-sm" />
+                  <Files01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     {isOrg ? "Organization Records & Documents" : "Requirements Compliance & Records"} ({studentDocs.length})
                   </h3>
@@ -628,15 +618,15 @@ export default function StudentProfileSheet({
                               : "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40"
                           )}
                         >
-                          <HugeIcon
+                          <AppIcon
                             className={
                               isApproved
-                                ? "ph-bold ph-seal-check"
+                                ? " CheckmarkBadge01Icon"
                                 : isPending
-                                ? "ph-bold ph-hourglass"
+                                ? " HourglassIcon"
                                 : isDeclined
-                                ? "ph-bold ph-x-circle"
-                                : "ph-bold ph-circle"
+                                ? " CancelCircleIcon"
+                                : " CircleIcon"
                             }
                           />
                         </div>
@@ -684,7 +674,7 @@ export default function StudentProfileSheet({
                                 aria-label="Re-scan Document"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
                               >
-                                <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-xs" />
+                                <ReloadIcon size="1em" className="text-xs" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Re-scan Document</TooltipContent>
@@ -707,7 +697,7 @@ export default function StudentProfileSheet({
                                 aria-label="Preview Document"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
                               >
-                                <HugeIcon className="ph-bold ph-eye text-xs" />
+                                <ViewIcon size="1em" className="text-xs" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Preview Document</TooltipContent>
@@ -736,7 +726,7 @@ export default function StudentProfileSheet({
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/30 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
-                        <HugeIcon className="ph-bold ph-file-pdf text-base" />
+                        <File02Icon size="1em" className="text-base" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -780,7 +770,7 @@ export default function StudentProfileSheet({
                               aria-label="Re-scan Document"
                               className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
                             >
-                              <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-xs" />
+                              <ReloadIcon size="1em" className="text-xs" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>Re-scan Document</TooltipContent>
@@ -806,7 +796,7 @@ export default function StudentProfileSheet({
                             aria-label="Preview Document"
                             className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
                           >
-                            <HugeIcon className="ph-bold ph-eye text-xs" />
+                            <ViewIcon size="1em" className="text-xs" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent>Preview Document</TooltipContent>
@@ -823,7 +813,7 @@ export default function StudentProfileSheet({
             <div className="space-y-2">
               <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
                 <div className="flex items-center gap-2">
-                  <HugeIcon className="ph-bold ph-clock-counter-clockwise text-pup-maroon dark:text-red-400 text-sm" />
+                  <Time01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                     Requests History ({requests.length})
                   </h3>
@@ -832,7 +822,7 @@ export default function StudentProfileSheet({
 
               {isLoadingRequests ? (
                 <div className="py-4 text-center text-xs text-gray-400">
-                  <HugeIcon className="ph-bold ph-spinner animate-spin text-sm mb-1 block mx-auto text-pup-maroon dark:text-red-400" />
+                  <Loading01Icon size="1em" className="animate-spin text-sm mb-1 block mx-auto text-pup-maroon dark:text-red-400" />
                   Loading requests...
                 </div>
               ) : requests.length === 0 ? (
@@ -866,7 +856,7 @@ export default function StudentProfileSheet({
                         </span>
                       </div>
                       <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1 font-sans tabular-nums">
-                        <HugeIcon className="ph-bold ph-calendar text-[10px]" />
+                        <Calendar01Icon size="1em" className="text-[10px]" />
                         {formatPHDateTime(req.created_at)}
                       </div>
                     </div>
@@ -878,7 +868,7 @@ export default function StudentProfileSheet({
         </div>
 
         {/* Executive Footer - Clean Action Bar */}
-        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between shrink-0">
+        <SheetFooter className="shrink-0 flex-wrap items-center justify-between gap-3 px-6 py-4">
           <div>
             {isArchived ? (
               onRestoreStudent && (
@@ -911,6 +901,7 @@ export default function StudentProfileSheet({
             )}
           </div>
 
+          <div className="ml-auto flex flex-wrap items-center gap-2.5">
           <Button
             type="button"
             variant="outline"
@@ -919,8 +910,18 @@ export default function StudentProfileSheet({
           >
             Close
           </Button>
+          {!isOrg && <Button onClick={() => setReportOpen(true)}>Generate Report</Button>}
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+    {!isOrg && <StudentRecordsReportDialog
+      key={`${student.studentNo}:${authUser?.office_id || "registrar"}`}
+      open={open && reportOpen}
+      onClose={() => setReportOpen(false)}
+      studentNo={student.studentNo}
+      officeId={authUser?.office_id || "registrar"}
+    />}
+    </>
   );
 }

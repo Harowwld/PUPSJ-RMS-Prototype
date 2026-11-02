@@ -1,7 +1,8 @@
 "use client";
 
+import SheetPagination from "@/components/shared/SheetPagination";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,8 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { EmptyState } from "@/components/ui/empty";
-import { UserGroupIcon, LayoutGridIcon } from "hugeicons-react";
-
+import { UserGroupIcon, LayoutGridIcon, Building01Icon, Cancel01Icon, CheckmarkCircle01Icon, ComputerIcon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Middle-truncates long filesystem paths so root and leaf directories remain visible.
  */
@@ -44,7 +45,7 @@ function InfoRow({ icon, label, value, children, className }) {
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
           typeof icon === "string" ? (
-            <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+            <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
           ) : (
             <span className="text-gray-400 dark:text-zinc-500 text-sm shrink-0 flex items-center">
               {icon}
@@ -200,9 +201,8 @@ export default function OfficeDetailSheet({
         showCloseButton={false}
         className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
       >
-        {/* Top Header matching reference standard: Department Details < > 01 of XX X */}
         <SheetHeader className="shrink-0 p-0">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
                 Department Details
@@ -212,34 +212,20 @@ export default function OfficeDetailSheet({
               </SheetDescription>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Record Browsing Navigation Controls (< > 01 of XX) */}
+            <div className="ml-auto flex items-center gap-3">
               {typeof totalCount === "number" && totalCount > 1 && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                  <button
-                    type="button"
-                    disabled={currentIndex <= 0}
-                    onClick={onNavigatePrev}
-                    aria-label="Previous Department"
-                    title="Previous Department"
-                    className="w-7 h-7 rounded-lg border border-border dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIndex >= totalCount - 1}
-                    onClick={onNavigateNext}
-                    aria-label="Next Department"
-                    title="Next Department"
-                    className="w-7 h-7 rounded-lg border border-border dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                  >
-                    <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                  </button>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                    {String(Math.max(1, (currentIndex ?? 0) + 1)).padStart(2, "0")} of {String(totalCount).padStart(2, "0")}
-                  </span>
-                </div>
+                <SheetPagination
+                  compact
+                  label="Record navigation"
+                  page={Math.max(1, (currentIndex ?? 0) + 1)}
+                  totalPages={totalCount}
+                  onPrevious={onNavigatePrev}
+                  onNext={onNavigateNext}
+                  previousDisabled={currentIndex <= 0}
+                  nextDisabled={currentIndex >= totalCount - 1}
+                  previousLabel="Previous Department"
+                  nextLabel="Next Department"
+                />
               )}
 
               {/* Accessible Squircle Close Button */}
@@ -250,7 +236,7 @@ export default function OfficeDetailSheet({
                 title="Close"
                 className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </div>
@@ -265,10 +251,10 @@ export default function OfficeDetailSheet({
               : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
           )}
         >
-          <HugeIcon
+          <AppIcon
             className={cn(
-              "ph-bold text-[15px] shrink-0",
-              isActive ? "ph-shield-check text-emerald-600 dark:text-emerald-400" : "ph-warning-circle text-amber-600 dark:text-amber-400"
+              " text-[15px] shrink-0",
+              isActive ? "Shield01Icon text-emerald-600 dark:text-emerald-400" : "Alert01Icon text-amber-600 dark:text-amber-400"
             )}
           />
           <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -298,7 +284,7 @@ export default function OfficeDetailSheet({
                   borderColor: `color-mix(in srgb, ${accent} 28%, transparent)`,
                 }}
               >
-                <HugeIcon className={displayOffice.icon || "ph-bold ph-buildings"} />
+                <Building01Icon size={16} className={displayOffice.icon || ""} />
               </div>
 
               <div className="min-w-0">
@@ -342,14 +328,14 @@ export default function OfficeDetailSheet({
           {/* Section 1: Department Overview & Identity */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 pb-1.5 border-b border-border dark:border-border">
-              <HugeIcon className="ph-bold ph-buildings text-pup-maroon dark:text-red-400 text-sm" />
+              <Building01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
               <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                 Department Identity & Scope
               </h3>
             </div>
             <div className="divide-y-0">
               <InfoRow
-                icon="ph-bold ph-identification-badge"
+                icon=" Contact01Icon"
                 label="Department Code"
                 value={
                   <div className="flex items-center gap-2">
@@ -362,18 +348,18 @@ export default function OfficeDetailSheet({
                       title="Copy Department Code"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
-                      <HugeIcon className={cn("text-[11px] ph-bold", copiedField === "code" ? "ph-check text-emerald-600 dark:text-emerald-400" : "ph-copy")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "code" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
               />
               <InfoRow
-                icon="ph-bold ph-text-align-left"
+                icon=" TextAlignLeftIcon"
                 label="Full Designation"
                 value={<span className="font-medium text-gray-800 dark:text-zinc-200 leading-relaxed">{displayOffice.name}</span>}
               />
               <InfoRow
-                icon="ph-bold ph-palette"
+                icon=" PaintBoardIcon"
                 label="Brand Accent"
                 value={
                   <div className="flex items-center gap-2">
@@ -388,7 +374,7 @@ export default function OfficeDetailSheet({
                 }
               />
               <InfoRow
-                icon="ph-bold ph-shield-check"
+                icon=" Shield01Icon"
                 label="Default Admin"
                 value={
                   <div className="flex items-center gap-2 flex-wrap">
@@ -404,13 +390,13 @@ export default function OfficeDetailSheet({
                       title="Copy Default Admin Email"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
-                      <HugeIcon className={cn("text-[11px] ph-bold", copiedField === "email" ? "ph-check text-emerald-600 dark:text-emerald-400" : "ph-copy")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "email" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
               />
               <InfoRow
-                icon="ph-bold ph-calendar-blank"
+                icon=" Calendar01Icon"
                 label="Provisioned"
                 value={<span className="font-medium text-gray-800 dark:text-zinc-200">{formatPHDateTime(displayOffice.created_at)}</span>}
               />
@@ -420,14 +406,14 @@ export default function OfficeDetailSheet({
           {/* Section 2: Scanning Workstation & Hardware */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 pb-1.5 border-b border-border dark:border-border">
-              <HugeIcon className="ph-bold ph-desktop text-pup-maroon dark:text-red-400 text-sm" />
+              <ComputerIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
               <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                 Scanning Station & Ingestion Hardware
               </h3>
             </div>
             <div className="divide-y-0">
               <InfoRow
-                icon="ph-bold ph-device-tablet-speaker"
+                icon=" Tablet01Icon"
                 label="Host Workstation"
                 value={
                   displayOffice.station_name ? (
@@ -448,7 +434,7 @@ export default function OfficeDetailSheet({
                 }
               />
               <InfoRow
-                icon="ph-bold ph-printer"
+                icon=" PrinterIcon"
                 label="Scanner Hardware"
                 value={
                   <span className="font-medium text-gray-800 dark:text-zinc-200">
@@ -457,7 +443,7 @@ export default function OfficeDetailSheet({
                 }
               />
               <InfoRow
-                icon="ph-bold ph-folder-notch-open"
+                icon=" FolderOpenIcon"
                 label="Inbound Hot-Folder"
                 value={
                   <div className="flex items-center gap-2 min-w-0">
@@ -473,13 +459,13 @@ export default function OfficeDetailSheet({
                       title="Copy Inbound Folder Path"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                     >
-                      <HugeIcon className={cn("text-[11px] ph-bold", copiedField === "inbound" ? "ph-check text-emerald-600 dark:text-emerald-400" : "ph-copy")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "inbound" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
               />
               <InfoRow
-                icon="ph-bold ph-hard-drives"
+                icon=" CloudServerIcon"
                 label="Storage Partition"
                 value={
                   <div className="flex items-center gap-2 min-w-0">
@@ -495,13 +481,13 @@ export default function OfficeDetailSheet({
                       title="Copy Storage Partition"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                     >
-                      <HugeIcon className={cn("text-[11px] ph-bold", copiedField === "storage" ? "ph-check text-emerald-600 dark:text-emerald-400" : "ph-copy")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "storage" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
               />
               <InfoRow
-                icon="ph-bold ph-key"
+                icon=" Key01Icon"
                 label="Ingest API Token"
                 value={
                   displayOffice.ingest_token ? (
@@ -515,7 +501,7 @@ export default function OfficeDetailSheet({
                         title="Copy Station Bearer Token"
                         className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                       >
-                        <HugeIcon className={cn("text-[11px] ph-bold", copiedField === "token" ? "ph-check text-emerald-600 dark:text-emerald-400" : "ph-copy")} />
+                        <AppIcon className={cn("text-[11px] ", copiedField === "token" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
                       </button>
                     </div>
                   ) : (
@@ -526,13 +512,13 @@ export default function OfficeDetailSheet({
                 }
               />
               <InfoRow
-                icon="ph-bold ph-broadcast"
+                icon=" RadioIcon"
                 label="Heartbeat Status"
                 value={
                   displayOffice.last_station_ping ? (
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                        <HugeIcon className="ph-bold ph-check-circle text-xs" />
+                        <CheckmarkCircle01Icon size="1em" className="text-xs" />
                         Online
                       </span>
                       <span className="text-[11px] text-gray-500 dark:text-zinc-400">
@@ -553,7 +539,7 @@ export default function OfficeDetailSheet({
           <div className="space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-border dark:border-border">
               <div className="flex items-center gap-2">
-                <HugeIcon className="ph-bold ph-users text-pup-maroon dark:text-red-400 text-sm" />
+                <UserSearch01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                 <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                   Assigned Personnel Roster
                 </h3>
@@ -647,7 +633,7 @@ export default function OfficeDetailSheet({
           <div className="space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-border dark:border-border">
               <div className="flex items-center gap-2">
-                <HugeIcon className="ph-bold ph-squares-four text-pup-maroon dark:text-red-400 text-sm" />
+                <LayoutGridIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                 <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                   Department Workspace Modules
                 </h3>
@@ -674,7 +660,7 @@ export default function OfficeDetailSheet({
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="w-6 h-6 rounded-lg bg-pup-maroon/10 dark:bg-white/10 text-pup-maroon dark:text-zinc-200 flex items-center justify-center shrink-0">
-                          <HugeIcon className={mod.icon || "ph-bold ph-check"} />
+                          <Tick01Icon size={16} className={mod.icon || ""} />
                         </div>
                         <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">
                           {mod.name || mod.id}

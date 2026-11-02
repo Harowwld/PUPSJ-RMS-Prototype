@@ -1,7 +1,7 @@
 "use client"
 import NoticeBanner from "@/components/shared/NoticeBanner";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import { Card, CardContent } from "@/components/ui/card"
@@ -27,39 +27,39 @@ import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
-import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Contact01Icon, Shield01Icon, TableIcon, Tick01Icon, UserSwitchIcon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function getOfficeIcon(office) {
   if (office?.icon && office.icon.trim()) return office.icon
   const id = (office?.id || office?.short_name || "").toLowerCase()
-  if (id.includes("reg")) return "ph-bold ph-certificate"
-  if (id.includes("osas") || id.includes("student")) return "ph-bold ph-student"
-  if (id.includes("admiss")) return "ph-bold ph-user-check"
-  if (id.includes("lib")) return "ph-bold ph-books"
-  if (id.includes("acc") || id.includes("cash") || id.includes("fin")) return "ph-bold ph-banknote"
-  return "ph-bold ph-building"
+  if (id.includes("reg")) return " Certificate01Icon"
+  if (id.includes("osas") || id.includes("student")) return " StudentIcon"
+  if (id.includes("admiss")) return " UserCheck01Icon"
+  if (id.includes("lib")) return " LibraryIcon"
+  if (id.includes("acc") || id.includes("cash") || id.includes("fin")) return " BankIcon"
+  return " Building02Icon"
 }
 
 function getModuleIcon(m) {
   if (m?.icon && m.icon.trim()) return m.icon
-  if (m?.id === "osas_monitoring") return "ph-bold ph-student"
-  if (m?.id === "records_review") return "ph-bold ph-seal-check"
-  if (m?.id === "compliance_analytics") return "ph-bold ph-chart-bar"
-  if (m?.id === "request_analytics") return "ph-bold ph-trend-up"
-  if (m?.id === "staff_directory") return "ph-bold ph-users"
-  if (m?.id === "storage_layout") return "ph-bold ph-warehouse"
-  if (m?.id === "system_config") return "ph-bold ph-gear"
-  if (m?.id === "backup") return "ph-bold ph-database-backup"
-  if (m?.id === "audit_logs") return "ph-bold ph-shield-check"
-  if (m?.id === "document_requests") return "ph-bold ph-tray-arrow-up"
-  if (m?.id === "student_directory") return "ph-bold ph-users"
-  if (m?.id === "scan_upload") return "ph-bold ph-scan"
-  if (m?.id === "documents") return "ph-bold ph-file-text"
-  if (m?.id === "notifications") return "ph-bold ph-bell"
-  if (m?.id === "records_archive") return "ph-bold ph-archive-box"
-  if (m?.id === "storage_explorer") return "ph-bold ph-folder-open"
-  if (m?.id === "student_organizations") return "ph-bold ph-buildings"
-  return "ph-bold ph-cube"
+  if (m?.id === "osas_monitoring") return " StudentIcon"
+  if (m?.id === "records_review") return " CheckmarkBadge01Icon"
+  if (m?.id === "compliance_analytics") return " Analytics01Icon"
+  if (m?.id === "request_analytics") return " Analytics01Icon"
+  if (m?.id === "staff_directory") return " UserSearch01Icon"
+  if (m?.id === "storage_layout") return " WarehouseIcon"
+  if (m?.id === "system_config") return " Settings01Icon"
+  if (m?.id === "backup") return " DatabaseIcon"
+  if (m?.id === "audit_logs") return " Shield01Icon"
+  if (m?.id === "document_requests") return " FileUploadIcon"
+  if (m?.id === "student_directory") return " UserSearch01Icon"
+  if (m?.id === "scan_upload") return " FingerPrintScanIcon"
+  if (m?.id === "documents") return " File02Icon"
+  if (m?.id === "notifications") return " Notification01Icon"
+  if (m?.id === "records_archive") return " Archive01Icon"
+  if (m?.id === "storage_explorer") return " FolderOpenIcon"
+  if (m?.id === "student_organizations") return " Building01Icon"
+  return " AlignBoxBottomCenterIcon"
 }
 
 function getModuleTargetText(m) {
@@ -99,12 +99,12 @@ function StatusChip({ status }) {
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -498,8 +498,8 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           : `Are you sure you want to turn off all optional ${category === "admin" ? "supervisor and department head" : "staff"} features for ${targetOffice?.short_name || "this department"}?`,
         confirmLabel: isAll ? "Reset to Core" : "Disable Features",
         variant: "warning",
-        icon: "ph-duotone ph-toggle-left",
-        buttonIcon: "ph-bold ph-arrow-counter-clockwise",
+        icon: " ToggleOffIcon",
+        buttonIcon: " ReloadIcon",
         selectedItems: affectedItems,
         action: () => executeBatchToggle(officeId, category, false),
       })
@@ -650,7 +650,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
-            icon="ph-bold ph-squares-four"
+            icon=" LayoutGridIcon"
             title="Department Features & Permissions"
             description="Turn system features on or off for each department."
             showBorder={true}
@@ -690,7 +690,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       {/* Main Card with Header, Toolbar & Active Filter Chips */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-squares-four"
+          icon=" LayoutGridIcon"
           title={
             <div className="flex items-center gap-[6px]">
               Department Features & Permissions
@@ -715,7 +715,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-buildings text-sm" />
+                  <Building01Icon size="1em" className="text-sm" />
                   <span>By Department</span>
                 </button>
                 <button
@@ -729,7 +729,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
                   )}
                 >
-                  <HugeIcon className="ph-bold ph-table text-sm" />
+                  <TableIcon size="1em" className="text-sm" />
                   <span>Compare Features</span>
                 </button>
               </div>
@@ -747,7 +747,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
         <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
-              <HugeIcon className="ph-bold ph-user-switch text-lg" />
+              <UserSwitchIcon size="1em" className="text-lg" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -826,7 +826,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon  className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></HugeIcon>
+                <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
               </div>
               <Input
                 value={searchQuery}
@@ -943,7 +943,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         aria-label="Scroll departments left"
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95"
                       >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
+                        <ArrowLeft01Icon size="1em" className="text-xs" />
                       </button>
                       <button
                         type="button"
@@ -952,7 +952,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         aria-label="Scroll departments right"
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95"
                       >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
+                        <ArrowRight01Icon size="1em" className="text-xs" />
                       </button>
                     </div>
                   </div>
@@ -995,7 +995,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 borderColor: isSelected ? accent : `${accent}30`,
                               }}
                             >
-                              <HugeIcon  className={cn(officeIconClass, "text-base")}></HugeIcon>
+                              <AppIcon  className={cn(officeIconClass, "text-base")}></AppIcon>
                             </div>
                             <div>
                               <div
@@ -1073,7 +1073,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       borderColor: `${currentOffice.accent_color || "#800000"}28`,
                     }}
                   >
-                    <HugeIcon  className={cn(getOfficeIcon(currentOffice), "text-xl")}></HugeIcon>
+                    <AppIcon  className={cn(getOfficeIcon(currentOffice), "text-xl")}></AppIcon>
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -1156,7 +1156,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border dark:border-border gap-2">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/30 dark:text-red-400 flex items-center justify-center text-sm">
-                              <HugeIcon  className="ph-bold ph-shield-check"></HugeIcon>
+                              <Shield01Icon size={16}  ></Shield01Icon>
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -1189,7 +1189,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed pointer-events-none"
                               )}
                             >
-                              <HugeIcon className="ph-bold ph-check text-[11px]" />
+                              <Tick01Icon size="1em" className="text-[11px]" />
                               <span>Enable All</span>
                             </button>
                             <button
@@ -1202,7 +1202,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed pointer-events-none"
                               )}
                             >
-                              <HugeIcon className="ph-bold ph-x text-[11px]" />
+                              <Cancel01Icon size="1em" className="text-[11px]" />
                               <span>Turn Off All</span>
                             </button>
                           </div>
@@ -1236,7 +1236,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border dark:border-border gap-2">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 flex items-center justify-center text-sm">
-                              <HugeIcon  className="ph-bold ph-identification-badge"></HugeIcon>
+                              <Contact01Icon size={16}  ></Contact01Icon>
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -1269,7 +1269,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed pointer-events-none"
                               )}
                             >
-                              <HugeIcon className="ph-bold ph-check text-[11px]" />
+                              <Tick01Icon size="1em" className="text-[11px]" />
                               <span>Enable All</span>
                             </button>
                             <button
@@ -1282,7 +1282,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 isCurrentArchived && "opacity-40 cursor-not-allowed pointer-events-none"
                               )}
                             >
-                              <HugeIcon className="ph-bold ph-x text-[11px]" />
+                              <Cancel01Icon size="1em" className="text-[11px]" />
                               <span>Turn Off All</span>
                             </button>
                           </div>
@@ -1441,7 +1441,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           className="px-4 pl-6 py-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/90 backdrop-blur-xs border-y border-border/50"
                         >
                           <div className="flex items-center gap-2">
-                            <HugeIcon className="ph-bold ph-shield-check text-pup-maroon dark:text-red-400 text-xs" />
+                            <Shield01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-xs" />
                             <span>Supervisor & Department Head Tools ({groupedModules.admin.length})</span>
                           </div>
                         </td>
@@ -1468,7 +1468,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           className="px-4 pl-6 py-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/90 backdrop-blur-xs border-y border-border/50"
                         >
                           <div className="flex items-center gap-2">
-                            <HugeIcon className="ph-bold ph-identification-badge text-blue-600 dark:text-blue-400 text-xs" />
+                            <Contact01Icon size="1em" className="text-blue-600 dark:text-blue-400 text-xs" />
                             <span>Staff & Frontline Tools ({groupedModules.staff.length})</span>
                           </div>
                         </td>
@@ -1547,7 +1547,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
                   : "bg-gray-200/60 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400"
               )}
             >
-              <HugeIcon className={cn(moduleIconClass, "text-base")}></HugeIcon>
+              <AppIcon className={cn(moduleIconClass, "text-base")}></AppIcon>
             </div>
             <div>
               <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight">
@@ -1624,7 +1624,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
       <td className="p-4 pl-6 align-top sticky left-0 bg-white/95 dark:bg-zinc-900/95 z-10 border-r border-border/70 dark:border-border/70 w-[340px] min-w-[340px] max-w-[340px]">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800/80 flex items-center justify-center text-gray-700 dark:text-zinc-300 text-xs shrink-0">
-            <HugeIcon className={cn(moduleIconClass, "text-sm")}></HugeIcon>
+            <AppIcon className={cn(moduleIconClass, "text-sm")}></AppIcon>
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">

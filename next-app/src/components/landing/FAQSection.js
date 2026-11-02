@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import HugeIcon from "@/components/shared/HugeIcon";
-import { cn } from "@/lib/utils";
 
+import { cn } from "@/lib/utils";
+import { Add01Icon, LayoutGridIcon, MinusSignIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_FAQS = [
   {
     id: "how-to-request",
@@ -93,15 +94,15 @@ export default function FAQSection() {
                   activeCategory === "all" ? "bg-[#800000] text-white" : "bg-transparent text-gray-600 hover:bg-gray-50"
                 )}
               >
-                <HugeIcon className={cn("text-base ph-bold ph-squares-four", activeCategory === "all" ? "text-white" : "text-gray-400")} />
+                <LayoutGridIcon size="1em" className={cn("text-base", activeCategory === "all" ? "text-white" : "text-gray-400")} />
                 All Questions
               </button>
               {categories.map((cat) => {
                 const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
-                let iconClass = "ph-bold ph-folder";
-                if (cat.toLowerCase().includes("request")) iconClass = "ph-bold ph-file-text";
-                if (cat.toLowerCase().includes("process")) iconClass = "ph-bold ph-gear";
-                if (cat.toLowerCase().includes("pickup")) iconClass = "ph-bold ph-hand-pointing";
+                let iconClass = " Folder01Icon";
+                if (cat.toLowerCase().includes("request")) iconClass = " File02Icon";
+                if (cat.toLowerCase().includes("process")) iconClass = " Settings01Icon";
+                if (cat.toLowerCase().includes("pickup")) iconClass = " CursorPointer01Icon";
 
                 return (
                   <button
@@ -113,7 +114,7 @@ export default function FAQSection() {
                       isActive ? "bg-[#800000] text-white" : "bg-transparent text-gray-600 hover:bg-gray-50"
                     )}
                   >
-                    <HugeIcon className={cn("text-base", isActive ? "text-white" : "text-gray-400", iconClass)} />
+                    <AppIcon className={cn("text-base", isActive ? "text-white" : "text-gray-400", iconClass)} />
                     {cat}
                   </button>
                 );
@@ -130,7 +131,7 @@ export default function FAQSection() {
                 <button type="button" onClick={() => toggleFaq(idx)} className="w-full flex items-center justify-between p-5 sm:px-6 text-left cursor-pointer transition-colors border-0 bg-transparent" aria-expanded={isOpen}>
                   <span className={cn("text-sm sm:text-base font-medium pr-4", isOpen ? "text-white" : "text-black")}>{faq.q}</span>
                   <div className="shrink-0 ml-4">
-                    {isOpen ? <HugeIcon className="ph-bold ph-minus text-white text-lg" /> : <HugeIcon className="ph-bold ph-plus text-gray-500 text-lg" />}
+                    {isOpen ? <MinusSignIcon size="1em" className="text-white text-lg" /> : <Add01Icon size="1em" className="text-gray-500 text-lg" />}
           </div>
                 </button>
                 <AnimatePresence>

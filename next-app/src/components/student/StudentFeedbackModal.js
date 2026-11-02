@@ -1,4 +1,5 @@
 "use client";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useState, useEffect } from "react";
 import {
@@ -10,10 +11,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { cn } from "@/lib/utils";
+import { Loading01Icon } from "hugeicons-react";
+
 
 const RATING_LABELS = {
   1: "Poor",
@@ -243,13 +246,13 @@ export default function StudentFeedbackModal({
               <label htmlFor="student-feedback-comments" className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                 Comments or Suggestions <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
               </label>
-              <textarea
+              <Textarea
                 id="student-feedback-comments"
                 rows={3}
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 placeholder="Share any thoughts or suggestions for the Registrar Office..."
-                className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs resize-none transition-all"
+                className="w-full resize-none"
               />
             </div>
           </div>
@@ -271,7 +274,7 @@ export default function StudentFeedbackModal({
             >
               {submitting ? (
                 <span className="flex items-center gap-2">
-                  <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                  <Loading01Icon size="1em" className="animate-spin text-sm" />
                   Submitting...
                 </span>
               ) : request?.feedback ? (

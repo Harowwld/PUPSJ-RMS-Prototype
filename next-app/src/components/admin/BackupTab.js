@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useRef, useState, useEffect } from "react"
 import {
@@ -35,7 +35,7 @@ import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { AlertCircleIcon as EmptyAlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon , Loading01Icon} from "hugeicons-react";
 
 export default function BackupTab({
   systemHealth,
@@ -305,7 +305,7 @@ export default function BackupTab({
           <div className="flex-1 min-w-0 flex flex-col">
             <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
               <PageHeader
-                icon="ph-hard-drives"
+                icon="CloudServerIcon"
                 title="Office Partition Backup & Archive"
                 description="Create and restore office partition backups, and save offline copies to an external drive for safekeeping."
                 showBorder={false}
@@ -335,7 +335,7 @@ export default function BackupTab({
                     >
                       {localLoading.uploading ? (
                         <span className="flex items-center gap-1.5">
-                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <Loading01Icon size="1em" className="animate-spin text-xs" />
                           <span>Restoring...</span>
                         </span>
                       ) : (
@@ -349,7 +349,7 @@ export default function BackupTab({
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
-                          <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                          <Loading01Icon size="1em" className="animate-spin text-xs" />
                           <span>Creating...</span>
                         </span>
                       ) : (
@@ -506,7 +506,7 @@ export default function BackupTab({
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => onDeleteBackup(effectiveSelectedBackupIds)}
           actionLabel="Delete"
-          actionIcon="ph-trash"
+          actionIcon="Delete01Icon"
         />
       </div>
     </TooltipProvider>

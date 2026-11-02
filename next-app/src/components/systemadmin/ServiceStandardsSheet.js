@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -17,7 +17,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
-
+import { Add01Icon, CalendarCheckIn01Icon, Cancel01Icon, HourglassIcon, LayoutGridIcon, MinusSignIcon, Timer01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const PRESETS = [
   {
     id: "ARTA",
@@ -91,7 +92,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
             : "opacity-40 cursor-not-allowed pointer-events-none"
         )}
       >
-        <HugeIcon className="ph-bold ph-minus text-xs" />
+        <MinusSignIcon size="1em" className="text-xs" />
       </button>
       <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-sans tabular-nums">
         {current}d
@@ -108,7 +109,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
             : "opacity-40 cursor-not-allowed pointer-events-none"
         )}
       >
-        <HugeIcon className="ph-bold ph-plus text-xs" />
+        <Add01Icon size="1em" className="text-xs" />
       </button>
     </div>
   );
@@ -303,14 +304,14 @@ export default function ServiceStandardsSheet({
                 aria-label="Close"
                 title="Close"
               >
-                <HugeIcon className="ph-bold ph-x text-sm" />
+                <Cancel01Icon size="1em" className="text-sm" />
               </button>
             </div>
           </SheetHeader>
 
           {/* Line-Attached Edge-to-Edge Policy Notice */}
           <div className="flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0 border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200">
-            <HugeIcon className="ph-bold ph-hourglass-high text-blue-600 dark:text-blue-400 text-[15px] shrink-0" />
+            <AppIcon className=" HourglassIcon text-blue-600 dark:text-blue-400 text-[15px] shrink-0" />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
               <strong className="font-semibold">Turnaround Policy:</strong>{" "}
               SLA thresholds enforce automated compliance scoring and queue prioritization across campus partitions.
@@ -333,7 +334,7 @@ export default function ServiceStandardsSheet({
                 <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="size-11 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border shadow-2xs bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40">
-                      <HugeIcon className="ph-bold ph-timer" />
+                      <Timer01Icon size={16}  />
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
@@ -366,7 +367,7 @@ export default function ServiceStandardsSheet({
                 {/* 1. Presets Segmented Selector */}
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HugeIcon className="ph-bold ph-squares-four text-pup-maroon dark:text-red-400 text-sm" />
+                    <LayoutGridIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Turnaround Framework Presets
                     </h3>
@@ -409,7 +410,7 @@ export default function ServiceStandardsSheet({
                 {/* 2. Policy & Calendar Configuration */}
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HugeIcon className="ph-bold ph-sliders text-pup-maroon dark:text-red-400 text-sm" />
+                    <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Policy & Calendar Configuration
                     </h3>
@@ -462,7 +463,7 @@ export default function ServiceStandardsSheet({
                 {/* 3. Tier Steppers */}
                 <div className="space-y-2.5 pt-2">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HugeIcon className="ph-bold ph-clock-countdown text-pup-maroon dark:text-red-400 text-sm" />
+                    <HourglassIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Turnaround Rules & Tier Thresholds
                     </h3>
@@ -551,7 +552,7 @@ export default function ServiceStandardsSheet({
                 {/* 4. Live Simulator */}
                 <div className="space-y-2.5 pt-2">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HugeIcon className="ph-bold ph-calendar-check text-pup-maroon dark:text-red-400 text-sm" />
+                    <CalendarCheckIn01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Fulfillment Schedule Simulation
                     </h3>
@@ -675,7 +676,7 @@ export default function ServiceStandardsSheet({
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
         variant="warning"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        buttonIcon=" ReloadIcon"
         isLoading={saving}
         onConfirm={handleReset}
       />

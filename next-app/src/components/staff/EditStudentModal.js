@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -15,6 +15,8 @@ import { Select } from "@/components/ui/select";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { PersonNameSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { Loading01Icon } from "hugeicons-react";
+
 
 export default function EditStudentModal({
   open,
@@ -191,20 +193,8 @@ export default function EditStudentModal({
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Student Identification
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Student Number
-                </label>
-                <Input
-                  type="text"
-                  disabled
-                  value={student?.studentNo || ""}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/50 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300 cursor-not-allowed shadow-none"
-                />
-              </div>
-
-              <div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+              <div className="md:col-span-8">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
                   Full Name (Last, First) <span className="text-red-500">*</span>
                 </label>
@@ -215,6 +205,18 @@ export default function EditStudentModal({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs uppercase"
+                />
+              </div>
+
+              <div className="md:col-span-4">
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                  Student Number
+                </label>
+                <Input
+                  type="text"
+                  disabled
+                  value={student?.studentNo || ""}
+                  className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/50 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300 cursor-not-allowed shadow-none"
                 />
               </div>
             </div>
@@ -363,7 +365,7 @@ export default function EditStudentModal({
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
-                  <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                  <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
                   Saving...
                 </span>
               ) : (

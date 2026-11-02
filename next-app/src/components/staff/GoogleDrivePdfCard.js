@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,8 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { Download01Icon, File02Icon, Location01Icon, MoreVerticalIcon, ReloadIcon, ViewIcon } from "hugeicons-react";
+
 
 function formatFileSize(bytes) {
   if (!bytes || isNaN(bytes) || bytes <= 0) return "1.2 MB";
@@ -278,7 +280,7 @@ export default function GoogleDrivePdfCard({
                     title="Re-scan Document"
                     aria-label="Re-scan Document"
                   >
-                    <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-sm" />
+                    <ReloadIcon size="1em" className="text-sm" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Re-scan Document</TooltipContent>
@@ -293,7 +295,7 @@ export default function GoogleDrivePdfCard({
                   className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                   title="Preview Document"
                 >
-                  <HugeIcon className="ph-bold ph-eye text-sm" />
+                  <ViewIcon size="1em" className="text-sm" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>Preview Document</TooltipContent>
@@ -308,7 +310,7 @@ export default function GoogleDrivePdfCard({
                     className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer"
                     title="Locate Archive Drawer"
                   >
-                    <HugeIcon className="ph-bold ph-map-pin text-sm" />
+                    <Location01Icon size="1em" className="text-sm" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Locate Archive Drawer</TooltipContent>
@@ -322,7 +324,7 @@ export default function GoogleDrivePdfCard({
                   className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                   title="More actions"
                 >
-                  <HugeIcon className="ph-bold ph-dots-three-vertical text-sm" />
+                  <MoreVerticalIcon size="1em" className="text-sm" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -346,7 +348,7 @@ export default function GoogleDrivePdfCard({
                     onClick={handlePreviewClick}
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
-                    <HugeIcon className="ph-bold ph-eye text-sm text-gray-500" />
+                    <ViewIcon size="1em" className="text-sm text-gray-500" />
                     <span>Preview Document</span>
                   </DropdownMenuItem>
                   {canRescan && (
@@ -354,7 +356,7 @@ export default function GoogleDrivePdfCard({
                       onClick={handleRescanClick}
                       className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     >
-                      <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-sm text-amber-600 dark:text-amber-400" />
+                      <ReloadIcon size="1em" className="text-sm text-amber-600 dark:text-amber-400" />
                       <span>Re-scan Document</span>
                     </DropdownMenuItem>
                   )}
@@ -363,7 +365,7 @@ export default function GoogleDrivePdfCard({
                       onClick={handleLocateClick}
                       className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     >
-                      <HugeIcon className="ph-bold ph-map-pin text-sm text-pup-maroon dark:text-red-400" />
+                      <Location01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                       <span>Locate Archive Drawer</span>
                     </DropdownMenuItem>
                   )}
@@ -372,7 +374,7 @@ export default function GoogleDrivePdfCard({
                     onClick={handleDownloadClick}
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
-                    <HugeIcon className="ph-bold ph-download-simple text-sm text-gray-500" />
+                    <Download01Icon size="1em" className="text-sm text-gray-500" />
                     <span>Download PDF</span>
                   </DropdownMenuItem>
                 </div>
@@ -419,7 +421,7 @@ export default function GoogleDrivePdfCard({
                 className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
                 aria-label="Document options"
               >
-                <HugeIcon className="ph-bold ph-dots-three-vertical text-sm" />
+                <MoreVerticalIcon size="1em" className="text-sm" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -443,7 +445,7 @@ export default function GoogleDrivePdfCard({
                   onClick={handlePreviewClick}
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
-                  <HugeIcon className="ph-bold ph-eye text-sm text-gray-500" />
+                  <ViewIcon size="1em" className="text-sm text-gray-500" />
                   <span>Preview Document</span>
                 </DropdownMenuItem>
                 {canRescan && (
@@ -451,7 +453,7 @@ export default function GoogleDrivePdfCard({
                     onClick={handleRescanClick}
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
-                    <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-sm text-amber-600 dark:text-amber-400" />
+                    <ReloadIcon size="1em" className="text-sm text-amber-600 dark:text-amber-400" />
                     <span>Re-scan Document</span>
                   </DropdownMenuItem>
                 )}
@@ -460,7 +462,7 @@ export default function GoogleDrivePdfCard({
                     onClick={handleLocateClick}
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
-                    <HugeIcon className="ph-bold ph-map-pin text-sm text-pup-maroon dark:text-red-400" />
+                    <Location01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                     <span>Locate Archive Drawer</span>
                   </DropdownMenuItem>
                 )}
@@ -469,7 +471,7 @@ export default function GoogleDrivePdfCard({
                   onClick={handleDownloadClick}
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
-                  <HugeIcon className="ph-bold ph-download-simple text-sm text-gray-500" />
+                  <Download01Icon size="1em" className="text-sm text-gray-500" />
                   <span>Download PDF</span>
                 </DropdownMenuItem>
               </div>
@@ -497,14 +499,14 @@ export default function GoogleDrivePdfCard({
         ) : isPdfLoading ? (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50/70 dark:bg-zinc-800/40 animate-pulse text-gray-300 dark:text-zinc-600">
             <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-[#ea4335]/70 mb-1.5 shadow-2xs">
-              <HugeIcon className="ph-duotone ph-file-pdf text-xl" />
+              <File02Icon size="1em" className="text-xl" />
             </div>
             <div className="h-1.5 w-16 bg-gray-200/80 dark:bg-zinc-700/80 rounded-full" />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500 p-4 text-center">
             <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/30 text-[#ea4335] flex items-center justify-center mb-2 shadow-2xs">
-              <HugeIcon className="ph-duotone ph-file-pdf text-2xl" />
+              <File02Icon size="1em" className="text-2xl" />
             </div>
             <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300 truncate max-w-[90%]">
               {docTitle}

@@ -193,16 +193,16 @@ export const DEFAULT_BENTO_CONTENT = {
     tab2Label: "RA 11032",
     tab3Label: "Tracking",
     charterItems: [
-      { icon: "ph-shield-check", title: "No Unrecorded Delays", desc: "Timestamped upon receipt" },
-      { icon: "ph-clock", title: "Clear Deadlines", desc: "Always on schedule" },
+      { icon: "Shield01Icon", title: "No Unrecorded Delays", desc: "Timestamped upon receipt" },
+      { icon: "Clock01Icon", title: "Clear Deadlines", desc: "Always on schedule" },
     ],
     artaItems: [
-      { icon: "ph-scales", title: "Zero Red Tape", desc: "Strict RA 11032 compliance" },
-      { icon: "ph-file-text", title: "Citizen's Charter", desc: "Published university processing time standards" },
+      { icon: "JusticeScale01Icon", title: "Zero Red Tape", desc: "Strict RA 11032 compliance" },
+      { icon: "File02Icon", title: "Citizen's Charter", desc: "Published university processing time standards" },
     ],
     auditItems: [
-      { icon: "ph-clock-counter-clockwise", title: "Staff Activity History", desc: "Staff actions are recorded" },
-      { icon: "ph-check-circle", title: "Live Tracking Updates", desc: "Real-time ticket progression" },
+      { icon: "Time01Icon", title: "Staff Activity History", desc: "Staff actions are recorded" },
+      { icon: "CheckmarkCircle01Icon", title: "Live Tracking Updates", desc: "Real-time ticket progression" },
     ],
     footerNote: "Fair, transparent university service",
   },
@@ -363,7 +363,7 @@ export const DEFAULT_WORKFLOW_CONTENT = {
       actionLabel: "Open Portal",
       actionType: "link",
       actionTarget: "/login",
-      actionIcon: "ph-arrow-right",
+      actionIcon: "ArrowRight02Icon",
     },
     {
       num: "02",
@@ -373,7 +373,7 @@ export const DEFAULT_WORKFLOW_CONTENT = {
       actionLabel: "View Catalog",
       actionType: "scroll",
       actionTarget: "catalog",
-      actionIcon: "ph-arrow-down",
+      actionIcon: "ArrowDown01Icon",
     },
     {
       num: "03",

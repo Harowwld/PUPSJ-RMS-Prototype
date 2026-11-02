@@ -1,5 +1,4 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
@@ -7,6 +6,7 @@ import { motion } from "framer-motion";
 
 
 
+import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_WORKFLOW_CONTENT = {
   eyebrow: "",
   headingLine1: "How to Request",
@@ -31,7 +31,7 @@ const DEFAULT_WORKFLOW_CONTENT = {
       actionLabel: "Open Portal",
       actionType: "link",
       actionTarget: "/login",
-      actionIcon: "ph-arrow-right",
+      actionIcon: "ArrowRight02Icon",
     },
     {
       num: "02",
@@ -42,7 +42,7 @@ const DEFAULT_WORKFLOW_CONTENT = {
       actionLabel: "View Catalog",
       actionType: "scroll",
       actionTarget: "catalog",
-      actionIcon: "ph-arrow-down",
+      actionIcon: "ArrowDown01Icon",
     },
     {
       num: "03",
@@ -284,7 +284,7 @@ export default function ProcessWorkflow() {
                               className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 hover:text-red-400 ml-2 transition-colors cursor-pointer"
                             >
                               <span>{step.actionLabel}</span>
-                              <HugeIcon  className={`ph-bold ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ph-arrow-down" : "ph-arrow-right")} text-xs`} />
+                              <AppIcon  className={` ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ArrowDown01Icon" : "ArrowRight02Icon")} text-xs`} />
                             </button>
                           )}
                         </div>

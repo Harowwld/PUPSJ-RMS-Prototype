@@ -1,7 +1,7 @@
 "use client"
 
 import useUrlPage from "@/hooks/useUrlPage"
-import HugeIcon from "@/components/shared/HugeIcon"
+
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { Reorder } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -37,16 +37,16 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import { toast } from "sonner"
 import { matchesSearchQuery } from "@/lib/searchUtils"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, DragDropIcon, Tick01Icon, ViewIcon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -733,7 +733,7 @@ export default function DigitalRecordsReviewTab({
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
-            icon="ph-seal-check"
+            icon="CheckmarkBadge01Icon"
             title="Records Review"
             description="Verify student record submissions."
             showBorder={false}
@@ -778,7 +778,7 @@ export default function DigitalRecordsReviewTab({
                         Pending Review
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
-                        <HugeIcon className="ph-bold text-[15px] ph-clock" />
+                        <Clock01Icon size="1em" className="text-[15px]" />
                       </div>
                     </div>
                     
@@ -791,7 +791,7 @@ export default function DigitalRecordsReviewTab({
                           {stats.pendingToday.toLocaleString()} received today
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
 
                     </div>
                   </div>
@@ -861,7 +861,7 @@ export default function DigitalRecordsReviewTab({
                         Approved
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                        <HugeIcon className="ph-bold text-[15px] ph-check-circle" />
+                        <CheckmarkCircle01Icon size="1em" className="text-[15px]" />
                       </div>
                     </div>
                     
@@ -874,7 +874,7 @@ export default function DigitalRecordsReviewTab({
                           {stats.approvedToday.toLocaleString()} approved today
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
 
                     </div>
                   </div>
@@ -937,7 +937,7 @@ export default function DigitalRecordsReviewTab({
                         Declined
                       </span>
                       <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                        <HugeIcon className="ph-bold text-[15px] ph-x-circle" />
+                        <CancelCircleIcon size="1em" className="text-[15px]" />
                       </div>
                     </div>
                     
@@ -950,7 +950,7 @@ export default function DigitalRecordsReviewTab({
                           {stats.declinedToday.toLocaleString()} returned today
                         </span>
                       </div>
-                      <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
 
                     </div>
                   </div>
@@ -1019,7 +1019,7 @@ export default function DigitalRecordsReviewTab({
         <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Search */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-            <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></HugeIcon>
+            <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></Search01Icon>
             <Input
               type="text"
               placeholder="Search Student"
@@ -1279,7 +1279,7 @@ export default function DigitalRecordsReviewTab({
                             title="Reset scroll to start"
                             className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
                           >
-                            <HugeIcon className="ph-bold ph-arrow-line-left text-[10px]" />
+                            <AppIcon className=" ArrowLeft01Icon text-[10px]" />
                           </button>
                         )}
                       </div>
@@ -1465,7 +1465,7 @@ export default function DigitalRecordsReviewTab({
                                     aria-label="Preview Document"
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
+                                    <ViewIcon size="1em"  className="text-[16px]"></ViewIcon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Preview Document</TooltipContent>
@@ -1480,7 +1480,7 @@ export default function DigitalRecordsReviewTab({
                                          aria-label="Approve Document"
                                          className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
-                                         <HugeIcon  className="ph-bold ph-check text-[16px]"></HugeIcon>
+                                         <Tick01Icon size="1em"  className="text-[16px]"></Tick01Icon>
                                        </button>
                                      </TooltipTrigger>
                                      <TooltipContent side="top">Approve Document</TooltipContent>
@@ -1501,7 +1501,7 @@ export default function DigitalRecordsReviewTab({
                                          aria-label="Decline Document"
                                          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                        >
-                                         <HugeIcon  className="ph-bold ph-x text-[16px]"></HugeIcon>
+                                         <Cancel01Icon size="1em"  className="text-[16px]"></Cancel01Icon>
                                        </button>
                                      </TooltipTrigger>
                                      <TooltipContent side="top">Decline Document</TooltipContent>
@@ -1611,7 +1611,7 @@ export default function DigitalRecordsReviewTab({
               onCancel={() => setSelectedIds(new Set())}
               actions={
                 <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50 flex items-center">
-                  <HugeIcon  className="ph-fill ph-warning-circle mr-1.5"></HugeIcon>
+                  <Alert01Icon size={16}  className="mr-1.5"></Alert01Icon>
                   Contains reviewed records. Bulk actions disabled.
                 </span>
               }

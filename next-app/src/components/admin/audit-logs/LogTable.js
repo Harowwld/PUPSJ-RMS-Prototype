@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import React, { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import TableScrollControls from "@/components/shared/TableScrollControls"
@@ -24,16 +24,16 @@ import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"
 import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ViewIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return logSortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -134,7 +134,7 @@ const LogRow = React.memo(function LogRow({
             title={isExpanded ? "Collapse Details" : "Expand Details"}
             className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors"
           >
-            <HugeIcon className={cn("ph-bold text-[14px]", isExpanded ? "ph-minus" : "ph-plus")}></HugeIcon>
+            <AppIcon className={cn(" text-[14px]", isExpanded ? "MinusSignIcon" : "Add01Icon")}></AppIcon>
           </button>
         </td>
         <td className="p-4 align-middle whitespace-nowrap text-xs font-medium text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
@@ -194,7 +194,7 @@ const LogRow = React.memo(function LogRow({
                   aria-label="View Details"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <HugeIcon  className="ph-bold ph-eye text-[16px]"></HugeIcon>
+                  <ViewIcon size="1em"  className="text-[16px]"></ViewIcon>
                 </button>
               </TooltipTrigger>
               <TooltipContent>View Details</TooltipContent>
@@ -371,7 +371,7 @@ export default function LogTable({
                               aria-label="Reset scroll to start"
                               className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer"
                             >
-                              <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                              <AppIcon className=" ArrowLeft01Icon text-xs" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>Reset scroll to start</TooltipContent>

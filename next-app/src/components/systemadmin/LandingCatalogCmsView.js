@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,8 @@ import LandingCatalogSkeleton from "@/components/systemadmin/skeletons/LandingCa
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
-
+import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, Delete01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export const MAX_CATALOG_ITEMS = 8
 export const MIN_CATALOG_ITEMS = 2
 
@@ -337,7 +339,7 @@ export default function LandingCatalogCmsView({ showToast }) {
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-books"
+          icon=" LibraryIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -460,7 +462,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         {catalogData.description?.length || 0}/200
                       </span>
                     </div>
-                    <textarea
+                    <Textarea
                       rows={3}
                       value={catalogData.description || ""}
                       onChange={(e) =>
@@ -468,7 +470,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       }
                       placeholder="Explore authentic credentials, university clearance protocols..."
                       maxLength={200}
-                      className="w-full min-h-[72px] rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20 resize-y transition-all shadow-xs"
+                      className="w-full min-h-[72px] resize-y"
                     />
                   </div>
                 </div>
@@ -558,7 +560,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               onClick={() => handleMoveCard(idx, "up")}
                               className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-caret-up text-xs" />
+                              <ArrowUp01Icon size="1em" className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -567,7 +569,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               onClick={() => handleMoveCard(idx, "down")}
                               className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-caret-down text-xs" />
+                              <ArrowDown01Icon size="1em" className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -576,7 +578,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               onClick={() => setDeleteCardIdx(idx)}
                               className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-trash text-xs" />
+                              <Delete01Icon size="1em" className="text-xs" />
                             </button>
                           </div>
                         </div>
@@ -652,12 +654,12 @@ export default function LandingCatalogCmsView({ showToast }) {
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Document Description / Purpose Summary
                       </label>
-                      <textarea
+                      <Textarea
                         rows={2}
                         value={currentCard.description || ""}
                         onChange={(e) => updateCardField("description", e.target.value)}
                         placeholder="Official comprehensive academic transcript for employment, PRC board examinations..."
-                        className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs leading-relaxed text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full resize-none"
                       />
                     </div>
 
@@ -676,7 +678,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         {(currentCard.requirements || []).map((req, rIdx) => (
                           <div key={rIdx} className="flex items-center gap-2">
                             <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-bold shrink-0">
-                              <HugeIcon className="ph-bold ph-check" />
+                              <Tick01Icon size={16}  />
                             </span>
                             <Input
                               value={req}
@@ -689,7 +691,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               onClick={() => removeRequirement(rIdx)}
                               className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent transition-colors"
                             >
-                              <HugeIcon className="ph-bold ph-x text-xs" />
+                              <Cancel01Icon size="1em" className="text-xs" />
                             </button>
                           </div>
                         ))}
@@ -751,14 +753,14 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                         <div className="pt-4 border-t border-black/5 dark:border-border">
                           <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-2.5 flex items-center gap-1.5">
-                            <HugeIcon className="ph-bold ph-shield-check text-xs" />
+                            <Shield01Icon size="1em" className="text-xs" />
                             Filing Requirements
                           </div>
                           <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
                             {(currentCard.requirements || []).slice(0, 2).map((req, i) => (
                               <li key={i} className="flex items-start gap-2 leading-relaxed">
                                 <span className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[7px] font-bold">
-                                  <HugeIcon className="ph-bold ph-check" />
+                                  <Tick01Icon size={16}  />
                                 </span>
                                 <span className="text-[11px] line-clamp-1">{req}</span>
                               </li>
@@ -801,7 +803,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-border dark:border-border cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
                   >
-                    <HugeIcon className={cn("ph-bold", previewDarkTheme ? "ph-sun text-amber-500" : "ph-moon text-zinc-700")} />
+                    <AppIcon className={cn("", previewDarkTheme ? "Sun01Icon text-amber-500" : "MoonIcon text-zinc-700")} />
                     <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
                   </button>
                 </div>
@@ -861,14 +863,14 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                         <div className="pt-4 border-t border-black/5 dark:border-border mt-auto">
                           <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-2 flex items-center gap-1.5">
-                            <HugeIcon className="ph-bold ph-shield-check text-xs" />
+                            <Shield01Icon size="1em" className="text-xs" />
                             Filing Requirements
                           </div>
                           <ul className="space-y-1.5 text-xs text-gray-600 dark:text-zinc-300">
                             {doc.requirements?.slice(0, 2).map((req, i) => (
                               <li key={i} className="flex items-start gap-2 leading-relaxed">
                                 <span className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[7px] font-bold">
-                                  <HugeIcon className="ph-bold ph-check" />
+                                  <Tick01Icon size={16}  />
                                 </span>
                                 <span className="text-[11px] line-clamp-1">{req}</span>
                               </li>
@@ -918,8 +920,8 @@ export default function LandingCatalogCmsView({ showToast }) {
         message="Are you sure you want to revert all catalog headlines, credential descriptions, and filing requirements back to the official PUP San Juan institutional template?"
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-arrow-counter-clockwise"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        icon=" ReloadIcon"
+        buttonIcon=" ReloadIcon"
         selectedItems={[
           "Reset catalog section heading and description",
           "Restore official 8 PUP San Juan academic credential documents",
@@ -940,7 +942,7 @@ export default function LandingCatalogCmsView({ showToast }) {
         message={`Are you sure you want to delete "${currentItems[deleteCardIdx]?.title || "this credential"}" from the public academic catalog?`}
         confirmLabel="Delete Document"
         cancelLabel="Cancel"
-        buttonIcon="ph-bold ph-trash"
+        buttonIcon=" Delete01Icon"
         isDeleteModal={true}
         isAppleStyled={true}
       />

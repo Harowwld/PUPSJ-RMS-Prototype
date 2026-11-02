@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import React, { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon } from "hugeicons-react";
+
 
 export default function SecurityQuestionsTab({ showToast }) {
   const [questions, setQuestions] = useState([
@@ -235,7 +237,7 @@ export default function SecurityQuestionsTab({ showToast }) {
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         {/* Header */}
         <PageHeader
-          icon="ph-bold ph-shield-check"
+          icon=" Shield01Icon"
           title="Global Security Questions"
           description="Define institutional verification challenges for staff account recovery. Mark mandatory challenges as Required (minimum 10 characters)."
           showBorder={true}
@@ -267,7 +269,7 @@ export default function SecurityQuestionsTab({ showToast }) {
               >
                 {saving ? (
                   <span className="flex items-center gap-1.5">
-                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                    <Loading01Icon size="1em" className="animate-spin text-sm" />
                     <span>Saving Questions...</span>
                   </span>
                 ) : (
@@ -367,7 +369,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                                 className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95"
                                 aria-label="Remove Question"
                               >
-                                <HugeIcon className="ph-bold ph-trash text-sm" />
+                                <Delete01Icon size="1em" className="text-sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
@@ -402,14 +404,14 @@ export default function SecurityQuestionsTab({ showToast }) {
                         </span>
                       ) : isWeak ? (
                         <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-                          <HugeIcon className="ph-bold ph-warning-circle text-xs" />
+                          <Alert01Icon size="1em" className="text-xs" />
                           {trimmed.length < 10
                             ? `Must be at least 10 characters (${trimmed.length}/10)`
                             : "Question is too repetitive or simple. Provide a more complex challenge."}
                         </span>
                       ) : (
                         <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
-                          <HugeIcon className="ph-bold ph-check-circle text-xs" />
+                          <CheckmarkCircle01Icon size="1em" className="text-xs" />
                           Valid challenge question
                         </span>
                       )}

@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,6 +20,8 @@ import PdfPreviewDialog from "./audit-logs/PdfPreviewDialog"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import { Loading01Icon } from "hugeicons-react";
+
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -236,7 +238,7 @@ export default function AuditLogsTab({
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
           <PageHeader
-            icon="ph-shield-check"
+            icon="Shield01Icon"
             title="Activity History"
             description="Review staff actions, security events, and administrative changes."
             showBorder={false}
@@ -261,7 +263,7 @@ export default function AuditLogsTab({
                     className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                   >
                     {isExporting ? (
-                      <HugeIcon  className="ph-bold ph-spinner animate-spin text-[16px]"></HugeIcon>
+                      <Loading01Icon size="1em"  className="animate-spin text-[16px]"></Loading01Icon>
                     ) : (
                       "Export CSV"
                     )}
@@ -273,7 +275,7 @@ export default function AuditLogsTab({
                     className="flex h-10 items-center justify-center disabled:opacity-50 cursor-pointer px-5 border-0"
                   >
                     {isGeneratingPdf ? (
-                      <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></HugeIcon>
+                      <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
                     ) : (
                       "Export PDF Report"
                     )}

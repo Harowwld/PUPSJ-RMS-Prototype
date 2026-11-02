@@ -1,8 +1,9 @@
 "use client";
 
+import SheetPagination from "@/components/shared/SheetPagination";
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { cn, formatTitleCase } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,11 +40,12 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
-import { AlertCircleIcon as EmptyAlertCircleIcon, NotificationOff01Icon as EmptyNotificationOff01Icon, Search01Icon as EmptySearch01Icon, TickDouble01Icon as EmptyTickDouble01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, NotificationOff01Icon as EmptyNotificationOff01Icon, Search01Icon as EmptySearch01Icon, TickDouble01Icon as EmptyTickDouble01Icon, Alert01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, LinkSquare01Icon, Mail01Icon, TickDouble01Icon, Search01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 /**
  * Returns icon, badge styling, and title accent for a notification type & status.
  */
@@ -55,7 +57,7 @@ function getNotificationVisuals(notif) {
   if (type === "document_review") {
     if (approvalStatus === "Approved") {
       return {
-        icon: "ph-check",
+        icon: "Tick01Icon",
         avatarClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/60",
         badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60",
         label: "Approved",
@@ -64,7 +66,7 @@ function getNotificationVisuals(notif) {
     }
     if (approvalStatus === "Declined") {
       return {
-        icon: "ph-x",
+        icon: "Cancel01Icon",
         avatarClass: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/70 dark:border-rose-800/60",
         badgeClass: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60",
         label: "Declined",
@@ -72,7 +74,7 @@ function getNotificationVisuals(notif) {
       };
     }
     return {
-      icon: "ph-clock",
+      icon: "Clock01Icon",
       avatarClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/60",
       badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60",
       label: "Pending Review",
@@ -89,7 +91,7 @@ function getNotificationVisuals(notif) {
     }
 
     return {
-      icon: "ph-file-text",
+      icon: "File02Icon",
       avatarClass: "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200/70 dark:border-sky-800/60",
       badgeClass,
       label: requestStatus || "Request",
@@ -99,7 +101,7 @@ function getNotificationVisuals(notif) {
 
   if (type === "scan_upload") {
     return {
-      icon: "ph-scan",
+      icon: "FingerPrintScanIcon",
       avatarClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/60",
       badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60",
       label: "Uploaded",
@@ -109,7 +111,7 @@ function getNotificationVisuals(notif) {
 
   if (type === "student_record") {
     return {
-      icon: "ph-user",
+      icon: "UserIcon",
       avatarClass: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200/70 dark:border-purple-800/60",
       badgeClass: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800/60",
       label: "Student",
@@ -118,7 +120,7 @@ function getNotificationVisuals(notif) {
   }
 
   return {
-    icon: "ph-bell",
+    icon: "Notification01Icon",
     avatarClass: "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
     badgeClass: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
     label: notif.severity || "System",
@@ -138,7 +140,7 @@ function InfoRow({ icon, label, value, children, className }) {
       )}
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
-        {icon && <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />}
+        {icon && <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />}
         <span className="truncate">{label}</span>
       </div>
       <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
@@ -187,6 +189,7 @@ export default function NotificationsTab({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [notifFrameStatus, setNotifFrameStatus] = useState("loading");
+  const [pdfPreview, setPdfPreview] = useState(null);
 
   const isLoading = propLoading || initialLoading;
 
@@ -520,7 +523,7 @@ export default function NotificationsTab({
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
-            icon="ph-bell"
+            icon="Notification01Icon"
             title={
               <div className="flex items-center gap-2">
                 <span>Notifications</span>
@@ -552,7 +555,7 @@ export default function NotificationsTab({
                     onClick={markAllRead}
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    <HugeIcon className="ph-bold ph-checks mr-1.5" />
+                    <TickDouble01Icon size={16} className="mr-1.5" />
                     Mark All as Read
                   </Button>
                   <Button
@@ -562,7 +565,7 @@ export default function NotificationsTab({
                     onClick={markAllUnread}
                     className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    <HugeIcon className="ph-bold ph-envelope mr-1.5" />
+                    <Mail01Icon size={16} className="mr-1.5" />
                     Mark All as Unread
                   </Button>
                 </div>
@@ -625,7 +628,7 @@ export default function NotificationsTab({
               {/* Search Input */}
               <div className="w-full sm:w-60 md:w-64 relative group min-w-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   value={searchQuery}
@@ -751,7 +754,7 @@ export default function NotificationsTab({
                                 visuals.avatarClass
                               )}
                             >
-                              <HugeIcon className={cn("ph-bold text-base", visuals.icon)} />
+                              <AppIcon className={cn(" text-base", visuals.icon)} />
                             </div>
 
                             {/* Middle Text Details */}
@@ -820,10 +823,10 @@ export default function NotificationsTab({
                                       : "text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                                   )}
                                 >
-                                  <HugeIcon
+                                  <AppIcon
                                     className={cn(
                                       "text-[16px]",
-                                      isUnread ? "ph-bold ph-envelope" : "ph-bold ph-envelope-open"
+                                      isUnread ? " Mail01Icon" : " MailOpen01Icon"
                                     )}
                                   />
                                 </button>
@@ -919,9 +922,8 @@ export default function NotificationsTab({
             showCloseButton={false}
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden focus:outline-none focus-visible:outline-none"
           >
-            {/* Top Header matching reference design: Notification Details < > 01 of XX X */}
             <SheetHeader className="shrink-0 p-0">
-              <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle>
                     Notification Details
@@ -931,33 +933,20 @@ export default function NotificationsTab({
                   </SheetDescription>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="ml-auto flex items-center gap-3">
                   {activeNavList.length > 1 && selectedNotifIndex >= 0 && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                      <button
-                        type="button"
-                        disabled={!hasPrevNotif}
-                        onClick={handlePrevNotif}
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                        aria-label="Previous Notification"
-                        title="Previous Notification"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!hasNextNotif}
-                        onClick={handleNextNotif}
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                        aria-label="Next Notification"
-                        title="Next Notification"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                      </button>
-                      <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                        {String(selectedNotifIndex + 1).padStart(2, "0")} of {String(activeNavList.length).padStart(2, "0")}
-                      </span>
-                    </div>
+                    <SheetPagination
+                      compact
+                      label="Record navigation"
+                      page={selectedNotifIndex + 1}
+                      totalPages={activeNavList.length}
+                      onPrevious={handlePrevNotif}
+                      onNext={handleNextNotif}
+                      previousDisabled={!hasPrevNotif}
+                      nextDisabled={!hasNextNotif}
+                      previousLabel="Previous Notification"
+                      nextLabel="Next Notification"
+                    />
                   )}
 
                   <button
@@ -967,7 +956,7 @@ export default function NotificationsTab({
                     aria-label="Close"
                     title="Close"
                   >
-                    <HugeIcon className="ph-bold ph-x text-sm" />
+                    <Cancel01Icon size="1em" className="text-sm" />
                   </button>
                 </div>
               </div>
@@ -988,7 +977,7 @@ export default function NotificationsTab({
                             ui.avatarClass
                           )}
                         >
-                          <HugeIcon className={cn("ph-bold", ui.icon)} />
+                          <AppIcon className={cn("", ui.icon)} />
                         </div>
                         <div className="min-w-0">
                           <h2
@@ -1010,7 +999,7 @@ export default function NotificationsTab({
                             ui.badgeClass
                           )}
                         >
-                          <HugeIcon className={cn("text-xs ph-bold", ui.icon)} />
+                          <AppIcon className={cn("text-xs ", ui.icon)} />
                           {ui.label}
                         </span>
                       </div>
@@ -1021,7 +1010,7 @@ export default function NotificationsTab({
                 {/* 1. Event Narrative / Message */}
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HugeIcon className="ph-bold ph-chat-centered-text text-pup-maroon dark:text-red-400 text-sm" />
+                    <AppIcon className=" Message01Icon text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Event Summary
                     </h3>
@@ -1035,7 +1024,7 @@ export default function NotificationsTab({
                     {selectedNotif.approval_status === "Declined" && selectedNotif.review_note && (
                       <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 dark:border-rose-900/40 dark:bg-rose-950/25">
                         <div className="flex gap-2.5">
-                          <HugeIcon className="ph-bold ph-warning-circle text-rose-600 dark:text-rose-400 text-base shrink-0 mt-0.5" />
+                          <Alert01Icon size="1em" className="text-rose-600 dark:text-rose-400 text-base shrink-0 mt-0.5" />
                           <div className="text-xs space-y-1">
                             <span className="font-bold text-rose-950 dark:text-rose-300 block tracking-wider text-[10px] uppercase">
                               Reviewer Rejection Reason
@@ -1053,7 +1042,7 @@ export default function NotificationsTab({
                 {/* 2. Structured Information Section (InfoRow label : value) */}
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400 text-sm" />
+                    <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                       Notification Specification
                     </h3>
@@ -1063,31 +1052,31 @@ export default function NotificationsTab({
                       const ui = getNotificationVisuals(selectedNotif);
                       return (
                         <>
-                          <InfoRow icon="ph-bold ph-tag" label="Event Category">
+                          <InfoRow icon=" Tag01Icon" label="Event Category">
                             <span className="font-semibold text-gray-900 dark:text-zinc-100">
                               {ui.category}
                             </span>
                           </InfoRow>
 
                           <InfoRow
-                            icon="ph-bold ph-buildings"
+                            icon=" Building01Icon"
                             label="Office Scope"
                             value={formatTitleCase(selectedNotif.office_id) || "University General"}
                           />
 
                           <InfoRow
-                            icon="ph-bold ph-user-circle"
+                            icon=" UserCircleIcon"
                             label="Triggered By"
                             value={formatTitleCase(selectedNotif.actor_name) || "System Automated"}
                           />
 
                           <InfoRow
-                            icon="ph-bold ph-calendar-blank"
+                            icon=" Calendar01Icon"
                             label="Timestamp"
                             value={formatPHDateTime(selectedNotif.created_at)}
                           />
 
-                          <InfoRow icon="ph-bold ph-envelope-simple" label="Read Status">
+                          <InfoRow icon=" Mail01Icon" label="Read Status">
                             <div className="flex items-center gap-2">
                               <span
                                 className={cn(
@@ -1116,7 +1105,7 @@ export default function NotificationsTab({
                           </InfoRow>
 
                           {selectedNotif.student_no && (
-                            <InfoRow icon="ph-bold ph-identification-card" label="Student Number">
+                            <InfoRow icon=" Contact01Icon" label="Student Number">
                               <div className="flex items-center gap-2">
                                 <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                   {selectedNotif.student_no}
@@ -1127,12 +1116,12 @@ export default function NotificationsTab({
                                   className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                                   title="Copy Student Number"
                                 >
-                                  <HugeIcon
+                                  <AppIcon
                                     className={cn(
                                       "text-xs",
                                       copiedKey === "student_no"
-                                        ? "ph-bold ph-check text-emerald-600"
-                                        : "ph-bold ph-copy"
+                                        ? " Tick01Icon text-emerald-600"
+                                        : " Copy01Icon"
                                     )}
                                   />
                                 </button>
@@ -1142,18 +1131,18 @@ export default function NotificationsTab({
 
                           {selectedNotif.student_name && (
                             <InfoRow
-                              icon="ph-bold ph-user"
+                              icon=" UserIcon"
                               label="Student Name"
                               value={formatTitleCase(selectedNotif.student_name)}
                             />
                           )}
 
                           {selectedNotif.doc_type && (
-                            <InfoRow icon="ph-bold ph-file" label="Document Category" value={selectedNotif.doc_type} />
+                            <InfoRow icon=" File01Icon" label="Document Category" value={selectedNotif.doc_type} />
                           )}
 
                           {selectedNotif.original_filename && (
-                            <InfoRow icon="ph-bold ph-paperclip" label="Original File">
+                            <InfoRow icon=" Attachment01Icon" label="Original File">
                               <span
                                 className="font-sans tabular-nums text-xs truncate block max-w-[240px]"
                                 title={selectedNotif.original_filename}
@@ -1164,7 +1153,7 @@ export default function NotificationsTab({
                           )}
 
                           {selectedNotif.entity_type === "document_request" && (
-                            <InfoRow icon="ph-bold ph-arrow-square-out" label="Related Request">
+                            <InfoRow icon=" LinkSquare01Icon" label="Related Request">
                               <div className="flex items-center gap-2">
                                 <span className="font-sans tabular-nums text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                   REQ-{selectedNotif.entity_id || selectedNotif.metadata?.request_id}
@@ -1196,20 +1185,22 @@ export default function NotificationsTab({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
                       <div className="flex items-center gap-2">
-                        <HugeIcon className="ph-bold ph-file-text text-pup-maroon dark:text-red-400 text-sm" />
+                        <File02Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
                           Document Preview
                         </h3>
                       </div>
-                      <a
-                        href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center text-xs text-pup-maroon dark:text-red-400 hover:underline font-semibold"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPdfPreview({
+                          url: `/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`,
+                          title: selectedNotif.doc_type || "Document",
+                          studentName: selectedNotif.student_name,
+                        })}
                       >
-                        <HugeIcon className="ph-bold ph-arrow-square-out mr-1 text-xs" />
-                        Open New Tab
-                      </a>
+                        Open PDF Preview
+                      </Button>
                     </div>
 
                     <div className="pt-2">
@@ -1245,7 +1236,7 @@ export default function NotificationsTab({
                     }}
                     className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
                   >
-                    <HugeIcon className="ph-bold ph-arrow-square-out text-sm" />
+                    <LinkSquare01Icon size="1em" className="text-sm" />
                     <span>Open in Requests</span>
                   </Button>
                 ) : selectedNotif?.approval_status === "Declined" && onRescan ? (
@@ -1281,7 +1272,7 @@ export default function NotificationsTab({
                 {(selectedNotif?.entity_type === "document" || selectedNotif?.metadata?.document_id) && (
                   <a
                     href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
-                    target="_blank"
+                    download={selectedNotif.original_filename || "document.pdf"}
                     rel="noreferrer"
                     className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
@@ -1292,6 +1283,7 @@ export default function NotificationsTab({
             </SheetFooter>
           </SheetContent>
         </Sheet>
+        <PDFPreviewModal open={!!pdfPreview} onClose={() => setPdfPreview(null)} preview={pdfPreview} />
       </div>
     </TooltipProvider>
   );

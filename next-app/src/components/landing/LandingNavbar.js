@@ -1,11 +1,12 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { getClientSession } from "@/lib/clientAuth";
-
+import { Clock01Icon, CovidInfoIcon, Files01Icon, HelpCircleIcon, WorkflowCircle01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export default function LandingNavbar() {
   const router = useRouter();
   const [sessionUser, setSessionUser] = useState(null);
@@ -210,7 +211,7 @@ export default function LandingNavbar() {
                   className="md:hidden min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer text-black hover:bg-black/5 active:scale-95 transition-all"
                   aria-label="Toggle navigation drawer"
                 >
-                  <HugeIcon  className={`ph-bold ${mobileMenuOpen ? "ph-x" : "ph-list"} text-xl`} />
+                  <AppIcon  className={` ${mobileMenuOpen ? "Cancel01Icon" : "ListViewIcon"} text-xl`} />
                 </button>
               </div>
             </div>
@@ -230,7 +231,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "about")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-info text-base text-[#800000] " />
+                    <CovidInfoIcon size="1em"  className="text-base text-[#800000]" />
                     <span>About</span>
                   </button>
                   <button
@@ -238,7 +239,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "workflow")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-flow-arrow text-base text-[#800000] " />
+                    <WorkflowCircle01Icon size="1em"  className="text-base text-[#800000]" />
                     <span>How It Works</span>
                   </button>
                   <button
@@ -246,7 +247,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "catalog")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-files text-base text-[#800000] " />
+                    <Files01Icon size="1em"  className="text-base text-[#800000]" />
                     <span>Catalog</span>
                   </button>
                   <button
@@ -254,7 +255,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "faq")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-question text-base text-[#800000] " />
+                    <HelpCircleIcon size="1em"  className="text-base text-[#800000]" />
                     <span>FAQ</span>
                   </button>
                   <button
@@ -262,7 +263,7 @@ export default function LandingNavbar() {
                     onClick={(e) => scrollToSection(e, "office")}
                     className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold text-gray-800  hover:bg-black/[0.04] :bg-white/[0.06] transition-all cursor-pointer"
                   >
-                    <HugeIcon  className="ph-bold ph-clock text-base text-[#800000] " />
+                    <Clock01Icon size="1em"  className="text-base text-[#800000]" />
                     <span>Contacts</span>
                   </button>
                 </motion.div>

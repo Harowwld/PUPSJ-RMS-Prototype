@@ -13,7 +13,7 @@ import { getOrganizationComplianceSummary } from "../../../../lib/organizationCo
 export const runtime = "nodejs";
 
 function parseBool(raw) {
-  if (raw === null || raw === undefined) return false;
+  if (raw === null || raw === undefined) return true;
   const s = String(raw).trim().toLowerCase();
   return s === "1" || s === "true" || s === "yes";
 }
@@ -73,18 +73,10 @@ export async function GET(req) {
 
     const requireApproved = parseBool(searchParams.get("requireApproved"));
 
-    const thresholdRaw = searchParams.get("threshold");
-    let threshold = 0.95;
-    if (thresholdRaw !== null && thresholdRaw !== "") {
-      const t = parseFloat(thresholdRaw);
-      if (Number.isFinite(t)) threshold = t;
-    }
-
     const data = await getDigitizationComplianceSummary({
       studentStatus,
       courseCodes: courseCodes.length ? courseCodes : undefined,
       requireApproved,
-      threshold,
       officeId,
     });
 

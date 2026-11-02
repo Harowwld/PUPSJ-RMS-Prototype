@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useRef } from "react";
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dialog"
 
 import { cn } from "@/lib/utils"
-
+import { Cancel01Icon, Loading01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
+import PDFPreview from "@/components/shared/PDFPreview";
 export default function PdfPreviewDialog({
   pdfPreviewOpen,
   setPdfPreviewOpen,
@@ -85,7 +87,7 @@ export default function PdfPreviewDialog({
                 cursor: 'pointer'
               }}
             >
-              <HugeIcon  className="ph-bold ph-x text-[16px]"></HugeIcon>
+              <Cancel01Icon size="1em"  className="text-[16px]"></Cancel01Icon>
             </button>
           </DialogClose>
         </DialogHeader>
@@ -101,7 +103,7 @@ export default function PdfPreviewDialog({
                     onClick={() => setIsFullscreenPreview(false)}
                     className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
                   >
-                    <HugeIcon  className="ph-bold ph-x text-lg"></HugeIcon>
+                    <Cancel01Icon size="1em"  className="text-lg"></Cancel01Icon>
                   </Button>
                 </div>
               )}
@@ -114,19 +116,19 @@ export default function PdfPreviewDialog({
                   </div>
                 </div>
               )}
-              <iframe
+              <PDFPreview
                 ref={pdfPreviewFrameRef}
-                src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
+                src={pdfBlobUrl}
                 className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
                 title="PDF Report Preview"
-                onLoad={() => setPreviewFrameReady(true)}
+                onReadyChange={setPreviewFrameReady}
               />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
-                  <HugeIcon  className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary"></HugeIcon>
+                  <Loading01Icon size="1em"  className="animate-spin text-xl text-pup-maroon dark:text-primary"></Loading01Icon>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                   Preparing report...
@@ -148,7 +150,7 @@ export default function PdfPreviewDialog({
             title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
             className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
           >
-            <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"}></HugeIcon>
+            <AppIcon className={isFullscreenPreview ? " ArrowShrink01Icon text-[16px]" : " ArrowExpand01Icon text-[16px]"}></AppIcon>
           </Button>
 
           <div className="flex items-center gap-2.5 ml-auto">

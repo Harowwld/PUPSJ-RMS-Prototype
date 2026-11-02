@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,8 @@ import LandingBentoSkeleton from "@/components/systemadmin/skeletons/LandingBent
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
-
+import { Agreement01Icon, Archive01Icon, ArrowDown01Icon, CalendarCheckIn01Icon, Cursor01Icon, File02Icon, LaptopIcon, Loading01Icon, Notification02Icon, SentIcon, Shield01Icon, Target01Icon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_BENTO = {
   eyebrow: "Student & Alumni Services",
   headingLine1: "Request, track, and",
@@ -167,7 +169,7 @@ export default function LandingBentoCmsView({ showToast }) {
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-squares-four"
+          icon=" LayoutGridIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -208,7 +210,7 @@ export default function LandingBentoCmsView({ showToast }) {
               >
                 {saving ? (
                   <>
-                    <HugeIcon className="ph-bold ph-spinner animate-spin mr-1.5 text-[14px]" />
+                    <Loading01Icon size="1em" className="animate-spin mr-1.5 text-[14px]" />
                     Saving...
                   </>
                 ) : (
@@ -284,7 +286,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-cursor-click text-sm" />
+                      <Cursor01Icon size="1em" className="text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -295,9 +297,9 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon
+                  <ArrowDown01Icon size="1em"
                     className={cn(
-                      "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                      "text-gray-400 text-sm shrink-0 transition-transform duration-200",
                       activeCardTab === 1 && "rotate-180"
                     )}
                   />
@@ -343,7 +345,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <textarea
+                      <Textarea
                         value={bentoData.card1?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -352,7 +354,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full resize-none"
                       />
                     </div>
 
@@ -432,7 +434,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-calendar-check text-sm" />
+                      <CalendarCheckIn01Icon size="1em" className="text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -443,9 +445,9 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon
+                  <ArrowDown01Icon size="1em"
                     className={cn(
-                      "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                      "text-gray-400 text-sm shrink-0 transition-transform duration-200",
                       activeCardTab === 2 && "rotate-180"
                     )}
                   />
@@ -473,7 +475,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <textarea
+                      <Textarea
                         value={bentoData.card2?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -482,7 +484,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full resize-none"
                       />
                     </div>
 
@@ -591,7 +593,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-archive text-sm" />
+                      <Archive01Icon size="1em" className="text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -602,9 +604,9 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon
+                  <ArrowDown01Icon size="1em"
                     className={cn(
-                      "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                      "text-gray-400 text-sm shrink-0 transition-transform duration-200",
                       activeCardTab === 3 && "rotate-180"
                     )}
                   />
@@ -632,7 +634,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <textarea
+                      <Textarea
                         value={bentoData.card3?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -641,7 +643,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full resize-none"
                       />
                     </div>
 
@@ -720,7 +722,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-check-square-offset text-sm" />
+                      <AppIcon className=" Task01Icon text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -731,9 +733,9 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon
+                  <ArrowDown01Icon size="1em"
                     className={cn(
-                      "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                      "text-gray-400 text-sm shrink-0 transition-transform duration-200",
                       activeCardTab === 4 && "rotate-180"
                     )}
                   />
@@ -761,7 +763,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <textarea
+                      <Textarea
                         value={bentoData.card4?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -770,7 +772,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full resize-none"
                       />
                     </div>
 
@@ -849,7 +851,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-shield-check text-sm" />
+                      <Shield01Icon size="1em" className="text-sm" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 truncate">
@@ -860,9 +862,9 @@ export default function LandingBentoCmsView({ showToast }) {
                       </p>
                     </div>
                   </div>
-                  <HugeIcon
+                  <ArrowDown01Icon size="1em"
                     className={cn(
-                      "ph-bold ph-caret-down text-gray-400 text-sm shrink-0 transition-transform duration-200",
+                      "text-gray-400 text-sm shrink-0 transition-transform duration-200",
                       activeCardTab === 5 && "rotate-180"
                     )}
                   />
@@ -908,7 +910,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <textarea
+                      <Textarea
                         value={bentoData.card5?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -917,7 +919,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           }))
                         }
                         rows={2}
-                        className="w-full rounded-xl border border-border bg-white p-3 text-xs leading-relaxed dark:border-border dark:bg-card focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                        className="w-full resize-none"
                       />
                     </div>
 
@@ -1029,14 +1031,14 @@ export default function LandingBentoCmsView({ showToast }) {
                   <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
                     Section Description / Intro Paragraph
                   </label>
-                  <textarea
+                  <Textarea
                     rows={3}
                     value={bentoData.description || ""}
                     onChange={(e) =>
                       setBentoData((prev) => ({ ...prev, description: e.target.value }))
                     }
                     placeholder="Submit your request online, track its progress in real time..."
-                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs leading-relaxed text-gray-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-pup-maroon resize-none"
+                    className="w-full resize-none"
                   />
                 </div>
               </div>
@@ -1061,7 +1063,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-border dark:border-border cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors shrink-0"
                 >
-                  <HugeIcon className={cn("ph-bold", previewDarkTheme ? "ph-sun text-amber-500" : "ph-moon text-zinc-700")} />
+                  <AppIcon className={cn("", previewDarkTheme ? "Sun01Icon text-amber-500" : "MoonIcon text-zinc-700")} />
                   <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
                 </button>
               </div>
@@ -1094,19 +1096,19 @@ export default function LandingBentoCmsView({ showToast }) {
                         <div className="relative z-10 w-full max-w-[180px] flex flex-col gap-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-sm">
-                              <HugeIcon className="ph-bold ph-file-text" />
+                              <File02Icon size={16}  />
                             </div>
                             <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{bentoData.card1?.step1Label || "Select Document"}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-zinc-400 shrink-0 border border-black/5">
-                              <HugeIcon className="ph-bold ph-target" />
+                              <Target01Icon size={16}  />
                             </div>
                             <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{bentoData.card1?.step2Label || "Specify Purpose"}</span>
                           </div>
                           <button className="px-4 py-2 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 w-[110px] mx-auto bg-[#800000] text-white shadow-xs">
                             {bentoData.card1?.buttonLabel || "Submit"}
-                            <HugeIcon className="ph-bold ph-paper-plane-right text-xs" />
+                            <SentIcon size="1em" className="text-xs" />
                           </button>
                         </div>
                       </div>
@@ -1126,7 +1128,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         <div className="relative z-10 w-full max-w-[190px] flex flex-col gap-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0">
-                              <HugeIcon className="ph-bold ph-calendar-check text-xs" />
+                              <CalendarCheckIn01Icon size="1em" className="text-xs" />
                             </div>
                             <div>
                               <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card2?.step1Title || "Clear Schedule"}</div>
@@ -1135,7 +1137,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0">
-                              <HugeIcon className="ph-bold ph-bell-ringing text-xs" />
+                              <Notification02Icon size="1em" className="text-xs" />
                             </div>
                             <div>
                               <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card2?.step2Title || "Live Notifications"}</div>
@@ -1144,7 +1146,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-[#800000] text-white flex items-center justify-center text-xs shrink-0 shadow-sm">
-                              <HugeIcon className="ph-bold ph-handshake" />
+                              <Agreement01Icon size={16}  />
                             </div>
                             <div>
                               <div className="text-xs font-semibold text-[#800000] dark:text-red-400">{bentoData.card2?.step3Title || "Visit Counter"}</div>
@@ -1172,21 +1174,21 @@ export default function LandingBentoCmsView({ showToast }) {
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div className="flex flex-col items-center gap-1.5">
                             <div className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5">
-                              <HugeIcon className="ph-bold ph-laptop text-sm" />
+                              <LaptopIcon size="1em" className="text-sm" />
                             </div>
                             <span className="text-[9px] font-bold text-zinc-500 uppercase">{bentoData.card3?.step1Label || "Request"}</span>
                           </div>
                           <div className="w-6 h-0 border-t-2 border-dashed border-zinc-300 -translate-y-2" />
                           <div className="flex flex-col items-center gap-1.5">
                             <div className="w-10 h-10 rounded-full bg-[#800000] text-white flex items-center justify-center shadow-md">
-                              <HugeIcon className="ph-bold ph-archive text-base" />
+                              <Archive01Icon size="1em" className="text-base" />
                             </div>
                             <span className="text-[9px] font-bold text-[#800000] dark:text-red-400 uppercase">{bentoData.card3?.step2Label || "Room 1"}</span>
                           </div>
                           <div className="w-6 h-0 border-t-2 border-dashed border-zinc-300 -translate-y-2" />
                           <div className="flex flex-col items-center gap-1.5">
                             <div className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5">
-                              <HugeIcon className="ph-bold ph-users text-sm" />
+                              <UserSearch01Icon size="1em" className="text-sm" />
                             </div>
                             <span className="text-[9px] font-bold text-zinc-500 uppercase">{bentoData.card3?.step3Label || "Staff"}</span>
                           </div>
@@ -1208,19 +1210,19 @@ export default function LandingBentoCmsView({ showToast }) {
                         <div className="w-full max-w-[170px] flex flex-col gap-3">
                           <div className="flex items-center gap-3">
                             <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                              <HugeIcon className="ph-bold ph-check text-xs" />
+                              <Tick01Icon size="1em" className="text-xs" />
                             </div>
                             <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card4?.item1 || "Student Number"}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                              <HugeIcon className="ph-bold ph-check text-xs" />
+                              <Tick01Icon size="1em" className="text-xs" />
                             </div>
                             <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card4?.item2 || "Active Email"}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                              <HugeIcon className="ph-bold ph-check text-xs" />
+                              <Tick01Icon size="1em" className="text-xs" />
                             </div>
                             <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card4?.item3 || "Campus Clearance"}</span>
                           </div>
@@ -1240,22 +1242,22 @@ export default function LandingBentoCmsView({ showToast }) {
                     <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex items-center justify-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex flex-col items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0 relative">
-                          <HugeIcon className="ph-bold ph-shield-check text-2xl" />
+                          <Shield01Icon size="1em" className="text-2xl" />
                           <span className="absolute -bottom-2 bg-[#800000] text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full uppercase">
                             {bentoData.card5?.badgeLabel || "RA 11032"}
                           </span>
                         </div>
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <HugeIcon className="ph-bold ph-check text-emerald-600 text-xs" />
+                            <Tick01Icon size="1em" className="text-emerald-600 text-xs" />
                             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{bentoData.card5?.item1 || "Zero Red Tape"}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <HugeIcon className="ph-bold ph-check text-emerald-600 text-xs" />
+                            <Tick01Icon size="1em" className="text-emerald-600 text-xs" />
                             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{bentoData.card5?.item2 || "No Hidden Delays"}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <HugeIcon className="ph-bold ph-check text-emerald-600 text-xs" />
+                            <Tick01Icon size="1em" className="text-emerald-600 text-xs" />
                             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{bentoData.card5?.item3 || "Transparent Tracking"}</span>
                           </div>
                         </div>

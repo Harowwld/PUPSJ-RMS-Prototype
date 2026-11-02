@@ -1,5 +1,6 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+import { Textarea } from "@/components/ui/textarea";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -18,12 +19,14 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
+import PDFPreview from "@/components/shared/PDFPreview";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { cn } from "@/lib/utils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { getAdjacentRowId, getBulkActionSkipReason, getRangeIds, getRowClickSelection } from "@/lib/batchReviewSelection";
-import { CheckmarkSquare01Icon as EmptyCheckmarkSquare01Icon, File02Icon as EmptyFile02Icon } from "hugeicons-react";
+import { CheckmarkSquare01Icon as EmptyCheckmarkSquare01Icon, File02Icon as EmptyFile02Icon , ArrowExpand01Icon, Search01Icon, File02Icon} from "hugeicons-react";
 
 const STATUS_TABS = [
   { id: "Needs Review", label: "Needs Review" },
@@ -452,7 +455,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         {/* ONE Single Card Container */}
         <Card className="flex h-full min-h-0 min-w-0 w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-1">
           <PageHeader
-            icon="ph-check-square"
+            icon="Task01Icon"
             title="Batch Review"
             description="Assign a student and document type before creating formal records."
             showBorder={false}
@@ -514,7 +517,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             <div className="flex min-w-0 flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:shrink-0">
               <div className="w-full sm:w-[min(260px,40vw)] lg:w-[300px] relative group min-w-0 sm:shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   value={query}
@@ -656,8 +659,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               <span aria-hidden="true" className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]", isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 dark:border-zinc-600")}>
                                 {isSelected ? "✓" : ""}
                               </span>
-                              <HugeIcon  className={cn(
-                                "ph-bold ph-file-text text-sm shrink-0",
+                              <File02Icon size="1em"  className={cn(
+                                "text-sm shrink-0",
                                 isCurrent
                                   ? "text-pup-maroon dark:text-red-400"
                                   : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500"
@@ -731,7 +734,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           title="View fullscreen"
                           className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white max-md:right-0 max-md:top-0 max-md:h-8 max-md:w-8"
                         >
-                          <HugeIcon className="ph-bold ph-corners-out text-base" />
+                          <ArrowExpand01Icon size="1em" className="text-base" />
                         </button>
                         {isImage ? (
                           <div
@@ -783,7 +786,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           </div>
                         ) : (
                           <div className="hidden h-full min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl lg:flex">
-                            <iframe
+                            <PDFPreview
                               title="Scanned document preview"
                               src={previewUrl}
                               className="min-h-0 flex-1 w-full border-0"
@@ -968,13 +971,13 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         <label className="mb-0.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300 sm:mb-1.5">
                           Review Note
                         </label>
-                        <textarea
+                        <Textarea
                           rows={3}
                           value={note}
                           onChange={(event) => setNote(event.target.value)}
                           onBlur={() => update({ reviewNote: note }).catch(() => {})}
                           placeholder="Optional review or conflict note..."
-                          className="w-full min-h-[72px] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs font-normal leading-relaxed text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon resize-y transition-all"
+                          className="w-full min-h-[72px] resize-y"
                         />
                       </div>
 
@@ -1086,45 +1089,11 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(fullscreenPreview)} onOpenChange={(open) => !open && setFullscreenPreview(null)}>
-        <DialogContent
-          hideClose
-          className="!fixed !inset-0 !flex !h-screen !w-screen !max-w-none !translate-x-0 !translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-zinc-950 p-0 text-white shadow-none"
-        >
-          <DialogHeader className="flex shrink-0 flex-row items-center justify-between px-5 py-3 text-white">
-            <DialogTitle className="pr-4 text-white">
-              {fullscreenPreview?.title || "Document preview"}
-            </DialogTitle>
-            <button
-              type="button"
-              onClick={() => setFullscreenPreview(null)}
-              aria-label="Close fullscreen preview"
-              title="Close"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              <HugeIcon className="ph-bold ph-x text-base" />
-            </button>
-          </DialogHeader>
-          <div className="flex min-h-0 flex-1 items-start justify-center overflow-auto bg-zinc-900 p-4 sm:p-6">
-            {fullscreenPreview?.src && (fullscreenPreview.isImage ? (
-              <Image
-                src={fullscreenPreview.src}
-                alt={fullscreenPreview.title || "Scanned document"}
-                width={1600}
-                height={2000}
-                unoptimized
-                className="block max-h-full max-w-full rounded-md object-contain shadow-2xl"
-              />
-            ) : (
-              <iframe
-                title={fullscreenPreview.title || "Scanned document preview"}
-                src={fullscreenPreview.src}
-                className="h-full min-h-[80vh] w-full border-0 bg-white"
-              />
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PDFPreviewModal
+        open={Boolean(fullscreenPreview)}
+        onClose={() => setFullscreenPreview(null)}
+        preview={fullscreenPreview ? { url: fullscreenPreview.src, title: fullscreenPreview.title, filename: fullscreenPreview.title, subtitle: "Review the scanned document before confirming its extracted fields." } : null}
+      />
     </TooltipProvider>
   );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +27,7 @@ import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone"
 import { detectDocType } from "@/lib/ocrClient"
 import { cn } from "@/lib/utils"
 import { formatErrorMessage } from "@/lib/errorUtils"
-import { BoundingBoxIcon as EmptyBoundingBoxIcon, Upload01Icon as EmptyUpload01Icon } from "hugeicons-react";
+import { BoundingBoxIcon as EmptyBoundingBoxIcon, Upload01Icon as EmptyUpload01Icon , Archive01Icon, Cursor01Icon, Delete01Icon, ReloadIcon, Tick01Icon} from "hugeicons-react";
 
 const FIELDS = [
   ["firstName", "First name"],
@@ -617,7 +617,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                       </div>
                       {plotted ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-                          <HugeIcon  className="ph-bold ph-check text-[10px]" /> Plotted
+                          <Tick01Icon size="1em"  className="text-[10px]" /> Plotted
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-normal text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800">
@@ -693,7 +693,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           <div className="min-w-0 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs flex flex-col justify-between min-h-[560px]">
             <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border text-xs text-gray-900 dark:text-zinc-300">
               <div className="flex items-center gap-2">
-                <HugeIcon  className="ph-bold ph-cursor-click text-sm text-pup-maroon dark:text-red-400" />
+                <Cursor01Icon size="1em"  className="text-sm text-pup-maroon dark:text-red-400" />
                 <span>Drag across the printed value area to calibrate field coordinates.</span>
               </div>
               <div className="flex items-center gap-2">
@@ -917,7 +917,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                 }}
                                 className="w-7 h-7 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 dark:text-zinc-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
-                                <HugeIcon  className="ph-bold ph-archive text-sm" />
+                                <Archive01Icon size="1em"  className="text-sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Archive template</TooltipContent>
@@ -934,7 +934,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                 }}
                                 className="w-7 h-7 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 dark:text-zinc-400 dark:hover:text-emerald-400 dark:hover:bg-emerald-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
-                                <HugeIcon  className="ph-bold ph-arrow-counter-clockwise text-sm" />
+                                <ReloadIcon size="1em"  className="text-sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Restore template</TooltipContent>
@@ -952,7 +952,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                               }}
                               className="w-7 h-7 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-red-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                             >
-                              <HugeIcon  className="ph-bold ph-trash text-sm" />
+                              <Delete01Icon size="1em"  className="text-sm" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>Delete permanently</TooltipContent>

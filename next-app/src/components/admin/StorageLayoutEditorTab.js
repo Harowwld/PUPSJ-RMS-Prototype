@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,8 @@ import {
   snapValue,
   calculatePath,
 } from "@/lib/storageLayoutUtils"
+import { Add01Icon, ArrowTurnBackwardIcon, ArrowTurnForwardIcon, Delete01Icon, Door01Icon, LayoutGridIcon, Loading01Icon, Magnet01Icon, MoreVerticalIcon, PencilEdit01Icon, ReloadIcon, SaveEnergy01Icon } from "hugeicons-react";
+
 
 export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   // 1. BASE STATE
@@ -1346,7 +1348,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
             title="Undo (Ctrl+Z)"
           >
-            <HugeIcon className="ph-bold ph-arrow-u-up-left text-[14px]" />
+            <ArrowTurnBackwardIcon size="1em" className="text-[14px]" />
           </button>
           <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
           <button
@@ -1356,7 +1358,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
             title="Redo (Ctrl+Y)"
           >
-            <HugeIcon className="ph-bold ph-arrow-u-up-right text-[14px]" />
+            <ArrowTurnForwardIcon size="1em" className="text-[14px]" />
           </button>
         </div>
 
@@ -1365,7 +1367,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           {/* Room Selector */}
           <div className="flex items-center h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-xs">
             <div className="flex items-center pl-3 pr-1 text-gray-400 dark:text-zinc-500">
-              <HugeIcon className="ph-bold ph-door text-[14px]" />
+              <Door01Icon size="1em" className="text-[14px]" />
             </div>
             <Select
               className="h-full min-w-[130px] w-fit cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 text-sm font-semibold text-gray-800 dark:text-zinc-200 shadow-none hover:bg-transparent focus:ring-0! focus:border-0!"
@@ -1387,7 +1389,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 hover:text-emerald-600 dark:hover:bg-zinc-700/60 dark:hover:text-emerald-400 transition-colors cursor-pointer active:scale-95"
               title="Add Room"
             >
-              <HugeIcon className="ph-bold ph-plus text-[14px]" />
+              <Add01Icon size="1em" className="text-[14px]" />
             </button>
             <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
             <button
@@ -1400,7 +1402,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 hover:text-pup-maroon dark:hover:bg-zinc-700/60 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
               title="Rename Room"
             >
-              <HugeIcon className="ph-bold ph-pencil-simple text-[14px]" />
+              <PencilEdit01Icon size="1em" className="text-[14px]" />
             </button>
             <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
             <button
@@ -1410,7 +1412,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
               title={activeRoomStudentCount > 0 ? "Cannot delete room with active student records" : "Delete Room"}
             >
-              <HugeIcon className="ph-bold ph-trash text-[14px]" />
+              <Delete01Icon size="1em" className="text-[14px]" />
             </button>
           </div>
         </div>
@@ -1429,7 +1431,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           )}
           title={showGrid ? "Hide Grid Lines (G)" : "Show Grid Lines (G)"}
         >
-          <HugeIcon className="ph-bold ph-grid-four text-[14px]" />
+          <LayoutGridIcon size="1em" className="text-[14px]" />
           <span>Grid</span>
         </button>
         
@@ -1444,7 +1446,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           )}
           title={snapToGrid ? "Disable Snap to Grid (S)" : "Enable Snap to Grid (S)"}
         >
-          <HugeIcon className="ph-bold ph-magnet text-[14px]" />
+          <Magnet01Icon size="1em" className="text-[14px]" />
           <span>Snap</span>
         </button>
       </div>
@@ -1466,7 +1468,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         {/* Group 5: Unified Template Suite Capsule */}
         <div className="flex min-w-[360px] items-center h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-xs divide-x divide-border dark:divide-border">
           <div className="flex items-center pl-3 pr-1 text-gray-400 dark:text-zinc-500 rounded-l-xl">
-            <HugeIcon className="ph-bold ph-squares-four text-[14px]" />
+            <LayoutGridIcon size="1em" className="text-[14px]" />
           </div>
           <Select
             className="h-full w-auto min-w-[140px] flex-1 cursor-pointer rounded-none! border-0 bg-transparent pl-1 pr-3 gap-1 text-xs font-medium text-gray-700 dark:text-zinc-200 shadow-none hover:bg-black/[0.02]! focus:ring-0! focus:border-0! focus:outline-none!"
@@ -1492,7 +1494,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               className="h-full px-2.5 flex items-center justify-center text-gray-900 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-zinc-700/60 transition-colors cursor-pointer border-0 bg-transparent focus:outline-none active:scale-95 rounded-r-xl"
               title="Template Options"
             >
-              <HugeIcon className="ph-bold ph-dots-three-vertical text-[15px]" />
+              <MoreVerticalIcon size="1em" className="text-[15px]" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
@@ -1516,7 +1518,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   disabled={!activeRoom || activeRoom.cabinets?.length === 0}
                 >
-                  <HugeIcon className="ph-bold ph-floppy-disk text-sm text-gray-500 dark:text-zinc-400" />
+                  <SaveEnergy01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
                   <span>Save as Template</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -1525,7 +1527,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 border-0 outline-none"
                   disabled={!selectedTemplateId}
                 >
-                  <HugeIcon className="ph-bold ph-trash text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
+                  <Delete01Icon size="1em" className="text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
                   <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Delete Template</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
@@ -1533,7 +1535,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
                   onClick={() => setRestoreTemplatesConfirmOpen(true)}
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
                 >
-                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-sm" />
+                  <ReloadIcon size="1em" className="text-sm" />
                   <span>Restore Defaults</span>
                 </DropdownMenuItem>
               </div>
@@ -1547,7 +1549,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   const renderEditorContent = () => (
     <div className="flex flex-[1_0_auto] w-full flex-col bg-white select-none dark:bg-card">
       <PageHeader
-        icon="ph-layout"
+        icon="DashboardSquare01Icon"
         title="Storage Layout Editor"
         description="Organize how cabinets are placed and arranged in your storage rooms."
         showBorder={false}
@@ -1566,7 +1568,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               className="h-10 px-5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {saving ? (
-                <HugeIcon className="ph-bold ph-spinner animate-spin text-xs" />
+                <Loading01Icon size="1em" className="animate-spin text-xs" />
               ) : (
                 "Save Layout"
               )}
@@ -1627,7 +1629,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         {renderEditorContent()}
       </Card>
 
-      <FloatingActionBar selectedCount={selectedDeletableCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete Cabinets" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
+      <FloatingActionBar selectedCount={selectedDeletableCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete Cabinets" actionIcon="Delete01Icon" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
       <ConfirmModal
         open={bulkConfirmOpen}
@@ -1696,7 +1698,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         onChange={setNewTemplateName}
         onConfirm={() => saveCurrentAsTemplate(newTemplateName)}
         isLoading={saving}
-        buttonIcon="ph-floppy-disk"
+        buttonIcon="SaveEnergy01Icon"
         variant="brand"
       />
 
@@ -1712,7 +1714,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         value={newRoomName}
         onChange={setNewRoomName}
         onConfirm={handleRenameRoom}
-        buttonIcon="ph-check"
+        buttonIcon="Tick01Icon"
         variant="brand"
       />
 
@@ -1729,7 +1731,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         value={newCabinetName}
         onChange={setNewCabinetName}
         onConfirm={handleRenameCabinet}
-        buttonIcon="ph-check"
+        buttonIcon="Tick01Icon"
         variant="brand"
       />
       <ConfirmModal 

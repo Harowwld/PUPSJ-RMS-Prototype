@@ -118,7 +118,7 @@ function SheetContent({
                 aria-label="Close"
                 className="absolute top-4 right-4 z-20 w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
               >
-                <XIcon className="w-4 h-4" />
+                <XIcon size={16} className="w-4 h-4" />
                 <span className="sr-only">Close</span>
               </button>
             }

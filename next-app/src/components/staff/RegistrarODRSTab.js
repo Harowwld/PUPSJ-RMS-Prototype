@@ -1,6 +1,7 @@
 "use client";
+import { Textarea } from "@/components/ui/textarea";
 import NoticeBanner from "@/components/shared/NoticeBanner";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,7 +26,7 @@ import {
   ALLOWED_REOPEN_TRANSITIONS,
 } from "@/lib/constants";
 import { formatErrorMessage } from "@/lib/errorUtils";
-import { Cursor01Icon as EmptyCursor01Icon, InboxIcon as EmptyInboxIcon } from "hugeicons-react";
+import { Cursor01Icon as EmptyCursor01Icon, InboxIcon as EmptyInboxIcon , Attachment01Icon, CheckmarkCircle01Icon, Clock01Icon, LockIcon, Shield01Icon, StarIcon} from "hugeicons-react";
 
 const statuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"];
 
@@ -217,7 +218,7 @@ export default function RegistrarODRSTab({ showToast }) {
         {/* ONE Single Card Container */}
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
-            icon="ph-tray"
+            icon="InboxIcon"
             title="Student Document Requests"
             description="Review, process, and publish status updates for student academic document requests."
             showBorder={false}
@@ -280,7 +281,7 @@ export default function RegistrarODRSTab({ showToast }) {
                         <div className="flex items-center gap-1.5">
                           {item.feedback && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/40 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                              <HugeIcon className="ph-fill ph-star text-[11px] text-amber-500" />
+                              <StarIcon size="1em" className="text-[11px] text-amber-500" />
                               <span>{item.feedback.rating}/5</span>
                             </span>
                           )}
@@ -306,7 +307,7 @@ export default function RegistrarODRSTab({ showToast }) {
                         )}
                         {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-900 dark:text-zinc-300" title={`${item.attachment_count || item.attachments?.length} attachment(s)`}>
-                            <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
+                            <Attachment01Icon size="1em" className="text-[11px]" />
                             {item.attachment_count || item.attachments?.length}
                           </span>
                         )}
@@ -350,17 +351,17 @@ export default function RegistrarODRSTab({ showToast }) {
                   <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3.5 border border-amber-200/70 dark:border-amber-900/40 space-y-2 mb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                        <HugeIcon className="ph-bold ph-shield-check text-xs text-amber-600 dark:text-amber-400" />
+                        <Shield01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
                         Parent / Legal Guardian
                       </span>
                       {selected.spa_verified ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                          <HugeIcon className="ph-fill ph-check-circle text-[10px]" />
+                          <CheckmarkCircle01Icon size="1em" className="text-[10px]" />
                           SPA Verified
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                          <HugeIcon className="ph-fill ph-clock text-[10px]" />
+                          <Clock01Icon size="1em" className="text-[10px]" />
                           SPA Pending
                         </span>
                       )}
@@ -393,13 +394,14 @@ export default function RegistrarODRSTab({ showToast }) {
                   <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 border border-border dark:border-border space-y-2 mb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 flex items-center gap-1.5">
-                        <HugeIcon className="ph-bold ph-paperclip text-xs" />
+                        <Attachment01Icon size="1em" className="text-xs" />
                         Attachments ({selected.attachments.length})
                       </span>
                     </div>
                     <div className="space-y-1.5 max-h-36 overflow-y-auto">
                       {selected.attachments.map((att) => {
                         const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
+                        const isPreviewable = isPdf || att.mime_type?.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp)$/i.test(att.original_filename || "");
                         const fileUrl = att.url || `/api/document-requests/${selected.id}/attachments/${att.id}`;
                         return (
                           <div key={att.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-border/60 dark:border-border text-xs">
@@ -408,7 +410,7 @@ export default function RegistrarODRSTab({ showToast }) {
                               <span className="block truncate font-medium text-gray-800 dark:text-zinc-200" title={att.original_filename}>{att.original_filename}</span>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                              {isPdf && (
+                              {isPreviewable && (
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -450,7 +452,7 @@ export default function RegistrarODRSTab({ showToast }) {
                   <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3.5 border border-amber-200/70 dark:border-amber-900/40 space-y-1.5 mb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                        <HugeIcon className="ph-fill ph-star text-xs text-amber-500" />
+                        <StarIcon size="1em" className="text-xs text-amber-500" />
                         Student Rating & Experience
                       </span>
                       <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
@@ -486,7 +488,7 @@ export default function RegistrarODRSTab({ showToast }) {
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-10 px-3 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-sm font-semibold text-gray-800 dark:text-zinc-200">
                           <span className="flex items-center gap-1.5 truncate">
-                            <HugeIcon className="ph-bold ph-lock-simple text-gray-400 text-xs" />
+                            <LockIcon size="1em" className="text-gray-400 text-xs" />
                             <span>{selected.status}</span>
                           </span>
                           <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
@@ -525,8 +527,8 @@ export default function RegistrarODRSTab({ showToast }) {
                     <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400 mb-1">
                       {status === "Deficient" ? "Deficiency Comment (required)" : status === "PendingPayment" ? "Payment Instructions" : "Student-Visible Update Note"}
                     </label>
-                    <textarea
-                      className="min-h-28 w-full rounded-brand border border-border bg-white px-3 py-2 text-sm outline-none focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon/10 dark:border-border dark:bg-zinc-800 dark:text-zinc-100"
+                    <Textarea
+                      className="min-h-28 w-full"
                       placeholder={status === "Deficient" ? "Explain what the student is missing (required)..." : status === "PendingPayment" ? "Explain the amount and how to submit payment..." : "Add an update message for the student (e.g. Document signed, ready for pick up at Room 201)..."}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
@@ -601,8 +603,8 @@ export default function RegistrarODRSTab({ showToast }) {
                   {reopenReason.trim().length}/5 chars min
                 </span>
               </div>
-              <textarea
-                className="w-full min-h-[90px] p-3 text-xs font-normal text-gray-900 dark:text-zinc-100 bg-[#F5F5F7] dark:bg-zinc-800/50 border border-border rounded-xl focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+              <Textarea
+                className="w-full min-h-[90px] resize-none"
                 placeholder="State the official reason for reopening (e.g., student appeal granted, payment verified, clerical error correction)..."
                 value={reopenReason}
                 onChange={(e) => setReopenReason(e.target.value)}

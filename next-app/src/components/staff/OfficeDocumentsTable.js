@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import TableScrollControls from "@/components/shared/TableScrollControls"
 import useTableScroll from "@/hooks/useTableScroll"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
-import { Files01Icon as EmptyFiles01Icon } from "hugeicons-react";
+import { Files01Icon as EmptyFiles01Icon , ReloadIcon, Search01Icon, ViewIcon} from "hugeicons-react";
 
 function getYear(document) {
   const year = Number(String(document?.student_no || "").split("-")[0])
@@ -77,7 +77,7 @@ export default function OfficeDocumentsTable({
         <div className="flex items-center gap-3">
           <div className="relative w-full max-w-xs group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <HugeIcon className="ph-bold ph-magnifying-glass text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
+              <Search01Icon size="1em" className="text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
             </div>
             <Input
               value={query}
@@ -203,7 +203,7 @@ export default function OfficeDocumentsTable({
                                 aria-label="Re-scan Document"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                               >
-                                <HugeIcon className="ph-bold ph-arrows-counter-clockwise text-[15px]" />
+                                <ReloadIcon size="1em" className="text-[15px]" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Re-scan Document</TooltipContent>
@@ -217,7 +217,7 @@ export default function OfficeDocumentsTable({
                               aria-label="Preview Document"
                               className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                             >
-                              <HugeIcon className="ph-bold ph-eye text-[16px]" />
+                              <ViewIcon size="1em" className="text-[16px]" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>Preview Document</TooltipContent>

@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Reorder } from "framer-motion";
-import HugeIcon from "@/components/shared/HugeIcon";
-import { cn } from "@/lib/utils";
 
+import { cn } from "@/lib/utils";
+import { DragDropIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const STORAGE_KEY = "pupsj_student_compliance_kpi_order";
 const DEFAULT_ORDER = ["rate", "submitted", "missing"];
 
@@ -69,7 +70,7 @@ export default function StudentComplianceKpiCards({ summary }) {
       value: `${summary.complianceRate}%`,
       sublabel: `(${summary.submittedCount || summary.approvedCount} of ${summary.totalRequired} submitted)`,
       sublabelClass: "text-gray-900 dark:text-zinc-300",
-      iconClass: "ph-chart-pie-slice",
+      iconClass: "PieChartIcon",
       iconBg: "bg-pup-maroon dark:bg-red-700",
       activeRing: "border-red-500/50 ring-1 ring-red-500/20",
     },
@@ -81,7 +82,7 @@ export default function StudentComplianceKpiCards({ summary }) {
       value: (summary.submittedCount || summary.approvedCount).toLocaleString(),
       sublabel: "Archived in records",
       sublabelClass: "text-emerald-600 dark:text-emerald-400",
-      iconClass: "ph-file-check",
+      iconClass: "TaskDone01Icon",
       iconBg: "bg-[#22c55e]",
       activeRing: "border-emerald-500/50 ring-1 ring-emerald-500/20",
     },
@@ -95,7 +96,7 @@ export default function StudentComplianceKpiCards({ summary }) {
       value: summary.missingCount.toLocaleString(),
       sublabel: summary.missingCount === 0 ? "All verified" : "Pending submission",
       sublabelClass: summary.missingCount === 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400",
-      iconClass: "ph-clock-countdown",
+      iconClass: "HourglassIcon",
       iconBg: "bg-[#f59e0b]",
       activeRing: "border-amber-500/50 ring-1 ring-amber-500/20",
     },
@@ -157,7 +158,7 @@ export default function StudentComplianceKpiCards({ summary }) {
                     card.iconBg
                   )}
                 >
-                  <HugeIcon className={cn("ph-bold text-[15px]", card.iconClass)} />
+                  <AppIcon className={cn(" text-[15px]", card.iconClass)} />
                 </div>
               </div>
 
@@ -172,8 +173,8 @@ export default function StudentComplianceKpiCards({ summary }) {
                   </span>
                 </div>
 
-                <HugeIcon
-                  className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
+                <DragDropIcon size="1em"
+                  className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
                   title="Drag to rearrange"
                 />
               </div>

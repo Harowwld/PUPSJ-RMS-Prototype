@@ -1,151 +1,164 @@
-import test, { mock } from "node:test";
-import assert from "node:assert/strict";
+import test, { mock } from "node:test"
+import assert from "node:assert/strict"
 
-const queryCalls = [];
-let totalStudentFixture = 2;
-
-mock.module("../src/lib/postgresCompat.js", {
-  namedExports: {
-    dbAll: async (sql, params = []) => {
-      queryCalls.push({ sql, params });
-      if (sql.includes("GROUP BY s.course_code")) {
-        return [{
-          course_code: "BSIT",
-          total_students: totalStudentFixture,
-          fully_digitized_count: 0,
-          total_digitized_docs: totalStudentFixture,
-        }];
-      }
-      if (sql.includes("GROUP BY s.year_level")) return [{ year_level: 2025, count: totalStudentFixture }];
-      if (sql.includes("GROUP BY dt.id, dt.name")) {
-        return [
-          { document_type_id: 11, document_type: "Birth Certificate", total_students: 2, digitized_students: 1, missing_students: 1 },
-          { document_type_id: 12, document_type: "Transcript of Records", total_students: 2, digitized_students: 1, missing_students: 1 },
-        ];
-      }
-      if (sql.includes("SELECT s.student_no, s.name, s.course_code")) {
-        return [{ student_no: "2025-00001", name: "A STUDENT", course_code: "BSIT" }];
-      }
-      throw new Error(`Unexpected query: ${sql}`);
-    },
-    dbGet: async (sql, params = []) => {
-      queryCalls.push({ sql, params });
-      return { total: 1 };
-    },
-  },
-});
-
+let snapshot
+const calls = []
 mock.module("../src/lib/postgres.js", {
   namedExports: {
-    query: async (sql, params = []) => {
-      queryCalls.push({ sql, params });
-      return [
-        { id: 11, name: "Birth Certificate" },
-        { id: 12, name: "Transcript of Records" },
-      ];
-    },
-    queryOne: async (sql, params = []) => {
-      queryCalls.push({ sql, params });
-      return { id: Number(params[0]), name: "Birth Certificate" };
+    queryOne: async (sql, params) => {
+      calls.push({ sql, params })
+      return structuredClone(snapshot)
     },
   },
-});
-
+})
 mock.module("../src/lib/studentAuth.js", {
-  namedExports: {
-    decryptStudentRow: (row) => row,
-  },
-});
+  namedExports: { decryptStudentRow: (row) => row },
+})
+const { getDigitizationComplianceSummary, getStudentComplianceReport } =
+  await import("../src/lib/digitizationComplianceRepo.js")
+const types = [
+  { id: 11, name: "Birth Certificate", office_id: "registrar" },
+  { id: 12, name: "Report Card", office_id: "registrar" },
+]
+const student = (number, states) => ({
+  student_no: String(number).padStart(4, "0"),
+  name: `Student ${number}`,
+  course_code: "BSIT",
+  section: "1",
+  year_level: 2025,
+  requirements: types.map((type, index) => ({
+    documentTypeId: type.id,
+    docType: type.name,
+    doc: states[index]
+      ? { id: number * 10 + index, approval_status: states[index] }
+      : null,
+  })),
+})
+const fixture = () => {
+  calls.length = 0
+  snapshot = {
+    types,
+    students: [
+      student(1, ["Approved", "Approved"]),
+      student(2, ["Pending", "Declined"]),
+      student(3, []),
+    ],
+  }
+}
 
-const {
-  getDigitizationComplianceSummary,
-  getMissingStudentsForDocumentType,
-} = await import("../src/lib/digitizationComplianceRepo.js");
-
-test("compliance summary separates document coverage from fully digitized students", async () => {
-  queryCalls.length = 0;
-  const result = await getDigitizationComplianceSummary({
-    studentStatus: "Active",
-    courseCodes: ["BSIT"],
+test("summary, type roster, and matrix share approved-only compliance by default", async () => {
+  fixture()
+  const summary = await getDigitizationComplianceSummary({
     officeId: "registrar",
-  });
+  })
+  const roster = await getStudentComplianceReport({ officeId: "registrar" })
+  const type = await getStudentComplianceReport({
+    officeId: "registrar",
+    documentTypeId: 11,
+  })
+  const matrix = await getStudentComplianceReport({
+    officeId: "registrar",
+    complianceStatus: "all",
+  })
+  assert.equal(summary.summary.fullyDigitizedStudents, 1)
+  assert.equal(summary.summary.notDigitizedStudents, roster.total)
+  assert.equal(summary.summary.percentDigitized, 33)
+  assert.equal(summary.missingByDocumentType[0].missingStudents, type.total)
+  assert.equal(
+    matrix.records.filter((record) => !record.isCompliant).length,
+    roster.total
+  )
+  assert.deepEqual(
+    roster.students[0].outstandingRequirements.map((r) => r.status),
+    ["pending", "declined"]
+  )
+})
 
-  assert.equal(result.summary.totalStudents, 2);
-  assert.equal(result.summary.totalDigitizedDocsCount, 2);
-  assert.equal(result.summary.totalExpectedDocsCount, 4);
-  assert.equal(result.summary.percentDigitized, 50);
-  assert.equal(result.summary.fullyDigitizedStudents, 0);
-  assert.equal(result.summary.fullyDigitizedRate, 0);
-  assert.deepEqual(result.missingByDocumentType, [
-    {
-      documentTypeId: 11,
-      documentType: "Birth Certificate",
-      totalStudents: 2,
-      digitizedStudents: 1,
-      missingStudents: 1,
-    },
-    {
-      documentTypeId: 12,
-      documentType: "Transcript of Records",
-      totalStudents: 2,
-      digitizedStudents: 1,
-      missingStudents: 1,
-    },
-  ]);
+test("upload coverage explicitly accepts Pending but never Declined", async () => {
+  fixture()
+  const result = await getStudentComplianceReport({
+    requireApproved: false,
+    documentTypeId: 11,
+  })
+  assert.equal(result.total, 1)
+  assert.equal(result.students[0].studentNo, "0003")
+  assert.equal(result.summary.totalDigitizedDocsCount, 3)
+})
 
-  const breakdownQuery = queryCalls.find(({ sql }) => sql.includes("GROUP BY dt.id, dt.name"));
-  assert.match(breakdownQuery.sql, /d\.approval_status IS NULL OR d\.approval_status != 'Declined'/);
-  assert.deepEqual(breakdownQuery.params, ["registrar", "registrar", "registrar", "BSIT"]);
-});
+test("pagination happens after compliance calculation; export includes every matching student", async () => {
+  fixture()
+  snapshot.students = Array.from({ length: 205 }, (_, index) =>
+    student(index + 1, [])
+  )
+  const page = await getStudentComplianceReport({ limit: 20, offset: 200 })
+  const all = await getStudentComplianceReport({
+    limit: 20,
+    offset: 200,
+    exportAll: true,
+  })
+  assert.equal(page.total, 205)
+  assert.equal(page.students.length, 5)
+  assert.equal(page.students[0].studentNo, "0201")
+  assert.equal(all.students.length, 205)
+  assert.equal(all.summary.notDigitizedStudents, 205)
+})
 
-test("approved-only missing-student results preserve filters and use bounded pagination", async () => {
-  queryCalls.length = 0;
-  const result = await getMissingStudentsForDocumentType({
-    documentTypeId: "11",
+test("empty requirements never invent mandatory documents or classify students as incomplete", async () => {
+  fixture()
+  snapshot.types = []
+  snapshot.students.forEach((row) => {
+    row.requirements = []
+  })
+  const result = await getStudentComplianceReport()
+  assert.equal(result.meta.configured, false)
+  assert.equal(result.total, 0)
+  assert.equal(result.summary.notDigitizedStudents, 0)
+  assert.equal(result.summary.percentDigitized, 0)
+})
+
+test("invalid and out-of-scope document identifiers return no report", async () => {
+  fixture()
+  assert.equal(
+    await getStudentComplianceReport({ documentTypeId: "11oops" }),
+    null
+  )
+  assert.equal(calls.length, 0)
+  assert.equal(await getStudentComplianceReport({ documentTypeId: 99 }), null)
+})
+
+test("search, outstanding filters and sorting operate before pagination", async () => {
+  fixture()
+  const result = await getStudentComplianceReport({
+    search: "student 2",
+    missingDocTypes: ["Report Card"],
+    limit: 1,
+    sortBy: "name",
+    sortOrder: "DESC",
+  })
+  assert.equal(result.total, 1)
+  assert.equal(result.students[0].studentNo, "0002")
+})
+
+test("one database statement supplies types, membership, evidence and population filters", async () => {
+  fixture()
+  await getDigitizationComplianceSummary({
+    officeId: "REGISTRAR",
     studentStatus: "Archived",
-    courseCodes: ["BSIT"],
-    requireApproved: true,
-    officeId: "registrar",
-    limit: 500,
-    offset: 20,
-  });
+    courseCodes: ["bsit", "BSENT"],
+  })
+  assert.equal(calls.length, 1)
+  assert.deepEqual(calls[0].params, [
+    "registrar",
+    "Archived",
+    ["BSIT", "BSENT"],
+  ])
+  assert.match(calls[0].sql, /d.office_id = t.office_id/)
+})
 
-  assert.equal(result.documentType, "Birth Certificate");
-  assert.equal(result.total, 1);
-  assert.deepEqual(result.students, [
-    { student_no: "2025-00001", name: "A STUDENT", course_code: "BSIT" },
-  ]);
-  assert.equal(result.limit, 100);
-  assert.equal(result.offset, 20);
-
-  const listQuery = queryCalls.find(({ sql }) => sql.includes("SELECT s.student_no, s.name, s.course_code"));
-  assert.match(listQuery.sql, /d\.approval_status = 'Approved'/);
-  assert.match(listQuery.sql, /d\.office_id = \?/);
-  assert.match(listQuery.sql, /s\.course_code = \?/);
-  assert.match(listQuery.sql, /s\.status != 'Active'/);
-  assert.deepEqual(listQuery.params, ["registrar", "BSIT", "Birth Certificate", "registrar", 100, 20]);
-});
-
-test("invalid document type identifiers return no results without querying", async () => {
-  queryCalls.length = 0;
-  const result = await getMissingStudentsForDocumentType({ documentTypeId: "bad-id" });
-  assert.equal(result, null);
-  assert.equal(queryCalls.length, 0);
-});
-
-test("configured document types remain visible when no students match the filters", async () => {
-  queryCalls.length = 0;
-  totalStudentFixture = 0;
-  const result = await getDigitizationComplianceSummary({
-    studentStatus: "Active",
-    courseCodes: ["BSIT"],
-    officeId: "registrar",
-  });
-  totalStudentFixture = 2;
-
-  assert.equal(result.summary.totalStudents, 0);
-  assert.deepEqual(result.missingByDocumentType, [
-    { documentTypeId: 11, documentType: "Birth Certificate", totalStudents: 0, digitizedStudents: 0, missingStudents: 0 },
-    { documentTypeId: 12, documentType: "Transcript of Records", totalStudents: 0, digitizedStudents: 0, missingStudents: 0 },
-  ]);
-});
+test("configured types remain available when population is empty", async () => {
+  fixture()
+  snapshot.students = []
+  const result = await getDigitizationComplianceSummary()
+  assert.equal(result.missingByDocumentType.length, 2)
+  assert.equal(result.missingByDocumentType[0].missingStudents, 0)
+})

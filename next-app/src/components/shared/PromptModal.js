@@ -1,4 +1,5 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
 import {
   Dialog,
@@ -35,37 +36,37 @@ export default function PromptModal({
 }) {
   const variantClasses = {
     danger: {
-      headerIcon: "ph-duotone ph-warning-circle",
+      headerIcon: " Alert01Icon",
       headerIconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-red-600 shadow-sm dark:border-border",
-      buttonIcon: "ph-bold ph-trash",
+      buttonIcon: " Delete01Icon",
       listDot: "bg-red-500",
       confirmVariant: "danger",
     },
     brand: {
-      headerIcon: "ph-duotone ph-user-gear",
+      headerIcon: " UserSettings01Icon",
       headerIconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-pup-maroon shadow-sm dark:border-border",
-      buttonIcon: "ph-bold ph-check",
+      buttonIcon: " Tick01Icon",
       listDot: "bg-pup-maroon",
       confirmVariant: "default",
     },
     warning: {
-      headerIcon: "ph-duotone ph-warning",
+      headerIcon: " Alert02Icon",
       headerIconWrap: "bg-amber-50 dark:bg-amber-950/30 border-amber-100 text-amber-600 shadow-sm dark:border-border",
-      buttonIcon: "ph-bold ph-warning",
+      buttonIcon: " Alert02Icon",
       listDot: "bg-amber-500",
       confirmVariant: "warning",
     },
     success: {
-      headerIcon: "ph-duotone ph-arrow-counter-clockwise",
+      headerIcon: " ReloadIcon",
       headerIconWrap: "bg-green-50 border-green-100 text-green-600 shadow-sm dark:bg-emerald-950/30 dark:border-border",
-      buttonIcon: "ph-bold ph-check",
+      buttonIcon: " Tick01Icon",
       listDot: "bg-emerald-500",
       confirmVariant: "success",
     },
     default: {
-      headerIcon: "ph-duotone ph-info",
+      headerIcon: " CovidInfoIcon",
       headerIconWrap: "bg-blue-50 dark:bg-blue-950/30 border-blue-100 text-blue-600 shadow-sm dark:border-border",
-      buttonIcon: "ph-bold ph-check-circle",
+      buttonIcon: " CheckmarkCircle01Icon",
       listDot: "bg-blue-500",
       confirmVariant: "default",
     },
@@ -131,11 +132,8 @@ export default function PromptModal({
               </label>
             )}
             {multiline ? (
-              <textarea
-                className={cn(
-                  "flex min-h-[100px] w-full rounded-brand border border-border bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon dark:border-border dark:bg-card dark:text-zinc-300 dark:focus:border-zinc-700",
-                  isDeclineModal && "rounded-[8px] border-[0.5px] border-border text-[13px] font-normal tracking-[-0.01em] focus:border-gray-500 focus:ring-0"
-                )}
+              <Textarea
+                className="min-h-[100px]"
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}

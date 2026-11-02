@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 import { useState, useEffect } from "react"
@@ -36,16 +36,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ClipboardIcon, CursorPointer01Icon, PencilEdit01Icon, Search01Icon, Archive01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ sortState, column }) {
   if (sortState?.key !== column) {
-    return <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
   }
   return sortState.direction === "asc" ? (
-    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400" />
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-gray-400" />
   ) : (
-    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400" />
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-gray-400" />
   )
 }
 
@@ -248,8 +248,8 @@ export default function DocTypesTab({
         : "These document types will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore Types" : "Archive Types",
       variant: showArchived ? "success" : "warning",
-      buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
-      icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
+      buttonIcon: showArchived ? " Archive02Icon" : " Archive01Icon",
+      icon: showArchived ? " Archive02Icon" : " Archive01Icon",
       selectedItems: selectedNames,
       onConfirm: () => executeBulkTaxonomyAction("DocumentType", showArchived ? "restore" : "delete"),
     })
@@ -260,7 +260,7 @@ export default function DocTypesTab({
     <TooltipProvider delay={200}>
       <div className="font-jakarta flex flex-[1_0_auto] w-full flex-col animate-fade-up">
         <PageHeader
-          icon="ph-files"
+          icon="Files01Icon"
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
@@ -394,7 +394,7 @@ export default function DocTypesTab({
           <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
             <div className="flex-1 max-w-md relative group">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
               </div>
               <Input
                 type="text"
@@ -526,7 +526,7 @@ export default function DocTypesTab({
                               aria-label="Reset scroll to start"
                               className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
                             >
-                              <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                              <AppIcon className=" ArrowLeft01Icon text-xs" />
                             </button>
                           )}
                         </div>
@@ -596,13 +596,13 @@ export default function DocTypesTab({
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               {dt.is_requestable && (
                                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40">
-                                  <HugeIcon className="ph-bold ph-hand-pointing text-[10px]" />
+                                  <CursorPointer01Icon size="1em" className="text-[10px]" />
                                   Requestable
                                 </span>
                               )}
                               {dt.is_compliance && (
                                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/40">
-                                  <HugeIcon className="ph-bold ph-clipboard-text text-[10px]" />
+                                  <ClipboardIcon size="1em" className="text-[10px]" />
                                   Compliance
                                 </span>
                               )}
@@ -646,7 +646,7 @@ export default function DocTypesTab({
                                       aria-label="Edit Document Type"
                                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                     >
-                                      <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
+                                      <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">Edit</TooltipContent>
@@ -665,8 +665,8 @@ export default function DocTypesTab({
                                         confirmLabel: "Restore Document Type",
                                         variant: "success",
                                         buttonIcon:
-                                          "ph-bold ph-archive-restore",
-                                        icon: "ph-duotone ph-archive-restore",
+                                          " Archive02Icon",
+                                        icon: " Archive02Icon",
                                         selectedItems: [dt.name],
                                         onConfirm: () => resDocType(dt.id, dt.name),
                                       })
@@ -675,7 +675,7 @@ export default function DocTypesTab({
                                     aria-label="Restore Document Type"
                                     className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
+                                    <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Restore</TooltipContent>
@@ -691,8 +691,8 @@ export default function DocTypesTab({
                                           "This document type will be hidden from new registrations but its history will be preserved.",
                                         confirmLabel: "Archive",
                                         variant: "warning",
-                                        buttonIcon: "ph-bold ph-archive",
-                                        icon: "ph-duotone ph-archive",
+                                        buttonIcon: " Archive01Icon",
+                                        icon: " Archive01Icon",
                                         selectedItems: [dt.name],
                                         onConfirm: () => delDocType(dt.id, dt.name),
                                       })
@@ -701,7 +701,7 @@ export default function DocTypesTab({
                                     aria-label="Archive Document Type"
                                     className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
+                                    <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Archive</TooltipContent>
@@ -776,7 +776,7 @@ export default function DocTypesTab({
         onCancel={() => toggleAllDocTypes(false)}
         onAction={handleBulkAction}
         actionLabel={showArchived ? "Restore Types" : "Archive Types"}
-        actionIcon={showArchived ? "ph-archive-restore" : "ph-archive"}
+        actionIcon={showArchived ? "Archive02Icon" : "Archive01Icon"}
         actionVariant={showArchived ? "success" : "danger"}
       />
 

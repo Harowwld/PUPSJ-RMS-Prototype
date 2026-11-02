@@ -1,5 +1,5 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,18 +26,12 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import ReportPreviewDialog from "@/components/shared/ReportPreviewDialog";
 import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
 import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
 import {
   getInstitutionalBranding,
@@ -47,26 +41,59 @@ import {
 } from "@/lib/pdfGenerator";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
-import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
-
-
+import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowRight02Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, Clock01Icon, FoldersIcon, Loading01Icon, Location01Icon, Shield01Icon, Tick01Icon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 // Icon categorization helper for document requirements
 function getRequirementCategoryIcon(category, isSubmitted) {
   const cat = String(category || "").toLowerCase();
   if (cat.includes("admission") || cat.includes("identity") || cat.includes("birth")) {
-    return "ph-identification-card";
+    return "Contact01Icon";
   }
   if (cat.includes("academic") || cat.includes("record") || cat.includes("137") || cat.includes("grade")) {
-    return "ph-graduation-cap";
+    return "GraduationScrollIcon";
   }
   if (cat.includes("graduation") || cat.includes("exit") || cat.includes("diploma") || cat.includes("transcript")) {
-    return "ph-certificate";
+    return "Certificate01Icon";
   }
   if (cat.includes("certificate") || cat.includes("clearance") || cat.includes("moral")) {
-    return "ph-shield-check";
+    return "Shield01Icon";
   }
-  return isSubmitted ? "ph-file-check" : "ph-file-arrow-up";
+  return isSubmitted ? "TaskDone01Icon" : "FileUploadIcon";
+}
+
+function ComplianceSlipPreview({ student, requirements, summary, branding, onClose }) {
+  const [snapshot] = useState(() => ({ student, requirements, summary, branding }));
+  const [url, setUrl] = useState(null);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    let objectUrl;
+    generateStudentComplianceSlipPdf(snapshot.student, snapshot.requirements, snapshot.summary, { branding: snapshot.branding })
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch((failure) => { if (active) setError(failure.message || "Unable to generate the compliance slip."); });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [snapshot, attempt]);
+  return (
+    <ReportPreviewDialog
+      open
+      onClose={onClose}
+      title="Student Document Compliance Slip"
+      description="Review your compliance summary before printing or downloading."
+      pdfUrl={url}
+      isPreparing={!url && !error}
+      error={error}
+      onRetry={() => { setError(""); setAttempt((value) => value + 1); }}
+      downloadFilename={generateExportFilename("STUDENT-COMPLIANCE", String(student.studentNo || "SUMMARY").replace(/[^0-9A-Za-z-]/g, ""), "pdf")}
+    />
+  );
 }
 
 export default function StudentComplianceTab({ authUser }) {
@@ -366,300 +393,6 @@ export default function StudentComplianceTab({ authUser }) {
     }
   };
 
-  // Dedicated Print Handler (Uses isolated iframe to guarantee top-of-paper placement)
-  const handlePrintSlip = () => {
-    const printFrame = document.createElement("iframe");
-    printFrame.style.position = "fixed";
-    printFrame.style.right = "0";
-    printFrame.style.bottom = "0";
-    printFrame.style.width = "0";
-    printFrame.style.height = "0";
-    printFrame.style.border = "0";
-    printFrame.title = "Print Compliance Slip";
-    document.body.appendChild(printFrame);
-
-    const doc = printFrame.contentWindow.document;
-    const printDate = new Date().toLocaleDateString("en-PH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const escapeHtml = (str) =>
-      String(str ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-
-    const safeStudentNo = student.studentNo
-      ? String(student.studentNo).replace(/[^0-9A-Za-z-]/g, "")
-      : "SUMMARY";
-    const printDocTitle = generateExportFilename("STUDENT-COMPLIANCE", safeStudentNo, "pdf").replace(/\.pdf$/, "");
-    const docId = `RKS-CMP-${student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-${new Date().getFullYear()}`;
-    const campusTitle = branding.campusName
-      ? `${branding.institutionName} · ${branding.campusName}`
-      : branding.institutionName;
-    const brandColor = branding.brandColor || "#800000";
-    const logoSrc = branding.logoBase64 || branding.logoUrl || DEFAULT_BRANDING_LOGO;
-    const fallbackLogoSrc = branding.fallbackLogoUrl || OFFICIAL_FALLBACK_LOGO;
-
-    const rowsHtml = sortedRequirements
-      .map((r, idx) => {
-        const isSubmitted = r.status === "Submitted";
-
-        return `
-          <tr>
-            <td style="padding: 7px 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; text-align: center; width: 34px;">${idx + 1}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 600; color: #111827;">${escapeHtml(r?.docType || r?.name || "N/A")}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; white-space: nowrap;">${escapeHtml(r?.category || "N/A")}</td>
-            <td style="padding: 7px 10px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
-              <span class="badge ${isSubmitted ? "badge-approved" : "badge-missing"}">
-                ${isSubmitted ? "Submitted" : "Not Submitted"}
-              </span>
-            </td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(printDocTitle)}</title>
-          <style>
-            @font-face {
-              font-family: "Plus Jakarta Sans";
-              src: url("${window.location.origin}/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2") format("woff2");
-              font-weight: 100 900;
-              font-display: swap;
-            }
-            @page {
-              size: A4 portrait;
-              margin: 14mm 16mm 14mm 16mm;
-            }
-            * {
-              box-sizing: border-box;
-              margin: 0;
-              padding: 0;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            body {
-              font-family: "Plus Jakarta Sans", sans-serif;
-              color: #111827;
-              background: #ffffff;
-              font-size: 11px;
-              line-height: 1.4;
-              padding: 0;
-              margin: 0;
-            }
-            .report-header {
-              text-align: center;
-              margin-bottom: 10px;
-            }
-            .logo-wrap {
-              display: flex;
-              justify-content: center;
-              margin-bottom: 8px;
-            }
-            .logo-wrap img {
-              width: 52px;
-              height: 52px;
-              object-fit: contain;
-            }
-            .institution-title {
-              font-size: 14.5px;
-              font-weight: 800;
-              color: ${brandColor};
-              letter-spacing: -0.01em;
-              line-height: 1.25;
-            }
-            .office-subtitle {
-              font-size: 8.5px;
-              font-weight: 700;
-              color: #6b7280;
-              letter-spacing: 2px;
-              text-transform: uppercase;
-              margin-top: 3px;
-            }
-            .report-title {
-              font-size: 13.5px;
-              font-weight: 800;
-              color: #111827;
-              letter-spacing: -0.01em;
-              margin-top: 9px;
-              margin-bottom: 2px;
-            }
-            .doc-id {
-              font-size: 8.5px;
-              font-style: italic;
-              font-family: inherit;
-              color: #6b7280;
-              margin-bottom: 10px;
-            }
-            .master-divider {
-              width: 100%;
-              height: 2px;
-              background-color: ${brandColor};
-              margin-bottom: 14px;
-            }
-            .meta-grid {
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 12px;
-              background: #f9fafb;
-              border: 1px solid #e5e7eb;
-              border-radius: 8px;
-              padding: 10px 14px;
-              margin-bottom: 14px;
-            }
-            .meta-item {
-              display: flex;
-              flex-direction: column;
-              gap: 2px;
-            }
-            .meta-label {
-              font-size: 8px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              color: #6b7280;
-            }
-            .meta-val {
-              font-size: 11px;
-              font-weight: 700;
-              color: #111827;
-              word-break: break-word;
-            }
-            .meta-val-maroon {
-              font-size: 11px;
-              font-weight: 700;
-              font-family: inherit;
-              color: ${brandColor};
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              border: 1px solid #e5e7eb;
-              border-radius: 6px;
-              overflow: hidden;
-              margin-bottom: 12px;
-            }
-            th {
-              background-color: #f3f4f6;
-              color: #374151;
-              font-size: 9px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              padding: 8px 10px;
-              text-align: left;
-              border-bottom: 1.5px solid #e5e7eb;
-            }
-            .badge-approved {
-              display: inline-block;
-              padding: 2px 7px;
-              border-radius: 9999px;
-              font-size: 9.5px;
-              font-weight: 700;
-              color: #065f46;
-              background: #ecfdf5;
-              border: 1px solid #a7f3d0;
-            }
-            .badge-missing {
-              display: inline-block;
-              padding: 2px 7px;
-              border-radius: 9999px;
-              font-size: 9.5px;
-              font-weight: 700;
-              color: #92400e;
-              background: #fffbeb;
-              border: 1px solid #fde68a;
-            }
-            .footer-note {
-              text-align: center;
-              font-size: 8.5px;
-              color: #9ca3af;
-              font-style: italic;
-              margin-top: 18px;
-              border-top: 1px dashed #e5e7eb;
-              padding-top: 10px;
-              page-break-inside: avoid;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="report-header">
-            <div class="logo-wrap">
-              <img src="${escapeHtml(logoSrc)}" onerror="this.src='${escapeHtml(fallbackLogoSrc)}'" alt="PUP Logo" />
-            </div>
-            <h1 class="institution-title">${escapeHtml(campusTitle)}</h1>
-            <p class="office-subtitle">${escapeHtml(branding.tagline || "OFFICE OF THE CAMPUS REGISTRAR")}</p>
-            <h2 class="report-title">STUDENT REQUIREMENTS COMPLIANCE SUMMARY</h2>
-            <p class="doc-id">Document ID: ${escapeHtml(docId)} &bull; Issued on ${escapeHtml(printDate)}</p>
-            <div class="master-divider"></div>
-          </div>
-
-          <div class="meta-grid">
-            <div class="meta-item">
-              <span class="meta-label">Student Name</span>
-              <span class="meta-val">${escapeHtml(student.name || "N/A")}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">Student Number</span>
-              <span class="meta-val-maroon">${escapeHtml(student.studentNo || "N/A")}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">Compliance Status</span>
-              <span class="meta-val">${summary.complianceRate}% (${summary.submittedCount}/${summary.totalRequired} Submitted)</span>
-            </div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 34px; text-align: center;">#</th>
-                <th>Requirement / Credential</th>
-                <th>Category</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div class="footer-note">
-            Note: This is an official system-generated student compliance summary from the PUPSJ Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited.
-          </div>
-        </body>
-      </html>
-    `);
-    doc.close();
-
-    setTimeout(async () => {
-      try {
-        await doc.fonts.load('11px "Plus Jakarta Sans"');
-        await doc.fonts.ready;
-        printFrame.contentWindow.focus();
-        printFrame.contentWindow.print();
-      } catch (err) {
-        console.error("Print execution failed:", err);
-      } finally {
-        setTimeout(() => {
-          if (document.body.contains(printFrame)) {
-            document.body.removeChild(printFrame);
-          }
-        }, 1500);
-      }
-    }, 250);
-  };
-
   return (
     <div className="flex flex-col w-full flex-[1_0_auto]">
       {/* 1. Main Unified Container Card */}
@@ -669,7 +402,7 @@ export default function StudentComplianceTab({ authUser }) {
       >
         {/* A. Header */}
         <PageHeader
-          icon="ph-clipboard-check"
+          icon="CheckListIcon"
           title="Document Checklist & Compliance"
           description="Track your submitted credentials and monitor required documents for university records compliance."
           showBorder={false}
@@ -702,7 +435,7 @@ export default function StudentComplianceTab({ authUser }) {
               >
                 {downloadingPdf ? (
                   <span className="flex items-center gap-1.5">
-                    <HugeIcon className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                    <Loading01Icon size="1em" className="animate-spin text-sm"></Loading01Icon>
                     Downloading...
                   </span>
                 ) : (
@@ -715,7 +448,7 @@ export default function StudentComplianceTab({ authUser }) {
                 onClick={() => setPrintModalOpen(true)}
                 className="h-10 px-5 border-0 cursor-pointer"
               >
-                Print Slip
+                Preview Compliance Slip
               </Button>
             </div>
           }
@@ -751,7 +484,7 @@ export default function StudentComplianceTab({ authUser }) {
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
             {/* Search Input */}
             <div className="relative w-full sm:w-60 lg:w-64 group">
-              <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search requirements..."
@@ -805,7 +538,7 @@ export default function StudentComplianceTab({ authUser }) {
                     {sortConfig.column === "category" && sortConfig.direction === "asc" && "Sort: Category (A-Z)"}
                     {sortConfig.column === "category" && sortConfig.direction === "desc" && "Sort: Category (Z-A)"}
                   </span>
-                  <HugeIcon className="ph-bold ph-caret-down text-[10px] text-gray-400 ml-0.5" />
+                  <ArrowDown01Icon size="1em" className="text-[10px] text-gray-400 ml-0.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -836,11 +569,11 @@ export default function StudentComplianceTab({ authUser }) {
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-sort-ascending text-sm text-pup-maroon dark:text-red-400" />
+                      <AppIcon className=" SortingUpIcon text-sm text-pup-maroon dark:text-red-400" />
                       <span>Name (A to Z)</span>
                     </div>
                     {sortConfig.column === "docType" && sortConfig.direction === "asc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
 
@@ -849,11 +582,11 @@ export default function StudentComplianceTab({ authUser }) {
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-sort-descending text-sm text-pup-maroon dark:text-red-400" />
+                      <AppIcon className=" SortingDownIcon text-sm text-pup-maroon dark:text-red-400" />
                       <span>Name (Z to A)</span>
                     </div>
                     {sortConfig.column === "docType" && sortConfig.direction === "desc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
 
@@ -862,11 +595,11 @@ export default function StudentComplianceTab({ authUser }) {
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-check-circle text-sm text-pup-maroon dark:text-red-400" />
+                      <CheckmarkCircle01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                       <span>Completed First</span>
                     </div>
                     {sortConfig.column === "status" && sortConfig.direction === "asc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
 
@@ -875,11 +608,11 @@ export default function StudentComplianceTab({ authUser }) {
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-clock text-sm text-pup-maroon dark:text-red-400" />
+                      <Clock01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                       <span>Pending First</span>
                     </div>
                     {sortConfig.column === "status" && sortConfig.direction === "desc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
 
@@ -888,11 +621,11 @@ export default function StudentComplianceTab({ authUser }) {
                     className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-folders text-sm text-pup-maroon dark:text-red-400" />
+                      <FoldersIcon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                       <span>Category (A to Z)</span>
                     </div>
                     {sortConfig.column === "category" && sortConfig.direction === "asc" && (
-                      <HugeIcon className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400" />
+                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
                     )}
                   </DropdownMenuItem>
                 </div>
@@ -914,7 +647,7 @@ export default function StudentComplianceTab({ authUser }) {
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <HugeIcon className="ph-bold ph-table text-sm" />
+                <ViewModeIcon mode="table" className="text-sm" />
                 <span>Table</span>
               </button>
               <button
@@ -930,7 +663,7 @@ export default function StudentComplianceTab({ authUser }) {
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                <HugeIcon className="ph-bold ph-squares-four text-sm" />
+                <ViewModeIcon mode="cards" className="text-sm" />
                 <span>Cards</span>
               </button>
             </div>
@@ -1013,14 +746,14 @@ export default function StudentComplianceTab({ authUser }) {
                       <button type="button" onClick={() => handleSort("docType")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-semibold", sortConfig.column === "docType" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Requirement
                         {sortConfig.column === "docType" ? (
-                          <HugeIcon
+                          <AppIcon
                             className={cn(
-                              "text-xs text-pup-maroon dark:text-red-400 ph-bold",
-                              sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                              "text-xs text-pup-maroon dark:text-red-400 ",
+                              sortConfig.direction === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon"
                             )}
                           />
                         ) : (
-                          <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
+                          <ArrowUpDownIcon size="1em" className="text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
                         )}
                       </button>
                     </th>
@@ -1031,14 +764,14 @@ export default function StudentComplianceTab({ authUser }) {
                       <button type="button" onClick={() => handleSort("category")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-semibold", sortConfig.column === "category" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Category
                         {sortConfig.column === "category" ? (
-                          <HugeIcon
+                          <AppIcon
                             className={cn(
-                              "text-xs text-pup-maroon dark:text-red-400 ph-bold",
-                              sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                              "text-xs text-pup-maroon dark:text-red-400 ",
+                              sortConfig.direction === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon"
                             )}
                           />
                         ) : (
-                          <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
+                          <ArrowUpDownIcon size="1em" className="text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
                         )}
                       </button>
                     </th>
@@ -1049,14 +782,14 @@ export default function StudentComplianceTab({ authUser }) {
                       <button type="button" onClick={() => handleSort("status")} className={cn("group flex items-center gap-1.5 transition-colors cursor-pointer text-xs font-semibold", sortConfig.column === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white")}>
                         Status
                         {sortConfig.column === "status" ? (
-                          <HugeIcon
+                          <AppIcon
                             className={cn(
-                              "text-xs text-pup-maroon dark:text-red-400 ph-bold",
-                              sortConfig.direction === "asc" ? "ph-caret-up" : "ph-caret-down"
+                              "text-xs text-pup-maroon dark:text-red-400 ",
+                              sortConfig.direction === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon"
                             )}
                           />
                         ) : (
-                          <HugeIcon className="ph-bold ph-caret-up-down text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
+                          <ArrowUpDownIcon size="1em" className="text-[10px] text-gray-300 dark:text-zinc-600 opacity-60" />
                         )}
                       </button>
                     </th>
@@ -1179,7 +912,7 @@ export default function StudentComplianceTab({ authUser }) {
                       {/* 4. Bottom Divider Section matching Catalog "Filing Requirements" */}
                       <div className="pt-4 border-t border-black/5 dark:border-white/10 mt-auto">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 font-sans tabular-nums mb-2.5 flex items-center gap-1.5">
-                          <HugeIcon className="ph-bold ph-shield-check text-xs" />
+                          <Shield01Icon size="1em" className="text-xs" />
                           <span>{isSubmitted ? "Archival Verification" : "Submission Guideline"}</span>
                         </div>
 
@@ -1187,7 +920,7 @@ export default function StudentComplianceTab({ authUser }) {
                           <div className="space-y-1.5 text-xs text-gray-600 dark:text-zinc-300">
                             <div className="flex items-center gap-2">
                               <span className="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[9px] shrink-0">
-                                <HugeIcon className="ph-bold ph-check" />
+                                <Tick01Icon size={16}  />
                               </span>
                               <span className="font-medium text-[11.5px] truncate">
                                 {item.document?.originalFilename || "Physical archive registered"}
@@ -1202,7 +935,7 @@ export default function StudentComplianceTab({ authUser }) {
                         ) : (
                           <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-zinc-400">
                             <span className="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 text-gray-500 dark:text-zinc-400 flex items-center justify-center text-[9px] shrink-0 mt-0.5">
-                              <HugeIcon className="ph-bold ph-arrow-right" />
+                              <ArrowRight02Icon size={16}  />
                             </span>
                             <span className="text-[11.5px] leading-relaxed line-clamp-2">
                               {item.instructions || "Submit original physical copy directly to Room 102."}
@@ -1212,7 +945,7 @@ export default function StudentComplianceTab({ authUser }) {
 
                         <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pt-3 mt-3 border-t border-black/5 dark:border-white/10 font-sans tabular-nums">
                           <div className="flex items-center gap-1.5">
-                            <HugeIcon className="ph-bold ph-map-pin text-xs text-gray-400 dark:text-zinc-500" />
+                            <Location01Icon size="1em" className="text-xs text-gray-400 dark:text-zinc-500" />
                             <span>{isSubmitted ? "Registrar Vault (Rm 102)" : "Window Counter (Rm 102)"}</span>
                           </div>
                           <Button
@@ -1264,219 +997,15 @@ export default function StudentComplianceTab({ authUser }) {
         student={student}
       />
 
-      {/* 2. Official Compliance Slip Print Modal */}
-      <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
-        <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-card border border-border dark:border-border shadow-2xl font-jakarta print:border-0 print:shadow-none print:max-h-none print:overflow-visible print:w-full print:max-w-none print:bg-white">
-          <DialogHeader className="p-6 pb-0 shrink-0 print:hidden">
-            <DialogTitle>
-              Student Document Compliance Slip
-            </DialogTitle>
-            <DialogDescription>
-              Official institutional summary generated from PUPSJ Records Keeping System.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Printable Content Area with Scroll Containment */}
-          <div
-            className="p-8 py-6 space-y-6 text-xs text-gray-800 dark:text-zinc-200 flex-1 overflow-y-auto print:overflow-visible print:p-0 print:m-0 print:space-y-4"
-            id="compliance-printable-slip"
-          >
-            {/* Institution Header matching Admin Reports */}
-            <div className="text-center pb-2 print:pb-2">
-              {/* Centered Logo */}
-              <div className="flex justify-center mb-2">
-                <div className="w-14 h-14 flex items-center justify-center p-0.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={branding.logoBase64 || branding.logoUrl || DEFAULT_BRANDING_LOGO}
-                    onError={(e) => {
-                      e.currentTarget.src = branding.fallbackLogoUrl || OFFICIAL_FALLBACK_LOGO;
-                    }}
-                    alt="PUP Logo"
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              </div>
-
-              {/* School & Campus Name */}
-              <h2
-                className="font-bold text-[15px] sm:text-[16px] tracking-tight transition-colors text-center"
-                style={{ color: branding.brandColor || "#800000" }}
-              >
-                {branding.campusName
-                  ? `${branding.institutionName} · ${branding.campusName}`
-                  : branding.institutionName}
-              </h2>
-
-              {/* Tagline / Subtitle */}
-              <p className="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-900 dark:text-zinc-300 text-center mt-1">
-                {branding.tagline || "OFFICE OF THE CAMPUS REGISTRAR"}
-              </p>
-
-              {/* Report Title */}
-              <h3 className="text-[13px] sm:text-[14px] font-bold text-gray-900 dark:text-zinc-100 text-center mt-2.5">
-                Student Requirements Compliance Summary
-              </h3>
-
-              {/* Document ID & Timestamp */}
-              <p className="text-[9px] italic text-gray-900 dark:text-zinc-300 text-center font-sans tabular-nums mt-0.5">
-                Document ID: RKS-CMP-{student.studentNo ? String(student.studentNo).replace(/[^0-9A-Za-z]/g, "") : "STD"}-{new Date().getFullYear()} · Issued on {new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}
-              </p>
-
-              {/* Master Divider Line */}
-              <div
-                className="w-full h-[2px] mt-3 mb-5 transition-colors"
-                style={{ backgroundColor: branding.brandColor || "#800000" }}
-              />
-            </div>
-
-            {/* Student Meta Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5 rounded-2xl bg-gray-50/80 dark:bg-zinc-900/50 border border-border/80 dark:border-border print:bg-gray-50 print:border-border">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Student Name</span>
-                <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block truncate" title={student.name}>{student.name}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Student Number</span>
-                <span className="font-sans tabular-nums text-xs font-bold text-pup-maroon dark:text-red-400 block">{student.studentNo}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-400 block">Compliance Status</span>
-                <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 block">
-                  {summary.complianceRate}% ({summary.submittedCount}/${summary.totalRequired} Submitted)
-                </span>
-              </div>
-            </div>
-
-            {/* Requirements Checklist Table */}
-            <div className="rounded-2xl border border-border dark:border-border overflow-hidden shadow-xs print:border-border">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs font-semibold text-xs text-gray-500 dark:text-zinc-400 border-b border-border select-none print:bg-gray-100">
-                  <tr>
-                    <th className="py-3 px-3 text-center w-9">#</th>
-                    <th className="py-3 px-4">Requirement / Credential</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border dark:divide-border print:divide-border">
-                  {sortedRequirements.map((r, idx) => (
-                    <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none print:border-b print:border-border">
-                      <td className="py-3 px-3 text-center text-gray-400 dark:text-zinc-500 font-sans tabular-nums text-[11px] border-r border-border/70 dark:border-border/70">{idx + 1}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-zinc-100 leading-normal border-r border-border/70 dark:border-border/70">{r?.docType || r?.name || "N/A"}</td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-zinc-300 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">{r?.category || "N/A"}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={cn(
-                            "px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center",
-                            r.status === "Submitted"
-                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300 print:bg-transparent print:border-emerald-700 print:text-emerald-900"
-                              : "bg-amber-100 text-amber-800 border border-amber-300 print:bg-transparent print:border-amber-700 print:text-amber-900"
-                          )}
-                        >
-                          {r.status === "Submitted" ? "Submitted" : "Not Submitted"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="text-[10px] text-gray-400 dark:text-zinc-400 text-center italic pt-2">
-              Note: This is an official system-generated student compliance summary from the PUPSJ Records Keeping System for institutional verification. Alteration or unauthorized reproduction is strictly prohibited.
-            </div>
-          </div>
-
-          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5 shrink-0 print:hidden">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPrintModalOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Close
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleDownloadPdf}
-              disabled={downloadingPdf}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-            >
-              {downloadingPdf ? (
-                <span className="flex items-center gap-1.5">
-                  <HugeIcon className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
-                  Generating...
-                </span>
-              ) : (
-                "Download PDF Slip"
-              )}
-            </Button>
-            <Button
-              type="button"
-              onClick={handlePrintSlip}
-              className="h-10 px-5 border-0 cursor-pointer"
-            >
-              Print Slip
-            </Button>
-          </DialogFooter>
-
-          {/* Scoped Print Media Styles for Native / Ctrl+P Printing */}
-          <style jsx global>{`
-            @media print {
-              @page {
-                size: A4 portrait;
-                margin: 12mm 15mm 12mm 15mm;
-              }
-              html,
-              body {
-                height: auto !important;
-                min-height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: visible !important;
-                background: #ffffff !important;
-                color: #111827 !important;
-              }
-              body > *:not([data-slot="dialog-portal"]) {
-                display: none !important;
-              }
-              [data-slot="dialog-overlay"],
-              [data-slot="dialog-portal"] > div:first-child {
-                display: none !important;
-              }
-              [data-slot="dialog-portal"] > div {
-                position: static !important;
-                display: block !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                height: auto !important;
-              }
-              [data-slot="dialog-content"] {
-                position: static !important;
-                display: block !important;
-                width: 100% !important;
-                max-width: none !important;
-                max-height: none !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow: visible !important;
-              }
-              #compliance-printable-slip {
-                position: static !important;
-                display: block !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: visible !important;
-              }
-            }
-          `}</style>
-        </DialogContent>
-      </Dialog>
+      {printModalOpen && (
+        <ComplianceSlipPreview
+          student={student}
+          requirements={sortedRequirements}
+          summary={summary}
+          branding={branding}
+          onClose={() => setPrintModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,10 +1,12 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useEffect, useRef, useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
 import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
+import { Door01Icon } from "hugeicons-react";
+
 const getEffectiveRect = (c) => {
   const rot = Number(c?.rotation) === 90 ? 90 : 0
   if (rot !== 90) return c.rect
@@ -261,7 +263,7 @@ export default function RoomMap2D({
             roomDoor?.rotation === 90 && "-rotate-90", 
             roomDoor?.rotation === 270 && "rotate-90"  
           )}>
-            <HugeIcon  className="ph-fill ph-door text-xs" />
+            <Door01Icon size="1em"  className="text-xs" />
             ENTRANCE
           </span>
         </div>

@@ -2,7 +2,6 @@
 import useCreateAnother from "@/hooks/useCreateAnother"
 
 import useUrlPage from "@/hooks/useUrlPage";
-import HugeIcon from "@/components/shared/HugeIcon";
 import {
   useEffect,
   useMemo,
@@ -78,6 +77,7 @@ function AdminDashboardLoadingSkeleton() {
 }
 import { registerOffices } from "@/lib/roleUtils"
 
+import AppIcon from "@/components/ui/app-icon";
 const AdminTabLoading = () => <AdminTabSkeleton />
 const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: () => <StaffDirectorySkeleton /> })
 const AuditLogsTab = dynamic(() => import("@/components/admin/AuditLogsTab"), { loading: () => <AuditLogsSkeleton /> })
@@ -313,13 +313,13 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           {
             key: "review",
             label: "Records Review",
-            iconClass: "ph-bold ph-seal-check",
+            iconClass: " CheckmarkBadge01Icon",
             badge: pendingReviewCount,
           },
           {
             key: "digitization",
             label: "Compliance Analytics",
-            iconClass: "ph-bold ph-chart-bar",
+            iconClass: " Analytics01Icon",
           },
         ]
       },
@@ -330,12 +330,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           {
             key: "request_analytics",
             label: "SLA Analytics",
-            iconClass: "ph-bold ph-trend-up",
+            iconClass: " Analytics01Icon",
           },
           {
             key: "storage_layout",
             label: "Storage Room Layout",
-            iconClass: "ph-bold ph-warehouse",
+            iconClass: " WarehouseIcon",
           },
         ]
       },
@@ -346,12 +346,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           {
             key: "directory",
             label: "Staff Directory",
-            iconClass: "ph-bold ph-users",
+            iconClass: " UserSearch01Icon",
           },
           {
             key: "logs",
             label: "Activity History",
-            iconClass: "ph-bold ph-history",
+            iconClass: " Time01Icon",
           },
         ]
       },
@@ -362,12 +362,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           {
             key: "system_data",
             label: "System Configuration",
-            iconClass: "ph-bold ph-gear",
+            iconClass: " Settings01Icon",
           },
           {
             key: "system",
             label: "Backup & Recovery",
-            iconClass: "ph-bold ph-cloud-arrow-up",
+            iconClass: " CloudUploadIcon",
           },
         ]
       }
@@ -1922,7 +1922,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                     color: "var(--brand-accent)"
                   } : undefined}
                 >
-                  <HugeIcon  className={cn(item.iconClass, "text-sm")}></HugeIcon>
+                  <AppIcon  className={cn(item.iconClass, "text-sm")}></AppIcon>
                   {item.label}
                   {item.badge > 0 && (
                     <span 
@@ -2214,8 +2214,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         message="This account will be restricted immediately but can be restored later."
         confirmLabel="Archive Personnel"
         variant="warning"
-        icon="ph-duotone ph-archive"
-        buttonIcon="ph-bold ph-archive"
+        icon=" Archive01Icon"
+        buttonIcon=" Archive01Icon"
         selectedItems={[
           deleteTarget ? `${deleteTarget.fname} ${deleteTarget.lname}` : "",
         ]}
@@ -2295,7 +2295,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         }}
         variant="danger"
         confirmLabel="Decline Record"
-        buttonIcon="ph-bold ph-x"
+        buttonIcon=" Cancel01Icon"
         inputLabel="Reason"
         placeholder="e.g., Image is too blurry, incorrect document type..."
         multiline
@@ -2314,7 +2314,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         value={bulkDeclineReason}
         onChange={setBulkDeclineReason}
         variant="danger"
-        buttonIcon="ph-bold ph-x"
+        buttonIcon=" Cancel01Icon"
         inputLabel="Common Rejection Reason"
         placeholder="Reason for bulk rejection (applied to all selected)..."
         onConfirm={submitBulkDecline}
@@ -2328,8 +2328,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         message={`${selectedStaffIds.size} personnel profiles will be archived and their system access revoked immediately.`}
         confirmLabel="Archive Selected Personnel"
         variant="warning"
-        icon="ph-duotone ph-archive"
-        buttonIcon="ph-bold ph-archive"
+        icon=" Archive01Icon"
+        buttonIcon=" Archive01Icon"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
           const s = staffData.find((x) => x.id === id)
           return s ? `${s.fname} ${s.lname}` : id

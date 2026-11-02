@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
+import { Cancel01Icon, StarIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const RATING_LABELS = {
   1: "Poor",
   2: "Fair",
@@ -66,7 +67,7 @@ export default function StudentSidebarFeedbackCard({
           aria-label={`Rate Request #${targetRequest.id}`}
           className="relative flex h-[38px] w-[38px] mx-auto items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition-all cursor-pointer shadow-2xs group"
         >
-          <HugeIcon className="ph-fill ph-star text-[19px] text-amber-500 transition-transform group-hover:scale-110" />
+          <StarIcon size="1em" className="text-[19px] text-amber-500 transition-transform group-hover:scale-110" />
           <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 ring-2 ring-white dark:ring-zinc-950" />
@@ -80,15 +81,15 @@ export default function StudentSidebarFeedbackCard({
   return (
     <div className="relative mx-1 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 shadow-xs backdrop-blur-xs transition-all dark:border-border dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
       {/* Decorative background watermark */}
-      <HugeIcon
-        className="ph-fill ph-star pointer-events-none absolute -bottom-4 -right-3 text-7xl text-amber-500/10 dark:text-amber-400/5 select-none"
+      <StarIcon size={16}
+        className="pointer-events-none absolute -bottom-4 -right-3 text-7xl text-amber-500/10 dark:text-amber-400/5 select-none"
         aria-hidden="true"
       />
 
       {/* Top Header Row: Category Badge + Dismiss Button */}
       <div className="flex items-center justify-between gap-1 mb-2">
         <span className="inline-flex items-center gap-1 rounded-full bg-red-100/80 px-2.5 py-0.5 text-[10px] font-semibold text-pup-maroon dark:bg-red-950/60 dark:text-red-300 dark:border dark:border-red-900/40">
-          <HugeIcon className="ph-fill ph-chat-circle-dots text-[11px]" />
+          <AppIcon className=" BubbleChatIcon text-[11px]" />
           Feedback
         </span>
         <button
@@ -98,7 +99,7 @@ export default function StudentSidebarFeedbackCard({
           title="Dismiss reminder"
           className="flex h-6 w-6 items-center justify-center rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/10 dark:hover:text-zinc-200 transition-colors cursor-pointer active:scale-90"
         >
-          <HugeIcon className="ph-bold ph-x text-[13px]" />
+          <Cancel01Icon size="1em" className="text-[13px]" />
         </button>
       </div>
 

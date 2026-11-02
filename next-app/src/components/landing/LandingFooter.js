@@ -1,8 +1,10 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { ArrowUp01Icon, LinkSquare01Icon, Location01Icon } from "hugeicons-react";
+
 
 const DEFAULT_FOOTER = {
   brandName: "eManage",
@@ -111,7 +113,7 @@ export default function LandingFooter() {
             
             <div className="pt-6 border-t border-white/5">
               <div className="font-bold text-zinc-200 flex items-center gap-2 mb-2 text-sm">
-                <HugeIcon className="ph-bold ph-map-pin text-red-400" />
+                <Location01Icon size={16} className="text-red-400" />
                 <span>{footerData.locationHall}</span>
               </div>
               <p className="text-zinc-500 leading-relaxed text-[12px] pl-6 mb-5">
@@ -136,7 +138,7 @@ export default function LandingFooter() {
                     className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-black p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-xl flex items-center justify-center cursor-pointer"
                     title="Open in Google Maps"
                   >
-                    <HugeIcon className="ph-bold ph-arrow-square-out text-[15px]" />
+                    <LinkSquare01Icon size="1em" className="text-[15px]" />
                   </a>
                 </div>
               )}
@@ -186,7 +188,7 @@ export default function LandingFooter() {
               <span className="text-[11px] font-sans tabular-nums text-zinc-500">{footerData.copyrightText}</span>
               <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} title="Scroll to Top" className="text-[11px] font-sans tabular-nums font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition-colors group">
                 Top
-                <HugeIcon className="ph-bold ph-arrow-up text-[10px] group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUp01Icon size="1em" className="text-[10px] group-hover:-translate-y-0.5 transition-transform" />
               </button>
             </div>
           </div>

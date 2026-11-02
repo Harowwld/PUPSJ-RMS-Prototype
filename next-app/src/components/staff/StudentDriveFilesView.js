@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import GoogleDrivePdfCard from "./GoogleDrivePdfCard";
@@ -14,10 +14,11 @@ import {
   EmptyContent,
 } from "@/components/ui/empty";
 import { cn, formatTitleCase } from "@/lib/utils";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { motion } from "framer-motion";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
-import { Files01Icon as EmptyFiles01Icon } from "hugeicons-react";
+import { Files01Icon as EmptyFiles01Icon , Location01Icon} from "hugeicons-react";
 
 export default function StudentDriveFilesView({
   student,
@@ -148,7 +149,7 @@ export default function StudentDriveFilesView({
         <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto justify-between lg:justify-end pt-2 lg:pt-0 border-t lg:border-t-0 border-border/60">
           {/* Physical Storage Coordinates Badge */}
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-100/90 dark:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 text-xs font-semibold text-gray-800 dark:text-zinc-200 select-none">
-            <HugeIcon className="ph-bold ph-map-pin text-pup-maroon dark:text-red-400 text-sm" />
+            <Location01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
             <span>
               Room {student.room} • Cabinet {student.cabinet} • Drawer {student.drawer}
             </span>
@@ -187,13 +188,14 @@ export default function StudentDriveFilesView({
             </Tooltip>
           )}
 
-          {/* View Mode Toggle: Grid vs List (Integrated into top header) */}
+          {/* View Mode Toggle: Cards vs List (Integrated into top header) */}
           <div className="flex items-center gap-1 bg-gray-100/90 dark:bg-zinc-800/80 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
+                  aria-pressed={viewMode === "grid"}
                   className={cn(
                     "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                     viewMode === "grid"
@@ -202,7 +204,7 @@ export default function StudentDriveFilesView({
                   )}
                   aria-label="Show files as cards"
                 >
-                  <HugeIcon className="ph-bold ph-squares-four text-sm" />
+                  <ViewModeIcon mode="cards" className="text-sm" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>Show files as cards</TooltipContent>
@@ -213,6 +215,7 @@ export default function StudentDriveFilesView({
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
+                  aria-pressed={viewMode === "list"}
                   className={cn(
                     "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                     viewMode === "list"
@@ -221,7 +224,7 @@ export default function StudentDriveFilesView({
                   )}
                   aria-label="Show files as separate rows"
                 >
-                  <HugeIcon className="ph-bold ph-list-dashes text-sm" />
+                  <ViewModeIcon mode="list" className="text-sm" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>Show files as separate rows</TooltipContent>

@@ -102,7 +102,7 @@ export async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
       "This link expires in 15 minutes and can be used once. Do not share it.",
       "If you did not request this reset, you can ignore this email. Your password has not changed.",
     ].join("\n"),
-    html: `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
+    html: `<!doctype html><html><body style="font-family:'Plus Jakarta Sans',sans-serif;color:#1f2937;line-height:1.5">
       <p>Hello ${escapeHtml(name)},</p>
       <p>Choose a new password for your eManage account.</p>
       <p><a href="${escapeHtml(resetUrl)}" style="display:inline-block;padding:12px 24px;background:#800000;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">Reset Password</a></p>
@@ -163,7 +163,7 @@ export async function sendAccountCredentialsEmail({
     "",
     securityText,
   ].join("\n");
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
+  const html = `<!doctype html><html><body style="font-family:'Plus Jakarta Sans',sans-serif;color:#1f2937;line-height:1.5">
     <p>Hello ${escapeHtml(name)},</p>
     <p>Your ${escapeHtml(type)} has been created. Use this account information to sign in:</p>
     ${requiresActivation ? "<p>An administrator must activate this account before you can sign in.</p>" : ""}

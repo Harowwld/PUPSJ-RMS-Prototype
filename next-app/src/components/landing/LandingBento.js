@@ -1,6 +1,8 @@
 "use client";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { motion } from "framer-motion";
+import { Agreement01Icon, Archive01Icon, CalendarCheckIn01Icon, File02Icon, LaptopIcon, Notification02Icon, SentIcon, Shield01Icon, Target01Icon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
+
 
 const BENTO_CONTENT = {
   eyebrow: "Student & Alumni Services",
@@ -124,7 +126,7 @@ export default function LandingBento() {
               {/* Full-Card Success Overlay */}
               <div className="absolute inset-0 bg-emerald-500/85 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-white opacity-0 pointer-events-none" style={{ animation: 'submitOverlay 6s infinite 0s' }}>
                 <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center mb-3">
-                  <HugeIcon  className="ph-bold ph-check text-2xl drop-shadow-sm" />
+                  <Tick01Icon size="1em"  className="text-2xl drop-shadow-sm" />
                 </div>
                 <span className="font-bold text-sm tracking-wide drop-shadow-sm">{bento.card1?.successLabel || "Submitted!"}</span>
               </div>
@@ -139,21 +141,21 @@ export default function LandingBento() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-4 group/step">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract1 6s infinite 0s, step1GreenCircle 6s infinite 0s' }}>
-                    <HugeIcon  className="ph-bold ph-file-text text-base" />
+                    <File02Icon size="1em"  className="text-base" />
                   </div>
                   <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step1GreenText 6s infinite 0s' }}>{bento.card1?.step1Label || "Select Document"}</span>
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4 group/step">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-zinc-400 group-hover/step:text-[#800000] transition-all border border-black/5 shrink-0" style={{ animation: 'objInteract2 6s infinite 0s, step2GreenCircle 6s infinite 0s' }}>
-                    <HugeIcon  className="ph-bold ph-target text-base" />
+                    <Target01Icon size="1em"  className="text-base" />
                   </div>
                   <span className="text-xs font-semibold text-zinc-600 transition-colors" style={{ animation: 'step2GreenText 6s infinite 0s' }}>{bento.card1?.step2Label || "Specify Purpose"}</span>
                 </div>
                 {/* Step 3 */}
                 <button className="relative px-5 py-2.5 rounded-full text-xs font-bold flex items-center justify-center gap-2 w-[120px] transition-all mx-auto" style={{ animation: 'objInteract3 6s infinite 0s, submitButtonEnable 6s infinite 0s' }}>
                   {bento.card1?.buttonLabel || "Submit"}
-                  <HugeIcon  className="ph-bold ph-paper-plane-right text-base" />
+                  <SentIcon size="1em"  className="text-base" />
                 </button>
               </div>
             </div>
@@ -189,7 +191,7 @@ export default function LandingBento() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 1s' }}>
-                    <HugeIcon  className="ph-bold ph-calendar-check text-base" />
+                    <CalendarCheckIn01Icon size="1em"  className="text-base" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-zinc-900">{bento.card2?.step1Title || "Clear Schedule"}</span>
@@ -199,7 +201,7 @@ export default function LandingBento() {
                 {/* Step 2 */}
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 1s' }}>
-                    <HugeIcon  className="ph-bold ph-bell-ringing text-base" />
+                    <Notification02Icon size="1em"  className="text-base" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-zinc-900">{bento.card2?.step2Title || "Live Notifications"}</span>
@@ -209,7 +211,7 @@ export default function LandingBento() {
                 {/* Step 3 */}
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 1s' }}>
-                    <HugeIcon  className="ph-bold ph-handshake text-base" />
+                    <Agreement01Icon size="1em"  className="text-base" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-[#800000]">{bento.card2?.step3Title || "Visit Counter"}</span>
@@ -257,7 +259,7 @@ export default function LandingBento() {
                  {/* Online Request */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract1 6s infinite 2s' }}>
-                     <HugeIcon  className="ph-bold ph-laptop text-lg" />
+                     <LaptopIcon size="1em"  className="text-lg" />
                    </div>
                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{bento.card3?.step1Label || "Request"}</span>
                  </div>
@@ -270,7 +272,7 @@ export default function LandingBento() {
                  {/* Archives Node */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative transition-all" style={{ animation: 'objInteract3 6s infinite 2s, room1CircleReveal 6s infinite 2s' }}>
-                     <HugeIcon  className="ph-bold ph-archive text-xl relative z-10" />
+                     <Archive01Icon size="1em"  className="text-xl relative z-10" />
                    </div>
                    <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>{bento.card3?.step2Label || "Archives"}</span>
                  </div>
@@ -283,7 +285,7 @@ export default function LandingBento() {
                  {/* Staff */}
                  <div className="flex flex-col items-center gap-2">
                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract2 6s infinite 2s' }}>
-                     <HugeIcon  className="ph-bold ph-users text-lg" />
+                     <UserSearch01Icon size="1em"  className="text-lg" />
                    </div>
                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{bento.card3?.step3Label || "Staff"}</span>
                  </div>
@@ -318,21 +320,21 @@ export default function LandingBento() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 3s' }}>
-                    <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 3s' }} />
+                    <Tick01Icon size="1em"  className="text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">{bento.card4?.item1 || "Student Number"}</span>
                 </div>
                 {/* Step 2 */}
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 3s' }}>
-                    <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 3s' }} />
+                    <Tick01Icon size="1em"  className="text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">{bento.card4?.item2 || "Active Email"}</span>
                 </div>
                 {/* Step 3 */}
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 3s' }}>
-                    <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 3s' }} />
+                    <Tick01Icon size="1em"  className="text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 3s' }} />
                   </div>
                   <span className="text-xs font-semibold text-zinc-900">{bento.card4?.item3 || "Campus Clearance"}</span>
                 </div>
@@ -363,7 +365,7 @@ export default function LandingBento() {
             {/* Simulated UI Area: Flow Diagram */}
             <div className="rounded-2xl bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
               <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center text-[#800000] border border-black/5 shrink-0 relative">
-                 <HugeIcon  className="ph-bold ph-shield-check text-3xl" />
+                 <Shield01Icon size="1em"  className="text-3xl" />
                  <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{bento.card5?.badgeLabel || "RA 10173"}</span>
               </div>
               
@@ -371,19 +373,19 @@ export default function LandingBento() {
                  <CursorOverlay animationName="cursorCard5" delay="4s" />
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract1 6s infinite 4s' }}>
-                     <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
+                     <Tick01Icon size="1em"  className="text-[14px] opacity-0" style={{ animation: 'checkReveal1 6s infinite 4s' }} />
                    </div>
                    <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item1 || "Data Privacy Protected"}</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract2 6s infinite 4s' }}>
-                     <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
+                     <Tick01Icon size="1em"  className="text-[14px] opacity-0" style={{ animation: 'checkReveal2 6s infinite 4s' }} />
                    </div>
                    <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item2 || "Staff Activity History"}</span>
                  </div>
                  <div className="flex items-center gap-4">
                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0 transition-all" style={{ animation: 'objInteract3 6s infinite 4s' }}>
-                     <HugeIcon  className="ph-bold ph-check text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 4s' }} />
+                     <Tick01Icon size="1em"  className="text-[14px] opacity-0" style={{ animation: 'checkReveal3 6s infinite 4s' }} />
                    </div>
                    <span className="text-xs font-semibold text-zinc-700">{bento.card5?.item3 || "Transparent Tracking"}</span>
                  </div>

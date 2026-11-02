@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import React, { memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card"
 import { toPct, fromPct } from "@/lib/storageLayoutUtils"
 import { EmptyState } from "@/components/ui/empty"
-import { Cursor01Icon, Clock01Icon } from "hugeicons-react"
+import { Cursor01Icon, Clock01Icon , ArrowLeft01Icon, ArrowRight01Icon, PencilEdit01Icon} from "hugeicons-react"
 
 const CabinetSidebar = memo(({
   carouselIndex = 0,
@@ -57,7 +57,7 @@ const CabinetSidebar = memo(({
                 className="w-5 h-5 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 transition-colors cursor-pointer flex items-center justify-center active:scale-95"
                 title="Rename Cabinet"
               >
-                <HugeIcon className="ph-bold ph-pencil-simple text-xs" />
+                <PencilEdit01Icon size="1em" className="text-xs" />
               </button>
             )}
           </div>
@@ -112,7 +112,7 @@ const CabinetSidebar = memo(({
                       onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
                       className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-r border-border dark:border-border"
                     >
-                      <HugeIcon  className="ph-bold ph-caret-left text-xs" />
+                      <ArrowLeft01Icon size="1em"  className="text-xs" />
                     </button>
 
                     <div className="flex-1 text-center text-xs font-medium text-gray-900 dark:text-zinc-50 select-none">
@@ -125,7 +125,7 @@ const CabinetSidebar = memo(({
                       onClick={() => setCarouselIndex(prev => Math.min(selectedCabinetIds.size - 1, prev + 1))}
                       className="px-3 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-l border-border dark:border-border"
                     >
-                      <HugeIcon  className="ph-bold ph-caret-right text-xs" />
+                      <ArrowRight01Icon size="1em"  className="text-xs" />
                     </button>
                   </div>
                 )}

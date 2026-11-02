@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,8 @@ import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import { Alert01Icon, Alert02Icon, Archive01Icon, CancelCircleIcon, CheckmarkCircle01Icon, CloudUploadIcon, Loading01Icon, Search01Icon } from "hugeicons-react";
+
 
 export default function BulkImportStudentsModal({
   open,
@@ -504,7 +506,7 @@ export default function BulkImportStudentsModal({
               }}
             >
               <div className="w-16 h-16 rounded-2xl bg-pup-maroon/10 dark:bg-red-950/40 border border-pup-maroon/20 flex items-center justify-center text-pup-maroon dark:text-red-400 mb-4">
-                <HugeIcon className="ph-bold ph-cloud-arrow-up text-3xl" />
+                <CloudUploadIcon size="1em" className="text-3xl" />
               </div>
               <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Choose a CSV file or drag & drop here
@@ -578,7 +580,7 @@ export default function BulkImportStudentsModal({
 
               <div className="flex items-center gap-3">
                 <div className="relative w-56 sm:w-64">
-                  <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                  <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                   <Input
                     type="text"
                     value={localCsvSearch}
@@ -611,7 +613,7 @@ export default function BulkImportStudentsModal({
             {/* Bulk Location Assignment Sub-bar */}
             <div className="px-6 py-3 bg-gray-50/70 dark:bg-zinc-900/40 border-b border-border flex flex-wrap items-center justify-between gap-4 shrink-0">
               <div className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-zinc-300">
-                <HugeIcon className="ph-bold ph-archive text-pup-maroon dark:text-red-400 text-sm" />
+                <Archive01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                 <span>Bulk Assign Location to Selected ({selectedCount}):</span>
               </div>
 
@@ -814,18 +816,18 @@ export default function BulkImportStudentsModal({
                         </td>
                         <td className="p-3 pr-5 text-right align-middle">
                           {r.error ? (
-                            <HugeIcon
-                              className="ph-bold ph-x-circle text-red-500 text-base inline-block"
+                            <CancelCircleIcon size="1em"
+                              className="text-red-500 text-base inline-block"
                               title={`Error: ${r.error}`}
                             />
                           ) : !isValid ? (
-                            <HugeIcon
-                              className="ph-bold ph-warning-circle text-amber-500 text-base inline-block"
+                            <Alert01Icon size="1em"
+                              className="text-amber-500 text-base inline-block"
                               title="Invalid storage location. Please update room, cabinet, or drawer."
                             />
                           ) : (
-                            <HugeIcon
-                              className="ph-bold ph-check-circle text-emerald-500 text-base inline-block"
+                            <CheckmarkCircle01Icon size="1em"
+                              className="text-emerald-500 text-base inline-block"
                               title="Valid storage location"
                             />
                           )}
@@ -879,7 +881,7 @@ export default function BulkImportStudentsModal({
         <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5 shrink-0">
           {hasInvalidSelected && (
             <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5 mr-auto">
-              <HugeIcon className="ph-bold ph-warning text-sm shrink-0" />
+              <Alert02Icon size="1em" className="text-sm shrink-0" />
               <span>One or more selected rows have invalid storage locations.</span>
             </p>
           )}
@@ -902,7 +904,7 @@ export default function BulkImportStudentsModal({
           >
             {csvLoading ? (
               <span className="flex items-center gap-2">
-                <HugeIcon className="ph-bold ph-spinner animate-spin text-sm" />
+                <Loading01Icon size="1em" className="animate-spin text-sm" />
                 <span>Importing...</span>
               </span>
             ) : (

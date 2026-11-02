@@ -1,12 +1,14 @@
 "use client";
 
+import SheetPagination from "@/components/shared/SheetPagination";
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import PDFPreview from "@/components/shared/PDFPreview";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Button } from "@/components/ui/button";
@@ -48,8 +50,8 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon } from "hugeicons-react";
-
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Clock01Icon, Copy01Icon, CovidInfoIcon, DragDropIcon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, UserMinus01Icon, UserSearch01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const CATEGORIES = ["All", "Academic", "Non-Academic"];
 
 function getOfficerRoleStyle(position = "") {
@@ -66,7 +68,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-indigo-800 via-indigo-600 to-blue-600 text-white",
       ring: "ring-indigo-500/30 dark:ring-indigo-400/30",
       badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/50",
-      icon: "ph-bold ph-shield-check",
+      icon: " Shield01Icon",
     };
   }
   if (pos.includes("secretary")) {
@@ -74,7 +76,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-emerald-800 via-emerald-600 to-teal-600 text-white",
       ring: "ring-emerald-500/30 dark:ring-emerald-400/30",
       badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
-      icon: "ph-bold ph-notepad",
+      icon: " Notebook01Icon",
     };
   }
   if (pos.includes("treasurer") || pos.includes("finance")) {
@@ -82,7 +84,7 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-amber-700 via-amber-600 to-yellow-600 text-white",
       ring: "ring-amber-500/30 dark:ring-amber-400/30",
       badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
-      icon: "ph-bold ph-coins",
+      icon: " Coins01Icon",
     };
   }
   if (pos.includes("auditor")) {
@@ -90,14 +92,14 @@ function getOfficerRoleStyle(position = "") {
       gradient: "from-purple-800 via-purple-600 to-violet-600 text-white",
       ring: "ring-purple-500/30 dark:ring-purple-400/30",
       badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/50",
-      icon: "ph-bold ph-scales",
+      icon: " JusticeScale01Icon",
     };
   }
   return {
     gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
     ring: "ring-gray-300/30 dark:ring-white/10",
     badge: "bg-gray-100 text-gray-700 border-border dark:bg-zinc-800 dark:text-zinc-300 dark:border-border",
-    icon: "ph-bold ph-user-check",
+    icon: " UserCheck01Icon",
   };
 }
 
@@ -122,7 +124,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -137,13 +139,13 @@ function InfoRow({ icon, label, value, children, className }) {
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
-      <HugeIcon className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
     );
   }
   return sortOrder === "asc" ? (
-    <HugeIcon className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-pup-maroon dark:text-primary" />
   ) : (
-    <HugeIcon className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-pup-maroon dark:text-primary" />
   );
 }
 
@@ -800,7 +802,7 @@ export default function OSASOrganizationComplianceView({
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
-            icon="ph-chart-bar"
+            icon="Analytics01Icon"
             title="Student Organization Compliance"
             description="Accreditation standing, Constitution & By-Laws (CBL) archival, and officer leadership compliance."
             showBorder={false}
@@ -825,7 +827,7 @@ export default function OSASOrganizationComplianceView({
                   className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isExportingCsv ? (
-                    <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px]" />
+                    <Loading01Icon size="1em" className="animate-spin text-[16px]" />
                   ) : (
                     "Export CSV"
                   )}
@@ -839,7 +841,7 @@ export default function OSASOrganizationComplianceView({
                   className="h-10 px-5 cursor-pointer"
                 >
                   {isGeneratingPdf ? (
-                    <HugeIcon className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center" />
+                    <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
                   ) : (
                     "Export PDF Report"
                   )}
@@ -895,7 +897,7 @@ export default function OSASOrganizationComplianceView({
                                   </span>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <HugeIcon className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                      <CovidInfoIcon size="1em" className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                                     </TooltipTrigger>
                                     <TooltipContent
                                       side="right"
@@ -912,7 +914,7 @@ export default function OSASOrganizationComplianceView({
                                   </Tooltip>
                                 </div>
                                 <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                                  <HugeIcon className="ph-bold text-[15px] ph-seal-check" />
+                                  <CheckmarkBadge01Icon size="1em" className="text-[15px]" />
                                 </div>
                               </div>
                               <div className="flex justify-between items-end p-4 pt-1">
@@ -929,7 +931,7 @@ export default function OSASOrganizationComplianceView({
                                     )}
                                   </span>
                                 </div>
-                                <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                                <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                               </div>
                             </div>
 
@@ -1005,7 +1007,7 @@ export default function OSASOrganizationComplianceView({
                                   </span>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <HugeIcon className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                      <CovidInfoIcon size="1em" className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                                     </TooltipTrigger>
                                     <TooltipContent
                                       side="right"
@@ -1019,7 +1021,7 @@ export default function OSASOrganizationComplianceView({
                                   </Tooltip>
                                 </div>
                                 <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                                  <HugeIcon className="ph-bold text-[15px] ph-buildings" />
+                                  <Building01Icon size="1em" className="text-[15px]" />
                                 </div>
                               </div>
                               <div className="flex justify-between items-end p-4 pt-1">
@@ -1036,7 +1038,7 @@ export default function OSASOrganizationComplianceView({
                                     )}
                                   </span>
                                 </div>
-                                <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                                <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                               </div>
                             </div>
 
@@ -1115,7 +1117,7 @@ export default function OSASOrganizationComplianceView({
                                   </span>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <HugeIcon className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
+                                      <CovidInfoIcon size="1em" className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
                                     </TooltipTrigger>
                                     <TooltipContent
                                       side="right"
@@ -1132,7 +1134,7 @@ export default function OSASOrganizationComplianceView({
                                   </Tooltip>
                                 </div>
                                 <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
-                                  <HugeIcon className="ph-bold text-[15px] ph-file-pdf" />
+                                  <File02Icon size="1em" className="text-[15px]" />
                                 </div>
                               </div>
                               <div className="flex justify-between items-end p-4 pt-1">
@@ -1149,7 +1151,7 @@ export default function OSASOrganizationComplianceView({
                                     )}
                                   </span>
                                 </div>
-                                <HugeIcon className="ph-bold ph-dots-six-vertical cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
+                                <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                               </div>
                             </div>
 
@@ -1226,7 +1228,7 @@ export default function OSASOrganizationComplianceView({
               {/* Search Bar with live count badge */}
               <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
                   value={search}
@@ -1303,7 +1305,7 @@ export default function OSASOrganizationComplianceView({
                                   className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
                                   aria-label="Reset scroll to start"
                                 >
-                                  <HugeIcon className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                                  <ReloadIcon size="1em" className="text-xs" />
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
@@ -1436,7 +1438,7 @@ export default function OSASOrganizationComplianceView({
                               </div>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-100/70 dark:bg-zinc-800/60 dark:text-zinc-400 rounded-lg border border-border/60 dark:border-border">
-                                <HugeIcon className="ph-bold ph-user-minus text-[11px] text-gray-400 dark:text-zinc-500" />
+                                <UserMinus01Icon size="1em" className="text-[11px] text-gray-400 dark:text-zinc-500" />
                                 <span>Unassigned</span>
                               </span>
                             )}
@@ -1457,12 +1459,12 @@ export default function OSASOrganizationComplianceView({
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
                                 title="Preview Official CBL"
                               >
-                                <HugeIcon className="ph-bold ph-file-pdf text-xs text-emerald-600 dark:text-emerald-400" />
+                                <File02Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
                                 <span>Archived PDF</span>
                               </button>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
-                                <HugeIcon className="ph-bold ph-clock text-xs text-amber-600 dark:text-amber-400" />
+                                <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
                                 <span>Pending PDF</span>
                               </span>
                             )}
@@ -1480,7 +1482,7 @@ export default function OSASOrganizationComplianceView({
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
                                 title="View authorized officers"
                               >
-                                <HugeIcon className="ph-bold ph-users-three text-xs text-blue-600 dark:text-blue-400" />
+                                <UserSearch01Icon size="1em" className="text-xs text-blue-600 dark:text-blue-400" />
                                 <span>
                                   {org.activeOfficerCount} {org.activeOfficerCount === 1 ? "Officer" : "Officers"}
                                 </span>
@@ -1655,9 +1657,8 @@ export default function OSASOrganizationComplianceView({
             showCloseButton={false}
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
           >
-            {/* TOP HEADER: Organization Leadership Roster + < > 01 of XX + X button */}
             <SheetHeader className="shrink-0 p-0">
-              <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle>
                     Organization Leadership Roster
@@ -1667,33 +1668,20 @@ export default function OSASOrganizationComplianceView({
                   </SheetDescription>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="ml-auto flex items-center gap-3">
                   {sortedOrganizations.length > 1 && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                      <button
-                        type="button"
-                        disabled={currentOrgIndex <= 0}
-                        onClick={handlePrevOrg}
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                        aria-label="Previous Organization"
-                        title="Previous Organization"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={currentOrgIndex >= sortedOrganizations.length - 1}
-                        onClick={handleNextOrg}
-                        className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                        aria-label="Next Organization"
-                        title="Next Organization"
-                      >
-                        <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                      </button>
-                      <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                        {String(Math.max(1, currentOrgIndex + 1)).padStart(2, "0")} of {String(sortedOrganizations.length).padStart(2, "0")}
-                      </span>
-                    </div>
+                    <SheetPagination
+                      compact
+                      label="Record navigation"
+                      page={Math.max(1, currentOrgIndex + 1)}
+                      totalPages={sortedOrganizations.length}
+                      onPrevious={handlePrevOrg}
+                      onNext={handleNextOrg}
+                      previousDisabled={currentOrgIndex <= 0}
+                      nextDisabled={currentOrgIndex >= sortedOrganizations.length - 1}
+                      previousLabel="Previous Organization"
+                      nextLabel="Next Organization"
+                    />
                   )}
 
                   <button
@@ -1706,7 +1694,7 @@ export default function OSASOrganizationComplianceView({
                     aria-label="Close"
                     title="Close"
                   >
-                    <HugeIcon className="ph-bold ph-x text-sm" />
+                    <Cancel01Icon size="1em" className="text-sm" />
                   </button>
                 </div>
               </div>
@@ -1724,14 +1712,14 @@ export default function OSASOrganizationComplianceView({
                     : "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
                 )}
               >
-                <HugeIcon
+                <AppIcon
                   className={cn(
-                    "ph-bold text-[15px] shrink-0",
+                    " text-[15px] shrink-0",
                     selectedOrgForOfficers?.status === "Active"
-                      ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                      ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                       : selectedOrgForOfficers?.status === "Inactive"
-                      ? "ph-warning-circle text-amber-600 dark:text-amber-400"
-                      : "ph-archive text-rose-600 dark:text-rose-400"
+                      ? "Alert01Icon text-amber-600 dark:text-amber-400"
+                      : "Archive01Icon text-rose-600 dark:text-rose-400"
                   )}
                 />
                 <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -1756,7 +1744,7 @@ export default function OSASOrganizationComplianceView({
               {/* Summary Strip */}
               <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
                 <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 flex items-center justify-center text-xl shrink-0 font-bold border border-blue-500/20 dark:border-blue-800/40 mt-0.5">
-                  <HugeIcon className="ph-bold ph-shield-check" />
+                  <Shield01Icon size={16}  />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1788,9 +1776,9 @@ export default function OSASOrganizationComplianceView({
                   Organization Standing
                 </h4>
                 <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                  <InfoRow icon="ph-tag" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
+                  <InfoRow icon="Tag01Icon" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
 
-                  <InfoRow icon="ph-chalkboard-teacher" label="Faculty Adviser">
+                  <InfoRow icon="TeacherIcon" label="Faculty Adviser">
                     <span>
                       {selectedOrgForOfficers?.adviserName || "Unassigned"}
                       {selectedOrgForOfficers?.adviserEmail && (
@@ -1800,12 +1788,12 @@ export default function OSASOrganizationComplianceView({
                   </InfoRow>
 
                   <InfoRow
-                    icon="ph-shield-check"
+                    icon="Shield01Icon"
                     label="Accredited Officers"
                     value={`${selectedOrgForOfficers?.activeOfficerCount || 0} Authorized ${selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}`}
                   />
 
-                  <InfoRow icon="ph-chart-pie-slice" label="Accreditation Status">
+                  <InfoRow icon="PieChartIcon" label="Accreditation Status">
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       {selectedOrgForOfficers?.status || "Active"}
@@ -1828,7 +1816,7 @@ export default function OSASOrganizationComplianceView({
                 {/* In-Sheet Search Filter */}
                 {selectedOrgForOfficers?.officers && selectedOrgForOfficers.officers.length > 2 && (
                   <div className="relative">
-                    <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                    <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                     <Input
                       value={officerSearch}
                       onChange={(e) => setOfficerSearch(e.target.value)}
@@ -1937,9 +1925,9 @@ export default function OSASOrganizationComplianceView({
                                   className="group/btn inline-flex items-center gap-1 font-sans tabular-nums text-[10px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                                   title="Click to copy email"
                                 >
-                                  <HugeIcon className="ph-bold ph-envelope-simple text-[11px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
+                                  <Mail01Icon size="1em" className="text-[11px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
                                   <span className="truncate max-w-[160px]">{officer.email}</span>
-                                  <HugeIcon className="ph-bold ph-copy text-[10px] opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                                  <Copy01Icon size="1em" className="text-[10px] opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                                 </button>
                               </div>
                             </div>
@@ -1948,7 +1936,7 @@ export default function OSASOrganizationComplianceView({
                           {/* Right: Authorization Pill */}
                           <div className="shrink-0">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
-                              <HugeIcon className="ph-bold ph-shield-check text-xs text-emerald-600 dark:text-emerald-400" />
+                              <Shield01Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
                               <span>Signatory</span>
                             </span>
                           </div>
@@ -2028,7 +2016,7 @@ export default function OSASOrganizationComplianceView({
                   onClick={() => setReportOpen(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-1 rounded-lg cursor-pointer"
                 >
-                  <HugeIcon className="ph-bold ph-x text-[16px]" />
+                  <Cancel01Icon size="1em" className="text-[16px]" />
                 </button>
               </DialogClose>
             </DialogHeader>
@@ -2044,7 +2032,7 @@ export default function OSASOrganizationComplianceView({
                         onClick={() => setIsFullscreenPreview(false)}
                         className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0 cursor-pointer"
                       >
-                        <HugeIcon className="ph-bold ph-x text-lg" />
+                        <Cancel01Icon size="1em" className="text-lg" />
                       </Button>
                     </div>
                   )}
@@ -2057,19 +2045,19 @@ export default function OSASOrganizationComplianceView({
                       </div>
                     </div>
                   )}
-                  <iframe
+                  <PDFPreview
                     ref={pdfPreviewFrameRef}
-                    src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
+                    src={pdfBlobUrl}
                     className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
                     title="OSAS PDF Report Preview"
-                    onLoad={() => setPreviewFrameReady(true)}
+                    onReadyChange={setPreviewFrameReady}
                   />
                 </div>
               ) : (
                 <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
                   <div className="max-w-lg text-center">
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
-                      <HugeIcon className="ph-bold ph-circle-notch animate-spin text-xl text-pup-maroon dark:text-primary" />
+                      <Loading01Icon size="1em" className="animate-spin text-xl text-pup-maroon dark:text-primary" />
                     </div>
                     <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                       Generating Official Report...
@@ -2089,7 +2077,7 @@ export default function OSASOrganizationComplianceView({
                     aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
                     className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
                   >
-                    <HugeIcon className={isFullscreenPreview ? "ph-bold ph-arrows-in text-[16px]" : "ph-bold ph-arrows-out text-[16px]"} />
+                    <AppIcon className={isFullscreenPreview ? " ArrowShrink01Icon text-[16px]" : " ArrowExpand01Icon text-[16px]"} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">

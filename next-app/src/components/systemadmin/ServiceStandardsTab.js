@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import ServiceStandardsSkeleton from "./skeletons/ServiceStandardsSkeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
+import { Add01Icon, Archive01Icon, Certificate01Icon, CovidInfoIcon, File02Icon, MinusSignIcon, Shield01Icon } from "hugeicons-react";
+
 
 const PRESETS = [
   {
@@ -86,7 +88,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
             : "opacity-40 cursor-not-allowed pointer-events-none"
         )}
       >
-        <HugeIcon className="ph-bold ph-minus text-xs" />
+        <MinusSignIcon size="1em" className="text-xs" />
       </button>
       <span className="min-w-[40px] text-center font-bold text-xs text-gray-900 dark:text-zinc-50 font-sans tabular-nums">
         {current}d
@@ -103,7 +105,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
             : "opacity-40 cursor-not-allowed pointer-events-none"
         )}
       >
-        <HugeIcon className="ph-bold ph-plus text-xs" />
+        <Add01Icon size="1em" className="text-xs" />
       </button>
     </div>
   );
@@ -269,7 +271,7 @@ export default function ServiceStandardsTab({ showToast }) {
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6 select-none">
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-clock-countdown"
+          icon="HourglassIcon"
           title="Processing Time Standards"
           description="Configure turnaround time standards and compliance rules for document processing."
           showBorder={true}
@@ -337,7 +339,7 @@ export default function ServiceStandardsTab({ showToast }) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border/70 text-xs">
               <div className="flex items-start gap-2.5">
                 <div className="h-6 w-6 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-xs shrink-0 mt-0.5">
-                  <HugeIcon className="ph-bold ph-info text-xs" />
+                  <CovidInfoIcon size="1em" className="text-xs" />
                 </div>
                 <span className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
                   {activePreset?.description}
@@ -507,7 +509,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0 border border-emerald-100 dark:border-emerald-900/30">
-                      <HugeIcon className="ph-duotone ph-file-text text-base" />
+                      <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
@@ -532,7 +534,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center text-sm shrink-0 border border-amber-100 dark:border-amber-900/30">
-                      <HugeIcon className="ph-duotone ph-archive text-base" />
+                      <Archive01Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
@@ -557,7 +559,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 flex items-center justify-center text-sm shrink-0 border border-purple-100 dark:border-purple-900/30">
-                      <HugeIcon className="ph-duotone ph-certificate text-base" />
+                      <Certificate01Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
@@ -582,7 +584,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 <div className="p-4 rounded-xl bg-slate-900 text-white dark:bg-zinc-800/90 border border-slate-800 dark:border-zinc-700/60 shadow-xs flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <HugeIcon className="ph-bold ph-shield-check text-sm text-emerald-400" />
+                      <Shield01Icon size="1em" className="text-sm text-emerald-400" />
                       <span className="font-semibold text-xs text-white">
                         {standards.frameworkName}
                       </span>
@@ -629,7 +631,7 @@ export default function ServiceStandardsTab({ showToast }) {
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
         variant="warning"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        buttonIcon=" ReloadIcon"
         isLoading={saving}
         onConfirm={handleReset}
       />

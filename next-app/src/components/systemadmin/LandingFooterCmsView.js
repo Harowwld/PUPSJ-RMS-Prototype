@@ -1,6 +1,7 @@
 "use client"
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,6 +13,8 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingFooterSkeleton from "./skeletons/LandingFooterSkeleton"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch";
+import { ArrowDown01Icon, ArrowUp01Icon, Delete01Icon, Link01Icon, Location01Icon } from "hugeicons-react";
+
 
 export const MAX_SCHEDULE_ITEMS = 3
 export const MAX_CONTACT_ITEMS = 3
@@ -300,7 +303,7 @@ export default function LandingFooterCmsView({ showToast }) {
       {/* Main Card */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-panel-bottom"
+          icon=" LayoutBottomIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
@@ -405,7 +408,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           {footerData.brandSubtitle.length}/250
                         </span>
                       </div>
-                      <textarea
+                      <Textarea
                         value={footerData.brandSubtitle}
                         onChange={(e) =>
                           setFooterData((prev) => ({
@@ -416,7 +419,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         rows={3}
                         maxLength={250}
                         placeholder="Polytechnic University of the Philippines, San Juan Campus Records Keeping & Online Document Request Platform."
-                        className="w-full rounded-xl border border-border bg-white p-3 text-xs font-normal leading-relaxed placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 focus:outline-hidden"
+                        className="w-full"
                       />
                     </div>
 
@@ -430,7 +433,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         </span>
                       </div>
                       <div className="relative">
-                        <HugeIcon  className="ph-bold ph-map-pin absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <Location01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                         <Input
                           value={footerData.locationHall}
                           onChange={(e) =>
@@ -501,7 +504,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       Google Maps Destination URL
                     </label>
                     <div className="relative">
-                      <HugeIcon  className="ph-bold ph-link absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <Link01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                       <Input
                         value={footerData.mapsUrl}
                         disabled={!footerData.mapsEnabled}
@@ -666,7 +669,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move up"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <HugeIcon  className="ph-bold ph-arrow-up text-xs" />
+                              <ArrowUp01Icon size="1em"  className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -675,7 +678,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move down"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <HugeIcon  className="ph-bold ph-arrow-down text-xs" />
+                              <ArrowDown01Icon size="1em"  className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -683,7 +686,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Remove row"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
                             >
-                              <HugeIcon  className="ph-bold ph-trash text-xs" />
+                              <Delete01Icon size="1em"  className="text-xs" />
                             </button>
                           </div>
                         </div>
@@ -805,7 +808,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move up"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <HugeIcon  className="ph-bold ph-arrow-up text-xs" />
+                              <ArrowUp01Icon size="1em"  className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -814,7 +817,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Move down"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
-                              <HugeIcon  className="ph-bold ph-arrow-down text-xs" />
+                              <ArrowDown01Icon size="1em"  className="text-xs" />
                             </button>
                             <button
                               type="button"
@@ -822,7 +825,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               title="Remove channel"
                               className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
                             >
-                              <HugeIcon  className="ph-bold ph-trash text-xs" />
+                              <Delete01Icon size="1em"  className="text-xs" />
                             </button>
                           </div>
                         </div>
@@ -934,7 +937,7 @@ export default function LandingFooterCmsView({ showToast }) {
 
                       <div className="pt-4 border-t border-white/5">
                         <div className="font-bold text-zinc-200 flex items-center gap-2 mb-1.5 text-xs">
-                          <HugeIcon className="ph-bold ph-map-pin text-red-400" />
+                          <Location01Icon size={16} className="text-red-400" />
                           <span>{footerData.locationHall}</span>
                         </div>
                         <p className="text-zinc-500 leading-relaxed text-[11px] pl-5 mb-4">
@@ -1025,7 +1028,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         </span>
                         <div className="text-[10px] font-sans tabular-nums font-medium text-zinc-400 flex items-center gap-1">
                           <span>Back to Top</span>
-                          <HugeIcon className="ph-bold ph-arrow-up text-[10px]" />
+                          <ArrowUp01Icon size="1em" className="text-[10px]" />
                         </div>
                       </div>
                     </div>
@@ -1063,8 +1066,8 @@ export default function LandingFooterCmsView({ showToast }) {
         message="Are you sure you want to reset the public landing page footer to default PUP institutional branding, schedules, and inquiry channels?"
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-arrow-counter-clockwise"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        icon=" ReloadIcon"
+        buttonIcon=" ReloadIcon"
         selectedItems={[
           "Reset campus mission description and records hall address",
           "Restore standard Monday – Friday registrar office hours",
@@ -1089,8 +1092,8 @@ export default function LandingFooterCmsView({ showToast }) {
         message="Are you sure you want to remove this office hours schedule row from the public footer?"
         confirmLabel="Remove Schedule"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
+        icon=" Delete01Icon"
+        buttonIcon=" Delete01Icon"
         selectedItems={
           deleteScheduleIdx !== null && footerData.scheduleItems[deleteScheduleIdx]
             ? [
@@ -1118,8 +1121,8 @@ export default function LandingFooterCmsView({ showToast }) {
         message="Are you sure you want to remove this inquiry channel from the public footer?"
         confirmLabel="Remove Channel"
         cancelLabel="Cancel"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
+        icon=" Delete01Icon"
+        buttonIcon=" Delete01Icon"
         selectedItems={
           deleteContactIdx !== null && footerData.contactItems[deleteContactIdx]
             ? [

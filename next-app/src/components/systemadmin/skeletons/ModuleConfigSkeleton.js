@@ -10,7 +10,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office" }) {
       {/* ONE Single Card Container encapsulating Header, Toolbar, & Content */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-squares-four"
+          icon=" LayoutGridIcon"
           title="Department Features & Permissions"
           description="Turn system features on or off for each department."
           showBorder={false}

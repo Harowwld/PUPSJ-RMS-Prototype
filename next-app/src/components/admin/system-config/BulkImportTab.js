@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { CardTitle, CardDescription } from "@/components/ui/card"
@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/dialog"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
-
+import { Add01Icon, Alert01Icon, Cancel01Icon, CheckmarkCircle01Icon, Copy01Icon, Database01Icon, HelpCircleIcon, PencilEdit01Icon, Search01Icon, Tick01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 export default function BulkImportTab({
   loading = false,
   importStatus,
@@ -143,7 +144,7 @@ export default function BulkImportTab({
         <div className="flex flex-col flex-1 w-full min-h-0 animate-fade-up">
           <PageHeader
             showBorder={false}
-            icon="ph-file-arrow-up"
+            icon="FileUploadIcon"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             title="Bulk Taxonomy Importer"
@@ -156,7 +157,7 @@ export default function BulkImportTab({
                 className="text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors bg-transparent border-0 p-0 cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
                 title="Import Instructions"
               >
-                <HugeIcon className="ph-bold ph-question text-[18px]" />
+                <HelpCircleIcon size="1em" className="text-[18px]" />
               </button>
             }
           />
@@ -211,7 +212,7 @@ export default function BulkImportTab({
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
                 <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                  <HugeIcon className={cn("ti ti-upload text-[24px] transition-colors duration-fast", importDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
+                  <AppIcon className={cn(" Upload01Icon text-[24px] transition-colors duration-fast", importDropActive ? "text-pup-maroon" : "text-gray-400 dark:text-zinc-500")} />
                   <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 mt-3 m-0">
                     Drop CSV file here
                   </p>
@@ -250,7 +251,7 @@ export default function BulkImportTab({
           <div className="flex items-center gap-4">
               <div className="relative group w-[220px]">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <HugeIcon className="ph-bold ph-magnifying-glass text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
+                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
                 </div>
                 <Input
                   type="text"
@@ -329,7 +330,7 @@ export default function BulkImportTab({
                             <tr className="bg-gray-50/60 dark:bg-zinc-900/40 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60 border-b border-border dark:border-border transition-colors">
                               <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
                                 <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-border dark:border-border">
-                                  <HugeIcon className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></HugeIcon>
+                                  <Add01Icon size="1em" className="text-[10px] text-gray-400 dark:text-zinc-500"></Add01Icon>
                                 </div>
                               </td>
                               <td className="p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
@@ -592,7 +593,7 @@ export default function BulkImportTab({
                                     aria-label="Save Entry"
                                     className="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs border-0"
                                   >
-                                    <HugeIcon className="ph-bold ph-check text-[14px]" />
+                                    <Tick01Icon size="1em" className="text-[14px]" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Save Entry</TooltipContent>
@@ -605,7 +606,7 @@ export default function BulkImportTab({
                                     aria-label="Cancel Edit"
                                     className="w-7 h-7 rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs"
                                   >
-                                    <HugeIcon className="ph-bold ph-x text-[14px]" />
+                                    <Cancel01Icon size="1em" className="text-[14px]" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>Cancel</TooltipContent>
@@ -616,7 +617,7 @@ export default function BulkImportTab({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="inline-flex cursor-help items-center gap-1 rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
-                                    <HugeIcon  className="ph-bold ph-warning-circle text-xs"></HugeIcon>
+                                    <Alert01Icon size="1em"  className="text-xs"></Alert01Icon>
                                     <span>{row.error}</span>
                                   </div>
                                 </TooltipTrigger>
@@ -632,7 +633,7 @@ export default function BulkImportTab({
                                     onClick={() => startEdit(row)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-pencil-simple text-sm"></HugeIcon>
+                                    <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Fix Entry</TooltipContent>
@@ -641,7 +642,7 @@ export default function BulkImportTab({
                           ) : (
                             <div className="flex items-center justify-end gap-2">
                               <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
-                                <HugeIcon  className="ph-bold ph-check-circle text-xs"></HugeIcon>
+                                <CheckmarkCircle01Icon size="1em"  className="text-xs"></CheckmarkCircle01Icon>
                                 <span>Validated</span>
                               </div>
                               <Tooltip>
@@ -650,7 +651,7 @@ export default function BulkImportTab({
                                     onClick={() => startEdit(row)}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
-                                    <HugeIcon  className="ph-bold ph-pencil-simple text-sm"></HugeIcon>
+                                    <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">Edit Entry</TooltipContent>
@@ -755,7 +756,7 @@ export default function BulkImportTab({
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
               <div className="h-20 w-20 animate-spin rounded-full border-4 border-border border-t-pup-maroon dark:border-border"></div>
-              <HugeIcon  className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></HugeIcon>
+              <Database01Icon size="1em"  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></Database01Icon>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Adding Records</h3>
@@ -770,7 +771,7 @@ export default function BulkImportTab({
           <div className="flex w-full max-w-md flex-col items-center gap-8 px-6 text-center">
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-                <HugeIcon  className="ph-bold ph-check text-[32px]"></HugeIcon>
+                <Tick01Icon size="1em"  className="text-[32px]"></Tick01Icon>
               </div>
             </div>
 
@@ -826,7 +827,7 @@ export default function BulkImportTab({
             onClick={() => setShowInstructions(false)}
             className="absolute right-8 top-8 text-gray-400 hover:text-gray-600 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors border-0 bg-transparent p-0 cursor-pointer"
           >
-            <HugeIcon  className="ph-bold ph-x text-base"></HugeIcon>
+            <Cancel01Icon size="1em"  className="text-base"></Cancel01Icon>
           </button>
 
           {/* Modal Header */}
@@ -870,7 +871,7 @@ export default function BulkImportTab({
                   className="absolute top-4 right-4 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer flex items-center justify-center"
                   title="Copy Example"
                 >
-                  <HugeIcon  className="ph-bold ph-copy ti-copy text-[14px]"></HugeIcon>
+                  <Copy01Icon size="1em"  className="Copy01Icon text-[14px]"></Copy01Icon>
                 </button>
 
                 <div className="text-[11px] text-[#8E8E93] mb-3 normal-case font-sans">CSV Structure Example</div>
@@ -914,17 +915,17 @@ export default function BulkImportTab({
                   {
                     label: "Document type",
                     desc: "Supports IsCompliance (true/false) and IsRequestable (true/false).",
-                    icon: "ph-files",
+                    icon: "Files01Icon",
                   },
                   {
                     label: "Course",
                     desc: "Short code required (e.g. BSIT, BSA).",
-                    icon: "ph-books",
+                    icon: "LibraryIcon",
                   },
                   {
                     label: "Section",
                     desc: "'Code' must match a degree program.",
-                    icon: "ph-list-numbers",
+                    icon: "ListViewIcon",
                   },
                 ].map((rule) => (
                   <div
@@ -932,7 +933,7 @@ export default function BulkImportTab({
                     className="flex items-start gap-3"
                   >
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8E8E93] mt-[2px]">
-                      <HugeIcon  className={`ph-bold ${rule.icon} text-[16px]`}></HugeIcon>
+                      <AppIcon  className={` ${rule.icon} text-[16px]`}></AppIcon>
                     </div>
                     <div>
                       <div className="text-[13px] font-medium text-[#111] dark:text-zinc-50 leading-tight">

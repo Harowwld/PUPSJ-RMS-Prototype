@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -37,8 +37,8 @@ import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
 import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils"
 import React from "react"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { AlertCircleIcon as EmptyAlertCircleIcon, Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, PencilEdit01Icon, Settings01Icon, Archive01Icon, Search01Icon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const formatLastLoginDate = (dateStr) => {
   if (!dateStr || dateStr === "N/A") return "N/A"
   try {
@@ -205,7 +205,7 @@ const StaffTableRow = React.memo(({
                   aria-label="My Account Settings"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <HugeIcon  className="ph-bold ph-gear-six text-[16px]"></HugeIcon>
+                  <Settings01Icon size="1em"  className="text-[16px]"></Settings01Icon>
                 </button>
               </TooltipTrigger>
               <TooltipContent>My Account Settings</TooltipContent>
@@ -220,7 +220,7 @@ const StaffTableRow = React.memo(({
                       aria-label="Edit Staff Member"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <HugeIcon  className="ph-bold ph-pencil-simple text-[16px]"></HugeIcon>
+                      <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Edit Staff</TooltipContent>
@@ -235,7 +235,7 @@ const StaffTableRow = React.memo(({
                       aria-label="Restore Staff Member"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <HugeIcon  className="ph-bold ph-archive-restore text-[16px]"></HugeIcon>
+                      <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Restore Staff</TooltipContent>
@@ -248,7 +248,7 @@ const StaffTableRow = React.memo(({
                       aria-label="Archive Staff Member"
                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                     >
-                      <HugeIcon  className="ph-bold ph-archive text-[16px]"></HugeIcon>
+                      <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Archive Staff</TooltipContent>
@@ -266,12 +266,12 @@ StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -626,7 +626,7 @@ export default function StaffDirectoryTab({
       {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-users"
+          icon="UserSearch01Icon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Staff Directory</span>
@@ -711,7 +711,7 @@ export default function StaffDirectoryTab({
           {/* Right: Search & Role Filter */}
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search name, email or ID..."
@@ -904,7 +904,7 @@ export default function StaffDirectoryTab({
                             aria-label="Reset scroll to start"
                             className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
                           >
-                            <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                            <AppIcon className=" ArrowLeft01Icon text-xs" />
                           </button>
                         )}
                       </div>

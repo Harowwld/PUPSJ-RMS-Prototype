@@ -1,6 +1,8 @@
 "use client";
+import SheetPagination from "@/components/shared/SheetPagination";
+import { Textarea } from "@/components/ui/textarea";
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useState, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -62,16 +64,16 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
-import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, Loading01Icon, Shield01Icon, StarIcon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>;
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>;
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   );
 }
 
@@ -161,7 +163,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <HugeIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -1199,25 +1201,25 @@ function StudentDashboard() {
     }).length + (pendingPostEvents || []).length;
 
   const sidebarItems = [
-    { key: "overview", label: "Overview", iconClass: "ph-bold ph-squares-four" },
+    { key: "overview", label: "Overview", iconClass: " LayoutGridIcon" },
     { type: "header", label: "Academic Records" },
     {
       key: "odrs",
       label: "Document Requests",
-      iconClass: "ph-bold ph-tray-arrow-up",
+      iconClass: " FileUploadIcon",
       badge: readyRequestsCount > 0 ? readyRequestsCount : undefined,
     },
     {
       key: "compliance",
       label: "Document Checklist",
-      iconClass: "ph-bold ph-clipboard-text",
+      iconClass: " ClipboardIcon",
       badge: missingComplianceCount > 0 ? missingComplianceCount : undefined,
     },
     { type: "header", label: "Student Affairs" },
     {
       key: "osas",
       label: "OSAS Submissions",
-      iconClass: "ph-bold ph-student",
+      iconClass: " StudentIcon",
       badge: osasActionCount > 0 ? osasActionCount : undefined,
     },
   ];
@@ -1312,7 +1314,7 @@ function StudentDashboard() {
                   >
                     {/* 1. Page Header */}
                     <PageHeader
-                      icon="ph-tray"
+                      icon="InboxIcon"
                       title="Document Requests"
                       description="Request official academic records and track Registrar processing updates."
                       showBorder={false}
@@ -1360,7 +1362,7 @@ function StudentDashboard() {
                         {!isDuplicateAlertDismissed && (
                           <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <HugeIcon className="ph-bold ph-info text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                              <CovidInfoIcon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
                               <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
                                 Please avoid creating duplicate tickets for the same concern to help us process your request promptly.
                               </span>
@@ -1372,7 +1374,7 @@ function StudentDashboard() {
                               aria-label="Dismiss notice"
                               title="Dismiss notice"
                             >
-                              <HugeIcon className="ph-bold ph-x text-sm" />
+                              <Cancel01Icon size="1em" className="text-sm" />
                             </button>
                           </div>
                         )}
@@ -1381,7 +1383,7 @@ function StudentDashboard() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                                <HugeIcon className="ph-bold ph-plus-circle text-xl" />
+                                <AddCircleIcon size="1em" className="text-xl" />
                               </div>
                               <div>
                                 <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Document Request</h2>
@@ -1394,7 +1396,7 @@ function StudentDashboard() {
                           {/* Parent / Legal Guardian Compliance Notice */}
                           {requestForm.clientType === "Parent" && (
                             <div className="rounded-xl border border-amber-200/90 bg-amber-50/70 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                              <HugeIcon className="ph-bold ph-shield-check text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                              <Shield01Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                               <div className="space-y-1 text-[11px] leading-relaxed">
                                 <span className="font-semibold block text-amber-950 dark:text-amber-100">
                                   Data Privacy Act (RA 10173) & Third-Party Request Policy
@@ -1559,11 +1561,11 @@ function StudentDashboard() {
                             <label htmlFor="student-request-description" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                               Description / Purpose <span className="text-red-500">*</span>
                             </label>
-                            <textarea
+                            <Textarea
                               id="student-request-description"
                               required
                               rows={2}
-                              className="w-full min-h-[72px] rounded-xl border border-border bg-white p-3 text-xs font-normal focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-zinc-800 dark:border-border dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 resize-none transition-all shadow-none"
+                              className="min-h-[72px] resize-none"
                               placeholder="Provide the purpose of your request (e.g. employment verification, board exam, transfer credentials, etc.)"
                               value={requestForm.notes}
                               minLength={5}
@@ -1647,7 +1649,7 @@ function StudentDashboard() {
                               >
                                 {requestSubmitting ? (
                                   <>
-                                    <HugeIcon  className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                                    <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
                                     Submitting...
                                   </>
                                 ) : (
@@ -1681,7 +1683,7 @@ function StudentDashboard() {
                       {/* Right: Search & Filter Group */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                         <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                          <HugeIcon  className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                          <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
                           <Input
                             type="text"
                             placeholder="Search ticket, document, notes..."
@@ -1894,7 +1896,7 @@ function StudentDashboard() {
                                         className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
                                         title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
                                       >
-                                        <HugeIcon className="ph-bold ph-paperclip text-[11px]" />
+                                        <Attachment01Icon size="1em" className="text-[11px]" />
                                         {item.attachment_count || item.attachments?.length}
                                       </span>
                                     )}
@@ -1927,7 +1929,7 @@ function StudentDashboard() {
                                             aria-label={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
                                             className="w-7 h-7 rounded-lg flex items-center justify-center text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer active:scale-95"
                                           >
-                                            <HugeIcon className="ph-fill ph-star text-[15px]" />
+                                            <StarIcon size="1em" className="text-[15px]" />
                                           </button>
                                         </TooltipTrigger>
                                         <TooltipContent>Rated {item.feedback.rating}/5 stars. Click to edit.</TooltipContent>
@@ -1945,7 +1947,7 @@ function StudentDashboard() {
                                             aria-label="Rate Service"
                                             className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer active:scale-95"
                                           >
-                                            <HugeIcon className="ph-bold ph-star text-[15px]" />
+                                            <StarIcon size="1em" className="text-[15px]" />
                                           </button>
                                         </TooltipTrigger>
                                         <TooltipContent>Rate Service</TooltipContent>
@@ -1959,7 +1961,7 @@ function StudentDashboard() {
                                           aria-label="View Request Updates Timeline"
                                           className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer active:scale-95"
                                         >
-                                          <HugeIcon className="ph-bold ph-clock-counter-clockwise text-[15px]" />
+                                          <Time01Icon size="1em" className="text-[15px]" />
                                         </button>
                                       </TooltipTrigger>
                                       <TooltipContent>View Timeline</TooltipContent>
@@ -2042,7 +2044,7 @@ function StudentDashboard() {
                 >
                   {/* 1. Page Header */}
                   <PageHeader
-                    icon="ph-file-text"
+                    icon="File02Icon"
                     title="OSAS Submissions"
                     description="Submit organization event proposals and follow evaluation progress."
                     showBorder={true}
@@ -2092,7 +2094,7 @@ function StudentDashboard() {
                     !isOfficerAlertDismissed && (
                       <div className="flex items-center justify-between gap-3 border-b border-emerald-200/90 bg-emerald-50/90 dark:border-emerald-900/40 dark:bg-emerald-950/25 px-5 sm:px-6 py-2.5 text-xs text-emerald-950 dark:text-emerald-200 animate-in fade-in transition-all">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <HugeIcon className="ph-bold ph-shield-check text-[16px] shrink-0 text-emerald-600 dark:text-emerald-400" />
+                          <Shield01Icon size="1em" className="text-[16px] shrink-0 text-emerald-600 dark:text-emerald-400" />
                           <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
                             You are signed in as a verified student officer authorized to submit OSAS proposals and reports.
                           </span>
@@ -2104,14 +2106,14 @@ function StudentDashboard() {
                           aria-label="Dismiss notice"
                           title="Dismiss notice"
                         >
-                          <HugeIcon className="ph-bold ph-x text-sm" />
+                          <Cancel01Icon size="1em" className="text-sm" />
                         </button>
                       </div>
                     )
                   ) : (
                     <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in transition-all">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <HugeIcon className="ph-bold ph-info text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                        <CovidInfoIcon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
                         <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
                           Officer authorization required: Only recognized student officers may submit proposals and reports. Contact OSAS to authorize your account.
                         </span>
@@ -2131,7 +2133,7 @@ function StudentDashboard() {
                           : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-calendar-blank text-sm" />
+                      <Calendar01Icon size="1em" className="text-sm" />
                       <span>Event Proposals</span>
                       <span className={cn(
                         "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
@@ -2151,7 +2153,7 @@ function StudentDashboard() {
                           : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-clipboard-text text-sm" />
+                      <ClipboardIcon size="1em" className="text-sm" />
                       <span>Post-Event & Liquidation</span>
                       {pendingPostEvents.length > 0 ? (
                         <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
@@ -2177,7 +2179,7 @@ function StudentDashboard() {
                           : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       )}
                     >
-                      <HugeIcon className="ph-bold ph-book-bookmark text-sm" />
+                      <BookBookmark01Icon size="1em" className="text-sm" />
                       <span>Constitution & By-Laws</span>
                       {cblVersions.filter((v) => v.status === "Pending").length > 0 ? (
                         <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
@@ -2203,7 +2205,7 @@ function StudentDashboard() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                                <HugeIcon className="ph-bold ph-plus-circle text-xl" />
+                                <AddCircleIcon size="1em" className="text-xl" />
                               </div>
                               <div>
                                 <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Event Proposal</h2>
@@ -2307,7 +2309,7 @@ function StudentDashboard() {
                                 >
                                   {proposalSubmitting ? (
                                     <>
-                                      <HugeIcon className="ph-bold ph-spinner animate-spin text-sm"></HugeIcon>
+                                      <Loading01Icon size="1em" className="animate-spin text-sm"></Loading01Icon>
                                       Submitting...
                                     </>
                                   ) : (
@@ -2338,7 +2340,7 @@ function StudentDashboard() {
 
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                           <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                            <HugeIcon className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                            <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
                             <Input
                               type="text"
                               placeholder="Search proposals..."
@@ -2466,7 +2468,7 @@ function StudentDashboard() {
                                       title="View Proposal Document"
                                       className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                     >
-                                      <HugeIcon className="ph-bold ph-file-pdf text-[16px]"></HugeIcon>
+                                      <File02Icon size="1em" className="text-[16px]"></File02Icon>
                                     </button>
                                     <button
                                       type="button"
@@ -2477,7 +2479,7 @@ function StudentDashboard() {
                                       title="View Proposal Details & Timeline"
                                       className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                     >
-                                      <HugeIcon className="ph-bold ph-clock-counter-clockwise text-[16px]"></HugeIcon>
+                                      <Time01Icon size="1em" className="text-[16px]"></Time01Icon>
                                     </button>
                                   </div>
                                 </div>
@@ -2538,7 +2540,7 @@ function StudentDashboard() {
                       {pendingPostEvents.length > 0 && !isPostEventAlertDismissed && (
                         <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all mb-4">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <HugeIcon className="ph-bold ph-warning-circle text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                            <Alert01Icon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
                             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
                               <strong className="font-semibold text-amber-950 dark:text-amber-100">Pending Post-Event Compliance:</strong> You have{" "}
                               <strong>{pendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
@@ -2551,7 +2553,7 @@ function StudentDashboard() {
                             aria-label="Dismiss notice"
                             title="Dismiss notice"
                           >
-                            <HugeIcon className="ph-bold ph-x text-sm" />
+                            <Cancel01Icon size="1em" className="text-sm" />
                           </button>
                         </div>
                       )}
@@ -2561,7 +2563,7 @@ function StudentDashboard() {
                         <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
                           <div className="flex items-center gap-3 pb-4 border-b border-border dark:border-border">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                              <HugeIcon className="ph-bold ph-clipboard-text text-xl" />
+                              <ClipboardIcon size="1em" className="text-xl" />
                             </div>
                             <div>
                               <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Post-Event & Liquidation Report</h2>
@@ -2793,7 +2795,7 @@ function StudentDashboard() {
                       {myOrganizations.length > 1 && (
                         <div className="border-t border-border dark:border-border p-4 bg-gray-50/70 dark:bg-zinc-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <HugeIcon className="ph-bold ph-buildings text-pup-maroon dark:text-red-400" />
+                            <Building01Icon size={16} className="text-pup-maroon dark:text-red-400" />
                             <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Active Organization Context:</span>
                           </div>
                           <Select
@@ -2819,7 +2821,7 @@ function StudentDashboard() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                                <HugeIcon className="ph-bold ph-book-open text-xl" />
+                                <BookOpen01Icon size="1em" className="text-xl" />
                               </div>
                               <div>
                                 <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Submit Constitution & By-Laws (CBL)</h2>
@@ -2847,15 +2849,16 @@ function StudentDashboard() {
 
                             {/* 2. Summary of Amendments / Notes for OSAS */}
                             <div className="min-w-0">
-                              <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                              <label htmlFor="cbl-amendment-summary" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                 Summary of Amendments / Notes for OSAS
                               </label>
-                              <textarea
+                              <Textarea
+                                id="cbl-amendment-summary"
                                 placeholder="Describe the amendments made, articles updated, or context of this ratification..."
                                 value={cblForm.amendmentSummary}
                                 onChange={(e) => setCblForm({ ...cblForm, amendmentSummary: e.target.value })}
                                 rows={3}
-                                className="w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon resize-y"
+                                className="resize-y"
                               />
                             </div>
 
@@ -2892,7 +2895,7 @@ function StudentDashboard() {
                               >
                                 {cblSubmitting ? (
                                   <>
-                                    <HugeIcon className="ph ph-spinner animate-spin text-sm" />
+                                    <Loading01Icon size="1em" className="ph animate-spin text-sm" />
                                     <span>Submitting...</span>
                                   </>
                                 ) : (
@@ -3104,9 +3107,8 @@ function StudentDashboard() {
           showCloseButton={false}
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          {/* TOP HEADER: Document Request Details + < > 01 of XX + X button */}
           <SheetHeader className="shrink-0 p-0">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <SheetTitle>
                   Document Request Details
@@ -3116,33 +3118,20 @@ function StudentDashboard() {
                 </SheetDescription>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="ml-auto flex items-center gap-3">
                 {sortedRequests.length > 1 && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                    <button
-                      type="button"
-                      disabled={currentRequestDetailIndex <= 0}
-                      onClick={handlePrevRequestDetail}
-                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      aria-label="Previous Request"
-                      title="Previous Request"
-                    >
-                      <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={currentRequestDetailIndex >= sortedRequests.length - 1}
-                      onClick={handleNextRequestDetail}
-                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      aria-label="Next Request"
-                      title="Next Request"
-                    >
-                      <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                    </button>
-                    <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                      {String(Math.max(1, currentRequestDetailIndex + 1)).padStart(2, "0")} of {String(sortedRequests.length).padStart(2, "0")}
-                    </span>
-                  </div>
+                  <SheetPagination
+                    compact
+                    label="Record navigation"
+                    page={Math.max(1, currentRequestDetailIndex + 1)}
+                    totalPages={sortedRequests.length}
+                    onPrevious={handlePrevRequestDetail}
+                    onNext={handleNextRequestDetail}
+                    previousDisabled={currentRequestDetailIndex <= 0}
+                    nextDisabled={currentRequestDetailIndex >= sortedRequests.length - 1}
+                    previousLabel="Previous Request"
+                    nextLabel="Next Request"
+                  />
                 )}
 
                 <button
@@ -3152,7 +3141,7 @@ function StudentDashboard() {
                   aria-label="Close"
                   title="Close"
                 >
-                  <HugeIcon className="ph-bold ph-x text-sm" />
+                  <Cancel01Icon size="1em" className="text-sm" />
                 </button>
               </div>
             </div>
@@ -3173,16 +3162,16 @@ function StudentDashboard() {
                 : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
             )}
           >
-            <HugeIcon
+            <AppIcon
               className={cn(
-                "ph-bold text-[15px] shrink-0",
+                " text-[15px] shrink-0",
                 selectedRequestForDetail?.status === "Ready" || selectedRequestForDetail?.status === "Completed"
-                  ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                   : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
-                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
                   : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
-                  ? "ph-x-circle text-rose-600 dark:text-rose-400"
-                  : "ph-clock text-blue-600 dark:text-blue-400"
+                  ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                  : "Clock01Icon text-blue-600 dark:text-blue-400"
               )}
             />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -3217,7 +3206,7 @@ function StudentDashboard() {
             {/* Request Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
               <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
-                <HugeIcon className="ph-bold ph-file-text" />
+                <File02Icon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -3241,19 +3230,19 @@ function StudentDashboard() {
                 Request Specification
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="ph-buildings" label="Verifying Office" value="Office of the Campus Registrar" />
-                <InfoRow icon="ph-tag" label="Client Classification" value={selectedRequestForDetail?.client_type || "Enrolled Student"} />
-                <InfoRow icon="ph-chart-pie-slice" label="Current Status">
+                <InfoRow icon="Building01Icon" label="Verifying Office" value="Office of the Campus Registrar" />
+                <InfoRow icon="Tag01Icon" label="Client Classification" value={selectedRequestForDetail?.client_type || "Enrolled Student"} />
+                <InfoRow icon="PieChartIcon" label="Current Status">
                   <StatusBadge status={selectedRequestForDetail?.status} />
                 </InfoRow>
                 {selectedRequestForDetail?.status === "Ready" && (
-                  <InfoRow icon="ph-door" label="Claiming Window" value="Window 1 — Releasing (Room 102)" />
+                  <InfoRow icon="Door01Icon" label="Claiming Window" value="Window 1 — Releasing (Room 102)" />
                 )}
                 {selectedRequestForDetail?.status === "Ready" && (
-                  <InfoRow icon="ph-clock" label="Window Hours" value="Mon – Fri, 8:00 AM – 5:00 PM (Bring Valid ID)" />
+                  <InfoRow icon="Clock01Icon" label="Window Hours" value="Mon – Fri, 8:00 AM – 5:00 PM (Bring Valid ID)" />
                 )}
                 {selectedRequestForDetail?.status === "Completed" && selectedRequestForDetail?.updated_at && (
-                  <InfoRow icon="ph-calendar-check" label="Claimed On" value={formatPHDateTime(selectedRequestForDetail.updated_at)} />
+                  <InfoRow icon="CalendarCheckIn01Icon" label="Claimed On" value={formatPHDateTime(selectedRequestForDetail.updated_at)} />
                 )}
               </div>
             </div>
@@ -3315,7 +3304,7 @@ function StudentDashboard() {
               <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <HugeIcon className="ph-fill ph-star text-amber-500 text-xs" />
+                    <StarIcon size="1em" className="text-amber-500 text-xs" />
                     <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                       Your Experience Rating
                     </h4>
@@ -3414,7 +3403,7 @@ function StudentDashboard() {
             {selectedRequestForDetail?.status === "PendingPayment" && (
               <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
                 <div className="flex items-center gap-2 mb-1">
-                  <HugeIcon className="ph-bold ph-receipt text-amber-700 dark:text-amber-400 text-base" />
+                  <AppIcon className=" Invoice01Icon text-amber-700 dark:text-amber-400 text-base" />
                   <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-100">
                     Payment proof required
                   </h4>
@@ -3605,9 +3594,8 @@ function StudentDashboard() {
           showCloseButton={false}
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
         >
-          {/* TOP HEADER: Event Proposal Details + < > 01 of XX + X button */}
           <SheetHeader className="shrink-0 p-0">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <SheetTitle>
                   Event Proposal Details
@@ -3617,33 +3605,20 @@ function StudentDashboard() {
                 </SheetDescription>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="ml-auto flex items-center gap-3">
                 {filteredProposals.length > 1 && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400">
-                    <button
-                      type="button"
-                      disabled={currentProposalDetailIndex <= 0}
-                      onClick={handlePrevProposalDetail}
-                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      aria-label="Previous Proposal"
-                      title="Previous Proposal"
-                    >
-                      <HugeIcon className="ph-bold ph-caret-left text-xs" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={currentProposalDetailIndex >= filteredProposals.length - 1}
-                      onClick={handleNextProposalDetail}
-                      className="w-7 h-7 rounded-lg border border-border/80 dark:border-border flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      aria-label="Next Proposal"
-                      title="Next Proposal"
-                    >
-                      <HugeIcon className="ph-bold ph-caret-right text-xs" />
-                    </button>
-                    <span className="font-sans tabular-nums text-[11px] font-semibold text-gray-700 dark:text-zinc-300 ml-0.5">
-                      {String(Math.max(1, currentProposalDetailIndex + 1)).padStart(2, "0")} of {String(filteredProposals.length).padStart(2, "0")}
-                    </span>
-                  </div>
+                  <SheetPagination
+                    compact
+                    label="Record navigation"
+                    page={Math.max(1, currentProposalDetailIndex + 1)}
+                    totalPages={filteredProposals.length}
+                    onPrevious={handlePrevProposalDetail}
+                    onNext={handleNextProposalDetail}
+                    previousDisabled={currentProposalDetailIndex <= 0}
+                    nextDisabled={currentProposalDetailIndex >= filteredProposals.length - 1}
+                    previousLabel="Previous Proposal"
+                    nextLabel="Next Proposal"
+                  />
                 )}
 
                 <button
@@ -3653,7 +3628,7 @@ function StudentDashboard() {
                   aria-label="Close"
                   title="Close"
                 >
-                  <HugeIcon className="ph-bold ph-x text-sm" />
+                  <Cancel01Icon size="1em" className="text-sm" />
                 </button>
               </div>
             </div>
@@ -3672,16 +3647,16 @@ function StudentDashboard() {
                 : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
             )}
           >
-            <HugeIcon
+            <AppIcon
               className={cn(
-                "ph-bold text-[15px] shrink-0",
+                " text-[15px] shrink-0",
                 selectedProposalForDetail?.status === "Approved"
-                  ? "ph-shield-check text-emerald-600 dark:text-emerald-400"
+                  ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
                   : selectedProposalForDetail?.status === "RevisionRequested"
-                  ? "ph-warning-circle text-amber-600 dark:text-amber-400"
+                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
                   : selectedProposalForDetail?.status === "Rejected"
-                  ? "ph-x-circle text-rose-600 dark:text-rose-400"
-                  : "ph-clock text-blue-600 dark:text-blue-400"
+                  ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                  : "Clock01Icon text-blue-600 dark:text-blue-400"
               )}
             />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
@@ -3708,7 +3683,7 @@ function StudentDashboard() {
             {/* Proposal Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
               <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
-                <HugeIcon className="ph-bold ph-calendar-check" />
+                <CalendarCheckIn01Icon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -3732,9 +3707,9 @@ function StudentDashboard() {
                 Proposal Specification
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="ph-buildings" label="Organization" value={selectedProposalForDetail?.organization_name || "Student Organization"} />
-                <InfoRow icon="ph-calendar" label="Target Event Date" value={selectedProposalForDetail?.event_date || "To Be Announced"} />
-                <InfoRow icon="ph-chart-pie-slice" label="Evaluation Stage">
+                <InfoRow icon="Building01Icon" label="Organization" value={selectedProposalForDetail?.organization_name || "Student Organization"} />
+                <InfoRow icon="Calendar01Icon" label="Target Event Date" value={selectedProposalForDetail?.event_date || "To Be Announced"} />
+                <InfoRow icon="PieChartIcon" label="Evaluation Stage">
                   <StatusBadge status={selectedProposalForDetail?.status} />
                 </InfoRow>
               </div>
@@ -3749,7 +3724,7 @@ function StudentDashboard() {
                 <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 dark:border-red-900/40">
-                      <HugeIcon className="ph-bold ph-file-pdf text-base" />
+                      <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate" title={selectedProposalForDetail.original_filename}>
@@ -3769,7 +3744,7 @@ function StudentDashboard() {
                     onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
                     className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <HugeIcon className="ph-bold ph-eye text-xs mr-1" />
+                    <ViewIcon size="1em" className="text-xs mr-1" />
                     <span>View PDF</span>
                   </Button>
                 </div>

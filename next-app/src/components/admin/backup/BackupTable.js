@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Button } from "@/components/ui/button"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import useTableScroll from "@/hooks/useTableScroll"
@@ -22,16 +22,16 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 import { formatBytes } from "@/lib/utils"
 import BackupPagination from "./BackupPagination"
 import { cn } from "@/lib/utils"
-import { Database01Icon as EmptyDatabase01Icon, Search01Icon as EmptySearch01Icon } from "hugeicons-react";
-
+import { Database01Icon as EmptyDatabase01Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, CovidInfoIcon, Delete01Icon, Download01Icon, HardDriveIcon, Plug01Icon, RefreshIcon} from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <HugeIcon  className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></HugeIcon>
+    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <HugeIcon  className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <HugeIcon  className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></HugeIcon>
+    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -209,7 +209,7 @@ export default function BackupTable({
                           aria-label="Reset scroll to start"
                           className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
                         >
-                          <HugeIcon className="ph-bold ph-arrow-line-left text-xs" />
+                          <AppIcon className=" ArrowLeft01Icon text-xs" />
                         </button>
                       )}
                     </div>
@@ -252,7 +252,7 @@ export default function BackupTable({
                         <span>Backup Copies</span>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <HugeIcon  className="ph-bold ph-info text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
+                            <CovidInfoIcon size="1em"  className="text-[13px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs text-xs font-normal">
                             Shows where this backup is safely stored: on Internal Storage and an External Drive.
@@ -343,7 +343,7 @@ export default function BackupTable({
                                       : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
                                   )}
                                 >
-                                  <HugeIcon  className="ph-bold ph-hard-drive text-[11px]" />
+                                  <HardDriveIcon size="1em"  className="text-[11px]" />
                                   <span>Internal Storage</span>
                                 </div>
                               </TooltipTrigger>
@@ -362,7 +362,7 @@ export default function BackupTable({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
-                                    <HugeIcon  className="ph-bold ph-check-circle text-[11px]" />
+                                    <CheckmarkCircle01Icon size="1em"  className="text-[11px]" />
                                     <span>External Drive</span>
                                   </div>
                                 </TooltipTrigger>
@@ -377,7 +377,7 @@ export default function BackupTable({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-border dark:border-border cursor-not-allowed">
-                                    <HugeIcon  className="ph-bold ph-plugs text-[11px]" />
+                                    <Plug01Icon size="1em"  className="text-[11px]" />
                                     <span>Drive Offline</span>
                                   </div>
                                 </TooltipTrigger>
@@ -407,7 +407,7 @@ export default function BackupTable({
                                   >
                                     {localLoading?.syncingId === b.id ? (
                                       <>
-                                        <HugeIcon  className="ph-bold ph-arrows-clockwise animate-spin text-[11px]" />
+                                        <RefreshIcon size="1em"  className="animate-spin text-[11px]" />
                                         <span>Copying...</span>
                                       </>
                                     ) : (
@@ -441,7 +441,7 @@ export default function BackupTable({
                                 aria-label="Download Backup"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                               >
-                                <HugeIcon  className="ph-bold ph-download-simple text-[16px]"></HugeIcon>
+                                <Download01Icon size="1em"  className="text-[16px]"></Download01Icon>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -455,7 +455,7 @@ export default function BackupTable({
                                 aria-label="Delete Backup"
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                               >
-                                <HugeIcon  className="ph-bold ph-trash text-[16px]"></HugeIcon>
+                                <Delete01Icon size="1em"  className="text-[16px]"></Delete01Icon>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>

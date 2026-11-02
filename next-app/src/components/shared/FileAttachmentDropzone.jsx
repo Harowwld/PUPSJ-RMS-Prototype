@@ -2,11 +2,11 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty";
-import { Attachment01Icon } from "hugeicons-react";
+import { Attachment01Icon , Add01Icon, Cancel01Icon, CloudUploadIcon, Download01Icon, Image01Icon, ViewIcon} from "hugeicons-react";
 
 /**
  * Formats bytes into clean human-readable strings (e.g. 111 KB, 12 MB)
@@ -39,7 +39,7 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
     return {
       extLabel: "PDF",
       badgeBg: "bg-[#dc2626] text-white",
-      iconClass: "ph-bold ph-file-pdf text-red-500",
+      iconClass: " File02Icon text-red-500",
       accentColor: "#dc2626",
       isImage: false,
     };
@@ -48,7 +48,7 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
     return {
       extLabel: "DOCX",
       badgeBg: "bg-[#2563eb] text-white",
-      iconClass: "ph-bold ph-file-doc text-blue-500",
+      iconClass: " Doc01Icon text-blue-500",
       accentColor: "#2563eb",
       isImage: false,
     };
@@ -57,7 +57,7 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
     return {
       extLabel: ext.toUpperCase() || "XLSX",
       badgeBg: "bg-[#16a34a] text-white",
-      iconClass: "ph-bold ph-file-xls text-emerald-500",
+      iconClass: " Xls01Icon text-emerald-500",
       accentColor: "#16a34a",
       isImage: false,
     };
@@ -66,7 +66,7 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
     return {
       extLabel: ext.toUpperCase() || "IMG",
       badgeBg: "bg-[#0d9488] text-white",
-      iconClass: "ph-bold ph-image text-teal-400",
+      iconClass: " Image01Icon text-teal-400",
       accentColor: "#0d9488",
       isImage: true,
     };
@@ -75,7 +75,7 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
     return {
       extLabel: ext.toUpperCase() || "ZIP",
       badgeBg: "bg-amber-600 text-white",
-      iconClass: "ph-bold ph-archive text-amber-500",
+      iconClass: " Archive01Icon text-amber-500",
       accentColor: "#d97706",
       isImage: false,
     };
@@ -84,7 +84,7 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
   return {
     extLabel: ext.toUpperCase() || "FILE",
     badgeBg: "bg-slate-600 dark:bg-zinc-700 text-white",
-    iconClass: "ph-bold ph-file text-slate-500 dark:text-zinc-400",
+    iconClass: " File01Icon text-slate-500 dark:text-zinc-400",
     accentColor: "#64748b",
     isImage: false,
   };
@@ -210,7 +210,7 @@ export function AttachedFileCard({
               title="Preview file"
               aria-label="Preview file"
             >
-              <HugeIcon className="ph-bold ph-eye text-xs" />
+              <ViewIcon size="1em" className="text-xs" />
             </button>
           )}
           {downloadUrl && (
@@ -224,7 +224,7 @@ export function AttachedFileCard({
               title="Download file"
               aria-label="Download file"
             >
-              <HugeIcon className="ph-bold ph-download-simple text-xs" />
+              <Download01Icon size="1em" className="text-xs" />
             </a>
           )}
           {!readOnly && onRemove && (
@@ -238,7 +238,7 @@ export function AttachedFileCard({
               title="Remove file"
               aria-label="Remove file"
             >
-              <HugeIcon className="ph-bold ph-x text-xs" />
+              <Cancel01Icon size="1em" className="text-xs" />
             </button>
           )}
         </div>
@@ -312,10 +312,10 @@ export function UploadProgressCard({
     >
       {/* Squircle Icon Badge */}
       <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
-        <HugeIcon
+        <Image01Icon size="1em"
           className={cn(
             "text-base",
-            formatConfig.isImage ? "ph-bold ph-image text-emerald-600 dark:text-emerald-400" : formatConfig.iconClass
+            formatConfig.isImage ? "text-emerald-600 dark:text-emerald-400" : formatConfig.iconClass
           )}
         />
       </div>
@@ -346,7 +346,7 @@ export function UploadProgressCard({
             title="Cancel"
             aria-label="Cancel"
           >
-            <HugeIcon className="ph-bold ph-x text-xs" />
+            <Cancel01Icon size="1em" className="text-xs" />
           </button>
         )}
       </div>
@@ -635,7 +635,7 @@ export default function FileAttachmentDropzone({
                 : "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/20 dark:bg-pup-maroon/20 dark:text-red-400 dark:border-red-500/30"
             )}
           >
-            <HugeIcon className="ph-bold ph-cloud-arrow-up text-2xl" />
+            <CloudUploadIcon size="1em" className="text-2xl" />
           </div>
           <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-zinc-100">
             {isDragging ? "Drop files to attach" : title || "Drag & drop files here, or browse"}
@@ -710,7 +710,7 @@ export default function FileAttachmentDropzone({
                   : "border-gray-200 hover:border-gray-300 bg-gray-50/40 hover:bg-gray-50/80 dark:border-zinc-800 dark:hover:border-zinc-700 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40"
               )}
             >
-              <HugeIcon className="ph-bold ph-plus text-xs text-pup-maroon dark:text-red-400" />
+              <Add01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
               <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                 {isDragging
                   ? "Drop files to attach"

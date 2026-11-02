@@ -11,7 +11,7 @@ export default function GlobalAuditLogsSkeleton() {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Header */}
         <PageHeader
-          icon="ph-bold ph-history"
+          icon=" Time01Icon"
           title="Platform Activity History"
           description="Review administrative actions, office changes, and security-related activity across the platform."
           showBorder={false}

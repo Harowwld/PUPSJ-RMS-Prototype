@@ -1,6 +1,6 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog"
 import { Select } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { Archive01Icon, ArrowRight02Icon, DragDropIcon, Tick01Icon } from "hugeicons-react";
+
 
 const ConflictResolutionModals = memo(({
   applyReportOpen,
@@ -112,7 +114,7 @@ const ConflictResolutionModals = memo(({
                       <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 shrink-0">
-                            <HugeIcon  className="ph-bold ph-archive text-sm" />
+                            <Archive01Icon size="1em"  className="text-sm" />
                           </div>
                           <div>
                             <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
@@ -131,7 +133,7 @@ const ConflictResolutionModals = memo(({
                             className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border bg-gray-50/80 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:border-border dark:bg-zinc-800/80 dark:text-zinc-300 cursor-grab active:cursor-grabbing hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-all select-none shadow-2xs"
                             title="Drag to any destination option on the right"
                           >
-                            <HugeIcon  className="ph-bold ph-dots-six-vertical text-gray-900 dark:text-zinc-300" />
+                            <DragDropIcon size={16}  className="text-gray-900 dark:text-zinc-300" />
                             <span>Drag Handle</span>
                           </div>
                         )}
@@ -203,7 +205,7 @@ const ConflictResolutionModals = memo(({
                               >
                                 <span className="truncate">{opt.label}</span>
                                 {selected && (
-                                  <HugeIcon  className="ph-bold ph-check text-xs text-pup-maroon dark:text-red-400 ml-1.5 shrink-0" />
+                                  <Tick01Icon size="1em"  className="text-xs text-pup-maroon dark:text-red-400 ml-1.5 shrink-0" />
                                 )}
                               </button>
                             )
@@ -267,7 +269,7 @@ const ConflictResolutionModals = memo(({
                       </td>
                       <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate border-r border-border/70 dark:border-border/70">
                         <div className="flex items-center gap-2 truncate">
-                          <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
+                          <ArrowRight02Icon size="1em"  className="text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                           <span className="truncate">{r.toLabel}</span>
                         </div>
                       </td>
@@ -343,7 +345,7 @@ const ConflictResolutionModals = memo(({
                         </td>
                         <td className="py-3 px-4 text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                           <div className="flex items-center gap-2">
-                            <HugeIcon  className="ph-bold ph-arrow-right text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
+                            <ArrowRight02Icon size="1em"  className="text-gray-400 dark:text-zinc-600 text-xs shrink-0" />
                             <span>Room {r?.to?.room} · Cabinet {r?.to?.cabinet} · Drawer {r?.to?.drawer}</span>
                           </div>
                         </td>

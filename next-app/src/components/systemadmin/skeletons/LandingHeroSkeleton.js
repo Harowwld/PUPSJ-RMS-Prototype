@@ -1,9 +1,11 @@
 "use client"
 
-import HugeIcon from "@/components/shared/HugeIcon";
+
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
+import { GitMergeIcon, HelpCircleIcon, Image01Icon, LayoutBottomIcon, LibraryIcon } from "hugeicons-react";
+
 
 export default function LandingHeroSkeleton() {
   return (
@@ -11,23 +13,23 @@ export default function LandingHeroSkeleton() {
       {/* Top Section Switcher Pill */}
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100/90 dark:bg-zinc-900/80 border border-border dark:border-border w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 shadow-sm">
-          <HugeIcon  className="ph-bold ph-image text-sm" />
+          <Image01Icon size="1em"  className="text-sm" />
           <span>Hero Section</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <HugeIcon  className="ph-bold ph-git-merge text-sm" />
+          <GitMergeIcon size="1em"  className="text-sm" />
           <span>Workflow &amp; Steps</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <HugeIcon  className="ph-bold ph-books text-sm" />
+          <LibraryIcon size="1em"  className="text-sm" />
           <span>Academic Catalog</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <HugeIcon  className="ph-bold ph-question text-sm" />
+          <HelpCircleIcon size="1em"  className="text-sm" />
           <span>FAQ Section</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-500">
-          <HugeIcon  className="ph-bold ph-panel-bottom text-sm" />
+          <LayoutBottomIcon size="1em"  className="text-sm" />
           <span>Footer Section</span>
         </div>
       </div>
@@ -35,7 +37,7 @@ export default function LandingHeroSkeleton() {
       {/* Main PageHeader Card */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-layout"
+          icon=" DashboardSquare01Icon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>

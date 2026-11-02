@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import HugeIcon from "@/components/shared/HugeIcon"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,8 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
 import { generateSampleBrandingPdf, deriveDocumentPrefix } from "@/lib/pdfGenerator"
-
+import { CheckmarkCircle01Icon, CovidInfoIcon } from "hugeicons-react";
+import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_PUP_LOGO = "/assets/pup-logo.webp"
 const OFFICIAL_FALLBACK_LOGO = "/assets/branding/black-icon.png"
 const BRANDING_CACHE_KEY = "institution_branding_cache"
@@ -359,7 +360,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
       {/* Main Container Card */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
-          icon="ph-bold ph-certificate"
+          icon=" Certificate01Icon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Institutional Identity</span>
@@ -558,7 +559,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         </div>
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-zinc-500 mb-2 border border-border dark:border-border shadow-2xs">
-                          <HugeIcon className="ph-duotone ph-shield-plus text-xl" />
+                          <AppIcon className=" Shield01Icon text-xl" />
                         </div>
                       )}
                       <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
@@ -1001,7 +1002,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
 
                 <div className="flex items-center justify-between gap-3 pt-1">
                   <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
-                    <HugeIcon className="ph-fill ph-check-circle text-emerald-500 text-sm shrink-0" />
+                    <CheckmarkCircle01Icon size="1em" className="text-emerald-500 text-sm shrink-0" />
                     <span>Matches official A4 PDF engine</span>
                   </div>
                   <Button
@@ -1018,7 +1019,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                 </div>
 
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-100/70 dark:bg-zinc-800/40 text-[11px] text-gray-600 dark:text-zinc-400">
-                  <HugeIcon className="ph-bold ph-info text-pup-maroon dark:text-red-400 text-sm shrink-0" />
+                  <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm shrink-0" />
                   <span>
                     When saved, these seals, titles, and color are stored in the local database and cached for offline use across all campus offices.
                   </span>
@@ -1041,7 +1042,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
         variant="warning"
-        buttonIcon="ph-bold ph-arrow-counter-clockwise"
+        buttonIcon=" ReloadIcon"
         isLoading={saving}
         onConfirm={handleReset}
       />

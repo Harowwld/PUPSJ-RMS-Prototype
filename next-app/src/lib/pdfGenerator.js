@@ -102,7 +102,7 @@ export async function getInstitutionalBranding() {
 /**
  * Helper to convert hex color to RGB array
  */
-function hexToRgb(hex) {
+export function hexToRgb(hex) {
   if (!hex || typeof hex !== "string") return [122, 30, 40]
   const clean = hex.replace("#", "").trim()
   if (clean.length === 3) {
@@ -185,6 +185,8 @@ export const getLogoAsPng = async (customSrc = null, fallbackToDefault = true) =
  */
 export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
   const pageWidth = doc.internal.pageSize.getWidth()
+  const fontName = options.fontName || "helvetica"
+  const fontStyle = (style) => options.fontName ? "normal" : style
   const instName = options?.institutionName || "Polytechnic University of the Philippines"
   const campName = options?.campusName || "San Juan City Campus"
   const autoPrefix = deriveDocumentPrefix(instName, campName)
@@ -224,7 +226,7 @@ export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
     if (jurisdictionHeader && jurisdictionHeader.trim()) {
       doc.setTextColor(120, 120, 120)
       doc.setFontSize(7.5)
-      doc.setFont("helvetica", "normal")
+      doc.setFont(fontName, fontStyle("normal"))
       doc.text(jurisdictionHeader.trim(), pageWidth / 2, currentY, { align: "center", charSpace: 1.2 })
       currentY += 13
     } else {
@@ -234,14 +236,16 @@ export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
     // School Name
     doc.setTextColor(brandR, brandG, brandB)
     doc.setFontSize(13.5)
-    doc.setFont("helvetica", "bold")
-    doc.text(instName, pageWidth / 2, currentY, { align: "center" })
+    doc.setFont(fontName, fontStyle("bold"))
+    const institutionLines = options.fontName ? doc.splitTextToSize(instName, pageWidth - 200) : [instName]
+    doc.text(institutionLines, pageWidth / 2, currentY, { align: "center" })
+    currentY += (institutionLines.length - 1) * 16
 
     // Campus (if provided)
     if (campName && campName.trim()) {
       currentY += 12
       doc.setFontSize(9.5)
-      doc.setFont("helvetica", "bold")
+      doc.setFont(fontName, fontStyle("bold"))
       doc.setTextColor(100, 100, 100)
       doc.text(campName.trim(), pageWidth / 2, currentY, { align: "center" })
     }
@@ -250,21 +254,21 @@ export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
     currentY += 13
     doc.setTextColor(130, 130, 130)
     doc.setFontSize(8)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(fontName, fontStyle("bold"))
     doc.text(officeName, pageWidth / 2, currentY, { align: "center", charSpace })
 
     // 4. Report Title
     currentY = Math.max(currentY + 22, logoY + logoSize + 20)
     doc.setTextColor(0, 0, 0)
     doc.setFontSize(13.5)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(fontName, fontStyle("bold"))
     doc.text(reportTitle || "Report", pageWidth / 2, currentY, { align: "center" })
 
     // 5. Document ID
     currentY += 14
     doc.setTextColor(110, 110, 110)
     doc.setFontSize(8.5)
-    doc.setFont("helvetica", "italic")
+    doc.setFont(fontName, fontStyle("italic"))
     doc.text(`Document ID: ${documentId}`, pageWidth / 2, currentY, { align: "center" })
 
     // 6. Master Divider Line
@@ -272,6 +276,7 @@ export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
     doc.setDrawColor(brandR, brandG, brandB)
     doc.setLineWidth(1.8)
     doc.line(40, currentY, pageWidth - 40, currentY)
+    return currentY
   } else {
     // SINGLE-LOGO CENTERED MASTHEAD (Original Standard)
     try {
@@ -286,7 +291,7 @@ export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
     if (jurisdictionHeader && jurisdictionHeader.trim()) {
       doc.setTextColor(120, 120, 120)
       doc.setFontSize(8)
-      doc.setFont("helvetica", "normal")
+      doc.setFont(fontName, fontStyle("normal"))
       doc.text(jurisdictionHeader.trim(), pageWidth / 2, currentY, { align: "center", charSpace: 1.5 })
       currentY += 15
     } else {
@@ -295,34 +300,37 @@ export const addPUPReportHeader = (doc, reportTitle, options = {}) => {
 
     doc.setTextColor(brandR, brandG, brandB)
     doc.setFontSize(14.5)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(fontName, fontStyle("bold"))
     const fullTitle = campName
       ? `${instName} · ${campName}`
       : instName
-    doc.text(fullTitle, pageWidth / 2, currentY, { align: "center" })
+    const institutionLines = options.fontName ? doc.splitTextToSize(fullTitle, pageWidth - 80) : [fullTitle]
+    doc.text(institutionLines, pageWidth / 2, currentY, { align: "center" })
+    currentY += (institutionLines.length - 1) * 17
 
     currentY += 16
     doc.setTextColor(130, 130, 130)
     doc.setFontSize(8.5)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(fontName, fontStyle("bold"))
     doc.text(officeName, pageWidth / 2, currentY, { align: "center", charSpace })
 
     currentY += 28
     doc.setTextColor(0, 0, 0)
     doc.setFontSize(13.5)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(fontName, fontStyle("bold"))
     doc.text(reportTitle || "Report", pageWidth / 2, currentY, { align: "center" })
 
     currentY += 15
     doc.setTextColor(110, 110, 110)
     doc.setFontSize(8.5)
-    doc.setFont("helvetica", "italic")
+    doc.setFont(fontName, fontStyle("italic"))
     doc.text(`Document ID: ${documentId}`, pageWidth / 2, currentY, { align: "center" })
 
     currentY += 15
     doc.setDrawColor(brandR, brandG, brandB)
     doc.setLineWidth(1.8)
     doc.line(40, currentY, pageWidth - 40, currentY)
+    return currentY
   }
 }
 
