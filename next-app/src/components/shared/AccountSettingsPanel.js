@@ -39,6 +39,7 @@ import { setHighContrastPreference } from "@/lib/accessibility";
 import { HelpCircleIcon as EmptyHelpCircleIcon , ArrowRight01Icon, CovidInfoIcon, Loading01Icon, Shield01Icon, SmartPhone01Icon, Tick01Icon, UserIcon} from "hugeicons-react";
 import { Switch } from "@/components/ui/switch";
 import AppIcon from "@/components/ui/app-icon";
+import { TableDensityControl } from "@/components/shared/TablePreferences";
 const getNowTimestamp = () => Date.now();
 
 export default function AccountSettingsPanel() {
@@ -1503,6 +1504,21 @@ export default function AccountSettingsPanel() {
                         {avatarsExpanded ? "Show Fewer Avatars" : "View More Avatars"}
                       </Button>
                     </div>
+                  </div>
+                </div>
+
+                {/* Table row density preference */}
+                <div className="py-10 sm:py-12">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                        Table Row Density
+                      </h3>
+                      <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                        Choose the row spacing used by tables across this browser.
+                      </p>
+                    </div>
+                    <TableDensityControl className="sm:min-w-56 sm:justify-end" label="Application table row density" />
                   </div>
                 </div>
 

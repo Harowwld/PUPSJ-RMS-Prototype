@@ -1,5 +1,8 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
@@ -61,6 +64,7 @@ import { Badge } from "@/components/ui/badge";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
 
 const CATEGORIES = [
@@ -200,10 +204,15 @@ const DEFAULT_ORDER = ["organizations", "officers", "proposals"];
 export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [categoryFilters, setCategoryFilters] = useState([]);
-  const [statusFilters, setStatusFilters] = useState([]);
+  const [search, setSearchState] = useState("");
+  const [categoryFilters, setCategoryFiltersState] = useState([]);
+  const [statusFilters, setStatusFiltersState] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
+  const [orgPage, setOrgPage] = useState(1);
+  const [orgPageSize, setOrgPageSize] = useState(10);
+  const setSearch = useCallback((value) => { setSearchState(value); setOrgPage(1); }, []);
+  const setCategoryFilters = useCallback((value) => { setCategoryFiltersState(value); setOrgPage(1); }, []);
+  const setStatusFilters = useCallback((value) => { setStatusFiltersState(value); setOrgPage(1); }, []);
 
   // Category Navigation Slider (horizontal scroll & drag)
   const categoryTabsRef = useRef(null);
@@ -848,13 +857,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const handleFilterChange = useCallback((groupId, values) => {
     if (groupId === "status") setStatusFilters(values);
     else if (groupId === "category") setCategoryFilters(values);
-  }, []);
+  }, [setCategoryFilters, setStatusFilters]);
 
   const handleResetFilters = useCallback(() => {
     setSearch("");
     setCategoryFilters([]);
     setStatusFilters([]);
-  }, []);
+  }, [setSearch, setCategoryFilters, setStatusFilters]);
 
   const filteredOrganizations = useMemo(() => {
     return organizations.filter((org) => {
@@ -880,6 +889,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       return true;
     });
   }, [organizations, statusFilters, categoryFilters, search]);
+
+  const safeOrgPage = Math.min(orgPage, Math.max(1, Math.ceil(filteredOrganizations.length / orgPageSize)));
+  const paginatedOrganizations = filteredOrganizations.slice((safeOrgPage - 1) * orgPageSize, safeOrgPage * orgPageSize);
 
   const currentOrgIndex = selectedOrgForOfficers
     ? filteredOrganizations.findIndex((o) => o.id === selectedOrgForOfficers.id)
@@ -933,7 +945,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       });
     });
     return chips;
-  }, [search, categoryFilters, statusFilters]);
+  }, [search, categoryFilters, statusFilters, setSearch, setCategoryFilters, setStatusFilters]);
 
   const hasActiveFilters = Boolean(
     search.trim() || categoryFilters.length > 0 || statusFilters.length > 0
@@ -1028,40 +1040,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
-                {/* Segmented View Mode Toggle: Cards vs Table */}
-                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("grid")}
-                    aria-pressed={viewMode === "grid"}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                      viewMode === "grid"
-                        ? "bg-pup-maroon text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                    title="Show each organization as a card"
-                  >
-                    <ViewModeIcon mode="cards" className="text-sm" />
-                    <span>Cards</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("table")}
-                    aria-pressed={viewMode === "table"}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                      viewMode === "table"
-                        ? "bg-pup-maroon text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                    title="Show organization details in columns"
-                  >
-                    <ViewModeIcon mode="table" className="text-sm" />
-                    <span>Table</span>
-                  </button>
-                </div>
-
                 {/* Refresh Button */}
                 <RefreshButton
                   onRefresh={() => fetchOrganizations(true)}
@@ -1505,9 +1483,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           </div>
 
           {/* 3. Navigation Toolbar: Category Navigation Slider & Search/Status Controls */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <DataViewToolbar label="Organization search, views, and filters" className="border-t border-border dark:border-border p-5 gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Category Navigation Slider */}
-            <div className="relative min-w-0 flex-1 max-w-full overflow-hidden flex items-center">
+            <div className="relative min-w-[220px] flex-1 max-w-full overflow-hidden flex items-center">
               {/* Left Gradient Mask & Chevron */}
               {canScrollLeft && (
                 <div className="absolute left-0 inset-y-0 z-10 flex items-center pr-3 bg-gradient-to-r from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
@@ -1597,7 +1575,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             </div>
 
             {/* Right: Search Input & Multi-Criteria Filter */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="flex flex-nowrap items-center gap-3 shrink-0">
               {/* Search Bar with live count badge */}
               <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -1614,6 +1592,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
               </div>
 
+              <div role="group" aria-label="Organization view" className="flex shrink-0 items-center gap-1 rounded-xl border border-border/60 bg-gray-100/80 p-1 dark:bg-zinc-800/60">
+                {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => (
+                  <button key={mode} type="button" onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode} className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors", viewMode === mode ? "bg-pup-maroon text-white shadow-xs" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                    <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />{label}
+                  </button>
+                ))}
+              </div>
+
               {/* Multi-Criteria Filter Popover */}
               <MultiCriteriaFilter
                 title="Filter Organizations"
@@ -1625,7 +1611,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 filteredCount={filteredOrganizations.length}
               />
             </div>
-          </div>
+            {viewMode === "table" && <TableScrollControls scrollContainerRef={tableContainerRef} isScrolledX={isScrolledX} onResetScroll={resetScroll} onScrollLeft={() => scrollLeft(400)} onScrollRight={() => scrollRight(400)} />}
+          </DataViewToolbar>
 
           {/* 4. Active Filter Chips & Scroll Controls */}
           <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
@@ -1636,14 +1623,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 className="p-0 border-0"
               />
             </div>
-            {viewMode === "table" && (
-              <TableScrollControls
-                isScrolledX={isScrolledX}
-                onResetScroll={resetScroll}
-                onScrollLeft={() => scrollLeft(400)}
-                onScrollRight={() => scrollRight(400)}
-              />
-            )}
           </div>
 
           {/* 5. Main Content Area (Dual View Engine) */}
@@ -1726,7 +1705,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+                <Table columns={[{ kind: "text", maxWidth: 340 }, "category", "text", "number", "status", "status", "actions"]} className="min-w-[1240px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
@@ -1761,7 +1740,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {filteredOrganizations.map((org) => {
+                    {paginatedOrganizations.map((org) => {
                       const hasCbl = Boolean(org.bylaws_storage_filename);
                       const officerCount = parseInt(org.active_officer_count, 10) || 0;
 
@@ -1867,7 +1846,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                       <button
                                         type="button"
                                         onClick={() => handlePreviewCbl(org)}
-                                        aria-label="Preview Official CBL"
+                                        aria-label={PDF_ACTION_LABELS.preview}
                                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
                                       >
                                         <ViewIcon size="1em" className="text-xs" />
@@ -1969,12 +1948,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       );
                     })}
                   </tbody>
-                </table>
+                </Table>
               </div>
             ) : (
               /* Grid View Mode */
               <div className="p-6 flex-[1_0_auto] content-start grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredOrganizations.map((org) => {
+                {paginatedOrganizations.map((org) => {
                   const hasCbl = Boolean(org.bylaws_storage_filename);
                   const officerCount = parseInt(org.active_officer_count, 10) || 0;
                   const proposalCount = parseInt(org.proposal_count, 10) || 0;
@@ -2159,7 +2138,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   <button
                                     type="button"
                                     onClick={() => handlePreviewCbl(org)}
-                                    title="Preview Official CBL"
+                                    title={PDF_ACTION_LABELS.preview}
                                     className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
                                   >
                                     <ViewIcon size="1em" className="text-xs" />
@@ -2211,16 +2190,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             )}
           </div>
 
-          {/* 6. Footer Summary Strip */}
-          <div className="mt-auto flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card px-6 py-3.5 rounded-b-2xl text-xs text-gray-900 dark:text-zinc-300 select-none">
-            <span>
-              Showing <strong>{filteredOrganizations.length}</strong> of <strong>{organizations.length}</strong> recognized{" "}
-              {organizations.length === 1 ? "organization" : "organizations"}
-            </span>
-            <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-              Only authorized student officers can submit campus event proposals for their organization.
-            </span>
-          </div>
+          {/* 6. Shared Table and Card Pagination Footer */}
+          <TablePagination label="Student organization pages" page={orgPage} pageSize={orgPageSize} totalCount={filteredOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setOrgPage} onPageSizeChange={setOrgPageSize} loading={loading} />
         </Card>
 
         {/* Manage Organization Slide-Over Sheet */}

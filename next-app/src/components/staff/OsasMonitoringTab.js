@@ -1,6 +1,9 @@
 "use client";
+import { Table, TableHead } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,7 @@ import PDFPreview from "@/components/shared/PDFPreview";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import {
@@ -48,11 +52,11 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   );
 }
 
-function SortableTableHeader({ column, label, sortBy, sortOrder, onSort, className = "" }) {
+function SortableTableHeader({ column, label, sortBy, sortOrder, onSort, className = "", tableColumn }) {
   const ariaSort = sortBy !== column ? "none" : sortOrder === "ASC" ? "ascending" : "descending";
 
   return (
-    <th className={className} aria-sort={ariaSort}>
+    <TableHead {...tableColumn} className={className} aria-sort={ariaSort}>
       <button
         type="button"
         onClick={() => onSort(column)}
@@ -61,7 +65,7 @@ function SortableTableHeader({ column, label, sortBy, sortOrder, onSort, classNa
         <span>{label}</span>
         <SortIndicator column={column} sortBy={sortBy} sortOrder={sortOrder} />
       </button>
-    </th>
+    </TableHead>
   );
 }
 
@@ -197,7 +201,7 @@ export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, su
         <div className="flex items-center justify-between gap-3">
           <span className="text-[11px] text-gray-500 dark:text-zinc-400">{subtext}</span>
           <Button variant="outline" size="sm" disabled={!previewUrl} onClick={() => onOpenPreview ? onOpenPreview() : setPreviewOpen(true)}>
-            Preview Document
+            {PDF_ACTION_LABELS.preview}
           </Button>
         </div>
       </div>
@@ -1257,64 +1261,13 @@ export default function OsasMonitoringTab({ showToast }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              {/* Segmented View Mode Toggle (Available for proposals & post-events streams) */}
-              {(activeStream === "proposals" || activeStream === "post_events") && (
-                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange("list")}
-                    aria-pressed={viewMode === "list"}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                      viewMode === "list"
-                        ? "bg-pup-maroon text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                    title="Show submissions as compact rows"
-                  >
-                    <ViewModeIcon mode="list" className="text-sm" />
-                    <span>List</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange("table")}
-                    aria-pressed={viewMode === "table"}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                      viewMode === "table"
-                        ? "bg-pup-maroon text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                    title="Show submissions in rows and columns"
-                  >
-                    <ViewModeIcon mode="table" className="text-sm" />
-                    <span>Table</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange("kanban")}
-                    aria-pressed={viewMode === "kanban"}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                      viewMode === "kanban"
-                        ? "bg-pup-maroon text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                    title="Show submissions on a Kanban board, grouped by stage"
-                  >
-                    <ViewModeIcon mode="kanban" className="text-sm" />
-                    <span>Kanban</span>
-                  </button>
-                </div>
-              )}
-
               <RefreshButton onRefresh={load} isLoading={loading} title="Refresh OSAS Queue" />
             </div>
           }
         />
 
         {/* 2. Stream, Search, Filter, and Horizontal Scroll Toolbar */}
-        <div className="border-t border-border dark:border-border bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <DataViewToolbar label="OSAS stream, search, and filters" className="border-t border-border dark:border-border bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30 gap-3">
           <div className="flex w-full items-center gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-gray-200/60 p-1 scrollbar-none dark:border-border dark:bg-zinc-800/80 xl:w-fit">
             <button
               type="button"
@@ -1364,7 +1317,7 @@ export default function OsasMonitoringTab({ showToast }) {
             </button>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end xl:flex-1">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2">
             <div className="relative w-full shrink-0 group sm:w-60 md:w-64">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                 <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 text-xs transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
@@ -1390,6 +1343,16 @@ export default function OsasMonitoringTab({ showToast }) {
               </div>
             </div>
 
+            {(activeStream === "proposals" || activeStream === "post_events") && (
+              <div role="group" aria-label="OSAS submission view" className="flex shrink-0 items-center gap-1 rounded-xl border border-border/60 bg-gray-100/80 p-1 dark:bg-zinc-800/60">
+                {[{ mode: "list", label: "List" }, { mode: "table", label: "Table" }, { mode: "kanban", label: "Kanban" }].map(({ mode, label }) => (
+                  <button key={mode} type="button" onClick={() => handleViewModeChange(mode)} aria-pressed={viewMode === mode} className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors", viewMode === mode ? "bg-pup-maroon text-white shadow-xs" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                    <ViewModeIcon mode={mode} className="text-sm" />{label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <MultiCriteriaFilter
               title={activeStream === "proposals" ? "Filter Proposals" : "Filter Post-Event Reports"}
               buttonLabel={activeStream === "proposals" ? "Filter Events" : "Filter Reports"}
@@ -1400,18 +1363,18 @@ export default function OsasMonitoringTab({ showToast }) {
               onClearAll={handleClearFilters}
             />
 
-            {(viewMode === "table" || viewMode === "kanban") && (
-              <TableScrollControls
-                isScrolledX={viewMode === "table" ? isScrolledX : kanbanCanScrollLeft}
+            {viewMode === "table" && (
+              <TableScrollControls scrollContainerRef={tableContainerRef}
+                isScrolledX={isScrolledX}
                 label="Scroll columns:"
-                scrollTargetLabel={viewMode === "kanban" ? "Kanban board" : "table"}
-                onResetScroll={resetActiveViewScroll}
+                scrollTargetLabel="table"
+                onResetScroll={resetTableScroll}
                 onScrollLeft={(amount) => scrollActiveView("left", amount)}
                 onScrollRight={(amount) => scrollActiveView("right", amount)}
               />
             )}
           </div>
-        </div>
+        </DataViewToolbar>
 
         {/* 3. Active Filter Chips */}
         <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
@@ -1465,7 +1428,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     ref={tableContainerRef}
                     className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                   >
-                  <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
+                  <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "text", "status", "date", "actions"]} className="min-w-[1300px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         <th
@@ -1602,7 +1565,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </Table>
                 </div>
               </div>
             )) : viewMode === "list" ? (
@@ -1720,7 +1683,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     ref={tableContainerRef}
                     className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                   >
-                  <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[1300px]">
+                  <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "text", "number", "status", "date", "actions"]} className="min-w-[1300px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         <th
@@ -1848,7 +1811,7 @@ export default function OsasMonitoringTab({ showToast }) {
                         );
                       })}
                     </tbody>
-                  </table>
+                  </Table>
                 </div>
               </div>
             )) : viewMode === "list" ? (
@@ -1932,62 +1895,7 @@ export default function OsasMonitoringTab({ showToast }) {
         )}
 
         {/* 5. Apple HIG Pagination Footer (Unified for both record views) */}
-        {viewMode !== "kanban" && activeFilteredList.length > 0 && (
-          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-              <span>
-                Showing {Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage)} of {activeFilteredList.length.toLocaleString()}
-              </span>
-              <div className="flex items-center gap-2">
-                <span>{viewMode === "table" ? "Rows:" : "Items:"}</span>
-                {[10, 20, 50, 100].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => {
-                      setItemsPerPage(size);
-                      setPage(1);
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                      itemsPerPage === size
-                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                        : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                    )}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 select-none">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={safePage <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Prev
-              </Button>
-
-              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                {safePage}
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={safePage >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
+        {viewMode !== "kanban" && <TablePagination label="OSAS monitoring pages" page={page} pageSize={itemsPerPage} totalCount={activeFilteredList.length} displayedCount={Math.max(0, Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage))} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />}
       </Card>
 
       {/* Slide-Over Review Sheet for Event Proposals */}

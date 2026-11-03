@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
@@ -62,9 +63,9 @@ export default function StudentOrganizationsSkeleton() {
 
         {/* 5. Main Table */}
         <div className="w-full flex-[1_0_auto] overflow-x-auto border-t border-border dark:border-border bg-white dark:bg-card">
-          <table className="w-full text-sm border-collapse min-w-[1040px]">
+          <Table columns={["text", "category", "text", "number", "status", "status", "actions"]} className="min-w-[1240px]">
             <thead className="border-b border-border bg-gray-50/90 dark:bg-zinc-900/90">
-              <tr className="h-11">
+              <tr>
                 <th className="p-4 pl-6 w-[280px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
@@ -90,7 +91,7 @@ export default function StudentOrganizationsSkeleton() {
             </thead>
             <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
               {Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} className="h-14">
+                <tr key={i}>
                   <td className="p-4 pl-6 border-r border-border/70 dark:border-border/70">
                     <div className="flex items-center gap-2">
                       <Skeleton className="w-2.5 h-2.5 rounded-full shrink-0" />
@@ -119,7 +120,7 @@ export default function StudentOrganizationsSkeleton() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
 
         {/* 6. Footer */}

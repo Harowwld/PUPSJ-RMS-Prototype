@@ -1,5 +1,8 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -64,6 +67,7 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, Loading01Icon, Shield01Icon, StarIcon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -680,7 +684,8 @@ function StudentDashboard() {
   useEffect(() => {
     const tab = searchParams?.get("view");
     const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
-    setView(allowed.has(tab) ? tab : "overview");
+    const timer = setTimeout(() => setView(allowed.has(tab) ? tab : "overview"), 0);
+    return () => clearTimeout(timer);
   }, [searchParams, router]);
 
   const load = useCallback(async () => {
@@ -1128,7 +1133,8 @@ function StudentDashboard() {
 
   useEffect(() => {
     if (osasSubView === "cbl" && selectedCblOrgId) {
-      loadCblData(selectedCblOrgId);
+      const timer = setTimeout(() => loadCblData(selectedCblOrgId), 0);
+      return () => clearTimeout(timer);
     }
   }, [osasSubView, selectedCblOrgId, loadCblData]);
 
@@ -1664,7 +1670,7 @@ function StudentDashboard() {
                     )}
 
                     {/* 3. Toolbar & Request History Header */}
-                    <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+                    <DataViewToolbar label="Request history search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
                       {/* Left: Heading and count */}
                       <div className="flex items-center gap-3 shrink-0">
                         <div>
@@ -1681,7 +1687,7 @@ function StudentDashboard() {
                       </div>
 
                       {/* Right: Search & Filter Group */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                      <div className="flex flex-nowrap items-center gap-3 w-full lg:w-auto">
                         <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
                           <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
                           <Input
@@ -1721,14 +1727,14 @@ function StudentDashboard() {
                           />
                         </div>
 
-                        <TableScrollControls
+                        <TableScrollControls scrollContainerRef={tableContainerRef}
                           canScrollLeft={canScrollLeft}
                           canScrollRight={canScrollRight}
                           onScrollLeft={() => scrollTable("left")}
                           onScrollRight={() => scrollTable("right")}
                         />
                       </div>
-                    </div>
+                    </DataViewToolbar>
 
                     {/* 4. Active Filter Chips Bar */}
                     <ActiveFilterChips
@@ -1801,7 +1807,7 @@ function StudentDashboard() {
                         ref={tableContainerRef}
                         className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
                       >
-                        <table className="w-full text-sm border-collapse min-w-[900px]">
+                      <Table columns={["identifier", "text", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[900px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                               <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
@@ -1972,69 +1978,14 @@ function StudentDashboard() {
                             ))
                           )}
                         </tbody>
-                      </table>
+                      </Table>
                     </div>
                   )}
 
                     {/* 6. Pagination Bar */}
                     {loading ? (
                       <StudentRequestsPaginationSkeleton />
-                    ) : filteredRequests.length > 0 ? (
-                      <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
-                        <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
-                          <span>
-                            Showing {paginatedRequests.length} of {filteredRequests.length.toLocaleString()}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span>Rows:</span>
-                            {[5, 10, 20, 50].map((size) => (
-                              <button
-                                key={size}
-                                type="button"
-                                onClick={() => {
-                                  setItemsPerPage(size);
-                                  setCurrentPage(1);
-                                }}
-                                className={cn(
-                                  "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                                  itemsPerPage === size
-                                    ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                                    : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                                )}
-                              >
-                                {size}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 select-none">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={displayPage <= 1}
-                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                          >
-                            Prev
-                          </Button>
-
-                          <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                            {displayPage}
-                          </div>
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={displayPage >= totalPages}
-                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                            className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
+                    ) : <TablePagination label="Student request pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRequests.length} displayedCount={paginatedRequests.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />}
                   </Card>
                 </div>
               ) : (
@@ -2465,7 +2416,7 @@ function StudentDashboard() {
                                         e.stopPropagation();
                                         handleOpenPdfPreview(item);
                                       }}
-                                      title="View Proposal Document"
+                                      title={PDF_ACTION_LABELS.preview}
                                       className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                     >
                                       <File02Icon size="1em" className="text-[16px]"></File02Icon>
@@ -2750,7 +2701,7 @@ function StudentDashboard() {
                                       docType: "Post-Event Narrative Report",
                                       originalFilename: report.narrative_original_filename,
                                     })}
-                                    title="Preview Narrative Report"
+                                    title={PDF_ACTION_LABELS.preview}
                                     className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                   >
                                     Preview
@@ -2768,7 +2719,7 @@ function StudentDashboard() {
                                         docType: "Financial Liquidation Report",
                                         originalFilename: report.liquidation_original_filename,
                                       })}
-                                      title="Preview Financial Liquidation"
+                                      title={PDF_ACTION_LABELS.preview}
                                       className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                                     >
                                       Preview
@@ -3437,7 +3388,6 @@ function StudentDashboard() {
                 </div>
                 <div className="flex flex-wrap items-start gap-3">
                   {selectedRequestForDetail.attachments.map((att) => {
-                    const isPdf = att.original_filename?.toLowerCase().endsWith(".pdf") || att.mime_type === "application/pdf";
                     const fileUrl = att.url || `/api/document-requests/${selectedRequestForDetail.id}/attachments/${att.id}`;
                     return (
                       <AttachedFileCard
@@ -3445,7 +3395,6 @@ function StudentDashboard() {
                         item={{ ...att, url: fileUrl }}
                         readOnly={true}
                         onPreview={() => {
-                          if (isPdf) {
                             setPdfPreviewData({
                               url: fileUrl,
                               title: att.original_filename,
@@ -3455,9 +3404,6 @@ function StudentDashboard() {
                               originalFilename: att.original_filename,
                             });
                             setPdfPreviewOpen(true);
-                          } else if (fileUrl) {
-                            window.open(fileUrl, "_blank");
-                          }
                         }}
                       />
                     );
@@ -3745,7 +3691,7 @@ function StudentDashboard() {
                     className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
                     <ViewIcon size="1em" className="text-xs mr-1" />
-                    <span>View PDF</span>
+                    <span>{PDF_ACTION_LABELS.preview}</span>
                   </Button>
                 </div>
               </div>

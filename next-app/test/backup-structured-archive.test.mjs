@@ -212,7 +212,7 @@ test("executeRestoreBackup extracts structured archive into office storage paths
       originalFilename: "f137.pdf",
       storageFilename: "test_f137_extracted_file.pdf",
       archivePath: "records/AY_2024/BSIT/Section_1/2024-00099-SJ-0 - TEST STUDENT [Loc R1-CabA-D1]/Form 137.pdf",
-      sha256: "testhash",
+      sha256: computeBufferSha256(Buffer.from(testFilePayload, "utf8")),
     },
   ];
 

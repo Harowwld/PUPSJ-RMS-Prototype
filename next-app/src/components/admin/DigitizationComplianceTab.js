@@ -1,6 +1,10 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -31,13 +35,14 @@ import {
   EmptyContent,
 } from "@/components/ui/empty";
 
-import ReportPreviewDialog from "@/components/shared/ReportPreviewDialog";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ComplianceStudentsSheet from "@/components/shared/ComplianceStudentsSheet";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
 import { AlertCircleIcon as EmptyAlertCircleIcon, Files01Icon as EmptyFiles01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, CovidInfoIcon, DragDropIcon, Loading01Icon, PieChartIcon, ReloadIcon, Target01Icon, UserSearch01Icon, Search01Icon } from "hugeicons-react";
@@ -103,6 +108,7 @@ function DigitizationComplianceContent({
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
+  const previewSession = usePdfPreviewSession();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState(null);
@@ -318,12 +324,15 @@ function DigitizationComplianceContent({
   const handlePreview = async () => {
     if (!data || loading) return;
     setIsGeneratingPdf(true);
+    const request = previewSession.begin();
     try {
       const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
-      const url = URL.createObjectURL(blob);
+      const url = previewSession.createUrl(blob, request);
+      if (!url) return;
       setPdfPreviewUrl(url);
       setReportOpen(true);
     } catch (e) {
+      if (!previewSession.isCurrent(request)) return;
       console.error("PDF Preview generation failed:", e);
       showToast?.(
         formatErrorMessage(e, {
@@ -332,11 +341,11 @@ function DigitizationComplianceContent({
         true
       );
     } finally {
-      setIsGeneratingPdf(false);
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
   }
 
-  const handlePrint = async () => {
+  const handleDownloadPdf = async () => {
     const fileName = generateExportFilename("COMPLIANCE", "REPORT", "pdf");
     if (!pdfBlobUrl) {
       setIsGeneratingPdf(true);
@@ -555,7 +564,7 @@ function DigitizationComplianceContent({
                   {isGeneratingPdf ? (
                     <Loading01Icon size="1em"  className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
                   ) : (
-                    "Export PDF Report"
+                    PDF_ACTION_LABELS.preview
                   )}
                 </Button>
               </div>
@@ -1125,7 +1134,7 @@ function DigitizationComplianceContent({
             "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border",
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="flex items-center justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
+            <DataViewToolbar label="Program compliance table controls" className="justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
               <div className="flex items-center gap-2.5">
                 <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
                   Program Breakdown
@@ -1134,20 +1143,20 @@ function DigitizationComplianceContent({
                   ({sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"})
                 </span>
               </div>
-              <TableScrollControls
+              <TableScrollControls scrollContainerRef={tableContainerRef}
                 onScrollLeft={scrollLeft}
                 onScrollRight={scrollRight}
                 onResetScroll={resetScroll}
                 isScrolled={isScrolledX}
               />
-            </div>
+            </DataViewToolbar>
 
             <div
               ref={tableContainerRef}
               className="hidden w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 sm:block"
             >
               {sortedByCourse.length > 0 ? (
-                <table className="w-full text-sm border-collapse min-w-[850px]">
+                <Table columns={["text", "number", "number", "number"]} className="min-w-[850px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
@@ -1278,7 +1287,7 @@ function DigitizationComplianceContent({
                       )
                     })}
                   </tbody>
-                </table>
+                </Table>
               ) : (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                   <Empty>
@@ -1353,62 +1362,7 @@ function DigitizationComplianceContent({
             )}
 
             {/* Standard Table Pagination Footer */}
-            {sortedByCourse.length > 0 && (
-              <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                  <span>
-                    Showing {paginatedByCourse.length} of {sortedByCourse.length.toLocaleString()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span>Rows:</span>
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => {
-                          setPageSize(size);
-                          setPage(1);
-                        }}
-                        className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                          pageSize === size
-                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 select-none">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Prev
-                  </Button>
-
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                    {page}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            <TablePagination label="Program compliance pages" page={page} pageSize={pageSize} totalCount={sortedByCourse.length} displayedCount={paginatedByCourse.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         ) : null}
       </Card>
@@ -1420,10 +1374,11 @@ function DigitizationComplianceContent({
         filters={{ status: statusFilter, courseCode: courseFilter, requireApproved: requireApproved ? "1" : "0", officeId }}
       />
 
-      <ReportPreviewDialog
+      <PDFPreviewModal
         open={reportOpen}
         onClose={() => {
-          if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+          previewSession.cancel();
+          setIsGeneratingPdf(false);
           setPdfPreviewUrl(null);
           setReportOpen(false);
         }}
@@ -1431,7 +1386,7 @@ function DigitizationComplianceContent({
         description="Review the generated document before downloading. Ensure all records and rates are correctly captured."
         pdfUrl={pdfBlobUrl}
         isPreparing={isGeneratingPdf}
-        onDownload={handlePrint}
+        onDownload={handleDownloadPdf}
         onPrint={() => onLogAction?.({
           action: "Print Report",
           details: "opened print dialog for the physical record compliance report",

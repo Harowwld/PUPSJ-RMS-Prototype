@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { access as fsAccess, constants, mkdir } from "node:fs/promises";
-import path from "node:path";
 import { getOfficeById, updateOffice, deactivateOffice } from "@/lib/officesRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
@@ -40,7 +38,7 @@ export async function PATCH(req, { params }) {
     }
     const allowedFields = new Set([
       "id", "name", "short_name", "description", "icon", "accent_color", "status",
-      "station_name", "storage_path", "inbound_path", "ingest_token", "scanner_model", "last_station_ping",
+      "station_name", "ingest_token", "scanner_model",
     ]);
     const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
     if (unsupportedField) {
@@ -60,27 +58,6 @@ export async function PATCH(req, { params }) {
         { ok: false, error: "Archived offices cannot be modified. Please reactivate the office first." },
         { status: 400 }
       );
-    }
-
-    if (body.inbound_path !== undefined) {
-      const inboundPath = String(body.inbound_path || "").trim();
-      if (!inboundPath) return NextResponse.json({ ok: false, error: "Scanner inbound folder is required" }, { status: 400 });
-      const resolvedInboundPath = path.resolve(inboundPath);
-      try {
-        await fsAccess(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
-      } catch (accessError) {
-        try {
-          await mkdir(resolvedInboundPath, { recursive: true });
-          await fsAccess(resolvedInboundPath, constants.R_OK | constants.W_OK | constants.X_OK);
-        } catch (createError) {
-          const permissionDenied = ["EACCES", "EPERM"].includes(accessError?.code) || ["EACCES", "EPERM"].includes(createError?.code);
-          const message = process.platform === "darwin" && permissionDenied
-            ? "macOS denied folder access to the app process. In System Settings → Privacy & Security → Files & Folders, allow Desktop access for Visual Studio Code, or run pnpm dev from Terminal, then restart the app."
-            : `The selected inbound folder is unavailable or not writable by the application host (${accessError?.code || createError?.code || "access check failed"}).`;
-          return NextResponse.json({ ok: false, error: message }, { status: 400 });
-        }
-      }
-      body.inbound_path = resolvedInboundPath;
     }
 
     const updated = await updateOffice(id, body);
@@ -109,9 +86,6 @@ export async function PATCH(req, { params }) {
     }
     if (body.station_name !== undefined && body.station_name !== original.station_name) {
       changes.push(`Station Host: '${original.station_name || "Unassigned"}' -> '${body.station_name}'`);
-    }
-    if (body.storage_path !== undefined && body.storage_path !== original.storage_path) {
-      changes.push(`Storage Partition: '${original.storage_path || "Default"}' -> '${body.storage_path}'`);
     }
     if (body.scanner_model !== undefined && body.scanner_model !== original.scanner_model) {
       changes.push(`Scanner Model: '${original.scanner_model || "Generic"}' -> '${body.scanner_model}'`);

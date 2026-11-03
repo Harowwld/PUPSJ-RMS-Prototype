@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { downloadDocument } from "@/lib/documentDownload";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import { toast } from "sonner";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Download01Icon, File02Icon, Location01Icon, MoreVerticalIcon, ReloadIcon, ViewIcon } from "hugeicons-react";
 
@@ -203,16 +206,13 @@ export default function GoogleDrivePdfCard({
     }
   };
 
-  const handleDownloadClick = (e) => {
+  const handleDownloadClick = async (e) => {
     e?.stopPropagation?.();
-    if (onDownload) {
-      onDownload(doc);
-    } else {
-      // Fallback direct download link
-      const downloadUrl = doc?.file_url || (doc?.id ? `/api/documents/${doc.id}` : null);
-      if (downloadUrl) {
-        window.open(downloadUrl, "_blank");
-      }
+    try {
+      if (onDownload) await onDownload(doc);
+      else if (resolvedSrc) await downloadDocument(resolvedSrc, originalFilename);
+    } catch (error) {
+      toast.error("Download Failed", { description: error.message });
     }
   };
 
@@ -293,12 +293,12 @@ export default function GoogleDrivePdfCard({
                   type="button"
                   onClick={handlePreviewClick}
                   className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Preview Document"
+                  title={PDF_ACTION_LABELS.preview}
                 >
                   <ViewIcon size="1em" className="text-sm" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Preview Document</TooltipContent>
+              <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
             </Tooltip>
 
             {student && onLocate && (
@@ -349,7 +349,7 @@ export default function GoogleDrivePdfCard({
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <ViewIcon size="1em" className="text-sm text-gray-500" />
-                    <span>Preview Document</span>
+                    <span>{PDF_ACTION_LABELS.preview}</span>
                   </DropdownMenuItem>
                   {canRescan && (
                     <DropdownMenuItem
@@ -375,7 +375,7 @@ export default function GoogleDrivePdfCard({
                     className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
                     <Download01Icon size="1em" className="text-sm text-gray-500" />
-                    <span>Download PDF</span>
+                    <span>{isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
@@ -446,7 +446,7 @@ export default function GoogleDrivePdfCard({
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   <ViewIcon size="1em" className="text-sm text-gray-500" />
-                  <span>Preview Document</span>
+                  <span>{PDF_ACTION_LABELS.preview}</span>
                 </DropdownMenuItem>
                 {canRescan && (
                   <DropdownMenuItem
@@ -472,7 +472,7 @@ export default function GoogleDrivePdfCard({
                   className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   <Download01Icon size="1em" className="text-sm text-gray-500" />
-                  <span>Download PDF</span>
+                  <span>{isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>

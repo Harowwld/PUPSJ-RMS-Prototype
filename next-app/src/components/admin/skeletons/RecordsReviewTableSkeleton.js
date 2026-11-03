@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -14,7 +15,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
       )}
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <table className="w-full text-sm border-collapse min-w-[1240px]">
+        <Table columns={["selection", "identifier", "text", "text", "text", "status", "date", "actions"]} className="min-w-[1380px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 py-3 px-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
@@ -103,7 +104,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Pagination Footer */}

@@ -1,9 +1,11 @@
 "use client"
+import { Table, TableRow } from "@/components/ui/table";
 
 
 import React, { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import useTableScroll from "@/hooks/useTableScroll"
 import {
   Empty,
@@ -107,7 +109,8 @@ const LogRow = React.memo(function LogRow({
 
   return (
     <React.Fragment>
-      <tr
+      <TableRow
+        selected={Boolean(isSelected)}
         className={cn(
           "group transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
@@ -201,13 +204,13 @@ const LogRow = React.memo(function LogRow({
             </Tooltip>
           </div>
         </td>
-      </tr>
+      </TableRow>
       {isExpanded && (
-        <tr className="border-0 bg-gray-50 dark:bg-muted/30">
+        <TableRow expanded className="border-0 bg-gray-50 dark:bg-muted/30">
           <td colSpan={7} className="p-0">
             <LogExpandedRow log={log} handleCopy={handleCopy} />
           </td>
-        </tr>
+        </TableRow>
       )}
     </React.Fragment>
   )
@@ -339,23 +342,23 @@ export default function LogTable({
           </div>
         ) : (
           <div className="w-full flex-[1_0_auto] flex flex-col">
-            <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
+            <DataViewToolbar label="Audit log table controls" className="justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
               <span className="text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                 Showing {displayLogs.length.toLocaleString()} of {logTotal.toLocaleString()} {logTotal === 1 ? "event" : "events"}
               </span>
-              <TableScrollControls
+              <TableScrollControls scrollContainerRef={tableContainerRef}
                 onScrollLeft={scrollLeft}
                 onScrollRight={scrollRight}
                 onResetScroll={resetScroll}
                 isScrolled={isScrolledX}
               />
-            </div>
+            </DataViewToolbar>
 
             <div
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
-              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+              <Table columns={["selection", "date", "status", "text", "text", { kind: "text", maxWidth: 340 }, "actions"]} className="min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className={cn(
@@ -472,7 +475,7 @@ export default function LogTable({
                     />
                   ))}
                 </tbody>
-              </table>
+              </Table>
             </div>
           </div>
         )}

@@ -1,17 +1,24 @@
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from "react"
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty"
+import PDFPreview from "@/components/shared/PDFPreview"
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
+import { REPORT_FONT_OPTIONS } from "@/lib/reportFontOptions"
+import { DEFAULT_BRANDING, resolveBranding } from "@/lib/institutionalBranding"
 import PageHeader from "@/components/shared/PageHeader"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
 import { generateSampleBrandingPdf, deriveDocumentPrefix } from "@/lib/pdfGenerator"
-import { CheckmarkCircle01Icon, CovidInfoIcon } from "hugeicons-react";
+import { AlertCircleIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_PUP_LOGO = "/assets/pup-logo.webp"
 const OFFICIAL_FALLBACK_LOGO = "/assets/branding/black-icon.png"
@@ -28,30 +35,17 @@ const COLOR_PRESETS = [
 
 export default function InstitutionalBrandingTab({ showToast }) {
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [generatingPdf, setGeneratingPdf] = useState(false)
+  const [sample, setSample] = useState(null)
+  const [sampleError, setSampleError] = useState("")
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [resetModalOpen, setResetModalOpen] = useState(false)
   const [removeLogoModalOpen, setRemoveLogoModalOpen] = useState(false)
   const [removeSecondaryLogoModalOpen, setRemoveSecondaryLogoModalOpen] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [isSecondaryDragOver, setIsSecondaryDragOver] = useState(false)
 
-  const [branding, setBranding] = useState({
-    institutionName: "Polytechnic University of the Philippines",
-    campusName: "San Juan City Campus",
-    tagline: "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
-    jurisdictionHeader: "Republic of the Philippines",
-    documentCodePrefix: "PUPSJ",
-    brandColor: "#7A1E28",
-    logoUrl: DEFAULT_PUP_LOGO,
-    fallbackLogoUrl: OFFICIAL_FALLBACK_LOGO,
-    logoBase64: null,
-    secondaryLogoUrl: null,
-    secondaryLogoBase64: null,
-    signatoryRegistrarTitle: "",
-    signatoryHeadTitle: "",
-  })
+  const [branding, setBranding] = useState(DEFAULT_BRANDING)
 
   const fileInputRef = useRef(null)
   const secondaryFileInputRef = useRef(null)
@@ -63,34 +57,6 @@ export default function InstitutionalBrandingTab({ showToast }) {
     [showToast]
   )
 
-  const fetchBranding = useCallback(
-    async (isRefresh = false) => {
-      if (isRefresh) setRefreshing(true)
-      else setLoading(true)
-      try {
-        const res = await fetch("/api/system/branding", { cache: "no-store" })
-        const json = await res.json()
-        if (res.ok && json.ok && json.data) {
-          setBranding(json.data)
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
-            } catch {}
-          }
-        } else {
-          notify(json.error || "Failed to load branding settings", true)
-        }
-      } catch (err) {
-        console.error("[InstitutionalBrandingTab] Fetch error:", err)
-        notify("Network error fetching branding settings", true)
-      } finally {
-        setLoading(false)
-        if (isRefresh) setRefreshing(false)
-      }
-    },
-    [notify]
-  )
-
   useEffect(() => {
     let ignore = false
     const init = async () => {
@@ -99,7 +65,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
         const json = await res.json()
         if (ignore) return
         if (res.ok && json.ok && json.data) {
-          setBranding(json.data)
+          setBranding(resolveBranding(json.data))
           if (typeof window !== "undefined") {
             try {
               localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
@@ -319,37 +285,33 @@ export default function InstitutionalBrandingTab({ showToast }) {
     }
   }
 
-  const handleDownloadSamplePdf = async () => {
-    try {
-      setGeneratingPdf(true)
-      notify("Rendering sample PDF specification...")
-      const payload = {
-        ...branding,
-        documentCodePrefix: deriveDocumentPrefix(branding.institutionName, branding.campusName),
+  useEffect(() => {
+    if (loading) return
+    let active = true
+    let url
+    const timer = setTimeout(async () => {
+      setSampleError("")
+      try {
+        const blob = await generateSampleBrandingPdf(branding)
+        if (!active) return
+        url = URL.createObjectURL(blob)
+        setSample({ branding, url })
+      } catch (error) {
+        if (active) setSampleError(error.message || "Unable to generate the branding preview.")
       }
-      const blob = await generateSampleBrandingPdf(payload)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `Institutional-Branding-Sample-${Date.now()}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      notify("Sample PDF downloaded successfully!")
-    } catch (err) {
-      console.error("[InstitutionalBrandingTab] PDF generation failed:", err)
-      notify("Failed to generate sample PDF", true)
-    } finally {
-      setGeneratingPdf(false)
+    }, 400)
+    return () => {
+      active = false
+      clearTimeout(timer)
+      if (url) URL.revokeObjectURL(url)
     }
-  }
+  }, [branding, loading])
+  const sampleReady = !loading && sample?.branding === branding && !sampleError
 
   const activeLogoSrc = branding.logoBase64 || branding.logoUrl || DEFAULT_PUP_LOGO
   const isCustomLogo = !!branding.logoBase64
   const activeSecondaryLogoSrc = branding.secondaryLogoBase64 || branding.secondaryLogoUrl
   const hasSecondaryLogo = !!activeSecondaryLogoSrc
-  const derivedPrefix = deriveDocumentPrefix(branding.institutionName, branding.campusName)
 
   if (loading) {
     return <InstitutionalBrandingSkeleton />
@@ -376,20 +338,15 @@ export default function InstitutionalBrandingTab({ showToast }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2.5 flex-wrap">
-              <RefreshButton
-                onRefresh={() => fetchBranding(true)}
-                isLoading={refreshing}
-                title="Refresh Branding Settings"
-              />
 
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleDownloadSamplePdf}
-                disabled={generatingPdf}
+                onClick={() => setPreviewOpen(true)}
+                disabled={!sampleReady}
                 className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                {generatingPdf ? "Rendering PDF..." : "Preview Sample PDF"}
+                {!sampleReady && !sampleError ? "Preparing PDF…" : PDF_ACTION_LABELS.preview}
               </Button>
 
               <Button
@@ -420,6 +377,19 @@ export default function InstitutionalBrandingTab({ showToast }) {
             
             {/* LEFT COLUMN (7 cols): Settings Configuration */}
             <div className="lg:col-span-7 space-y-5">
+              <div className="rounded-2xl border border-border bg-white p-6 shadow-2xs dark:bg-card space-y-4">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">Report Typography</h3>
+                  <p className="mt-1 text-[12px] text-gray-500 dark:text-zinc-400">Choose the typeface for the letterhead, body, tables, and footers of all generated reports.</p>
+                </div>
+                <div>
+                  <label htmlFor="report-font" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">Report font</label>
+                  <Select id="report-font" value={branding.reportFont || "jakarta"} onChange={(event) => setBranding((previous) => ({ ...previous, reportFont: event.target.value }))} className="h-11 w-full sm:h-10" aria-describedby="report-font-help">
+                    {REPORT_FONT_OPTIONS.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
+                  </Select>
+                  <p id="report-font-help" className="mt-2 text-xs text-gray-500 dark:text-zinc-400">Arial and Times New Roman options use embedded compatible fonts, Liberation Sans and Liberation Serif. The app interface keeps its current font.</p>
+                </div>
+              </div>
               
               {/* Card 1: Official Institutional Seals & Logos */}
               <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
@@ -801,228 +771,28 @@ export default function InstitutionalBrandingTab({ showToast }) {
 
             </div>
 
-            {/* RIGHT COLUMN (5 cols): Live Interactive PDF Simulator (Sticky) */}
             <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-6">
-              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Live PDF Report Header Simulator
-                    </h3>
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Pixel-accurate representation of your A4 print headers.
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      "text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0 border shadow-2xs",
-                      hasSecondaryLogo
-                        ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
-                        : "bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
-                    )}
-                  >
-                    {hasSecondaryLogo ? "Dual-Seal Split" : "Single-Seal Mode"}
-                  </span>
+              <div className="rounded-2xl border border-border bg-white p-6 shadow-2xs dark:bg-card space-y-4">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">Document Preview</h3>
+                  <p className="mt-1 text-[12px] text-gray-500 dark:text-zinc-400">Preview your current settings in the actual report format. Save Branding to apply them to new reports.</p>
                 </div>
-
-                {/* Simulated A4 Paper Header */}
-                <div className="w-full rounded-2xl bg-white border border-border/80 shadow-md p-6 sm:p-8 select-none text-center relative overflow-hidden font-sans">
-                  {hasSecondaryLogo ? (
-                    /* Mode B: Dual-Logo Split Masthead */
-                    <div className="flex items-center justify-between gap-3 mb-4">
-                      {/* Left Primary Seal */}
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center p-1 border border-border dark:border-border rounded-xl bg-gray-50/50 shadow-2xs">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={activeLogoSrc}
-                          onError={(e) => {
-                            e.currentTarget.src = OFFICIAL_FALLBACK_LOGO
-                          }}
-                          alt="Primary Seal"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-
-                      {/* Center Institutional Block */}
-                      <div className="flex-1 text-center min-w-0">
-                        {branding.jurisdictionHeader && (
-                          <p className="text-[7.5px] uppercase tracking-[0.2em] font-medium text-gray-400 mb-0.5 truncate">
-                            {branding.jurisdictionHeader}
-                          </p>
-                        )}
-                        <h2
-                          className="text-[13px] sm:text-[14px] font-bold tracking-tight transition-colors duration-200 truncate"
-                          style={{ color: branding.brandColor }}
-                        >
-                          {branding.institutionName}
-                        </h2>
-                        {branding.campusName && (
-                          <p className="text-[9.5px] sm:text-[10px] font-semibold text-gray-600 dark:text-zinc-300 mt-0.5 truncate">
-                            {branding.campusName}
-                          </p>
-                        )}
-                        <p className="text-[8px] uppercase tracking-[0.16em] font-semibold text-gray-400 mt-0.5 truncate">
-                          {branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS"}
-                        </p>
-                      </div>
-
-                      {/* Right Secondary Seal */}
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center p-1 border border-amber-200/60 rounded-xl bg-amber-50/30 shadow-2xs">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={activeSecondaryLogoSrc}
-                          alt="Secondary Seal"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
+                <div className="relative flex h-[620px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-gray-100 dark:bg-muted" aria-busy={!sampleReady && !sampleError}>
+                  {sampleError ? (
+                    <div className="flex flex-1 items-center justify-center p-5">
+                      <EmptyState variant="compact" icon={AlertCircleIcon} title="Preview Unavailable" description={sampleError}>
+                        <Button variant="outline" onClick={() => setSampleAttempt((value) => value + 1)}>Retry Preview</Button>
+                      </EmptyState>
                     </div>
+                  ) : sampleReady ? (
+                    <PDFPreview src={sample.url} title="Institutional document style preview" />
                   ) : (
-                    /* Mode A: Single-Logo Centered Masthead */
-                    <>
-                      <div className="flex justify-center mb-3">
-                        <div className="w-16 h-16 flex items-center justify-center p-1">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={activeLogoSrc}
-                            onError={(e) => {
-                              e.currentTarget.src = OFFICIAL_FALLBACK_LOGO
-                            }}
-                            alt="Simulated Logo"
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        </div>
-                      </div>
-
-                      {branding.jurisdictionHeader && (
-                        <p className="text-[8px] uppercase tracking-[0.2em] font-medium text-gray-400 mb-0.5">
-                          {branding.jurisdictionHeader}
-                        </p>
-                      )}
-
-                      <h2
-                        className="text-[15px] sm:text-[16px] font-bold tracking-tight transition-colors duration-200"
-                        style={{ color: branding.brandColor }}
-                      >
-                        {branding.campusName
-                          ? `${branding.institutionName} · ${branding.campusName}`
-                          : branding.institutionName}
-                      </h2>
-
-                      <p className="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-400 mt-1">
-                        {branding.tagline || "OFFICIAL ACADEMIC ARCHIVES & RECORDS"}
-                      </p>
-                    </>
+                    <div className="flex-1 space-y-4 bg-white p-5 dark:bg-card" role="status" aria-label="Preparing document preview">
+                      <Skeleton className="mx-auto h-10 w-10" />
+                      <Skeleton className="mx-auto h-4 w-4/5" />
+                      <Skeleton className="h-72 w-full" />
+                    </div>
                   )}
-
-                  {/* Sample Report Title */}
-                  <h3 className="text-[13px] sm:text-[14px] font-bold text-gray-900 mt-4">
-                    Official Document Header Specification
-                  </h3>
-
-                  {/* Sample Document ID */}
-                  <p className="text-[9px] italic text-gray-500 mt-1 font-sans tabular-nums">
-                    Document ID: {derivedPrefix}-SPEC-2026-XXXX
-                  </p>
-
-                  {/* Master Divider Line */}
-                  <div
-                    className="w-full h-[2px] mt-3.5 mb-5 transition-colors duration-200"
-                    style={{ backgroundColor: branding.brandColor }}
-                  />
-
-                  {/* Simulated Table Body Snippet */}
-                  <div className="rounded-xl border border-border bg-gray-50/60 p-3.5 text-left space-y-2 text-[10px]">
-                    <div
-                      className="p-1.5 rounded-lg text-white font-bold text-[9px] uppercase tracking-wider flex items-center justify-between"
-                      style={{ backgroundColor: branding.brandColor }}
-                    >
-                      <span>Audit Specification Sample</span>
-                      <span className="text-[8px] opacity-90">
-                        {hasSecondaryLogo ? "Dual-Seal Mode" : "Single-Seal Mode"}
-                      </span>
-                    </div>
-                    {branding.jurisdictionHeader && (
-                      <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                        <span>Super-Header / Jurisdiction</span>
-                        <span className="font-semibold text-gray-900">{branding.jurisdictionHeader}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <span>School / University</span>
-                      <span className="font-semibold text-gray-900">{branding.institutionName}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <span>Campus / Branch</span>
-                      <span className="font-semibold text-gray-900">{branding.campusName || "N/A"}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <span>Office / Subheader</span>
-                      <span className="font-semibold text-gray-900 text-right truncate max-w-[210px]">{branding.tagline || "N/A"}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <div className="flex items-center gap-1.5">
-                        <span>Tracking Code Prefix</span>
-                        <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                          Auto
-                        </span>
-                      </div>
-                      <span className="font-semibold font-sans tabular-nums text-gray-900">{derivedPrefix}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <span>Primary Seal</span>
-                      <span className="font-semibold text-emerald-600">
-                        {isCustomLogo ? "Custom Upload" : "Default PUP Seal (eManage Fallback)"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <span>Secondary / Regulatory Seal</span>
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          hasSecondaryLogo ? "text-amber-600 dark:text-amber-400" : "text-gray-400"
-                        )}
-                      >
-                        {hasSecondaryLogo ? "Custom Upload (Dual Masthead Active)" : "None (Single Logo Mode)"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border text-gray-600">
-                      <span>Registrar Signatory</span>
-                      <span className="font-semibold text-gray-900">
-                        {branding.signatoryRegistrarTitle || (branding.campusName ? "CAMPUS REGISTRAR (Auto)" : "REGISTRAR (Auto)")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1 text-gray-600">
-                      <span>Executive Signatory</span>
-                      <span className="font-semibold text-gray-900">
-                        {branding.signatoryHeadTitle || (branding.campusName ? "CAMPUS DIRECTOR (Auto)" : "HEAD OF INSTITUTION (Auto)")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 pt-1">
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300">
-                    <CheckmarkCircle01Icon size="1em" className="text-emerald-500 text-sm shrink-0" />
-                    <span>Matches official A4 PDF engine</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadSamplePdf}
-                    disabled={generatingPdf}
-                    title="Download Official Seal Test Sheet (PDF)"
-                    className="h-8 px-3 rounded-xl text-xs font-semibold border border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-all shadow-2xs"
-                  >
-                    {generatingPdf ? "Rendering..." : "Download Sample PDF"}
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-100/70 dark:bg-zinc-800/40 text-[11px] text-gray-600 dark:text-zinc-400">
-                  <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm shrink-0" />
-                  <span>
-                    When saved, these seals, titles, and color are stored in the local database and cached for offline use across all campus offices.
-                  </span>
                 </div>
               </div>
             </div>
@@ -1031,6 +801,18 @@ export default function InstitutionalBrandingTab({ showToast }) {
         </CardContent>
       </Card>
 
+      <PDFPreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title="Institutional Document Style Sample"
+        description="Review the current branding and font before saving."
+        pdfUrl={sampleReady ? sample.url : null}
+        isPreparing={!sampleReady && !sampleError}
+        error={sampleError}
+        onRetry={() => setSampleAttempt((value) => value + 1)}
+        downloadFilename="Institutional-Document-Style-Sample.pdf"
+      />
+
       {/* Reset Confirmation Modal */}
       <ConfirmModal
         open={resetModalOpen}
@@ -1038,7 +820,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
         isAppleStyled={true}
         isRestoreModal={true}
         title="Restore Default Institutional Branding"
-        message="Are you sure you want to restore the Jurisdiction Line, School Name, Campus, Administrative Office Header, Signatory Titles, Brand Color, and all uploaded seals back to default institutional settings (PUP logo with eManage fallback)?"
+        message="Restore the institutional names, office header, report font, signatory titles, brand color, and seals to their default settings?"
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
         variant="warning"

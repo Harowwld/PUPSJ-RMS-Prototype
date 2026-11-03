@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
@@ -50,7 +51,7 @@ export default function StaffDirectorySkeleton({ rowCount = 8 }) {
         {/* Table Body */}
         <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
           <div className="w-full flex-[1_0_auto] overflow-x-auto pb-2">
-            <table className="w-full text-sm border-collapse min-w-[1050px]">
+          <Table columns={["selection", "identifier", "text", "category", "status", "date", "actions"]} className="min-w-[1240px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                   <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
@@ -120,7 +121,7 @@ export default function StaffDirectorySkeleton({ rowCount = 8 }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+          </Table>
           </div>
 
           {/* Pagination Footer */}

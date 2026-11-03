@@ -4,228 +4,168 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import chokidar from "chokidar";
 import { Pool } from "pg";
+import { getOfficeHotFolderDirs } from "../../src/lib/officePaths.js";
 import { waitForStableFile } from "./fileStability.mjs";
 import { cleanupDoneFiles } from "./cleanup.mjs";
 
-const nextAppRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-dotenv.config({ path: path.join(nextAppRoot, ".env"), override: true });
+const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+dotenv.config({ path: path.join(appRoot, ".env") });
 
 const API_URL = String(process.env.HOT_FOLDER_API_URL || "http://localhost:3000/api/ingest/hot-folder").trim();
 const TOKEN = String(process.env.HOT_FOLDER_INGEST_TOKEN || "").trim();
 const SOURCE_STATION = String(process.env.HOT_FOLDER_SOURCE_STATION || "Scanner-PC").trim();
-const OFFICE_ID = String(process.env.HOT_FOLDER_OFFICE_ID || "registrar").trim().toLowerCase();
-const DEFAULT_INBOUND_DIR = path.resolve(process.env.HOT_FOLDER_ROOT
-  ? path.join(process.env.HOT_FOLDER_ROOT, "INBOUND")
-  : path.join(process.cwd(), ".local", "hot-folder", "INBOUND"));
-let INBOUND_DIR = DEFAULT_INBOUND_DIR;
-let PROCESSING_DIR = path.join(path.dirname(INBOUND_DIR), "PROCESSING");
-let DONE_DIR = path.join(path.dirname(INBOUND_DIR), "DONE");
-let FAILED_DIR = path.join(path.dirname(INBOUND_DIR), "FAILED");
+const SUPPORTED_EXTENSIONS = new Set([".pdf", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".webp", ".heic", ".heif"]);
 
-function ensureHotFolderDirs() {
-  for (const dir of [INBOUND_DIR, PROCESSING_DIR, DONE_DIR, FAILED_DIR]) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-async function readConfiguredInboundDir() {
-  if (!process.env.DATABASE_URL) return DEFAULT_INBOUND_DIR;
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, connectionTimeoutMillis: 3000 });
-  try {
-    const result = await pool.query("SELECT inbound_path FROM offices WHERE id = $1", [OFFICE_ID]);
-    const configured = String(result.rows[0]?.inbound_path || "").trim();
-    if (!configured) return DEFAULT_INBOUND_DIR;
-    if (path.isAbsolute(configured)) return path.resolve(configured);
-    return path.resolve(process.env.HOT_FOLDER_ROOT ? path.dirname(DEFAULT_INBOUND_DIR) : process.cwd(), configured);
-  } catch (error) {
-    console.warn(`[hot-folder] Could not read dynamic inbound path: ${error.message}`);
-    return DEFAULT_INBOUND_DIR;
-  } finally {
-    await pool.end();
-  }
-}
-
-if (!TOKEN) {
-  console.error("[hot-folder] Missing HOT_FOLDER_INGEST_TOKEN");
+if (!TOKEN || !process.env.DATABASE_URL) {
+  console.error("[hot-folder] HOT_FOLDER_INGEST_TOKEN and DATABASE_URL are required");
   process.exit(1);
 }
 
-// ── File filter ──────────────────────────────────────────────────────────────
-// macOS writes .DS_Store, ._filename (AppleDouble resource forks), and other
-// hidden temporary files alongside real content. We must skip them.
-const SUPPORTED_EXTENSIONS = new Set([".pdf", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".webp", ".heic", ".heif"]);
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, connectionTimeoutMillis: 3000 });
+const offices = new Map();
+let refreshing = false;
 
 function shouldIgnore(filePath) {
-  const basename = path.basename(filePath);
-  // Skip hidden/dot-files (.DS_Store, ._*, .Spotlight-V100, etc.)
-  if (basename.startsWith(".")) return true;
-  // Skip macOS temp files from scanner apps (e.g. "filename~", "#filename#")
-  if (basename.endsWith("~") || basename.startsWith("#")) return true;
-  // Only process known document/image types
-  const ext = path.extname(basename).toLowerCase();
-  if (!SUPPORTED_EXTENSIONS.has(ext)) return true;
-  return false;
+  const name = path.basename(filePath);
+  return name.startsWith(".") || name.startsWith("#") || name.endsWith("~") || !SUPPORTED_EXTENSIONS.has(path.extname(name).toLowerCase());
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-const inFlight = new Set();
-const pending = new Map();
-
-async function sendToIngest(absPath, originalName) {
-  const bytes = fs.readFileSync(absPath);
-  const file = new File([bytes], originalName);
+async function sendToIngest(officeId, filePath, originalName) {
+  const file = new File([fs.readFileSync(filePath)], originalName);
   const form = new FormData();
   form.set("file", file);
   form.set("sourceStation", SOURCE_STATION);
-  form.set("officeId", OFFICE_ID);
-  const res = await fetch(API_URL, {
+  form.set("officeId", officeId);
+  const response = await fetch(API_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${TOKEN}` },
     body: form,
   });
-  const json = await res.json().catch(() => null);
-  if (!res.ok || !json?.ok) {
-    throw new Error(json?.error || `HTTP ${res.status}`);
-  }
-  return json.data;
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.ok) throw new Error(result?.error || `HTTP ${response.status}`);
+  return result.data;
 }
 
-async function processOne(filePath) {
-  if (shouldIgnore(filePath)) return;
-  const fileName = path.basename(filePath);
-  if (inFlight.has(filePath)) return;
-  inFlight.add(filePath);
+async function processOne(context, filePath) {
+  if (shouldIgnore(filePath) || context.inFlight.has(filePath)) return;
+  context.inFlight.add(filePath);
   try {
-    const stable = await waitForStableFile(filePath);
-    if (!stable) throw new Error("File is not stable after waiting");
+    if (!await waitForStableFile(filePath)) throw new Error("File is not stable after waiting");
+    if (!fs.existsSync(filePath)) return;
 
-    // Verify the file still exists in INBOUND (Image Capture may have moved it)
-    if (!fs.existsSync(filePath)) {
-      console.warn(`[hot-folder] File disappeared before processing: ${fileName}`);
-      return;
-    }
-
-    const processingPath = path.join(PROCESSING_DIR, `${Date.now()}-${fileName}`);
+    const fileName = path.basename(filePath);
+    const processingPath = path.join(context.dirs.processing, `${Date.now()}-${fileName}`);
     fs.renameSync(filePath, processingPath);
-    let row;
     try {
-      row = await sendToIngest(processingPath, fileName);
-    } catch (e) {
-      const failedPath = path.join(FAILED_DIR, path.basename(processingPath));
-      fs.renameSync(processingPath, failedPath);
-      console.error(`[hot-folder] ✗ Failed ${fileName}: ${e.message}`);
-      return;
+      const row = await sendToIngest(context.officeId, processingPath, fileName);
+      fs.renameSync(processingPath, path.join(context.dirs.done, path.basename(processingPath)));
+      cleanupDoneFiles(context.dirs.done);
+      console.log(`[hot-folder] ${context.officeId}: uploaded ${fileName} as ingest #${row.id}`);
+    } catch (error) {
+      fs.renameSync(processingPath, path.join(context.dirs.failed, path.basename(processingPath)));
+      console.error(`[hot-folder] ${context.officeId}: failed ${fileName}: ${error.message}`);
     }
-    console.log(`[hot-folder] ✓ Uploaded ${fileName} -> ingest #${row.id}`);
-    const donePath = path.join(DONE_DIR, path.basename(processingPath));
-    fs.renameSync(processingPath, donePath);
-    cleanupDoneFiles(DONE_DIR);
-  } catch (e) {
-    console.error(`[hot-folder] Error ${fileName}: ${e.message}`);
+  } catch (error) {
+    console.error(`[hot-folder] ${context.officeId}: ${path.basename(filePath)}: ${error.message}`);
   } finally {
-    inFlight.delete(filePath);
+    context.inFlight.delete(filePath);
   }
 }
 
-function scheduleProcess(filePath) {
+function scheduleProcess(context, filePath) {
   if (shouldIgnore(filePath)) return;
-  const key = path.resolve(filePath);
-  clearTimeout(pending.get(key));
-  // Short debounce coalesces scanner event bursts. The stability gate below
-  // remains the source of truth for determining when a file is complete.
-  const timer = setTimeout(() => {
-    pending.delete(key);
-    processOne(key);
-  }, 250);
-  pending.set(key, timer);
+  const absolute = path.resolve(filePath);
+  clearTimeout(context.pending.get(absolute));
+  context.pending.set(absolute, setTimeout(() => {
+    context.pending.delete(absolute);
+    void processOne(context, absolute);
+  }, 250));
 }
 
-// ── Startup scan ─────────────────────────────────────────────────────────────
-// Process any files that were dropped into INBOUND while the watcher was offline
-// (e.g. Image Capture scanned before the script was started).
-function scanExistingFiles() {
-  let entries;
-  try {
-    entries = fs.readdirSync(INBOUND_DIR);
-  } catch {
-    return;
-  }
-  for (const name of entries) {
-    const absPath = path.join(INBOUND_DIR, name);
-    if (!shouldIgnore(absPath)) {
-      console.log(`[hot-folder] Found pre-existing file: ${name}`);
-      scheduleProcess(absPath);
-    }
+function scanExistingFiles(context) {
+  for (const name of fs.readdirSync(context.dirs.inbound)) {
+    scheduleProcess(context, path.join(context.dirs.inbound, name));
   }
 }
 
-// ── Chokidar watcher ─────────────────────────────────────────────────────────
-let watcher = null;
-let watcherGeneration = 0;
-
-function attachWatcher() {
-  ensureHotFolderDirs();
-  cleanupDoneFiles(DONE_DIR);
-  const generation = ++watcherGeneration;
-  console.log(`[hot-folder] Watching ${INBOUND_DIR}`);
-
-  watcher = chokidar.watch(INBOUND_DIR, {
-    // The explicit startup scan avoids a double-process race.
+function startOffice(officeId, dirs = getOfficeHotFolderDirs(officeId), key = officeId) {
+  Object.values(dirs).forEach((dir) => fs.mkdirSync(dir, { recursive: true }));
+  cleanupDoneFiles(dirs.done);
+  const context = { officeId, key, dirs, pending: new Map(), inFlight: new Set(), watcher: null, ready: false, failed: false };
+  const watcher = chokidar.watch(dirs.inbound, {
     ignoreInitial: true,
-    // Polling is reliable for scanner apps and Finder atomic renames.
     usePolling: true,
     interval: 200,
     binaryInterval: 200,
     ignored: (filePath) => {
-      const basename = path.basename(filePath);
-      return basename.startsWith(".") || basename.endsWith("~") || basename.startsWith("#");
+      const name = path.basename(filePath);
+      return name.startsWith(".") || name.startsWith("#") || name.endsWith("~");
     },
   });
-
-  watcher.on("add", scheduleProcess);
-  watcher.on("change", scheduleProcess);
-  watcher.on("error", (err) => {
-    console.error("[hot-folder] watcher error:", err?.message || err);
+  context.watcher = watcher;
+  watcher.on("add", (filePath) => scheduleProcess(context, filePath));
+  watcher.on("change", (filePath) => scheduleProcess(context, filePath));
+  watcher.on("ready", () => {
+    context.ready = true;
+    context.failed = false;
+    try {
+      scanExistingFiles(context);
+    } catch (error) {
+      context.ready = false;
+      context.failed = true;
+      console.error(`[hot-folder] ${officeId}: could not scan inbound folder: ${error.message}`);
+    }
+    void pool.query("UPDATE offices SET last_station_ping = NOW() WHERE id = $1", [officeId])
+      .catch((error) => console.error(`[hot-folder] ${officeId}: heartbeat failed: ${error.message}`));
+  });
+  watcher.on("error", (error) => {
+    context.ready = false;
+    context.failed = true;
+    console.error(`[hot-folder] ${officeId}: watcher error: ${error.message}`);
   });
   watcher.on("unlinkDir", (removedDir) => {
-    if (path.resolve(removedDir) === path.resolve(INBOUND_DIR)) {
-      console.error(`[hot-folder] Configured inbound folder was removed: ${INBOUND_DIR}`);
+    if (path.resolve(removedDir) === path.resolve(dirs.inbound)) {
+      context.ready = false;
+      context.failed = true;
+      console.error(`[hot-folder] ${officeId}: inbound folder was removed: ${dirs.inbound}`);
     }
   });
-  watcher.on("ready", () => {
-    if (generation !== watcherGeneration) return;
-    console.log("[hot-folder] Watcher ready. Scanning for pre-existing files...");
-    scanExistingFiles();
-  });
+  offices.set(key, context);
+  console.log(`[hot-folder] ${officeId}: watching ${dirs.inbound}`);
 }
 
-async function reloadConfiguredWatcher() {
-  const nextInboundDir = await readConfiguredInboundDir();
-  if (path.resolve(nextInboundDir) === path.resolve(INBOUND_DIR)) return;
-
-  console.log(`[hot-folder] Inbound path changed: ${INBOUND_DIR} -> ${nextInboundDir}`);
-  if (watcher) await watcher.close();
-  INBOUND_DIR = nextInboundDir;
-  const parentDir = path.dirname(INBOUND_DIR);
-  PROCESSING_DIR = path.join(parentDir, "PROCESSING");
-  DONE_DIR = path.join(parentDir, "DONE");
-  FAILED_DIR = path.join(parentDir, "FAILED");
-  attachWatcher();
+async function stopOffice(context) {
+  await context.watcher.close();
+  const pendingPaths = [...context.pending.keys()];
+  context.pending.forEach(clearTimeout);
+  context.pending.clear();
+  await Promise.allSettled(pendingPaths.map((filePath) => processOne(context, filePath)));
+  while (context.inFlight.size) await new Promise((resolve) => setTimeout(resolve, 100));
+  offices.delete(context.key);
 }
 
-async function main() {
-  INBOUND_DIR = await readConfiguredInboundDir();
-  const parentDir = path.dirname(INBOUND_DIR);
-  PROCESSING_DIR = path.join(parentDir, "PROCESSING");
-  DONE_DIR = path.join(parentDir, "DONE");
-  FAILED_DIR = path.join(parentDir, "FAILED");
-  attachWatcher();
-  setInterval(() => cleanupDoneFiles(DONE_DIR), 60000);
-  // Office settings can change while the dev server is running.
-  setInterval(() => reloadConfiguredWatcher().catch((error) => {
-    console.warn(`[hot-folder] Could not reload inbound path: ${error.message}`);
-  }), 10000);
+async function refreshOffices() {
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    const result = await pool.query("SELECT id FROM offices WHERE status = 'Active'");
+    const active = new Set(result.rows.map((row) => String(row.id).toLowerCase()));
+    for (const officeId of active) if (!offices.has(officeId)) startOffice(officeId);
+    for (const context of [...offices.values()]) {
+      if (!active.has(context.officeId)) await stopOffice(context);
+      else if (context.failed || !fs.existsSync(context.dirs.inbound)) {
+        await stopOffice(context);
+        startOffice(context.officeId, context.dirs, context.key);
+      }
+    }
+    for (const context of offices.values()) {
+      if (context.ready) await pool.query("UPDATE offices SET last_station_ping = NOW() WHERE id = $1", [context.officeId]);
+    }
+  } finally {
+    refreshing = false;
+  }
 }
 
-await main();
+await refreshOffices();
+setInterval(() => refreshOffices().catch((error) => console.error(`[hot-folder] Office refresh failed: ${error.message}`)), 10000);
+setInterval(() => offices.forEach((context) => cleanupDoneFiles(context.dirs.done)), 60000);

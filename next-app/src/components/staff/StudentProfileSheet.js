@@ -2,6 +2,7 @@
 
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import StudentRecordsReportDialog from "@/components/shared/StudentRecordsReportDialog";
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -694,13 +695,13 @@ export default function StudentProfileSheet({
                                     req.doc.id
                                   );
                                 }}
-                                aria-label="Preview Document"
+                                aria-label={PDF_ACTION_LABELS.preview}
                                 className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
                               >
                                 <ViewIcon size="1em" className="text-xs" />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent>Preview Document</TooltipContent>
+                            <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
                           </Tooltip>
                         )}
                       </div>
@@ -793,13 +794,13 @@ export default function StudentProfileSheet({
                                 previewTarget
                               );
                             }}
-                            aria-label="Preview Document"
+                            aria-label={PDF_ACTION_LABELS.preview}
                             className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
                           >
                             <ViewIcon size="1em" className="text-xs" />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent>Preview Document</TooltipContent>
+                        <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
                       </Tooltip>
                     </div>
                   </div>
@@ -910,7 +911,7 @@ export default function StudentProfileSheet({
           >
             Close
           </Button>
-          {!isOrg && <Button onClick={() => setReportOpen(true)}>Generate Report</Button>}
+          {!isOrg && <Button onClick={() => setReportOpen(true)}>{PDF_ACTION_LABELS.preview}</Button>}
           </div>
         </SheetFooter>
       </SheetContent>

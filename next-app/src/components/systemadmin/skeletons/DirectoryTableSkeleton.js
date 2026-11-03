@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -7,7 +8,7 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
   return (
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none">
-        <table className="w-full text-sm border-collapse min-w-[960px]">
+        <Table columns={["selection", "identifier", "text", "category", "category", "actions"]} className="min-w-[960px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 p-4 text-center">
@@ -34,7 +35,7 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[56px] border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+                className="border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
               >
                 <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
@@ -68,7 +69,7 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Pagination Footer Skeleton */}

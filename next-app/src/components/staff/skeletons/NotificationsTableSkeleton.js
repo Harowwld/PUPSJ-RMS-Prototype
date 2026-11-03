@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -12,7 +13,7 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
       )}
     >
       <div className="overflow-x-auto w-full show-scrollbar pb-2">
-        <table className="w-full border-collapse min-w-[1000px] text-sm">
+        <Table columns={["identifier", "category", "text", "category", "text", "date", "status", "actions"]} className="min-w-[1000px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-[13%] py-3 px-4">
@@ -45,7 +46,7 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[56px] border-b border-border dark:border-border last:border-b-0"
+                className="border-b border-border dark:border-border last:border-b-0"
               >
                 <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
@@ -77,7 +78,7 @@ export default function NotificationsTableSkeleton({ rowCount = 6, embedded = fa
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     </div>
   )

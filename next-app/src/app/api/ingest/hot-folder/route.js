@@ -18,6 +18,7 @@ import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { publishIngestEvent } from "@/lib/ingestEvents";
 import { triggerIngestProcessing } from "@/lib/ingestEventProcessor";
+import { getOfficeById } from "@/lib/officesRepo";
 
 export const runtime = "nodejs";
 
@@ -34,12 +35,14 @@ function hasValidMachineToken(req) {
   return constantTimeEqual(providedToken, expectedToken);
 }
 
-function getMachineContext(req, sourceStation, requestedOffice) {
+async function getMachineContext(req, sourceStation, requestedOffice) {
   const approvedStation = String(process.env.HOT_FOLDER_SOURCE_STATION || "Scanner-PC").trim();
-  const approvedOfficeId = String(process.env.HOT_FOLDER_OFFICE_ID || "registrar").trim().toLowerCase();
   if (!hasValidMachineToken(req)) return null;
   if (String(sourceStation || "").trim() !== approvedStation) return null;
-  if (String(requestedOffice || "").trim().toLowerCase() !== approvedOfficeId) return null;
+  const approvedOfficeId = String(requestedOffice || "").trim().toLowerCase();
+  if (!approvedOfficeId) return null;
+  const office = await getOfficeById(approvedOfficeId);
+  if (!office || office.status !== "Active") return null;
   return { approvedOfficeId, approvedStation };
 }
 
@@ -52,8 +55,8 @@ export async function POST(req) {
 
   const file = form.get("file");
   const sourceStation = String(form.get("sourceStation") || req.headers.get("x-source-station") || "").trim();
-  const requestedOffice = String(form.get("officeId") || process.env.HOT_FOLDER_OFFICE_ID || "registrar").trim().toLowerCase();
-  const machineContext = getMachineContext(req, sourceStation, requestedOffice);
+  const requestedOffice = String(form.get("officeId") || "").trim().toLowerCase();
+  const machineContext = await getMachineContext(req, sourceStation, requestedOffice);
   if (!machineContext) return NextResponse.json({ ok: false, error: "Invalid ingest token or source binding" }, { status: 401 });
   const { approvedOfficeId } = machineContext;
   if (!file || typeof file === "string") {

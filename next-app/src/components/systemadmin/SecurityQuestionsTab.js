@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/shared/PageHeader"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import BulkImportQuestionsModal from "@/components/systemadmin/BulkImportQuestionsModal"
 import {
@@ -30,8 +29,7 @@ export default function SecurityQuestionsTab({ showToast }) {
   const [totpLoading, setTotpLoading] = useState(false)
   const [bulkModalOpen, setBulkModalOpen] = useState(false)
 
-  const loadQuestions = useCallback(async (isManual = false) => {
-    if (isManual) setLoading(true)
+  const loadQuestions = useCallback(async () => {
     try {
       const res = await fetch("/api/system/security-questions", { cache: "no-store" })
       const json = await res.json().catch(() => null)
@@ -246,11 +244,6 @@ export default function SecurityQuestionsTab({ showToast }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <RefreshButton
-                onRefresh={() => loadQuestions(true)}
-                isLoading={loading}
-                title="Refresh Security Questions"
-              />
 
               <Button
                 type="button"

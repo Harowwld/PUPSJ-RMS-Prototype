@@ -865,7 +865,7 @@ export default function SystemBackupsTab({ showToast }) {
               )}
 
               {isLoading && !isManualLoading ? (
-                <BackupTableSkeleton embedded={true} />
+                <BackupTableSkeleton embedded={true} scope="platform" />
               ) : error ? (
                 <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">

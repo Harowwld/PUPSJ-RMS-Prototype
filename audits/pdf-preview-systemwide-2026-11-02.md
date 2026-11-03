@@ -21,9 +21,9 @@ The opening view now uses 100% zoom in desktop-sized panels. Panels narrower tha
 | Document matrix and notification panels | `ResilientPDFViewer` → `PDFPreview`; expanded viewing opens `PDFPreviewModal` |
 | Batch review | Inline PDFs use `PDFPreview`; opening PDFs or scan images uses `PDFPreviewModal` |
 | OSAS proposal review | The embedded document uses `PDFPreview`; its open action uses the shared modal |
-| Compliance summary, incomplete list, student records report | `ReportPreviewDialog` → `PDFPreview` |
-| Activity history, SLA/CSM, OSAS compliance reports | Their existing report shells use `PDFPreview` |
-| Student compliance slip | Generated PDF → `ReportPreviewDialog` → `PDFPreview` |
+| Compliance summary, incomplete list, student records report | `PDFPreviewModal` → `PDFPreview` |
+| Activity history, SLA/CSM, OSAS compliance reports | `PDFPreviewModal` → `PDFPreview` |
+| Student compliance slip | Generated PDF → `PDFPreviewModal` → `PDFPreview` |
 
 Document thumbnails and the OCR/template region editors retain their navigation/editing canvases. Full document viewing uses the shared preview. Map embeds retain their map iframes.
 
@@ -44,3 +44,5 @@ Direction: the existing institutional inspection UI for administrators, personne
 - **Purpose gate PASS:** A single PDF body and a restrained opening scale make the page structure readable; existing institutional assets and controls remain in use.
 - **Liveliness PASS:** Institutional paper styling and the existing primary action provide the intended identity and focal hierarchy without additional decoration or motion.
 - **Craftsmanship PASS:** File recovery is shared, original files remain intact, and full document viewers use one component and zoom policy.
+
+Current consolidation and action-label findings are recorded in [the PDF preview UI/UX audit](./pdf-preview-ui-ux-consolidation-2026-11-02.md).

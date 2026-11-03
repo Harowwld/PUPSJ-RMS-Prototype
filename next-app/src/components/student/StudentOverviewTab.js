@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
+import TablePagination from "@/components/shared/TablePagination";
 import useUrlPage from "@/hooks/useUrlPage";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
@@ -941,61 +942,7 @@ export default function StudentOverviewTab({
                 })}
               </div>
 
-              {/* Standard Table Pagination Footer */}
-              <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl select-none">
-                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                  <span>
-                    Showing {paginatedMilestones.length} of {filteredMilestones.length.toLocaleString()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span>Rows:</span>
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => {
-                          setItemsPerPage(size);
-                          setPage(1);
-                        }}
-                        className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                          itemsPerPage === size
-                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 select-none">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={validPage <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Prev
-                  </Button>
-
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                    {validPage}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={validPage >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
+              <TablePagination label="Student activity pages" page={validPage} pageSize={itemsPerPage} totalCount={filteredMilestones.length} displayedCount={paginatedMilestones.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />
             </>
           ) : (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">

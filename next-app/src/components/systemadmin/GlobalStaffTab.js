@@ -1,4 +1,6 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle"
 import useCreateAnother from "@/hooks/useCreateAnother"
@@ -51,6 +53,7 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Clock01Icon, Copy01Icon, DragDropIcon, Loading01Icon, PencilEdit01Icon, Settings01Icon, ViewIcon, Search01Icon, Archive01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -107,7 +110,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   // Pagination
   const [page, setPage] = useUrlPage()
-  const [pageSize, setPageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(10)
 
   // Multi-Selection State & Batch Actions
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -985,7 +988,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         )}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Personnel search, views, and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Apple Segmented Control for Active vs Archived */}
           <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
             <button
@@ -1035,17 +1038,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
 
           {/* Right: Scroll controls, Search Input & Dropdown Popovers Group */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            {/* Horizontal Scroll Controls */}
-            <TableScrollControls
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              isScrolled={isScrolled}
-              onScrollLeft={scrollLeft}
-              onScrollRight={scrollRight}
-              onResetScroll={resetScroll}
-            />
-
+          <div className="flex flex-nowrap items-center gap-3 shrink-0">
             <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                 <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
@@ -1079,8 +1072,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 }}
               />
             </div>
+            <TableScrollControls scrollContainerRef={tableContainerRef}
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              isScrolled={isScrolled}
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetScroll}
+            />
           </div>
-        </div>
+        </DataViewToolbar>
 
         {/* Active Filter Chips Row */}
         <ActiveFilterChips
@@ -1158,7 +1159,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             ref={tableContainerRef}
             className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
           >
-            <table className="w-full text-sm border-collapse min-w-[960px]">
+            <Table columns={["selection", "identifier", { kind: "text", maxWidth: 340 }, "category", "category", "actions"]} className="min-w-[960px]">
             <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
               <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                 <th
@@ -1245,6 +1246,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 return (
                   <tr 
                     key={member.id}
+                    selected={isSelected}
                     onClick={(e) => !isSelf && toggleSelect(member.id, e)}
                     className={cn(
                       "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
@@ -1412,58 +1414,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 )
               })}
             </tbody>
-          </table>
+            </Table>
         </div>
 
         {/* Pagination Footer */}
-        <div className="mt-auto flex items-center justify-between border-t border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl">
-          <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-            <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
-            <div className="flex items-center gap-2">
-              <span>Rows:</span>
-              {[10, 20, 50, 100].map(sz => (
-                <button
-                  key={sz}
-                  onClick={() => {
-                    setPageSize(sz)
-                    setPage(1)
-                  }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                    pageSize === sz 
-                      ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100" 
-                      : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                  )}
-                >
-                  {sz}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 select-none">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-              className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-            >
-              Prev
-            </Button>
-            <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-              {page}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={endIndex >= filteredStaff.length}
-              onClick={() => setPage(p => p + 1)}
-              className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <TablePagination label="Global personnel pages" page={page} pageSize={pageSize} totalCount={filteredStaff.length} displayedCount={paginatedStaff.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
       </>
     )}
     </div>

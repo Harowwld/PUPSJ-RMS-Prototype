@@ -1,6 +1,8 @@
 "use client";
+import { Table } from "@/components/ui/table";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -26,7 +28,7 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
-import ReportPreviewDialog from "@/components/shared/ReportPreviewDialog";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
 import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +43,7 @@ import {
 } from "@/lib/pdfGenerator";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowRight02Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, Clock01Icon, FoldersIcon, Loading01Icon, Location01Icon, Shield01Icon, Tick01Icon, Search01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 // Icon categorization helper for document requirements
@@ -61,15 +64,15 @@ function getRequirementCategoryIcon(category, isSubmitted) {
   return isSubmitted ? "TaskDone01Icon" : "FileUploadIcon";
 }
 
-function ComplianceSlipPreview({ student, requirements, summary, branding, onClose }) {
-  const [snapshot] = useState(() => ({ student, requirements, summary, branding }));
+function ComplianceSlipPreview({ student, requirements, summary, onClose }) {
+  const [snapshot] = useState(() => ({ student, requirements, summary }));
   const [url, setUrl] = useState(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
     let objectUrl;
-    generateStudentComplianceSlipPdf(snapshot.student, snapshot.requirements, snapshot.summary, { branding: snapshot.branding })
+    generateStudentComplianceSlipPdf(snapshot.student, snapshot.requirements, snapshot.summary)
       .then((blob) => {
         if (!active) return;
         objectUrl = URL.createObjectURL(blob);
@@ -82,7 +85,7 @@ function ComplianceSlipPreview({ student, requirements, summary, branding, onClo
     };
   }, [snapshot, attempt]);
   return (
-    <ReportPreviewDialog
+    <PDFPreviewModal
       open
       onClose={onClose}
       title="Student Document Compliance Slip"
@@ -360,8 +363,7 @@ export default function StudentComplianceTab({ authUser }) {
       const blob = await generateStudentComplianceSlipPdf(
         student,
         sortedRequirements,
-        summary,
-        { branding }
+        summary
       );
       const safeStudentNo = student.studentNo
         ? String(student.studentNo).replace(/[^0-9A-Za-z-]/g, "")
@@ -382,7 +384,7 @@ export default function StudentComplianceTab({ authUser }) {
       console.error("PDF download failed:", err);
       const normalized = formatErrorMessage(err, {
         title: "Download Interrupted",
-        description: "Unable to generate the checklist PDF preview. Please try printing the slip directly instead.",
+        description: "Unable to generate the compliance PDF. Please try again.",
       });
       toast.error(normalized.title, {
         description: normalized.description,
@@ -439,7 +441,7 @@ export default function StudentComplianceTab({ authUser }) {
                     Downloading...
                   </span>
                 ) : (
-                  "Download PDF Slip"
+                  PDF_ACTION_LABELS.download
                 )}
               </Button>
 
@@ -448,7 +450,7 @@ export default function StudentComplianceTab({ authUser }) {
                 onClick={() => setPrintModalOpen(true)}
                 className="h-10 px-5 border-0 cursor-pointer"
               >
-                Preview Compliance Slip
+                {PDF_ACTION_LABELS.preview}
               </Button>
             </div>
           }
@@ -460,7 +462,7 @@ export default function StudentComplianceTab({ authUser }) {
         </div>
 
         {/* C. Toolbar & Section Header */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Compliance search, views, and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Table Header & Total Count */}
           <div className="flex items-center gap-3 shrink-0">
             <div>
@@ -669,7 +671,7 @@ export default function StudentComplianceTab({ authUser }) {
             </div>
 
             {viewMode === "table" && (
-              <TableScrollControls
+              <TableScrollControls scrollContainerRef={tableContainerRef}
                 canScrollLeft={canScrollLeft}
                 canScrollRight={canScrollRight}
                 onScrollLeft={() => scrollTable("left")}
@@ -677,7 +679,7 @@ export default function StudentComplianceTab({ authUser }) {
               />
             )}
           </div>
-        </div>
+        </DataViewToolbar>
 
         {/* D. Active Filter Chips Bar */}
         <ActiveFilterChips
@@ -736,7 +738,7 @@ export default function StudentComplianceTab({ authUser }) {
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
-              <table className="w-full text-sm border-collapse table-fixed min-w-[750px]">
+              <Table columns={[{ kind: "text", maxWidth: 340 }, "category", "status", "actions"]} className="min-w-[750px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th
@@ -855,7 +857,7 @@ export default function StudentComplianceTab({ authUser }) {
                     );
                   })}
                 </tbody>
-              </table>
+              </Table>
             </div>
           ) : (
             /* Cards View */

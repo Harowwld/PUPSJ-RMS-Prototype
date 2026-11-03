@@ -12,6 +12,7 @@ import { clearAuthCookies } from "@/lib/cookieSecurity";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { verifyPasswordHash } from "../../../../lib/passwordHash.js";
 import { isDemoAccount } from "@/lib/demoAccounts";
+import { getOfficeUploadsDir, getScannerVisibleInboundDir } from "@/lib/officePaths";
 
 export const runtime = "nodejs";
 
@@ -222,6 +223,8 @@ export async function GET(req) {
         enabled_modules: enabledModules,
         station_name: stationName,
         scanner_model: scannerModel,
+        storage_path: staff?.office_id ? getOfficeUploadsDir(staff.office_id) : null,
+        inbound_path: staff?.office_id ? getScannerVisibleInboundDir(staff.office_id) : null,
         username: principal.email || sessionPayload.username || null,
         fname: staff?.fname || "",
         lname: staff?.lname || "",

@@ -117,14 +117,14 @@ export default function ActiveFilterChips({
             type="button"
             onClick={chip.onClear}
             className="w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer ml-0.5"
-            aria-label={`Remove filter ${chip.label}`}
+            aria-label={`Remove ${chip.groupLabel ? `${chip.groupLabel} filter` : "filter"} ${chip.label}`}
           >
             <Cancel01Icon size="1em" className="text-[10px]" />
           </button>
         </span>
       ))}
 
-      {chips.length > 1 && onClearAll && (
+      {chips.length > 0 && onClearAll && (
         <button
           type="button"
           onClick={onClearAll}

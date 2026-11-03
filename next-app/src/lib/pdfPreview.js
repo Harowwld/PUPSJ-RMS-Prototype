@@ -1,5 +1,11 @@
 export const PDF_PREVIEW_ZOOM = 100
 export const PDF_PREVIEW_COMPACT_WIDTH = 820
+export const PDF_ACTION_LABELS = Object.freeze({
+  preview: "Preview PDF",
+  print: "Print PDF",
+  download: "Download PDF",
+  original: "Download Original",
+})
 
 export function getPdfPreviewSrc(src, compact = false) {
   if (!src) return ""

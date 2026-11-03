@@ -1,6 +1,10 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Reorder } from "framer-motion";
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -854,6 +858,13 @@ export default function DocumentsTab({
                     totalCount={kpiStats.totalStudents}
                     filteredCount={matrixTotal}
                   />
+                  <TableScrollControls
+                    scrollContainerRef={matrixTableContainerRef}
+                    isScrolledX={isScrolledX}
+                    onResetScroll={resetMatrixScroll}
+                    onScrollLeft={() => scrollMatrixTable("left")}
+                    onScrollRight={() => scrollMatrixTable("right")}
+                  />
                 </div>
               </div>
 
@@ -866,59 +877,12 @@ export default function DocumentsTab({
                     className="p-0 border-0"
                   />
                 </div>
-                <div className="flex items-center gap-2 shrink-0 select-none">
-                  <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-zinc-500 mr-1">
-                    <ArrowLeftRightIcon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-                    <span>Scroll columns:</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={resetMatrixScroll}
-                    disabled={!isScrolledX}
-                    className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                    title="Reset horizontal scroll to default"
-                  >
-                    <ReloadIcon size="1em" className="text-xs" />
-                    <span>Reset Scroll</span>
-                  </Button>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => scrollMatrixTable("left")}
-                        className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
-                        aria-label="Scroll table left"
-                      >
-                        <ArrowLeft01Icon size="1em" className="text-xs" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Scroll Left</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => scrollMatrixTable("right")}
-                        className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
-                        aria-label="Scroll table right"
-                      >
-                        <ArrowRight01Icon size="1em" className="text-xs" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Scroll Right</TooltipContent>
-                  </Tooltip>
-                </div>
               </div>
 
               {/* 5. Matrix Table Content */}
               <div className="flex flex-col flex-[1_0_auto] w-full border-t border-border dark:border-border">
                 {docsLoading ? (
-                  <DocumentsMatrixSkeleton rowCount={7} embedded={true} />
+                  <DocumentsMatrixSkeleton rowCount={7} embedded={true} docTypes={complianceDocTypes} />
                 ) : docsError ? (
                   <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                     <Empty>
@@ -965,7 +929,7 @@ export default function DocumentsTab({
                     ref={matrixTableContainerRef}
                     className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
                   >
-                    <table className="w-full text-sm border-collapse min-w-max">
+                    <Table layout="matrix" columns={[{ kind: "identifier", width: 180 }, { kind: "text", width: 240 }, { kind: "category", width: 160 }, { kind: "number", width: 210 }, ...complianceDocTypes.map(() => ({ kind: "category", width: 185 }))]}>
                       <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                         <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           {/* Sticky Column: Student No */}
@@ -1202,74 +1166,12 @@ export default function DocumentsTab({
                           </tr>
                         ))}
                       </tbody>
-                    </table>
+                    </Table>
                   </div>
                 )}
 
                 {/* Matrix Pagination */}
-                {matrixTotal > 0 && (
-                  <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none rounded-b-2xl">
-                    <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
-                      <span>
-                        Showing {paginatedMatrixRecords.length} of{" "}
-                        {matrixTotal.toLocaleString()}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span>Rows:</span>
-                        <div className="flex items-center gap-1">
-                          {[10, 20, 50, 100].map((size) => (
-                            <button
-                              key={size}
-                              type="button"
-                              onClick={() => {
-                                setMatrixItemsPerPage(size);
-                                setMatrixPage(1);
-                              }}
-                              className={cn(
-                                "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                                matrixItemsPerPage === size
-                                  ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                              )}
-                            >
-                              {size}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={currentMatrixPage <= 1}
-                        onClick={() => {
-                          setMatrixPage((p) => Math.max(1, p - 1));
-                        }}
-                        className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                      >
-                        Prev
-                      </Button>
-
-                      <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                        {currentMatrixPage}
-                      </div>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={currentMatrixPage >= totalMatrixPages}
-                        onClick={() => {
-                          setMatrixPage((p) => Math.min(totalMatrixPages, p + 1));
-                        }}
-                        className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <TablePagination label="Student document matrix pages" page={matrixPage} pageSize={matrixItemsPerPage} totalCount={matrixTotal} displayedCount={paginatedMatrixRecords.length} onPageChange={setMatrixPage} onPageSizeChange={setMatrixItemsPerPage} loading={docsLoading} />
               </div>
         </Card>
 
@@ -1506,7 +1408,7 @@ export default function DocumentsTab({
                         studentName: selectedDoc.student?.name,
                       })}
                     >
-                      Open PDF Preview
+                      {PDF_ACTION_LABELS.preview}
                     </Button>
                   )}
               </div>

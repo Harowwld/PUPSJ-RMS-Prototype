@@ -1,5 +1,7 @@
 "use client";
 import { Textarea } from "@/components/ui/textarea";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import { downloadDocument } from "@/lib/documentDownload";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 
 import { useCallback, useEffect, useState } from "react";
@@ -428,18 +430,22 @@ export default function RegistrarODRSTab({ showToast }) {
                                   }}
                                   className="h-6 px-2 text-[10px] font-semibold rounded-md border"
                                 >
-                                  Preview
+                                  {PDF_ACTION_LABELS.preview}
                                 </Button>
                               )}
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download={att.original_filename}
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await downloadDocument(fileUrl, att.original_filename);
+                                  } catch (error) {
+                                    showToast?.({ title: "Download Failed", description: error.message }, true);
+                                  }
+                                }}
                                 className="h-6 px-2 inline-flex items-center text-[10px] font-semibold rounded-md border border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300"
                               >
-                                Download
-                              </a>
+                                {isPdf ? PDF_ACTION_LABELS.download : PDF_ACTION_LABELS.original}
+                              </button>
                             </div>
                           </div>
                         );

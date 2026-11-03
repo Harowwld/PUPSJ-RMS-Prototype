@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -8,6 +9,7 @@ export default function TaxonomyTableSkeleton({
   showSubtext = true,
   embedded = false,
   showPagination = true,
+  columns = ["selection", "identifier", "text", "status", "actions"],
 }) {
   return (
     <div
@@ -19,7 +21,7 @@ export default function TaxonomyTableSkeleton({
       )}
     >
       <div className="overflow-x-auto show-scrollbar pb-2">
-        <table className="w-full text-sm border-collapse min-w-[850px]">
+        <Table columns={columns} className="min-w-[950px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 py-3 px-4 text-center">
@@ -85,7 +87,7 @@ export default function TaxonomyTableSkeleton({
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Pagination Footer */}

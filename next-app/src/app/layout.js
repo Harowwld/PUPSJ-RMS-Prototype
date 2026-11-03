@@ -6,6 +6,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import DynamicFavicon from "@/components/shared/DynamicFavicon";
+import { TablePreferencesProvider } from "@/components/shared/TablePreferences";
 import localFont from "next/font/local";
 import { headers } from "next/headers";
 
@@ -52,7 +53,7 @@ export default async function RootLayout({ children }) {
           <AccessibilitySync />
           <DynamicFavicon />
           <ScrollIndicator />
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider><TablePreferencesProvider>{children}</TablePreferencesProvider></TooltipProvider>
           <Toaster position="top-center" />
         </ThemeProvider>
       </body>

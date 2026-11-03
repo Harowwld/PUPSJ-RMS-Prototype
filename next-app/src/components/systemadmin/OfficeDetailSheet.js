@@ -185,7 +185,7 @@ export default function OfficeDetailSheet({
   const isActive = displayOffice.status === "Active";
   const defaultAdminId = `PUP${String(displayOffice.id || "").trim().toUpperCase()}-001`;
   const defaultAdminEmail = `admin.${String(displayOffice.id || "").trim().toLowerCase()}@pup.local`;
-  const inboundPath = displayOffice.inbound_path || `.local/hot-folder/${displayOffice.id}`;
+  const inboundPath = displayOffice.scanner_host_path || displayOffice.inbound_path || `.local/hot-folder/${displayOffice.id}/INBOUND`;
   const storagePath = displayOffice.storage_path || `.local/storage/${displayOffice.id}`;
 
   return (
@@ -421,9 +421,14 @@ export default function OfficeDetailSheet({
                       <span className="font-semibold text-gray-900 dark:text-zinc-100">
                         {displayOffice.station_name}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Paired
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-medium",
+                        displayOffice.scanner_watching
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60"
+                          : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+                      )}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full", displayOffice.scanner_watching ? "bg-emerald-500" : "bg-gray-400")} />
+                        {displayOffice.scanner_watching ? "Watching" : "Not watching"}
                       </span>
                     </div>
                   ) : (
@@ -702,46 +707,43 @@ export default function OfficeDetailSheet({
 
         {/* Executive Action Bar Footer */}
         <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
-          <div>
-            {isActive ? (
-              onConfigure && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    handleClose();
-                    onConfigure?.(displayOffice);
-                  }}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Configure Department
-                </Button>
-              )
-            ) : (
-              onRestore && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    handleClose();
-                    onRestore?.(displayOffice);
-                  }}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Restore Department
-                </Button>
-              )
-            )}
-          </div>
-
           <Button
             type="button"
             variant="outline"
             onClick={handleClose}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10"
           >
             Close
           </Button>
+
+          {isActive ? (
+            onConfigure && (
+              <Button
+                type="button"
+                onClick={() => {
+                  handleClose()
+                  onConfigure(displayOffice)
+                }}
+                className="h-10"
+              >
+                Configure Department
+              </Button>
+            )
+          ) : (
+            onRestore && (
+              <Button
+                type="button"
+                variant="success"
+                onClick={() => {
+                  handleClose()
+                  onRestore(displayOffice)
+                }}
+                className="h-10"
+              >
+                Restore Department
+              </Button>
+            )
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

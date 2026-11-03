@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -22,7 +23,7 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
       </div>
 
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <table className="w-full text-sm border-collapse min-w-[850px]">
+        <Table columns={["text", "number", "number", "number"]} className="min-w-[850px]">
           <thead className="sticky top-0 z-10 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs border-b border-border select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="py-3 px-6 w-[32%] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
@@ -43,7 +44,7 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[54px] border-b border-border dark:border-border last:border-b-0"
+                className="border-b border-border dark:border-border last:border-b-0"
               >
                 {/* Program */}
                 <td className="py-3 px-6 align-middle border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white dark:bg-card">
@@ -85,7 +86,7 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     </div>
   )

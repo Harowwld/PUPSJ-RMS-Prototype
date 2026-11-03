@@ -1,6 +1,10 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
@@ -8,7 +12,6 @@ import { Reorder } from "framer-motion";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
-import PDFPreview from "@/components/shared/PDFPreview";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Button } from "@/components/ui/button";
@@ -18,16 +21,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -201,11 +197,9 @@ export default function OSASOrganizationComplianceView({
   const [previewCbl, setPreviewCbl] = useState(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
-  const [previewFrameReady, setPreviewFrameReady] = useState(false);
-  const pdfPreviewFrameRef = useRef(null);
+  const previewSession = usePdfPreviewSession();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
-  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
 
   // Load Data
   const load = useCallback(
@@ -694,9 +688,9 @@ export default function OSASOrganizationComplianceView({
 
   // PDF Generation
   const handleOpenPdfReport = async () => {
+    const request = previewSession.begin();
     try {
       setIsGeneratingPdf(true);
-      setPreviewFrameReady(false);
       setReportOpen(true);
 
       const scopeNote = isFiltered
@@ -711,7 +705,8 @@ export default function OSASOrganizationComplianceView({
         filteredSummary.categoryBreakdown.length > 0 ? filteredSummary.categoryBreakdown : byCategory,
         { scopeNote }
       );
-      const url = URL.createObjectURL(blob);
+      const url = previewSession.createUrl(blob, request);
+      if (!url) return;
       setPdfBlobUrl(url);
 
       onLogAction?.({
@@ -722,6 +717,7 @@ export default function OSASOrganizationComplianceView({
         entityType: "Report",
       });
     } catch (err) {
+      if (!previewSession.isCurrent(request)) return;
       showToast?.(
         formatErrorMessage(err, {
           defaultTitle: "Report Generation Failed",
@@ -730,7 +726,7 @@ export default function OSASOrganizationComplianceView({
       );
       setReportOpen(false);
     } finally {
-      setIsGeneratingPdf(false);
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
   };
 
@@ -742,25 +738,6 @@ export default function OSASOrganizationComplianceView({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
-
-  const handlePrintReport = () => {
-    const printWindow = pdfPreviewFrameRef.current?.contentWindow;
-    if (!printWindow || !previewFrameReady) {
-      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true);
-      return;
-    }
-
-    try {
-      printWindow.focus();
-      printWindow.print();
-    } catch (err) {
-      console.error("OSAS compliance report printing failed:", err);
-      showToast?.(
-        formatErrorMessage(err, { defaultTitle: "Report Printing Failed" }),
-        true
-      );
-    }
   };
 
   // CSV Export
@@ -833,7 +810,6 @@ export default function OSASOrganizationComplianceView({
                   )}
                 </Button>
 
-                {/* Primary Action: Export PDF Report */}
                 <Button
                   type="button"
                   onClick={handleOpenPdfReport}
@@ -843,7 +819,7 @@ export default function OSASOrganizationComplianceView({
                   {isGeneratingPdf ? (
                     <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
                   ) : (
-                    "Export PDF Report"
+                    PDF_ACTION_LABELS.preview
                   )}
                 </Button>
               </div>
@@ -1200,7 +1176,7 @@ export default function OSASOrganizationComplianceView({
           ) : null}
 
           {/* 3. Navigation Toolbar: Category Line Tabs & Search/Status Controls */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <DataViewToolbar label="Organization compliance search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Category Segmented Tabs */}
             <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
               {CATEGORIES.map((cat) => {
@@ -1224,7 +1200,7 @@ export default function OSASOrganizationComplianceView({
             </div>
 
             {/* Right: Search Input & Multi-Criteria Filter */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="flex flex-nowrap items-center gap-3 shrink-0">
               {/* Search Bar with live count badge */}
               <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -1252,14 +1228,14 @@ export default function OSASOrganizationComplianceView({
                 filteredCount={filteredOrganizations.length}
               />
 
-              <TableScrollControls
+              <TableScrollControls scrollContainerRef={tableContainerRef}
                 onScrollLeft={scrollLeft}
                 onScrollRight={scrollRight}
                 onResetScroll={resetScroll}
                 isScrolled={isScrolledX}
               />
             </div>
-          </div>
+          </DataViewToolbar>
 
           {/* 4. Active Filter Chips */}
           <ActiveFilterChips
@@ -1275,7 +1251,7 @@ export default function OSASOrganizationComplianceView({
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
               {sortedOrganizations.length > 0 ? (
-                <table className="w-full text-sm border-collapse min-w-[1050px]">
+                <Table columns={[{ kind: "text", maxWidth: 340 }, "text", "status", "number", "number"]} className="min-w-[1050px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       {/* Column 1: Organization */}
@@ -1457,7 +1433,7 @@ export default function OSASOrganizationComplianceView({
                                   })
                                 }
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
-                                title="Preview Official CBL"
+                                title={PDF_ACTION_LABELS.preview}
                               >
                                 <File02Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
                                 <span>Archived PDF</span>
@@ -1544,7 +1520,7 @@ export default function OSASOrganizationComplianceView({
                       );
                     })}
                   </tbody>
-                </table>
+                </Table>
               ) : loading ? (
                 <div className="p-6 space-y-3">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1583,62 +1559,7 @@ export default function OSASOrganizationComplianceView({
           </div>
 
           {/* 6. Standard Table Pagination Footer */}
-          {sortedOrganizations.length > 0 && (
-            <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-zinc-900/40 p-4 px-6 rounded-b-2xl mt-auto select-none">
-              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                <span>
-                  Showing {paginatedOrganizations.length} of {sortedOrganizations.length.toLocaleString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span>Rows:</span>
-                  {[10, 20, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setPageSize(size);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                        pageSize === size
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-
-                <div className="h-8 w-8 rounded-xl border border-border dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-800">
-                  {page}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination label="Organization compliance pages" page={page} pageSize={pageSize} totalCount={sortedOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         </Card>
 
         {/* Authorized Officers Slide-Over Sheet */}
@@ -1978,140 +1899,21 @@ export default function OSASOrganizationComplianceView({
           />
         )}
 
-        {/* Official OSAS Compliance PDF Report Modal */}
-        <Dialog
+        <PDFPreviewModal
           open={reportOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-              setPdfBlobUrl(null);
-              setPreviewFrameReady(false);
-              setIsFullscreenPreview(false);
-            }
-            setReportOpen(open);
+          onClose={() => {
+            previewSession.cancel();
+            setIsGeneratingPdf(false);
+            setPdfBlobUrl(null);
+            setReportOpen(false);
           }}
-        >
-          <DialogContent
-            hideClose={true}
-            className={cn(
-              "flex flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-normal ease-standard rounded-2xl dark:border-border z-[70] gap-0 bg-white dark:bg-card",
-              isFullscreenPreview
-                ? "h-[96vh] w-[98vw] max-w-[98vw] sm:max-w-[98vw]"
-                : "h-[90vh] w-[96vw] max-w-[96vw] sm:max-w-[96vw] xl:max-w-[1400px]"
-            )}
-          >
-            <DialogHeader className="shrink-0 px-6 py-4 flex flex-row items-center justify-between gap-4">
-              <div className="min-w-0">
-                <DialogTitle className="text-left">
-                  Official OSAS Student Organization Compliance Report
-                </DialogTitle>
-                <DialogDescription className="text-left mt-0.5">
-                  Accreditation and institutional audit report: PUP San Juan OSAS
-                </DialogDescription>
-              </div>
-
-              <DialogClose asChild>
-                <button
-                  type="button"
-                  onClick={() => setReportOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-1 rounded-lg cursor-pointer"
-                >
-                  <Cancel01Icon size="1em" className="text-[16px]" />
-                </button>
-              </DialogClose>
-            </DialogHeader>
-
-            <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
-              {pdfBlobUrl ? (
-                <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
-                  {isFullscreenPreview && (
-                    <div className="absolute top-4 right-4 z-[10000]">
-                      <Button
-                        variant="default"
-                        size="icon"
-                        onClick={() => setIsFullscreenPreview(false)}
-                        className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0 cursor-pointer"
-                      >
-                        <Cancel01Icon size="1em" className="text-lg" />
-                      </Button>
-                    </div>
-                  )}
-                  {!previewFrameReady && (
-                    <div className="absolute inset-0 z-10 bg-white p-6 dark:bg-card">
-                      <div className="space-y-4">
-                        <Skeleton className="h-6 w-56 dark:bg-muted" />
-                        <Skeleton className="h-4 w-80 dark:bg-muted" />
-                        <Skeleton className="h-[55vh] w-full dark:bg-muted" />
-                      </div>
-                    </div>
-                  )}
-                  <PDFPreview
-                    ref={pdfPreviewFrameRef}
-                    src={pdfBlobUrl}
-                    className="absolute inset-0 h-full w-full border-none bg-gray-200 dark:bg-zinc-700"
-                    title="OSAS PDF Report Preview"
-                    onReadyChange={setPreviewFrameReady}
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
-                  <div className="max-w-lg text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-gray-50 dark:border-border dark:bg-card">
-                      <Loading01Icon size="1em" className="animate-spin text-xl text-pup-maroon dark:text-primary" />
-                    </div>
-                    <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
-                      Generating Official Report...
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center justify-between px-6 py-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-                    aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
-                    className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors rounded-xl shadow-none border-0 p-0 h-10 w-10 cursor-pointer"
-                  >
-                    <AppIcon className={isFullscreenPreview ? " ArrowShrink01Icon text-[16px]" : " ArrowExpand01Icon text-[16px]"} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {isFullscreenPreview ? "Exit Fullscreen" : "Fullscreen"}
-                </TooltipContent>
-              </Tooltip>
-
-              <div className="flex items-center gap-2.5 ml-auto">
-                <Button
-                  variant="outline"
-                  onClick={() => setReportOpen(false)}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Close
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handlePrintReport}
-                  disabled={!pdfBlobUrl || !previewFrameReady || isGeneratingPdf}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-                >
-                  Print Report
-                </Button>
-                <Button
-                  onClick={handleDownloadPdf}
-                  disabled={!pdfBlobUrl || isGeneratingPdf}
-                  className="h-10 px-5 disabled:opacity-50 cursor-pointer"
-                >
-                  Download PDF
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          title="Official OSAS Student Organization Compliance Report"
+          description="Student organization compliance and accreditation records."
+          pdfUrl={pdfBlobUrl}
+          isPreparing={isGeneratingPdf}
+          onDownload={handleDownloadPdf}
+          onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}
+        />
       </div>
     </TooltipProvider>
   );

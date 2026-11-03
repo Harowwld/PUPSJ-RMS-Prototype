@@ -1,29 +1,32 @@
-export const REPORT_FONT = "Plus Jakarta Sans"
+import { getReportFont } from "./reportFontOptions.js"
 
-let fontPromise
+const fonts = new Map()
 
-async function loadReportFont() {
-  if (!fontPromise) {
-    fontPromise = fetch("/assets/fonts/jakarta/PlusJakartaSans-VariableFont_wght.ttf")
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Unable to load the report font")
-        const bytes = new Uint8Array(await response.arrayBuffer())
-        let binary = ""
-        for (let start = 0; start < bytes.length; start += 8192) {
-          binary += String.fromCharCode(...bytes.subarray(start, start + 8192))
-        }
-        return btoa(binary)
-      })
-      .catch((error) => {
-        fontPromise = null
-        throw error
-      })
+async function loadFont(path) {
+  if (!fonts.has(path)) {
+    fonts.set(path, fetch(path, { cache: "force-cache" }).then(async (response) => {
+      if (!response.ok) throw new Error("Unable to load the report font. Please retry the PDF preview.")
+      const bytes = new Uint8Array(await response.arrayBuffer())
+      let binary = ""
+      for (let start = 0; start < bytes.length; start += 8192) {
+        binary += String.fromCharCode(...bytes.subarray(start, start + 8192))
+      }
+      return btoa(binary)
+    }).catch((error) => {
+      fonts.delete(path)
+      throw error
+    }))
   }
-  return fontPromise
+  return fonts.get(path)
 }
 
-export async function registerReportFont(doc) {
-  doc.addFileToVFS("PlusJakartaSans.ttf", await loadReportFont())
-  doc.addFont("PlusJakartaSans.ttf", REPORT_FONT, "normal")
-  doc.setFont(REPORT_FONT, "normal")
+export async function registerReportFont(doc, value) {
+  const font = getReportFont(value)
+  await Promise.all(["normal", "bold"].map(async (style) => {
+    const filename = `${font.file}-${style === "bold" ? "Bold" : "Regular"}.ttf`
+    doc.addFileToVFS(filename, await loadFont(`/assets/fonts/reports/${filename}`))
+    doc.addFont(filename, font.family, style)
+  }))
+  doc.setFont(font.family, "normal")
+  return font.family
 }

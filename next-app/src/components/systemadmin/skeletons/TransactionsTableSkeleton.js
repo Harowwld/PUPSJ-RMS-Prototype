@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -7,7 +8,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
   return (
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+            <Table columns={["identifier", "category", "text", "text", "text", "status", "date", "actions"]} className="min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="py-3 px-4 pl-6 w-[100px] min-w-[100px]">
@@ -40,7 +41,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[52px] border-b border-border dark:border-border last:border-b-0"
+                className="border-b border-border dark:border-border last:border-b-0"
               >
                 <td className="py-3 px-4 pl-6 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-5 w-10 rounded-md dark:bg-muted" />
@@ -86,7 +87,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8 }) {
               </tr>
             ))}
           </tbody>
-        </table>
+            </Table>
       </div>
 
       {/* Pagination Footer Skeleton */}

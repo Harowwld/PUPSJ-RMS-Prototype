@@ -1,74 +1,7 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import TablePagination from "@/components/shared/TablePagination";
 
-export default function LogPagination({
-  logTotal = 0,
-  logPage,
-  setLogPage,
-  itemsPerPage,
-  logsPerPage,
-  handleItemsPerPageChange,
-  displayCount,
-}) {
-  const currentItemsPerPage = itemsPerPage || logsPerPage || 10
-  const totalPages = Math.max(1, Math.ceil(logTotal / currentItemsPerPage))
-  const displayPage = Math.min(logPage, totalPages)
-  const shownCount = displayCount !== undefined ? displayCount : logTotal > 0 ? Math.min(logTotal, currentItemsPerPage) : 0
-
-  return (
-    <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-      <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-        <span>
-          Showing {shownCount} of {logTotal.toLocaleString()}
-        </span>
-
-        <div className="flex items-center gap-2">
-          <span>Rows:</span>
-          {[10, 20, 50, 100].map((size) => (
-            <button
-              key={size}
-              type="button"
-              onClick={() => handleItemsPerPageChange?.(size)}
-              className={cn(
-                "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                currentItemsPerPage === size
-                  ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                  : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-              )}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 select-none">
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={displayPage <= 1}
-          onClick={() => setLogPage((p) => Math.max(1, p - 1))}
-          className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-        >
-          Prev
-        </Button>
-
-        <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-          {displayPage}
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={displayPage >= totalPages}
-          onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
-          className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-        >
-          Next
-        </Button>
-      </div>
-    </div>
-  )
+export default function LogPagination({ logTotal = 0, logPage, setLogPage, itemsPerPage, logsPerPage, handleItemsPerPageChange, displayCount, loading = false }) {
+  return <TablePagination label="Audit log pages" page={logPage} pageSize={itemsPerPage || logsPerPage || 10} totalCount={logTotal} displayedCount={displayCount} onPageChange={setLogPage} onPageSizeChange={handleItemsPerPageChange} loading={loading} />;
 }

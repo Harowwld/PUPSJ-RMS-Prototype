@@ -2,6 +2,8 @@
 
 
 import { useState, useEffect } from "react"
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -16,7 +18,7 @@ import StatCards from "./audit-logs/StatCards"
 import LogFilters from "./audit-logs/LogFilters"
 import LogTable from "./audit-logs/LogTable"
 import LogDetailSheet from "./audit-logs/LogDetailSheet"
-import PdfPreviewDialog from "./audit-logs/PdfPreviewDialog"
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
@@ -69,8 +71,7 @@ export default function AuditLogsTab({
   // PDF Preview State
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
-  const [previewFrameReady, setPreviewFrameReady] = useState(false)
-  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
+  const previewSession = usePdfPreviewSession();
 
   // Debounced Search
   useEffect(() => {
@@ -164,6 +165,7 @@ export default function AuditLogsTab({
   const handlePreviewPDF = async () => {
     if (logTotal === 0 || isGeneratingPdf) return
     setIsGeneratingPdf(true)
+    const request = previewSession.begin();
     try {
       const allLogs = await fetchAllForExport()
       const blob = await generateAuditLogsPdf(allLogs, {
@@ -173,7 +175,8 @@ export default function AuditLogsTab({
         endDate: logEndDate,
         search: logSearch
       })
-      const url = URL.createObjectURL(blob)
+      const url = previewSession.createUrl(blob, request)
+      if (!url) return;
       setPdfPreviewUrl(url)
       setPdfPreviewOpen(true)
       if (onLogAction) {
@@ -184,10 +187,11 @@ export default function AuditLogsTab({
         })
       }
     } catch (err) {
+      if (!previewSession.isCurrent(request)) return;
       console.error("[PDF Preview Error]", err)
       showToast(formatErrorMessage(err, "Preview Failed"), true)
     } finally {
-      setIsGeneratingPdf(false)
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
   }
 
@@ -277,7 +281,7 @@ export default function AuditLogsTab({
                     {isGeneratingPdf ? (
                       <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
                     ) : (
-                      "Export PDF Report"
+                      PDF_ACTION_LABELS.preview
                     )}
                   </Button>
                 </div>
@@ -429,17 +433,18 @@ export default function AuditLogsTab({
         />
 
         {/* PDF Export Preview */}
-        <PdfPreviewDialog
-          pdfPreviewOpen={pdfPreviewOpen}
-          setPdfPreviewOpen={setPdfPreviewOpen}
-          pdfBlobUrl={pdfBlobUrl}
-          setPdfPreviewUrl={setPdfPreviewUrl}
-          previewFrameReady={previewFrameReady}
-          setPreviewFrameReady={setPreviewFrameReady}
-          handleDownloadFromPreview={handleDownloadFromPreview}
-          showToast={showToast}
-          isFullscreenPreview={isFullscreenPreview}
-          setIsFullscreenPreview={setIsFullscreenPreview}
+        <PDFPreviewModal
+          open={pdfPreviewOpen}
+          onClose={() => {
+            previewSession.cancel();
+            setIsGeneratingPdf(false);
+            setPdfPreviewUrl(null)
+            setPdfPreviewOpen(false)
+          }}
+          title="Activity History Report Preview"
+          description="Review the recorded actions and details before printing or downloading."
+          pdfUrl={pdfBlobUrl}
+          onDownload={handleDownloadFromPreview}
         />
       </div>
     </TooltipProvider>

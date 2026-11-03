@@ -19,6 +19,9 @@ export default function ResilientPDFViewer({
   onStatusChange,
   onFileReplaced,
   showReupload = true,
+  frameRef,
+  onReadyChange,
+  onPreviewReady,
 }) {
   const [loadState, setLoadState] = useState("loading");
   const [frameSrc, setFrameSrc] = useState(null);
@@ -36,6 +39,8 @@ export default function ResilientPDFViewer({
       setLoadState("loading");
       setFrameSrc(null);
       setError("");
+      onReadyChange?.(false);
+      onPreviewReady?.(null);
       onStatusChange?.("loading");
       let exists = false;
       try {
@@ -65,8 +70,10 @@ export default function ResilientPDFViewer({
           if (controller.signal.aborted) return;
           objectUrl = URL.createObjectURL(pdf);
           setFrameSrc(objectUrl);
+          onPreviewReady?.({ url: objectUrl, source: resolvedSrc, isConverted: true });
         } else if (!mime || mime.includes("pdf") || (mime === "application/octet-stream" && (!originalFilename || /\.pdf$/i.test(originalFilename)))) {
           setFrameSrc(resolvedSrc);
+          onPreviewReady?.({ url: resolvedSrc, source: resolvedSrc, isConverted: false });
         } else {
           setLoadState("unsupported");
           onStatusChange?.("ready");
@@ -86,7 +93,7 @@ export default function ResilientPDFViewer({
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [resolvedSrc, originalFilename, onStatusChange, attempt]);
+  }, [resolvedSrc, originalFilename, onStatusChange, onReadyChange, onPreviewReady, attempt]);
 
   const handleFileSelect = async (event) => {
     const file = event.target.files?.[0];
@@ -124,7 +131,7 @@ export default function ResilientPDFViewer({
           <Skeleton className="h-[55vh] w-full" />
         </div>
       ) : loadState === "ready" ? (
-        <PDFPreview src={frameSrc} title={title} className={className} />
+        <PDFPreview ref={frameRef} src={frameSrc} title={title} className={className} onReadyChange={onReadyChange} />
       ) : (
         <div className="flex h-full items-center justify-center overflow-y-auto bg-white p-6 dark:bg-card">
           <EmptyState

@@ -1,4 +1,6 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
@@ -34,6 +36,7 @@ import StudentProfileSheet from "./StudentProfileSheet";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
@@ -1025,7 +1028,7 @@ export default function StudentDirectoryTab({
           </Reorder.Group>
 
           {/* 3. Navigation & Filters Toolbar */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
+          <DataViewToolbar label="Student directory search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
             {/* Status Segmented Tabs */}
             <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
               <button
@@ -1082,7 +1085,7 @@ export default function StudentDirectoryTab({
             </div>
 
             {/* Filter Selects & Search Bar */}
-            <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
+            <div className="flex flex-nowrap items-center gap-2.5 flex-1 lg:justify-end">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64 group">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -1114,7 +1117,13 @@ export default function StudentDirectoryTab({
                 filteredCount={filteredStudents.length}
               />
             </div>
-          </div>
+            <TableScrollControls scrollContainerRef={tableContainerRef}
+              isScrolledX={isScrolledX}
+              onResetScroll={resetScroll}
+              onScrollLeft={() => scrollLeft(400)}
+              onScrollRight={() => scrollRight(400)}
+            />
+          </DataViewToolbar>
 
           {/* Active Filter Chips & Scroll Controls */}
           <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
@@ -1125,12 +1134,6 @@ export default function StudentDirectoryTab({
                 className="p-0 border-0"
               />
             </div>
-            <TableScrollControls
-              isScrolledX={isScrolledX}
-              onResetScroll={resetScroll}
-              onScrollLeft={() => scrollLeft(400)}
-              onScrollRight={() => scrollRight(400)}
-            />
           </div>
 
           {/* 4. Main Data Table */}
@@ -1174,7 +1177,7 @@ export default function StudentDirectoryTab({
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <table className="w-full text-sm border-separate border-spacing-0 min-w-[1320px]">
+                <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
@@ -1284,6 +1287,7 @@ export default function StudentDirectoryTab({
                       return (
                         <tr
                           key={s.studentNo}
+                          selected={isSelected}
                           onClick={() => {
                             setActiveStudent(s);
                             setProfileOpen(true);
@@ -1357,17 +1361,9 @@ export default function StudentDirectoryTab({
                           </td>
 
                           <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                                docCount > 0
-                                  ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20"
-                                  : "bg-gray-50 text-gray-500 border-border dark:bg-zinc-800 dark:text-zinc-400 dark:border-border"
-                              )}
-                            >
+                            <span className="tabular-nums">
                               {docCount} {docCount === 1 ? "file" : "files"}
-                            </Badge>
+                            </span>
                           </td>
 
                           <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
@@ -1474,68 +1470,13 @@ export default function StudentDirectoryTab({
                       );
                     })}
                   </tbody>
-                </table>
+                </Table>
               </div>
             )}
           </div>
 
           {/* 5. Apple HIG Pagination Footer */}
-          {filteredStudents.length > 0 && (
-            <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto select-none">
-              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                <span>
-                  Showing {paginatedStudents.length} of {filteredStudents.length.toLocaleString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span>Rows:</span>
-                  {[10, 20, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setItemsPerPage(size);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                        itemsPerPage === size
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                  {page}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredStudents.length} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
         </Card>
 
         {/* Floating Bulk Action Bar */}

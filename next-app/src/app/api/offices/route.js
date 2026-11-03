@@ -4,6 +4,7 @@ import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { requireSystemAdmin, requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { sendAccountCredentialsNotice } from "@/lib/accountEmail";
+import { getLocalDataDir, getScannerHostRoot } from "@/lib/officePaths";
 
 export const runtime = "nodejs";
 
@@ -41,7 +42,11 @@ export async function GET(req) {
         status: o.status,
       }));
     }
-    return NextResponse.json({ ok: true, data: offices });
+    return NextResponse.json({
+      ok: true,
+      data: offices,
+      ...(stats ? { storageRoot: getLocalDataDir(), scannerHostRoot: getScannerHostRoot() } : {}),
+    });
   } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
@@ -58,7 +63,7 @@ export async function POST(req) {
     }
     const allowedFields = new Set([
       "id", "name", "short_name", "description", "icon", "accent_color", "status", "station_name",
-      "storage_path", "ingest_token", "scanner_model", "inbound_path", "adminEmail", "moduleIds",
+      "ingest_token", "scanner_model", "adminEmail", "moduleIds",
     ]);
     const unsupportedField = Object.keys(body).find((field) => !allowedFields.has(field));
     if (unsupportedField) {

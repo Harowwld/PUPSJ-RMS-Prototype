@@ -1,8 +1,9 @@
 "use client"
+import { Table, TableRow } from "@/components/ui/table";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react"
 import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,10 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import PageHeader from "@/components/shared/PageHeader"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import {
   Empty,
@@ -27,6 +26,8 @@ import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Contact01Icon, Shield01Icon, TableIcon, Tick01Icon, UserSwitchIcon, Search01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function getOfficeIcon(office) {
@@ -41,24 +42,24 @@ function getOfficeIcon(office) {
 }
 
 function getModuleIcon(m) {
-  if (m?.icon && m.icon.trim()) return m.icon
   if (m?.id === "osas_monitoring") return " StudentIcon"
   if (m?.id === "records_review") return " CheckmarkBadge01Icon"
   if (m?.id === "compliance_analytics") return " Analytics01Icon"
-  if (m?.id === "request_analytics") return " Analytics01Icon"
+  if (m?.id === "request_analytics") return " ChartLineData01Icon"
   if (m?.id === "staff_directory") return " UserSearch01Icon"
   if (m?.id === "storage_layout") return " WarehouseIcon"
   if (m?.id === "system_config") return " Settings01Icon"
   if (m?.id === "backup") return " DatabaseIcon"
-  if (m?.id === "audit_logs") return " Shield01Icon"
+  if (m?.id === "audit_logs") return " Time01Icon"
   if (m?.id === "document_requests") return " FileUploadIcon"
-  if (m?.id === "student_directory") return " UserSearch01Icon"
+  if (m?.id === "student_directory") return " StudentIcon"
   if (m?.id === "scan_upload") return " FingerPrintScanIcon"
   if (m?.id === "documents") return " File02Icon"
   if (m?.id === "notifications") return " Notification01Icon"
-  if (m?.id === "records_archive") return " Archive01Icon"
+  if (m?.id === "records_archive") return " Archive02Icon"
   if (m?.id === "storage_explorer") return " FolderOpenIcon"
   if (m?.id === "student_organizations") return " Building01Icon"
+  if (m?.icon && m.icon.trim()) return m.icon
   return " AlignBoxBottomCenterIcon"
 }
 
@@ -111,12 +112,8 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [isManualLoading, setIsManualLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [moduleFilters, setModuleFilters] = useState({
-    category: [],
-    status: [],
-  })
+  const [filterClauses, setFilterClauses] = useState([])
   const [officeFilter, setOfficeFilter] = useState("Active") // "Active" | "Archived"
   const [selectedOfficeId, setSelectedOfficeId] = useState(initialOfficeId || "")
   const [viewMode, setViewMode] = useState("office") // "office" | "matrix"
@@ -141,8 +138,12 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   // Matrix Table Sorting
   const [matrixSortBy, setMatrixSortBy] = useState("name")
   const [matrixSortOrder, setMatrixSortOrder] = useState("ASC")
+  const [matrixGroupBy, setMatrixGroupBy] = useState("category")
+  const [hiddenOfficeIds, setHiddenOfficeIds] = useState([])
 
   const deptCardsScrollRef = useRef(null)
+  const [deptScrollState, setDeptScrollState] = useState({ overflow: false, left: false, right: false })
+  const [matrixViewportWidth, setMatrixViewportWidth] = useState(0)
 
   const scrollDeptCards = useCallback((direction) => {
     if (deptCardsScrollRef.current) {
@@ -183,6 +184,36 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   }, [matrix, officeFilter])
 
   useEffect(() => {
+    if (loading || viewMode !== "office" || filteredOffices.length === 0) return
+    const element = deptCardsScrollRef.current
+    if (!element) return
+    const measure = () => {
+      const remaining = element.scrollWidth - element.clientWidth
+      setDeptScrollState({ overflow: remaining > 5, left: element.scrollLeft > 5, right: remaining - element.scrollLeft > 5 })
+    }
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null
+    observer?.observe(element)
+    Array.from(element.children).forEach((child) => observer?.observe(child))
+    element.addEventListener("scroll", measure, { passive: true })
+    window.addEventListener("resize", measure, { passive: true })
+    measure()
+    return () => {
+      observer?.disconnect()
+      element.removeEventListener("scroll", measure)
+      window.removeEventListener("resize", measure)
+    }
+  }, [loading, viewMode, filteredOffices])
+
+  const selectOfficeScope = (scope) => {
+    const firstOffice = matrix?.offices?.find((office) => {
+      const archived = office.status === "Inactive" || office.status === "Archived"
+      return scope === "Archived" ? archived : !archived
+    })
+    setOfficeFilter(scope)
+    setSelectedOfficeId(firstOffice?.id || "")
+  }
+
+  useEffect(() => {
     if (filteredOffices.length > 0 && !filteredOffices.some((o) => o.id === selectedOfficeId)) {
       const inOther = matrix?.offices?.find((o) => o.id === selectedOfficeId)
       if (inOther) {
@@ -204,11 +235,26 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     scrollLeft,
     scrollRight,
     resetScroll: resetMatrixScroll,
-  } = useTableScroll([filteredOffices?.length, matrix?.modules?.length]);
+  } = useTableScroll([filteredOffices?.length, hiddenOfficeIds.length, matrix?.modules?.length]);
+
+  useEffect(() => {
+    if (loading || viewMode !== "matrix") return
+    const element = matrixTableContainerRef.current
+    if (!element) return
+    const measure = () => setMatrixViewportWidth(element.clientWidth)
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null
+    observer?.observe(element)
+    window.addEventListener("resize", measure, { passive: true })
+    measure()
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener("resize", measure)
+    }
+  }, [loading, viewMode, matrixTableContainerRef])
 
   useEffect(() => {
     resetMatrixScroll();
-  }, [viewMode, searchQuery, moduleFilters, officeFilter, matrixSortBy, matrixSortOrder, resetMatrixScroll]);
+  }, [viewMode, searchQuery, filterClauses, officeFilter, matrixSortBy, matrixSortOrder, matrixGroupBy, hiddenOfficeIds, resetMatrixScroll]);
 
   // Dismissed Archived Department Notice Alerts
   const [dismissedArchivedAlerts, setDismissedArchivedAlerts] = useState(() => {
@@ -304,15 +350,6 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       setDemoSettingSaving(false)
     }
   }
-
-  const handleManualRefresh = useCallback(async () => {
-    setIsManualLoading(true)
-    try {
-      await Promise.all([fetchMatrix(true), loadDemoAccountSetting()])
-    } finally {
-      setIsManualLoading(false)
-    }
-  }, [fetchMatrix, loadDemoAccountSetting])
 
   useEffect(() => {
     queueMicrotask(loadDemoAccountSetting)
@@ -513,7 +550,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     if (matrixTableContainerRef.current) {
       matrixTableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" })
     }
-  }, [officeFilter, searchQuery, moduleFilters, viewMode])
+  }, [officeFilter, searchQuery, filterClauses, viewMode, matrixTableContainerRef])
 
   const officeFilterCounts = useMemo(() => {
     if (!matrix?.offices) return { active: 0, archived: 0 }
@@ -526,56 +563,16 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     return { active, archived }
   }, [matrix])
 
-  const moduleFilterGroups = useMemo(() => {
-    const modules = matrix?.modules || []
+  const totalDepartments = officeFilterCounts.active + officeFilterCounts.archived
 
-    const catOptions = [
-      {
-        value: "admin",
-        label: "Supervisors & Heads",
-        dotColor: "bg-purple-500",
-        count: modules.filter((m) => m.category === "admin").length,
-      },
-      {
-        value: "staff",
-        label: "Staff Tools",
-        dotColor: "bg-blue-500",
-        count: modules.filter((m) => m.category === "staff").length,
-      },
-    ]
-
-    const statusOptions = [
-      {
-        value: "enabled",
-        label: "Enabled",
-        dotColor: "bg-emerald-500",
-      },
-      {
-        value: "disabled",
-        label: "Disabled",
-        dotColor: "bg-amber-500",
-      },
-    ]
-
-    return [
-      {
-        id: "category",
-        label: "Target Role",
-        options: catOptions,
-      },
-      {
-        id: "status",
-        label: "Module Status",
-        options: statusOptions,
-      },
-    ]
-  }, [matrix])
+  const moduleFilterFields = useMemo(() => [
+    { key: "category", label: "Target role", options: [{ value: "admin", label: "Supervisors & Heads" }, { value: "staff", label: "Staff Tools" }] },
+    { key: "status", label: "Feature status", options: [{ value: "enabled", label: viewMode === "matrix" ? "Enabled in a department" : "Enabled" }, { value: "disabled", label: viewMode === "matrix" ? "Disabled in all departments" : "Disabled" }] },
+    { key: "required", label: "Requirement", options: [{ value: "required", label: "Required" }, { value: "optional", label: "Optional" }] },
+  ], [viewMode])
 
   const filteredModules = useMemo(() => {
     if (!matrix?.modules) return []
-    const selectedCats = moduleFilters.category || []
-    const selectedStatuses = moduleFilters.status || []
-
     const list = matrix.modules.filter((m) => {
       const matchesSearch =
         !searchQuery ||
@@ -583,39 +580,52 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
         m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (m.description || "").toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesCat = selectedCats.length === 0 || selectedCats.includes(m.category)
+      const matchesClauses = filterClauses.every(({ fieldKey, operator, value }) => {
+        let actual
+        if (fieldKey === "category") actual = m.category
+        else if (fieldKey === "required") actual = m.is_system ? "required" : "optional"
+        else if (fieldKey === "status") {
+          const enabled = m.is_system || (viewMode === "office" && currentOffice
+            ? Boolean(matrix.assignments[currentOffice.id]?.[m.id]?.enabled)
+            : filteredOffices.some((office) => matrix.assignments[office.id]?.[m.id]?.enabled))
+          actual = enabled ? "enabled" : "disabled"
+        } else return true
+        return operator === "is_not" ? actual !== value : actual === value
+      })
 
-      let matchesState = true
-      if (selectedStatuses.length > 0) {
-        let isEnabled = false
-        if (viewMode === "office" && currentOffice) {
-          isEnabled = Boolean(m.is_system) || Boolean(matrix.assignments[currentOffice.id]?.[m.id]?.enabled)
-        } else {
-          isEnabled = Boolean(m.is_system) || (matrix.offices || []).some((o) => matrix.assignments[o.id]?.[m.id]?.enabled)
-        }
-        const stateKey = isEnabled ? "enabled" : "disabled"
-        matchesState = selectedStatuses.includes(stateKey)
-      }
-
-      return matchesSearch && matchesCat && matchesState
+      return matchesSearch && matchesClauses
     })
 
     list.sort((a, b) => {
-      let valA = (a.name || "").toLowerCase()
-      let valB = (b.name || "").toLowerCase()
-      if (valA < valB) return matrixSortOrder === "ASC" ? -1 : 1
-      if (valA > valB) return matrixSortOrder === "ASC" ? 1 : -1
-      return 0
+      const nameComparison = (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" })
+      const comparison = matrixSortBy === "required"
+        ? Number(Boolean(b.is_system)) - Number(Boolean(a.is_system)) || nameComparison
+        : nameComparison
+      return comparison * (matrixSortOrder === "ASC" ? 1 : -1)
     })
 
     return list
-  }, [matrix, searchQuery, moduleFilters, viewMode, currentOffice, matrixSortOrder])
+  }, [matrix, searchQuery, filterClauses, viewMode, currentOffice, filteredOffices, matrixSortBy, matrixSortOrder])
 
   const groupedModules = useMemo(() => {
     const admin = filteredModules.filter((m) => m.category === "admin")
     const staff = filteredModules.filter((m) => m.category === "staff")
     return { admin, staff }
   }, [filteredModules])
+
+  const matrixGroups = useMemo(() => {
+    if (matrixGroupBy === "none") return [{ key: "all", label: null, modules: filteredModules }]
+    if (matrixGroupBy === "required") return [
+      { key: "required", label: "Required System Features", modules: filteredModules.filter((m) => m.is_system) },
+      { key: "optional", label: "Optional Features", modules: filteredModules.filter((m) => !m.is_system) },
+    ].filter((group) => group.modules.length)
+    return [
+      { key: "admin", label: "Supervisor & Department Head Tools", modules: groupedModules.admin },
+      { key: "staff", label: "Staff & Frontline Tools", modules: groupedModules.staff },
+    ].filter((group) => group.modules.length)
+  }, [filteredModules, groupedModules, matrixGroupBy])
+
+  const visibleMatrixOffices = useMemo(() => filteredOffices.filter((office) => !hiddenOfficeIds.includes(office.id)), [filteredOffices, hiddenOfficeIds])
 
   const officeCounts = useMemo(() => {
     if (!matrix?.offices || !matrix?.assignments) return {}
@@ -631,17 +641,15 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     return counts
   }, [matrix])
 
-  const hasActiveChips = useMemo(() => {
-    return Boolean(searchQuery?.trim()) || (moduleFilters.category?.length > 0) || (moduleFilters.status?.length > 0)
-  }, [searchQuery, moduleFilters])
+  const hasActiveChips = Boolean(searchQuery?.trim()) || filterClauses.length > 0
 
   const handleClearFilters = () => {
     setSearchQuery("")
-    setModuleFilters({ category: [], status: [] })
+    setFilterClauses([])
   }
 
   if (loading) {
-    return <ModuleConfigSkeleton viewMode={viewMode} />
+    return <ModuleConfigSkeleton viewMode={viewMode} officeFilter={officeFilter} groupBy={matrixGroupBy} officeCount={visibleMatrixOffices.length || 4} />
   }
 
   // Empty State if No Offices exist in the system (Matches OfficeManagementTab design)
@@ -684,6 +692,8 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     )
   }
   const { modules } = matrix
+  const matrixFeatureWidth = Math.max(420, Math.min(matrixViewportWidth * 0.55, matrixViewportWidth * 1.5 / (visibleMatrixOffices.length + 1)))
+  const matrixOfficeWidth = Math.max(150, (matrixViewportWidth - matrixFeatureWidth) / Math.max(1, visibleMatrixOffices.length))
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -691,140 +701,42 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon=" LayoutGridIcon"
-          title={
-            <div className="flex items-center gap-[6px]">
-              Department Features & Permissions
-              
-            </div>
-          }
+          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span>Department Features &amp; Permissions</span>
+            <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">
+              {modules.length.toLocaleString()} features · {totalDepartments.toLocaleString()} departments
+            </span>
+          </div>}
           description="Turn system features on or off for each department."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border dark:border-border">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("office")}
-                  title="Show features grouped by department"
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    viewMode === "office"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
-                  <Building01Icon size="1em" className="text-sm" />
-                  <span>By Department</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("matrix")}
-                  title="Compare features across departments"
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    viewMode === "matrix"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
-                  <TableIcon size="1em" className="text-sm" />
-                  <span>Compare Features</span>
-                </button>
-              </div>
-
-              <RefreshButton
-                onRefresh={handleManualRefresh}
-                isLoading={isManualLoading}
-                title="Refresh Module Configuration"
-              />
-            </div>
-          }
         />
 
-        {/* System-Wide Prototype Feature: Login Demo Accounts */}
-        <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
-              <UserSwitchIcon size="1em" className="text-lg" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                  Public Login Demo Accounts
-                </p>
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
-                  Prototype Access
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.
-              </p>
-            </div>
+        <div className="flex items-end gap-x-5 overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
+          <div role="group" aria-label="Department status" className="flex h-9 shrink-0 items-stretch">
+            {[{ key: "Active", count: officeFilterCounts.active }, { key: "Archived", count: officeFilterCounts.archived }].map(({ key, count }) => (
+              <button key={key} type="button" onClick={() => selectOfficeScope(key)} aria-pressed={officeFilter === key}
+                className={cn("relative inline-flex items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", officeFilter === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                {key}<span className="text-[10px] font-normal tabular-nums text-gray-400 dark:text-zinc-500">{count}</span>
+                {officeFilter === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+              </button>
+            ))}
           </div>
-          <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-            <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-              {demoAccountsEnabled ? "Enabled" : "Disabled"}
-            </span>
-            <Switch
-              checked={demoAccountsEnabled}
-              onCheckedChange={handleDemoAccountsToggle}
-              disabled={demoSettingLoading || demoSettingSaving}
-              aria-label="Show Demo Accounts button on login page"
-            />
+          <div role="group" aria-label="Feature display" className="flex h-9 shrink-0 items-stretch">
+            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => (
+              <button key={mode} type="button" onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode}
+                className={cn("relative inline-flex items-center gap-1.5 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", viewMode === mode ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                <Icon size={14} aria-hidden="true" />{label}
+                {viewMode === mode && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Active vs Archived Segmented Control */}
-          <div className="flex items-center p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setOfficeFilter("Active")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                officeFilter === "Active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Active</span>
-              <span className={cn(
-                "text-[10px] px-1.5 py-0.2 rounded-full font-sans tabular-nums font-medium",
-                officeFilter === "Active"
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                  : "bg-gray-200/70 text-gray-600 dark:bg-zinc-700 dark:text-zinc-400"
-              )}>
-                {officeFilterCounts.active}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOfficeFilter("Archived")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                officeFilter === "Archived"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Archived</span>
-              <span className={cn(
-                "text-[10px] px-1.5 py-0.2 rounded-full font-sans tabular-nums font-medium",
-                officeFilter === "Archived"
-                  ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                  : "bg-gray-200/70 text-gray-600 dark:bg-zinc-700 dark:text-zinc-400"
-              )}>
-                {officeFilterCounts.archived}
-              </span>
-            </button>
-          </div>
-
-          {/* Right: Search Input & Dropdown Popovers Group */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
+        <DataViewToolbar label="Feature search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="relative group w-[min(320px,30vw)] min-w-[190px] shrink-0">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                 <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
               </div>
@@ -832,41 +744,48 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search features by name, description..."
-                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                aria-label="Search features"
+                className="h-9 w-full rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-12 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                {filteredModules.length}
-              </div>
+              <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 tabular-nums" aria-live="polite">{filteredModules.length.toLocaleString()}</span>
             </div>
-
-            {/* Multi-Criteria Filter Dropdown */}
-            <div className="w-full sm:w-auto shrink-0">
-              <MultiCriteriaFilter
-                title="Filter Features"
-                groups={moduleFilterGroups}
-                selected={moduleFilters}
-                onChange={setModuleFilters}
-                totalCount={modules.length}
-                matchingCount={filteredModules.length}
-                onReset={() => setModuleFilters({ category: [], status: [] })}
+            <FilterPopover fields={moduleFilterFields} filters={filterClauses} onFiltersChange={setFilterClauses} entityLabel="features" />
+            {viewMode === "matrix" && <>
+              <SortPopover
+                options={[{ key: "name", label: "Feature name", icon: Search01Icon }, { key: "required", label: "Requirement", icon: Shield01Icon }]}
+                sortBy={matrixSortBy}
+                onSortByChange={(key) => { setMatrixSortBy(key); setMatrixSortOrder("ASC") }}
+                sortOrder={matrixSortOrder}
+                onSortOrderChange={setMatrixSortOrder}
               />
-            </div>
+              <GroupPopover
+                options={[{ key: "category", label: "Target role", icon: Contact01Icon }, { key: "required", label: "Requirement", icon: Shield01Icon }, { key: "none", label: "No grouping" }]}
+                groupBy={matrixGroupBy}
+                onGroupByChange={setMatrixGroupBy}
+              />
+              {filteredOffices.length > 1 && <ColumnsPopover
+                columns={filteredOffices.map((office) => ({ key: office.id, label: office.short_name || office.name || office.id }))}
+                visibleColumns={visibleMatrixOffices.map((office) => office.id)}
+                minVisible={1}
+                onVisibleColumnsChange={(visibleIds) => {
+                  setHiddenOfficeIds(filteredOffices.filter((office) => !visibleIds.includes(office.id)).map((office) => office.id))
+                }}
+              />}
+              {visibleMatrixOffices.length > 0 && <TableScrollControls scrollContainerRef={matrixTableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetMatrixScroll} />}
+            </>}
           </div>
-        </div>
+        </DataViewToolbar>
 
         {/* Active Filter Chips & Horizontal Scroll Controls Bar */}
-        {(hasActiveChips || viewMode === "matrix") && (
+        {hasActiveChips && (
           <div className="border-t border-border dark:border-border px-6 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-card">
             <div className="flex-1 min-w-0">
               <ActiveFilterChips
-                groups={moduleFilterGroups}
-                selected={moduleFilters}
-                onRemove={(groupId, val) => {
-                  setModuleFilters((prev) => ({
-                    ...prev,
-                    [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-                  }))
-                }}
+                chips={filterClauses.map((clause) => {
+                  const field = moduleFilterFields.find((item) => item.key === clause.fieldKey)
+                  const value = field?.options?.find((item) => item.value === clause.value)?.label || clause.value
+                  return { id: clause.id, label: `${field?.label || clause.fieldKey} ${clause.operator === "is_not" ? "is not" : "is"} ${value}`, onRemove: () => setFilterClauses((prev) => prev.filter((item) => item.id !== clause.id)) }
+                })}
                 searchQuery={searchQuery}
                 onClearSearch={() => setSearchQuery("")}
                 onClearAll={handleClearFilters}
@@ -874,18 +793,6 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               />
             </div>
 
-            {viewMode === "matrix" && filteredOffices.length > 0 && (
-              <div className="flex items-center gap-2 shrink-0 select-none self-end sm:self-auto ml-auto">
-                <TableScrollControls
-                  canScrollLeft={canScrollLeft}
-                  canScrollRight={canScrollRight}
-                  isScrolled={isScrolled}
-                  onScrollLeft={scrollLeft}
-                  onScrollRight={scrollRight}
-                  onResetScroll={resetMatrixScroll}
-                />
-              </div>
-            )}
           </div>
         )}
 
@@ -912,7 +819,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       <EmptyContent>
                         <Button
                           variant="outline"
-                          onClick={() => setOfficeFilter("Active")}
+                          onClick={() => selectOfficeScope("Active")}
                           title="View Active Departments"
                           className="flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
                         >
@@ -935,26 +842,28 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                    {deptScrollState.overflow && <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
                         onClick={() => scrollDeptCards("left")}
+                        disabled={!deptScrollState.left}
                         title="Scroll left"
                         aria-label="Scroll departments left"
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <ArrowLeft01Icon size="1em" className="text-xs" />
                       </button>
                       <button
                         type="button"
                         onClick={() => scrollDeptCards("right")}
+                        disabled={!deptScrollState.right}
                         title="Scroll right"
                         aria-label="Scroll departments right"
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-border/60 dark:border-border/60 bg-white dark:bg-zinc-800 shadow-2xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <ArrowRight01Icon size="1em" className="text-xs" />
                       </button>
-                    </div>
+                    </div>}
                   </div>
 
                   <div
@@ -983,7 +892,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         )}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2.5">
+                          <div className="flex min-w-0 items-center gap-2.5">
                             <div
                               className={cn(
                                 "h-9 w-9 rounded-xl flex items-center justify-center text-sm shadow-2xs shrink-0 border transition-all",
@@ -995,12 +904,12 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 borderColor: isSelected ? accent : `${accent}30`,
                               }}
                             >
-                              <AppIcon  className={cn(officeIconClass, "text-base")}></AppIcon>
+                              <AppIcon  className={cn(officeIconClass, "text-base")} fallback="Building02Icon"></AppIcon>
                             </div>
-                            <div>
-                              <div
+                            <div className="min-w-0">
+                              <div title={o.short_name}
                                 className={cn(
-                                  "text-xs font-bold transition-colors",
+                                  "truncate text-xs font-bold transition-colors",
                                   isSelected
                                     ? "text-pup-maroon dark:text-red-400"
                                     : "text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon"
@@ -1043,7 +952,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                               : "border-border/40 text-gray-600 dark:text-zinc-300"
                           )}
                         >
-                          <span className="truncate">{o.name || o.short_name}</span>
+                          <span className="truncate" title={o.name || o.short_name}>{o.name || o.short_name}</span>
                           {isOfficeArchived && (
                             <span className="text-[10px] text-gray-400 ml-1 shrink-0 font-sans tabular-nums font-medium">
                               {activeCount} active
@@ -1073,11 +982,11 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       borderColor: `${currentOffice.accent_color || "#800000"}28`,
                     }}
                   >
-                    <AppIcon  className={cn(getOfficeIcon(currentOffice), "text-xl")}></AppIcon>
+                    <AppIcon  className={cn(getOfficeIcon(currentOffice), "text-xl")} fallback="Building02Icon"></AppIcon>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-gray-900 dark:text-zinc-50">
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <h3 className="min-w-0 truncate text-base font-bold text-gray-900 dark:text-zinc-50" title={currentOffice.name || currentOffice.short_name}>
                         {currentOffice.name || currentOffice.short_name} ({currentOffice.short_name})
                       </h3>
                       <StatusChip status={currentOffice.status} />
@@ -1340,7 +1249,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                   <EmptyContent>
                     <Button
                       variant="outline"
-                      onClick={() => setOfficeFilter("Active")}
+                      onClick={() => selectOfficeScope("Active")}
                       title="View Active Departments"
                       className="flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
                     >
@@ -1379,10 +1288,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               ref={matrixTableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
-              <table className="w-full border-collapse text-left min-w-max">
+              <Table layout="matrix" columns={[{ kind: "text", width: matrixFeatureWidth, maxWidth: matrixFeatureWidth }, ...visibleMatrixOffices.map(() => ({ kind: "category", width: matrixOfficeWidth }))]}>
                 <thead className="sticky top-0 z-20 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                    <th className="p-4 pl-6 w-[340px] min-w-[340px] max-w-[340px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30">
+                    <th aria-sort={matrixSortBy === "name" ? matrixSortOrder === "ASC" ? "ascending" : "descending" : "none"} className="p-4 pl-6 min-w-[420px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30">
                       <div className="flex items-center justify-between gap-2">
                         <button
                           type="button"
@@ -1397,17 +1306,17 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         </button>
                       </div>
                     </th>
-                    {filteredOffices.map((o) => {
+                    {visibleMatrixOffices.map((o) => {
                       const isArchived = o.status === "Inactive" || o.status === "Archived"
                       return (
                         <th
                           key={o.id}
                           className={cn(
-                            "p-4 text-center w-[150px] min-w-[150px] select-none",
+                            "p-4 text-center min-w-[150px] select-none",
                             isArchived && "opacity-75"
                           )}
                         >
-                          <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center justify-center">
                             <span 
                               className="text-xs font-semibold tracking-tight truncate max-w-[130px]"
                               style={{ color: o.accent_color || "#800000" }}
@@ -1415,15 +1324,6 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                             >
                               {o.short_name}
                             </span>
-                            {isArchived ? (
-                              <span className="rounded-full px-2 py-0.5 text-[9.5px] font-medium bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
-                                Archived
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
-                                {officeCounts[o.id] || 0}/{modules.length}
-                              </span>
-                            )}
                           </div>
                         </th>
                       )
@@ -1432,67 +1332,65 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 </thead>
 
                 <tbody className="divide-y divide-border dark:divide-border">
-                  {/* Head / Admin Group Row */}
-                  {groupedModules.admin.length > 0 && (
-                    <>
-                      <tr className="bg-gray-100/70 dark:bg-zinc-950/60">
-                        <td
-                          colSpan={filteredOffices.length + 1}
-                          className="px-4 pl-6 py-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/90 backdrop-blur-xs border-y border-border/50"
-                        >
+                  {matrixGroups.map((group) => (
+                    <Fragment key={group.key}>
+                      {group.label && <tr className="bg-gray-100/70 dark:bg-zinc-950/60">
+                        <td colSpan={visibleMatrixOffices.length + 1} className="sticky left-0 border-y border-border/50 bg-gray-100/90 px-4 py-2.5 pl-6 text-xs font-semibold text-gray-800 dark:bg-zinc-950/90 dark:text-zinc-200">
                           <div className="flex items-center gap-2">
-                            <Shield01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-xs" />
-                            <span>Supervisor & Department Head Tools ({groupedModules.admin.length})</span>
+                            {group.key === "staff" ? <Contact01Icon size={14} aria-hidden="true" className="text-blue-600 dark:text-blue-400" /> : <Shield01Icon size={14} aria-hidden="true" className="text-pup-maroon dark:text-red-400" />}
+                            <span>{group.label} ({group.modules.length})</span>
                           </div>
                         </td>
-                      </tr>
-                      {groupedModules.admin.map((m) => (
-                        <MatrixTableRow
-                          key={m.id}
-                          m={m}
-                          offices={filteredOffices}
-                          assignments={matrix.assignments}
-                          toggling={toggling}
-                          onToggle={handleToggle}
-                        />
-                      ))}
-                    </>
-                  )}
-
-                  {/* Staff Workspace Group Row */}
-                  {groupedModules.staff.length > 0 && (
-                    <>
-                      <tr className="bg-gray-100/70 dark:bg-zinc-950/60">
-                        <td
-                          colSpan={filteredOffices.length + 1}
-                          className="px-4 pl-6 py-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200 sticky left-0 bg-gray-100/90 dark:bg-zinc-950/90 backdrop-blur-xs border-y border-border/50"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Contact01Icon size="1em" className="text-blue-600 dark:text-blue-400 text-xs" />
-                            <span>Staff & Frontline Tools ({groupedModules.staff.length})</span>
-                          </div>
-                        </td>
-                      </tr>
-                      {groupedModules.staff.map((m) => (
-                        <MatrixTableRow
-                          key={m.id}
-                          m={m}
-                          offices={filteredOffices}
-                          assignments={matrix.assignments}
-                          toggling={toggling}
-                          onToggle={handleToggle}
-                        />
-                      ))}
-                    </>
-                  )}
+                      </tr>}
+                      {group.modules.map((feature) => <MatrixTableRow
+                        key={feature.id}
+                        m={feature}
+                        offices={visibleMatrixOffices}
+                        assignments={matrix.assignments}
+                        toggling={toggling}
+                        onToggle={handleToggle}
+                      />)}
+                    </Fragment>
+                  ))}
                 </tbody>
-              </table>
+              </Table>
             </div>
           )}
         </>
       )}
       </div>
-    </Card>
+        <div className="rounded-b-2xl border-t border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
+              <UserSwitchIcon size="1em" className="text-lg" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  Public Login Demo Accounts
+                </p>
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                  Prototype Access
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+            <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+              {demoAccountsEnabled ? "Enabled" : "Disabled"}
+            </span>
+            <Switch
+              checked={demoAccountsEnabled}
+              onCheckedChange={handleDemoAccountsToggle}
+              disabled={demoSettingLoading || demoSettingSaving}
+              aria-label="Show Demo Accounts button on login page"
+            />
+          </div>
+        </div>
+      </Card>
 
       {/* Confirmation Modal for Destructive Batch Actions */}
       {confirmModalState && (
@@ -1538,7 +1436,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
     >
       <div>
         <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             <div
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center text-sm shrink-0",
@@ -1549,16 +1447,16 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
             >
               <AppIcon className={cn(moduleIconClass, "text-base")}></AppIcon>
             </div>
-            <div>
-              <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight">
+            <div className="min-w-0">
+              <h5 className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight" title={m.name}>
                 {m.name}
               </h5>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] text-gray-400">
+              <div className="flex min-w-0 items-center gap-1.5 mt-0.5">
+                <span className="min-w-0 truncate text-[10px] text-gray-400" title={m.id}>
                   {m.id}
                 </span>
                 <span className="text-gray-300 dark:text-zinc-700 text-[10px]">·</span>
-                <span className="text-[10px] font-medium text-gray-900 dark:text-zinc-300">
+                <span className="min-w-0 truncate text-[10px] font-medium text-gray-900 dark:text-zinc-300" title={getModuleTargetText(m)}>
                   {getModuleTargetText(m)}
                 </span>
               </div>
@@ -1584,7 +1482,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           )}
         </div>
 
-        <p className="text-[11px] text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed">
+        <p className="text-[11px] text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed" title={m.description || "Standard system feature."}>
           {m.description || "Standard system feature."}
         </p>
       </div>
@@ -1620,15 +1518,15 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
   const moduleIconClass = getModuleIcon(m)
 
   return (
-    <tr className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
-      <td className="p-4 pl-6 align-top sticky left-0 bg-white/95 dark:bg-zinc-900/95 z-10 border-r border-border/70 dark:border-border/70 w-[340px] min-w-[340px] max-w-[340px]">
+    <TableRow className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
+      <td className="p-4 pl-6 align-top sticky left-0 bg-white/95 dark:bg-zinc-900/95 z-10 border-r border-border/70 dark:border-border/70 min-w-[420px]">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800/80 flex items-center justify-center text-gray-700 dark:text-zinc-300 text-xs shrink-0">
             <AppIcon className={cn(moduleIconClass, "text-sm")}></AppIcon>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-xs text-gray-900 dark:text-zinc-100">
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 truncate font-semibold text-xs text-gray-900 dark:text-zinc-100" title={m.name}>
                 {m.name}
               </span>
               {isSystem && (
@@ -1636,11 +1534,11 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
                   Required
                 </span>
               )}
-              <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
+              <span className="min-w-0 truncate text-[10px] font-medium text-gray-400 dark:text-zinc-500" title={getModuleTargetText(m)}>
                 ({getModuleTargetText(m)})
               </span>
             </div>
-            <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed">
+            <p className="min-w-0 truncate text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 leading-relaxed" title={m.description || "Standard system feature."}>
               {m.description || "Standard system feature."}
             </p>
           </div>
@@ -1658,7 +1556,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
           <td
             key={o.id}
             className={cn(
-              "p-4 text-center align-middle w-[150px] min-w-[150px]",
+              "p-4 text-center align-middle min-w-[150px]",
               idx < offices.length - 1 && "border-r border-border/70 dark:border-border/70"
             )}
           >
@@ -1681,6 +1579,6 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
           </td>
         )
       })}
-    </tr>
+    </TableRow>
   )
 }

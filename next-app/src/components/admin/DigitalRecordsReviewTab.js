@@ -1,6 +1,9 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage"
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { Reorder } from "framer-motion"
@@ -35,6 +38,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { toast } from "sonner"
 import { matchesSearchQuery } from "@/lib/searchUtils"
 import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, DragDropIcon, Tick01Icon, ViewIcon, Search01Icon} from "hugeicons-react";
@@ -1016,7 +1020,7 @@ export default function DigitalRecordsReviewTab({
           ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Digital records search, filters, and dates" className="border-t border-border dark:border-border p-5 gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Search */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
             <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></Search01Icon>
@@ -1033,7 +1037,7 @@ export default function DigitalRecordsReviewTab({
           </div>
 
           {/* Doc Type, Time, and Date Range Controls */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-nowrap items-center gap-3">
             {/* Multi-Criteria Filters (Status + Doc Type) */}
             <MultiCriteriaFilter
               groups={filterCriteriaGroups}
@@ -1126,14 +1130,14 @@ export default function DigitalRecordsReviewTab({
             </div>
 
             {/* Horizontal Scroll Navigation */}
-            <TableScrollControls
+            <TableScrollControls scrollContainerRef={tableContainerRef}
               onScrollLeft={() => scrollTable("left")}
               onScrollRight={() => scrollTable("right")}
               onResetScroll={resetTableScroll}
               isScrolled={isScrolledX}
             />
           </div>
-        </div>
+        </DataViewToolbar>
 
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
@@ -1225,7 +1229,7 @@ export default function DigitalRecordsReviewTab({
               onScroll={handleScroll}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
-              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1380px]">
+                <Table columns={["selection", "identifier", "text", "text", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[1380px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
@@ -1367,6 +1371,7 @@ export default function DigitalRecordsReviewTab({
                     return (
                       <tr
                         key={r.id}
+                        selected={isSelected}
                         className={cn(
                           "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                           isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
@@ -1462,13 +1467,13 @@ export default function DigitalRecordsReviewTab({
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => handlePreview(r)}
-                                    aria-label="Preview Document"
+                                    aria-label={PDF_ACTION_LABELS.preview}
                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
                                   >
                                     <ViewIcon size="1em"  className="text-[16px]"></ViewIcon>
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="top">Preview Document</TooltipContent>
+                                <TooltipContent side="top">{PDF_ACTION_LABELS.preview}</TooltipContent>
                               </Tooltip>
 
                               {r.approval_status === "Pending" && (
@@ -1514,66 +1519,11 @@ export default function DigitalRecordsReviewTab({
                       )
                     })}
                 </tbody>
-              </table>
+                </Table>
             </div>
 
             {/* Pagination Toolbar */}
-            {sortedRecords.length > 0 && (
-              <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                  <span>
-                    Showing {paginatedRecords.length} of {sortedRecords.length.toLocaleString()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span>Rows:</span>
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => {
-                          setItemsPerPage(size)
-                          setCurrentPage(1)
-                        }}
-                        className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                          itemsPerPage === size
-                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 select-none">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={displayPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Prev
-                  </Button>
-
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                    {displayPage}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={displayPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            <TablePagination label="Digital record review pages" page={currentPage} pageSize={itemsPerPage} totalCount={sortedRecords.length} displayedCount={paginatedRecords.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />
           </div>
         )}
       </Card>

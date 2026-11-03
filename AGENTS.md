@@ -466,7 +466,7 @@ const res = await fetch("/api/storage-layout", { cache: "no-store" });
 Typography defaults belong on body or in Tailwind's base layer. Component utilities must retain control of sizes, weights, and line heights. Do not reintroduce universal important font/line-height rules; all app text must use Plus Jakarta Sans. Shared Input/Select/Textarea default to 13px and preserve explicit caller sizes.
 
 - **Primary**: Plus Jakarta Sans (self-hosted from `public/assets/fonts/jakarta/PlusJakartaSans-Variable.woff2`)
-- **Single-family policy**: Plus Jakarta Sans is the only app font, including IDs, timestamps, recovery codes, previews, code text, and print views. Use `tabular-nums` for aligned digits; do not introduce monospace, serif, or separate system font families.
+- **Single-family policy**: Plus Jakarta Sans is the app interface font, including IDs, timestamps, recovery codes, controls, and code text. Generated institutional PDF reports use the report font selected in Institutional Branding; this setting applies to PDF letterheads, body text, tables, and footers. Keep the surrounding preview interface in Plus Jakarta Sans. Use `tabular-nums` for aligned interface digits.
 
 ### 8.3 Icon System (Hugeicons)
 
@@ -495,9 +495,10 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
   Cancel
 </Button>
 
-// 3. Universal Refresh Action: Icon-only squircle button with accessible tooltip
+// 3. Selective Refresh Action: use when data can change outside the current screen
 <RefreshButton onRefresh={() => fetchData(true)} isLoading={isLoading} title="Refresh Records" />
-// Note: Never use text-only "Refresh" buttons in headers. RefreshButton renders a 40x40px rounded-xl squircle.
+// Keep it on live queues, monitoring, and shared records. Omit it from routine settings
+// that load when opened and update after save. RefreshButton renders a 40x40px rounded-xl squircle.
 ```
 
 - **Sizing Standards**: Standard forms/headers use `h-10 px-5 text-xs font-semibold rounded-xl`. Compact tables/toolbars use `h-9 px-4 text-xs font-semibold rounded-xl` (or `h-8` for inline action badges).
@@ -506,7 +507,7 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
   - Always label primary action, header, and confirmation submit buttons explicitly using `[Action Verb] + [Specific Noun]` (e.g., `Register Student`, `Register Staff`, `Register Personnel`, `Register Organization`, `Add Program`, `Add Block`, `Add Document Type`, `Save Changes`, `Save Layout`, `Save Standards`, `Save Questions`, `Submit Request`, `Submit Proposal`, `Submit Post-Event Report`).
   - Avoid vague single-word action labels (e.g., never use a bare `Save`, `Register`, `Submit`, `Add`, `Create` on actions without its noun target), as they cause ambiguity and cognitive friction for non-technical users.
   - **Single-Word Exception**: Negative, dismissive, or navigation actions remain clean atomic words: `Cancel`, `Close`, `Back`, `Done`.
-  - **Refresh Standard**: Never use a text button labeled "Refresh"; always use the squircle `<RefreshButton>` icon component.
+  - **Refresh Standard**: Add the squircle `<RefreshButton>` only when users need to pull in changes made by other people or background work (for example, queues, notifications, audit feeds, and operations monitoring). Routine settings and reference screens should load when opened and update after save without a refresh control. If a refresh action is needed, use `<RefreshButton>` rather than a text-only "Refresh" button.
 
 ### 8.5 Border Radius Hierarchy (Apple HIG Tokens)
 
@@ -551,6 +552,8 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
     ```
 
 ### 8.7 Table Action Columns & Filter Chips
+
+**Canonical table contract:** Follow `COMPONENT_STANDARDS.md` section 9 for all tables, matrices, import previews, dialog/sheet tables, lists, cards, and skeletons. Use the shared `Table` primitives with explicit semantic columns, content-aware sizing for record tables, explicit repeated widths for matrices, inherited Compact/Normal/Comfortable density (40/52/64px minimum rows), 48px action and selection columns, designated 340px text constraints, and fluid truncation. IDs use neutral 24px `rounded-lg` badges; statuses use semantic pills. Left-align IDs/text/dates, center status/year/category/actions, and right-align quantities. Select All updates eligible visible rows in one state update; selected styling covers every row cell, including sticky cells. One row action renders directly; two or more use the shared horizontal-ellipsis `TableActions` menu. Action headings are visually hidden and remain accessible as “Actions.” Use one `DataViewToolbar` line in the canonical search → view → combined filters → date → horizontal-scroll-controls order. Show scroll controls only when the table viewport overflows, and keep row density in Account Settings → Preferences. Use `TablePagination` for every paginated table, card, or list; it includes the standard result range, row-size choices, and navigation. Do not copy local table, toolbar, or pagination styling.
 
 - **Action Column Squircle Buttons**: Standardized to 28x28px squircle buttons with accessible `<Tooltip>`:
   ```jsx
@@ -774,28 +777,21 @@ Use `variant="compact"` for sheets, chart panels, and small cards. Keep no-recor
 
 ### 10.3 Pagination Pattern
 
-```jsx
-import { ArrowLeft01Icon, ArrowRight01Icon } from "hugeicons-react";
+Use `TablePagination` below the table or collection viewport, inside the same card. The canonical API and behavior are documented in `COMPONENT_STANDARDS.md` section 9.7. Use it consistently in table, card, and list modes for the same collection. Use 10 rows by default and 10/20/50/100 choices, accurate `Showing X–Y of Z` ranges, and `Showing 0 of 0` for empty results. Reset on filter/page-size changes, clamp after shrinking results, and ignore stale server responses. Sheet pagers use `SheetPagination` to share controls while retaining divider-free spacing.
 
-<div className="mt-4 flex items-center justify-between">
-  <div className="text-xs font-medium text-gray-500">
-    Showing {start}-{end} of <strong>{total.toLocaleString()}</strong> entries
-  </div>
-  <div className="flex items-center gap-2">
-    <Button variant="outline" size="sm" disabled={page <= 1}
-            onClick={() => setPage(p => p - 1)}>
-      <ArrowLeft01Icon size={16} aria-hidden="true" /> Previous
-    </Button>
-    <div className="px-3 text-xs font-bold text-gray-700 bg-white border
-                    border-gray-200 rounded-md h-8 flex items-center justify-center">
-      {page} / {totalPages}
-    </div>
-    <Button variant="outline" size="sm" disabled={page >= totalPages}
-            onClick={() => setPage(p => p + 1)}>
-      Next <ArrowRight01Icon size={16} aria-hidden="true" />
-    </Button>
-  </div>
-</div>
+```jsx
+import TablePagination from "@/components/shared/TablePagination";
+
+<TablePagination
+  label="Student pages"
+  page={page}
+  pageSize={pageSize}
+  totalCount={total}
+  displayedCount={rows.length}
+  onPageChange={setPage}
+  onPageSizeChange={setPageSize}
+  loading={loading}
+/>
 ```
 
 ---

@@ -48,6 +48,15 @@ if (migration.error || migration.status !== 0) {
   process.exit(1);
 }
 
+const folderCheck = spawnSync("node", ["scripts/migrate-office-folders.mjs"], {
+  stdio: "inherit",
+  cwd: process.cwd(),
+});
+if (folderCheck.error || folderCheck.status !== 0) {
+  console.error("[start] Office folders require migration before starting.");
+  process.exit(1);
+}
+
 const commands = ['"node scripts/run-next-with-ocr.mjs start"'];
 const names = ["next", "warmup"];
 const colors = ["cyan", "yellow"];
