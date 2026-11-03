@@ -302,7 +302,7 @@ export default function HealthSidebar({
             {/* Last Synced Row */}
             <div className="flex items-center justify-between h-[44px] border-b border-black/5 dark:border-border">
               <span className="text-[13px] font-normal text-[#8E8E93]">Last Synced</span>
-              <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
+              <span className="text-[13px] font-normal text-gray-900 dark:text-zinc-100">
                 {formatLastSync(lastBackupTime)}
               </span>
             </div>
@@ -310,7 +310,7 @@ export default function HealthSidebar({
             {/* Last Restored Row */}
             <div className="flex items-center justify-between h-[44px]">
               <span className="text-[13px] font-normal text-[#8E8E93]">Last Restored</span>
-              <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
+              <span className="text-[13px] font-normal text-gray-900 dark:text-zinc-100">
                 {systemHealth?.lastRestorationAt ? formatLastSync(systemHealth.lastRestorationAt) : "Never"}
               </span>
             </div>

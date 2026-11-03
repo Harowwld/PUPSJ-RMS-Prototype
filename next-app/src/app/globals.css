@@ -10,6 +10,32 @@
   --brand-foreground: #ffffff;
 }
 
+.systemadmin-dashboard {
+  --systemadmin-nav-icon: #0f172a;
+}
+
+.dark .systemadmin-dashboard {
+  --systemadmin-nav-icon: #d4d4d8;
+}
+
+.dark .systemadmin-dashboard img[data-sidebar-logo] {
+  filter: invert(1);
+}
+
+.systemadmin-office-label,
+.systemadmin-office-badge {
+  color: var(--office-accent);
+}
+
+.systemadmin-office-badge {
+  background-color: color-mix(in srgb, var(--office-accent) 12%, transparent);
+}
+
+.dark .systemadmin-office-label,
+.dark .systemadmin-office-badge {
+  color: color-mix(in srgb, var(--office-accent) 40%, white);
+}
+
 .rms-brand-scope {
   --brand-accent: #ad2f2f;
   --brand-foreground: #ffffff;

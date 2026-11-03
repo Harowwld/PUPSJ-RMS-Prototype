@@ -1,10 +1,23 @@
 "use client"
-import { Table } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { PLATFORM_BACKUP_COLUMNS, platformBackupSchema } from "@/components/systemadmin/PlatformBackupTable"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "", scope = "office" }) {
+export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "", scope = "office", visibleColumns = PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key) }) {
+  if (scope === "platform") return <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl">
+    <div className="min-h-0 flex-1 overflow-x-auto"><Table columns={platformBackupSchema(visibleColumns)}><TableHeader><TableRow>
+      <TableHead><Skeleton className="mx-auto h-4 w-4" /></TableHead><TableHead><Skeleton className="h-3.5 w-28" /></TableHead>
+      {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => <TableHead key={key}><Skeleton className="h-3.5 w-20" /></TableHead>)}
+      <TableHead><Skeleton className="mx-auto h-7 w-7 rounded-lg" /></TableHead>
+    </TableRow></TableHeader><TableBody>{Array.from({ length: rowCount }, (_, index) => <TableRow key={index}>
+      <TableCell><Skeleton className="mx-auto h-4 w-4" /></TableCell><TableCell><Skeleton className="h-4 w-3/4 max-w-72" /></TableCell>
+      {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => <TableCell key={key}><Skeleton className="h-4 w-3/4" /></TableCell>)}
+      <TableCell><Skeleton className="mx-auto h-7 w-7 rounded-lg" /></TableCell>
+    </TableRow>)}</TableBody></Table></div>
+    <div className="flex items-center justify-between border-t border-border px-6 py-4"><Skeleton className="h-4 w-36" /><Skeleton className="h-8 w-36" /></div>
+  </div>
   return (
     <div
       className={cn(

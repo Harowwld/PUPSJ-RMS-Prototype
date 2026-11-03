@@ -33,7 +33,7 @@ async function main() {
   try {
     console.log(`[reset-db] Resetting local PostgreSQL data and seeding the 7 default demo accounts.`);
     await resetDatabase({ demoAccountsOnly });
-    console.log(`[reset-db] Reset completed. All tables cleared; only the 7 default demo accounts seeded.`);
+    console.log(`[reset-db] Reset completed. Database tables and local data files cleared; the demo baseline was seeded.`);
   } finally {
     await pool.end();
   }

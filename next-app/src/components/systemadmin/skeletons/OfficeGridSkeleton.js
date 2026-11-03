@@ -14,6 +14,7 @@ function columnDefinition(key) {
   if (key === "station") return { kind: "text", maxWidth: 280 }
   if (key === "staff" || key === "modules") return { kind: "number", maxWidth: 104 }
   if (key === "status") return { kind: "status", maxWidth: 144 }
+  if (key === "created_at" || key === "updated_at") return { kind: "date" }
   return { kind: "text" }
 }
 

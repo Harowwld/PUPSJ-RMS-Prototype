@@ -7,63 +7,24 @@ import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogs
 
 export default function GlobalAuditLogsSkeleton() {
   return (
-    <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
-        {/* Header */}
+    <div className="flex flex-[1_0_auto] min-w-0 flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
+      <Card className="flex flex-[1_0_auto] min-w-0 w-full flex-col gap-0 overflow-visible rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
         <PageHeader
-          icon=" Time01Icon"
+          icon="Shield01Icon"
           title="Platform Activity History"
-          description="Review administrative actions, office changes, and security-related activity across the platform."
+          description={<Skeleton className="mt-1 h-4 w-52" />}
           showBorder={false}
-          className="p-6"
+          className="px-6 py-5"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-40 rounded-xl dark:bg-muted" />
-            </div>
-          }
         />
-
-        {/* 4 Top KPI Stat Cards */}
-        <div className="px-6 pb-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="overflow-hidden rounded-2xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/50 p-4 min-h-[95px] flex flex-col justify-between"
-              >
-                <div className="flex justify-between items-start">
-                  <Skeleton className="h-4 w-28 rounded dark:bg-muted" />
-                  <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-                </div>
-                <div className="pt-2">
-                  <Skeleton className="h-7 w-20 rounded dark:bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
+        <div aria-hidden="true" className="flex h-9 items-stretch gap-5 border-b border-border px-6 dark:border-white/10">
+          {["w-20", "w-24", "w-16", "w-14"].map((width) => <div key={width} className="flex h-9 items-center px-3"><Skeleton className={`h-3 ${width}`} /></div>)}
         </div>
-
-        {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
-          <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5">
-              <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
-            </div>
-            <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
-            <Skeleton className="h-9 w-44 rounded-xl dark:bg-muted" />
-            <Skeleton className="h-9 w-48 rounded-xl dark:bg-muted" />
-          </div>
+        <div className="flex items-center gap-2 overflow-hidden bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          {["w-64", "w-20", "w-28", "w-24", "w-32", "w-28", "w-9", "w-24", "w-32"].map((width, i) => <Skeleton key={i} className={`h-9 shrink-0 rounded-xl ${width}`} />)}
         </div>
-
-        {/* Table Body & Pagination */}
-        <AuditLogsTableSkeleton rowCount={8} embedded={true} showScope={true} />
+        <AuditLogsTableSkeleton rowCount={20} embedded showScope />
       </Card>
     </div>
   )

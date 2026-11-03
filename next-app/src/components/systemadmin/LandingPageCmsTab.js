@@ -1,4 +1,5 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -8,23 +9,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
 import LandingFaqCmsView from "./LandingFaqCmsView"
 import LandingFooterCmsView from "./LandingFooterCmsView"
 import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
+import LandingCmsSectionTabs, { LANDING_CMS_SECTIONS } from "./LandingCmsSectionTabs"
 import { cn } from "@/lib/utils"
-import { Add01Icon, Alert01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, Camera01Icon, Delete01Icon, DragDropIcon, GitMergeIcon, HelpCircleIcon, Image01Icon, LayoutBottomIcon, LibraryIcon, Loading01Icon, Timer01Icon } from "hugeicons-react";
+import { Add01Icon, Alert01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, Camera01Icon, Delete01Icon, DragDropIcon, Loading01Icon, Timer01Icon } from "hugeicons-react";
 
 
-export default function LandingPageCmsTab({ showToast }) {
-  const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'workflow' | 'catalog' | 'faq' | 'footer'
+export default function LandingPageCmsTab({ showToast, initialSection }) {
+  const [currentSection, setCurrentSection] = useState(() => LANDING_CMS_SECTIONS.includes(initialSection) ? initialSection : "hero")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
-  const [activeTab, setActiveTab] = useState("slides") // 'slides' | 'preview'
+  const [activeTab, setActiveTab] = useViewPreference("cms-hero", "activeTab", "slides") // 'slides' | 'preview'
   const [previewSlideIdx, setPreviewSlideIdx] = useState(0)
 
   // Form State
@@ -310,96 +313,24 @@ export default function LandingPageCmsTab({ showToast }) {
     notify(`Moved Photo ${fromIndex + 1} to position ${toIndex + 1}`)
   }
 
-  if (loading) {
-    return <LandingHeroSkeleton />
-  }
-
   return (
-    <div className="flex flex-[1_0_auto] flex-col gap-5 w-full animate-fade-up font-jakarta select-none">
-      {/* Top Section Switcher (Apple Segmented Control) */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 w-fit select-none overflow-x-auto max-w-full">
-        <button
-          type="button"
-          onClick={() => handleSelectSection("hero")}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
-            currentSection === "hero"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-          )}
-        >
-          <Image01Icon size="1em" className="text-sm" />
-          <span>Hero Section</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSelectSection("workflow")}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
-            currentSection === "workflow"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-          )}
-        >
-          <GitMergeIcon size="1em" className="text-sm" />
-          <span>Workflow &amp; Steps</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSelectSection("catalog")}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
-            currentSection === "catalog"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-          )}
-        >
-          <LibraryIcon size="1em" className="text-sm" />
-          <span>Academic Catalog</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSelectSection("faq")}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
-            currentSection === "faq"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-          )}
-        >
-          <HelpCircleIcon size="1em" className="text-sm" />
-          <span>FAQ Section</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSelectSection("footer")}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]",
-            currentSection === "footer"
-              ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
-              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-          )}
-        >
-          <LayoutBottomIcon size="1em" className="text-sm" />
-          <span>Footer Section</span>
-        </button>
-      </div>
+    <div className="flex flex-[1_0_auto] min-w-0 flex-col gap-4 w-full animate-fade-up font-jakarta select-none">
+      <Card className="flex min-w-0 flex-[1_0_auto] flex-col gap-0 rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
+      <LandingCmsSectionTabs section={currentSection} onSelect={handleSelectSection} />
 
       {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} />}
       {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} />}
       {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} />}
       {currentSection === "footer" && <LandingFooterCmsView showToast={showToast} />}
-      {currentSection === "hero" && (
-        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      {currentSection === "hero" && loading && <LandingHeroSkeleton />}
+      {currentSection === "hero" && !loading && (
+        <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
           <PageHeader
             icon=" DashboardSquare01Icon"
             title={
               <div className="flex items-center gap-[6px]">
                 <span>Landing Page CMS</span>
+              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {heroData.slides.length} photos</span>
                 <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
                   · Hero Section
                 </span>
@@ -416,7 +347,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   type="button"
                   variant="outline"
                   onClick={() => window.open("/", "_blank")}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5"
                 >
                   Preview Portal
                 </Button>
@@ -426,7 +357,7 @@ export default function LandingPageCmsTab({ showToast }) {
                   variant="outline"
                   onClick={() => setResetModalOpen(true)}
                   disabled={saving}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-10 px-5"
                 >
                   Restore Defaults
                 </Button>
@@ -444,38 +375,9 @@ export default function LandingPageCmsTab({ showToast }) {
           />
 
           {/* SuperAdmin Navigation Segmented Tabs */}
-          <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-              <button
-                type="button"
-                onClick={() => setActiveTab("slides")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                  activeTab === "slides"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                )}
-              >
-                Hero Content
-              </button>
+          <LandingCmsViewTabs activeTab={activeTab === "slides" ? "content" : activeTab} onChange={(tab) => setActiveTab(tab === "content" ? "slides" : "preview")} contentLabel="Hero Content" />
 
-              <button
-                type="button"
-                onClick={() => setActiveTab("preview")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                  activeTab === "preview"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                )}
-              >
-                Interactive Live Preview
-              </button>
-            </div>
-          </div>
-
-          {/* Content Body */}
-          <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
             {/* TAB 1: Hero Content (Messaging + Carousel Combined) */}
             {activeTab === "slides" && (
               <div className="space-y-6">
@@ -495,7 +397,7 @@ export default function LandingPageCmsTab({ showToast }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          <label htmlFor="hero-headline-one" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                             Headline Line 1 (Upper)
                           </label>
                           <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -503,6 +405,7 @@ export default function LandingPageCmsTab({ showToast }) {
                           </span>
                         </div>
                         <Input
+                          id="hero-headline-one"
                           value={heroData.headlineLine1}
                           onChange={(e) =>
                             setHeroData((prev) => ({
@@ -518,7 +421,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                          <label htmlFor="hero-headline-two" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                             Headline Line 2 (Lower Accent)
                           </label>
                           <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -526,6 +429,7 @@ export default function LandingPageCmsTab({ showToast }) {
                           </span>
                         </div>
                         <Input
+                          id="hero-headline-two"
                           value={heroData.headlineLine2}
                           onChange={(e) =>
                             setHeroData((prev) => ({
@@ -542,7 +446,7 @@ export default function LandingPageCmsTab({ showToast }) {
 
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="hero-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Hero Subtitle &amp; Institutional Description
                         </label>
                         <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -550,6 +454,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         </span>
                       </div>
                       <Textarea
+                        id="hero-description"
                         value={heroData.description}
                         onChange={(e) =>
                           setHeroData((prev) => ({
@@ -585,13 +490,14 @@ export default function LandingPageCmsTab({ showToast }) {
                       <div className="w-[145px]">
                         <Select
                           value={heroData.autoRotateInterval}
+                          aria-label="Slide pace"
                           onChange={(e) =>
                             setHeroData((prev) => ({
                               ...prev,
                               autoRotateInterval: Number(e.target.value),
                             }))
                           }
-                          className="h-9 rounded-xl border border-border dark:border-border text-xs font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-2xs px-3"
+                          className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-700 shadow-none dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200"
                         >
                           <option value={3500}>Fast (3.5s)</option>
                           <option value={5500}>Balanced (5.5s)</option>
@@ -691,7 +597,7 @@ export default function LandingPageCmsTab({ showToast }) {
                         setDragOverSlideIdx(null)
                       }
                     }}
-                    className="rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none shadow-2xs"
+                    className="rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-[color,background-color,border-color,box-shadow,opacity,transform] p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none shadow-2xs"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-2xs">
                       <Add01Icon size={16} className="text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
@@ -833,7 +739,7 @@ export default function LandingPageCmsTab({ showToast }) {
                             onClick={() => setPreviewSlideIdx(dotIdx)}
                             aria-label={`View photo ${dotIdx + 1}`}
                             className={cn(
-                              "h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer",
+                              "h-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-500 ease-out cursor-pointer",
                               isActive
                                 ? "w-6 bg-gray-800 dark:bg-zinc-100"
                                 : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
@@ -849,6 +755,8 @@ export default function LandingPageCmsTab({ showToast }) {
           </CardContent>
         </Card>
       )}
+
+      </Card>
 
       {/* Reset Confirmation Modal */}
       <ConfirmModal
@@ -958,7 +866,7 @@ function SlideCard({
         }
       }}
       className={cn(
-        "group rounded-2xl border bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between select-none relative",
+        "group rounded-2xl border bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-[color,background-color,border-color,box-shadow,opacity,transform] flex flex-col justify-between select-none relative",
         isDragging
           ? "opacity-35 scale-[0.98] border-dashed border-pup-maroon/60 bg-pup-maroon/5 ring-2 ring-pup-maroon/20 cursor-grabbing"
           : isDragTarget
@@ -997,7 +905,7 @@ function SlideCard({
             onClick={onMoveUp}
             onMouseDown={(e) => e.stopPropagation()}
             title="Move earlier"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
+            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
           >
             <ArrowLeft01Icon size="1em" className="text-xs" />
           </button>
@@ -1008,7 +916,7 @@ function SlideCard({
             onClick={onMoveDown}
             onMouseDown={(e) => e.stopPropagation()}
             title="Move later"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
+            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0 shadow-2xs"
           >
             <ArrowRight01Icon size="1em" className="text-xs" />
           </button>
@@ -1018,7 +926,7 @@ function SlideCard({
             onClick={onDelete}
             onMouseDown={(e) => e.stopPropagation()}
             title="Remove photo"
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1 shadow-2xs"
+            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1 shadow-2xs"
           >
             <Delete01Icon size="1em" className="text-xs" />
           </button>
@@ -1055,7 +963,7 @@ function SlideCard({
         }}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
-          "relative aspect-video w-full bg-zinc-950 overflow-hidden group/img transition-all cursor-pointer",
+          "relative aspect-video w-full bg-zinc-950 overflow-hidden group/img transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
           isFileDragOver && "ring-2 ring-pup-maroon"
         )}
         title="Click to change photo, or drag an image file from your computer"
@@ -1132,7 +1040,7 @@ function SlideCard({
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           onMouseDown={(e) => e.stopPropagation()}
-          className="w-full h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold cursor-pointer shadow-2xs active:scale-95 transition-all"
+          className="w-full h-9"
         >
           Change Photo
         </Button>

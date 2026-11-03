@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, Suspense } from "react"
+import { useEffect, useState, useCallback, useRef, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
@@ -11,16 +11,18 @@ import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
+import ConfirmModal from "@/components/shared/ConfirmModal"
 import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
 import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
-import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
 import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
 import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
 import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
 import OfficeManagementPageSkeleton from "@/components/systemadmin/skeletons/OfficeManagementPageSkeleton"
+import LandingCmsLoadingSkeleton from "@/components/systemadmin/skeletons/LandingCmsLoadingSkeleton"
 import { getClientSession } from "@/lib/clientAuth"
 import { formatErrorMessage } from "@/lib/errorUtils"
+import { getRoleBranding } from "@/lib/roleBranding"
 
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 
@@ -61,11 +63,16 @@ const CampusOperationsTab = dynamic(() => import("@/components/systemadmin/Campu
   loading: () => <CampusOperationsSkeleton />,
 })
 const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
-  loading: () => <SystemBackupsSkeleton />,
+  loading: () => <SystemBackupsSkeleton rowCount={20} />,
 })
 const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/LandingPageCmsTab"), {
-  loading: () => <LandingHeroSkeleton />,
+  loading: () => <LandingCmsDynamicFallback />,
 })
+
+function LandingCmsDynamicFallback() {
+  const searchParams = useSearchParams()
+  return <LandingCmsLoadingSkeleton section={searchParams?.get("section")} />
+}
 const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
   loading: () => <SecurityQuestionsSkeleton />,
 })
@@ -88,7 +95,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   const [authUser, setAuthUser] = useState(initialAuth)
   const [loading, setLoading] = useState(!initialAuth)
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser)
-  
+
   const initialView = VALID_VIEWS.includes(searchParams?.get("view"))
     ? searchParams.get("view")
     : "offices"
@@ -96,19 +103,12 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   const [view, setView] = useState(initialView)
   const [selectedOfficeId, setSelectedOfficeId] = useState(() => searchParams?.get("office") || "")
   const [sidebarOpen, setSidebarOpen] = useState(true)
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.style.setProperty("--brand-accent", "#000000")
-      document.documentElement.style.setProperty("--brand-foreground", "#FFFFFF")
-    }
-    return () => {
-      if (typeof window !== "undefined") {
-        document.documentElement.style.setProperty("--brand-accent", "#800000")
-        document.documentElement.style.setProperty("--brand-foreground", "#FFFFFF")
-      }
-    }
-  }, [])
+  const [brandingDirty, setBrandingDirty] = useState(false)
+  const [pendingBrandingView, setPendingBrandingView] = useState(null)
+  const currentViewRef = useRef(view)
+  const brandingDirtyRef = useRef(brandingDirty)
+  useEffect(() => { currentViewRef.current = view }, [view])
+  useEffect(() => { brandingDirtyRef.current = brandingDirty }, [brandingDirty])
 
   useEffect(() => {
     const handleToggle = () => setSidebarOpen((prev) => !prev)
@@ -120,6 +120,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     const handleSwitch = (e) => {
       const { view: targetView, officeId, section } = e.detail || {}
       if (targetView) {
+        if (view === "branding" && brandingDirty && targetView !== "branding") {
+          setPendingBrandingView({ view: targetView, officeId, section })
+          return
+        }
         setView(targetView)
         if (officeId) {
           setSelectedOfficeId(officeId)
@@ -137,7 +141,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     }
     window.addEventListener("switch-view", handleSwitch)
     return () => window.removeEventListener("switch-view", handleSwitch)
-  }, [router])
+  }, [router, view, brandingDirty])
 
   const showToast = useCallback((msg, typeOrIsError = false, autoHide = true) => {
     if (msg instanceof Error) {
@@ -222,9 +226,13 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   useEffect(() => {
     const rawTab = searchParams?.get("view")
     const tab = VALID_VIEWS.includes(rawTab) ? rawTab : "offices"
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (currentViewRef.current === "branding" && brandingDirtyRef.current && tab !== "branding") {
+      setPendingBrandingView({ view: tab })
+      router.replace(`${window.location.pathname}?view=branding`, { scroll: false })
+      return
+    }
     setView(tab)
-  }, [searchParams])
+  }, [searchParams, router])
 
   useEffect(() => {
     if (initialAuth) {
@@ -233,7 +241,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       setLoading(false)
       return
     }
-    ;(async () => {
+    ; (async () => {
       try {
         const session = await getClientSession()
         if (!session.ok || !session.data) {
@@ -251,6 +259,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   }, [initialAuth, router])
 
   const switchView = useCallback((nextView, officeId) => {
+    if (view === "branding" && brandingDirty && nextView !== "branding") {
+      setPendingBrandingView({ view: nextView, officeId })
+      return
+    }
     setView(nextView)
     if (officeId) {
       setSelectedOfficeId(officeId)
@@ -261,7 +273,21 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       params.set("office", officeId)
     }
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
-  }, [router])
+  }, [router, view, brandingDirty])
+
+  const discardBrandingChanges = useCallback(() => {
+    if (!pendingBrandingView) return
+    const { view: nextView, officeId, section } = pendingBrandingView
+    setBrandingDirty(false)
+    setPendingBrandingView(null)
+    setView(nextView)
+    if (officeId) setSelectedOfficeId(officeId)
+    const params = new URLSearchParams()
+    params.set("view", nextView)
+    if (officeId) params.set("office", officeId)
+    if (section) params.set("section", section)
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+  }, [pendingBrandingView, router])
 
   const sidebarItems = SYSTEMADMIN_NAV_ITEMS
 
@@ -270,7 +296,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   }
 
   return (
-    <div className="font-jakarta flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
+    <div className="systemadmin-dashboard font-jakarta flex h-dvh overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300" style={{ "--brand-accent": getRoleBranding(authUser).color, "--brand-foreground": getRoleBranding(authUser).foreground }}>
       {/* Dynamic Glassmorphism Blobs */}
       <div className="liquid-container">
         <div className="liquid-blob liquid-blob-1 bg-blue-400/20 dark:bg-blue-600/10"></div>
@@ -295,13 +321,13 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           handleZoomMouseDown={handleZoomMouseDown}
           authUser={authUser}
         />
-        
+
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xl flex flex-col">
-          <div 
+          <div
             className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]"
           >
             {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
-            {view === "branding" && <InstitutionalBrandingTab showToast={showToast} />}
+            {view === "branding" && <InstitutionalBrandingTab showToast={showToast} onDirtyChange={setBrandingDirty} />}
             {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
             {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
             {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
@@ -313,12 +339,13 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
               />
             )}
             {view === "backups" && <SystemBackupsTab showToast={showToast} />}
-            {view === "landing" && <LandingPageCmsTab showToast={showToast} />}
+            {view === "landing" && <LandingPageCmsTab showToast={showToast} initialSection={searchParams?.get("section")} />}
             {view === "activity" && <MyActivityPanel />}
             {view === "settings" && <AccountSettingsPanel />}
           </div>
         </main>
       </div>
+      <ConfirmModal open={Boolean(pendingBrandingView)} title="Unsaved Changes" message="You have unsaved institutional identity changes. Navigating away will discard them." confirmLabel="Discard" variant="warning" onConfirm={discardBrandingChanges} onCancel={() => setPendingBrandingView(null)} isUnsavedChangesModal={true} />
     </div>
   )
 }

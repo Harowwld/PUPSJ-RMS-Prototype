@@ -26,7 +26,7 @@ function DepartmentSelectorSkeleton() {
         </div>
         <div className="flex items-stretch gap-3 overflow-hidden pb-2 pt-0.5">
           {Array.from({ length: 5 }, (_, index) => (
-            <div key={index} className="flex w-[240px] min-w-[240px] flex-col justify-between gap-3 rounded-xl border border-border bg-white/80 p-3.5 shadow-2xs dark:bg-zinc-900/60">
+            <div key={index} className="flex w-[240px] min-w-[240px] flex-col justify-between gap-3 rounded-xl border border-border bg-white p-4 dark:bg-zinc-900/60">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <Placeholder className="h-9 w-9 shrink-0 rounded-xl" />
@@ -50,9 +50,9 @@ function DepartmentSelectorSkeleton() {
 
 function FeatureCardSkeleton() {
   return (
-    <div className="flex min-h-[150px] flex-col justify-between gap-3 rounded-xl border border-border bg-white p-4 shadow-2xs dark:bg-zinc-900">
+    <div className="flex min-h-[172px] flex-col justify-between gap-4 rounded-2xl border border-border bg-white p-4 dark:bg-zinc-900">
       <div>
-        <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <Placeholder className="h-8 w-8 shrink-0 rounded-lg" />
             <div className="space-y-1.5">
@@ -144,8 +144,8 @@ function MatrixViewSkeleton({ groupBy, officeCount }) {
       window.removeEventListener("resize", measure)
     }
   }, [])
-  const featureWidth = Math.max(420, Math.min(viewportWidth * 0.55, viewportWidth * 1.5 / (officeCount + 1)))
-  const officeWidth = Math.max(150, (viewportWidth - featureWidth) / officeCount)
+  const featureWidth = Math.max(420, Math.min(viewportWidth * 0.6, viewportWidth - officeCount * 180))
+  const officeWidth = Math.max(180, (viewportWidth - featureWidth) / officeCount)
   const columns = Array.from({ length: officeCount }, () => ({ kind: "category", width: officeWidth }))
   const groups = groupBy === "none" ? [null] : groupBy === "required" ? ["Required System Features", "Optional Features"] : ["Supervisor & Department Head Tools", "Staff & Frontline Tools"]
   return (
@@ -165,7 +165,7 @@ function MatrixViewSkeleton({ groupBy, officeCount }) {
                 <div className="flex min-w-0 items-start gap-3">
                   <Placeholder className="h-7 w-7 shrink-0 rounded-lg" />
                   <div className="min-w-0 flex-1 space-y-1.5">
-                    <Placeholder className="h-3.5 w-48 max-w-full rounded" />
+                    <div className="flex items-center justify-between gap-3"><Placeholder className="h-3.5 w-32 max-w-[45%] rounded" /><div className="flex min-w-0 max-w-[55%] items-center gap-2"><Placeholder className="h-4 w-14 shrink-0 rounded-full" /><Placeholder className="h-3 w-32 max-w-full rounded" /></div></div>
                     <Placeholder className="h-3 w-64 max-w-full rounded" />
                   </div>
                 </div>
@@ -206,10 +206,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
             {viewMode === "matrix" && <><Placeholder className="h-9 w-36 shrink-0 rounded-xl" /><Placeholder className="h-9 w-32 shrink-0 rounded-xl" />{visibleOfficeCount > 1 && <Placeholder className="h-9 w-24 shrink-0 rounded-xl" />}</>}
           </div>
         </DataViewToolbar>
-        <div aria-busy="true" className="flex flex-[1_0_auto] flex-col overflow-hidden border-t border-border bg-white dark:bg-card">
-          {viewMode === "matrix" ? <MatrixViewSkeleton groupBy={groupBy} officeCount={visibleOfficeCount} /> : <DepartmentViewSkeleton />}
-        </div>
-        <div className="flex flex-col justify-between gap-4 rounded-b-2xl border-t border-border bg-gray-50/40 px-6 py-4 dark:bg-zinc-900/30 sm:flex-row sm:items-center">
+        <div className="flex flex-col justify-between gap-4 border-t border-border bg-gray-50/40 px-6 py-4 dark:bg-zinc-900/30 sm:flex-row sm:items-center">
           <div className="flex min-w-0 items-center gap-3.5">
             <Placeholder className="h-10 w-10 shrink-0 rounded-xl" />
             <div className="min-w-0 space-y-1.5">
@@ -219,6 +216,10 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
           </div>
           <div className="flex shrink-0 items-center gap-3 self-end sm:self-center"><Placeholder className="h-4 w-14 rounded" /><Placeholder className="h-6 w-11 rounded-full" /></div>
         </div>
+        <div aria-busy="true" className="flex flex-[1_0_auto] flex-col overflow-hidden border-t border-border bg-white dark:bg-card">
+          {viewMode === "matrix" ? <MatrixViewSkeleton groupBy={groupBy} officeCount={visibleOfficeCount} /> : <DepartmentViewSkeleton />}
+        </div>
+
       </Card>
     </div>
   )

@@ -3,6 +3,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 
 export default function InstitutionalBrandingSkeleton() {
   return (
@@ -11,26 +12,24 @@ export default function InstitutionalBrandingSkeleton() {
         <PageHeader
           icon=" Certificate01Icon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Institutional Identity</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · School Credentials &amp; Letterhead
-              </span>
+              <Skeleton aria-hidden="true" className="h-3.5 w-44 rounded dark:bg-muted" />
             </div>
           }
           description="Configure your official university seal, school credentials, administrative letterhead, and color theme for all official reports."
-          showBorder={true}
+          showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-24 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-20 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-20 rounded-xl dark:bg-muted" />
-            </div>
-          }
         />
+        <DataViewToolbar label="Institutional identity actions" className="gap-2 border-t border-border bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          <Skeleton aria-hidden="true" className="h-8 w-44 shrink-0 rounded-full dark:bg-muted" />
+          <div aria-hidden="true" className="ml-auto flex shrink-0 items-center gap-2">
+            <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-9 w-32 shrink-0 rounded-xl dark:bg-muted" />
+            <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
+          </div>
+        </DataViewToolbar>
 
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -156,7 +155,7 @@ export default function InstitutionalBrandingSkeleton() {
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </div>
                 {/* Simulated A4 Canvas Sheet */}
-                <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-6 flex flex-col items-center justify-between h-[620px] shadow-xs">
+                <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-6 flex flex-col items-center justify-between h-[760px] shadow-xs">
                   <div className="w-full flex flex-col items-center gap-3 border-b border-border dark:border-border pb-4">
                     <Skeleton className="w-12 h-12 rounded-full dark:bg-muted" />
                     <Skeleton className="h-3.5 w-48 rounded dark:bg-muted" />

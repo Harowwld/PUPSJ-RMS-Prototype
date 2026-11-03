@@ -1,4 +1,5 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import LandingCatalogSkeleton from "@/components/systemadmin/skeletons/LandingCatalogSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
 import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, Delete01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
@@ -126,7 +128,7 @@ const CLIENT_PILLS = [
 export default function LandingCatalogCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("content") // 'content' | 'preview'
+  const [activeTab, setActiveTab] = useViewPreference("cms-catalog", "activeTab", "content") // 'content' | 'preview'
   const [catalogData, setCatalogData] = useState(DEFAULT_CATALOG_CONTENT)
 
   // Card editor states
@@ -137,7 +139,7 @@ export default function LandingCatalogCmsView({ showToast }) {
 
   // Live preview states
   const [previewActiveIdx, setPreviewActiveIdx] = useState(0)
-  const [previewDarkTheme, setPreviewDarkTheme] = useState(false)
+  const [previewDarkTheme, setPreviewDarkTheme] = useViewPreference("cms-catalog", "previewDarkTheme", false)
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -337,12 +339,13 @@ export default function LandingCatalogCmsView({ showToast }) {
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
         <PageHeader
           icon=" LibraryIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
+              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {catalogData.items.length} documents</span>
               <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
                 · Academic Document Catalog
               </span>
@@ -358,7 +361,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#catalog", "_blank")}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Preview Portal
               </Button>
@@ -368,7 +371,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Restore Defaults
               </Button>
@@ -386,37 +389,8 @@ export default function LandingCatalogCmsView({ showToast }) {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setActiveTab("content")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                activeTab === "content"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Catalog Content
-            </button>
+        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Catalog Content" />
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("preview")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                activeTab === "preview"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Interactive Live Preview
-            </button>
-          </div>
-        </div>
-
-        {/* Content Body */}
         <CardContent className="p-6 flex flex-[1_0_auto] flex-col rounded-b-2xl">
           {/* TAB 1: Catalog Content (Section Header + Document Cards) */}
           {activeTab === "content" && (
@@ -432,10 +406,10 @@ export default function LandingCatalogCmsView({ showToast }) {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label htmlFor="catalog-heading" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Main Section Heading
                       </label>
                       <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -443,19 +417,20 @@ export default function LandingCatalogCmsView({ showToast }) {
                       </span>
                     </div>
                     <Input
+                      id="catalog-heading"
                       value={catalogData.heading || ""}
                       onChange={(e) =>
                         setCatalogData((prev) => ({ ...prev, heading: e.target.value }))
                       }
                       placeholder="e.g. Academic Document Catalog"
                       maxLength={50}
-                      className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-semibold focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                      className="bg-white dark:bg-card"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label htmlFor="catalog-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Section Description / Intro
                       </label>
                       <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -464,6 +439,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     </div>
                     <Textarea
                       rows={3}
+                      id="catalog-description"
                       value={catalogData.description || ""}
                       onChange={(e) =>
                         setCatalogData((prev) => ({ ...prev, description: e.target.value }))
@@ -516,7 +492,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                           key={item.id || idx}
                           onClick={() => setSelectedCardIdx(idx)}
                           className={cn(
-                            "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 select-none",
+                            "p-3.5 rounded-2xl border transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer flex items-center gap-3.5 select-none",
                             isSelected
                               ? "border-pup-maroon dark:border-red-500 ring-2 ring-pup-maroon/25 dark:ring-red-500/30 bg-white dark:bg-zinc-900 shadow-sm"
                               : "border-border dark:border-border bg-white dark:bg-zinc-900/50 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60"
@@ -524,7 +500,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         >
                           <div
                             className={cn(
-                              "w-7 h-7 rounded-xl flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
+                              "w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-xl flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
                               isSelected
                                 ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
                                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
@@ -558,7 +534,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               title="Move Up"
                               disabled={idx === 0}
                               onClick={() => handleMoveCard(idx, "up")}
-                              className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <ArrowUp01Icon size="1em" className="text-xs" />
                             </button>
@@ -567,7 +543,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               title="Move Down"
                               disabled={idx === currentItems.length - 1}
                               onClick={() => handleMoveCard(idx, "down")}
-                              className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <ArrowDown01Icon size="1em" className="text-xs" />
                             </button>
@@ -576,7 +552,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               title="Delete Card"
                               disabled={currentItems.length <= MIN_CATALOG_ITEMS}
                               onClick={() => setDeleteCardIdx(idx)}
-                              className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <Delete01Icon size="1em" className="text-xs" />
                             </button>
@@ -607,7 +583,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     {/* Official Document Title */}
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="catalog-document-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Official Document Title
                         </label>
                         <span className="text-[10px] text-gray-400 font-sans tabular-nums">
@@ -615,6 +591,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         </span>
                       </div>
                       <Input
+                        id="catalog-document-title"
                         value={currentCard.title || ""}
                         onChange={(e) => updateCardField("title", e.target.value)}
                         placeholder="e.g. Transcript of Records"
@@ -625,10 +602,11 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                     {/* Client Tag */}
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label htmlFor="catalog-client" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Client Eligibility Tag
                       </label>
                       <Input
+                        id="catalog-client"
                         value={currentCard.client || ""}
                         onChange={(e) => updateCardField("client", e.target.value)}
                         placeholder="e.g. Student & Alumni"
@@ -651,11 +629,12 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label htmlFor="catalog-document-description" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Document Description / Purpose Summary
                       </label>
                       <Textarea
                         rows={2}
+                        id="catalog-document-description"
                         value={currentCard.description || ""}
                         onChange={(e) => updateCardField("description", e.target.value)}
                         placeholder="Official comprehensive academic transcript for employment, PRC board examinations..."
@@ -666,7 +645,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                     {/* Mandatory Filing Requirements */}
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="catalog-new-requirement" className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Mandatory Filing Requirements ({currentCard.requirements?.length || 0})
                         </label>
                         <span className="text-[10px] text-gray-400 font-sans tabular-nums">
@@ -681,15 +660,16 @@ export default function LandingCatalogCmsView({ showToast }) {
                               <Tick01Icon size={16}  />
                             </span>
                             <Input
+                              aria-label={`Filing requirement ${rIdx + 1}`}
                               value={req}
                               onChange={(e) => updateRequirement(rIdx, e.target.value)}
-                              className="h-8 rounded-lg bg-white dark:bg-zinc-900 border-border dark:border-border text-xs flex-1"
+                              className="h-9 flex-1 bg-white dark:bg-card"
                             />
                             <button
                               type="button"
                               title="Remove requirement"
                               onClick={() => removeRequirement(rIdx)}
-                              className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent transition-colors"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent transition-colors"
                             >
                               <Cancel01Icon size="1em" className="text-xs" />
                             </button>
@@ -700,6 +680,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       {/* Add requirement input */}
                       <div className="flex items-center gap-2 pt-2 border-t border-border dark:border-border">
                         <Input
+                          id="catalog-new-requirement"
                           value={newRequirementText}
                           onChange={(e) => setNewRequirementText(e.target.value)}
                           onKeyDown={(e) => {
@@ -811,8 +792,11 @@ export default function LandingCatalogCmsView({ showToast }) {
 
               {/* Stage Container */}
               <div
+                data-light-only={!previewDarkTheme ? "" : undefined}
+                data-catalog-preview-theme={previewDarkTheme ? "dark" : "light"}
                 className={cn(
                   "relative w-full rounded-2xl border p-6 sm:p-10 overflow-hidden transition-colors select-none font-jakarta flex flex-col items-center",
+                  previewDarkTheme && "dark",
                   previewDarkTheme
                     ? "bg-zinc-950 text-white border-zinc-800"
                     : "bg-white text-gray-900 border-border"
@@ -837,7 +821,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         key={doc.id || idx}
                         onClick={() => setPreviewActiveIdx(idx)}
                         className={cn(
-                          "shrink-0 w-[280px] sm:w-[320px] md:w-[360px] flex flex-col rounded-3xl p-6 text-left transition-all duration-300 cursor-pointer snap-center",
+                          "shrink-0 w-[280px] sm:w-[320px] md:w-[360px] flex flex-col rounded-3xl p-6 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 cursor-pointer snap-center",
                           previewDarkTheme ? "bg-zinc-900 border border-white/10" : "bg-[#f5f5f7] border border-black/[0.04]",
                           isActive
                             ? "scale-[1.02] ring-2 ring-pup-maroon/50 dark:ring-red-500/50 shadow-md z-10"
@@ -895,7 +879,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       type="button"
                       onClick={() => setPreviewActiveIdx(idx)}
                       className={cn(
-                        "h-1.5 rounded-full transition-all cursor-pointer border-0",
+                        "h-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer border-0",
                         idx === previewActiveIdx
                           ? "w-6 bg-black dark:bg-white"
                           : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"

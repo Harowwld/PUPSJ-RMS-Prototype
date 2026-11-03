@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,11 +14,12 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { REPORT_FONT_OPTIONS } from "@/lib/reportFontOptions"
 import { DEFAULT_BRANDING, resolveBranding } from "@/lib/institutionalBranding"
 import PageHeader from "@/components/shared/PageHeader"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
 import { generateSampleBrandingPdf, deriveDocumentPrefix } from "@/lib/pdfGenerator"
-import { AlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_PUP_LOGO = "/assets/pup-logo.webp"
 const OFFICIAL_FALLBACK_LOGO = "/assets/branding/black-icon.png"
@@ -33,8 +34,11 @@ const COLOR_PRESETS = [
   { label: "Institutional Gold", hex: "#B45309" },
 ]
 
-export default function InstitutionalBrandingTab({ showToast }) {
+export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [sampleAttempt, setSampleAttempt] = useState(0)
   const [saving, setSaving] = useState(false)
   const [sample, setSample] = useState(null)
   const [sampleError, setSampleError] = useState("")
@@ -46,9 +50,8 @@ export default function InstitutionalBrandingTab({ showToast }) {
   const [isSecondaryDragOver, setIsSecondaryDragOver] = useState(false)
 
   const [branding, setBranding] = useState(DEFAULT_BRANDING)
-
-  const fileInputRef = useRef(null)
-  const secondaryFileInputRef = useRef(null)
+  const [savedBranding, setSavedBranding] = useState(null)
+  const isDirty = savedBranding !== null && JSON.stringify(branding) !== JSON.stringify(savedBranding)
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -60,21 +63,27 @@ export default function InstitutionalBrandingTab({ showToast }) {
   useEffect(() => {
     let ignore = false
     const init = async () => {
+      setLoadError("")
       try {
         const res = await fetch("/api/system/branding", { cache: "no-store" })
         const json = await res.json()
         if (ignore) return
         if (res.ok && json.ok && json.data) {
-          setBranding(resolveBranding(json.data))
+          const loaded = resolveBranding(json.data)
+          setBranding(loaded)
+          setSavedBranding(loaded)
           if (typeof window !== "undefined") {
             try {
               localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
             } catch {}
           }
+        } else {
+          throw new Error(json.error || "Unable to load institutional identity.")
         }
       } catch (err) {
         if (!ignore) {
           console.error("[InstitutionalBrandingTab] Fetch error:", err)
+          setLoadError("Institutional identity could not be loaded. Retry before making changes.")
         }
       } finally {
         if (!ignore) {
@@ -86,7 +95,16 @@ export default function InstitutionalBrandingTab({ showToast }) {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [loadAttempt])
+
+  useEffect(() => { onDirtyChange?.(isDirty) }, [isDirty, onDirtyChange])
+
+  useEffect(() => {
+    if (!isDirty) return
+    const warnBeforeLeaving = (event) => { event.preventDefault(); event.returnValue = "" }
+    window.addEventListener("beforeunload", warnBeforeLeaving)
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving)
+  }, [isDirty])
 
   // Process File to Base64
   const processImageFile = (file) => {
@@ -107,6 +125,10 @@ export default function InstitutionalBrandingTab({ showToast }) {
     reader.onload = (e) => {
       const base64 = e.target?.result
       if (typeof base64 === "string") {
+        if (base64.length > 4 * 1024 * 1024) {
+          notify("This seal is too large after processing. Choose an image smaller than 3 MB.", true)
+          return
+        }
         setBranding((prev) => ({
           ...prev,
           logoBase64: base64,
@@ -171,6 +193,10 @@ export default function InstitutionalBrandingTab({ showToast }) {
     reader.onload = (e) => {
       const base64 = e.target?.result
       if (typeof base64 === "string") {
+        if (base64.length > 4 * 1024 * 1024) {
+          notify("This seal is too large after processing. Choose an image smaller than 3 MB.", true)
+          return
+        }
         setBranding((prev) => ({
           ...prev,
           secondaryLogoBase64: base64,
@@ -222,6 +248,10 @@ export default function InstitutionalBrandingTab({ showToast }) {
       notify("Institution name cannot be blank", true)
       return
     }
+    if (!/^#[0-9a-fA-F]{6}$/.test(branding.brandColor)) {
+      notify("Enter a six-digit brand color, such as #7A1E28.", true)
+      return
+    }
 
     try {
       setSaving(true)
@@ -236,7 +266,9 @@ export default function InstitutionalBrandingTab({ showToast }) {
       })
       const json = await res.json()
       if (res.ok && json.ok) {
-        setBranding(json.data)
+        const saved = resolveBranding(json.data)
+        setBranding(saved)
+        setSavedBranding(saved)
         if (typeof window !== "undefined") {
           try {
             localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
@@ -265,7 +297,9 @@ export default function InstitutionalBrandingTab({ showToast }) {
       })
       const json = await res.json()
       if (res.ok && json.ok) {
-        setBranding(json.data)
+        const saved = resolveBranding(json.data)
+        setBranding(saved)
+        setSavedBranding(saved)
         if (typeof window !== "undefined") {
           try {
             localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(json.data))
@@ -305,16 +339,23 @@ export default function InstitutionalBrandingTab({ showToast }) {
       clearTimeout(timer)
       if (url) URL.revokeObjectURL(url)
     }
-  }, [branding, loading])
+  }, [branding, loading, sampleAttempt])
   const sampleReady = !loading && sample?.branding === branding && !sampleError
 
   const activeLogoSrc = branding.logoBase64 || branding.logoUrl || DEFAULT_PUP_LOGO
   const isCustomLogo = !!branding.logoBase64
   const activeSecondaryLogoSrc = branding.secondaryLogoBase64 || branding.secondaryLogoUrl
   const hasSecondaryLogo = !!activeSecondaryLogoSrc
+  const reportFontLabel = REPORT_FONT_OPTIONS.find((font) => font.value === (branding.reportFont || "jakarta"))?.label || "Report font"
 
   if (loading) {
     return <InstitutionalBrandingSkeleton />
+  }
+  if (loadError) {
+    return <Card className="flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-white p-6 dark:bg-card">
+      <EmptyState icon={AlertCircleIcon} title="Institutional Identity Unavailable" description={loadError} />
+      <Button onClick={() => { setLoading(true); setLoadAttempt((value) => value + 1) }}>Retry Loading Identity</Button>
+    </Card>
   }
 
   return (
@@ -324,27 +365,32 @@ export default function InstitutionalBrandingTab({ showToast }) {
         <PageHeader
           icon=" Certificate01Icon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Institutional Identity</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · School Credentials &amp; Letterhead
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">
+                {hasSecondaryLogo ? "Dual-seal letterhead" : "Single-seal letterhead"} · {reportFontLabel}
               </span>
             </div>
           }
           description="Configure your official university seal, school credentials, administrative letterhead, and color theme for all official reports."
-          showBorder={true}
+          showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
+        />
+        <DataViewToolbar label="Institutional identity actions" className="gap-2 border-t border-border bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+            <span className={cn("inline-flex h-8 shrink-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold", isDirty ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300")} role="status" aria-live="polite">
+              <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", isDirty ? "bg-amber-500" : "bg-emerald-500")} />
+              {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
+            </span>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setPreviewOpen(true)}
                 disabled={!sampleReady}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4"
               >
                 {!sampleReady && !sampleError ? "Preparing PDF…" : PDF_ACTION_LABELS.preview}
               </Button>
@@ -354,7 +400,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4"
               >
                 Restore Defaults
               </Button>
@@ -362,14 +408,13 @@ export default function InstitutionalBrandingTab({ showToast }) {
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
-                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={saving || !isDirty}
+                className="h-9 px-4"
               >
                 {saving ? "Saving Changes..." : "Save Branding"}
               </Button>
             </div>
-          }
-        />
+        </DataViewToolbar>
 
         {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
@@ -420,7 +465,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           variant="outline"
                           size="sm"
                           onClick={() => setRemoveLogoModalOpen(true)}
-                          className="h-7 px-2.5 rounded-lg text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold cursor-pointer active:scale-95 transition-all shadow-2xs"
+                          className="h-7 px-2.5"
                         >
                           Remove Seal
                         </Button>
@@ -428,24 +473,24 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     </div>
 
                     {/* Interactive Dropzone Area */}
-                    <div
+                    <label
+                      htmlFor="identity-primary-seal"
                       onDrop={handleDrop}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
-                      onClick={() => fileInputRef.current?.click()}
                       className={cn(
-                        "relative rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all select-none min-h-[145px]",
+                        "relative rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-[color,background-color,border-color,box-shadow,opacity,transform] select-none min-h-[145px] focus-within:outline-none focus-within:ring-2 focus-within:ring-pup-maroon",
                         isDragOver
                           ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500 dark:bg-red-950/20"
                           : "border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/50"
                       )}
                     >
                       <input
-                        ref={fileInputRef}
+                        id="identity-primary-seal"
                         type="file"
                         accept="image/png,image/webp,image/svg+xml,image/jpeg"
                         onChange={handleFileChange}
-                        className="hidden"
+                        className="sr-only"
                       />
                       <div className="w-14 h-14 rounded-xl flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-border dark:border-border shadow-2xs mb-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -462,9 +507,9 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         {isCustomLogo ? "Replace primary seal" : "Upload primary seal"}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                        PNG, WebP, SVG (max 3MB)
+                        PNG, JPEG, WebP, SVG (max 3 MB)
                       </p>
-                    </div>
+                    </label>
                   </div>
 
                   {/* Secondary / Regulatory Seal (Optional) */}
@@ -491,7 +536,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                           variant="outline"
                           size="sm"
                           onClick={() => setRemoveSecondaryLogoModalOpen(true)}
-                          className="h-7 px-2.5 rounded-lg text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold cursor-pointer active:scale-95 transition-all shadow-2xs"
+                          className="h-7 px-2.5"
                         >
                           Remove Seal
                         </Button>
@@ -499,24 +544,24 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     </div>
 
                     {/* Interactive Secondary Dropzone Area */}
-                    <div
+                    <label
+                      htmlFor="identity-secondary-seal"
                       onDrop={handleSecondaryDrop}
                       onDragOver={handleSecondaryDragOver}
                       onDragLeave={handleSecondaryDragLeave}
-                      onClick={() => secondaryFileInputRef.current?.click()}
                       className={cn(
-                        "relative rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all select-none min-h-[145px]",
+                        "relative rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-[color,background-color,border-color,box-shadow,opacity,transform] select-none min-h-[145px] focus-within:outline-none focus-within:ring-2 focus-within:ring-pup-maroon",
                         isSecondaryDragOver
                           ? "border-pup-maroon bg-pup-maroon/5 dark:border-red-500 dark:bg-red-950/20"
                           : "border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/50"
                       )}
                     >
                       <input
-                        ref={secondaryFileInputRef}
+                        id="identity-secondary-seal"
                         type="file"
                         accept="image/png,image/webp,image/svg+xml,image/jpeg"
                         onChange={handleSecondaryFileChange}
-                        className="hidden"
+                        className="sr-only"
                       />
                       {hasSecondaryLogo ? (
                         <div className="w-14 h-14 rounded-xl flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-amber-200/60 dark:border-amber-900/40 shadow-2xs mb-2">
@@ -536,9 +581,9 @@ export default function InstitutionalBrandingTab({ showToast }) {
                         {hasSecondaryLogo ? "Replace secondary seal" : "Add secondary seal"}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                        Republic, CHED, DepEd, ISO
+                        PNG, JPEG, WebP, SVG (max 3 MB)
                       </p>
-                    </div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -558,7 +603,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   {/* Super-Header / Jurisdiction Line */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label htmlFor="identity-jurisdiction" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Super-header / jurisdiction line (optional)
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
@@ -566,6 +611,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       </span>
                     </div>
                     <Input
+                      id="identity-jurisdiction"
                       value={branding.jurisdictionHeader ?? ""}
                       onChange={(e) =>
                         setBranding((prev) => ({
@@ -581,10 +627,12 @@ export default function InstitutionalBrandingTab({ showToast }) {
 
                   {/* School / Institution Name */}
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                    <label htmlFor="identity-institution" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                       School / institution name
                     </label>
                     <Input
+                      id="identity-institution"
+                      aria-invalid={!branding.institutionName?.trim()}
                       value={branding.institutionName}
                       onChange={(e) =>
                         setBranding((prev) => ({
@@ -596,15 +644,17 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       maxLength={120}
                       className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                     />
+                    {!branding.institutionName?.trim() && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">Institution name is required.</p>}
                   </div>
 
                   {/* Campus & Office Subheader */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label htmlFor="identity-campus" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Campus / branch
                       </label>
                       <Input
+                        id="identity-campus"
                         value={branding.campusName}
                         onChange={(e) =>
                           setBranding((prev) => ({
@@ -619,10 +669,11 @@ export default function InstitutionalBrandingTab({ showToast }) {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label htmlFor="identity-office-header" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                         Administrative office subheader
                       </label>
                       <Input
+                        id="identity-office-header"
                         value={branding.tagline}
                         onChange={(e) =>
                           setBranding((prev) => ({
@@ -640,7 +691,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   {/* Signatory Titles */}
                   <div className="pt-3 border-t border-border dark:border-border space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Signatory Titles (Optional Overrides)
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
@@ -650,10 +701,11 @@ export default function InstitutionalBrandingTab({ showToast }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                        <label htmlFor="identity-registrar-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                           Records / Registrar Title
                         </label>
                         <Input
+                          id="identity-registrar-title"
                           value={branding.signatoryRegistrarTitle ?? ""}
                           onChange={(e) =>
                             setBranding((prev) => ({
@@ -668,10 +720,11 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                        <label htmlFor="identity-head-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                           Executive Approver Title
                         </label>
                         <Input
+                          id="identity-head-title"
                           value={branding.signatoryHeadTitle ?? ""}
                           onChange={(e) =>
                             setBranding((prev) => ({
@@ -700,23 +753,38 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative flex items-center">
+                <div className="space-y-4 rounded-2xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-950/40 sm:p-5">
+                  <div>
+                    <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400">Recommended University Presets</span>
+                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                      {COLOR_PRESETS.map((preset) => {
+                        const isSelected = branding.brandColor.toUpperCase() === preset.hex.toUpperCase()
+                        return <button key={preset.hex} type="button" onClick={() => setBranding((prev) => ({ ...prev, brandColor: preset.hex }))} aria-label={`${preset.label}, ${preset.hex}`} aria-pressed={isSelected} title={`${preset.label} (${preset.hex})`} style={{ backgroundColor: preset.hex }} className={cn("flex h-9 items-center justify-center rounded-xl border border-black/10 shadow-2xs transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:ring-offset-2", isSelected && "ring-2 ring-slate-900 ring-offset-2 dark:ring-white dark:ring-offset-zinc-950")}>
+                          {isSelected && <Tick01Icon size={16} aria-hidden="true" className="text-white drop-shadow-sm" />}
+                        </button>
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-3 sm:flex-nowrap">
+                    <div className="flex items-center gap-3">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center overflow-hidden rounded-xl border border-border shadow-2xs focus-within:ring-2 focus-within:ring-pup-maroon focus-within:ring-offset-2" style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(branding.brandColor) ? branding.brandColor : DEFAULT_BRANDING.brandColor }}>
                       <input
                         type="color"
-                        value={branding.brandColor}
+                        value={/^#[0-9a-fA-F]{6}$/.test(branding.brandColor) ? branding.brandColor : DEFAULT_BRANDING.brandColor}
                         onChange={(e) =>
                           setBranding((prev) => ({
                             ...prev,
                             brandColor: e.target.value.toUpperCase(),
                           }))
                         }
-                        className="w-10 h-10 rounded-xl border border-border dark:border-border cursor-pointer p-0 bg-transparent shadow-2xs"
+                        aria-label="Choose custom brand color"
+                        className="absolute inset-0 h-full w-full cursor-pointer border-0 p-0 opacity-0"
                       />
                     </div>
-                    <div className="flex-1">
+                    <div className="w-32">
                       <Input
+                        aria-label="Brand color hex code"
+                        aria-invalid={!/^#[0-9a-fA-F]{6}$/.test(branding.brandColor)}
                         value={branding.brandColor}
                         onChange={(e) =>
                           setBranding((prev) => ({
@@ -730,42 +798,9 @@ export default function InstitutionalBrandingTab({ showToast }) {
                       />
                     </div>
                   </div>
-
-                  {/* Preset Quick-Picks */}
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400 mb-1.5">
-                      Recommended University Presets
-                    </label>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {COLOR_PRESETS.map((preset) => {
-                        const isSelected = branding.brandColor.toUpperCase() === preset.hex.toUpperCase()
-                        return (
-                          <button
-                            key={preset.hex}
-                            type="button"
-                            onClick={() =>
-                              setBranding((prev) => ({
-                                ...prev,
-                                brandColor: preset.hex,
-                              }))
-                            }
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all active:scale-95 shadow-2xs",
-                              isSelected
-                                ? "border-slate-900 dark:border-white bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
-                                : "border-border dark:border-border bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                            )}
-                          >
-                            <span
-                              className="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10 shadow-2xs"
-                              style={{ backgroundColor: preset.hex }}
-                            />
-                            <span>{preset.label}</span>
-                          </button>
-                        )
-                      })}
-                    </div>
+                    <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">Report accent</span>
                   </div>
+                  {!/^#[0-9a-fA-F]{6}$/.test(branding.brandColor) && <p className="text-xs text-red-600 dark:text-red-400">Enter a six-digit hex color, such as #7A1E28.</p>}
                 </div>
               </div>
 
@@ -777,7 +812,7 @@ export default function InstitutionalBrandingTab({ showToast }) {
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">Document Preview</h3>
                   <p className="mt-1 text-[12px] text-gray-500 dark:text-zinc-400">Preview your current settings in the actual report format. Save Branding to apply them to new reports.</p>
                 </div>
-                <div className="relative flex h-[620px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-gray-100 dark:bg-muted" aria-busy={!sampleReady && !sampleError}>
+                <div className="relative flex h-[760px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-gray-100 dark:bg-muted" aria-busy={!sampleReady && !sampleError}>
                   {sampleError ? (
                     <div className="flex flex-1 items-center justify-center p-5">
                       <EmptyState variant="compact" icon={AlertCircleIcon} title="Preview Unavailable" description={sampleError}>

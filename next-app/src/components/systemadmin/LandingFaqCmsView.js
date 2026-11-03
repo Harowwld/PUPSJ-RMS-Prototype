@@ -1,4 +1,6 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -10,6 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import LandingFaqSkeleton from "@/components/systemadmin/skeletons/LandingFaqSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "./LandingCmsViewTabs"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { FilterPopover } from "./OfficeTableControls"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
 import { Add01Icon, ArrowDown01Icon, ArrowUp01Icon, Copy01Icon, CovidInfoIcon, Delete01Icon, LayoutGridIcon, MinusSignIcon } from "hugeicons-react";
@@ -75,18 +80,19 @@ const STANDARD_CATEGORIES = [
 export default function LandingFaqCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("content") // 'content' | 'preview'
+  const [activeTab, setActiveTab] = useViewPreference("cms-faq", "activeTab", "content") // 'content' | 'preview'
   const [faqData, setFaqData] = useState(DEFAULT_FAQ_CONTENT)
 
   // Item Editor State
   const [expandedIdx, setExpandedIdx] = useState(0)
-  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [categoryFilters, setCategoryFilters] = useViewPreference("cms-faq", "categoryFilters", [])
+  const [questionSearch, setQuestionSearch] = useViewPreference("cms-faq", "questionSearch", "")
   const [deleteFaqIdx, setDeleteFaqIdx] = useState(null)
   const [resetModalOpen, setResetModalOpen] = useState(false)
 
   // Live Preview State
   const [previewOpenIdx, setPreviewOpenIdx] = useState(0)
-  const [previewFilter, setPreviewFilter] = useState("all")
+  const [previewFilter, setPreviewFilter] = useViewPreference("cms-faq", "previewFilter", "all")
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -291,8 +297,12 @@ export default function LandingFaqCmsView({ showToast }) {
   const filteredFaqs = faqData.faqs
     .map((item, originalIdx) => ({ item, originalIdx }))
     .filter(({ item }) => {
-      if (categoryFilter === "all") return true
-      return (item.category || "General").toLowerCase() === categoryFilter.toLowerCase()
+      const matchesCategory = categoryFilters.every((filter) => {
+        const same = (item.category || "General").toLowerCase() === String(filter.value).toLowerCase()
+        return filter.operator === "is_not" ? !same : same
+      })
+      const matchesSearch = `${item.q} ${item.a}`.toLowerCase().includes(questionSearch.trim().toLowerCase())
+      return matchesCategory && matchesSearch
     })
 
   // Unique categories list for filters
@@ -306,13 +316,14 @@ export default function LandingFaqCmsView({ showToast }) {
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
         {/* Page Header */}
         <PageHeader
           icon=" HelpCircleIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
+              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {faqData.faqs.length} questions</span>
               <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
                 · FAQ Section
               </span>
@@ -328,7 +339,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#faq", "_blank")}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Preview Portal
               </Button>
@@ -338,7 +349,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Restore Defaults
               </Button>
@@ -356,37 +367,8 @@ export default function LandingFaqCmsView({ showToast }) {
         />
 
         {/* Standardized SuperAdmin Navigation Segmented Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab("content")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 shrink-0",
-                activeTab === "content"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              FAQ Content ({faqData.faqs.length})
-            </button>
+        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel={`FAQ Content (${faqData.faqs.length})`} />
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("preview")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 shrink-0",
-                activeTab === "preview"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Interactive Live Preview
-            </button>
-          </div>
-        </div>
-
-        {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: FAQ Content Management */}
           {activeTab === "content" && (
@@ -402,10 +384,10 @@ export default function LandingFaqCmsView({ showToast }) {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label htmlFor="faq-heading" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Section Heading
                       </label>
                       <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -413,6 +395,7 @@ export default function LandingFaqCmsView({ showToast }) {
                       </span>
                     </div>
                     <Input
+                      id="faq-heading"
                       value={faqData.heading}
                       onChange={(e) =>
                         setFaqData((prev) => ({
@@ -422,13 +405,13 @@ export default function LandingFaqCmsView({ showToast }) {
                       }
                       placeholder="Frequently Asked Questions"
                       maxLength={60}
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-semibold dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                      className="bg-white dark:bg-card"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label htmlFor="faq-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Section Subtitle Description
                       </label>
                       <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -437,6 +420,7 @@ export default function LandingFaqCmsView({ showToast }) {
                     </div>
                     <Textarea
                       rows={3}
+                      id="faq-description"
                       value={faqData.description || ""}
                       onChange={(e) =>
                         setFaqData((prev) => ({
@@ -452,8 +436,8 @@ export default function LandingFaqCmsView({ showToast }) {
                 </div>
               </div>
               {/* Header Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
-                <div>
+              <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-900/30 xl:flex-row xl:items-center xl:justify-between">
+                <div className="shrink-0">
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Questions &amp; Answers List</span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-sans tabular-nums">
@@ -465,66 +449,40 @@ export default function LandingFaqCmsView({ showToast }) {
                   </p>
                 </div>
 
-                {/* Add Question Button */}
-                <Button
-                  type="button"
-                  disabled={faqData.faqs.length >= MAX_FAQ_ITEMS}
-                  onClick={addNewFaq}
-                  className="h-9 px-4 cursor-pointer disabled:opacity-40"
-                  title={faqData.faqs.length >= MAX_FAQ_ITEMS ? `Maximum limit of ${MAX_FAQ_ITEMS} questions reached` : "Add question"}
-                >
-                  Add Question
-                </Button>
-              </div>
-
-              {/* Category Filter Bar */}
-              <div className="flex items-center gap-1.5 flex-wrap select-none pt-1">
-                <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 mr-1 uppercase tracking-wider">
-                  Filter:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCategoryFilter("all")}
-                  className={cn(
-                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                    categoryFilter === "all"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs border border-border dark:border-border"
-                      : "bg-gray-100 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
-                  )}
-                >
-                  All ({faqData.faqs.length})
-                </button>
-                {uniqueCategories.map((cat) => {
-                  const count = faqData.faqs.filter(
-                    (f) => (f.category || "General").toLowerCase() === cat.toLowerCase()
-                  ).length
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategoryFilter(cat)}
-                      className={cn(
-                        "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border-0",
-                        categoryFilter.toLowerCase() === cat.toLowerCase()
-                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs border border-border dark:border-border"
-                          : "bg-gray-100 dark:bg-zinc-800/80 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
-                      )}
-                    >
-                      {cat} ({count})
-                    </button>
-                  )
-                })}
+                <DataViewToolbar label="FAQ search, category filter, and add question" className="w-full gap-2 xl:ml-auto xl:w-auto">
+<DashboardSearch value={questionSearch} onChange={setQuestionSearch} count={filteredFaqs.length} label="Search questions and answers" placeholder="Search questions and answers" className="w-[min(280px,45vw)] min-w-[200px]" />
+                  <FilterPopover
+                    fields={[{ key: "category", label: "Category", options: uniqueCategories.map((category) => ({ value: category, label: category })) }]}
+                    filters={categoryFilters}
+                    onFiltersChange={setCategoryFilters}
+                    entityLabel="questions"
+                  />
+                  <Button
+                    type="button"
+                    disabled={faqData.faqs.length >= MAX_FAQ_ITEMS}
+                    onClick={addNewFaq}
+                    className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-40"
+                    title={faqData.faqs.length >= MAX_FAQ_ITEMS ? `Maximum limit of ${MAX_FAQ_ITEMS} questions reached` : "Add question"}
+                  >
+                    Add Question
+                  </Button>
+                </DataViewToolbar>
               </div>
 
               {/* FAQ Items Accordion Cards */}
               <div className="space-y-3">
+                {filteredFaqs.length === 0 && (
+                  <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-xs text-gray-500 dark:text-zinc-400">
+                    No questions match this search or category.
+                  </p>
+                )}
                 {filteredFaqs.map(({ item, originalIdx }) => {
                   const isExpanded = expandedIdx === originalIdx
                   return (
                     <div
                       key={item.id || originalIdx}
                       className={cn(
-                        "rounded-xl border transition-all overflow-hidden",
+                        "rounded-xl border transition-[color,background-color,border-color,box-shadow,opacity,transform] overflow-hidden",
                         isExpanded
                           ? "border-pup-maroon/30 dark:border-red-500/30 bg-white dark:bg-zinc-900/60 shadow-xs"
                           : "border-border dark:border-border bg-white dark:bg-zinc-900/30 hover:border-border dark:hover:border-white/20"
@@ -559,7 +517,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             disabled={originalIdx === 0}
                             onClick={() => moveFaq(originalIdx, -1)}
                             title="Move Earlier"
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
+                            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
                             <ArrowUp01Icon size="1em"  className="text-xs" />
                           </button>
@@ -569,7 +527,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             disabled={originalIdx === faqData.faqs.length - 1}
                             onClick={() => moveFaq(originalIdx, 1)}
                             title="Move Later"
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
+                            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
                             <ArrowDown01Icon size="1em"  className="text-xs" />
                           </button>
@@ -578,7 +536,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             type="button"
                             onClick={() => handleDuplicate(originalIdx)}
                             title="Duplicate Question"
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent p-0"
+                            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-0 bg-transparent p-0"
                           >
                             <Copy01Icon size="1em"  className="text-xs" />
                           </button>
@@ -587,7 +545,7 @@ export default function LandingFaqCmsView({ showToast }) {
                             type="button"
                             onClick={() => setDeleteFaqIdx(originalIdx)}
                             title="Delete Question"
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-0.5"
+                            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-0.5"
                           >
                             <Delete01Icon size="1em"  className="text-xs" />
                           </button>
@@ -609,7 +567,7 @@ export default function LandingFaqCmsView({ showToast }) {
                           {/* Question Input */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                              <label htmlFor={`faq-question-${originalIdx}`} className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                 Question Text
                               </label>
                               <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -617,18 +575,19 @@ export default function LandingFaqCmsView({ showToast }) {
                               </span>
                             </div>
                             <Input
+                              id={`faq-question-${originalIdx}`}
                               value={item.q}
                               onChange={(e) => updateFaqItem(originalIdx, "q", e.target.value)}
                               placeholder="e.g. How do I request my school records?"
                               maxLength={140}
-                              className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-semibold dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                              className="bg-white dark:bg-card"
                             />
                           </div>
 
                           {/* Answer Textarea */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                              <label htmlFor={`faq-answer-${originalIdx}`} className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                 Answer Explanation
                               </label>
                               <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -636,6 +595,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               </span>
                             </div>
                             <Textarea
+                              id={`faq-answer-${originalIdx}`}
                               value={item.a}
                               onChange={(e) => updateFaqItem(originalIdx, "a", e.target.value)}
                               rows={3}
@@ -648,7 +608,7 @@ export default function LandingFaqCmsView({ showToast }) {
                           {/* Category Tag Section */}
                           <div className="pt-1">
                             <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                              <label htmlFor={`faq-category-${originalIdx}`} className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                 Category Tag
                               </label>
                               <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -660,6 +620,8 @@ export default function LandingFaqCmsView({ showToast }) {
                               <div className="flex items-center gap-2">
                                 <div className="w-[155px] shrink-0">
                                   <Select
+                                    id={`faq-category-${originalIdx}`}
+                                    aria-label={`Question ${originalIdx + 1} category tag`}
                                     value={
                                       STANDARD_CATEGORIES.includes(item.category)
                                         ? item.category
@@ -674,7 +636,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                         updateFaqItem(originalIdx, "category", e.target.value)
                                       }
                                     }}
-                                    className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border text-xs font-normal text-gray-800 dark:text-zinc-200 cursor-pointer shadow-none px-3"
+                                    className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-700 shadow-none dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200"
                                   >
                                     {STANDARD_CATEGORIES.map((cat) => (
                                       <option key={cat} value={cat}>
@@ -686,13 +648,14 @@ export default function LandingFaqCmsView({ showToast }) {
                                 </div>
 
                                 <Input
+                                  aria-label={`Question ${originalIdx + 1} custom category tag`}
                                   value={item.category || ""}
                                   onChange={(e) =>
                                     updateFaqItem(originalIdx, "category", e.target.value)
                                   }
                                   placeholder="Type or customize category tag (e.g. Requests, Clearance, Graduation)"
                                   maxLength={30}
-                                  className="h-9 flex-1 rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-zinc-950 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                                  className="h-9 flex-1 bg-white dark:bg-card"
                                 />
                               </div>
 
@@ -710,7 +673,7 @@ export default function LandingFaqCmsView({ showToast }) {
                                       type="button"
                                       onClick={() => updateFaqItem(originalIdx, "category", cat)}
                                       className={cn(
-                                        "px-2.5 py-0.5 rounded-lg text-[10px] font-sans tabular-nums transition-all cursor-pointer border",
+                                        "px-2.5 py-0.5 rounded-lg text-[10px] font-sans tabular-nums transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer border",
                                         isSelected
                                           ? "bg-pup-maroon text-white border-pup-maroon font-bold shadow-xs"
                                           : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border-transparent hover:border-border dark:hover:border-zinc-700"
@@ -736,7 +699,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   type="button"
                   onClick={addNewFaq}
                   title={`Add Another Question (${faqData.faqs.length}/${MAX_FAQ_ITEMS})`}
-                  className="w-full py-3.5 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
+                  className="w-full py-3.5 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
                   Add Question
                 </button>
@@ -790,7 +753,7 @@ export default function LandingFaqCmsView({ showToast }) {
                           type="button"
                           onClick={() => setPreviewFilter("all")}
                           className={cn(
-                            "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer",
+                            "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] whitespace-nowrap cursor-pointer",
                             previewFilter === "all"
                               ? "bg-[#800000] text-white"
                               : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
@@ -807,7 +770,7 @@ export default function LandingFaqCmsView({ showToast }) {
                               type="button"
                               onClick={() => setPreviewFilter(cat)}
                               className={cn(
-                                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer",
+                                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] whitespace-nowrap cursor-pointer",
                                 isActive
                                   ? "bg-[#800000] text-white"
                                   : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
@@ -834,7 +797,7 @@ export default function LandingFaqCmsView({ showToast }) {
                           <div
                             key={faq.id || idx}
                             className={cn(
-                              "rounded-2xl transition-all duration-200 overflow-hidden",
+                              "rounded-2xl transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 overflow-hidden",
                               isOpen ? "bg-[#09090b] text-white" : "bg-[#f4f4f5] dark:bg-zinc-800/60 text-black dark:text-zinc-100"
                             )}
                           >

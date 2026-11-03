@@ -25,6 +25,7 @@ export default function TableScrollControls({
   canScrollLeft,
   canScrollRight,
   className,
+  controlSize = "sm",
   label = "Scroll columns:",
   scrollTargetLabel = "table",
 }) {
@@ -120,7 +121,7 @@ export default function TableScrollControls({
         variant="outline"
         onClick={handleResetScroll}
         disabled={!isScrolledX}
-        className="h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        className={cn(controlSize === "md" ? "h-9" : "h-8", "px-2.5 gap-1.5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all")}
         title="Reset horizontal scroll to default"
       >
         <ReloadIcon size="1em" className="text-xs" />
@@ -134,7 +135,7 @@ export default function TableScrollControls({
             size="icon"
             onClick={handleScrollLeft}
             disabled={scrollContainerRef ? !canScrollBackward : canScrollLeft === false}
-            className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
+            className={cn("rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95", controlSize === "md" ? "h-9 w-9" : "h-8 w-8")}
             aria-label={`Scroll ${scrollTargetLabel} left`}
           >
             <ArrowLeft01Icon size="1em" className="text-xs" />
@@ -150,7 +151,7 @@ export default function TableScrollControls({
             size="icon"
             onClick={handleScrollRight}
             disabled={scrollContainerRef ? !canScrollForward : canScrollRight === false}
-            className="w-8 h-8 rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95"
+            className={cn("rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95", controlSize === "md" ? "h-9 w-9" : "h-8 w-8")}
             aria-label={`Scroll ${scrollTargetLabel} right`}
           >
             <ArrowRight01Icon size="1em" className="text-xs" />

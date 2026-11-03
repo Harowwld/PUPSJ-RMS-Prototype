@@ -4,7 +4,8 @@ import { Table } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false, showScope = false }) {
+export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false, showScope = false, visibleColumns = ["severity", "actor", "office_id", "details"] }) {
+  const has = (key) => !showScope || visibleColumns.includes(key)
   return (
     <div
       className={cn(
@@ -15,7 +16,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
       )}
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <Table columns={["selection", "date", "status", "text", ...(showScope ? ["text"] : []), "text", "text", "actions"]} className="min-w-[1240px]">
+        <Table columns={["selection", "date", ...(has("severity") ? ["status"] : []), ...(has("actor") ? ["text"] : []), ...(showScope && has("office_id") ? ["status"] : []), "text", ...(has("details") ? [{ kind: "text", maxWidth: 340 }] : []), ...(showScope && has("ip") ? [{ kind: "text", maxWidth: 200 }] : []), "actions"]} className={showScope ? "min-w-[900px]" : "min-w-[1240px]"}>
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 min-w-12 max-w-12 py-3 px-2.5 text-center">
@@ -24,23 +25,24 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
               <th className={cn("py-3 px-4", showScope ? "w-[15%]" : "w-[16%]")}>
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className={cn("py-3 px-4", showScope ? "w-[9%]" : "w-[10%]")}>
+              {has("severity") && <th className={cn("py-3 px-4", showScope ? "w-[9%]" : "w-[10%]")}>
                 <Skeleton className="h-3.5 w-14 dark:bg-muted" />
-              </th>
-              <th className={cn("py-3 px-4", showScope ? "w-[18%]" : "w-[20%]")}>
+              </th>}
+              {has("actor") && <th className={cn("py-3 px-4", showScope ? "w-[18%]" : "w-[20%]")}>
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
-              </th>
-              {showScope && (
-                <th className="py-3 px-4 w-[12%]">
+              </th>}
+              {showScope && has("office_id") && (
+                <th className="py-3 px-4 w-[12%] text-center">
                   <Skeleton className="h-3.5 w-16 dark:bg-muted" />
                 </th>
               )}
               <th className={cn("py-3 px-4", showScope ? "w-[16%]" : "w-[18%]")}>
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className={cn("py-3 px-4", showScope ? "w-[22%] max-w-[280px]" : "w-[24%] max-w-[280px]")}>
+              {has("details") && <th className={cn("py-3 px-4", showScope ? "w-[22%]" : "w-[24%]")}>
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
-              </th>
+              </th>}
+              {showScope && has("ip") && <th><Skeleton className="h-3.5 w-24" /></th>}
               <th className="py-3 px-4 pr-6 text-right w-20">
                 <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
               </th>
@@ -60,13 +62,13 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                     <Skeleton className="h-3.5 w-24 font-sans tabular-nums rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                {has("severity") && <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
-                </td>
-                <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                </td>}
+                {has("actor") && <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
-                </td>
-                {showScope && (
+                </td>}
+                {showScope && has("office_id") && (
                   <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                   </td>
@@ -74,14 +76,15 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                 <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle overflow-hidden max-w-[280px] border-r border-border/70 dark:border-border/70">
+                {has("details") && <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                   <Skeleton
                     className={cn(
                       "h-3.5 rounded dark:bg-muted",
                       i % 2 === 0 ? "w-36" : "w-44"
                     )}
                   />
-                </td>
+                </td>}
+                {showScope && has("ip") && <td><Skeleton className="h-3.5 w-24" /></td>}
                 <td className="py-3 px-4 pr-6 align-middle text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1">
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
