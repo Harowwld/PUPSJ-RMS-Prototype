@@ -1,11 +1,15 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 
 
 import React, { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import BulkImportQuestionsModal from "@/components/systemadmin/BulkImportQuestionsModal"
@@ -15,7 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon } from "hugeicons-react";
+import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon, Search01Icon } from "hugeicons-react";
 
 
 export default function SecurityQuestionsTab({ showToast }) {
@@ -28,6 +32,9 @@ export default function SecurityQuestionsTab({ showToast }) {
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpLoading, setTotpLoading] = useState(false)
   const [bulkModalOpen, setBulkModalOpen] = useState(false)
+  const [scope, setScope] = useViewPreference("security", "scope", "all")
+  const [search, setSearch] = useViewPreference("security", "search", "")
+  const [focusedIndex, setFocusedIndex] = useState(null)
 
   const loadQuestions = useCallback(async () => {
     try {
@@ -74,6 +81,8 @@ export default function SecurityQuestionsTab({ showToast }) {
   }, [loadQuestions])
 
   const handleAddQuestion = () => {
+    setScope("all")
+    setSearch("")
     setQuestions((prev) => [
       ...prev,
       { id: Date.now(), question: "", is_required: false },
@@ -104,6 +113,9 @@ export default function SecurityQuestionsTab({ showToast }) {
 
   const handleBulkImport = (newQuestions) => {
     if (!newQuestions || newQuestions.length === 0) return
+
+    setScope("all")
+    setSearch("")
 
     setQuestions((prev) => {
       const nonEmpties = prev.filter((q) => q.question && q.question.trim().length > 0)
@@ -230,67 +242,56 @@ export default function SecurityQuestionsTab({ showToast }) {
     }
   }
 
+  if (loading) return <SecurityQuestionsSkeleton />
+
+  const counts = {
+    all: questions.length,
+    required: questions.filter((question) => question.is_required).length,
+    optional: questions.filter((question) => !question.is_required).length,
+  }
+  const visibleQuestions = questions
+    .map((question, index) => ({ question, index }))
+    .filter(({ question, index }) => (scope === "all" || (scope === "required") === question.is_required)
+      && (question.question.toLowerCase().includes(search.trim().toLowerCase()) || focusedIndex === index))
+
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
-        {/* Header */}
         <PageHeader
           icon=" Shield01Icon"
-          title="Global Security Questions"
+          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Security Questions</span><span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">{counts.all} questions · {counts.required} required</span></div>}
           description="Define institutional verification challenges for staff account recovery. Mark mandatory challenges as Required (minimum 10 characters)."
-          showBorder={true}
+          showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setBulkModalOpen(true)}
-                disabled={loading || saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-              >
-                Import Questions
-              </Button>
-
-              <Button
-                onClick={() => handleSave()}
-                disabled={saving || loading}
-                className="h-10 px-5 cursor-pointer"
-              >
-                {saving ? (
-                  <span className="flex items-center gap-1.5">
-                    <Loading01Icon size="1em" className="animate-spin text-sm" />
-                    <span>Saving Questions...</span>
-                  </span>
-                ) : (
-                  "Save Questions"
-                )}
-              </Button>
-            </div>
-          }
         />
+
+        <div role="group" aria-label="Question scope" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 dark:border-white/10">
+          {[["all", "All"], ["required", "Required"], ["optional", "Optional"]].map(([key, label]) => (
+            <button key={key} type="button" onClick={() => setScope(key)} aria-pressed={scope === key} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon", scope === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+              {label}<span className="tabular-nums text-[10px] text-gray-400 dark:text-zinc-500">{counts[key]}</span>
+              {scope === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+            </button>
+          ))}
+        </div>
+
+        <DataViewToolbar label="Security question search and actions" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} label="Search security questions" placeholder="Search questions..." className="w-[min(320px,60vw)]" />
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setBulkModalOpen(true)} disabled={saving} className="h-9 rounded-xl px-4">Import Questions</Button>
+            <Button size="sm" onClick={() => handleSave()} disabled={saving} className="h-9 rounded-xl px-4">
+              {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving Questions...</span> : "Save Questions"}
+            </Button>
+          </div>
+        </DataViewToolbar>
+        <ActiveFilterChips searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={() => setSearch("")} className="px-5 py-2.5" />
 
         {/* Questions Form Area */}
         <div className="p-6 flex-[1_0_auto] flex flex-col">
-          {loading ? (
-            <div className="w-full space-y-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="rounded-2xl border border-border dark:border-border bg-gray-50/20 dark:bg-zinc-900/20 p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Skeleton className="h-5 w-32 rounded-lg dark:bg-muted" />
-                    <Skeleton className="h-7 w-36 rounded-xl dark:bg-muted" />
-                  </div>
-                  <Skeleton className="h-10.5 w-full rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="w-full space-y-4">
-              {questions.map((q, i) => {
+          <div className="w-full space-y-4">
+              {visibleQuestions.length === 0 && <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center text-xs text-gray-500 dark:text-zinc-400">No questions match this view. Change the scope or search to find a question.</div>}
+              {visibleQuestions.map(({ question: q, index: i }) => {
                 const text = q.question || ""
                 const trimmed = text.trim()
                 const isWeak =
@@ -301,7 +302,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                 return (
                   <div
                     key={q.id || i}
-                    className="rounded-2xl border border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-all hover:border-border dark:hover:border-white/20 space-y-2.5"
+                    className="rounded-2xl border border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/40 p-4 transition-[color,background-color,border-color,box-shadow,opacity,transform] hover:border-border dark:hover:border-white/20 space-y-2.5"
                   >
                     {/* Top Row: Question label & Controls */}
                     <div className="flex items-center justify-between gap-3">
@@ -317,7 +318,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                             Required
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-gray-900 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-border dark:border-border">
+                          <span className="text-xs font-medium text-gray-900 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 inline-flex min-h-6 items-center px-2.5 rounded-full border border-border dark:border-border">
                             Optional
                           </span>
                         )}
@@ -330,7 +331,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                             type="button"
                             onClick={() => !q.is_required && handleToggleRequired(i)}
                             className={cn(
-                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
                               q.is_required
                                 ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-red-400 shadow-xs"
                                 : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
@@ -342,7 +343,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                             type="button"
                             onClick={() => q.is_required && handleToggleRequired(i)}
                             className={cn(
-                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer",
+                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
                               !q.is_required
                                 ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 shadow-xs"
                                 : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
@@ -359,7 +360,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveQuestion(i)}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95"
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer border-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 active:scale-95"
                                 aria-label="Remove Question"
                               >
                                 <Delete01Icon size="1em" className="text-sm" />
@@ -378,9 +379,12 @@ export default function SecurityQuestionsTab({ showToast }) {
                       type="text"
                       placeholder="e.g., What was the name of your first elementary school?"
                       value={text}
+                      onFocus={() => setFocusedIndex(i)}
+                      onBlur={() => setFocusedIndex(null)}
                       onChange={(e) => handleQuestionChange(i, e.target.value)}
+                      aria-label={`Question ${i + 1} text`}
                       className={cn(
-                        "h-10.5 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3.5 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-2xs",
+                        "h-10.5 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3.5 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-[color,background-color,border-color,box-shadow,opacity,transform] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-2xs",
                         isWeak
                           ? "border-amber-400 dark:border-amber-600 focus-visible:ring-amber-500"
                           : "border-border dark:border-border"
@@ -425,13 +429,12 @@ export default function SecurityQuestionsTab({ showToast }) {
                   type="button"
                   onClick={handleAddQuestion}
                   title="Add Security Question"
-                  className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-all flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
+                  className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
                   Add Security Question
                 </button>
               </div>
-            </div>
-          )}
+          </div>
         </div>
       </Card>
 

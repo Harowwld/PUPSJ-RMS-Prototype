@@ -22,7 +22,8 @@
 .data-view-toolbar [data-slot="table-scroll-controls"] > * { flex-shrink: 0; }
 .dark .data-view-toolbar { scrollbar-color: #52525b transparent; }
 :where(.data-view-toolbar) :is(input, select) { max-width: min(20rem, 45vw); }
-:where(div):has(> [data-slot="table-scroll-controls"]) { min-width: 0; flex-wrap: wrap; }
+:where(div:not(.data-view-toolbar)):has(> [data-slot="table-scroll-controls"]) { min-width: 0; flex-wrap: wrap; }
+.data-view-toolbar :where(div):has(> [data-slot="table-scroll-controls"]) { flex-wrap: nowrap; }
 .dark .app-table {
   --table-divider: #3f3f46;
   --table-surface: var(--card, #18181b);
@@ -106,6 +107,9 @@
 .table-action-button:focus-visible,
 .app-table button:focus-visible,
 .app-table a:focus-visible { outline: 1px solid var(--brand-accent); outline-offset: 2px; }
+.dark .table-action-button:focus-visible,
+.dark .app-table button:focus-visible,
+.dark .app-table a:focus-visible { outline-color: #f87171; }
 .high-contrast .app-table { --table-divider: #52525b; }
 .high-contrast.dark .app-table { --table-divider: #a1a1aa; }
 .high-contrast [data-slot="table-status"] { border: 1px solid currentColor; }

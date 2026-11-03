@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { Select } from "@/components/ui/select"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { Switch } from "@/components/ui/switch";
-import { Calendar01Icon, Cancel01Icon, RefreshIcon, Tick01Icon } from "hugeicons-react";
+import { ArrowDown01Icon, ArrowUp01Icon, Calendar01Icon, Cancel01Icon, RefreshIcon, Tick01Icon } from "hugeicons-react";
 
 
 const DAY_LABELS = [
@@ -102,6 +102,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   // Fetch current schedule
   const fetchSchedule = useCallback(async () => {
@@ -176,6 +177,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
     const newEnabled = !schedule.enabled
     const updated = { ...schedule, enabled: newEnabled }
     setSchedule(updated)
+    setIsExpanded(newEnabled)
     saveSchedule({ enabled: newEnabled })
   }
 
@@ -251,7 +253,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
       )}
     >
       {/* Group Header Row with Apple Squircle Icon & Switch */}
-      <div className="flex items-center justify-between px-5 py-4">
+      <div className="flex min-h-[56px] items-center justify-between gap-4 px-5 py-2.5">
         <div className="flex items-center gap-3.5">
           {/* Apple Squircle Tile */}
           <div
@@ -262,7 +264,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 : "bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 border border-border/60 dark:border-border"
             )}
           >
-            <RefreshIcon size="1em"  className="text-[18px]" />
+            <RefreshIcon size="1em" className="text-[18px]" />
           </div>
 
           <div>
@@ -285,16 +287,30 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         </div>
 
         {/* Apple Switch Toggle */}
-        <Switch
-          checked={schedule.enabled}
-          onCheckedChange={handleToggle}
-          aria-label="Toggle automatic backups"
-          disabled={isSaving}
-        />
+        <div className="flex shrink-0 items-center gap-2">
+          {schedule.enabled && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded((expanded) => !expanded)}
+              aria-label={isExpanded ? "Collapse automatic backup settings" : "Expand automatic backup settings"}
+              aria-expanded={isExpanded}
+              title={isExpanded ? "Collapse settings" : "Expand settings"}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+            >
+              {isExpanded ? <ArrowUp01Icon size={16} aria-hidden="true" /> : <ArrowDown01Icon size={16} aria-hidden="true" />}
+            </button>
+          )}
+          <Switch
+            checked={schedule.enabled}
+            onCheckedChange={handleToggle}
+            aria-label="Toggle automatic backups"
+            disabled={isSaving}
+          />
+        </div>
       </div>
 
       {/* macOS Settings Grouped Rows: Expands when enabled */}
-      {schedule.enabled && (
+      {schedule.enabled && isExpanded && (
         <div className="border-t border-border dark:border-border divide-y divide-border dark:divide-border bg-white/70 dark:bg-card/70 animate-in fade-in slide-in-from-top-1 duration-200">
           {/* Row 1: Frequency with Apple Segmented Control / Tabs */}
           <div className="min-h-[52px] px-5 py-2.5 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
@@ -422,7 +438,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
           </div>
 
           {/* Apple Time Machine Status Strip */}
-          <div className="bg-gray-50/80 dark:bg-zinc-900/60 border-t border-border dark:border-border px-5 py-3 flex items-center justify-between flex-wrap gap-3 text-xs">
+          <div className="bg-gray-50/80 dark:bg-zinc-900/60 px-5 py-3 flex items-center justify-between flex-wrap gap-3 text-xs">
             {/* Left: Last Backup State */}
             <div className="flex items-center gap-2">
               <span
@@ -431,8 +447,8 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                   schedule.lastRunStatus === "success"
                     ? "bg-emerald-500"
                     : schedule.lastRunStatus === "failed"
-                    ? "bg-rose-500"
-                    : "bg-gray-400 dark:text-zinc-500"
+                      ? "bg-rose-500"
+                      : "bg-gray-400 dark:text-zinc-500"
                 )}
               />
               <span className="text-gray-900 dark:text-zinc-300">Last Run:</span>
@@ -442,13 +458,13 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
 
               {schedule.lastRunStatus === "success" && (
                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                  <Tick01Icon size="1em"  className="text-[9px]" />
+                  <Tick01Icon size="1em" className="text-[9px]" />
                   Successful
                 </span>
               )}
               {schedule.lastRunStatus === "failed" && (
                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40">
-                  <Cancel01Icon size="1em"  className="text-[9px]" />
+                  <Cancel01Icon size="1em" className="text-[9px]" />
                   Failed
                 </span>
               )}
@@ -457,7 +473,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
             {/* Right: Next Scheduled Run */}
             {nextRunFormatted ? (
               <div className="flex items-center gap-1.5 text-gray-900 dark:text-zinc-300">
-                <Calendar01Icon size="1em"  className="text-[13px] text-gray-400 dark:text-zinc-500" />
+                <Calendar01Icon size="1em" className="text-[13px] text-gray-400 dark:text-zinc-500" />
                 <span>Next Run:</span>
                 <span className="font-semibold text-gray-900 dark:text-zinc-200 font-sans tabular-nums text-[11px]">
                   {nextRunFormatted}

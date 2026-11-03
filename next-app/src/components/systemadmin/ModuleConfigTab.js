@@ -1,4 +1,6 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table, TableRow } from "@/components/ui/table";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 
@@ -112,11 +114,11 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterClauses, setFilterClauses] = useState([])
-  const [officeFilter, setOfficeFilter] = useState("Active") // "Active" | "Archived"
-  const [selectedOfficeId, setSelectedOfficeId] = useState(initialOfficeId || "")
-  const [viewMode, setViewMode] = useState("office") // "office" | "matrix"
+  const [searchQuery, setSearchQuery] = useViewPreference("modules", "searchQuery", "")
+  const [filterClauses, setFilterClauses] = useViewPreference("modules", "filterClauses", [])
+  const [officeFilter, setOfficeFilter] = useViewPreference("modules", "officeFilter", "Active") // "Active" | "Archived"
+  const [selectedOfficeId, setSelectedOfficeId] = useViewPreference("modules", "selectedOfficeId", initialOfficeId || "")
+  const [viewMode, setViewMode] = useViewPreference("modules", "viewMode", "office") // "office" | "matrix"
   const [confirmModalState, setConfirmModalState] = useState(null)
   const [toggling, setToggling] = useState({})
 
@@ -128,7 +130,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [initialOfficeId])
+  }, [initialOfficeId, setSelectedOfficeId, setViewMode])
 
   // System-Wide Demo Accounts Setting
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true)
@@ -136,10 +138,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   const [demoSettingSaving, setDemoSettingSaving] = useState(false)
   
   // Matrix Table Sorting
-  const [matrixSortBy, setMatrixSortBy] = useState("name")
-  const [matrixSortOrder, setMatrixSortOrder] = useState("ASC")
-  const [matrixGroupBy, setMatrixGroupBy] = useState("category")
-  const [hiddenOfficeIds, setHiddenOfficeIds] = useState([])
+  const [matrixSortBy, setMatrixSortBy] = useViewPreference("modules", "matrixSortBy", "name")
+  const [matrixSortOrder, setMatrixSortOrder] = useViewPreference("modules", "matrixSortOrder", "ASC")
+  const [matrixGroupBy, setMatrixGroupBy] = useViewPreference("modules", "matrixGroupBy", "category")
+  const [hiddenOfficeIds, setHiddenOfficeIds] = useViewPreference("modules", "hiddenOfficeIds", [])
 
   const deptCardsScrollRef = useRef(null)
   const [deptScrollState, setDeptScrollState] = useState({ overflow: false, left: false, right: false })
@@ -224,7 +226,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       const timer = setTimeout(() => setSelectedOfficeId(filteredOffices[0].id), 0)
       return () => clearTimeout(timer)
     }
-  }, [filteredOffices, selectedOfficeId, matrix])
+  }, [filteredOffices, selectedOfficeId, matrix, setOfficeFilter, setSelectedOfficeId])
 
   // Horizontal scroll hook for Compare Features (Matrix view)
   const {
@@ -317,7 +319,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     } finally {
       setLoading(false)
     }
-  }, [showToast, initialOfficeId])
+  }, [setSelectedOfficeId, initialOfficeId, showToast])
 
   const loadDemoAccountSetting = useCallback(async () => {
     try {
@@ -381,7 +383,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       clearTimeout(timer)
       window.removeEventListener("switch-view", handleSwitch)
     }
-  }, [])
+  }, [setSelectedOfficeId, setViewMode])
 
   // Optimistic Toggle with Rollback on Error
   const handleToggle = async (officeId, moduleId, currentEnabled, isSystem) => {
@@ -513,7 +515,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     }
   }
 
-  // Intercept Batch Action with Confirmation Modal for Destructive Operations
+  // Confirm the exact optional features this batch action will change.
   const handleBatchToggle = (officeId, category, enable) => {
     const targetOffice = matrix?.offices?.find((o) => o.id === officeId)
     if (targetOffice && (targetOffice.status === "Inactive" || targetOffice.status === "Archived")) {
@@ -521,28 +523,32 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       return
     }
 
-    if (!enable) {
-      const isAll = category === "all"
-      // Build selectedItems list: the affected office
-      const affectedItems = targetOffice
-        ? [`${targetOffice.short_name} (${targetOffice.id})`]
-        : []
-      setConfirmModalState({
-        open: true,
-        title: isAll ? "Reset to Core Features Only?" : `Turn Off Optional ${category === "admin" ? "Supervisor" : "Staff"} Features?`,
-        message: isAll
-          ? `Are you sure you want to turn off all optional features for ${targetOffice?.short_name || "this department"}? Department staff will no longer be able to use tools like document scanning, file uploads, and student records review. Required core features will remain available.`
-          : `Are you sure you want to turn off all optional ${category === "admin" ? "supervisor and department head" : "staff"} features for ${targetOffice?.short_name || "this department"}?`,
-        confirmLabel: isAll ? "Reset to Core" : "Disable Features",
-        variant: "warning",
-        icon: " ToggleOffIcon",
-        buttonIcon: " ReloadIcon",
-        selectedItems: affectedItems,
-        action: () => executeBatchToggle(officeId, category, false),
-      })
-    } else {
-      executeBatchToggle(officeId, category, true)
-    }
+    const officeAssignments = matrix?.assignments?.[officeId] || {}
+    const scopedFeatures = (matrix?.modules || [])
+      .filter((module) => !module.is_system && (category === "all" || module.category === category))
+    const affectedFeatures = scopedFeatures
+      .filter((module) => Boolean(officeAssignments[module.id]?.enabled) !== enable)
+      .map((module) => module.name)
+    const hasChanges = affectedFeatures.length > 0
+
+    const isAll = category === "all"
+    const categoryName = category === "admin" ? "Supervisor" : "Staff"
+    setConfirmModalState({
+      open: true,
+      title: enable
+        ? isAll ? "Enable All Features?" : `Enable All ${categoryName} Features?`
+        : isAll ? "Reset to Core Features Only?" : `Turn Off Optional ${categoryName} Features?`,
+      message: hasChanges
+        ? enable
+          ? `Enable these features for ${targetOffice?.short_name || "this department"}? Staff will gain access to the tools listed below.`
+          : `Turn off these optional features for ${targetOffice?.short_name || "this department"}? Required system features will remain available.`
+        : `These optional features are already ${enable ? "enabled" : "turned off"} for ${targetOffice?.short_name || "this department"}. Confirm to reapply this setting.`,
+      confirmLabel: enable ? "Enable Features" : isAll ? "Reset Core Features" : "Turn Off Features",
+      variant: enable ? "success" : "warning",
+      selectedItemsLabel: hasChanges ? enable ? "Features to Enable" : "Features to Turn Off" : "Features in This Group",
+      selectedItems: hasChanges ? affectedFeatures : scopedFeatures.map((module) => module.name),
+      action: () => executeBatchToggle(officeId, category, enable),
+    })
   }
 
   // Auto reset scroll to start when filters or view change
@@ -566,9 +572,9 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   const totalDepartments = officeFilterCounts.active + officeFilterCounts.archived
 
   const moduleFilterFields = useMemo(() => [
-    { key: "category", label: "Target role", options: [{ value: "admin", label: "Supervisors & Heads" }, { value: "staff", label: "Staff Tools" }] },
-    { key: "status", label: "Feature status", options: [{ value: "enabled", label: viewMode === "matrix" ? "Enabled in a department" : "Enabled" }, { value: "disabled", label: viewMode === "matrix" ? "Disabled in all departments" : "Disabled" }] },
-    { key: "required", label: "Requirement", options: [{ value: "required", label: "Required" }, { value: "optional", label: "Optional" }] },
+    { key: "category", label: "Target role", icon: Contact01Icon, options: [{ value: "admin", label: "Supervisors & Heads" }, { value: "staff", label: "Staff Tools" }] },
+    { key: "status", label: "Feature status", icon: Tick01Icon, options: [{ value: "enabled", label: viewMode === "matrix" ? "Enabled in a department" : "Enabled" }, { value: "disabled", label: viewMode === "matrix" ? "Disabled in all departments" : "Disabled" }] },
+    { key: "required", label: "Requirement", icon: Shield01Icon, options: [{ value: "required", label: "Required" }, { value: "optional", label: "Optional" }] },
   ], [viewMode])
 
   const filteredModules = useMemo(() => {
@@ -692,8 +698,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     )
   }
   const { modules } = matrix
-  const matrixFeatureWidth = Math.max(420, Math.min(matrixViewportWidth * 0.55, matrixViewportWidth * 1.5 / (visibleMatrixOffices.length + 1)))
-  const matrixOfficeWidth = Math.max(150, (matrixViewportWidth - matrixFeatureWidth) / Math.max(1, visibleMatrixOffices.length))
+  const matrixFeatureWidth = visibleMatrixOffices.length === 0
+    ? Math.max(420, matrixViewportWidth)
+    : Math.max(420, Math.min(matrixViewportWidth * 0.6, matrixViewportWidth - visibleMatrixOffices.length * 180))
+  const matrixOfficeWidth = Math.max(180, (matrixViewportWidth - matrixFeatureWidth) / Math.max(1, visibleMatrixOffices.length))
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -736,19 +744,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
         <DataViewToolbar label="Feature search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <div className="relative group w-[min(320px,30vw)] min-w-[190px] shrink-0">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
-              </div>
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search features by name, description..."
-                aria-label="Search features"
-                className="h-9 w-full rounded-xl border border-border dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-12 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-              />
-              <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 tabular-nums" aria-live="polite">{filteredModules.length.toLocaleString()}</span>
-            </div>
+<DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} label="Search features" placeholder="Search features by name, description..." />
             <FilterPopover fields={moduleFilterFields} filters={filterClauses} onFiltersChange={setFilterClauses} entityLabel="features" />
             {viewMode === "matrix" && <>
               <SortPopover
@@ -766,7 +762,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               {filteredOffices.length > 1 && <ColumnsPopover
                 columns={filteredOffices.map((office) => ({ key: office.id, label: office.short_name || office.name || office.id }))}
                 visibleColumns={visibleMatrixOffices.map((office) => office.id)}
-                minVisible={1}
+                minVisible={0}
                 onVisibleColumnsChange={(visibleIds) => {
                   setHiddenOfficeIds(filteredOffices.filter((office) => !visibleIds.includes(office.id)).map((office) => office.id))
                 }}
@@ -775,6 +771,38 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
             </>}
           </div>
         </DataViewToolbar>
+
+        <div className="border-t border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
+              <UserSwitchIcon size="1em" className="text-lg" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                  Public Login Demo Accounts
+                </p>
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                  Prototype Access
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+            <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+              {demoAccountsEnabled ? "Enabled" : "Disabled"}
+            </span>
+            <Switch
+              checked={demoAccountsEnabled}
+              onCheckedChange={handleDemoAccountsToggle}
+              disabled={demoSettingLoading || demoSettingSaving}
+              aria-label="Show Demo Accounts button on login page"
+            />
+          </div>
+        </div>
 
         {/* Active Filter Chips & Horizontal Scroll Controls Bar */}
         {hasActiveChips && (
@@ -821,7 +849,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           variant="outline"
                           onClick={() => selectOfficeScope("Active")}
                           title="View Active Departments"
-                          className="flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
+                          className="flex h-10 items-center justify-center px-5"
                         >
                           View Active Departments
                         </Button>
@@ -884,19 +912,18 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         data-office-id={String(o.id).toLowerCase()}
                         onClick={() => setSelectedOfficeId(o.id)}
                         className={cn(
-                          "p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between gap-3 cursor-pointer group select-none shadow-2xs w-[240px] min-w-[240px] shrink-0",
+                          "p-4 rounded-xl border text-left transition-colors relative flex flex-col justify-between gap-3 cursor-pointer group select-none w-[240px] min-w-[240px] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400",
                           isSelected
-                            ? "bg-pup-maroon/[0.03] dark:bg-red-500/[0.06] border-pup-maroon dark:border-red-500 ring-2 ring-pup-maroon/30 dark:ring-red-500/30 shadow-md"
-                            : "bg-white/80 dark:bg-zinc-900/60 border-border/80 dark:border-border hover:border-gray-400 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-900",
-                          isOfficeArchived && !isSelected && "opacity-75"
+                            ? "bg-red-50/60 dark:bg-red-950/20 border-pup-maroon dark:border-red-500"
+                            : "bg-white dark:bg-zinc-900/60 border-border dark:border-border hover:border-gray-400 dark:hover:border-zinc-600",
+                          isOfficeArchived && !isSelected && "border-dashed bg-gray-50/60 dark:bg-zinc-900/40"
                         )}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex min-w-0 items-center gap-2.5">
                             <div
                               className={cn(
-                                "h-9 w-9 rounded-xl flex items-center justify-center text-sm shadow-2xs shrink-0 border transition-all",
-                                isSelected && "ring-2 ring-pup-maroon/20 dark:ring-red-400/30"
+                                "h-9 w-9 rounded-xl flex items-center justify-center text-sm shrink-0 border",
                               )}
                               style={{
                                 backgroundColor: `${accent}18`,
@@ -932,9 +959,9 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                               <Badge
                                 variant="secondary"
                                 className={cn(
-                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-bold font-sans tabular-nums transition-colors",
+                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-semibold font-sans tabular-nums transition-colors",
                                   isSelected
-                                    ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
+                                    ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white"
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
                                 )}
                               >
@@ -1014,7 +1041,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", false)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Turn off optional features and keep required system tools only"}
-                    className="h-9 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer flex items-center justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50 shadow-2xs active:scale-95 transition-all"
+                    className="h-9 flex items-center justify-center px-4"
                   >
                     Reset to Core
                   </Button>
@@ -1050,7 +1077,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           variant="outline"
                           onClick={handleClearFilters}
                           title="Reset Filters"
-                          className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="flex h-10 items-center justify-center gap-2 px-5"
                         >
                           Reset Filters
                         </Button>
@@ -1251,7 +1278,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       variant="outline"
                       onClick={() => selectOfficeScope("Active")}
                       title="View Active Departments"
-                      className="flex h-10 items-center justify-center rounded-xl border border-border bg-white px-5 text-xs font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:bg-zinc-900 dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95"
+                      className="flex h-10 items-center justify-center px-5"
                     >
                       View Active Departments
                     </Button>
@@ -1276,7 +1303,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center gap-2 px-5"
                   >
                     Reset Filters
                   </Button>
@@ -1318,8 +1345,8 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         >
                           <div className="flex items-center justify-center">
                             <span 
-                              className="text-xs font-semibold tracking-tight truncate max-w-[130px]"
-                              style={{ color: o.accent_color || "#800000" }}
+                              className="systemadmin-office-label text-xs font-semibold tracking-tight truncate max-w-[130px]"
+                              style={{ "--office-accent": o.accent_color || "#800000" }}
                               title={o.name}
                             >
                               {o.short_name}
@@ -1359,37 +1386,6 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
         </>
       )}
       </div>
-        <div className="rounded-b-2xl border-t border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
-              <UserSwitchIcon size="1em" className="text-lg" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                  Public Login Demo Accounts
-                </p>
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
-                  Prototype Access
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-            <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-              {demoAccountsEnabled ? "Enabled" : "Disabled"}
-            </span>
-            <Switch
-              checked={demoAccountsEnabled}
-              onCheckedChange={handleDemoAccountsToggle}
-              disabled={demoSettingLoading || demoSettingSaving}
-              aria-label="Show Demo Accounts button on login page"
-            />
-          </div>
-        </div>
       </Card>
 
       {/* Confirmation Modal for Destructive Batch Actions */}
@@ -1403,6 +1399,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           icon={confirmModalState.icon}
           buttonIcon={confirmModalState.buttonIcon}
           selectedItems={confirmModalState.selectedItems || []}
+          selectedItemsLabel={confirmModalState.selectedItemsLabel}
           onConfirm={confirmModalState.action}
           onCancel={() => setConfirmModalState(null)}
           isLoading={confirmModalState.isLoading}
@@ -1428,14 +1425,14 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
   return (
     <div
       className={cn(
-        "p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 select-none",
+        "min-h-[172px] p-4 rounded-2xl border flex flex-col justify-between gap-4 select-none transition-colors",
         isEnabled
-          ? "bg-white dark:bg-zinc-900 border-border dark:border-border shadow-2xs hover:shadow-sm"
-          : "bg-gray-50/50 dark:bg-zinc-950/40 border-border dark:border-border opacity-70 hover:opacity-100"
+          ? "bg-white dark:bg-zinc-900 border-border dark:border-border"
+          : "bg-gray-50/70 dark:bg-zinc-950/40 border-border dark:border-border"
       )}
     >
       <div>
-        <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <div
               className={cn(
@@ -1448,10 +1445,10 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
               <AppIcon className={cn(moduleIconClass, "text-base")}></AppIcon>
             </div>
             <div className="min-w-0">
-              <h5 className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50 leading-tight" title={m.name}>
+              <h5 className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-50 leading-5" title={m.name}>
                 {m.name}
               </h5>
-              <div className="flex min-w-0 items-center gap-1.5 mt-0.5">
+              <div className="flex min-w-0 items-center gap-1.5 mt-1">
                 <span className="min-w-0 truncate text-[10px] text-gray-400" title={m.id}>
                   {m.id}
                 </span>
@@ -1482,12 +1479,12 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           )}
         </div>
 
-        <p className="text-[11px] text-gray-900 dark:text-zinc-300 line-clamp-2 leading-relaxed" title={m.description || "Standard system feature."}>
+        <p className="text-xs text-gray-600 dark:text-zinc-300 line-clamp-2 leading-5" title={m.description || "Standard system feature."}>
           {m.description || "Standard system feature."}
         </p>
       </div>
 
-      <div className="pt-3 border-t border-border dark:border-border flex items-center justify-between">
+      <div className="pt-3 border-t border-border/80 dark:border-border flex items-center justify-between gap-3">
         <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-400">
           {isSystem ? "Always Active (Required)" : isOfficeArchived ? "Locked (Archived Department)" : isEnabled ? "Available to Staff" : "Turned Off"}
         </span>
@@ -1519,23 +1516,25 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
 
   return (
     <TableRow className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
-      <td className="p-4 pl-6 align-top sticky left-0 bg-white/95 dark:bg-zinc-900/95 z-10 border-r border-border/70 dark:border-border/70 min-w-[420px]">
-        <div className="flex items-start gap-3">
+      <td className="p-4 pl-6 align-top sticky left-0 bg-white/95 dark:bg-zinc-900/95 z-10 border-r border-border/70 dark:border-border/70 min-w-[420px] overflow-hidden">
+        <div className="flex w-full min-w-0 items-start gap-3">
           <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800/80 flex items-center justify-center text-gray-700 dark:text-zinc-300 text-xs shrink-0">
             <AppIcon className={cn(moduleIconClass, "text-sm")}></AppIcon>
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="min-w-0 truncate font-semibold text-xs text-gray-900 dark:text-zinc-100" title={m.name}>
+          <div className="w-full min-w-0 flex-1 overflow-hidden">
+            <div className="flex w-full min-w-0 items-center justify-between gap-3">
+              <span className="min-w-0 flex-1 truncate font-semibold text-xs text-gray-900 dark:text-zinc-100" title={m.name}>
                 {m.name}
               </span>
-              {isSystem && (
-                <span className="bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  Required
+              <span className="flex min-w-0 max-w-[55%] shrink-0 items-center justify-end gap-2">
+                {isSystem && (
+                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    Required
+                  </span>
+                )}
+                <span className="min-w-0 truncate text-[10px] font-medium text-gray-400 dark:text-zinc-500" title={getModuleTargetText(m)}>
+                  ({getModuleTargetText(m)})
                 </span>
-              )}
-              <span className="min-w-0 truncate text-[10px] font-medium text-gray-400 dark:text-zinc-500" title={getModuleTargetText(m)}>
-                ({getModuleTargetText(m)})
               </span>
             </div>
             <p className="min-w-0 truncate text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 leading-relaxed" title={m.description || "Standard system feature."}>

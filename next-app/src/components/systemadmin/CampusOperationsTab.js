@@ -1,6 +1,9 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
+import { TableActions } from "@/components/shared/TableActions";
 
 
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -8,10 +11,11 @@ import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
@@ -40,8 +44,10 @@ import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
-import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon } from "hugeicons-react";
+import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+const OPERATION_COLUMNS = ["department", "requester", "title", "details", "status", "submitted", "updatedAt"]
+
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return <ArrowUpDownIcon size="1em" className="ml-1 text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -138,15 +144,16 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   const [autoRefreshSecs] = useState(15)
 
   // Filters & Sorting
-  const [search, setSearch] = useState("")
-  const [operationFilters, setOperationFilters] = useState({
-    department: [],
-    status: [],
-  })
-  const [sortBy, setSortBy] = useState("createdAt")
-  const [sortOrder, setSortOrder] = useState("DESC")
+  const [search, setSearch] = useViewPreference("operations", "search", "")
+  const [operationFilters, setOperationFilters] = useViewPreference("operations", "operationFilters", [])
+  const [lifecycle, setLifecycle] = useViewPreference("operations", "lifecycle", "all")
+  const [groupBy, setGroupBy] = useViewPreference("operations", "groupBy", "none")
+  const [visibleColumns, setVisibleColumns] = useViewPreference("operations", "visibleColumns", OPERATION_COLUMNS.filter((key) => key !== "updatedAt"))
+  const visibleTableColumns = OPERATION_COLUMNS.filter((key) => visibleColumns.includes(key))
+  const [sortBy, setSortBy] = useViewPreference("operations", "sortBy", "createdAt")
+  const [sortOrder, setSortOrder] = useViewPreference("operations", "sortOrder", "DESC")
   const [page, setPage] = useUrlPage()
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useViewPreference("operations", "pageSize", 20)
 
   // Horizontal table scrolling hook
   const {
@@ -166,7 +173,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   const handleOpenDetails = useCallback((item) => {
     setSheetItem(item)
     setSelectedItem(item)
-  }, [])
+  }, [setSheetItem, setSelectedItem])
 
   const handleCopy = useCallback((text, label) => {
     if (!text) return
@@ -356,33 +363,43 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
     ]
   }, [transactions])
 
+  const filterFields = useMemo(() => operationFilterGroups.map((group) => ({
+    key: group.id,
+    label: group.id === "department" ? "Department" : "Stage status",
+    icon: group.id === "department" ? Certificate01Icon : Timer01Icon,
+    options: group.options.map(({ value, label }) => ({ value, label })),
+  })), [operationFilterGroups])
+
+  const isClosed = (status) => ["approved", "completed", "done", "declined", "cancelled", "shredded"].includes(String(status || "").trim().toLowerCase())
+  const matchesStatus = (status, value) => {
+    const s = String(status || "").trim().toLowerCase()
+    if (value === "action_needed") return s === "pending" || s === "submitted"
+    if (value === "in_progress") return ["inprogress", "in progress", "under review", "processing"].includes(s)
+    if (value === "completed") return ["approved", "completed", "done"].includes(s)
+    if (value === "needs_revision") return s === "needs revision" || s === "revision"
+    if (value === "declined") return ["declined", "cancelled", "shredded"].includes(s)
+    return s === value
+  }
+
+  const lifecycleCounts = useMemo(() => ({
+    all: transactions?.length || 0,
+    open: transactions?.filter((tx) => !isClosed(tx.status)).length || 0,
+    closed: transactions?.filter((tx) => isClosed(tx.status)).length || 0,
+  }), [transactions])
+
   // Filtered transactions for cross-department activity stream
   const filteredTransactions = useMemo(() => {
     if (!transactions) return []
-    const selectedDepts = operationFilters.department || []
-    const selectedStatuses = operationFilters.status || []
 
     return transactions.filter((tx) => {
-      // Department filter
-      if (selectedDepts.length > 0) {
-        const txDept = String(tx.officeId || "").toLowerCase()
-        if (!selectedDepts.includes(txDept)) return false
-      }
-
-      // Status filter
-      if (selectedStatuses.length > 0) {
-        const s = String(tx.status || "").trim().toLowerCase()
-        const matchesStatus = selectedStatuses.some((val) => {
-          if (val === "action_needed") return s === "pending" || s === "submitted"
-          if (val === "in_progress") return s === "inprogress" || s === "in progress" || s === "under review" || s === "processing"
-          if (val === "ready") return s === "ready"
-          if (val === "completed") return s === "approved" || s === "completed" || s === "done"
-          if (val === "needs_revision") return s === "needs revision" || s === "revision"
-          if (val === "declined") return s === "declined" || s === "cancelled" || s === "shredded"
-          return s === val.toLowerCase()
-        })
-        if (!matchesStatus) return false
-      }
+      if (lifecycle === "open" && isClosed(tx.status)) return false
+      if (lifecycle === "closed" && !isClosed(tx.status)) return false
+      if (!operationFilters.every(({ fieldKey, operator, value }) => {
+        const matches = fieldKey === "department"
+          ? String(tx.officeId || "").toLowerCase() === value
+          : matchesStatus(tx.status, value)
+        return operator === "is_not" ? !matches : matches
+      })) return false
 
       // Keyword search
       if (search.trim()) {
@@ -406,11 +423,17 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
       return true
     })
-  }, [transactions, operationFilters, search])
+  }, [transactions, lifecycle, operationFilters, search])
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
     return [...filteredTransactions].sort((a, b) => {
+      if (groupBy !== "none") {
+        const aGroup = groupBy === "department" ? a.officeId : a.status
+        const bGroup = groupBy === "department" ? b.officeId : b.status
+        const groupComparison = String(aGroup || "").localeCompare(String(bGroup || ""))
+        if (groupComparison) return groupComparison
+      }
       let aVal = a[sortBy] ?? ""
       let bVal = b[sortBy] ?? ""
 
@@ -426,7 +449,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
       if (aVal > bVal) return sortOrder === "ASC" ? 1 : -1
       return 0
     })
-  }, [filteredTransactions, sortBy, sortOrder])
+  }, [filteredTransactions, sortBy, sortOrder, groupBy])
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedTransactions.length / pageSize) || 1
@@ -455,23 +478,22 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   // Reset page when filters change
   useEffect(() => {
     setPage(1)
-  }, [search, operationFilters, pageSize, setPage])
+  }, [search, operationFilters, lifecycle, groupBy, pageSize, setPage])
 
   // Auto-reset scroll to start whenever page, filters, search, or sorting changes
   useEffect(() => {
     resetTableScroll()
-  }, [page, pageSize, search, operationFilters, sortBy, sortOrder, resetTableScroll])
+  }, [page, pageSize, search, operationFilters, lifecycle, groupBy, visibleColumns, sortBy, sortOrder, resetTableScroll])
 
   const handleClearFilters = useCallback(() => {
     setSearch("")
-    setOperationFilters({ department: [], status: [] })
+    setOperationFilters([])
     setPage(1)
-  }, [setPage])
+  }, [setOperationFilters, setPage, setSearch])
 
   const hasActiveFilters =
     Boolean(search?.trim()) ||
-    Boolean(operationFilters.department?.length > 0) ||
-    Boolean(operationFilters.status?.length > 0)
+    operationFilters.length > 0
 
   return (
     <div className="animate-fade-up flex flex-[1_0_auto] flex-col w-full gap-6">
@@ -480,22 +502,44 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         {/* Header */}
         <PageHeader
           icon=" Activity01Icon"
-          title="Campus Services & Operations Monitor"
+          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Campus Services &amp; Operations Monitor</span>{loading ? <Skeleton aria-hidden="true" className="h-3.5 w-40 rounded dark:bg-muted" /> : <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">{lifecycleCounts.all.toLocaleString()} operations · {lifecycleCounts.open.toLocaleString()} open</span>}</div>}
           description="Live tracking of student document requests and student organization proposals across campus departments."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-              <RefreshButton
-                onRefresh={() => fetchHealth(true)}
-                isLoading={refreshing}
-                title="Refresh Operations Health"
-              />
-            </div>
-          }
         />
+
+        <div role="group" aria-label="Operation lifecycle" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
+          {[["all", "All", lifecycleCounts.all], ["open", "Open", lifecycleCounts.open], ["closed", "Closed", lifecycleCounts.closed]].map(([key, label, count]) => (
+            <button key={key} type="button" onClick={() => setLifecycle(key)} aria-pressed={lifecycle === key} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", lifecycle === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+              {label}{loading ? <Skeleton aria-hidden="true" className="h-3 w-6 rounded dark:bg-muted" /> : <span className="text-[10px] font-normal tabular-nums text-gray-400 dark:text-zinc-500">{count}</span>}
+              {lifecycle === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+            </button>
+          ))}
+        </div>
+
+        {/* Navigation Toolbar */}
+        <DataViewToolbar label="Campus operations search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          <div className="flex min-w-0 items-center gap-2" style={{ flex: "1 0 auto" }}>
+          {/* Search Input with Clear Button & Record Count */}
+<DashboardSearch value={search} onChange={setSearch} count={filteredTransactions.length} loading={loading} label="Search campus operations" placeholder="Search student, document, or org..." />
+
+          <FilterPopover fields={filterFields} filters={operationFilters} onFiltersChange={setOperationFilters} entityLabel="operations" />
+          <SortPopover options={[{ key: "createdAt", label: "Submitted", icon: Calendar01Icon }, { key: "updatedAt", label: "Last Updated", icon: Calendar01Icon }, { key: "id", label: "ID", icon: Layers01Icon }, { key: "officeId", label: "Department", icon: Certificate01Icon }, { key: "studentName", label: "Student requester", icon: StudentIcon }, { key: "title", label: "Title", icon: File02Icon }, { key: "organizationName", label: "Organization / details", icon: ViewIcon }, { key: "status", label: "Stage status", icon: Timer01Icon }]} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
+          <GroupPopover options={[{ key: "department", label: "Department", icon: Certificate01Icon }, { key: "status", label: "Stage status", icon: Timer01Icon }, { key: "none", label: "No grouping", icon: Layers01Icon }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
+          <ColumnsPopover columns={[{ key: "department", label: "Department" }, { key: "requester", label: "Student requester" }, { key: "title", label: "Document or proposal" }, { key: "details", label: "Organization / details" }, { key: "status", label: "Stage status" }, { key: "submitted", label: "Submitted" }, { key: "updatedAt", label: "Last Updated" }]} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={0} />
+          <TableScrollControls scrollContainerRef={tableContainerRef}
+            canScrollLeft={canScrollLeft}
+            canScrollRight={canScrollRight}
+            isScrolled={isScrolled}
+            onScrollLeft={scrollLeft}
+            onScrollRight={scrollRight}
+            onResetScroll={resetTableScroll}
+          />
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2"><RefreshButton onRefresh={() => fetchHealth(true)} isLoading={refreshing} title="Refresh Campus Operations" className="h-9 w-9" /></div>
+        </DataViewToolbar>
 
         {/* Full Top-Level Turnaround Standards Institutional Banner */}
         <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 text-xs transition-colors">
@@ -526,73 +570,19 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               type="button"
               variant="outline"
               onClick={() => setStandardsSheetOpen(true)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+              className="h-9 px-4"
             >
-              <AppIcon className=" SlidersHorizontalIcon text-xs" />
               <span>Configure Standards</span>
             </Button>
           </div>
         </div>
 
-        {/* Navigation Toolbar */}
-        <DataViewToolbar label="Campus operations search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Search Input with Clear Button & Record Count */}
-          <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-            </div>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search student, document, or org..."
-              className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-              {filteredTransactions.length}
-            </div>
-          </div>
-
-          {/* Smart Multi-Criteria Filter Dropdown */}
-          <div className="w-full sm:w-auto shrink-0">
-            <MultiCriteriaFilter
-              title="Filter Operations"
-              groups={operationFilterGroups}
-              selected={operationFilters}
-              onChange={(newFilters) => {
-                setOperationFilters(newFilters)
-                setPage(1)
-              }}
-              totalCount={transactions?.length || 0}
-              matchingCount={filteredTransactions.length}
-              onReset={() => {
-                setOperationFilters({ department: [], status: [] })
-                setPage(1)
-              }}
-            />
-          </div>
-          <TableScrollControls scrollContainerRef={tableContainerRef}
-            canScrollLeft={canScrollLeft}
-            canScrollRight={canScrollRight}
-            isScrolled={isScrolled}
-            onScrollLeft={scrollLeft}
-            onScrollRight={scrollRight}
-            onResetScroll={resetTableScroll}
-          />
-        </DataViewToolbar>
 
         {/* Active Filter Chips & Horizontal Scroll Controls */}
-        <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+        {hasActiveFilters && <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex-1 min-w-0">
             <ActiveFilterChips
-              groups={operationFilterGroups}
-              selected={operationFilters}
-              onRemove={(groupId, val) => {
-                setOperationFilters((prev) => ({
-                  ...prev,
-                  [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-                }))
-                setPage(1)
-              }}
+              chips={operationFilters.map((clause) => ({ id: clause.id, label: `${filterFields.find((field) => field.key === clause.fieldKey)?.label || clause.fieldKey} ${clause.operator === "is_not" ? "is not" : "is"} ${filterFields.find((field) => field.key === clause.fieldKey)?.options.find((option) => option.value === clause.value)?.label || clause.value}`, onRemove: () => setOperationFilters((previous) => previous.filter((item) => item.id !== clause.id)) }))}
               searchQuery={search}
               onClearSearch={() => {
                 setSearch("")
@@ -603,12 +593,12 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             />
           </div>
 
-        </div>
+        </div>}
 
         {/* Cross-Department Activity Stream Table */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
-            <TransactionsTableSkeleton rowCount={8} />
+            <TransactionsTableSkeleton rowCount={pageSize} visibleColumns={visibleTableColumns} groupBy={groupBy} />
           ) : paginatedTransactions.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -620,7 +610,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   <EmptyDescription>
                     {hasActiveFilters
                       ? "No student requests or proposals match your search or filter settings."
-                      : "There are currently no active document requests or event proposals recorded."}
+                      : `There are currently no ${lifecycle === "all" ? "" : `${lifecycle} `}document requests or event proposals recorded.`}
                   </EmptyDescription>
                 </EmptyHeader>
                 {hasActiveFilters && (
@@ -629,7 +619,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       variant="outline"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center gap-2 px-5"
                     >
                       Reset Filters
                     </Button>
@@ -642,7 +632,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               ref={tableContainerRef}
               className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
             >
-                <Table columns={["identifier", "category", "text", { kind: "text", maxWidth: 340 }, { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[1240px]">
+                <Table columns={[{ kind: "identifier", width: 120 }, ...visibleTableColumns.map((key) => ({ kind: key === "status" ? "status" : key === "department" ? "category" : (key === "submitted" || key === "updatedAt") ? "date" : "text", width: key === "title" ? 300 : key === "details" ? 250 : key === "requester" ? 220 : key === "status" ? 150 : 160, maxWidth: key === "title" ? 340 : key === "details" ? 300 : undefined })), { kind: "actions" }]} className="min-w-0">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
@@ -663,6 +653,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       </button>
                     </th>
 
+                    {visibleColumns.includes("department") && <>
                     {/* Department */}
                     <th className="p-4 w-[130px] min-w-[130px]">
                       <button
@@ -675,7 +666,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         Department <SortIndicator column="officeId" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
                     </th>
+                    </>}
 
+                    {visibleColumns.includes("requester") && <>
                     {/* Student Requester */}
                     <th className="p-4 w-[200px] min-w-[180px] max-w-[240px]">
                       <button
@@ -688,7 +681,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         Student Requester <SortIndicator column="studentName" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
                     </th>
+                    </>}
 
+                    {visibleColumns.includes("title") && <>
                     {/* Document or Proposal Title */}
                     <th className="p-4 w-[270px] min-w-[200px] max-w-[340px]">
                       <button
@@ -701,7 +696,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         Document or Proposal Title <SortIndicator column="title" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
                     </th>
+                    </>}
 
+                    {visibleColumns.includes("details") && <>
                     {/* Student Org / Details */}
                     <th className="p-4 w-[220px] min-w-[180px] max-w-[340px]">
                       <button
@@ -714,7 +711,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         Student Org / Details <SortIndicator column="organizationName" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
                     </th>
+                    </>}
 
+                    {visibleColumns.includes("status") && <>
                     {/* Stage Status */}
                     <th className="p-4 w-[140px] min-w-[140px]">
                       <button
@@ -727,7 +726,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         Stage Status <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
                     </th>
+                    </>}
 
+                    {visibleColumns.includes("submitted") && <>
                     {/* Submitted */}
                     <th className="p-4 w-[130px] min-w-[130px]">
                       <button
@@ -740,22 +741,34 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         Submitted <SortIndicator column="createdAt" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
                     </th>
+                    </>}
 
                     {/* Actions */}
+                    {visibleColumns.includes("updatedAt") && (
+                      <th aria-sort={sortBy === "updatedAt" ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>
+                        <button type="button" onClick={() => handleSort("updatedAt")} className="group inline-flex items-center text-xs font-semibold">
+                          Last Updated<SortIndicator column="updatedAt" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                    )}
                     <th className="px-1 py-3 text-center w-12 min-w-[48px] max-w-[48px] text-[11px] font-semibold text-gray-500 dark:text-zinc-400 sticky right-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
-                      Actions
+                      <span className="sr-only">Actions</span>
                     </th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-card">
-                  {paginatedTransactions.map((tx) => {
+                  {paginatedTransactions.map((tx, index) => {
                     const isRegistrar = tx.officeId === "registrar"
                     const rel = formatRelativeTime(tx.createdAt)
 
+                    const groupValue = groupBy === "department" ? (isRegistrar ? "Registrar" : "OSAS") : tx.status
+                    const previous = paginatedTransactions[index - 1]
+                    const previousGroup = previous && (groupBy === "department" ? (previous.officeId === "registrar" ? "Registrar" : "OSAS") : previous.status)
                     return (
+                      <React.Fragment key={tx.id}>
+                      {groupBy !== "none" && groupValue !== previousGroup && <tr className="bg-gray-100/70 dark:bg-zinc-950/60"><td colSpan={visibleTableColumns.length + 2} className="px-6 py-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200">{groupValue || "Unspecified"} ({paginatedTransactions.filter((item) => (groupBy === "department" ? (item.officeId === "registrar" ? "Registrar" : "OSAS") : item.status) === groupValue).length})</td></tr>}
                       <tr
-                        key={tx.id}
                         onClick={() => handleOpenDetails(tx)}
                         className="group h-[52px] border-b border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer select-none"
                       >
@@ -771,6 +784,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                           </span>
                         </td>
 
+                        {visibleColumns.includes("department") && <>
                         {/* Department Badge */}
                         <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           {isRegistrar ? (
@@ -785,7 +799,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             </span>
                           )}
                         </td>
+                        </>}
 
+                        {visibleColumns.includes("requester") && <>
                         {/* Student Requester */}
                         <td className="p-4 align-middle overflow-hidden max-w-[240px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <div className="w-full min-w-0">
@@ -800,7 +816,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             </div>
                           </div>
                         </td>
+                        </>}
 
+                        {visibleColumns.includes("title") && <>
                         {/* Document or Proposal Title */}
                         <td className="p-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <div className="w-full min-w-0">
@@ -815,7 +833,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             )}
                           </div>
                         </td>
+                        </>}
 
+                        {visibleColumns.includes("details") && <>
                         {/* Student Org / Details */}
                         <td className="p-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <div className="w-full min-w-0">
@@ -830,7 +850,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             )}
                           </div>
                         </td>
+                        </>}
 
+                        {visibleColumns.includes("status") && <>
                         {/* Stage Status Badge */}
                         <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <span
@@ -843,34 +865,29 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             <span>{tx.status === "InProgress" ? "In Progress" : tx.status}</span>
                           </span>
                         </td>
+                        </>}
 
+                        {visibleColumns.includes("submitted") && <>
                         {/* Date Submitted */}
                         <td className="p-4 align-middle text-[12px] text-gray-700 dark:text-zinc-300 whitespace-nowrap font-sans tabular-nums border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           {rel.relative || rel.date}
                         </td>
+                        </>}
 
+                        {visibleColumns.includes("updatedAt") && (
+                          <td className="p-4 align-middle whitespace-nowrap tabular-nums">
+                            {tx.updatedAt ? formatPHDateTime(tx.updatedAt) : "N/A"}
+                          </td>
+                        )}
                         {/* Action Button (Sticky Right, Fixed 48px) */}
                         <td
                           className="py-0 px-2 text-center align-middle whitespace-nowrap sticky right-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/70 dark:group-hover:bg-zinc-800/40 border-b border-border dark:border-border w-12 min-w-[48px] max-w-[48px]"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="flex items-center justify-center">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenDetails(tx)}
-                                  aria-label="View Details"
-                                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border-0 bg-transparent shadow-2xs"
-                                >
-                                  <ViewIcon size="1em" className="text-[15px]" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>View Details</TooltipContent>
-                            </Tooltip>
-                          </div>
+                          <TableActions actions={[{ label: "View Details", icon: ViewIcon, onClick: () => handleOpenDetails(tx) }]} />
                         </td>
                       </tr>
+                      </React.Fragment>
                     )
                   })}
                 </tbody>
@@ -879,7 +896,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           )}
 
           {/* Pagination Footer */}
-          <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} loading={loading} />
+          {!loading && <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} />}
         </div>
       </Card>
 
@@ -921,7 +938,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <button
                   type="button"
                   onClick={() => setSelectedItem(null)}
-                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  className="w-8 h-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
                   aria-label="Close"
                   title="Close"
                 >
@@ -1183,7 +1200,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 </div>
                 <div className="p-3.5 rounded-xl border border-border dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
                       <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="min-w-0">
@@ -1203,7 +1220,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     variant="outline"
                     size="sm"
                     onClick={() => handleOpenPdfPreview(sheetItem)}
-                    className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-3 rounded-xl cursor-pointer shadow-xs active:scale-95 transition-all"
+                    className="shrink-0 h-8 px-3"
                   >
                     {PDF_ACTION_LABELS.preview}
                   </Button>
@@ -1220,7 +1237,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   type="button"
                   variant="outline"
                   onClick={() => handleCopy(JSON.stringify(sheetItem, null, 2), "Operation Record JSON")}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
+                  className="h-10 px-4 flex items-center gap-2"
                   title="Copy operation record data"
                 >
                   <Copy01Icon size="1em" className="text-sm" />
@@ -1233,7 +1250,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               type="button"
               variant="outline"
               onClick={() => setSelectedItem(null)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5"
             >
               Close
             </Button>

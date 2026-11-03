@@ -249,7 +249,7 @@ export default function Sidebar({
   const activeForeground =
     (accentColor && accentColor !== roleBranding.color ? "#FFFFFF" : roleBranding.foreground) ||
     "#FFFFFF";
-  const staffIconColor = activeColor;
+  const staffIconColor = isSuperAdmin ? `var(--systemadmin-nav-icon, ${activeColor})` : activeColor;
 
   useEffect(() => {
     if (roleBranding?.color) {
@@ -1364,6 +1364,7 @@ export default function Sidebar({
             onClick={handleMainDashboardClick}
           >
             <img
+              data-sidebar-logo={isSuperAdmin || undefined}
               src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
               alt="eManage Logo"
               className={cn("h-6 w-6 object-contain", isStudent && "brightness-0 saturate-100")}
@@ -1443,6 +1444,7 @@ export default function Sidebar({
               title="eManage Dashboard"
             >
               <img
+                data-sidebar-logo={isSuperAdmin || undefined}
                 src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
                 alt="eManage Logo"
                 className={cn(
@@ -1493,6 +1495,7 @@ export default function Sidebar({
             >
               {/* Default resting state: eManage Logo */}
               <img
+                data-sidebar-logo={isSuperAdmin || undefined}
                 src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
                 alt="eManage Logo"
                 className={cn(
@@ -2152,6 +2155,7 @@ export default function Sidebar({
         >
           <SheetHeader className="p-4 flex flex-row items-center gap-2.5">
             <img
+              data-sidebar-logo={isSuperAdmin || undefined}
               src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
               alt="eManage Logo"
               className={cn("h-7 w-7 object-contain", isStudent && "brightness-0 saturate-100")}

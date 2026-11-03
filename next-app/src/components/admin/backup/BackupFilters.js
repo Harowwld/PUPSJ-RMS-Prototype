@@ -2,6 +2,7 @@
 
 
 import { Button } from "@/components/ui/button"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -34,6 +35,10 @@ export default function BackupFilters({
   setBackupSearch,
   backupTotal = 0,
   isLoading = false,
+  inline = false,
+  tableControls,
+  scrollControls,
+  actions,
 }) {
   const handleQuickRange = (range) => {
     if (activeShortcut === range) {
@@ -94,8 +99,9 @@ export default function BackupFilters({
     return null
   })()
 
+  const Wrapper = inline ? DataViewToolbar : "div"
   return (
-    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+    <Wrapper {...(inline ? { label: "Platform backup search and controls" } : {})} className={inline ? "gap-2 bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30" : "border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap"}>
       {/* Search Bar: Placed on the left with standard count number */}
       <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -120,92 +126,95 @@ export default function BackupFilters({
         </div>
       </div>
 
-      {/* Filter controls: Shortcuts and Date Pickers on the right */}
-      <div className="flex flex-wrap items-center gap-3">
+      {tableControls}
+      {/* Date shortcuts and pickers */}
+      <div className="flex shrink-0 items-center gap-2">
         {/* Time Shortcuts */}
-      <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
-        {[
-          { key: "today", label: "Today" },
-          { key: "yesterday", label: "Yest." },
-          { key: "last7", label: "7d" },
-          { key: "last30", label: "30d" },
-        ].map((range) => {
-          const isActive = activeShortcut === range.key
-          return (
-            <button
-              key={range.key}
-              type="button"
-              onClick={() => handleQuickRange(range.key)}
-              className={cn(
-                "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                isActive
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-              )}
-            >
-              {range.label}
-            </button>
-          )
-        })}
-      </div>
+        <div className="flex h-9 items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
+          {[
+            { key: "today", label: "Today" },
+            { key: "yesterday", label: "Yest." },
+            { key: "last7", label: "7d" },
+            { key: "last30", label: "30d" },
+          ].map((range) => {
+            const isActive = activeShortcut === range.key
+            return (
+              <button
+                key={range.key}
+                type="button"
+                onClick={() => handleQuickRange(range.key)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                  isActive
+                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                )}
+              >
+                {range.label}
+              </button>
+            )
+          })}
+        </div>
 
-      {/* Date pickers */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <div className="w-[105px]">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                  !backupStartDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                )}
-              >
-                {backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d") : "Start"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-              <Calendar
-                mode="single"
-                selected={backupStartDate ? parseDateLocal(backupStartDate) : undefined}
-                onSelect={(date) => {
-                  setBackupStartDate(date ? format(date, "yyyy-MM-dd") : "")
-                  setPage?.(1)
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
-        <div className="w-[105px]">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                  !backupEndDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                )}
-              >
-                {backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d") : "End"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-              <Calendar
-                mode="single"
-                selected={backupEndDate ? parseDateLocal(backupEndDate) : undefined}
-                onSelect={(date) => {
-                  setBackupEndDate(date ? format(date, "yyyy-MM-dd") : "")
-                  setPage?.(1)
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+        {/* Date pickers */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-[105px]">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                    !backupStartDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  )}
+                >
+                  {backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d") : "Start"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                <Calendar
+                  mode="single"
+                  selected={backupStartDate ? parseDateLocal(backupStartDate) : undefined}
+                  onSelect={(date) => {
+                    setBackupStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                    setPage?.(1)
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
+          <div className="w-[105px]">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
+                    !backupEndDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  )}
+                >
+                  {backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d") : "End"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                <Calendar
+                  mode="single"
+                  selected={backupEndDate ? parseDateLocal(backupEndDate) : undefined}
+                  onSelect={(date) => {
+                    setBackupEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                    setPage?.(1)
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
-    </div>
-    </div>
+      {scrollControls}
+      {actions && <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>}
+    </Wrapper>
   )
 }

@@ -188,7 +188,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#about", "_blank")}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-10 items-center justify-center px-4"
               >
                 Preview
               </Button>
@@ -197,7 +197,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
-                className="flex h-10 items-center justify-center rounded-xl! border border-rose-200 dark:border-rose-900/40 bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                className="flex h-10 items-center justify-center px-4"
               >
                 Reset
               </Button>

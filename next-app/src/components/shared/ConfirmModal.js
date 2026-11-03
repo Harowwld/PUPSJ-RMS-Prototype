@@ -28,6 +28,7 @@ export default function ConfirmModal({
   variant,
   confirmVariant,
   selectedItems = [],
+  selectedItemsLabel = "Selected Items",
   note,
   confirmClassName,
   verificationValue = "",
@@ -265,7 +266,7 @@ export default function ConfirmModal({
                   "text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500",
                   isAppleStyled && "text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300"
                 )}>
-                  Selected Items ({selectedItems.length})
+                  {selectedItemsLabel} ({selectedItems.length})
                 </p>
                 <div className="relative w-full">
                   {isAppleStyled ? (
@@ -279,6 +280,7 @@ export default function ConfirmModal({
                         {selectedItems.map((item, idx) => (
                           <div
                             key={idx}
+                            title={item}
                             className={cn(
                               "text-[13px] font-normal px-[14px] py-[10px] truncate",
                               idx < selectedItems.length - 1 && "border-b-[0.5px] border-solid border-black/5",

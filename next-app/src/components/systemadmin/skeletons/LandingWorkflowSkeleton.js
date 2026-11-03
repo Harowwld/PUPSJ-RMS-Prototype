@@ -4,13 +4,14 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "../LandingCmsViewTabs"
 import { ArrowDown01Icon } from "hugeicons-react";
 
 
 export default function LandingWorkflowSkeleton() {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
         <PageHeader
           icon=" GitMergeIcon"
           title={
@@ -35,18 +36,8 @@ export default function LandingWorkflowSkeleton() {
         />
 
         {/* Standard Navigation Segmented Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs">
-              Workflow Content
-            </div>
-            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-gray-500 dark:text-zinc-400">
-              Interactive Live Preview
-            </div>
-          </div>
-        </div>
+        <LandingCmsViewTabs activeTab="content" onChange={() => {}} contentLabel="Workflow Content" />
 
-        {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-6">
             {/* Section Title & Narrative Copy Skeleton */}

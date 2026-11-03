@@ -85,7 +85,7 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
   });
   const ariaSelected = props["aria-selected"] === true || props["aria-selected"] === "true";
   const rowIsSelected = section === "body" && (selected === undefined ? isSelectionChecked || ariaSelected : selected);
-  const cells = rowChildren.map((child) => {
+  const cells = rowChildren.map((child, cellIndex) => {
     if (!React.isValidElement(child)) return child;
     const index = columnIndex;
     columnIndex += Number(child.props.colSpan) || 1;
@@ -93,7 +93,7 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
     const config = typeof column === "string" ? { kind: column } : column;
     if (!["td", "th", TableCell, TableHead].includes(child.type)) return React.cloneElement(child, { tableColumn: config });
     const Cell = child.type === "th" || child.type === TableHead ? TableHead : TableCell;
-    return <Cell key={child.key ?? index} {...config} {...child.props} />;
+    return <Cell key={cellIndex} {...config} {...child.props} />;
   });
   return <tr data-slot="table-row" data-selected={rowIsSelected ? "true" : undefined} data-expanded={expanded || undefined} className={cn(section === "body" && "group border-b hover:bg-gray-50/70 dark:hover:bg-zinc-800/40", className)} style={{ ...style, height: "auto" }} {...props}>{cells}</tr>;
 }

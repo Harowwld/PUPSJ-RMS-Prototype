@@ -344,7 +344,7 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. `pnpm reset-db` clears application data, then restores the demo baseline, including demo staff and student accounts, lookup data, and default storage layouts:
+Resetting the database is destructive. It also removes **all contents of `LOCAL_DATA_DIR`** (default `next-app/.local`), including scanned documents, legacy uploads, pending scanner files, local backups, and emulated external backups stored there. Backups on a separate external drive are outside that directory and are not removed. Stop scanner output before resetting; the watcher recreates empty office folders when it resumes. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. `pnpm reset-db` clears application data, then restores the demo baseline, including demo staff and student accounts, lookup data, and default storage layouts:
 
 ```bash
 pnpm reset-db

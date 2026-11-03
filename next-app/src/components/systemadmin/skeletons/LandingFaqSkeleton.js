@@ -4,13 +4,15 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "../LandingCmsViewTabs"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { ArrowDown01Icon } from "hugeicons-react";
 
 
 export default function LandingFaqSkeleton() {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
         <PageHeader
           icon=" HelpCircleIcon"
           title={
@@ -35,18 +37,8 @@ export default function LandingFaqSkeleton() {
         />
 
         {/* Standardized SuperAdmin Navigation Segmented Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
-            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs">
-              FAQ Content (8)
-            </div>
-            <div className="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-gray-500 dark:text-zinc-400">
-              Interactive Live Preview
-            </div>
-          </div>
-        </div>
+        <LandingCmsViewTabs activeTab="content" onChange={() => {}} contentLabel="FAQ Content" />
 
-        {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-5">
             {/* Section Header & Subtitle Skeleton */}
@@ -55,26 +47,26 @@ export default function LandingFaqSkeleton() {
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="space-y-1.5">
                   <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
                   <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
                 </div>
                 <div className="space-y-1.5">
                   <Skeleton className="h-3 w-36 rounded dark:bg-muted" />
-                  <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+                  <Skeleton className="h-[84px] w-full rounded-xl dark:bg-muted" />
                 </div>
               </div>
             </div>
             {/* Header Action Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30">
-              <div>
+            <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-900/30 xl:flex-row xl:items-center xl:justify-between">
+              <div className="shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Questions &amp; Answers List
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-sans tabular-nums">
-                    8/12
+                    8/16
                   </span>
                 </div>
                 <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
@@ -82,19 +74,11 @@ export default function LandingFaqSkeleton() {
                 </p>
               </div>
 
-              <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
-            </div>
-
-            {/* Category Filter Bar */}
-            <div className="flex items-center gap-1.5 flex-wrap select-none pt-1">
-              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 mr-1 uppercase tracking-wider">
-                Filter:
-              </span>
-              <Skeleton className="h-6 w-16 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-6 w-20 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-6 w-24 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-6 w-24 rounded-lg dark:bg-muted" />
-              <Skeleton className="h-6 w-20 rounded-lg dark:bg-muted" />
+              <DataViewToolbar label="FAQ search, category filter, and add question" className="w-full gap-2 xl:ml-auto xl:w-auto">
+                <Skeleton className="h-9 w-[min(280px,45vw)] min-w-[200px] rounded-xl dark:bg-muted" />
+                <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+                <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+              </DataViewToolbar>
             </div>
 
             {/* FAQ Accordion Items */}

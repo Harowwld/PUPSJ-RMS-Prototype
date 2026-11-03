@@ -4,11 +4,22 @@ import { Table } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function DirectoryTableSkeleton({ rowCount = 8 }) {
+export default function DirectoryTableSkeleton({ rowCount = 8, variant = "default", columns }) {
+  if (columns) return (
+    <div className="flex flex-1 flex-col overflow-hidden rounded-b-2xl bg-white dark:bg-card">
+      <div className="flex-1 overflow-x-auto show-scrollbar">
+        <Table columns={columns} className={columns.length >= 6 ? "min-w-[960px]" : "min-w-[560px]"}>
+          <thead><tr>{columns.map((column, index) => <th key={index}><Skeleton className="h-3 w-8 max-w-full" /></th>)}</tr></thead>
+          <tbody>{Array.from({ length: rowCount }, (_, row) => <tr key={row}>{columns.map((column, index) => <td key={index}><Skeleton className={cn("h-4 max-w-full", column === "selection" || column === "actions" ? "mx-auto w-5" : "w-24")} /></td>)}</tr>)}</tbody>
+        </Table>
+      </div>
+      <div className="flex justify-between border-t border-border p-4"><Skeleton className="h-8 w-36" /><Skeleton className="h-8 w-40" /></div>
+    </div>
+  )
   return (
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none">
-        <Table columns={["selection", "identifier", "text", "category", "category", "actions"]} className="min-w-[960px]">
+        <Table columns={variant === "global" ? ["selection", "identifier", { kind: "text", maxWidth: 340 }, { kind: "text", maxWidth: 340 }, "category", "category", "actions"] : ["selection", "identifier", "text", "category", "category", "actions"]} className="min-w-[960px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 p-4 text-center">
@@ -20,14 +31,15 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
               <th className="p-4 w-[28%]">
                 <Skeleton className="h-3.5 w-36 dark:bg-muted" />
               </th>
+              {variant === "global" && <th className="p-4"><Skeleton className="h-3.5 w-14 dark:bg-muted" /></th>}
               <th className="p-4 w-[20%]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
               <th className="p-4 w-[20%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="w-28 p-4 pr-6 text-right">
-                <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
+              <th className={variant === "global" ? "w-12 p-0 text-center" : "w-28 p-4 pr-6 text-right"}>
+                {variant === "global" ? <Skeleton className="mx-auto h-3.5 w-6 dark:bg-muted" /> : <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />}
               </th>
             </tr>
           </thead>
@@ -51,19 +63,20 @@ export default function DirectoryTableSkeleton({ rowCount = 8 }) {
                         i % 3 === 0 ? "w-40" : i % 2 === 0 ? "w-48" : "w-32"
                       )}
                     />
-                    <Skeleton className="h-3 w-44 rounded dark:bg-muted" />
+                    {variant !== "global" && <Skeleton className="h-3 w-44 rounded dark:bg-muted" />}
                   </div>
                 </td>
+                {variant === "global" && <td className="p-4 align-middle"><Skeleton className="h-3 w-44 dark:bg-muted" /></td>}
                 <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-32 rounded-lg dark:bg-muted" />
                 </td>
                 <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>
-                <td className="w-28 p-4 pr-6 align-middle text-right">
-                  <div className="flex items-center justify-end gap-1.5">
+                <td className={variant === "global" ? "w-12 p-0 align-middle text-center" : "w-28 p-4 pr-6 align-middle text-right"}>
+                  <div className={variant === "global" ? "flex items-center justify-center" : "flex items-center justify-end gap-1.5"}>
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
-                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                    {variant !== "global" && <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />}
                   </div>
                 </td>
               </tr>

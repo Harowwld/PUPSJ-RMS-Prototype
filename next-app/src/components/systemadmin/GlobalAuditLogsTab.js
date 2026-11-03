@@ -1,5 +1,6 @@
 "use client"
-import { Table } from "@/components/ui/table";
+import useViewPreference from "@/hooks/useViewPreference"
+import { Table, TableStatus } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
 
@@ -31,7 +32,6 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -39,23 +39,24 @@ import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 
-import StatCards from "../admin/audit-logs/StatCards"
+import { FilterPopover, SortPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
+import { Skeleton } from "@/components/ui/skeleton"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Loading01Icon, ViewIcon, Search01Icon} from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Loading01Icon, ViewIcon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -101,6 +102,21 @@ function formatActionLabel(actionStr) {
   return actionStr;
 }
 
+const OPTIONAL_COLUMNS = [
+  { key: "severity", label: "Level", kind: "status", maxWidth: 120 },
+  { key: "actor", label: "Actor", kind: "text", maxWidth: 240 },
+  { key: "office_id", label: "Scope", kind: "status", maxWidth: 180 },
+  { key: "details", label: "Description", kind: "text", maxWidth: 340 },
+  { key: "ip", label: "IP Address", kind: "text", maxWidth: 200 },
+]
+const SORT_OPTIONS = [
+  { key: "created_at", label: "Timestamp" },
+  { key: "severity", label: "Level" },
+  { key: "actor", label: "Actor" },
+  { key: "office_id", label: "Scope" },
+  { key: "action", label: "Action" },
+]
+
 export default function GlobalAuditLogsTab({ showToast }) {
   const [logs, setLogs] = useState([])
   const [offices, setOffices] = useState([])
@@ -116,7 +132,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [isManualLoading, setIsManualLoading] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
   const [expandedRows, setExpandedRows] = useState({})
-  const [logStats, setLogStats] = useState(null)
+  const [visibleColumns, setVisibleColumns] = useViewPreference("logs", "visibleColumns", OPTIONAL_COLUMNS.filter(({ key }) => key !== "ip").map(({ key }) => key))
+  const showColumn = (key) => visibleColumns.includes(key)
+  const tableColumns = [
+    { kind: "selection" },
+    { kind: "date", maxWidth: 205 },
+    ...OPTIONAL_COLUMNS.filter(({ key }) => !["details", "ip"].includes(key) && showColumn(key)).map(({ kind, maxWidth }) => ({ kind, maxWidth })),
+    { kind: "text", maxWidth: 300 },
+    ...(showColumn("details") ? [{ kind: "text", maxWidth: 340 }] : []),
+    ...(showColumn("ip") ? [{ kind: "text", maxWidth: 200 }] : []),
+    { kind: "actions" },
+  ]
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -125,15 +151,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const initialPageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
   const initialSearchFromUrl = searchParams?.get("search") || ""
   const [page, setPage] = useState(!isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1)
-  const [limit, setLimit] = useState(10)
+  const [limit, setLimit] = useViewPreference("logs", "limit", 20)
   const [search, setSearch] = useState(initialSearchFromUrl)
-  const [localSearch, setLocalSearch] = useState(initialSearchFromUrl)
-  const [logFilters, setLogFilters] = useState({
+  const [localSearch, setLocalSearch] = useViewPreference("logs", "localSearch", initialSearchFromUrl)
+  useEffect(() => {
+    if (initialSearchFromUrl) setLocalSearch(initialSearchFromUrl)
+  }, [initialSearchFromUrl, setLocalSearch])
+  const [logFilters, setLogFilters] = useViewPreference("logs", "logFilters", {
     severity: [],
     office: [],
   })
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+  const [startDate, setStartDate] = useViewPreference("logs", "startDate", "")
+  const [endDate, setEndDate] = useViewPreference("logs", "endDate", "")
 
   // Horizontal table scrolling hook
   const {
@@ -201,11 +230,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
       setSearch(searchFromUrl)
       setLocalSearch(searchFromUrl)
     }
-  }, [searchParams])
+  }, [searchParams, setLocalSearch])
 
   // Sorting
-  const [sortBy, setSortBy] = useState("created_at")
-  const [sortOrder, setSortOrder] = useState("DESC")
+  const [sortBy, setSortBy] = useViewPreference("logs", "sortBy", "created_at")
+  const [sortOrder, setSortOrder] = useViewPreference("logs", "sortOrder", "DESC")
 
   // Export & Preview States
   const [isExporting, setIsExporting] = useState(false)
@@ -242,19 +271,13 @@ export default function GlobalAuditLogsTab({ showToast }) {
         setCachedData("systemadmin_offices", json.data, 120000)
         return json.data
       }
-    } catch {}
+    } catch { }
     setOffices([])
     officesRef.current = []
     return []
   }, [])
 
   const logFilterGroups = useMemo(() => {
-    const sevOptions = [
-      { value: "INFO", label: "Information", dotColor: "bg-blue-500" },
-      { value: "WARNING", label: "Warning", dotColor: "bg-amber-500" },
-      { value: "CRITICAL", label: "Critical Security", dotColor: "bg-rose-500" },
-    ]
-
     const officeOptions = [
       { value: "global", label: "Global (Platform)" },
       ...(Array.isArray(offices) ? offices : []).map((o) => ({
@@ -263,47 +286,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
       })),
     ]
 
-    return [
-      {
-        id: "severity",
-        label: "Severity Level",
-        options: sevOptions,
-      },
-      {
-        id: "office",
-        label: "Scope / Partition",
-        options: officeOptions,
-      },
-    ]
+    return [{ id: "office", label: "Scope / Partition", options: officeOptions }]
   }, [offices])
 
+  const auditFilterFields = useMemo(() => [{
+    key: "office",
+    label: "Scope",
+    icon: Building01Icon,
+    type: "multi",
+    operators: [{ value: "is_any", label: "is any of" }],
+    options: logFilterGroups[0]?.options || [],
+  }], [logFilterGroups])
 
-  const fetchStats = useCallback(async () => {
-    const officeStr = (logFilters.office || []).join(",")
-    const sevStr = (logFilters.severity || []).join(",")
-    const statsKey = `audit_stats_${officeStr}_${sevStr}_${search}_${startDate}_${endDate}`
-    const cachedStats = getCachedData(statsKey)
-    if (cachedStats) {
-      setLogStats(cachedStats)
-    }
-
-    try {
-      const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
-      const severityQuery = sevStr ? `&severity=${encodeURIComponent(sevStr)}` : ""
-      const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
-      const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
-      const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
-
-      const res = await fetch(`/api/audit-logs/global/stats?${officeQuery}${severityQuery}${searchQuery}${startQuery}${endQuery}`)
-      const json = await res.json()
-      if (res.ok && json.ok) {
-        setLogStats(json.data)
-        setCachedData(statsKey, json.data, 30000)
-      }
-    } catch (err) {
-      console.error("Failed to fetch global audit log stats", err)
-    }
-  }, [logFilters, search, startDate, endDate])
 
   const fetchLogs = useCallback(
     async (isManual = false, currentOffices = null) => {
@@ -410,10 +404,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
   useEffect(() => {
     let active = true
     queueMicrotask(() => {
-      if (active) { fetchStats(); fetchLogs(); }
+      if (active) fetchLogs()
     })
     return () => { active = false; logsRequest.current += 1; }
-  }, [fetchStats, fetchLogs])
+  }, [fetchLogs])
 
   const toggleRow = useCallback((id) => {
     setExpandedRows((prev) => ({
@@ -592,12 +586,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
         selectedOffices.length === 0
           ? "All Scopes"
           : selectedOffices
-              .map((off) => {
-                if (off === "global") return "Global (Platform)"
-                const offObj = offList.find((o) => o.id === off)
-                return offObj ? offObj.short_name || offObj.name : off
-              })
-              .join(", ")
+            .map((off) => {
+              if (off === "global") return "Global (Platform)"
+              const offObj = offList.find((o) => o.id === off)
+              return offObj ? offObj.short_name || offObj.name : off
+            })
+            .join(", ")
 
       const severityLabel =
         selectedSeverities.length === 0 ? "All Severities" : selectedSeverities.join(", ")
@@ -672,17 +666,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
     setSearch("")
     setPage(1)
     updateUrl(1, "")
-  }, [updateUrl])
+  }, [setLocalSearch, updateUrl])
 
   const handleClearFilters = useCallback(() => {
     setLocalSearch("")
     setSearch("")
-    setLogFilters({ severity: [], office: [] })
+    setLogFilters((current) => ({ ...current, office: [] }))
     setStartDate("")
     setEndDate("")
     setPage(1)
     updateUrl(1, "")
-  }, [updateUrl])
+  }, [setEndDate, setLocalSearch, setLogFilters, setStartDate, updateUrl])
 
   const totalPages = Math.ceil(total / limit) || 1
   const displayPage = Math.min(page, totalPages)
@@ -694,87 +688,62 @@ export default function GlobalAuditLogsTab({ showToast }) {
   }, [totalPages, search, updateUrl])
   const hasActiveFilters =
     localSearch !== "" ||
-    (logFilters.severity?.length > 0) ||
     (logFilters.office?.length > 0) ||
     startDate !== "" ||
     endDate !== ""
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full min-w-0 gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="Shield01Icon"
             title="Platform Activity History"
-            description="Review administrative actions, office changes, and security-related activity across the platform."
+            description={
+              loading && total === 0
+                ? <Skeleton className="mt-1 h-4 w-52" />
+                : (
+                    <span className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                      <span>Track every institutional action, approval, and system event across the platform.</span>
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {total.toLocaleString()} matching recorded actions
+                      </span>
+                    </span>
+                  )
+            }
             showBorder={false}
-            className="p-6"
+            className="px-6 py-5"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-            actions={
-              <div className="flex items-center gap-2">
-                <RefreshButton
-                  onRefresh={() => {
-                    fetchLogs(true)
-                    fetchStats()
-                  }}
-                  isLoading={isManualLoading}
-                  title="Refresh Activity History"
-                />
-
-                
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleDownloadCSV}
-                    disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  >
-                    {isExporting ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loading01Icon size="1em" className="animate-spin text-sm" />
-                        <span>Exporting...</span>
-                      </span>
-                    ) : (
-                      "Export CSV"
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handlePreviewPDF}
-                    disabled={total === 0 || isExporting || isGeneratingPdf}
-                    className="h-10 px-5 cursor-pointer"
-                  >
-                    {isGeneratingPdf ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loading01Icon size="1em" className="animate-spin text-sm" />
-                        <span>Generating...</span>
-                      </span>
-                    ) : (
-                      PDF_ACTION_LABELS.preview
-                    )}
-                  </Button>
-                </div>
-              </div>
-            }
           />
 
-          {/* Stat Cards */}
-          <div className="px-6 pb-6">
-            <StatCards isLoading={loading} logStats={logStats} />
+          <div role="group" aria-label="Activity severity" className="flex items-end gap-5 border-b border-border px-6 dark:border-border">
+            {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => (
+              <button
+                key={value || "all"}
+                type="button"
+                aria-pressed={(logFilters.severity[0] || "") === value}
+                onClick={() => {
+                  setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
+                  setPage(1)
+                  updateUrl(1, search)
+                }}
+                className={cn("relative flex h-9 items-center px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon", (logFilters.severity[0] || "") === value ? "text-pup-maroon dark:text-red-400 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-current" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {/* Navigation Toolbar */}
-          <DataViewToolbar label="Audit log search, filters, and dates" className="border-t border-border dark:border-border p-5 gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+          <DataViewToolbar label="Platform activity search, filters, sorting, columns, and dates" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
             {/* Search Input with Pure Number Count (Left side) */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
               <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
               <Input
                 type="text"
                 placeholder="Search logs by actor, action, details..."
+                aria-label="Search platform activity history"
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
@@ -797,118 +766,112 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   </button>
                 )}
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums pointer-events-none">
-                  {total.toLocaleString()}
+                  {loading && total === 0 ? <Skeleton className="h-3 w-6" /> : total.toLocaleString()}
                 </span>
               </div>
             </div>
 
             {/* Filter controls (Right side) */}
-            <div className="flex flex-nowrap items-center gap-3">
-              {/* Multi-Criteria Popover Filter */}
-              <div className="w-full sm:w-auto shrink-0">
-              <MultiCriteriaFilter
-                title="Filter Logs"
-                groups={logFilterGroups}
-                selected={logFilters}
-                onChange={(newFilters) => {
-                  setLogFilters(newFilters)
+            <div className="flex shrink-0 items-center gap-2">
+              <FilterPopover
+                fields={auditFilterFields}
+                filters={logFilters.office.length ? [{ id: "audit-offices", fieldKey: "office", operator: "is_any", value: logFilters.office }] : []}
+                onFiltersChange={(rules) => {
+                  setLogFilters((current) => ({ ...current, office: rules.flatMap((rule) => Array.isArray(rule.value) ? rule.value : [rule.value]) }))
                   setPage(1)
                   updateUrl(1, search)
                 }}
-                totalCount={total}
-                onReset={() => {
-                  setLogFilters({ severity: [], office: [] })
-                  setPage(1)
-                  updateUrl(1, search)
-                }}
+                maxRulesPerField={1}
+                entityLabel="activity"
               />
-            </div>
+              <SortPopover options={SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1); updateUrl(1, search) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1); updateUrl(1, search) }} />
+              <ColumnsPopover columns={OPTIONAL_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
 
-            {/* Time Shortcuts */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border dark:border-border shrink-0">
-              {[
-                { key: "today", label: "Today" },
-                { key: "yesterday", label: "Yest." },
-                { key: "last7", label: "7d" },
-                { key: "last30", label: "30d" },
-              ].map((range) => {
-                const isActive = activeShortcut === range.key
-                return (
-                  <button
-                    key={range.key}
-                    type="button"
-                    onClick={() => handleQuickRange(range.key)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                      isActive
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                  >
-                    {range.label}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Date pickers */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-[105px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
+              {/* Time Shortcuts */}
+              <div className="flex h-9 items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border dark:border-border shrink-0">
+                {[
+                  { key: "today", label: "Today" },
+                  { key: "yesterday", label: "Yest." },
+                  { key: "last7", label: "7d" },
+                  { key: "last30", label: "30d" },
+                ].map((range) => {
+                  const isActive = activeShortcut === range.key
+                  return (
+                    <button
+                      key={range.key}
+                      type="button"
+                      onClick={() => handleQuickRange(range.key)}
                       className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
-                        !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
+                        isActive
+                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                       )}
                     >
-                      {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate ? parseDateLocal(startDate) : undefined}
-                      onSelect={(date) => {
-                        setStartDate(date ? format(date, "yyyy-MM-dd") : "")
-                        setPage(1)
-                        updateUrl(1, search)
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                      {range.label}
+                    </button>
+                  )
+                })}
               </div>
-              <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
-              <div className="w-[105px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
-                        !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                      )}
-                    >
-                      {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate ? parseDateLocal(endDate) : undefined}
-                      onSelect={(date) => {
-                        setEndDate(date ? format(date, "yyyy-MM-dd") : "")
-                        setPage(1)
-                        updateUrl(1, search)
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+
+              {/* Date pickers */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-[105px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                          !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate ? parseDateLocal(startDate) : undefined}
+                        onSelect={(date) => {
+                          setStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                          setPage(1)
+                          updateUrl(1, search)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
+                <div className="w-[105px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
+                          !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate ? parseDateLocal(endDate) : undefined}
+                        onSelect={(date) => {
+                          setEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                          setPage(1)
+                          updateUrl(1, search)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
-            </div>
               <TableScrollControls scrollContainerRef={tableContainerRef}
                 canScrollLeft={canScrollLeft}
                 canScrollRight={canScrollRight}
@@ -916,7 +879,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 onScrollLeft={scrollLeft}
                 onScrollRight={scrollRight}
                 onResetScroll={resetTableScroll}
+                controlSize="md"
               />
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <RefreshButton onRefresh={() => fetchLogs(true)} isLoading={isManualLoading} title="Refresh Activity History" className="h-9 w-9" />
+              <Button type="button" variant="outline" onClick={handleDownloadCSV} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-3 text-xs">
+                {isExporting ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Exporting...</> : "Export CSV"}
+              </Button>
+              <Button type="button" onClick={handlePreviewPDF} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-3 text-xs">
+                {isGeneratingPdf ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Generating...</> : PDF_ACTION_LABELS.preview}
+              </Button>
             </div>
           </DataViewToolbar>
 
@@ -937,17 +910,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
             extraChips={[
               ...(startDate || endDate
                 ? [
-                    {
-                      groupLabel: "Date Range",
-                      label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
-                      onClear: () => {
-                        setStartDate("")
-                        setEndDate("")
-                        setPage(1)
-                        updateUrl(1, search)
-                      },
+                  {
+                    groupLabel: "Date Range",
+                    label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
+                    onClear: () => {
+                      setStartDate("")
+                      setEndDate("")
+                      setPage(1)
+                      updateUrl(1, search)
                     },
-                  ]
+                  },
+                ]
                 : []),
             ]}
             onClearAll={handleClearFilters}
@@ -956,7 +929,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
           {/* Content Area inside Single Card */}
           {loading && (!logs || logs.length === 0) ? (
-            <AuditLogsTableSkeleton rowCount={8} embedded={true} showScope={true} />
+            <AuditLogsTableSkeleton rowCount={limit} embedded={true} showScope={true} visibleColumns={visibleColumns} />
           ) : error ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
@@ -974,7 +947,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     variant="outline"
                     onClick={() => fetchLogs(true)}
                     title="Retry Loading"
-                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-10 items-center justify-center gap-2 px-5"
                   >
                     Retry Loading
                   </Button>
@@ -999,7 +972,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       variant="outline"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-10 items-center justify-center gap-2 px-5"
                     >
                       Reset Filters
                     </Button>
@@ -1008,244 +981,238 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="flex-[1_0_auto] overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
+            <div className="flex-[1_0_auto] min-w-0 overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col">
               <div
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
               >
-              <Table columns={["selection", "date", "status", "text", "text", "text", { kind: "text", maxWidth: 340 }, "actions"]} className="min-w-[1040px]">
-              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                  <th
-                    className="w-12 min-w-12 max-w-12 px-2.5 py-4 text-center"
-                  >
-                  </th>
-                  <th className="p-4 w-[14%]">
-                    <button
-                      onClick={() => handleSort("created_at")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Timestamp{" "}
-                      <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[9%]">
-                    <button
-                      onClick={() => handleSort("severity")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "severity" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Level{" "}
-                      <SortIndicator column="severity" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[14%]">
-                    <button
-                      onClick={() => handleSort("actor")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "actor" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Actor{" "}
-                      <SortIndicator column="actor" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[10%]">
-                    <button
-                      onClick={() => handleSort("office_id")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "office_id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Scope{" "}
-                      <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[16%]">
-                    <button
-                      onClick={() => handleSort("action")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "action" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Action{" "}
-                      <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[22%] max-w-[280px] text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                    Description
-                  </th>
-                  <th className="p-4 pr-6 w-20 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                {logs.map((log) => {
-                    const severityInfo = getSeverityInfo(log.severity)
-                    const isExpanded = !!expandedRows[log.id]
-                    const isSelected = selectedLog && selectedLog.id === log.id
-
-                    const formattedTimestamp = (() => {
-                      try {
-                        const d = new Date(log.created_at || log.time)
-                        if (isNaN(d.getTime())) return log.created_at || log.time
-                        return d.toLocaleString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
-                      } catch {
-                        return log.created_at || log.time
-                      }
-                    })()
-
-                    return (
-                      <React.Fragment key={log.id}>
-                        <tr
-                          selected={Boolean(isSelected)}
-                          onClick={() => toggleRow(log.id)}
+                <Table columns={tableColumns} className="min-w-[900px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                      <th
+                        className="w-12 min-w-12 max-w-12 px-2.5 py-4 text-center"
+                      >
+                      </th>
+                      <th className="p-4 w-[14%]" aria-sort={sortBy === "created_at" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                        <button
+                          onClick={() => handleSort("created_at")}
                           className={cn(
-                            "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
-                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
-                            isExpanded && "bg-gray-50 dark:bg-white/8"
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                           )}
                         >
-                          {/* Accordion Chevron */}
-                          <td
-                            className="w-12 min-w-12 max-w-12 px-2.5 py-4 align-middle text-center border-r border-border/70 dark:border-border/70"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              onClick={() => toggleRow(log.id)}
-                              title={isExpanded ? "Collapse Details" : "Expand Details"}
-                              className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors"
-                            >
-                              <AppIcon className={cn(" text-[14px]", isExpanded ? "MinusSignIcon" : "Add01Icon")}></AppIcon>
-                            </button>
-                          </td>
+                          Timestamp{" "}
+                          <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      {showColumn("severity") && <th className="p-4 w-[9%]" aria-sort={sortBy === "severity" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                        <button
+                          onClick={() => handleSort("severity")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "severity" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Level{" "}
+                          <SortIndicator column="severity" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>}
+                      {showColumn("actor") && <th className="p-4 w-[14%]" aria-sort={sortBy === "actor" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                        <button
+                          onClick={() => handleSort("actor")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "actor" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Actor{" "}
+                          <SortIndicator column="actor" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>}
+                      {showColumn("office_id") && <th className="p-4 w-[10%]" aria-sort={sortBy === "office_id" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                        <button
+                          onClick={() => handleSort("office_id")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "office_id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Scope{" "}
+                          <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>}
+                      <th className="p-4 w-[16%]" aria-sort={sortBy === "action" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                        <button
+                          onClick={() => handleSort("action")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "action" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Action{" "}
+                          <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>
+                      {showColumn("details") && <th className="p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                        Description
+                      </th>}
+                      {showColumn("ip") && <th>IP Address</th>}
+                      <th className="w-12 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                    {logs.map((log) => {
+                      const severityInfo = getSeverityInfo(log.severity)
+                      const isExpanded = !!expandedRows[log.id]
+                      const isSelected = selectedLog && selectedLog.id === log.id
 
-                          {/* Timestamp */}
-                          <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            {formattedTimestamp}
-                          </td>
+                      const formattedTimestamp = (() => {
+                        try {
+                          const d = new Date(log.created_at || log.time)
+                          if (isNaN(d.getTime())) return log.created_at || log.time
+                          return d.toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                        } catch {
+                          return log.created_at || log.time
+                        }
+                      })()
 
-                          {/* Level / Severity */}
-                          <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
-                            <span
-                              className={cn(
-                                "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
-                                severityInfo.classes
-                              )}
-                            >
-                              {severityInfo.label}
-                            </span>
-                          </td>
-
-                          {/* Actor */}
-                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <AuditActorAvatar
-                                log={log}
-                                className="size-8 border border-border"
-                                fallbackClassName="text-[10px] font-semibold"
-                              />
-                              <div className="flex flex-col overflow-hidden min-w-0">
-                                <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
-                                  {formatTitleCase(log.actor)}
-                                </span>
-                                <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
-                                  {log.role}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Scope */}
-                          <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
-                            {log.office_id ? (
-                              <span className="font-medium text-gray-800 dark:text-zinc-300 truncate inline-block max-w-full" title={log.scope}>
-                                {log.scope}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 px-2.5 py-0.5 text-[10px] font-semibold">
-                                Global
-                              </span>
+                      return (
+                        <React.Fragment key={log.id}>
+                          <tr
+                            selected={Boolean(isSelected)}
+                            onClick={() => toggleRow(log.id)}
+                            className={cn(
+                              "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
+                              isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
+                              isExpanded && "bg-gray-50 dark:bg-white/8"
                             )}
-                          </td>
-
-                          {/* Action */}
-                          <td className="p-4 align-middle whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
-                            {formatActionLabel(log.action)}
-                          </td>
-
-                          {/* Description Tooltip */}
-                          <td className="p-4 align-middle overflow-hidden max-w-[280px] border-r border-border/70 dark:border-border/70">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
-                                  {formatLogDetails(log.details) || "N/A"}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
+                          >
+                            {/* Accordion Chevron */}
+                            <td
+                              className="w-12 min-w-12 max-w-12 px-2.5 py-4 align-middle text-center border-r border-border/70 dark:border-border/70"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={() => toggleRow(log.id)}
+                                title={isExpanded ? "Collapse Details" : "Expand Details"}
+                                className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors"
                               >
-                                {formatLogDetails(log.details) || "N/A"}
-                              </TooltipContent>
-                            </Tooltip>
-                          </td>
+                                <AppIcon className={cn(" text-[14px]", isExpanded ? "MinusSignIcon" : "Add01Icon")}></AppIcon>
+                              </button>
+                            </td>
 
-                          {/* Actions: View Details in Sheet */}
-                          <td className="p-4 pr-6 align-middle text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1.5">
+                            {/* Timestamp */}
+                            <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              {formattedTimestamp}
+                            </td>
+
+                            {/* Level / Severity */}
+                            {showColumn("severity") && <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
+                              <span
+                                className={cn(
+                                  "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
+                                  severityInfo.classes
+                                )}
+                              >
+                                {severityInfo.label}
+                              </span>
+                            </td>}
+
+                            {/* Actor */}
+                            {showColumn("actor") && <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <AuditActorAvatar
+                                  log={log}
+                                  className="size-8 border border-border"
+                                  fallbackClassName="text-[10px] font-semibold"
+                                />
+                                <div className="flex flex-col overflow-hidden min-w-0">
+                                  <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
+                                    {formatTitleCase(log.actor)}
+                                  </span>
+                                  <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
+                                    {log.role}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>}
+
+                            {/* Scope */}
+                            {showColumn("office_id") && <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                              <TableStatus value={log.scope} tone={log.office_id ? "neutral" : "info"} className="text-[10px]" title={log.officeName} />
+                            </td>}
+
+                            {/* Action */}
+                            <td className="p-4 align-middle text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                              <span className="block w-full min-w-0 truncate" title={formatActionLabel(log.action)}>{formatActionLabel(log.action)}</span>
+                            </td>
+
+                            {/* Description Tooltip */}
+                            {showColumn("details") && <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => setSelectedLog(log)}
-                                    aria-label="View Details"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                  >
-                                    <ViewIcon size="1em"  className="text-[16px]"></ViewIcon>
-                                  </button>
+                                  <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-500 dark:text-zinc-400" title={formatLogDetails(log.details) || "N/A"}>
+                                    {formatLogDetails(log.details) || "N/A"}
+                                  </span>
                                 </TooltipTrigger>
-                                <TooltipContent>View Details</TooltipContent>
+                                <TooltipContent
+                                  side="top"
+                                  className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
+                                >
+                                  {formatLogDetails(log.details) || "N/A"}
+                                </TooltipContent>
                               </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
+                            </td>}
 
-                        {/* Accordion Expanded Details */}
-                        {isExpanded && (
-                          <tr className="border-0 bg-gray-50 dark:bg-muted/30">
-                            <td colSpan={8} className="p-0">
-                              <LogExpandedRow log={log} handleCopy={handleCopy} />
+                            {/* Actions: View Details in Sheet */}
+                            {showColumn("ip") && <td className="p-4 tabular-nums">{log.ip || "N/A"}</td>}
+                            <td className="w-12 px-2 align-middle text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={() => setSelectedLog(log)}
+                                      aria-label="View Details"
+                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                    >
+                                      <ViewIcon size="1em" className="text-[16px]"></ViewIcon>
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>View Details</TooltipContent>
+                                </Tooltip>
+                              </div>
                             </td>
                           </tr>
-                        )}
-                      </React.Fragment>
-                    )
-                  })}
-              </tbody>
-              </Table>
-          </div>
 
-          {/* Pagination Toolbar */}
-          <TablePagination label="Global audit log pages" page={page} pageSize={limit} totalCount={total} displayedCount={logs.length} onPageChange={updatePage} onPageSizeChange={(size) => { setLimit(size); setPage(1); updateUrl(1, search); }} loading={loading} />
-        </div>
-      )}
-    </Card>
+                          {/* Accordion Expanded Details */}
+                          {isExpanded && (
+                            <tr className="border-0 bg-gray-50 dark:bg-muted/30">
+                              <td colSpan={tableColumns.length} className="p-0">
+                                <LogExpandedRow log={log} handleCopy={handleCopy} />
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      )
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+
+              {/* Pagination Toolbar */}
+              <TablePagination label="Global audit log pages" page={page} pageSize={limit} totalCount={total} displayedCount={logs.length} onPageChange={updatePage} onPageSizeChange={(size) => { setLimit(size); setPage(1); updateUrl(1, search); }} loading={loading} />
+            </div>
+          )}
+        </Card>
 
         {/* Log Detail Side Sheet */}
         <LogDetailSheet

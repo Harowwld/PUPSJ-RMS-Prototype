@@ -557,7 +557,8 @@ async function readRecentTransactions() {
           s.storage_room::text AS storage_room,
           s.storage_cabinet::text AS storage_cabinet,
           s.storage_drawer::text AS storage_drawer,
-          dr.created_at
+          dr.created_at,
+          dr.updated_at
         FROM document_requests dr
         LEFT JOIN students s ON s.student_no = dr.student_no
         LEFT JOIN offices o ON o.id = dr.office_id
@@ -582,7 +583,8 @@ async function readRecentTransactions() {
           NULL::text AS storage_room,
           NULL::text AS storage_cabinet,
           NULL::text AS storage_drawer,
-          ep.created_at
+          ep.created_at,
+          ep.updated_at
         FROM event_proposals ep
         LEFT JOIN students s ON s.student_no = ep.student_no
         LEFT JOIN offices o ON o.id = ep.office_id
@@ -615,6 +617,7 @@ async function readRecentTransactions() {
         storageCabinet: r.storage_cabinet,
         storageDrawer: r.storage_drawer,
         createdAt: r.created_at,
+        updatedAt: r.updated_at,
       };
     });
   } catch (err) {

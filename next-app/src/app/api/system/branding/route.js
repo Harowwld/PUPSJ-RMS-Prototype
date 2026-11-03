@@ -166,6 +166,17 @@ export async function PUT(req) {
     if (body.reportFont !== undefined && !isReportFont(body.reportFont)) {
       return NextResponse.json({ ok: false, error: "Choose a supported report font." }, { status: 400 });
     }
+    if (body.institutionName !== undefined && (typeof body.institutionName !== "string" || !body.institutionName.trim())) {
+      return NextResponse.json({ ok: false, error: "Institution name is required." }, { status: 400 });
+    }
+    if (body.brandColor !== undefined && (typeof body.brandColor !== "string" || !/^#[0-9a-fA-F]{6}$/.test(body.brandColor.trim()))) {
+      return NextResponse.json({ ok: false, error: "Enter a six-digit brand color, such as #7A1E28." }, { status: 400 });
+    }
+    for (const field of ["logoBase64", "secondaryLogoBase64"]) {
+      if (typeof body[field] === "string" && body[field].length > 4 * 1024 * 1024) {
+        return NextResponse.json({ ok: false, error: "The uploaded seal is too large. Choose a smaller image." }, { status: 400 });
+      }
+    }
 
     if (body.reset) {
       if (Object.keys(body).length !== 1) {

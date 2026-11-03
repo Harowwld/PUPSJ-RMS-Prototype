@@ -1,4 +1,5 @@
 "use client";
+import useViewPreference from "@/hooks/useViewPreference";
 
 
 import useUrlPage from "@/hooks/useUrlPage";
@@ -74,12 +75,12 @@ function getSeverityVisual(sev) {
 
 export default function MyActivityPanel({ embedded = false }) {
   const [search, setSearch] = useState("");
-  const [localSearch, setLocalSearch] = useState("");
-  const [severityFilter, setSeverityFilter] = useState("All");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [localSearch, setLocalSearch] = useViewPreference("activity", "localSearch", "");
+  const [severityFilter, setSeverityFilter] = useViewPreference("activity", "severityFilter", "All");
+  const [startDate, setStartDate] = useViewPreference("activity", "startDate", "");
+  const [endDate, setEndDate] = useViewPreference("activity", "endDate", "");
   const [page, setPage] = useUrlPage();
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useViewPreference("activity", "perPage", 10);
 
   const selectedSeverities = useMemo(() => {
     if (!severityFilter || severityFilter === "All") return [];
@@ -101,7 +102,7 @@ export default function MyActivityPanel({ embedded = false }) {
         setPage(1);
       },
     },
-  ], [selectedSeverities, setPage]);
+  ], [selectedSeverities, setPage, setSeverityFilter]);
 
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);

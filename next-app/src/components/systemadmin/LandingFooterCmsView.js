@@ -1,4 +1,5 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingFooterSkeleton from "./skeletons/LandingFooterSkeleton"
 import { cn } from "@/lib/utils"
@@ -86,7 +88,7 @@ const CONTACT_TYPE_OPTIONS = [
 export default function LandingFooterCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("content") // 'content' | 'preview'
+  const [activeTab, setActiveTab] = useViewPreference("cms-footer", "activeTab", "content") // 'content' | 'preview'
   const [footerData, setFooterData] = useState(DEFAULT_FOOTER_CONTENT)
 
   // Modals
@@ -301,7 +303,7 @@ export default function LandingFooterCmsView({ showToast }) {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
       {/* Main Card */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
         <PageHeader
           icon=" LayoutBottomIcon"
           title={
@@ -322,7 +324,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#office", "_blank")}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Preview Portal
               </Button>
@@ -332,7 +334,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Restore Defaults
               </Button>
@@ -350,37 +352,8 @@ export default function LandingFooterCmsView({ showToast }) {
         />
 
         {/* Standardized SuperAdmin Navigation Segmented Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setActiveTab("content")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                activeTab === "content"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Footer Content
-            </button>
+        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Footer Content" />
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("preview")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                activeTab === "preview"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Interactive Live Preview
-            </button>
-          </div>
-        </div>
-
-        {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: Unified Footer Content */}
           {activeTab === "content" && (
@@ -401,7 +374,7 @@ export default function LandingFooterCmsView({ showToast }) {
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="footer-subtitle" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Platform Subtitle / Description
                         </label>
                         <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -409,6 +382,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         </span>
                       </div>
                       <Textarea
+                        id="footer-subtitle"
                         value={footerData.brandSubtitle}
                         onChange={(e) =>
                           setFooterData((prev) => ({
@@ -425,7 +399,7 @@ export default function LandingFooterCmsView({ showToast }) {
 
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="footer-hall" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Archive Room / Hall Name
                         </label>
                         <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -435,7 +409,8 @@ export default function LandingFooterCmsView({ showToast }) {
                       <div className="relative">
                         <Location01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                         <Input
-                          value={footerData.locationHall}
+                        id="footer-hall"
+                        value={footerData.locationHall}
                           onChange={(e) =>
                             setFooterData((prev) => ({
                               ...prev,
@@ -444,14 +419,14 @@ export default function LandingFooterCmsView({ showToast }) {
                           }
                           placeholder="Ground Floor, Admin & Records Hall"
                           maxLength={80}
-                          className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-medium dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                          className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-medium dark:border-border dark:bg-card"
                         />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="footer-address" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Campus Street Address
                         </label>
                         <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -459,6 +434,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         </span>
                       </div>
                       <Input
+                        id="footer-address"
                         value={footerData.locationAddress}
                         onChange={(e) =>
                           setFooterData((prev) => ({
@@ -468,7 +444,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }
                         placeholder="223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500"
                         maxLength={200}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card"
                       />
                     </div>
                   </div>
@@ -500,12 +476,13 @@ export default function LandingFooterCmsView({ showToast }) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Google Maps Destination URL
+                        <label htmlFor="footer-maps" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                          Google Maps Destination URL
                     </label>
                     <div className="relative">
                       <Link01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                       <Input
+                        id="footer-maps"
                         value={footerData.mapsUrl}
                         disabled={!footerData.mapsEnabled}
                         onChange={(e) =>
@@ -547,11 +524,12 @@ export default function LandingFooterCmsView({ showToast }) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                      Watermark Typography
+                        <label htmlFor="footer-watermark" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                          Watermark Typography
                     </label>
                     <Input
-                      value={footerData.watermarkText}
+                        id="footer-watermark"
+                        value={footerData.watermarkText}
                       disabled={!footerData.watermarkEnabled}
                       onChange={(e) =>
                         setFooterData((prev) => ({
@@ -585,10 +563,11 @@ export default function LandingFooterCmsView({ showToast }) {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Copyright Statement
+                        <label htmlFor="footer-copyright" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                          Copyright Statement
                       </label>
                       <Input
+                        id="footer-copyright"
                         value={footerData.copyrightText}
                         onChange={(e) =>
                           setFooterData((prev) => ({
@@ -630,11 +609,12 @@ export default function LandingFooterCmsView({ showToast }) {
 
                   {/* Section Title */}
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                    <label htmlFor="footer-schedule-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                       Section Title
                     </label>
                     <Input
-                      value={footerData.scheduleEyebrow}
+                        id="footer-schedule-title"
+                        value={footerData.scheduleEyebrow}
                       onChange={(e) =>
                         setFooterData((prev) => ({
                           ...prev,
@@ -667,7 +647,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               disabled={idx === 0}
                               onClick={() => moveScheduleRow(idx, -1)}
                               title="Move up"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
+                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
                               <ArrowUp01Icon size="1em"  className="text-xs" />
                             </button>
@@ -676,7 +656,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               disabled={idx === footerData.scheduleItems.length - 1}
                               onClick={() => moveScheduleRow(idx, 1)}
                               title="Move down"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
+                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
                               <ArrowDown01Icon size="1em"  className="text-xs" />
                             </button>
@@ -684,7 +664,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               type="button"
                               onClick={() => setDeleteScheduleIdx(idx)}
                               title="Remove row"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
+                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
                             >
                               <Delete01Icon size="1em"  className="text-xs" />
                             </button>
@@ -693,43 +673,47 @@ export default function LandingFooterCmsView({ showToast }) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                           <div className="sm:col-span-5">
-                            <label className="block text-[10px] text-gray-500 mb-1">
+                            <label htmlFor={`footer-schedule-label-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Day Range / Description
                             </label>
                             <Input
+                              id={`footer-schedule-label-${idx}`}
                               value={item.label}
                               onChange={(e) =>
                                 updateScheduleItem(idx, "label", e.target.value)
                               }
                               placeholder="e.g. Monday – Friday"
-                              className="h-8 rounded-lg text-xs"
+                              className="h-9 rounded-xl text-xs"
                             />
                           </div>
 
                           <div className="sm:col-span-4">
-                            <label className="block text-[10px] text-gray-500 mb-1">
+                            <label htmlFor={`footer-schedule-hours-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Hours / Value
                             </label>
                             <Input
+                              id={`footer-schedule-hours-${idx}`}
                               value={item.value}
                               onChange={(e) =>
                                 updateScheduleItem(idx, "value", e.target.value)
                               }
                               placeholder="e.g. 8:00 AM – 5:00 PM"
-                              className="h-8 rounded-lg text-xs font-sans tabular-nums"
+                              className="h-9 rounded-xl text-xs font-sans tabular-nums"
                             />
                           </div>
 
                           <div className="sm:col-span-3">
-                            <label className="block text-[10px] text-gray-500 mb-1">
+                            <label htmlFor={`footer-schedule-status-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Status Highlight
                             </label>
                             <Select
+                              id={`footer-schedule-status-${idx}`}
                               value={item.status}
+                              aria-label={`Schedule ${idx + 1} status highlight`}
                               onChange={(e) =>
                                 updateScheduleItem(idx, "status", e.target.value)
                               }
-                              className="h-8 rounded-lg text-xs"
+                              className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-700 shadow-none dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200"
                             >
                               {SCHEDULE_STATUS_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -769,10 +753,11 @@ export default function LandingFooterCmsView({ showToast }) {
 
                   {/* Section Title */}
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 mb-1.5">
+                    <label htmlFor="footer-contacts-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                       Section Title
                     </label>
                     <Input
+                      id="footer-contacts-title"
                       value={footerData.contactsEyebrow}
                       onChange={(e) =>
                         setFooterData((prev) => ({
@@ -806,7 +791,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               disabled={idx === 0}
                               onClick={() => moveContactChannel(idx, -1)}
                               title="Move up"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
+                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
                               <ArrowUp01Icon size="1em"  className="text-xs" />
                             </button>
@@ -815,7 +800,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               disabled={idx === footerData.contactItems.length - 1}
                               onClick={() => moveContactChannel(idx, 1)}
                               title="Move down"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
+                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer border-0 bg-transparent p-0"
                             >
                               <ArrowDown01Icon size="1em"  className="text-xs" />
                             </button>
@@ -823,7 +808,7 @@ export default function LandingFooterCmsView({ showToast }) {
                               type="button"
                               onClick={() => setDeleteContactIdx(idx)}
                               title="Remove channel"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
+                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
                             >
                               <Delete01Icon size="1em"  className="text-xs" />
                             </button>
@@ -832,43 +817,47 @@ export default function LandingFooterCmsView({ showToast }) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                           <div className="sm:col-span-5">
-                            <label className="block text-[10px] text-gray-500 mb-1">
+                            <label htmlFor={`footer-contact-label-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Channel Label / Department
                             </label>
                             <Input
+                              id={`footer-contact-label-${idx}`}
                               value={contact.label}
                               onChange={(e) =>
                                 updateContactItem(idx, "label", e.target.value)
                               }
                               placeholder="e.g. Registrar Inquiries"
-                              className="h-8 rounded-lg text-xs"
+                              className="h-9 rounded-xl text-xs"
                             />
                           </div>
 
                           <div className="sm:col-span-4">
-                            <label className="block text-[10px] text-gray-500 mb-1">
+                            <label htmlFor={`footer-contact-value-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Email Address or Phone
                             </label>
                             <Input
+                              id={`footer-contact-value-${idx}`}
                               value={contact.value}
                               onChange={(e) =>
                                 updateContactItem(idx, "value", e.target.value)
                               }
                               placeholder="e.g. info@pup.edu.ph"
-                              className="h-8 rounded-lg text-xs font-sans tabular-nums"
+                              className="h-9 rounded-xl text-xs font-sans tabular-nums"
                             />
                           </div>
 
                           <div className="sm:col-span-3">
-                            <label className="block text-[10px] text-gray-500 mb-1">
+                            <label htmlFor={`footer-contact-type-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Channel Type
                             </label>
                             <Select
+                              id={`footer-contact-type-${idx}`}
                               value={contact.type}
+                              aria-label={`Contact ${idx + 1} channel type`}
                               onChange={(e) =>
                                 updateContactItem(idx, "type", e.target.value)
                               }
-                              className="h-8 rounded-lg text-xs"
+                              className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-700 shadow-none dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200"
                             >
                               {CONTACT_TYPE_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -903,7 +892,7 @@ export default function LandingFooterCmsView({ showToast }) {
                   variant="outline"
                   size="sm"
                   onClick={() => window.open("/#office", "_blank")}
-                  className="rounded-xl! text-xs font-semibold"
+                  className=""
                 >
                   Test
                 </Button>
@@ -917,7 +906,7 @@ export default function LandingFooterCmsView({ showToast }) {
                     <div className="lg:col-span-5 bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2rem] p-6 sm:p-8 flex flex-col justify-between shadow-xl">
                       <div>
                         <div className="flex items-center gap-2.5 mb-3">
-                          <div className="w-7 h-7 flex items-center justify-center shrink-0">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center">
                             <Image
                               src="/assets/branding/white-icon.png"
                               alt="eManage Logo"

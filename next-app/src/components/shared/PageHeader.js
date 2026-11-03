@@ -44,10 +44,10 @@ export default function PageHeader({
       className
     )}>
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 items-center gap-4 lg:flex-1">
           {leftAction}
           
-          <div className="flex flex-col gap-[4px]">
+          <div className="flex min-w-0 flex-col gap-[4px]">
             <CardTitle 
               className={cn(
                 "flex items-center gap-2 text-[18px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50 m-0",
@@ -74,7 +74,7 @@ export default function PageHeader({
         </div>
 
         {(filters || onSearchChange || searchValue !== undefined || actions) && (
-          <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-end lg:flex-1 lg:justify-end">
+          <div className={cn("flex min-w-0 flex-col items-stretch gap-4 sm:flex-row sm:items-end lg:justify-end", filters || onSearchChange || searchValue !== undefined ? "lg:flex-1" : "lg:shrink-0")}>
             {/* Filters & Search */}
             <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
               {filters}
@@ -106,7 +106,7 @@ export default function PageHeader({
 
             {/* Actions */}
             {actions && (
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 {actions}
               </div>
             )}

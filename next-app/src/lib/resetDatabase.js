@@ -7,14 +7,16 @@ import { encryptPII } from "./piiEncryption.js";
 import { invalidateOcrStudentRoster } from "./ocrStudentRoster.js";
 import { clearDynamicOffices } from "./roleUtils.js";
 import { getOfficeUploadsDir, getOfficeHotFolderDirs } from "./officePaths.js";
+import { clearLocalDataForReset, validateLocalDataResetTarget } from "./resetLocalData.js";
 
 /**
- * Wipes all application tables in the database without seeding extra data.
+ * Wipes application tables and local runtime files before restoring the demo baseline.
  * Resets departments and stations back to the pristine baseline (registrar & osas).
  * Seeds strictly the 7 default demo accounts (5 personnel + 2 student accounts)
  * and essential system settings (storage layouts, security questions).
  */
 export async function resetDatabase({ demoAccountsOnly = false } = {}) {
+  await validateLocalDataResetTarget();
   invalidateOcrStudentRoster();
   clearDynamicOffices();
 
@@ -272,6 +274,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
     [new Date().toISOString()]
   );
 
+  await clearLocalDataForReset();
   clearHealthCache();
   invalidateOcrStudentRoster();
 }

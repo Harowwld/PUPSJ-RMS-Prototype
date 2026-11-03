@@ -1,4 +1,5 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingWorkflowSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
+import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
 import { ArrowDown01Icon, ArrowRight02Icon, ArrowUp01Icon, Cancel01Icon, CovidInfoIcon, Delete01Icon } from "hugeicons-react";
@@ -110,7 +112,7 @@ export const MIN_STEPS = 2
 export default function LandingWorkflowCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("content") // 'content' | 'preview'
+  const [activeTab, setActiveTab] = useViewPreference("cms-workflow", "activeTab", "content") // 'content' | 'preview'
   const [workflowData, setWorkflowData] = useState(DEFAULT_WORKFLOW)
 
   // Step deletion & reset modal states
@@ -322,12 +324,13 @@ export default function LandingWorkflowCmsView({ showToast }) {
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
         <PageHeader
           icon="GitMergeIcon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Landing Page CMS</span>
+              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {workflowData.steps.length} steps</span>
               <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
                 · Workflow &amp; Steps
               </span>
@@ -343,7 +346,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#workflow", "_blank")}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Preview Portal
               </Button>
@@ -353,7 +356,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5"
               >
                 Restore Defaults
               </Button>
@@ -371,37 +374,8 @@ export default function LandingWorkflowCmsView({ showToast }) {
         />
 
         {/* Standard Navigation Segmented Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setActiveTab("content")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                activeTab === "content"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Workflow Content
-            </button>
+        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Workflow Content" />
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("preview")}
-              className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                activeTab === "preview"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              Interactive Live Preview
-            </button>
-          </div>
-        </div>
-
-        {/* Content Body */}
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
 
           {/* TAB 1: WORKFLOW CONTENT (Editorial + Sequential Steps) */}
@@ -422,7 +396,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="workflow-heading-one" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Main Heading Line 1
                         </label>
                         <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -430,6 +404,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         </span>
                       </div>
                       <Input
+                        id="workflow-heading-one"
                         value={workflowData.headingLine1}
                         onChange={(e) =>
                           setWorkflowData((prev) => ({
@@ -439,13 +414,13 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         }
                         placeholder="e.g. How to Request"
                         maxLength={40}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                        className="bg-white dark:bg-card"
                       />
                     </div>
 
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        <label htmlFor="workflow-heading-two" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           Main Heading Line 2
                         </label>
                         <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -453,6 +428,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         </span>
                       </div>
                       <Input
+                        id="workflow-heading-two"
                         value={workflowData.headingLine2}
                         onChange={(e) =>
                           setWorkflowData((prev) => ({
@@ -462,14 +438,14 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         }
                         placeholder="e.g. Your Documents."
                         maxLength={40}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                        className="bg-white dark:bg-card"
                       />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <label htmlFor="workflow-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                         Section Narrative &amp; Subtitle
                       </label>
                       <span className="text-[11px] text-gray-400 font-sans tabular-nums">
@@ -477,6 +453,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       </span>
                     </div>
                     <Textarea
+                      id="workflow-description"
                       value={workflowData.description}
                       onChange={(e) =>
                         setWorkflowData((prev) => ({
@@ -514,13 +491,14 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     <div className="w-[195px]">
                       <Select
                         value={workflowData.curveStyle}
+                        aria-label="Curve arc"
                         onChange={(e) =>
                           setWorkflowData((prev) => ({
                             ...prev,
                             curveStyle: e.target.value,
                           }))
                         }
-                        className="h-9 rounded-xl border border-border dark:border-border text-xs font-normal text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 cursor-pointer shadow-none px-3"
+                        className="h-9 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-700 shadow-none dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200"
                       >
                         <option value="gentle">Gentle Arc (Default)</option>
                         <option value="pronounced">Pronounced Arc</option>
@@ -553,7 +531,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     <div
                       key={idx}
                       className={cn(
-                        "rounded-xl border transition-all duration-200 bg-white dark:bg-card shadow-2xs",
+                        "rounded-xl border transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 bg-white dark:bg-card shadow-2xs",
                         isExpanded
                           ? "border-pup-maroon/40 dark:border-red-500/40 shadow-xs"
                           : "border-border dark:border-border hover:border-border dark:hover:border-white/20"
@@ -640,7 +618,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                           {/* Step Main Title */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                              <label htmlFor={`workflow-step-title-${idx}`} className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                 Step Main Title
                               </label>
                               <span className="text-[10px] text-gray-400 font-sans tabular-nums">
@@ -648,18 +626,19 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               </span>
                             </div>
                             <Input
+                              id={`workflow-step-title-${idx}`}
                               value={step.title}
                               onChange={(e) => updateStep(idx, "title", e.target.value)}
                               placeholder="e.g. Sign In to Portal"
                               maxLength={60}
-                              className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-semibold placeholder:text-gray-400 dark:border-border dark:bg-card focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:focus:ring-pup-maroon/20"
+                              className="bg-white dark:bg-card"
                             />
                           </div>
 
                           {/* Full Step Narrative Description */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                              <label htmlFor={`workflow-step-description-${idx}`} className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                 Detailed Step Instructions
                               </label>
                               <span className="text-[10px] text-gray-400 font-sans tabular-nums">
@@ -667,6 +646,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               </span>
                             </div>
                             <Textarea
+                              id={`workflow-step-description-${idx}`}
                               value={step.desc}
                               onChange={(e) => updateStep(idx, "desc", e.target.value)}
                               rows={3}
@@ -717,7 +697,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                   type="button"
                   onClick={addNewStep}
                   title={`Add Another Workflow Step (${currentSteps.length}/${MAX_STEPS})`}
-                  className="w-full py-4 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-all flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
+                  className="w-full py-4 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
                 >
                   Add Step
                 </button>
@@ -781,7 +761,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                           key={sIdx}
                           onClick={() => setPreviewActiveStep(sIdx)}
                           className={cn(
-                            "relative pl-14 sm:pl-16 group transition-all duration-200 cursor-pointer",
+                            "relative pl-14 sm:pl-16 group transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 cursor-pointer",
                             curveClass
                           )}
                         >
@@ -789,7 +769,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                           <div className="absolute left-0 top-0">
                             <div
                               className={cn(
-                                "w-11 h-11 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-all duration-300",
+                                "w-11 h-11 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300",
                                 isSelected
                                   ? "bg-[#800000] text-white shadow-md"
                                   : "bg-white/5 border border-white/10 text-zinc-400 group-hover:text-white"

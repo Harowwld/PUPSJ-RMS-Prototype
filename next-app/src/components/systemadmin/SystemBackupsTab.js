@@ -1,4 +1,5 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
 
 
 import useUrlPage from "@/hooks/useUrlPage"
@@ -17,10 +18,11 @@ import {
 } from "@/components/ui/empty"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
+import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
 import HealthSidebar from "@/components/admin/backup/HealthSidebar"
-import BackupTable from "@/components/admin/backup/BackupTable"
+import PlatformBackupTable, { PLATFORM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
 import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupFilters from "@/components/admin/backup/BackupFilters"
 import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
@@ -31,8 +33,11 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import RestoreModal from "@/components/shared/RestoreModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import useTableScroll from "@/hooks/useTableScroll"
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
-import { AlertCircleIcon as EmptyAlertCircleIcon , Loading01Icon} from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, CheckmarkCircle01Icon, Database01Icon, HardDriveIcon, Loading01Icon } from "hugeicons-react";
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -58,9 +63,9 @@ export default function SystemBackupsTab({ showToast }) {
 
   // Filters
   const [backupSearch, setBackupSearch] = useState("")
-  const [backupStartDate, setBackupStartDate] = useState("")
-  const [backupEndDate, setBackupEndDate] = useState("")
-  const [localSearch, setLocalSearch] = useState("")
+  const [backupStartDate, setBackupStartDate] = useViewPreference("backups", "backupStartDate", "")
+  const [backupEndDate, setBackupEndDate] = useViewPreference("backups", "backupEndDate", "")
+  const [localSearch, setLocalSearch] = useViewPreference("backups", "localSearch", "")
 
   // Loading states for actions
   const [localLoading, setLocalLoading] = useState({
@@ -73,11 +78,15 @@ export default function SystemBackupsTab({ showToast }) {
 
   // Table state
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
-  const [sortBy, setSortBy] = useState("created_at")
-  const [sortOrder, setSortOrder] = useState("DESC")
+  const [sortBy, setSortBy] = useViewPreference("backups", "sortBy", "created_at")
+  const [sortOrder, setSortOrder] = useViewPreference("backups", "sortOrder", "DESC")
   const [page, setPage] = useUrlPage()
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [jumpPage, setJumpPage] = useState("1")
+  const [itemsPerPage, setItemsPerPage] = useViewPreference("backups", "itemsPerPage", 20)
+  const [filterRules, setFilterRules] = useViewPreference("backups", "filterRules", [])
+  const [backupTypeFilter, setBackupTypeFilter] = useViewPreference("backups", "backupTypeFilter", "all")
+  const [groupBy, setGroupBy] = useViewPreference("backups", "groupBy", "none")
+  const [visibleColumns, setVisibleColumns] = useViewPreference("backups", "visibleColumns", PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key))
+  const { containerRef: tableScrollRef, scrollLeft, scrollRight, resetScroll } = useTableScroll([visibleColumns.join(","), backups.length, isLoading])
 
   // Delete modal state
   const [backupDeleteTargets, setBackupDeleteTargets] = useState([])
@@ -191,7 +200,7 @@ export default function SystemBackupsTab({ showToast }) {
         if (!cancelled && res.ok && json?.ok && json.data) {
           setExternalDrive(json.data)
         }
-      } catch {}
+      } catch { }
     }
     checkDrive()
     return () => {
@@ -230,12 +239,6 @@ export default function SystemBackupsTab({ showToast }) {
       throw new Error(clean)
     }
   }, [])
-
-  // Sync jumpPage with page
-  useEffect(() => {
-    const timer = setTimeout(() => setJumpPage(String(page)), 0)
-    return () => clearTimeout(timer)
-  }, [page])
 
   // Debounced search
   useEffect(() => {
@@ -353,28 +356,39 @@ export default function SystemBackupsTab({ showToast }) {
     )
   }
 
-  const sortedAndPaginatedBackups = useMemo(() => {
-    let result = (backups || []).filter(b => b)
-    result.sort((a, b) => {
-      let valA, valB
-      if (sortBy === "size_bytes") {
-        valA = a.size_bytes
-        valB = b.size_bytes
-      } else {
-        valA = a[sortBy] || ""
-        valB = b[sortBy] || ""
-        if (typeof valA === "string") valA = valA.toLowerCase()
-        if (typeof valB === "string") valB = valB.toLowerCase()
-      }
-      if (valA < valB) return sortOrder === "ASC" ? -1 : 1
-      if (valA > valB) return sortOrder === "ASC" ? 1 : -1
-      return 0
-    })
-    const start = (page - 1) * itemsPerPage
-    return result.slice(start, start + itemsPerPage)
-  }, [backups, sortBy, sortOrder, page, itemsPerPage])
-
-  const totalPages = Math.max(1, Math.ceil((backups || []).length / itemsPerPage))
+  const backupTypes = useMemo(() => [...new Set(backups.map((backup) => backup.backup_type).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [backups])
+  const filterFields = useMemo(() => [
+    { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon, options: [...new Set(backups.map((backup) => backup.status_local).filter(Boolean))].map((value) => ({ value, label: value })) },
+    { key: "size_bytes", label: "Size (bytes)", icon: HardDriveIcon, type: "number" },
+  ], [backups])
+  const filteredBackups = useMemo(() => (backups || []).filter((backup) => backup && (backupTypeFilter === "all" || backup.backup_type === backupTypeFilter) && filterRules.every((rule) => {
+    const actual = backup[rule.fieldKey]
+    if (rule.fieldKey === "size_bytes") {
+      const value = Number(rule.value)
+      if (!Number.isFinite(value)) return true
+      if (rule.operator === "greater_than") return Number(actual) > value
+      if (rule.operator === "less_than") return Number(actual) < value
+      return rule.operator === "is_not" ? Number(actual) !== value : Number(actual) === value
+    }
+    return rule.operator === "is_not" ? String(actual ?? "") !== rule.value : String(actual ?? "") === rule.value
+  })), [backups, backupTypeFilter, filterRules])
+  const sortedBackups = useMemo(() => [...filteredBackups].sort((a, b) => {
+    const left = sortBy === "size_bytes" ? Number(a[sortBy] || 0) : String(a[sortBy] || "").toLowerCase()
+    const right = sortBy === "size_bytes" ? Number(b[sortBy] || 0) : String(b[sortBy] || "").toLowerCase()
+    return (left < right ? -1 : left > right ? 1 : 0) * (sortOrder === "ASC" ? 1 : -1)
+  }), [filteredBackups, sortBy, sortOrder])
+  const totalPages = Math.max(1, Math.ceil(sortedBackups.length / itemsPerPage))
+  const sortedAndPaginatedBackups = sortedBackups.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+  const groups = useMemo(() => {
+    if (groupBy === "none") return []
+    const grouped = new Map()
+    for (const backup of sortedAndPaginatedBackups) {
+      const label = String(backup[groupBy] || "Unknown")
+      if (!grouped.has(label)) grouped.set(label, [])
+      grouped.get(label).push(backup)
+    }
+    return [...grouped].map(([label, items]) => ({ label, items }))
+  }, [groupBy, sortedAndPaginatedBackups])
 
   // Backup Creation with optional TOTP
   const handleGenerateBackup = async (totpToken = "") => {
@@ -712,115 +726,34 @@ export default function SystemBackupsTab({ showToast }) {
     return formatPHDateTime(backups[0].created_at)
   }, [backups])
 
-  const handleItemsPerPageChange = (e) => {
-    const value = Number(e.target.value)
-    setItemsPerPage(value)
-    setPage(1)
-  }
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      if (!isNaN(val) && val >= 1 && val <= totalPages) {
-        setPage(val)
-      } else {
-        setJumpPage(String(page))
-      }
-    }
-  }
-
-  const startItem = (page - 1) * itemsPerPage + 1
-  const endItem = Math.min(page * itemsPerPage, (backups || []).length)
-  const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate)
+  const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate || filterRules.length || backupTypeFilter !== "all")
 
   const handleClearFilters = () => {
     setLocalSearch("")
     setBackupSearch("")
     setBackupStartDate("")
     setBackupEndDate("")
+    setFilterRules([])
+    setBackupTypeFilter("all")
     setPage(1)
   }
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="rms-brand-scope animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6" data-brand-accent="#000000" data-brand-foreground="#FFFFFF" style={{ "--brand-accent": "#000000", "--brand-foreground": "#FFFFFF" }}>
+      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
         <div className="relative flex flex-[1_0_auto] min-h-[600px] w-full items-stretch gap-5">
-          
+
           {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0 flex flex-col">
             <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
-              <PageHeader
-                icon="CloudServerIcon"
-                title="Platform Governance Backups"
-                description="Create and restore full system governance backups, manage scheduled snapshots, and sync to external hardware."
-                showBorder={false}
-                titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-                descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-                actions={
-                  <div className="flex items-center gap-2">
-                    <RefreshButton
-                      onRefresh={() => fetchData(true)}
-                      isLoading={isManualLoading}
-                      title="Refresh Governance Backups"
-                    />
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleToggleStatusSidebar()}
-                      className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                      title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
-                    >
-                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        restoreFileRef.current &&
-                        restoreFileRef.current.click()
-                      }
-                      disabled={localLoading.uploading}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                    >
-                      {localLoading.uploading ? (
-                        <span className="flex items-center gap-1.5">
-                          <Loading01Icon size="1em" className="animate-spin text-xs" />
-                          <span>Restoring...</span>
-                        </span>
-                      ) : (
-                        "Restore Backup"
-                      )}
-                    </Button>
-                    <Button
-                      onClick={() => handleGenerateBackup()}
-                      disabled={localLoading.generating}
-                      className="h-10 px-5 cursor-pointer"
-                    >
-                      {localLoading.generating ? (
-                        <span className="flex items-center gap-1.5">
-                          <Loading01Icon size="1em" className="animate-spin text-xs" />
-                          <span>Creating...</span>
-                        </span>
-                      ) : (
-                        "Create Backup"
-                      )}
-                    </Button>
-                    <input
-                      ref={restoreFileRef}
-                      type="file"
-                      className="hidden"
-                      accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
-                      onChange={handleRestoreFileChangeLocal}
-                    />
-                  </div>
-                }
-              />
-
-              {/* Automatic Backup Configuration Section */}
-              <AutoBackupSchedule showToast={showToast} scope="system" embedded={true} />
-
+              <PageHeader title={<span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">Platform Backups <span className="text-xs font-normal text-gray-500 dark:text-zinc-400 tabular-nums">{isLoading ? "Loading backups…" : `${backups.length} ${backups.length === 1 ? "archive" : "archives"}`}</span></span>} description="Create and restore full system backups, manage scheduled snapshots, and sync to external hardware." showBorder={false} />
+              <div role="group" aria-label="Backup type" className="flex items-end gap-5 border-b border-border px-6 dark:border-border">
+                {[{ value: "all", label: "All Types", count: backups.length }, ...backupTypes.map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length }))].map(({ value, label, count }) => (
+                  <button key={value} type="button" aria-pressed={backupTypeFilter === value} onClick={() => { setBackupTypeFilter(value); setPage(1) }} className={cn("relative flex h-9 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon", backupTypeFilter === value ? "text-pup-maroon dark:text-red-400 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-current" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                    {label}<span className="tabular-nums text-[11px] font-normal">{count}</span>
+                  </button>
+                ))}
+              </div>
               {/* Standard Filter Toolbar */}
               <BackupFilters
                 localSearch={localSearch}
@@ -835,14 +768,81 @@ export default function SystemBackupsTab({ showToast }) {
                 setPage={setPage}
                 setLocalSearch={setLocalSearch}
                 setBackupSearch={setBackupSearch}
-                backupTotal={(backups || []).length}
+                backupTotal={filteredBackups.length}
                 isLoading={isLoading}
+                inline
+                tableControls={<>
+                  <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={(rules) => { setFilterRules(rules); setPage(1) }} entityLabel="backups" />
+                  <SortPopover options={[{ key: "created_at", label: "Created" }, { key: "filename", label: "Archive name" }, { key: "size_bytes", label: "Size" }, { key: "backup_type", label: "Backup type" }, { key: "status_local", label: "Storage status" }]} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1) }} />
+                  <GroupPopover options={[{ key: "backup_type", label: "Backup type", icon: Database01Icon }, { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
+                  <ColumnsPopover columns={PLATFORM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+                </>}
+                scrollControls={<TableScrollControls scrollContainerRef={tableScrollRef} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />}
+                actions={<div className="flex items-center gap-2">
+                  <RefreshButton
+                    onRefresh={() => fetchData(true)}
+                    isLoading={isManualLoading}
+                    title="Refresh Governance Backups"
+                    className="h-9 w-9"
+                  />
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleToggleStatusSidebar()}
+                    className="h-9 px-4"
+                    title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
+                  >
+                    {statusSidebarOpen ? "Hide Status" : "Show Status"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      restoreFileRef.current &&
+                      restoreFileRef.current.click()
+                    }
+                    disabled={localLoading.uploading}
+                    className="h-9 px-4"
+                  >
+                    {localLoading.uploading ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loading01Icon size="1em" className="animate-spin text-xs" />
+                        <span>Restoring...</span>
+                      </span>
+                    ) : (
+                      "Restore Backup"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateBackup()}
+                    disabled={localLoading.generating}
+                    className="h-9 px-4 cursor-pointer"
+                  >
+                    {localLoading.generating ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loading01Icon size="1em" className="animate-spin text-xs" />
+                        <span>Creating...</span>
+                      </span>
+                    ) : (
+                      "Create Backup"
+                    )}
+                  </Button>
+                  <input
+                    ref={restoreFileRef}
+                    type="file"
+                    className="hidden"
+                    accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
+                    onChange={handleRestoreFileChangeLocal}
+                  />
+                </div>}
               />
 
+              <AutoBackupSchedule showToast={showToast} scope="system" embedded={true} />
+
               {/* Active Filter Chips Row */}
-              {(localSearch !== "" ||
-                backupStartDate !== "" ||
-                backupEndDate !== "") && (
+              {(localSearch !== "" || backupStartDate !== "" || backupEndDate !== "" || filterRules.length > 0) && (
                 <ActiveFilterChips
                   searchQuery={localSearch}
                   onClearSearch={() => {
@@ -850,7 +850,7 @@ export default function SystemBackupsTab({ showToast }) {
                     setBackupSearch("")
                     setPage(1)
                   }}
-                  extraChips={(backupStartDate || backupEndDate) ? [{
+                  extraChips={[...(backupTypeFilter !== "all" ? [{ key: "backupType", groupLabel: "Backup type", label: backupTypeFilter, onRemove: () => { setBackupTypeFilter("all"); setPage(1) } }] : []), ...filterRules.map((rule) => ({ key: rule.id, label: `${filterFields.find((field) => field.key === rule.fieldKey)?.label || rule.fieldKey} ${rule.operator.replaceAll("_", " ")} ${rule.value}`, onRemove: () => setFilterRules((current) => current.filter((item) => item.id !== rule.id)) })), ...(backupStartDate || backupEndDate ? [{
                     key: "dateRange",
                     label: `Range: ${backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to ${backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}`,
                     onRemove: () => {
@@ -858,14 +858,14 @@ export default function SystemBackupsTab({ showToast }) {
                       setBackupEndDate("")
                       setPage(1)
                     }
-                  }] : []}
+                  }] : [])]}
                   onClearAll={handleClearFilters}
-                  className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                  className="bg-white dark:bg-card px-6 py-2.5"
                 />
               )}
 
               {isLoading && !isManualLoading ? (
-                <BackupTableSkeleton embedded={true} scope="platform" />
+                <BackupTableSkeleton embedded={true} scope="platform" visibleColumns={visibleColumns} rowCount={itemsPerPage} />
               ) : error ? (
                 <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
@@ -878,10 +878,10 @@ export default function SystemBackupsTab({ showToast }) {
                         <EmptyDescription>
                           {error}
                         </EmptyDescription>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => fetchData(true)}
-                          className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                          className="mt-6 flex h-10 items-center justify-center px-5"
                         >
                           Retry
                         </Button>
@@ -890,36 +890,8 @@ export default function SystemBackupsTab({ showToast }) {
                   </CardContent>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col min-h-0 border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
-                  <BackupTable
-                    backups={backups}
-                    sortedAndPaginatedBackups={sortedAndPaginatedBackups}
-                    selectedBackupIds={selectedBackupIds}
-                    handleToggleRow={handleToggleRow}
-                    handleSelectAll={handleSelectAll}
-                    handleSort={handleSort}
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                    localLoading={localLoading}
-                    handleSyncExternal={handleSyncExternal}
-                    onDownloadBackup={handleDownloadBackup}
-                    onDeleteBackup={handleDeletePrompt}
-                    handleGenerateBackup={handleGenerateBackup}
-                    isFilterActive={isFilterActive}
-                    onClearFilters={handleClearFilters}
-                    page={page}
-                    setPage={setPage}
-                    totalPages={totalPages}
-                    startItem={startItem}
-                    endItem={endItem}
-                    totalCount={(backups || []).length}
-                    itemsPerPage={itemsPerPage}
-                    jumpPage={jumpPage}
-                    setJumpPage={setJumpPage}
-                    handleJumpPage={handleJumpPage}
-                    handleItemsPerPageChange={handleItemsPerPageChange}
-                    scope="system"
-                  />
+                <div className="flex-1 flex flex-col min-h-0 rounded-b-2xl overflow-hidden">
+                  <PlatformBackupTable backups={filteredBackups} rows={sortedAndPaginatedBackups} visibleColumns={visibleColumns} selectedIds={selectedBackupIds} onSelectAll={(checked, rows) => setSelectedBackupIds((current) => checked ? Array.from(new Set([...current, ...rows.map((row) => row.id)])) : current.filter((id) => !rows.some((row) => row.id === id)))} onToggle={handleToggleRow} onSort={handleSort} sortBy={sortBy} sortOrder={sortOrder} onDownload={handleDownloadBackup} onDelete={handleDeletePrompt} onCreate={handleGenerateBackup} isFilterActive={isFilterActive} onClearFilters={handleClearFilters} page={page} pageSize={itemsPerPage} onPageChange={setPage} onPageSizeChange={setItemsPerPage} scrollRef={tableScrollRef} groups={groups} />
                 </div>
               )}
             </Card>

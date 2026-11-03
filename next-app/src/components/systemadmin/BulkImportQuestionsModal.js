@@ -390,7 +390,7 @@ export default function BulkImportQuestionsModal({
                       e.stopPropagation();
                       fileInputRef.current?.click();
                     }}
-                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-9 px-4"
                   >
                     Browse
                   </Button>
@@ -433,7 +433,7 @@ export default function BulkImportQuestionsModal({
                   type="button"
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-8 px-3 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                  className="h-8 px-3 shrink-0"
                 >
                   Change
                 </Button>
@@ -529,7 +529,7 @@ export default function BulkImportQuestionsModal({
                   type="button"
                   variant="outline"
                   onClick={handleAddRow}
-                  className="w-full h-9 text-xs font-semibold rounded-xl border border-dashed border-border dark:border-border hover:border-pup-maroon/60 dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-700 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-pup-maroon shadow-none cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-9"
                 >
                   Add Row
                 </Button>
@@ -544,7 +544,7 @@ export default function BulkImportQuestionsModal({
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4"
           >
             Cancel
           </Button>

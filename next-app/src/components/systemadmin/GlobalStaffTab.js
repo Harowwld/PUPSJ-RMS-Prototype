@@ -1,4 +1,6 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -7,12 +9,12 @@ import useCreateAnother from "@/hooks/useCreateAnother"
 
 
 import useUrlPage from "@/hooks/useUrlPage"
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
-import DirectoryTableSkeleton from "@/components/systemadmin/skeletons/DirectoryTableSkeleton"
+import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
+import PersonnelActionsMenu from "@/components/systemadmin/PersonnelActionsMenu"
 import { Card } from "@/components/ui/card"
 import {
   Dialog,
@@ -35,9 +37,8 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Select } from "@/components/ui/select"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
   EmptyHeader,
@@ -48,22 +49,21 @@ import {
 } from "@/components/ui/empty"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { formatPHDateTime } from "@/lib/timeFormat"
-import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Clock01Icon, Copy01Icon, DragDropIcon, Loading01Icon, PencilEdit01Icon, Settings01Icon, ViewIcon, Search01Icon, Archive01Icon } from "hugeicons-react";
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Clock01Icon, Copy01Icon, Loading01Icon, Search01Icon, Archive01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -86,18 +86,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [offices, setOffices] = useState([])
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
-  
+
   // Filters & Search
-  const [search, setSearch] = useState("")
-  const [staffFilters, setStaffFilters] = useState({
+  const [search, setSearch] = useViewPreference("staff", "search", "")
+  const [staffFilters, setStaffFilters] = useViewPreference("staff", "staffFilters", {
     role: [],
     office: [],
   })
-  const [statusFilter, setStatusFilter] = useState("Active")
-  
+  const [statusFilter, setStatusFilter] = useViewPreference("staff", "statusFilter", "Active")
+  const [filterRules, setFilterRules] = useViewPreference("staff", "filterRules", [])
+
   // Sorting
-  const [sortBy, setSortBy] = useState("name")
-  const [sortOrder, setSortOrder] = useState("ASC")
+  const [sortBy, setSortBy] = useViewPreference("staff", "sortBy", "name")
+  const [sortOrder, setSortOrder] = useViewPreference("staff", "sortOrder", "ASC")
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -110,7 +111,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   // Pagination
   const [page, setPage] = useUrlPage()
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useViewPreference("staff", "pageSize", 20)
 
   // Multi-Selection State & Batch Actions
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -128,7 +129,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       setLastSelectedId(null)
     }, 0)
     return () => clearTimeout(timer)
-  }, [search, staffFilters, statusFilter, setPage])
+  }, [search, staffFilters, filterRules, statusFilter, setPage])
 
   // Detail Sheet & Dialogs
   const [inspectMember, setInspectMember] = useState(null)
@@ -137,7 +138,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [isEditing, setIsEditing] = useState(false)
   const [targetIsExistingSysAdmin, setTargetIsExistingSysAdmin] = useState(false)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
-  
+
   const [form, setForm] = useState({
     id: "",
     office_id: "",
@@ -148,7 +149,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     email: "",
     status: "Active"
   })
-  
+
   const [submitLoading, setSubmitLoading] = useState(false)
   const [tempPassword, setTempPassword] = useState(null)
   const [pwDialogOpen, setPwDialogOpen] = useState(false)
@@ -204,7 +205,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             setNextIdPreview(json.nextId)
           }
         })
-        .catch(() => {})
+        .catch(() => { })
     }
     return () => {
       active = false
@@ -279,7 +280,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
     window.addEventListener("switch-view", handleSwitch)
     return () => window.removeEventListener("switch-view", handleSwitch)
-  }, [])
+  }, [setStaffFilters])
 
   const handleOpenCreate = () => {
     setIsEditing(false)
@@ -322,7 +323,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     // Existing accounts cannot be changed or promoted to System Admin
     if (isEditing && !targetIsExistingSysAdmin && (form.role === "SystemAdmin" || !form.office_id)) {
       showToast("Existing accounts cannot be made a System Admin", true)
@@ -336,11 +337,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
     if (!repeat.beginSave()) return
     setSubmitLoading(true)
-    
+
     try {
       const url = isEditing ? `/api/staff/${selectedStaffId}` : "/api/staff"
       const method = isEditing ? "PATCH" : "POST"
-      
+
       const payload = {
         id: isEditing ? form.id.trim() : (form.id?.trim() || nextIdPreview || undefined),
         fname: form.fname.trim(),
@@ -379,7 +380,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         Promise.resolve().then(() => fetchData()).catch(() => {
           showToast("Personnel saved. Refresh the directory to see the updated list.", true)
         })
-        
+
         if (!isEditing && json.defaultPassword) {
           setTempPassword(json.defaultPassword)
           setPwDialogOpen(true)
@@ -517,14 +518,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       const cleanName = getStaffCleanName(member).toLowerCase()
       const cleanEmail = getStaffCleanEmail(member).toLowerCase()
       // Search query filter
-      const matchesSearch = 
+      const matchesSearch =
         !search ||
         cleanName.includes(search.toLowerCase()) ||
         cleanEmail.includes(search.toLowerCase()) ||
         member.id.toLowerCase().includes(search.toLowerCase())
-      
+
       // Office filter
-      const matchesOffice = 
+      const matchesOffice =
         selectedOffices.length === 0 ||
         selectedOffices.some((off) => {
           if (off === "global") return !member.office_id;
@@ -540,11 +541,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         });
 
       // Status filter
-      const matchesStatus = statusFilter === "Active" 
-        ? member.status === "Active" 
+      const matchesStatus = statusFilter === "Active"
+        ? member.status === "Active"
         : (member.status === "Inactive" || member.status === "Archived")
 
-      return matchesSearch && matchesOffice && matchesRole && matchesStatus
+      const matchesRules = filterRules.every((rule) => {
+        const actual = rule.fieldKey === "role" ? (isSystemAdminRole(member.role) ? "SystemAdmin" : member.role) : (member.office_id || "global")
+        return rule.operator === "is_not" ? String(actual) !== String(rule.value) : String(actual) === String(rule.value)
+      })
+      return matchesSearch && matchesOffice && matchesRole && matchesStatus && matchesRules
     })
 
     list.sort((a, b) => {
@@ -553,6 +558,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       if (sortBy === "name") {
         valA = getStaffCleanName(a).toLowerCase()
         valB = getStaffCleanName(b).toLowerCase()
+      } else if (sortBy === "email") {
+        valA = getStaffCleanEmail(a).toLowerCase()
+        valB = getStaffCleanEmail(b).toLowerCase()
       } else if (sortBy === "id") {
         valA = (a.id || "").toLowerCase()
         valB = (b.id || "").toLowerCase()
@@ -565,6 +573,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       } else if (sortBy === "role") {
         valA = (a.role || "").toLowerCase()
         valB = (b.role || "").toLowerCase()
+      } else if (sortBy === "section") {
+        valA = (a.section || "").toLowerCase()
+        valB = (b.section || "").toLowerCase()
+      } else if (sortBy === "last_active" || sortBy === "created_at" || sortBy === "updated_at") {
+        valA = a[sortBy] ? new Date(a[sortBy]).getTime() : 0
+        valB = b[sortBy] ? new Date(b[sortBy]).getTime() : 0
+      } else if (sortBy === "totp_enabled") {
+        valA = Number(Boolean(a.totp_enabled))
+        valB = Number(Boolean(b.totp_enabled))
       }
 
       if (valA < valB) return sortOrder === "ASC" ? -1 : 1
@@ -573,7 +590,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     })
 
     return list
-  }, [staff, search, staffFilters, statusFilter, sortBy, sortOrder, offices])
+  }, [staff, search, staffFilters, statusFilter, sortBy, sortOrder, offices, filterRules])
 
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
@@ -602,7 +619,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       setLastSelectedId(null)
     }, 0)
     return () => clearTimeout(timer)
-  }, [statusFilter, page, pageSize, search, staffFilters])
+  }, [statusFilter, page, pageSize, search, staffFilters, filterRules])
 
   // Prune stale selected IDs when filtered staff updates
   useEffect(() => {
@@ -671,7 +688,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
         const next = new Set(selectedIds)
         idsInRange.forEach((rangeId) => next.add(rangeId))
-        
+
         setSelectedIds(next)
         setLastSelectedId(id)
         return
@@ -765,25 +782,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
   }
 
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const [kpiOrder, setKpiOrder] = useState(["total", "active", "admins"]);
-  const statCardsRef = useRef(null)
-
-  useEffect(() => {
-    if (!selectedKpi) return
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("touchstart", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside)
-    }
-  }, [selectedKpi])
-
   const stats = useMemo(() => {
     const total = staff.length
     const active = staff.filter((s) => s.status === "Active").length
@@ -791,14 +789,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     const admins = staff.filter(
       (s) => s.role === "Admin" || s.role === "SystemAdmin" || s.role === "SuperAdmin"
     ).length
-    const regular = staff.filter((s) => s.role === "Staff").length
     const assignedOffices = new Set(staff.map((s) => s.office_id).filter(Boolean)).size
     return {
       total,
       active,
       inactive,
       admins,
-      regular,
       assignedOffices,
     }
   }, [staff])
@@ -806,285 +802,96 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const hasActiveFilters =
     search !== "" ||
     (staffFilters.role?.length > 0) ||
-    (staffFilters.office?.length > 0)
+    (staffFilters.office?.length > 0) ||
+    filterRules.length > 0
 
   const handleClearFilters = () => {
     setSearch("")
     setStaffFilters({ role: [], office: [] })
+    setFilterRules([])
     setPage(1)
   }
 
-  const statCardsData = [
-    {
-      key: "total",
-      label: "Total Personnel",
-      value: stats.total,
-      sublabel: `${stats.assignedOffices} campus partitions represented`,
-      color: "blue",
-    },
-    {
-      key: "active",
-      label: "Active Personnel",
-      value: stats.active,
-      sublabel: `${stats.inactive} suspended or archived`,
-      color: "emerald",
-    },
-    {
-      key: "admins",
-      label: "Administrators",
-      value: stats.admins,
-      sublabel: `${stats.regular} standard records staff`,
-      color: "amber",
-    },
+  const [groupBy, setGroupBy] = useViewPreference("staff", "groupBy", "none")
+  const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["name", "email", "office", "role"])
+  const optionalColumns = [
+    { key: "name", label: "Staff Name" },
+    { key: "email", label: "Email" },
+    { key: "office", label: "Office Partition" },
+    { key: "role", label: "Privilege Level" },
+    { key: "section", label: "Administrative Section" },
+    { key: "last_active", label: "Last Sign-in" },
+    { key: "totp_enabled", label: "Two-step Verification" },
+    { key: "created_at", label: "Date Added" },
+    { key: "updated_at", label: "Last Updated" },
   ]
+  const filterFields = [
+    { key: "role", label: "Role", icon: EmptyUserGroupIcon, options: [{ value: "SystemAdmin", label: "System Admin" }, { value: "Admin", label: "Administrator" }, { value: "Staff", label: "Regular Staff" }] },
+    { key: "office", label: "Office", icon: Building01Icon, options: [{ value: "global", label: "Platform Level" }, ...offices.map((office) => ({ value: office.id, label: office.short_name || office.name }))] },
+  ]
+  const orderedVisibleColumns = optionalColumns.filter(({ key }) => visibleColumns.includes(key))
+  const groupedStaff = (() => {
+    if (groupBy === "none") return [[null, paginatedStaff]]
+    const groups = new Map()
+    for (const member of paginatedStaff) {
+      const office = offices.find((item) => item.id === member.office_id)
+      const label = groupBy === "office" ? (office?.short_name || office?.name || "Platform Level") : (isSystemAdminRole(member.role) ? "System Admin" : member.role === "Admin" ? "Administrator" : "Regular Staff")
+      if (!groups.has(label)) groups.set(label, [])
+      groups.get(label).push(member)
+    }
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b))
+  })()
+
+  const staffTableColumns = ["selection", "identifier", ...orderedVisibleColumns.map(({ key }) => {
+    if (key === "name" || key === "email") return { kind: "text", maxWidth: 340 }
+    if (key === "section") return { kind: "text", maxWidth: 240 }
+    if (key === "last_active" || key === "created_at" || key === "updated_at") return { kind: "date" }
+    if (key === "totp_enabled") return { kind: "status" }
+    return { kind: "category" }
+  }), "actions"]
+
+  if (loading) return <GlobalStaffSkeleton columns={staffTableColumns} />
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
-      {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="UserSearch01Icon"
-          title={
-            <div className="flex items-center gap-[6px]">
-              <span>Global Personnel Directory</span>
-              
-            </div>
-          }
+          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Global Personnel Directory</span><span className="text-xs font-normal text-gray-500 dark:text-zinc-400">{stats.total} personnel · {stats.assignedOffices} offices · {stats.admins} administrators</span></div>}
           description="Manage system access, office assignments, and authorization settings for all administrators and records staff."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-              <RefreshButton
-                onRefresh={handleManualRefresh}
-                isLoading={isManualLoading}
-                title="Refresh Staff Directory"
-              />
 
-              
-
-              <Button
-                onClick={handleOpenCreate}
-                className="h-10 px-5 cursor-pointer"
-              >
-                Register Personnel
-              </Button>
-            </div>
-          }
         />
 
-        {/* Stat Cards */}
-        {loading ? (
-          <div className="px-6 pb-6">
-            <KpiStatCardsSkeleton count={3} />
-          </div>
-        ) : (
-          <div className="px-6 pb-6">
-            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="flex flex-wrap gap-4 items-stretch w-full relative z-20 transition-all duration-500">
-              {kpiOrder.map((kpiKey) => {
-                const stat = statCardsData.find(s => s.key === kpiKey);
-                if (!stat) return null;
-                return (
-                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("flex-1 min-w-[280px] relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
-                  <div
-                    onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
-                    className={cn(
-                      "relative overflow-hidden rounded-2xl border cursor-pointer select-none transition-all shadow-xs hover:shadow-sm flex flex-col justify-between min-h-[110px] h-full bg-gray-50/90 hover:bg-gray-50 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90",
-                      selectedKpi === stat.key
-                        ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
-                        : "border-border dark:border-border"
-                    )}
-                  >
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                          {stat.label}
-                        </span>
-                      </div>
-                      <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : stat.color === "emerald" ? "bg-[#10b981]" : "bg-[#f59e0b]")}>
-                        <AppIcon className={cn(" text-[15px]", stat.color === "blue" ? "UserSearch01Icon" : stat.color === "emerald" ? "UserStatusIcon" : "Building02Icon")} />
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {stat.value.toLocaleString()}
-                        </span>
-                        <span className={cn("text-xs font-medium mb-1", `text-${stat.color}-600 dark:text-${stat.color}-400`)}>
-                          {stat.sublabel}
-                        </span>
-                      </div>
-                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                    </div>
-                  </div>
-
-                  {/* Absolute details container */}
-                  <div
-                    className={cn(
-                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                      selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                    )}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {stat.key === "total" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Accounts</span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.total}</span>
-                          </div>
-                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Offices Covered</span>
-                            <span className="text-lg font-black text-blue-700 dark:text-blue-400">{stats.assignedOffices}</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Directory registry of all personnel across all campus partitions and centralized administrative systems.
-                        </div>
-                      </div>
-                    )}
-                    {stat.key === "active" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Active Staff</span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.active}</span>
-                          </div>
-                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Suspended</span>
-                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{stats.inactive}</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Personnel in good standing with active operational privileges and live credentials.
-                        </div>
-                      </div>
-                    )}
-                    {stat.key === "admins" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Admin Level</span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.admins}</span>
-                          </div>
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                            <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Regular Staff</span>
-                            <span className="text-lg font-black text-amber-700 dark:text-amber-400">{stats.regular}</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Staff members holding elevated administrator or system administrator privileges.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Reorder.Item>
-              );})}
-            </Reorder.Group>
-          </div>
-        )}
-
-        {/* Navigation Toolbar */}
-        <DataViewToolbar label="Personnel search, views, and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Apple Segmented Control for Active vs Archived */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Active")}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                statusFilter === "Active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Active</span>
-              <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  statusFilter === "Active"
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
-              >
-                {stats.active}
-              </span>
+        <div role="group" aria-label="Personnel status" className="flex items-end gap-5 border-b border-border px-6 dark:border-border">
+          {[["Active", "Active", stats.active], ["Inactive", "Archived", stats.inactive]].map(([value, label, count]) => (
+            <button key={value} type="button" aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)} className={cn("relative flex h-9 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon", statusFilter === value ? "text-pup-maroon dark:text-red-400 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-current" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+              {label} <span className="tabular-nums text-[11px] font-normal">{count}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Inactive")}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                statusFilter === "Inactive"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Archived</span>
-              <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  statusFilter === "Inactive"
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
-              >
-                {stats.inactive}
-              </span>
-            </button>
+          ))}
+        </div>
+
+        <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          <div className="flex min-w-0 flex-[1_0_auto] items-center gap-2">
+<DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID or email..." />
+            <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={setFilterRules} entityLabel="personnel" />
+            <SortPopover options={[{ key: "name", label: "Name" }, { key: "id", label: "Employee ID" }, { key: "email", label: "Email" }, { key: "office", label: "Office" }, { key: "role", label: "Role" }, { key: "section", label: "Section" }, { key: "last_active", label: "Last Sign-in" }, { key: "totp_enabled", label: "Two-step Verification" }, { key: "created_at", label: "Date Added" }, { key: "updated_at", label: "Last Updated" }]} sortBy={sortBy} onSortByChange={(value) => { setSortBy(value); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
+            <GroupPopover options={[{ key: "office", label: "Office", icon: Building01Icon }, { key: "role", label: "Role", icon: EmptyUserGroupIcon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
+            <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+            <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} />
           </div>
-
-          {/* Right: Scroll controls, Search Input & Dropdown Popovers Group */}
-          <div className="flex flex-nowrap items-center gap-3 shrink-0">
-            <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-              </div>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, ID or email..."
-                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                {filteredStaff.length}
-              </div>
-            </div>
-
-            {/* Unified Multi-Criteria Popover Filter */}
-            <div className="w-full sm:w-auto shrink-0">
-              <MultiCriteriaFilter
-                title="Filter Personnel"
-                groups={staffFilterGroups}
-                selected={staffFilters}
-                onChange={(newFilters) => {
-                  setStaffFilters(newFilters)
-                  setPage(1)
-                }}
-                totalCount={staff.filter((s) => (statusFilter === "Active" ? s.status === "Active" : s.status !== "Active")).length}
-                matchingCount={filteredStaff.length}
-                onReset={() => {
-                  setStaffFilters({ role: [], office: [] })
-                  setPage(1)
-                }}
-              />
-            </div>
-            <TableScrollControls scrollContainerRef={tableContainerRef}
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              isScrolled={isScrolled}
-              onScrollLeft={scrollLeft}
-              onScrollRight={scrollRight}
-              onResetScroll={resetScroll}
-            />
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <RefreshButton onRefresh={handleManualRefresh} isLoading={isManualLoading} title="Refresh Staff Directory" className="h-9 w-9" />
+            <Button onClick={handleOpenCreate} className="h-9 px-4">Register Personnel</Button>
           </div>
         </DataViewToolbar>
 
         {/* Active Filter Chips Row */}
         <ActiveFilterChips
+          chips={filterRules.map((rule) => ({ id: rule.id, label: `${filterFields.find((field) => field.key === rule.fieldKey)?.label || rule.fieldKey} ${rule.operator === "is_not" ? "is not" : "is"} ${filterFields.find((field) => field.key === rule.fieldKey)?.options?.find((option) => String(option.value) === rule.value)?.label || rule.value}`, onRemove: () => setFilterRules((current) => current.filter((item) => item.id !== rule.id)) }))}
           groups={staffFilterGroups}
           selected={staffFilters}
           onRemove={(groupId, val) => {
@@ -1102,23 +909,22 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           onClearAll={() => {
             setSearch("")
             setStaffFilters({ role: [], office: [] })
+            setFilterRules([])
             setPage(1)
           }}
-          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+          className="bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Content Section: Directory Table inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
-          {loading ? (
-            <DirectoryTableSkeleton rowCount={8} />
-          ) : filteredStaff.length === 0 ? (
+        <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
+          {filteredStaff.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia>{hasActiveFilters ? <EmptySearch01Icon size="1em" /> : statusFilter === "Inactive" ? <EmptyArchive01Icon size="1em" /> : <EmptyUserGroupIcon size="1em" />}</EmptyMedia>
                   <EmptyTitle>
-                    {hasActiveFilters 
-                      ? "No Results Found" 
+                    {hasActiveFilters
+                      ? "No Results Found"
                       : (statusFilter === "Inactive" ? "No Archived Personnel Found" : "No Personnel Found")}
                   </EmptyTitle>
                   <EmptyDescription>
@@ -1136,7 +942,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         variant="outline"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-10 items-center justify-center gap-2 px-5"
                       >
                         Reset Filters
                       </Button>
@@ -1153,276 +959,260 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 )}
               </Empty>
             </div>
-      ) : (
-        <>
-          <div
-            ref={tableContainerRef}
-            className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
-          >
-            <Table columns={["selection", "identifier", { kind: "text", maxWidth: 340 }, "category", "category", "actions"]} className="min-w-[960px]">
-            <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-              <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                <th
-                  className="w-12 p-4 text-center align-middle"
-                >
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
-                    checked={
-                      paginatedStaff.length > 0 &&
-                      paginatedStaff
-                        .filter((s) => s.id !== authUser?.id)
-                        .every((s) => selectedIds.has(s.id))
-                    }
-                    onChange={(e) => toggleSelectAll(e.target.checked)}
-                    disabled={
-                      paginatedStaff.length === 0 ||
-                      paginatedStaff.every((s) => s.id === authUser?.id)
-                    }
-                  />
-                </th>
-                <th className="p-4 w-[22%]">
-                  <div className="flex items-center justify-between gap-1">
-                    <button
-                      onClick={() => handleSort("id")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Employee ID{" "}
-                      <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </div>
-                </th>
-                <th className="p-4 w-[28%]">
-                  <button
-                    onClick={() => handleSort("name")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                      sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Staff Name / Contact{" "}
-                    <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
-                  </button>
-                </th>
-                <th className="p-4 w-[20%]">
-                  <button
-                    onClick={() => handleSort("office")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                      sortBy === "office" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Office Partition{" "}
-                    <SortIndicator column="office" sortBy={sortBy} sortOrder={sortOrder} />
-                  </button>
-                </th>
-                <th className="p-4 w-[20%]">
-                  <button
-                    onClick={() => handleSort("role")}
-                    className={cn(
-                      "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                      sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    Privilege Level{" "}
-                    <SortIndicator column="role" sortBy={sortBy} sortOrder={sortOrder} />
-                  </button>
-                </th>
-                <th className="w-28 p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            
-            <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
-              {paginatedStaff.map((member) => {
-                const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
-                const isSelf = member.id === authUser?.id
-                const isSelected = selectedIds.has(member.id)
-                
-                return (
-                  <tr 
-                    key={member.id}
-                    selected={isSelected}
-                    onClick={(e) => !isSelf && toggleSelect(member.id, e)}
-                    className={cn(
-                      "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
-                      !isSelf && "cursor-pointer",
-                      isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
-                    )}
-                  >
-                    <td
-                      className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70"
-                    >
-                      {!isSelf && (
+          ) : (
+            <>
+              <div
+                ref={tableContainerRef}
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar select-none"
+              >
+                <Table columns={staffTableColumns} className={visibleColumns.length >= 3 ? "min-w-[960px]" : "min-w-[560px]"}>
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                      <th
+                        className="w-12 p-4 text-center align-middle"
+                      >
                         <input
                           type="checkbox"
-                          className={cn(
-                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                          )}
-                          checked={isSelected}
-                          onChange={() => {}}
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
+                          checked={
+                            paginatedStaff.length > 0 &&
+                            paginatedStaff
+                              .filter((s) => s.id !== authUser?.id)
+                              .every((s) => selectedIds.has(s.id))
+                          }
+                          onChange={(e) => toggleSelectAll(e.target.checked)}
+                          disabled={
+                            paginatedStaff.length === 0 ||
+                            paginatedStaff.every((s) => s.id === authUser?.id)
+                          }
                         />
+                      </th>
+                      <th className="p-4 w-[22%]">
+                        <div className="flex items-center justify-between gap-1">
+                          <button
+                            onClick={() => handleSort("id")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Employee ID{" "}
+                            <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </div>
+                      </th>
+                      {visibleColumns.includes("name") && (
+                        <th className="p-4 w-[28%]">
+                          <button
+                            onClick={() => handleSort("name")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Staff Name{" "}
+                            <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
                       )}
-                    </td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                      <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                        {member.id}
-                      </span>
-                    </td>
-                    <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                      <div className="flex flex-col min-w-0">
-                        <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
-                          {getStaffCleanName(member)} {isSelf && "(You)"}
-                        </span>
-                        <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={getStaffCleanEmail(member)}>
-                          {getStaffCleanEmail(member)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                      {office ? (
-                        <span 
-                          className="rms-office-accent inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide border-0 select-none"
-                          data-color={office.accent_color || "#800000"}
-                          style={{
-                            color: office.accent_color || "#800000",
-                            backgroundColor: `color-mix(in srgb, ${office.accent_color || "#800000"} 12%, transparent)`,
-                          }}
-                        >
-                          {office.short_name}
-                        </span>
-                      ) : (
-                        <span className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
-                          Platform Level
-                        </span>
+                      {visibleColumns.includes("email") && (
+                        <th className="p-4"><button onClick={() => handleSort("email")} className="group flex items-center text-xs font-semibold text-gray-500 dark:text-zinc-400">Email <SortIndicator column="email" sortBy={sortBy} sortOrder={sortOrder} /></button></th>
                       )}
-                    </td>
-                    <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                      <div 
-                        className={cn(
-                          "inline-flex items-center gap-1.5 w-fit justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide border",
-                          member.role === "SystemAdmin" || member.role === "SuperAdmin"
-                            ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
-                            : member.role === "Admin"
-                              ? "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40"
-                              : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
-                        )}
-                      >
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          member.role === "SystemAdmin" || member.role === "SuperAdmin"
-                            ? "bg-purple-400 dark:bg-purple-600"
-                            : member.role === "Admin"
-                              ? "bg-red-500"
-                              : "bg-amber-500"
-                        )} />
-                        <span>{member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}</span>
-                      </div>
-                    </td>
-                    <td className="w-28 p-4 pr-6 align-middle text-right whitespace-nowrap">
-                      <div
-                        className="flex items-center justify-end gap-1.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {/* Always show View Profile inspector button */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => setInspectMember(member)}
-                              aria-label="View Personnel Profile"
-                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      {visibleColumns.includes("office") && (
+                        <th className="p-4 w-[20%]">
+                          <button
+                            onClick={() => handleSort("office")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              sortBy === "office" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Office Partition{" "}
+                            <SortIndicator column="office" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("role") && (
+                        <th className="p-4 w-[20%]">
+                          <button
+                            onClick={() => handleSort("role")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Privilege Level{" "}
+                            <SortIndicator column="role" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {[
+                        ["section", "Administrative Section"],
+                        ["last_active", "Last Sign-in"],
+                        ["totp_enabled", "Two-step Verification"],
+                        ["created_at", "Date Added"],
+                        ["updated_at", "Last Updated"],
+                      ].map(([key, label]) => visibleColumns.includes(key) && (
+                        <th key={key} className="p-4">
+                          <button type="button" onClick={() => handleSort(key)} className={cn(
+                            "group inline-flex items-center text-xs font-semibold transition-colors",
+                            sortBy === key ? "text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                          )}>
+                            {label}<SortIndicator column={key} sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      ))}
+                      <th className="w-12 p-0 text-center"><span className="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
+                    {groupedStaff.map(([groupLabel, members]) => <Fragment key={groupLabel || "all"}>
+                      {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 3} className="bg-gray-50 px-6 py-2 text-xs font-semibold text-gray-600 dark:bg-zinc-900 dark:text-zinc-300">{groupLabel} <span className="ml-2 tabular-nums font-normal">{members.length}</span></td></tr>}
+                      {members.map((member) => {
+                        const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
+                        const isSelf = member.id === authUser?.id
+                        const isSelected = selectedIds.has(member.id)
+
+                        return (
+                          <tr
+                            key={member.id}
+                            data-selected={isSelected}
+                            onClick={(e) => !isSelf && toggleSelect(member.id, e)}
+                            className={cn(
+                              "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
+                              !isSelf && "cursor-pointer",
+
+                            )}
+                          >
+                            <td
+                              className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70"
                             >
-                              <ViewIcon size="1em" className="text-[16px]" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>View Profile</TooltipContent>
-                        </Tooltip>
-
-                        {isSelf ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() =>
-                                  window.dispatchEvent(
-                                    new CustomEvent("switch-view", {
-                                      detail: { view: "settings" },
-                                    })
-                                  )
-                                }
-                                aria-label="My Account Settings"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                              >
-                                <Settings01Icon size="1em" className="text-[16px]"></Settings01Icon>
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>My Account Settings</TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <div className="flex items-center gap-1.5">
-                            {statusFilter === "Active" && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => handleOpenEdit(member)}
-                                    aria-label="Edit Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                  >
-                                    <PencilEdit01Icon size="1em" className="text-[16px]"></PencilEdit01Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit Staff</TooltipContent>
-                              </Tooltip>
+                              {!isSelf && (
+                                <input
+                                  type="checkbox"
+                                  className={cn(
+                                    "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                                    isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                                  )}
+                                  checked={isSelected}
+                                  onChange={() => { }}
+                                />
+                              )}
+                            </td>
+                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                                {member.id}
+                              </span>
+                            </td>
+                            {visibleColumns.includes("name") && (
+                              <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                <div className="flex flex-col min-w-0">
+                                  <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
+                                    {getStaffCleanName(member)} {isSelf && "(You)"}
+                                  </span>
+                                </div>
+                              </td>
                             )}
-
-                            {statusFilter === "Inactive" || member.status === "Inactive" || member.status === "Archived" ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => setRestoreTarget(member)}
-                                    aria-label="Restore Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                  >
-                                    <Archive02Icon size="1em" className="text-[16px]"></Archive02Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Restore</TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => setArchiveTarget(member)}
-                                    aria-label="Archive Staff Member"
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                  >
-                                    <Archive01Icon size="1em" className="text-[16px]"></Archive01Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Archive</TooltipContent>
-                              </Tooltip>
+                            {visibleColumns.includes("email") && (
+                              <td className="p-4 align-middle"><div className="w-full min-w-0 truncate text-xs text-gray-600 dark:text-zinc-300" title={getStaffCleanEmail(member)}>{getStaffCleanEmail(member)}</div></td>
                             )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-            </Table>
+                            {visibleColumns.includes("office") && (
+                              <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                {office ? (
+                                  <span
+                                    className="systemadmin-office-badge inline-flex min-h-6 w-fit items-center justify-center rounded-full px-2.5 text-xs font-medium border-0 select-none"
+                                    style={{ "--office-accent": office.accent_color || "#800000" }}
+                                  >
+                                    {office.short_name}
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                                    Platform Level
+                                  </span>
+                                )}
+                              </td>
+                            )}
+                            {visibleColumns.includes("role") && (
+                              <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <div
+                                  className={cn(
+                                    "inline-flex items-center gap-1.5 w-fit justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide border",
+                                    member.role === "SystemAdmin" || member.role === "SuperAdmin"
+                                      ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
+                                      : member.role === "Admin"
+                                        ? "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40"
+                                        : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
+                                  )}
+                                >
+                                  <span className={cn(
+                                    "w-1.5 h-1.5 rounded-full",
+                                    member.role === "SystemAdmin" || member.role === "SuperAdmin"
+                                      ? "bg-purple-400 dark:bg-purple-600"
+                                      : member.role === "Admin"
+                                        ? "bg-red-500"
+                                        : "bg-amber-500"
+                                  )} />
+                                  <span>{member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}</span>
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.includes("section") && (
+                              <td className="p-4 align-middle">
+                                <span className="block w-full min-w-0 truncate text-xs text-gray-700 dark:text-zinc-300" title={member.section || "No section assigned"}>
+                                  {member.section || "No section assigned"}
+                                </span>
+                              </td>
+                            )}
+                            {visibleColumns.includes("last_active") && (
+                              <td className="p-4 align-middle whitespace-nowrap text-xs tabular-nums text-gray-600 dark:text-zinc-300" title={member.last_active ? formatPHDateTime(member.last_active) : "Never logged in"}>
+                                {member.last_active ? formatPHDateTime(member.last_active) : "Never logged in"}
+                              </td>
+                            )}
+                            {visibleColumns.includes("totp_enabled") && (
+                              <td className="p-4 align-middle text-center">
+                                <span className={cn(
+                                  "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium",
+                                  member.totp_enabled
+                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                                    : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                )}>
+                                  {member.totp_enabled ? "Enabled" : "Not enabled"}
+                                </span>
+                              </td>
+                            )}
+                            {visibleColumns.includes("created_at") && (
+                              <td className="p-4 align-middle whitespace-nowrap text-xs tabular-nums text-gray-600 dark:text-zinc-300" title={member.created_at ? formatPHDateTime(member.created_at) : "Date unavailable"}>
+                                {member.created_at ? formatPHDateTime(member.created_at) : "Date unavailable"}
+                              </td>
+                            )}
+                            {visibleColumns.includes("updated_at") && (
+                              <td className="p-4 align-middle whitespace-nowrap tabular-nums">
+                                {member.updated_at ? formatPHDateTime(member.updated_at) : "N/A"}
+                              </td>
+                            )}
+                            <td className="w-12 p-0 align-middle text-center whitespace-nowrap">
+                              <div className="flex items-center justify-center" onClick={(event) => event.stopPropagation()}>
+                                <PersonnelActionsMenu member={member} name={getStaffCleanName(member)} isSelf={isSelf}
+                                  onViewProfile={setInspectMember} onEdit={handleOpenEdit}
+                                  onSettings={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "settings" } }))}
+                                  onArchive={setArchiveTarget} onRestore={setRestoreTarget} />
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </Fragment>)}
+                  </tbody>
+                </Table>
+              </div>
+
+              {/* Pagination Footer */}
+              <TablePagination label="Global personnel pages" page={page} pageSize={pageSize} totalCount={filteredStaff.length} displayedCount={paginatedStaff.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+            </>
+          )}
         </div>
-
-        {/* Pagination Footer */}
-        <TablePagination label="Global personnel pages" page={page} pageSize={pageSize} totalCount={filteredStaff.length} displayedCount={paginatedStaff.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
-      </>
-    )}
-    </div>
-  </Card>
+      </Card>
 
       {/* Register / Edit Form Dialog */}
       <Dialog
@@ -1573,7 +1363,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 variant="outline"
                 onClick={() => setFormOpen(false)}
                 disabled={submitLoading}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4"
               >
                 Cancel
               </Button>
@@ -1609,7 +1399,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               Please share this temporary password securely with the user. They will be prompted to change it upon first login.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="p-6 pt-4">
             <div className="p-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50 dark:bg-zinc-950/20 text-center">
               <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Temporary Password</span>
@@ -1626,7 +1416,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 showToast("Password copied to clipboard")
               }}
               variant="outline"
-              className="text-xs border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 h-10 px-4 font-semibold rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs active:scale-95 transition-all"
+              className="h-10 px-4"
             >
               Copy Password
             </Button>
@@ -1846,11 +1636,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="shrink-0">
                       {office ? (
                         <span
-                          className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold border-0 select-none"
-                          style={{
-                            color: office.accent_color || "#800000",
-                            backgroundColor: `color-mix(in srgb, ${office.accent_color || "#800000"} 12%, transparent)`,
-                          }}
+                          className="systemadmin-office-badge inline-flex min-h-6 items-center justify-center rounded-full px-2.5 text-xs font-medium border-0 select-none"
+                          style={{ "--office-accent": office.accent_color || "#800000" }}
                         >
                           {office.name}
                         </span>
@@ -1955,7 +1742,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           })
                         )
                       }}
-                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs shrink-0 cursor-pointer active:scale-95 transition-all"
+                      className="h-8 px-3 shrink-0"
                     >
                       View History
                     </Button>
@@ -1967,7 +1754,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     type="button"
                     variant="outline"
                     onClick={() => setInspectMember(null)}
-                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-10 px-4"
                   >
                     Close
                   </Button>
@@ -1984,7 +1771,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               setInspectMember(null)
                               handleOpenEdit(m)
                             }}
-                            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            className="h-10 px-4"
                           >
                             Edit Profile
                           </Button>
@@ -1996,7 +1783,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               setInspectMember(null)
                               setArchiveTarget(m)
                             }}
-                            className="h-10 px-4 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            className="h-10 px-4"
                           >
                             Archive Personnel
                           </Button>
@@ -2010,7 +1797,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             setInspectMember(null)
                             setRestoreTarget(m)
                           }}
-                          className="h-10 px-4 text-xs font-semibold rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+                          className="h-10 px-4"
                         >
                           Restore Personnel
                         </Button>

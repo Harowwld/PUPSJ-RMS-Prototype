@@ -34,7 +34,7 @@ export async function POST(req) {
     await resetDatabase({ demoAccountsOnly: true });
     return NextResponse.json({
       ok: true,
-      message: "PostgreSQL data reset successfully. Cleared all tables and seeded the 7 default demo accounts.",
+      message: "PostgreSQL data and local files reset successfully. Cleared local scans, uploads, and backups, then seeded the demo baseline.",
     });
   } catch (error) {
     console.error("[reset-db:demo-accounts] Reset failed:", error);

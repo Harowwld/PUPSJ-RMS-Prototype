@@ -36,11 +36,11 @@ export function TableActions({ children, actions, label = "Row actions" }) {
   if (items.length === 1) {
     const item = items[0];
     const control = item.menuItem ? <button type="button" disabled={item.original.props.disabled} onClick={item.original.props.onClick}>{React.Children.toArray(item.original.props.children).filter((child) => React.isValidElement(child) && !textContent(child.props.children))}</button> : item.original;
-    return <div className="table-actions flex items-center justify-center" onClick={stop}><Tooltip><TooltipTrigger asChild>{React.cloneElement(control, { "aria-label": item.label, className: "table-action-button" })}</TooltipTrigger><TooltipContent>{item.label}</TooltipContent></Tooltip></div>;
+    return <div className="table-actions flex w-full items-center justify-center" onClick={stop}><Tooltip><TooltipTrigger asChild>{React.cloneElement(control, { "aria-label": item.label, className: "table-action-button" })}</TooltipTrigger><TooltipContent>{item.label}</TooltipContent></Tooltip></div>;
   }
-  return <div className="table-actions flex items-center justify-center" onClick={stop}><DropdownMenu>
+  return <div className="table-actions flex w-full items-center justify-center" onClick={stop}><DropdownMenu>
     <Tooltip><TooltipTrigger asChild><DropdownMenuTrigger className="table-action-button" aria-label={label}><MoreHorizontalIcon size={16} aria-hidden="true" /></DropdownMenuTrigger></TooltipTrigger><TooltipContent>{label}</TooltipContent></Tooltip>
-    <DropdownMenuContent align="end" onClick={stop}>
+    <DropdownMenuContent align="center" sideOffset={6} onClick={stop}>
       {items.map((item, index) => {
         if (item.menuItem) return React.cloneElement(item.original, { key: index });
         const icons = React.Children.toArray(item.original.props.children).filter((child) => React.isValidElement(child) && !textContent(child.props.children));

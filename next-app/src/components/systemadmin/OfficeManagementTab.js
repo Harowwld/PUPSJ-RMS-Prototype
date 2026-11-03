@@ -1,4 +1,6 @@
 "use client"
+import useViewPreference from "@/hooks/useViewPreference"
+import { formatPHDateTime } from "@/lib/timeFormat"
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import { Textarea } from "@/components/ui/textarea";
@@ -188,18 +190,18 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
   // Filters & Search
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("Active") // "Active" | "Inactive"
-  const [filterClauses, setFilterClauses] = useState([])
+  const [searchQuery, setSearchQuery] = useViewPreference("offices", "searchQuery", "")
+  const [statusFilter, setStatusFilter] = useViewPreference("offices", "statusFilter", "Active") // "Active" | "Inactive"
+  const [filterClauses, setFilterClauses] = useViewPreference("offices", "filterClauses", [])
   const [archiveOfficeTarget, setArchiveOfficeTarget] = useState(null)
   const [isArchiving, setIsArchiving] = useState(false)
   const [restoreOfficeTarget, setRestoreOfficeTarget] = useState(null)
   const [isRestoring, setIsRestoring] = useState(false)
   const [selectedOfficeIdForDetail, setSelectedOfficeIdForDetail] = useState(null)
   const [confirmMatrixLeaveOpen, setConfirmMatrixLeaveOpen] = useState(false)
-  const [layoutView, setLayoutView] = useState("grid")
-  const [visibleColumns, setVisibleColumns] = useState(["department", "office", "station", "staff", "modules", "status"])
-  const [groupBy, setGroupBy] = useState("none")
+  const [layoutView, setLayoutView] = useViewPreference("offices", "layoutView", "grid")
+  const [visibleColumns, setVisibleColumns] = useViewPreference("offices", "visibleColumns", ["department", "office", "station", "staff", "modules", "status"])
+  const [groupBy, setGroupBy] = useViewPreference("offices", "groupBy", "none")
 
   // Multi-Selection State & Batch Actions
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -210,8 +212,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
 
   // Table Sorting state
-  const [sortBy, setSortBy] = useState("short_name")
-  const [sortOrder, setSortOrder] = useState("ASC")
+  const [sortBy, setSortBy] = useViewPreference("offices", "sortBy", "short_name")
+  const [sortOrder, setSortOrder] = useViewPreference("offices", "sortOrder", "ASC")
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -219,7 +221,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   // Table Pagination state
   const initialPageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
   const [page, setPage] = useState(!isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useViewPreference("offices", "pageSize", 20)
 
   useEffect(() => {
     const pageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
@@ -529,7 +531,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       label: `${operator} ${value}`,
       onRemove: () => setFilterClauses((current) => current.filter((clause) => clause.id !== filter.id)),
     }
-  }).filter(Boolean), [filterClauses, filterFields])
+  }).filter(Boolean), [filterClauses, filterFields, setFilterClauses])
 
   const clearOfficeFilters = () => {
     setSearchQuery("")
@@ -597,6 +599,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       } else if (sortBy === "status") {
         valA = (a.status || "").toLowerCase()
         valB = (b.status || "").toLowerCase()
+      } else if (sortBy === "created_at" || sortBy === "updated_at") {
+        valA = Date.parse(a[sortBy]) || 0
+        valB = Date.parse(b[sortBy]) || 0
       }
 
       if (valA < valB) return sortOrder === "ASC" ? -1 : 1
@@ -636,6 +641,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     { key: "staff", label: "Staff", sort: "staff_count", icon: UserSearch01Icon },
     { key: "modules", label: "Modules", sort: "module_count", icon: LayoutGridIcon },
     { key: "status", label: "Status", sort: "status", icon: CheckmarkCircle01Icon },
+    { key: "created_at", label: "Date Added", sort: "created_at", icon: Building01Icon },
+    { key: "updated_at", label: "Last Updated", sort: "updated_at", icon: Building01Icon },
   ]
   const sortOptions = tableColumns.map(({ sort, label, icon }) => ({ key: sort, label, icon }))
   const groupOptions = [
@@ -920,9 +927,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           groupOptions={groupOptions}
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
-          columns={tableColumns}
+          columns={tableColumns.filter((column) => column.key !== "department")}
           visibleColumns={visibleColumns}
-          onVisibleColumnsChange={setVisibleColumns}
+          onVisibleColumnsChange={(keys) => setVisibleColumns(["department", ...keys.filter((key) => key !== "department")])}
           showTableControls={layoutView === "table"}
           scrollControls={{
             scrollContainerRef: tableContainerRef,
@@ -982,7 +989,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         variant="outline"
                         onClick={() => { setSearchQuery(""); setFilterClauses([]) }}
                         title="Reset Filters"
-                        className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-10 items-center justify-center gap-2 px-5"
                       >
                         Reset Filters
                       </Button>
@@ -1219,6 +1226,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   if (key === "station") return { kind: "text", maxWidth: 280 }
                   if (key === "staff" || key === "modules") return { kind: "number", maxWidth: 104 }
                   if (key === "status") return { kind: "status", maxWidth: 144 }
+                  if (key === "created_at" || key === "updated_at") return { kind: "date" }
                   return { kind: "text" }
                 }), { kind: "actions" }]} className="min-w-[960px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1308,6 +1316,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>)}
+                      {tableColumns.filter(({ key }) => ["created_at", "updated_at"].includes(key) && visibleColumns.includes(key)).map(({ key, label }) => (
+                        <th key={key} aria-sort={sortBy === key ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>
+                          <button type="button" onClick={() => handleSort(key)} className="group inline-flex items-center text-xs font-semibold">
+                            {label}<SortIndicator column={key} sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      ))}
                       <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         Actions
                       </th>
@@ -1457,6 +1472,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               </td>
                             )}
 
+                            {["created_at", "updated_at"].filter((key) => visibleColumns.includes(key)).map((key) => (
+                              <td key={key} className="p-4 align-middle whitespace-nowrap tabular-nums">
+                                {office[key] ? formatPHDateTime(office[key]) : "N/A"}
+                              </td>
+                            ))}
                             <td className="p-4 align-middle text-center whitespace-nowrap">
                               <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                                 <OfficeActionsMenu
@@ -1806,7 +1826,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       type="button"
                       onClick={() => setConfirmMatrixLeaveOpen(true)}
                       title="Compare features across departments"
-                      className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center shrink-0 self-start sm:self-auto"
+                      className="h-8 px-3.5 flex items-center justify-center shrink-0 self-start"
                     >
                       Compare Features
                     </Button>
@@ -1944,7 +1964,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 type="button"
                 variant="outline"
                 onClick={() => setDialogOpen(false)}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-4"
               >
                 Cancel
               </Button>

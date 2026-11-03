@@ -619,7 +619,7 @@ export default function OfficeDetailSheet({
                     );
                     handleClose();
                   }}
-                  className="w-full h-9 rounded-xl text-xs font-semibold mt-2 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-9 mt-2"
                 >
                   Manage All Staff in Global Directory
                 </Button>
@@ -689,7 +689,7 @@ export default function OfficeDetailSheet({
                     );
                     handleClose();
                   }}
-                  className="w-full h-9 rounded-xl text-xs font-semibold mt-2 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-9 mt-2"
                 >
                   Configure Feature Matrix
                 </Button>
