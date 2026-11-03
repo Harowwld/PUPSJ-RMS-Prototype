@@ -22,6 +22,7 @@ export function useTableScroll(dependencies = []) {
     setCanScroll(el.scrollWidth > el.clientWidth + 5);
   }, []);
 
+  // Loading states and view switches can replace the viewport after the first render.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -44,7 +45,7 @@ export function useTableScroll(dependencies = []) {
       cancelAnimationFrame(rId);
       if (ro) ro.disconnect();
     };
-  }, [checkScroll]);
+  });
 
   // Re-check scroll state whenever dependencies change, safely using a single trigger effect
   const depsKey = Array.isArray(dependencies)
