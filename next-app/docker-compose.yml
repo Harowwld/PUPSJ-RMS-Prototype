@@ -39,8 +39,8 @@ services:
       HOT_FOLDER_INGEST_TOKEN: ${HOT_FOLDER_INGEST_TOKEN:-}
       HOT_FOLDER_API_URL: http://localhost:3000/api/ingest/hot-folder
       HOT_FOLDER_SOURCE_STATION: ${HOT_FOLDER_SOURCE_STATION:-Docker-Scanner}
-      HOT_FOLDER_OFFICE_ID: ${HOT_FOLDER_OFFICE_ID:-registrar}
       HOT_FOLDER_ROOT: /app/.local/hot-folder
+      HOT_FOLDER_HOST_PATH: ${HOT_FOLDER_HOST_PATH:-/tmp/pupsj-rms-hot-folder}
       TZ: Asia/Manila
       EXTERNAL_BACKUP_PATH: ""
       NODE_ENV: production

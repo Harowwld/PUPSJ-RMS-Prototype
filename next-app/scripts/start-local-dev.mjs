@@ -31,6 +31,7 @@ try {
   run("docker", ["compose", "up", "-d", "--wait", "postgres"], "Docker Compose");
   console.log("[dev] PostgreSQL is ready. Running migrations...");
   run(pnpmCommand, ["db:migrate"], "Database migrations");
+  run("node", ["scripts/migrate-office-folders.mjs"], "Office folder check");
   console.log("[dev] Starting Next.js and the hot-folder watcher...");
 
   const devCommands = [

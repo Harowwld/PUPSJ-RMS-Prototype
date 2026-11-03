@@ -4,6 +4,7 @@ import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
+import { getLocalDataDir, getOfficeUploadsDir } from "./officePaths.js";
 
 function decryptDocumentRow(row) {
   if (!row) return row;
@@ -17,12 +18,8 @@ function decryptDocumentRow(row) {
 async function ensureReviewColumns() {}
 
 function getLocalDir() {
-  return process.env.LOCAL_DATA_DIR
-    ? process.env.LOCAL_DATA_DIR
-    : path.join(process.cwd(), ".local");
+  return getLocalDataDir();
 }
-
-const officeStorageMap = new Map();
 
 function isSafeStorageFilename(value) {
   const normalized = String(value || "").trim().replace(/\\/g, "/");
@@ -35,25 +32,8 @@ function requireOfficeId(officeId) {
   return value;
 }
 
-export function setOfficeStoragePath(officeId, storagePath) {
-  if (officeId && storagePath) {
-    officeStorageMap.set(String(officeId).toLowerCase(), storagePath);
-  }
-}
-
 export function getUploadsDir(officeId = null) {
-  if (officeId) {
-    const custom = officeStorageMap.get(String(officeId).toLowerCase());
-    if (custom) {
-      const dir = path.isAbsolute(custom) ? custom : path.join(/*turbopackIgnore: true*/ process.cwd(), custom);
-      fs.mkdirSync(dir, { recursive: true });
-      return dir;
-    }
-  }
-  const base = getLocalDir();
-  const dir = officeId
-    ? path.join(base, "storage", String(officeId).toLowerCase(), "uploads")
-    : path.join(base, "uploads");
+  const dir = officeId ? getOfficeUploadsDir(officeId) : path.join(getLocalDir(), "uploads");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -172,14 +152,6 @@ export async function createDocument({
     [officeId, docType],
   );
   if (!documentType) throw new Error("Document type is not available in this office.");
-
-  try {
-    const { getOfficeById } = await import("./officesRepo.js");
-    const office = await getOfficeById(officeId);
-    if (office?.storage_path) {
-      setOfficeStoragePath(officeId, office.storage_path);
-    }
-  } catch {}
 
   let verifiedStudentNo = null;
   if (effectiveStudentNo) {

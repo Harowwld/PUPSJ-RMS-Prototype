@@ -1,7 +1,11 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,9 +42,10 @@ import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 import StatCards from "../admin/audit-logs/StatCards"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
-import PdfPreviewDialog from "../admin/audit-logs/PdfPreviewDialog"
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Loading01Icon, ViewIcon, Search01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -106,6 +111,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const logsRequest = useRef(0)
   const [error, setError] = useState(null)
   const [isManualLoading, setIsManualLoading] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
@@ -206,8 +212,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
-  const [previewFrameReady, setPreviewFrameReady] = useState(false)
-  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
+  const previewSession = usePdfPreviewSession();
 
   // Debounce search input
   useEffect(() => {
@@ -302,6 +307,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const fetchLogs = useCallback(
     async (isManual = false, currentOffices = null) => {
+      const request = ++logsRequest.current
       const officeStr = (logFilters.office || []).join(",")
       const sevStr = (logFilters.severity || []).join(",")
       const logsKey = `audit_logs_${page}_${limit}_${officeStr}_${sevStr}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
@@ -332,6 +338,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           `/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${severityQuery}${searchQuery}${startQuery}${endQuery}${sortQuery}`
         )
         const json = await res.json()
+        if (request !== logsRequest.current) return
 
         const officeList = currentOffices || officesRef.current || []
 
@@ -381,11 +388,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
           showToast?.(json.error || "Unable to load activity history.", true)
         }
       } catch {
+        if (request !== logsRequest.current) return
         setError("A network problem prevented the activity history from loading.")
         showToast?.("A network problem prevented the activity history from loading.", true)
       } finally {
-        setLoading(false)
-        setIsManualLoading(false)
+        if (request === logsRequest.current) {
+          setLoading(false)
+          setIsManualLoading(false)
+        }
       }
     },
     [page, limit, logFilters, search, startDate, endDate, sortBy, sortOrder, showToast, updateUrl]
@@ -398,10 +408,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
   }, [fetchOffices])
 
   useEffect(() => {
+    let active = true
     queueMicrotask(() => {
-      fetchStats()
-      fetchLogs()
+      if (active) { fetchStats(); fetchLogs(); }
     })
+    return () => { active = false; logsRequest.current += 1; }
   }, [fetchStats, fetchLogs])
 
   const toggleRow = useCallback((id) => {
@@ -570,6 +581,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const handlePreviewPDF = async () => {
     if (total === 0 || isGeneratingPdf) return
     setIsGeneratingPdf(true)
+    const request = previewSession.begin();
     try {
       const allLogs = await fetchAllForExport()
       const selectedOffices = logFilters.office || []
@@ -597,14 +609,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
         endDate,
         search,
       })
-      const url = URL.createObjectURL(blob)
+      const url = previewSession.createUrl(blob, request)
+      if (!url) return;
       setPdfPreviewUrl(url)
       setPdfPreviewOpen(true)
     } catch (err) {
+      if (!previewSession.isCurrent(request)) return;
       console.error("[PDF Preview Error]", err)
       showToast?.({ title: "Preview Failed", description: err.message || "Unable to generate PDF preview." }, true)
     } finally {
-      setIsGeneratingPdf(false)
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
   }
 
@@ -740,7 +754,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         <span>Generating...</span>
                       </span>
                     ) : (
-                      "Export PDF Report"
+                      PDF_ACTION_LABELS.preview
                     )}
                   </Button>
                 </div>
@@ -754,7 +768,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           </div>
 
           {/* Navigation Toolbar */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+          <DataViewToolbar label="Audit log search, filters, and dates" className="border-t border-border dark:border-border p-5 gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Search Input with Pure Number Count (Left side) */}
             <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
               <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
@@ -789,17 +803,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
 
             {/* Filter controls (Right side) */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Horizontal Scroll Controls */}
-              <TableScrollControls
-                canScrollLeft={canScrollLeft}
-                canScrollRight={canScrollRight}
-                isScrolled={isScrolled}
-                onScrollLeft={scrollLeft}
-                onScrollRight={scrollRight}
-                onResetScroll={resetTableScroll}
-              />
-
+            <div className="flex flex-nowrap items-center gap-3">
               {/* Multi-Criteria Popover Filter */}
               <div className="w-full sm:w-auto shrink-0">
               <MultiCriteriaFilter
@@ -905,8 +909,16 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 </Popover>
               </div>
             </div>
+              <TableScrollControls scrollContainerRef={tableContainerRef}
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                isScrolled={isScrolled}
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetTableScroll}
+              />
             </div>
-          </div>
+          </DataViewToolbar>
 
           {/* Active Filter Chips Row */}
           <ActiveFilterChips
@@ -1001,7 +1013,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
               >
-                <table className="w-full text-sm border-collapse min-w-[1040px]">
+              <Table columns={["selection", "date", "status", "text", "text", "text", { kind: "text", maxWidth: 340 }, "actions"]} className="min-w-[1040px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                   <th
@@ -1102,6 +1114,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     return (
                       <React.Fragment key={log.id}>
                         <tr
+                          selected={Boolean(isSelected)}
                           onClick={() => toggleRow(log.id)}
                           className={cn(
                             "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
@@ -1225,65 +1238,11 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     )
                   })}
               </tbody>
-            </table>
+              </Table>
           </div>
 
           {/* Pagination Toolbar */}
-          {total > 0 && (
-            <div className="mt-auto flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
-              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                <span>Showing {logs.length} of {total.toLocaleString()}</span>
-                <div className="flex items-center gap-2">
-                  <span>Rows:</span>
-                  {[10, 20, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setLimit(size)
-                        setPage(1)
-                        updateUrl(1, search)
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                        limit === size
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={displayPage <= 1}
-                  onClick={() => updatePage(displayPage - 1)}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                  {displayPage}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={displayPage >= totalPages}
-                  onClick={() => updatePage(displayPage + 1)}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination label="Global audit log pages" page={page} pageSize={limit} totalCount={total} displayedCount={logs.length} onPageChange={updatePage} onPageSizeChange={(size) => { setLimit(size); setPage(1); updateUrl(1, search); }} loading={loading} />
         </div>
       )}
     </Card>
@@ -1309,16 +1268,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
         />
 
         {/* PDF Export Preview Dialog */}
-        <PdfPreviewDialog
-          pdfPreviewOpen={pdfPreviewOpen}
-          setPdfPreviewOpen={setPdfPreviewOpen}
-          pdfBlobUrl={pdfBlobUrl}
-          setPdfPreviewUrl={setPdfPreviewUrl}
-          previewFrameReady={previewFrameReady}
-          setPreviewFrameReady={setPreviewFrameReady}
-          handleDownloadFromPreview={handleDownloadFromPreview}
-          isFullscreenPreview={isFullscreenPreview}
-          setIsFullscreenPreview={setIsFullscreenPreview}
+        <PDFPreviewModal
+          open={pdfPreviewOpen}
+          onClose={() => {
+            previewSession.cancel();
+            setIsGeneratingPdf(false);
+            setPdfPreviewUrl(null)
+            setPdfPreviewOpen(false)
+          }}
+          title="Activity History Report Preview"
+          description="Review the recorded actions and details before printing or downloading."
+          pdfUrl={pdfBlobUrl}
+          onDownload={handleDownloadFromPreview}
         />
       </div>
     </TooltipProvider>

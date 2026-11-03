@@ -1,7 +1,10 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 
 import useUrlPage from "@/hooks/useUrlPage"
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useState, useEffect, useMemo } from "react"
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion"
 
@@ -43,6 +46,7 @@ import {
 } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import useTableScroll from "@/hooks/useTableScroll"
 import StudentProfileSheet from "./StudentProfileSheet"
 import StudentDriveFilesView from "./StudentDriveFilesView"
@@ -291,7 +295,7 @@ export default function RecordsArchiveTab({
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
   const [page, setPage] = useUrlPage()
-  const [itemsPerPage, setItemsPerPage] = useState(9) // 9 fits nicely in 3-column card grid, 10 or more in table
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [folderSortBy, setFolderSortBy] = useState("default") // "default", "year-desc", "year-asc", "name-asc", "name-desc", "count-desc"
 
   const [folderColors, setFolderColors] = useState({})
@@ -1070,7 +1074,7 @@ export default function RecordsArchiveTab({
       </div>
 
         {/* 3. Breadcrumb Sub-Header & Table Scroll Controls */}
-        <div className="flex min-h-[46px] py-1.5 items-center justify-between gap-4 border-t border-border dark:border-border bg-white px-6 text-sm dark:bg-card select-none">
+        <DataViewToolbar label="Archive location and table controls" className="min-h-[46px] py-1.5 justify-between gap-4 border-t border-border bg-white px-6 text-sm dark:border-border dark:bg-card select-none">
           <div className="flex items-center gap-3 min-w-0">
             <Breadcrumb className="flex items-center select-none">
               <BreadcrumbList className="flex items-center font-medium text-[14px] text-[#8E8E93] gap-0 dark:text-zinc-400">
@@ -1103,14 +1107,14 @@ export default function RecordsArchiveTab({
             </Breadcrumb>
           </div>
           {isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 && (
-            <TableScrollControls
+            <TableScrollControls scrollContainerRef={tableContainerRef}
               isScrolledX={isScrolledX}
               onResetScroll={resetScroll}
               onScrollLeft={() => scrollLeft(400)}
               onScrollRight={() => scrollRight(400)}
             />
           )}
-        </div>
+        </DataViewToolbar>
 
             <div className={cn("w-full flex-[1_0_auto] flex flex-col bg-white dark:bg-card", isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6", selectedStudent && "rounded-b-2xl")}>
               {selectedStudent ? (
@@ -1441,7 +1445,7 @@ export default function RecordsArchiveTab({
                   key={`table-${currentLevel}-${showArchived}`}
                   className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
                 >
-                  <table className="w-full text-sm border-collapse min-w-[850px]">
+                  <Table columns={["selection", "identifier", "text", ...(isOsas ? ["category"] : []), "text", "actions"]} className="min-w-[850px]">
                     <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         <th className="w-12 p-4 text-center">
@@ -1465,6 +1469,7 @@ export default function RecordsArchiveTab({
                         return (
                           <tr
                             key={row.key}
+                            selected={isSelected}
                             className={cn(
                               "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                               isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
@@ -1536,7 +1541,7 @@ export default function RecordsArchiveTab({
                                          row.student.rawOrg?.bylaws_storage_filename || row.student.bylawsStorageFilename || ""
                                        );
                                      }}
-                                     title="Preview Constitution and By-Laws"
+                                     title={PDF_ACTION_LABELS.preview}
                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
                                    >
                                      <File02Icon size="1em" className="text-[15px]"></File02Icon>
@@ -1574,69 +1579,12 @@ export default function RecordsArchiveTab({
                         )
                       })}
                     </tbody>
-                  </table>
+                  </Table>
                 </div>
               )}
             </div>
 
-            {isLeafLevel && !selectedStudent && totalItems > 0 && (
-              <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none">
-                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
-                  <span>
-                    Showing {paginatedExplorerItems.length} of {totalItems.toLocaleString()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span>Rows:</span>
-                    <div className="flex items-center gap-1">
-                      {[9, 12, 24, 48].map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => {
-                            setItemsPerPage(size)
-                            setPage(1)
-                          }}
-                          className={cn(
-                            "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                            itemsPerPage === size
-                              ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                              : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                          )}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Prev
-                  </Button>
-
-                  <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                    {page}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            {isLeafLevel && !selectedStudent && <TablePagination label="Archive record pages" page={page} pageSize={itemsPerPage} totalCount={totalItems} displayedCount={paginatedExplorerItems.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />}
 
             {!selectedStudent && (
               <OfficeDocumentsTable

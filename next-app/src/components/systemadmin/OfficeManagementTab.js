@@ -1,13 +1,16 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 import { Textarea } from "@/components/ui/textarea";
 
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
-import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
+import { Select } from "@/components/ui/select"
 import OfficeGridSkeleton from "@/components/systemadmin/skeletons/OfficeGridSkeleton"
 import {
   Dialog,
@@ -17,20 +20,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
 import PageHeader from "@/components/shared/PageHeader"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
-import { RefreshButton } from "@/components/shared/RefreshButton"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Empty,
   EmptyHeader,
@@ -40,13 +35,13 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
-import { Reorder } from "framer-motion";
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { fetchJsonOnce } from "@/lib/clientRequest"
 import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
 import useTableScroll from "@/hooks/useTableScroll"
-import TableScrollControls from "@/components/shared/TableScrollControls"
-import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ComputerIcon, Copy01Icon, CovidInfoIcon, DragDropIcon, Folder01Icon, LayoutGridIcon, MoreVerticalIcon, ReloadIcon, Settings01Icon, UserSearch01Icon, ViewIcon, Search01Icon, Archive01Icon} from "hugeicons-react";
+import OfficeTableControls from "@/components/systemadmin/OfficeTableControls"
+import OfficeActionsMenu from "@/components/systemadmin/OfficeActionsMenu"
+import { Add01Icon, Archive01Icon as EmptyArchive01Icon, Building01Icon, Building02Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, ComputerIcon, Copy01Icon, Folder01Icon, LayoutGridIcon, UserSearch01Icon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 // Stored icons may use either the " Cancel01Icon" or " Cancel01Icon" prefix, so compare by bare icon name.
 const iconKey = (value = "") => String(value).trim().split(/\s+/).pop().replace(/^(|ph)-/, "")
@@ -70,7 +65,6 @@ const PRESET_ICONS = [
   { value: " File02Icon", label: "Documents" },
   { value: " Folder01Icon", label: "Folders" },
   { value: " Archive02Icon", label: "Archive Folder" },
-  { value: " Archive01Icon", label: "Archives" },
   { value: " Book01Icon", label: "Library" },
   { value: " BookOpen01Icon", label: "Textbooks" },
   { value: " LibraryIcon", label: "Catalog" },
@@ -101,6 +95,7 @@ const PRESET_ICONS = [
   { value: " Key01Icon", label: "Access Keys" },
   { value: " GlobeIcon", label: "International Affairs" },
   { value: " SecurityCheckIcon", label: "Safety & Security" },
+  { value: " JusticeScale01Icon", label: "Legal Affairs" },
 ]
 
 // Expanded institutional branding colors palette
@@ -127,12 +122,12 @@ const PRESET_COLORS = [
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
   }
   return sortOrder === "ASC" ? (
-    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
   ) : (
-    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
   )
 }
 
@@ -143,16 +138,59 @@ function formatMiddleTruncate(str, maxLength = 26) {
   return str.slice(0, startChars) + "..." + str.slice(str.length - endChars)
 }
 
+function matchesOfficeFilters(office, filters, fields) {
+  return filters.every((filter) => {
+    const field = fields.find((candidate) => candidate.key === filter.fieldKey)
+    if (!field) return true
+
+    if (field.type === "number") {
+      if (String(filter.value).trim() === "") return true
+      const actual = Number(office[field.key] || 0)
+      const expected = Number(filter.value)
+      if (!Number.isFinite(expected)) return true
+      if (filter.operator === "greater_than") return actual > expected
+      if (filter.operator === "less_than") return actual < expected
+      if (filter.operator === "is_not") return actual !== expected
+      return actual === expected
+    }
+
+    const rawActual = field.key === "station_name" ? (office.station_name?.trim() || "__unassigned") : office[field.key]
+    const actual = String(rawActual || "").toLocaleLowerCase()
+    const expected = String(filter.value || "").toLocaleLowerCase()
+    return filter.operator === "is_not" ? actual !== expected : actual === expected
+  })
+}
+
+function OfficeStatusBadge({ isActive }) {
+  const label = isActive ? "Active" : "Archived"
+
+  return (
+    <span
+      data-slot="table-status"
+      data-tone={isActive ? "success" : "neutral"}
+      className="inline-flex min-h-6 max-w-full items-center justify-center gap-1.5 rounded-full border border-transparent px-2.5 py-1 text-[11px] font-medium"
+    >
+      <span
+        aria-hidden="true"
+        className="status-dot h-2 w-2 shrink-0 rounded-full"
+        style={{ backgroundColor: isActive ? "#34d399" : "#a1a1aa" }}
+      />
+      {label}
+    </span>
+  )
+}
+
 export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [offices, setOffices] = useState([])
+  const [storageRoot, setStorageRoot] = useState(".local")
+  const [scannerHostRoot, setScannerHostRoot] = useState(".local/hot-folder")
   const [availableModules, setAvailableModules] = useState([])
   const [loading, setLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("Active") // "Active" | "Inactive"
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const [kpiOrder, setKpiOrder] = useState(["total", "active", "staff"]);
+  const [filterClauses, setFilterClauses] = useState([])
   const [archiveOfficeTarget, setArchiveOfficeTarget] = useState(null)
   const [isArchiving, setIsArchiving] = useState(false)
   const [restoreOfficeTarget, setRestoreOfficeTarget] = useState(null)
@@ -160,7 +198,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [selectedOfficeIdForDetail, setSelectedOfficeIdForDetail] = useState(null)
   const [confirmMatrixLeaveOpen, setConfirmMatrixLeaveOpen] = useState(false)
   const [layoutView, setLayoutView] = useState("grid")
-  
+  const [visibleColumns, setVisibleColumns] = useState(["department", "office", "station", "staff", "modules", "status"])
+  const [groupBy, setGroupBy] = useState("none")
+
   // Multi-Selection State & Batch Actions
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
@@ -202,7 +242,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
       }
     }
-  }, [searchQuery, statusFilter, selectedKpi, router])
+  }, [searchQuery, statusFilter, filterClauses, router])
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -213,29 +253,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     }
   }
 
-  const statCardsRef = useRef(null)
-
-  useEffect(() => {
-    if (!selectedKpi) return
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("touchstart", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside)
-    }
-  }, [selectedKpi])
-
   // Form State
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [selectedOfficeId, setSelectedOfficeId] = useState(null)
   const [modulesAccordionOpen, setModulesAccordionOpen] = useState(false)
-  const [showAdvancedStorage, setShowAdvancedStorage] = useState(false)
 
   const [form, setForm] = useState({
     id: "",
@@ -253,28 +275,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   })
 
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [folderPickerLoading, setFolderPickerLoading] = useState(false)
-
-  const handlePickInboundFolder = async () => {
-    if (!isEditing || !selectedOfficeId) {
-      showToast("Save the office first, then select its inbound folder.", true)
-      return
-    }
-    setFolderPickerLoading(true)
-    try {
-      const response = await fetch(`/api/offices/${selectedOfficeId}/inbound-folder-picker`, { method: "POST" })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || "Folder picker is unavailable")
-      if (!result.cancelled && result.data?.path) {
-        setForm((previous) => ({ ...previous, inbound_path: result.data.path }))
-      }
-    } catch (error) {
-      showToast(error.message || "Could not select an inbound folder", true)
-    } finally {
-      setFolderPickerLoading(false)
-    }
-  }
-
   const fetchOffices = useCallback(async (isSilent = false) => {
     try {
       const cached = getCachedData("systemadmin_offices_stats")
@@ -286,6 +286,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       const result = await fetchJsonOnce("/api/offices?stats=true")
       if (result.ok && Array.isArray(result.data)) {
         setOffices(result.data)
+        if (result.storageRoot) setStorageRoot(result.storageRoot)
+        if (result.scannerHostRoot) setScannerHostRoot(result.scannerHostRoot)
         setCachedData("systemadmin_offices_stats", result.data, 60000)
       } else if (!cached) {
         showToast(result.error || "Failed to fetch offices", true)
@@ -335,7 +337,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     setIsEditing(false)
     setSelectedOfficeId(null)
     setModulesAccordionOpen(false)
-    setShowAdvancedStorage(false)
     const defaultSelected = availableModules.map(m => m.id)
     setForm({
       id: "",
@@ -360,7 +361,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     setSelectedOfficeId(office.id)
     const icon = office.icon || " Building02Icon"
     setModulesAccordionOpen(false)
-    setShowAdvancedStorage(Boolean(office.storage_path || office.inbound_path))
     setForm({
       id: office.id,
       name: office.name,
@@ -371,7 +371,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       status: office.status || "Active",
       station_name: office.station_name || "",
       storage_path: office.storage_path || "",
-      inbound_path: office.inbound_path || "",
+      inbound_path: office.scanner_host_path || office.inbound_path || "",
       adminEmail: "",
       selectedModules: [],
     })
@@ -413,8 +413,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         accent_color: form.accent_color,
         status: form.status,
         station_name: form.station_name.trim() || undefined,
-        storage_path: form.storage_path.trim() || undefined,
-        inbound_path: form.inbound_path.trim() || undefined,
         adminEmail: !isEditing ? cleanAdminEmail : undefined,
       }
 
@@ -496,6 +494,49 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     }
   }, [offices])
 
+  const filterFields = useMemo(() => {
+    const uniqueOptions = (field, fallback = "") => [...new Map(offices.map((office) => {
+      const value = office[field] || fallback
+      return [String(value), { value: String(value), label: String(value) }]
+    })).values()].filter((option) => option.value)
+    const stationOptions = uniqueOptions("station_name")
+    stationOptions.push({ value: "__unassigned", label: "No station assigned" })
+
+    return [
+      { key: "short_name", label: "Department", icon: Building02Icon, options: uniqueOptions("short_name") },
+      { key: "name", label: "Office name", icon: Building01Icon, options: uniqueOptions("name") },
+      { key: "station_name", label: "Station", icon: ComputerIcon, options: stationOptions },
+      { key: "staff_count", label: "Staff", icon: UserSearch01Icon, type: "number" },
+      { key: "module_count", label: "Modules", icon: LayoutGridIcon, type: "number" },
+    ]
+  }, [offices])
+
+  const activeFilterChips = useMemo(() => filterClauses.map((filter) => {
+    const field = filterFields.find((candidate) => candidate.key === filter.fieldKey)
+    if (!field) return null
+    const option = field.options?.find((candidate) => String(candidate.value) === String(filter.value))
+    const value = option?.label || (String(filter.value ?? "").trim() || "Any value")
+    const operator = ({
+      is: "is",
+      is_not: "is not",
+      greater_than: "is greater than",
+      less_than: "is less than",
+    })[filter.operator] || "is"
+
+    return {
+      id: filter.id,
+      groupLabel: field.label,
+      label: `${operator} ${value}`,
+      onRemove: () => setFilterClauses((current) => current.filter((clause) => clause.id !== filter.id)),
+    }
+  }).filter(Boolean), [filterClauses, filterFields])
+
+  const clearOfficeFilters = () => {
+    setSearchQuery("")
+    setFilterClauses([])
+    setPage(1)
+  }
+
   const confirmArchiveOffice = async () => {
     if (!archiveOfficeTarget) return
     setIsArchiving(true)
@@ -524,11 +565,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         !searchQuery ||
         o.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         o.short_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.id.toLowerCase().includes(searchQuery.toLowerCase())
+        o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (o.station_name || "").toLowerCase().includes(searchQuery.toLowerCase())
       const isArchived = o.status !== "Active"
       const matchesTab = statusFilter === "Active" ? !isArchived : isArchived
+      const matchesFilters = matchesOfficeFilters(o, filterClauses, filterFields)
 
-      return matchesSearch && matchesTab
+      return matchesSearch && matchesTab && matchesFilters
     })
 
     list.sort((a, b) => {
@@ -562,7 +605,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     })
 
     return list
-  }, [offices, searchQuery, statusFilter, sortBy, sortOrder])
+  }, [offices, searchQuery, statusFilter, filterClauses, filterFields, sortBy, sortOrder])
 
   const totalPages = Math.max(1, Math.ceil(filteredOffices.length / pageSize))
   const startIndex = (page - 1) * pageSize
@@ -570,6 +613,38 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const paginatedOffices = useMemo(() => {
     return filteredOffices.slice(startIndex, startIndex + pageSize)
   }, [filteredOffices, startIndex, pageSize])
+
+  const groupedOffices = useMemo(() => {
+    if (groupBy === "none") return [{ key: "all", label: "", offices: paginatedOffices }]
+    const groups = new Map()
+    paginatedOffices.forEach((office) => {
+      const label = groupBy === "station"
+        ? (office.station_name || "Unassigned station")
+        : groupBy === "staff_count"
+          ? `${office.staff_count || 0} staff`
+          : office.status === "Active" ? "Active" : "Archived"
+      if (!groups.has(label)) groups.set(label, [])
+      groups.get(label).push(office)
+    })
+    return [...groups.entries()].map(([label, offices]) => ({ key: label, label, offices }))
+  }, [groupBy, paginatedOffices])
+
+  const tableColumns = [
+    { key: "department", label: "Department / Office", sort: "short_name", icon: Building02Icon },
+    { key: "office", label: "Office Name & Description", sort: "name", icon: Building01Icon },
+    { key: "station", label: "Workstation & Storage", sort: "station_name", icon: ComputerIcon },
+    { key: "staff", label: "Staff", sort: "staff_count", icon: UserSearch01Icon },
+    { key: "modules", label: "Modules", sort: "module_count", icon: LayoutGridIcon },
+    { key: "status", label: "Status", sort: "status", icon: CheckmarkCircle01Icon },
+  ]
+  const sortOptions = tableColumns.map(({ sort, label, icon }) => ({ key: sort, label, icon }))
+  const groupOptions = [
+    { key: "status", label: "Status", icon: CheckmarkCircle01Icon },
+    { key: "station", label: "Station", icon: ComputerIcon },
+    { key: "staff_count", label: "Staff count", icon: UserSearch01Icon },
+    { key: "none", label: "No grouping" },
+  ]
+  const orderedVisibleColumnKeys = tableColumns.filter((column) => visibleColumns.includes(column.key)).map((column) => column.key)
 
   // Horizontal table scrolling hook
   const {
@@ -773,30 +848,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     router.push(nextUrl, { scroll: false })
   }, [totalPages, router])
 
-  const statCardsData = [
-    {
-      key: "total",
-      label: "Campus Offices",
-      value: stats.total,
-      sublabel: `${stats.active} active offices`,
-      color: "blue",
-    },
-    {
-      key: "active",
-      label: "Active Departments",
-      value: stats.active,
-      sublabel: `${stats.inactive} archived departments`,
-      color: "emerald",
-    },
-    {
-      key: "staff",
-      label: "Total Staff",
-      value: stats.totalStaff,
-      sublabel: `${stats.avgStaff} avg. staff per office`,
-      color: "amber",
-    },
-  ]
-
   const enabledCount = useMemo(() => {
     const sysCount = availableModules.filter(m => m.is_system).length
     const customCount = form.selectedModules.filter(id => !availableModules.find(m => m.id === id)?.is_system).length
@@ -810,9 +861,15 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         <PageHeader
           icon=" Building01Icon"
           title={
-            <div className="flex items-center gap-[6px]">
-              <span>Departments & Offices</span>
-              
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>Departments & Stations</span>
+              {loading ? (
+                <Skeleton aria-hidden="true" className="h-3.5 w-44 rounded dark:bg-muted" />
+              ) : (
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">
+                  {stats.total.toLocaleString()} departments · {stats.totalStaff.toLocaleString()} personnel
+                </span>
+              )}
             </div>
           }
           description="Manage campus offices, link scanning computers, and configure departmental storage folders."
@@ -820,308 +877,110 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-              {/* 1. View Switcher: Cards vs Table */}
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border dark:border-border">
-                <button
-                  type="button"
-                  onClick={() => setLayoutView("grid")}
-                  aria-pressed={layoutView === "grid"}
-                  title="Show each office as a card"
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                    layoutView === "grid"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
-                  <ViewModeIcon mode="cards" className="text-sm" />
-                  <span>Cards</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLayoutView("table")}
-                  aria-pressed={layoutView === "table"}
-                  title="Show offices in rows and columns"
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                    layoutView === "table"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
-                  <ViewModeIcon mode="table" className="text-sm" />
-                  <span>Table</span>
-                </button>
-              </div>
-
-              {/* 2. Refresh Button (beside table/grid on left side of separator) */}
-              <RefreshButton
-                onRefresh={handleManualRefresh}
-                isLoading={isManualLoading}
-                title="Refresh Offices & Modules"
-              />
-
-              
-              {/* 4. Add Button */}
-              <Button
-                onClick={handleOpenCreate}
-                className="flex h-10 items-center justify-center cursor-pointer px-5"
-              >
-                Add Department
-              </Button>
-            </div>
-          }
         />
 
-        {/* Stat Cards */}
-        {loading ? (
-          <div className="px-6 pb-6">
-            <KpiStatCardsSkeleton count={3} />
-          </div>
-        ) : (
-          <div className="px-6 pb-6">
-            <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="flex flex-wrap gap-4 items-stretch w-full relative z-20 transition-all duration-500">
-              {kpiOrder.map((kpiKey) => {
-                const stat = statCardsData.find(s => s.key === kpiKey);
-                if (!stat) return null;
-                return (
-                <Reorder.Item as="div" value={stat.key} key={stat.key} className={cn("flex-1 min-w-[280px] relative group rounded-xl", selectedKpi === stat.key ? "z-30" : "z-10")}>
-                  <div
-                    onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
-                    className={cn(
-                      "relative overflow-hidden rounded-2xl border cursor-pointer select-none transition-all shadow-xs hover:shadow-sm flex flex-col justify-between min-h-[110px] h-full bg-gray-50/90 hover:bg-gray-50 dark:bg-zinc-900/60 dark:hover:bg-zinc-900/90",
-                      selectedKpi === stat.key
-                        ? `border-${stat.color}-500/50 ring-1 ring-${stat.color}-500/20`
-                        : "border-border dark:border-border"
-                    )}
-                  >
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                          {stat.label}
-                        </span>
-                      </div>
-                      <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0", stat.color === "blue" ? "bg-[#3b82f6]" : stat.color === "emerald" ? "bg-[#10b981]" : "bg-[#f59e0b]")}>
-                        <AppIcon className={cn(" text-[15px]", stat.color === "blue" ? "Building01Icon" : stat.color === "emerald" ? "Briefcase01Icon" : "UserSearch01Icon")} />
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {stat.value.toLocaleString()}
-                        </span>
-                        <span className={cn("text-xs font-medium mb-1", `text-${stat.color}-600 dark:text-${stat.color}-400`)}>
-                          {stat.sublabel}
-                        </span>
-                      </div>
-                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                    </div>
-                  </div>
-
-                  {/* Absolute details container */}
-                  <div
-                    className={cn(
-                      "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                      selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                    )}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {stat.key === "total" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Offices</span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.total}</span>
-                          </div>
-                          <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                            <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Avg Modules</span>
-                            <span className="text-lg font-black text-blue-700 dark:text-blue-400">{stats.avgModules}</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Administrative and academic offices operating across campus with role-based access.
-                        </div>
-                      </div>
-                    )}
-                    {stat.key === "active" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setStatusFilter("Active")
-                              setSelectedKpi(null)
-                            }}
-                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-border dark:border-border"
-                          >
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Active</span>
-                            <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{stats.active}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setStatusFilter("Inactive")
-                              setSelectedKpi(null)
-                            }}
-                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-border dark:border-border"
-                          >
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Archived</span>
-                            <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats.inactive}</span>
-                          </button>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Click either button to filter active departments or switch to the archived recovery vault.
-                        </div>
-                      </div>
-                    )}
-                    {stat.key === "staff" && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedKpi(null)
-                              if (typeof onSwitchTab === "function") {
-                                onSwitchTab("staff")
-                              } else if (typeof window !== "undefined") {
-                                window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff" } }))
-                              }
-                            }}
-                            className="bg-gray-50 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-700/60 transition-colors p-2.5 rounded-lg text-left cursor-pointer border border-border dark:border-border"
-                          >
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Total Staff</span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{stats.totalStaff}</span>
-                          </button>
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Avg. Staff / Office</span>
-                            <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats.avgStaff}</span>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
-                          Click Total Staff to view all personnel across all offices in the Global Directory.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Reorder.Item>
-              );})}
-            </Reorder.Group>
-          </div>
-        )}
-
-        {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-          {/* Left: Active vs Archived Apple-style Segmented Control */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl shrink-0 border border-border dark:border-border select-none">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Active")}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                statusFilter === "Active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Active</span>
-              <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  statusFilter === "Active"
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+        <div className="flex items-end gap-x-5 overflow-x-auto px-6 scrollbar-none border-b border-border dark:border-white/10">
+          <div role="group" aria-label="Department status" className="flex h-9 shrink-0 items-stretch">
+            {[{ key: "Active", label: "Active", count: stats.active }, { key: "Inactive", label: "Archived", count: stats.inactive }].map(({ key, label, count }) => (
+              <button key={key} type="button" onClick={() => setStatusFilter(key)} aria-pressed={statusFilter === key}
+                className={cn("relative inline-flex items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", statusFilter === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                {label}{loading ? (
+                  <Skeleton aria-hidden="true" className="h-3 w-6 rounded dark:bg-muted" />
+                ) : (
+                  <span className="font-sans tabular-nums text-[10px] text-gray-400 dark:text-zinc-500">{count}</span>
                 )}
-              >
-                {stats.active}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Inactive")}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                statusFilter === "Inactive"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Archived</span>
-              <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  statusFilter === "Inactive"
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
-              >
-                {stats.inactive}
-              </span>
-            </button>
+                {statusFilter === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+              </button>
+            ))}
           </div>
-
-          {/* Right: Scroll controls & Search Input */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            {layoutView === "table" && (
-              <TableScrollControls
-                canScrollLeft={canScrollLeft}
-                canScrollRight={canScrollRight}
-                isScrolled={isScrolled}
-                onScrollLeft={scrollLeft}
-                onScrollRight={scrollRight}
-                onResetScroll={resetScroll}
-              />
-            )}
-            <div className="w-full sm:w-[320px] lg:w-[380px] relative group shrink-0">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
-              </div>
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search departments by name, acronym, ID..."
-                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                {filteredOffices.length}
-              </div>
-            </div>
+          <div role="group" aria-label="Department display" className="flex h-9 shrink-0 items-stretch">
+            {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => (
+              <button key={mode} type="button" onClick={() => setLayoutView(mode)} aria-pressed={layoutView === mode}
+                className={cn("relative inline-flex items-center gap-1.5 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", layoutView === mode ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />{label}
+                {layoutView === mode && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+              </button>
+            ))}
           </div>
         </div>
 
+        <OfficeTableControls
+          searchQuery={searchQuery}
+          onSearchChange={(value) => { setSearchQuery(value); setPage(1) }}
+          resultCount={filteredOffices.length}
+          isLoading={loading}
+          filterFields={filterFields}
+          filters={filterClauses}
+          onFiltersChange={(nextFilters) => { setFilterClauses(nextFilters); setPage(1) }}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          onSortByChange={(value) => { setSortBy(value); setSortOrder("ASC") }}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
+          groupOptions={groupOptions}
+          groupBy={groupBy}
+          onGroupByChange={setGroupBy}
+          columns={tableColumns}
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
+          showTableControls={layoutView === "table"}
+          scrollControls={{
+            scrollContainerRef: tableContainerRef,
+            canScrollLeft,
+            canScrollRight,
+            isScrolled,
+            onScrollLeft: scrollLeft,
+            onScrollRight: scrollRight,
+            onResetScroll: resetScroll,
+          }}
+          onRefresh={handleManualRefresh}
+          isRefreshing={isManualLoading}
+          onAddDepartment={handleOpenCreate}
+        />
+
+        <ActiveFilterChips
+          chips={activeFilterChips}
+          searchQuery={searchQuery}
+          onClearSearch={() => { setSearchQuery(""); setPage(1) }}
+          onClearAll={clearOfficeFilters}
+          className="border-t border-border px-5 py-2.5 dark:border-border"
+        />
+
         {/* Content Section inside the single card */}
-        <div className="rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
+        <div aria-busy={loading || undefined} className="rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
-            <OfficeGridSkeleton layoutView={layoutView} count={6} />
+            <OfficeGridSkeleton
+              layoutView={layoutView}
+              count={layoutView === "table" ? pageSize : 6}
+              visibleColumns={orderedVisibleColumnKeys}
+              groupBy={groupBy}
+              statusFilter={statusFilter}
+              tableContainerRef={tableContainerRef}
+            />
           ) : filteredOffices.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
                 <EmptyHeader>
-                  <EmptyMedia>{searchQuery ? <EmptySearch01Icon size="1em" /> : statusFilter === "Inactive" ? <EmptyArchive01Icon size="1em" /> : <EmptyBuilding03Icon size="1em" />}</EmptyMedia>
+                  <EmptyMedia>{searchQuery || filterClauses.length ? <EmptySearch01Icon size="1em" /> : statusFilter === "Inactive" ? <EmptyArchive01Icon size="1em" /> : <EmptyBuilding03Icon size="1em" />}</EmptyMedia>
                   <EmptyTitle>
-                    {searchQuery
+                    {searchQuery || filterClauses.length
                       ? "No Results Found"
                       : (statusFilter === "Inactive" ? "No Archived Departments Found" : "No Departments Found")}
                   </EmptyTitle>
                   <EmptyDescription>
-                    {searchQuery
-                      ? "We couldn't find any departments matching your search criteria. Try adjusting your keywords."
+                    {searchQuery || filterClauses.length
+                      ? "No departments match your search and filters. Adjust or reset the filters to see more results."
                       : (statusFilter === "Inactive"
                         ? "There are currently no archived departments in the system."
                         : "There are currently no administrative or academic campus departments configured in the system.")}
                   </EmptyDescription>
                 </EmptyHeader>
-                {(searchQuery || statusFilter === "Active") && (
+                {(searchQuery || filterClauses.length > 0 || statusFilter === "Active") && (
                   <EmptyContent>
-                    {searchQuery ? (
+                    {searchQuery || filterClauses.length > 0 ? (
                       <Button
                         variant="outline"
-                        onClick={() => setSearchQuery("")}
+                        onClick={() => { setSearchQuery(""); setFilterClauses([]) }}
                         title="Reset Filters"
                         className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
@@ -1140,733 +999,494 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 )}
               </Empty>
             </div>
-      ) : layoutView === "grid" ? (
-        <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOffices.map((office) => {
-            const accent = office.accent_color || "#800000"
-            const isActive = office.status === "Active"
-            const storagePath = office.storage_path || `.local/storage/${office.id}`
-            return (
-              <Card
-                key={office.id}
-                onClick={() => setSelectedOfficeIdForDetail(office.id)}
-                className={cn(
-                  "group overflow-hidden border relative shadow-xs transition-all duration-200 rounded-2xl flex flex-col justify-between p-0 py-0 gap-0 cursor-pointer",
-                  isActive
-                    ? "border-border dark:border-border bg-white dark:bg-card hover:shadow-md hover:-translate-y-0.5"
-                    : "border-dashed border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
-                )}
-              >
-                {/* Clean Apple HIG Header: Continuous-corner icon badge, Department code & Overflow menu */}
-                <div className="p-5 pb-0 flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div
-                      className={cn(
-                        "h-11 w-11 rounded-xl flex items-center justify-center border text-xl shadow-2xs shrink-0 transition-all",
-                        isActive
-                          ? "border-border dark:border-white/10"
-                          : "bg-gray-100 text-gray-400 border-border dark:bg-zinc-800 dark:text-zinc-500"
-                      )}
-                      style={{
-                        backgroundColor: isActive ? `${accent}14` : undefined,
-                        color: isActive ? accent : undefined,
-                      }}
-                    >
-                      <AppIcon className={cn(office.icon || " Building02Icon", "text-xl")} />
-                    </div>
-
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3
-                          className="font-bold text-gray-900 dark:text-zinc-50 text-base leading-tight hover:text-pup-maroon dark:hover:text-red-400 transition-colors truncate"
-                          title={`View details for ${office.name}`}
-                        >
-                          {office.short_name}
-                        </h3>
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
-                          {office.id}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5" title={office.name}>
-                        {office.name}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Status Capsule & Overflow Actions Menu */}
-                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full select-none border",
-                        isActive
-                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                          : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border-border"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          isActive ? "bg-emerald-500" : "bg-zinc-400"
-                        )}
-                      />
-                      {isActive ? "Active" : "Archived"}
-                    </span>
-
-                    {/* Secondary/Destructive Actions Overflow Menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
-                          title="More department actions"
-                          aria-label={`More options for ${office.short_name}`}
-                        >
-                          <MoreVerticalIcon size="1em" className="text-[15px]" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        sideOffset={6}
-                        className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
-                      >
-                        {/* Zone 1: Popover Header */}
-                        <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between">
-                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                            Department Actions
-                          </span>
-                          <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
-                            #{office.id}
-                          </span>
-                        </div>
-
-                        {/* Zone 2: Action Items */}
-                        <div className="p-1.5 space-y-0.5">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedOfficeIdForDetail(office.id)
-                            }}
-                            className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                          >
-                            <CovidInfoIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
-                            <span>View Details</span>
-                          </DropdownMenuItem>
-                          {isActive && (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleOpenEdit(office)
-                              }}
-                              className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                            >
-                              <AppIcon className=" SlidersHorizontalIcon text-sm text-gray-500 dark:text-zinc-400" />
-                              <span>Configure Department</span>
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              if (navigator?.clipboard?.writeText) {
-                                navigator.clipboard.writeText(storagePath)
-                                showToast("Storage path copied to clipboard")
-                              }
-                            }}
-                            className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                          >
-                            <Copy01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
-                            <span>Copy Storage Path</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
-                          {isActive ? (
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setArchiveOfficeTarget(office)
-                              }}
-                              className="cursor-pointer text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
-                            >
-                              <Archive01Icon size="1em" className="text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
-                              <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Archive Department</span>
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setRestoreOfficeTarget(office)
-                              }}
-                              className="cursor-pointer text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:bg-emerald-50 dark:focus:bg-emerald-950/30 focus:text-emerald-600 dark:focus:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 data-highlighted:bg-emerald-50 dark:data-highlighted:bg-emerald-950/30 data-highlighted:text-emerald-600 dark:data-highlighted:text-emerald-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
-                            >
-                              <ReloadIcon size="1em" className="text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
-                              <span className="text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400">Restore Department</span>
-                            </DropdownMenuItem>
-                          )}
-                        </div>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                <CardContent className="p-5 pt-3 flex flex-col h-full justify-between gap-4">
-                  <div className="space-y-3">
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 line-clamp-2 leading-relaxed">
-                      {office.description || "No description provided."}
-                    </p>
-
-                    {/* Workstation & Storage Specs (Grouped Inset Card) */}
-                    <div className="rounded-xl bg-gray-50/80 dark:bg-zinc-800/50 p-2.5 space-y-1.5 border border-border text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
-                          <ComputerIcon size="1em" className="text-xs" />
-                          <span>Scanning Computer:</span>
-                        </span>
-                        <span className="font-semibold text-gray-900 dark:text-zinc-100 text-[11px]">
-                          {office.station_name || "Unassigned"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
-                          <Folder01Icon size="1em" className="text-xs" />
-                          <span>Storage Folder:</span>
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300"
-                            title={storagePath}
-                          >
-                            {formatMiddleTruncate(storagePath, 24)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              if (navigator?.clipboard?.writeText) {
-                                navigator.clipboard.writeText(storagePath)
-                                showToast("Storage path copied to clipboard")
-                              }
-                            }}
-                            className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                            title="Copy path"
-                          >
-                            <Copy01Icon size="1em" className="text-[11px]" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Metrics (Pill Chips, No Dotted Underlines) & Primary Action */}
-                  <div className="space-y-3 pt-3 border-t border-border">
-                    <div className="flex items-center justify-between gap-2">
-                      {/* Native HIG Metric Chips */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))
-                          }}
-                          title="View assigned personnel in Global Directory"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
-                        >
-                          <UserSearch01Icon size="1em" className="text-xs text-gray-400" />
-                          <span>Staff</span>
-                          <span className="font-bold text-gray-900 dark:text-zinc-100">{office.staff_count || 0}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))
-                          }}
-                          title={`Configure workspace modules for ${office.short_name}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
-                        >
-                          <LayoutGridIcon size="1em" className="text-xs text-gray-400" />
-                          <span>Modules</span>
-                          <span className="font-bold text-gray-900 dark:text-zinc-100">{office.module_count || 0}</span>
-                        </button>
-                      </div>
-
-                      {/* Primary Action Button ([Action Verb] + [Specific Noun]) */}
-                      {isActive ? (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleOpenEdit(office)
-                          }}
-                          className="h-9 px-4 cursor-pointer"
-                        >
-                          Configure Department
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setRestoreOfficeTarget(office)
-                          }}
-                          className="h-9 px-4 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer active:scale-95 transition-all"
-                        >
-                          Restore Department
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-          </div>
-        </div>
-      ) : (
-        /* Compact Table View */
-        <>
-          <div
-            ref={tableContainerRef}
-            className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
-          >
-            <table className="w-full text-left text-xs text-gray-600 dark:text-zinc-400 border-collapse min-w-[960px]">
-              <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
-                  <th className="w-12 p-4 text-center align-middle">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
-                      checked={
-                        paginatedOffices.length > 0 &&
-                        paginatedOffices.every((o) => selectedIds.has(o.id))
-                      }
-                      onChange={(e) => toggleSelectAll(e.target.checked)}
-                      disabled={paginatedOffices.length === 0}
-                      aria-label="Select all departments on this page"
-                    />
-                  </th>
-                  <th className="p-4 w-[22%] whitespace-nowrap">
-                    <button
-                      onClick={() => handleSort("short_name")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "short_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Department / Office{" "}
-                      <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[28%] max-w-[340px] whitespace-nowrap">
-                    <button
-                      onClick={() => handleSort("name")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Office Name & Description{" "}
-                      <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[22%] whitespace-nowrap">
-                    <button
-                      onClick={() => handleSort("station_name")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "station_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Workstation & Storage{" "}
-                      <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
-                    <button
-                      onClick={() => handleSort("staff_count")}
-                      className={cn(
-                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "staff_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Staff{" "}
-                      <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[8%] text-center whitespace-nowrap">
-                    <button
-                      onClick={() => handleSort("module_count")}
-                      className={cn(
-                        "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "module_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Modules{" "}
-                      <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 w-[8%] whitespace-nowrap">
-                    <button
-                      onClick={() => handleSort("status")}
-                      className={cn(
-                        "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                        sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      Status{" "}
-                      <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
-                    </button>
-                  </th>
-                  <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border dark:divide-border">
+          ) : layoutView === "grid" ? (
+            <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedOffices.map((office) => {
                   const accent = office.accent_color || "#800000"
-                  const isActive = office.status === "Active"
-                  const isSelected = selectedIds.has(office.id)
+                  const isActive = String(office.status || "").trim().toLowerCase() === "active"
+                  const storagePath = office.storage_path || `.local/storage/${office.id}`
                   return (
-                    <tr
+                    <Card
                       key={office.id}
-                      onClick={(e) => toggleSelect(office.id, e)}
                       className={cn(
-                        "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer",
-                        !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75",
-                        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                        "group overflow-hidden border relative shadow-xs rounded-2xl flex flex-col justify-between p-0 py-0 gap-0",
+                        isActive
+                          ? "border-border dark:border-border bg-white dark:bg-card"
+                          : "border-dashed border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
                       )}
                     >
-                      <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
-                        <input
-                          type="checkbox"
-                          className={cn(
-                            "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                          )}
-                          checked={isSelected}
-                          onChange={() => {}}
-                          aria-label={`Select ${office.short_name}`}
-                        />
-                      </td>
-                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                        <div
-                          className="flex items-center gap-3 cursor-pointer group/dept"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSelectedOfficeIdForDetail(office.id)
-                          }}
-                          title={`View details for ${office.name}`}
-                        >
+                      {/* Clean Apple HIG Header: Continuous-corner icon badge, Department code & Overflow menu */}
+                      <div className="p-5 pb-0 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
                           <div
                             className={cn(
-                              "h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0 transition-transform group-hover/dept:scale-105",
+                              "h-11 w-11 rounded-xl flex items-center justify-center border text-xl shadow-2xs shrink-0 transition-all",
                               isActive
-                                ? "rms-office-accent"
-                                : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
+                                ? "border-border dark:border-white/10"
+                                : "bg-gray-100 text-gray-400 border-border dark:bg-zinc-800 dark:text-zinc-500"
                             )}
-                            {...(isActive ? { "data-color": accent } : {})}
-                            style={isActive ? {
-                              color: accent,
-                              backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`,
-                              borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
-                            } : undefined}
+                            style={{
+                              backgroundColor: isActive ? `${accent}14` : undefined,
+                              color: isActive ? accent : undefined,
+                            }}
                           >
-                            <AppIcon className={office.icon || " Building02Icon"} />
+                            <AppIcon className={cn(office.icon || " Building02Icon", "text-xl")} fallback="Building02Icon" />
                           </div>
-                          <div>
-                            <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight group-hover/dept:text-pup-maroon dark:group-hover/dept:text-red-400 transition-colors">
-                              {office.short_name}
-                            </span>
-                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                              ID: {office.id}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
 
-                      <td className="p-4 align-middle overflow-hidden max-w-[340px] border-r border-border/70 dark:border-border/70">
-                        <div className="w-full min-w-0">
-                          <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
-                            {office.name}
-                          </span>
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate block mt-0.5" title={office.description || "No description provided."}>
-                            {office.description || "No description provided."}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="p-4 align-middle whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
-                        <div className="text-[11px] space-y-1">
-                          <div className="flex items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium truncate">
-                            <ComputerIcon size="1em"  className="text-gray-400 dark:text-zinc-500 text-xs shrink-0"></ComputerIcon>
-                            <span className="truncate">{office.station_name || "Unassigned"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
-                            <span title={office.storage_path || `.local/storage/${office.id}`}>
-                              {formatMiddleTruncate(office.storage_path || `.local/storage/${office.id}`, 22)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                if (navigator?.clipboard?.writeText) {
-                                  navigator.clipboard.writeText(office.storage_path || `.local/storage/${office.id}`)
-                                  showToast("Storage path copied to clipboard")
-                                }
-                              }}
-                              className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                              title="Copy storage path"
-                            >
-                              <Copy01Icon size="1em" className="text-[11px]" />
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))
-                          }}
-                          title="View assigned personnel in Global Directory"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
-                        >
-                          <UserSearch01Icon size="1em"  className="text-xs text-gray-500"></UserSearch01Icon>
-                          <span>{office.staff_count || 0}</span>
-                        </button>
-                      </td>
-
-                      <td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))
-                          }}
-                          title={`Configure workspace modules for ${office.short_name}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
-                        >
-                          <LayoutGridIcon size="1em"  className="text-xs text-gray-500"></LayoutGridIcon>
-                          <span>{office.module_count || 0}</span>
-                        </button>
-                      </td>
-
-                      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full select-none border",
-                            isActive
-                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                              : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border-border"
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              isActive ? "bg-emerald-500" : "bg-zinc-400"
-                            )}
-                          />
-                          {isActive ? "Active" : "Archived"}
-                        </span>
-                      </td>
-
-                      <td className="p-4 pr-6 align-middle text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setSelectedOfficeIdForDetail(office.id)
-                                }}
-                                aria-label="View Details"
-                                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3
+                                className="truncate text-base font-bold leading-tight text-gray-900 dark:text-zinc-50"
+                                title={office.name}
                               >
-                                <ViewIcon size="1em" className="text-[15px]" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>View Details</TooltipContent>
-                          </Tooltip>
+                                {office.short_name}
+                              </h3>
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
+                                {office.id}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5" title={office.name}>
+                              {office.name}
+                            </p>
+                          </div>
+                        </div>
 
-                          {isActive && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
+                        {/* Status Capsule & Overflow Actions Menu */}
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <OfficeStatusBadge isActive={isActive} />
+                          <OfficeActionsMenu
+                            office={office}
+                            onViewDetails={(currentOffice) => setSelectedOfficeIdForDetail(currentOffice.id)}
+                            onConfigure={handleOpenEdit}
+                            onCopyStoragePath={(currentOffice) => {
+                              if (navigator?.clipboard?.writeText) {
+                                navigator.clipboard.writeText(currentOffice.storage_path || `.local/storage/${currentOffice.id}`)
+                                showToast("Storage path copied to clipboard")
+                              }
+                            }}
+                            onArchive={setArchiveOfficeTarget}
+                            onRestore={setRestoreOfficeTarget}
+                          />
+                        </div>
+                      </div>
+
+                      <CardContent className="p-5 pt-3 flex flex-col h-full justify-between gap-4">
+                        <div className="space-y-3">
+                          <p
+                            className="w-full min-w-0 truncate text-xs leading-4 text-gray-600 dark:text-zinc-400"
+                            title={office.description || "No description provided."}
+                          >
+                            {office.description || "No description provided."}
+                          </p>
+
+                          {/* Workstation & Storage Specs (Grouped Inset Card) */}
+                          <div className="rounded-xl bg-gray-50/80 dark:bg-zinc-800/50 p-2.5 space-y-1.5 border border-border text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
+                                <ComputerIcon size="1em" className="text-xs" />
+                                <span>Scanning Computer:</span>
+                              </span>
+                              <span className="font-semibold text-gray-900 dark:text-zinc-100 text-[11px]">
+                                {office.station_name || "Unassigned"}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 text-[11px]">
+                                <Folder01Icon size="1em" className="text-xs" />
+                                <span>Storage Folder:</span>
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300"
+                                  title={storagePath}
+                                >
+                                  {formatMiddleTruncate(storagePath, 24)}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleOpenEdit(office)
-                                  }}
-                                  aria-label="Configure Department"
-                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
-                                >
-                                  <Settings01Icon size="1em" className="text-[15px]" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>Configure Department</TooltipContent>
-                            </Tooltip>
-                          )}
-
-                          {/* Secondary / Destructive Actions Overflow Menu */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={(e) => e.stopPropagation()}
-                                aria-label="More department actions"
-                                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
-                              >
-                                <MoreVerticalIcon size="1em" className="text-[15px]" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              sideOffset={6}
-                              className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
-                            >
-                              {/* Zone 1: Popover Header */}
-                              <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between">
-                                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                                  Department Actions
-                                </span>
-                                <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-border dark:border-white/10 shrink-0">
-                                  #{office.id}
-                                </span>
-                              </div>
-
-                              {/* Zone 2: Action Items */}
-                              <div className="p-1.5 space-y-0.5">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setSelectedOfficeIdForDetail(office.id)
-                                  }}
-                                  className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                                >
-                                  <CovidInfoIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
-                                  <span>View Details</span>
-                                </DropdownMenuItem>
-                                {isActive && (
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleOpenEdit(office)
-                                    }}
-                                    className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                                  >
-                                    <AppIcon className=" SlidersHorizontalIcon text-sm text-gray-500 dark:text-zinc-400" />
-                                    <span>Configure Department</span>
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation()
                                     if (navigator?.clipboard?.writeText) {
-                                      navigator.clipboard.writeText(office.storage_path || `.local/storage/${office.id}`)
+                                      navigator.clipboard.writeText(storagePath)
                                       showToast("Storage path copied to clipboard")
                                     }
                                   }}
-                                  className="cursor-pointer text-xs font-medium rounded-lg py-1.5 px-2 flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                  className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                                  title="Copy path"
                                 >
-                                  <Copy01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400" />
-                                  <span>Copy Storage Path</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
-                                {isActive ? (
-                                  <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setArchiveOfficeTarget(office)
-                                    }}
-                                    className="cursor-pointer text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 focus:text-red-600 dark:focus:text-red-400 hover:text-red-600 dark:hover:text-red-400 data-highlighted:bg-red-50 dark:data-highlighted:bg-red-950/30 data-highlighted:text-red-600 dark:data-highlighted:text-red-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
-                                  >
-                                    <Archive01Icon size="1em" className="text-sm text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400" />
-                                    <span className="text-red-600 dark:text-red-400 group-hover/dropdown-menu-item:text-red-600 dark:group-hover/dropdown-menu-item:text-red-400 group-data-highlighted/dropdown-menu-item:text-red-600 dark:group-data-highlighted/dropdown-menu-item:text-red-400">Archive Department</span>
-                                  </DropdownMenuItem>
-                                ) : (
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setRestoreOfficeTarget(office)
-                                    }}
-                                    className="cursor-pointer text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:bg-emerald-50 dark:focus:bg-emerald-950/30 focus:text-emerald-600 dark:focus:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 data-highlighted:bg-emerald-50 dark:data-highlighted:bg-emerald-950/30 data-highlighted:text-emerald-600 dark:data-highlighted:text-emerald-400 rounded-lg py-1.5 px-2 flex items-center gap-2 transition-colors border-0 outline-none"
-                                  >
-                                    <ReloadIcon size="1em" className="text-sm text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400" />
-                                    <span className="text-emerald-600 dark:text-emerald-400 group-hover/dropdown-menu-item:text-emerald-600 dark:group-hover/dropdown-menu-item:text-emerald-400 group-data-highlighted/dropdown-menu-item:text-emerald-600 dark:group-data-highlighted/dropdown-menu-item:text-emerald-400">Restore Department</span>
-                                  </DropdownMenuItem>
-                                )}
+                                  <Copy01Icon size="1em" className="text-[11px]" />
+                                </button>
                               </div>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            </div>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
+
+                        {/* Metrics (Pill Chips, No Dotted Underlines) & Primary Action */}
+                        <div className="space-y-3 pt-3 border-t border-border">
+                          <div className="flex items-center justify-between gap-2">
+                            {/* Native HIG Metric Chips */}
+                            <div className="flex min-w-0 items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))
+                                }}
+                                title="View assigned personnel in Global Directory"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
+                              >
+                                <UserSearch01Icon size="1em" className="text-xs text-gray-400" />
+                                <span>Staff</span>
+                                <span className="font-bold text-gray-900 dark:text-zinc-100">{office.staff_count || 0}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))
+                                }}
+                                title={`Configure workspace modules for ${office.short_name}`}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all cursor-pointer border-0"
+                              >
+                                <LayoutGridIcon size="1em" className="text-xs text-gray-400" />
+                                <span>Modules</span>
+                                <span className="font-bold text-gray-900 dark:text-zinc-100">{office.module_count || 0}</span>
+                              </button>
+                            </div>
+
+                            {isActive ? (
+                              <Button
+                                size="sm"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  handleOpenEdit(office)
+                                }}
+                                className="h-9 shrink-0"
+                              >
+                                Configure Department
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="success"
+                                size="sm"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setRestoreOfficeTarget(office)
+                                }}
+                                className="h-9 shrink-0"
+                              >
+                                Restore Department
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Footer */}
-          {filteredOffices.length > 0 && (
-            <div className="flex items-center justify-between border-t border-border dark:border-border bg-gray-50/30 dark:bg-zinc-900/20 p-4 px-6 rounded-b-2xl mt-auto">
-              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                <span>Showing {paginatedOffices.length} of {filteredOffices.length}</span>
-                <div className="flex items-center gap-2">
-                  <span>Rows:</span>
-                  {[10, 20, 50, 100].map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => {
-                        setPageSize(sz)
-                        setPage(1)
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                        pageSize === sz
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => updatePage(page - 1)}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                  {page}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page >= totalPages || endIndex >= filteredOffices.length}
-                  onClick={() => updatePage(page + 1)}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
+                {statusFilter === "Active" && page === totalPages && (
+                  <button
+                    type="button"
+                    onClick={handleOpenCreate}
+                    className="group flex min-h-[300px] w-full cursor-pointer select-none flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-8 text-gray-500 shadow-2xs transition-all hover:border-pup-maroon/40 hover:bg-pup-maroon/5 hover:text-pup-maroon dark:border-border dark:hover:bg-red-500/5 dark:hover:text-red-400"
+                    aria-label="Add a department"
+                  >
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-xl shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
+                      <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                    </span>
+                    <span className="text-center">
+                      <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">Add Department</span>
+                      <span className="mt-0.5 block text-[11px] text-gray-400">Create a department and set up its office and station.</span>
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
+          ) : (
+            /* Compact Table View */
+            <>
+              <div
+                ref={tableContainerRef}
+                className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
+              >
+                <Table columns={[{ kind: "selection" }, ...orderedVisibleColumnKeys.map((key) => {
+                  if (key === "department") return { kind: "text", maxWidth: 240 }
+                  if (key === "office") return { kind: "text", maxWidth: 420 }
+                  if (key === "station") return { kind: "text", maxWidth: 280 }
+                  if (key === "staff" || key === "modules") return { kind: "number", maxWidth: 104 }
+                  if (key === "status") return { kind: "status", maxWidth: 144 }
+                  return { kind: "text" }
+                }), { kind: "actions" }]} className="min-w-[960px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
+                      <th className="w-12 p-4 text-center align-middle">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
+                          checked={
+                            paginatedOffices.length > 0 &&
+                            paginatedOffices.every((o) => selectedIds.has(o.id))
+                          }
+                          onChange={(e) => toggleSelectAll(e.target.checked)}
+                          disabled={paginatedOffices.length === 0}
+                          aria-label="Select all departments on this page"
+                        />
+                      </th>
+                      {visibleColumns.includes("department") && (<th className="p-4 w-[22%] whitespace-nowrap">
+                        <button
+                          onClick={() => handleSort("short_name")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "short_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Department / Office{" "}
+                          <SortIndicator column="short_name" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>)}
+                      {visibleColumns.includes("office") && (<th className="p-4 max-w-[420px] whitespace-nowrap">
+                        <button
+                          onClick={() => handleSort("name")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Office Name & Description{" "}
+                          <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>)}
+                      {visibleColumns.includes("station") && (<th className="p-4 max-w-[280px] whitespace-nowrap">
+                        <button
+                          onClick={() => handleSort("station_name")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "station_name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Workstation & Storage{" "}
+                          <SortIndicator column="station_name" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>)}
+                      {visibleColumns.includes("staff") && (<th className="p-4 w-[8%] text-center whitespace-nowrap">
+                        <button
+                          onClick={() => handleSort("staff_count")}
+                          className={cn(
+                            "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "staff_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Staff{" "}
+                          <SortIndicator column="staff_count" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>)}
+                      {visibleColumns.includes("modules") && (<th className="p-4 w-[8%] text-center whitespace-nowrap">
+                        <button
+                          onClick={() => handleSort("module_count")}
+                          className={cn(
+                            "group inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "module_count" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Modules{" "}
+                          <SortIndicator column="module_count" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>)}
+                      {visibleColumns.includes("status") && (<th className="p-4 w-[8%] whitespace-nowrap">
+                        <button
+                          onClick={() => handleSort("status")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Status{" "}
+                          <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                        </button>
+                      </th>)}
+                      <th className="p-4 pr-6 text-right w-20 whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border dark:divide-border">
+                    {groupedOffices.map((group) => <Fragment key={group.key}>
+                      {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><th colSpan={orderedVisibleColumnKeys.length + 2} className="px-4 py-2 text-left text-[11px] font-semibold text-gray-600 dark:text-zinc-300">{group.label}<span className="ml-2 font-sans tabular-nums text-gray-400">{group.offices.length}</span></th></tr>}
+                      {group.offices.map((office) => {
+                        const accent = office.accent_color || "#800000"
+                        const isActive = String(office.status || "").trim().toLowerCase() === "active"
+                        const isSelected = selectedIds.has(office.id)
+                        return (
+                          <tr
+                            key={office.id}
+                            selected={isSelected}
+                            onClick={(e) => toggleSelect(office.id, e)}
+                            className={cn(
+                              "group border-b-[0.5px] border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer",
+                              !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75",
+                            )}
+                          >
+                            <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                              <input
+                                type="checkbox"
+                                className={cn(
+                                  "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                                  isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                                )}
+                                checked={isSelected}
+                                onChange={() => { }}
+                                aria-label={`Select ${office.short_name}`}
+                              />
+                            </td>
+                            {visibleColumns.includes("department") && (<td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <div
+                                className="flex items-center gap-3 cursor-pointer group/dept"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedOfficeIdForDetail(office.id)
+                                }}
+                                title={`View details for ${office.name}`}
+                              >
+                                <div
+                                  className={cn(
+                                    "h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0 transition-transform group-hover/dept:scale-105",
+                                    isActive
+                                      ? "rms-office-accent"
+                                      : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
+                                  )}
+                                  {...(isActive ? { "data-color": accent } : {})}
+                                  style={isActive ? {
+                                    color: accent,
+                                    backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`,
+                                    borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
+                                  } : undefined}
+                                >
+                                  <AppIcon className={office.icon || " Building02Icon"} fallback="Building02Icon" />
+                                </div>
+                                <div>
+                                  <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight group-hover/dept:text-pup-maroon dark:group-hover/dept:text-red-400 transition-colors">
+                                    {office.short_name}
+                                  </span>
+                                  <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                                    ID: {office.id}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>)}
+
+                            {visibleColumns.includes("office") && (<td className="p-4 align-middle overflow-hidden max-w-[420px] border-r border-border/70 dark:border-border/70">
+                              <div className="w-full min-w-0">
+                                <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
+                                  {office.name}
+                                </span>
+                                <span
+                                  className="mt-0.5 block min-w-0 truncate text-[11px] text-gray-400 dark:text-zinc-500"
+                                  style={{ width: "100%", maxWidth: 415 }}
+                                  title={office.description || "No description provided."}
+                                >
+                                  {office.description || "No description provided."}
+                                </span>
+                              </div>
+                            </td>)}
+
+                            {visibleColumns.includes("station") && (<td className="p-4 align-middle max-w-[280px] whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <div className="text-[11px] space-y-1">
+                                <div className="flex min-w-0 items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium">
+                                  <ComputerIcon size="1em" className="text-gray-400 dark:text-zinc-500 text-xs shrink-0"></ComputerIcon>
+                                  <span className="min-w-0 truncate">{office.station_name || "Unassigned"}</span>
+                                </div>
+                                <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
+                                  <span className="min-w-0 truncate" title={office.storage_path || `.local/storage/${office.id}`}>
+                                    {office.storage_path || `.local/storage/${office.id}`}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      if (navigator?.clipboard?.writeText) {
+                                        navigator.clipboard.writeText(office.storage_path || `.local/storage/${office.id}`)
+                                        showToast("Storage path copied to clipboard")
+                                      }
+                                    }}
+                                    className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                                    title="Copy storage path"
+                                  >
+                                    <Copy01Icon size="1em" className="text-[11px]" />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>)}
+
+                            {visibleColumns.includes("staff") && (<td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "staff", officeId: office.id } }))
+                                }}
+                                title="View assigned personnel in Global Directory"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
+                              >
+                                <UserSearch01Icon size="1em" className="text-xs text-gray-500"></UserSearch01Icon>
+                                <span>{office.staff_count || 0}</span>
+                              </button>
+                            </td>)}
+
+                            {visibleColumns.includes("modules") && (<td className="p-4 align-middle text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "modules", officeId: office.id } }))
+                                }}
+                                title={`Configure workspace modules for ${office.short_name}`}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors font-semibold text-xs cursor-pointer border-0"
+                              >
+                                <LayoutGridIcon size="1em" className="text-xs text-gray-500"></LayoutGridIcon>
+                                <span>{office.module_count || 0}</span>
+                              </button>
+                            </td>)}
+
+                            {visibleColumns.includes("status") && (
+                              <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <OfficeStatusBadge isActive={isActive} />
+                              </td>
+                            )}
+
+                            <td className="p-4 align-middle text-center whitespace-nowrap">
+                              <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                                <OfficeActionsMenu
+                                  office={office}
+                                  triggerVariant="table"
+                                  onViewDetails={(currentOffice) => setSelectedOfficeIdForDetail(currentOffice.id)}
+                                  onConfigure={handleOpenEdit}
+                                  onCopyStoragePath={(currentOffice) => {
+                                    if (navigator?.clipboard?.writeText) {
+                                      navigator.clipboard.writeText(currentOffice.storage_path || `.local/storage/${currentOffice.id}`)
+                                      showToast("Storage path copied to clipboard")
+                                    }
+                                  }}
+                                  onArchive={setArchiveOfficeTarget}
+                                  onRestore={setRestoreOfficeTarget}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </Fragment>)}
+                  </tbody>
+                </Table>
+              </div>
+
+              {/* Pagination Footer */}
+              <TablePagination label="Office directory pages" page={page} pageSize={pageSize} totalCount={filteredOffices.length} displayedCount={paginatedOffices.length} onPageChange={updatePage} onPageSizeChange={setPageSize} />
+            </>
           )}
-        </>
-      )}
         </div>
       </Card>
 
@@ -1998,7 +1618,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 </div>
               </div>
 
-              {/* Row 3: Scanning Workstation Setup (Simplified Option A) */}
+              {/* Row 3: Scanning workstation and fixed local folders */}
               <div className="p-4 sm:p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
                 <div className="flex items-center justify-between pb-2.5 border-b border-border dark:border-border">
                   <div className="flex items-center gap-2.5">
@@ -2010,18 +1630,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         Scanning Workstation
                       </h5>
                       <p className="text-[11px] text-gray-900 dark:text-zinc-300">
-                        Optionally assign an identifiable terminal name to this department&apos;s scanning PC.
+                        Set a station name and configure its scanner to save into this department&apos;s inbound folder.
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvancedStorage(prev => !prev)}
-                    className="text-[11px] font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    <span>{showAdvancedStorage ? "Hide Storage Paths" : "Advanced Storage Paths"}</span>
-                    <AppIcon  className={cn("text-[10px] ", showAdvancedStorage ? "ArrowUp01Icon" : "ArrowDown01Icon")}></AppIcon>
-                  </button>
                 </div>
 
                 <div>
@@ -2039,44 +1651,25 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </span>
                 </div>
 
-                {showAdvancedStorage && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border dark:border-border animate-fade-in">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Storage Partition Path
-                      </label>
-                      <Input
-                        value={form.storage_path}
-                        onChange={(e) => setForm(prev => ({ ...prev, storage_path: e.target.value }))}
-                        placeholder="Default: .local/storage/{id}/uploads"
-                        className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-sans tabular-nums text-[11px]"
-                      />
-                      <span className="text-[10px] text-gray-400 mt-1 block">
-                        Server directory for storing uploaded archives.
-                      </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border dark:border-border">
+                  <div>
+                    <span className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">Document Storage</span>
+                    <div className="min-h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 px-3 py-2 text-[11px] text-gray-700 dark:text-zinc-200 break-all select-text">
+                      {isEditing ? form.storage_path : `${storageRoot}/storage/${form.id || "office-id"}/uploads`}
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Scanner Inbound Watch Path
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={form.inbound_path}
-                          onChange={(e) => setForm(prev => ({ ...prev, inbound_path: e.target.value }))}
-                          placeholder="Default: .local/hot-folder/INBOUND"
-                          className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white font-sans tabular-nums text-[11px]"
-                        />
-                        <Button type="button" variant="outline" disabled={folderPickerLoading || !isEditing} onClick={handlePickInboundFolder} className="h-10 shrink-0 rounded-xl px-3 text-xs font-semibold">
-                          {folderPickerLoading ? "Opening…" : "Browse Folder"}
-                        </Button>
-                      </div>
-                      <span className="text-[10px] text-gray-400 mt-1 block">
-                        Select a folder on the computer running the app and watcher. Saving switches the watcher to this folder.
-                      </span>
-                    </div>
+                    <span className="text-[10px] text-gray-400 mt-1 block">Records stay in this department&apos;s local folder.</span>
                   </div>
-                )}
+
+                  <div>
+                    <span className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">Scanner Inbound</span>
+                    <div className="min-h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 px-3 py-2 text-[11px] text-gray-700 dark:text-zinc-200 break-all select-text">
+                      {isEditing ? form.inbound_path : `${scannerHostRoot}/${form.id || "office-id"}/INBOUND`}
+                    </div>
+                    <span className="text-[10px] text-gray-400 mt-1 block">
+                      Set this as the output folder in the scanner profile. Each department needs its own destination.
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Row 4: Module Scope Section with Collapsible Accordion (Create View) / Workspace Modules Configured (Edit View) */}
@@ -2090,7 +1683,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                          <AppIcon  className=" LayoutGridIcon text-base"></AppIcon>
+                          <AppIcon className=" LayoutGridIcon text-base"></AppIcon>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -2111,7 +1704,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                           {modulesAccordionOpen ? "Collapse" : "Expand"}
                         </span>
-                        <AppIcon  className={cn(
+                        <AppIcon className={cn(
                           " ArrowDown01Icon text-gray-400 text-sm transition-transform duration-200",
                           modulesAccordionOpen && "rotate-180 text-pup-maroon dark:text-red-400"
                         )}></AppIcon>
@@ -2197,7 +1790,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                        <AppIcon  className=" LayoutGridIcon text-base"></AppIcon>
+                        <AppIcon className=" LayoutGridIcon text-base"></AppIcon>
                       </div>
                       <div>
                         <span className="font-semibold text-gray-900 dark:text-zinc-100 block leading-tight">
@@ -2247,7 +1840,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                           )}
                         >
-                          <AppIcon  className={opt.value}></AppIcon>
+                          <AppIcon className={opt.value}></AppIcon>
                         </button>
                       )
                     })}
@@ -2289,7 +1882,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           )}
                         >
                           {isSelected && (
-                            <AppIcon  className=" Tick01Icon text-white text-xs drop-shadow-sm font-bold"></AppIcon>
+                            <AppIcon className=" Tick01Icon text-white text-xs drop-shadow-sm font-bold"></AppIcon>
                           )}
                         </button>
                       )
@@ -2337,7 +1930,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           borderColor: `color-mix(in srgb, ${form.accent_color || "#800000"} 25%, transparent)`,
                         }}
                       >
-                        <AppIcon  className={cn(form.icon || " Building02Icon", "text-sm")}></AppIcon>
+                        <AppIcon className={cn(form.icon || " Building02Icon", "text-sm")} fallback="Building02Icon"></AppIcon>
                         <span>{form.short_name || "Department"}</span>
                       </div>
                     </div>
@@ -2477,7 +2070,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             setBulkRestoreOpen(true)
           }
         }}
-        actionLabel={statusFilter === "Active" ? "Archive" : "Restore"}
+        actionLabel={statusFilter === "Active" ? "Archive Departments" : "Restore Departments"}
         actionVariant={statusFilter === "Active" ? "danger" : "success"}
       />
 

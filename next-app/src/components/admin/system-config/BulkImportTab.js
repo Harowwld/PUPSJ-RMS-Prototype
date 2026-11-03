@@ -1,4 +1,6 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 
 import { useState, useEffect, useMemo } from "react"
@@ -22,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { Add01Icon, Alert01Icon, Cancel01Icon, CheckmarkCircle01Icon, Copy01Icon, Database01Icon, HelpCircleIcon, PencilEdit01Icon, Search01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function BulkImportTab({
@@ -248,7 +251,7 @@ export default function BulkImportTab({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <DataViewToolbar label="Import preview search and table controls" className="gap-4">
               <div className="relative group w-[220px]">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
@@ -283,14 +286,14 @@ export default function BulkImportTab({
                     </span>
                   </div>
                 </div>
-                <TableScrollControls
+                <TableScrollControls scrollContainerRef={tableContainerRef}
                   canScrollLeft={canScrollLeft}
                   canScrollRight={canScrollRight}
                   onScrollLeft={() => scrollTable("left")}
                   onScrollRight={() => scrollTable("right")}
                 />
               </div>
-            </div>
+          </DataViewToolbar>
           </div>
 
           <div className="flex flex-1 flex-col w-full min-h-0 bg-white dark:bg-card">
@@ -305,7 +308,7 @@ export default function BulkImportTab({
                         ref={tableContainerRef}
                         className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                       >
-                        <table className="w-full text-sm border-collapse min-w-[850px]">
+              <Table columns={["selection", "number", "category", { kind: "text", maxWidth: 340 }, "identifier", "status"]} className="min-w-[850px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                               <th className="w-12 min-w-[48px] p-4 text-center">
@@ -663,65 +666,10 @@ export default function BulkImportTab({
                     )
                   })}
                 </tbody>
-              </table>
+              </Table>
             </div>
 
-            {importRows.length > 0 && (
-              <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 mt-auto select-none">
-                <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                  <span>
-                    Showing {paginatedRows.length} of {filteredRows.length.toLocaleString()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span>Rows:</span>
-                    {[10, 20, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => {
-                          setItemsPerPage(size)
-                          setCurrentPage(1)
-                        }}
-                        className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                          itemsPerPage === size
-                            ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 select-none">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={displayPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Prev
-                  </Button>
-
-                  <div className="h-8 w-8 rounded-xl border border-border dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                    {displayPage}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={displayPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            <TablePagination label="Lookup import preview pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRows.length} displayedCount={paginatedRows.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />
          </>
         )
       })()}

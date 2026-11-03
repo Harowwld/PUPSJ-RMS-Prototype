@@ -1,4 +1,5 @@
 "use client"
+import { Table, TableRow } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
@@ -8,9 +9,9 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
   return (
     <>
       {Array.from({ length: rowCount }).map((_, i) => (
-        <tr
+        <TableRow
           key={i}
-          className="h-[52px] border-b border-border dark:border-border last:border-b-0"
+          className="border-b border-border dark:border-border last:border-b-0"
         >
           {/* Ticket # */}
           <td className="p-4 pl-6 align-middle border-r border-border/70 dark:border-border/70">
@@ -51,7 +52,7 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
           <td className="p-4 pr-6 align-middle text-right">
             <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted ml-auto" />
           </td>
-        </tr>
+        </TableRow>
       ))}
     </>
   )
@@ -163,7 +164,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
 
         {/* 4. Main Table Skeleton */}
         <div className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none">
-          <table className="w-full text-sm border-collapse min-w-[900px]">
+          <Table columns={["identifier", "text", "text", "status", "date", "actions"]} className="min-w-[900px]">
             <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
               <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                 <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
@@ -189,7 +190,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
             <tbody className="bg-transparent">
               <StudentRequestsTableRowsSkeleton rowCount={rowCount} />
             </tbody>
-          </table>
+          </Table>
         </div>
 
         {/* 5. Pagination Bar Skeleton */}

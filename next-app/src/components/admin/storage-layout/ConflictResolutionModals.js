@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 
 import { memo } from "react"
@@ -100,7 +101,7 @@ const ConflictResolutionModals = memo(({
 
             {/* Conflict Resolution Mapping Table */}
             <div className="max-h-[46vh] overflow-auto rounded-xl border border-border/80 dark:border-border shadow-xs bg-white dark:bg-card select-none">
-              <table className="w-full text-sm border-collapse min-w-[500px]">
+                  <Table columns={["text", "number", "text"]} className="min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="py-3 px-4 w-[28%] font-semibold">Displaced Drawer</th>
@@ -215,7 +216,7 @@ const ConflictResolutionModals = memo(({
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                  </Table>
             </div>
           </div>
 
@@ -253,7 +254,7 @@ const ConflictResolutionModals = memo(({
 
           <div className="p-6">
             <div className="max-h-[50vh] overflow-auto rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs select-none">
-              <table className="w-full text-sm border-collapse min-w-[500px]">
+                <Table columns={["text", "text", "number"]} className="min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="py-3 px-4 w-[38%] font-semibold">Original Location</th>
@@ -281,7 +282,7 @@ const ConflictResolutionModals = memo(({
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </Table>
             </div>
           </div>
 
@@ -319,7 +320,7 @@ const ConflictResolutionModals = memo(({
 
           <div className="p-6">
             <div className="max-h-[50vh] overflow-auto rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs select-none">
-              <table className="w-full text-sm border-collapse min-w-[500px]">
+                <Table columns={["text", "text", "number"]} className="min-w-[500px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="py-3 px-4 w-[38%] font-semibold">From Location</th>
@@ -359,7 +360,7 @@ const ConflictResolutionModals = memo(({
                     ))
                   )}
                 </tbody>
-              </table>
+                </Table>
             </div>
           </div>
 

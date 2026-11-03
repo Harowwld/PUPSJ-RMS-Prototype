@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import PageHeader from "@/components/shared/PageHeader";
-import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import ServiceStandardsSkeleton from "./skeletons/ServiceStandardsSkeleton";
 import { cn } from "@/lib/utils";
@@ -114,7 +113,6 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
 export default function ServiceStandardsTab({ showToast }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const [standards, setStandards] = useState({
     frameworkName: "Citizen's Charter (ARTA RA 11032)",
@@ -129,9 +127,8 @@ export default function ServiceStandardsTab({ showToast }) {
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
-  const loadStandards = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
+  const loadStandards = useCallback(async () => {
+    setLoading(true);
 
     try {
       const res = await fetch("/api/system/sla-settings", { cache: "no-store" });
@@ -146,7 +143,6 @@ export default function ServiceStandardsTab({ showToast }) {
       showToast?.({ title: "Network Error", description: "Could not connect to service standards API." }, true);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [showToast]);
 
@@ -280,11 +276,6 @@ export default function ServiceStandardsTab({ showToast }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <RefreshButton
-                onRefresh={() => loadStandards(true)}
-                isLoading={refreshing}
-                title="Refresh Standards"
-              />
 
               <Button
                 type="button"

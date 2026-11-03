@@ -1,4 +1,5 @@
 "use client";
+import { Table } from "@/components/ui/table";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 
 import { useState, useEffect, useMemo } from "react";
@@ -227,7 +228,7 @@ export default function RestoreModal({
                 </div>
               ) : previewData?.tables && previewData.tables.length > 0 ? (
                 <div className="max-h-48 overflow-y-auto custom-scrollbar select-none relative">
-                  <table className="w-full text-xs border-collapse min-w-[420px]">
+                  <Table columns={["text", "number", "number", "number"]} className="min-w-[420px]">
                     <thead className="sticky top-0 z-20 bg-gray-100/90 dark:bg-zinc-800/90 backdrop-blur-xs border-b border-border dark:border-border select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                         <th className="py-2.5 px-3.5 w-[36%] font-semibold">
@@ -285,7 +286,7 @@ export default function RestoreModal({
                         );
                       })}
                     </tbody>
-                  </table>
+                  </Table>
                 </div>
               ) : (
                 <div className="p-4 text-center text-xs text-gray-500 dark:text-zinc-400">

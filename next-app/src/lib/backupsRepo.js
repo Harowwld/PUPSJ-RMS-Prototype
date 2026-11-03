@@ -16,6 +16,8 @@ import {
   formatLocationCode,
 } from "./archivalStructure.js";
 import { decryptPII } from "./piiEncryption.js";
+import { getLocalDataDir, getOfficeUploadsDir } from "./officePaths.js";
+import { OFFICE_SCOPED_BACKUP_TABLES, scopeOfficeDump } from "./officeBackupScope.js";
 
 const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
 const BACKUP_ENC_ALGO = "aes-256-gcm";
@@ -23,9 +25,7 @@ const BACKUP_ENC_IV_LENGTH = 12;
 const BACKUP_ENC_TAG_LENGTH = 16;
 
 export function getLocalDir() {
-  return process.env.LOCAL_DATA_DIR
-    ? process.env.LOCAL_DATA_DIR
-    : path.join(process.cwd(), ".local");
+  return getLocalDataDir();
 }
 
 export function getBackupsDir() {
@@ -344,7 +344,7 @@ export async function syncBackupExternally(id) {
   return syncPromise;
 }
 
-function dumpPostgresTables(tables, targetSqlPath) {
+function dumpPostgresTables(tables, targetSqlPath, officeRules = null) {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required to create a PostgreSQL backup");
   }
@@ -372,22 +372,25 @@ function dumpPostgresTables(tables, targetSqlPath) {
     }
 
     try {
+      const target = dockerPostgresTarget();
       const dockerArgs = [
         "exec",
+        "-e", "PGPASSWORD",
         "pupsj-rms-postgres",
         "pg_dump",
         "--data-only",
         "--no-owner",
         "--no-privileges",
         "--username",
-        "pupsj_rms",
+        target.user,
         "--dbname",
-        "pupsj_rms",
+        target.database,
         ...tableArgs,
       ];
       const dockerDump = execFileSync("docker", dockerArgs, {
         encoding: "buffer",
         maxBuffer: 100 * 1024 * 1024,
+        env: { ...process.env, PGPASSWORD: target.password },
       });
       fs.writeFileSync(targetSqlPath, dockerDump);
     } catch (dockerError) {
@@ -398,6 +401,67 @@ function dumpPostgresTables(tables, targetSqlPath) {
       );
     }
   }
+  if (officeRules) {
+    fs.writeFileSync(targetSqlPath, scopeOfficeDump(fs.readFileSync(targetSqlPath, "utf8"), officeRules));
+  }
+}
+
+function dockerPostgresTarget() {
+  const url = new URL(process.env.DATABASE_URL);
+  if (!["localhost", "127.0.0.1", "postgres"].includes(url.hostname)) {
+    throw new Error("PostgreSQL client tools are required for a database outside the local Docker stack.");
+  }
+  return {
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database: decodeURIComponent(url.pathname.slice(1)),
+  };
+}
+
+async function officeBackupTablesAndRules(officeId) {
+  const tables = [
+    "students", "student_identity_profiles", "student_accounts", "student_security_answers",
+    "student_office_memberships", "courses", "sections", "document_types", "documents",
+    "document_requests", "ingest_queue", "recognition_templates", "notifications",
+    "event_proposals",
+  ];
+  const studentRows = await dbAll(
+    `SELECT student_no FROM student_office_memberships WHERE office_id = ?
+     UNION SELECT student_no FROM documents WHERE office_id = ? AND student_no IS NOT NULL
+     UNION SELECT student_no FROM event_proposals WHERE office_id = ? AND student_no IS NOT NULL`,
+    [officeId, officeId, officeId],
+  );
+  const studentNumbers = studentRows.map((row) => row.student_no).filter(Boolean);
+  const accountRows = studentNumbers.length
+    ? await dbAll("SELECT id, identity_profile_id FROM student_accounts WHERE student_no = ANY(?)", [studentNumbers])
+    : [];
+  const accountIds = accountRows.map((row) => row.id);
+  const profileIds = accountRows.map((row) => row.identity_profile_id).filter(Boolean);
+  const rules = {
+    students: { column: "student_no", values: studentNumbers },
+    student_accounts: { column: "student_no", values: studentNumbers },
+    student_identity_profiles: { column: "id", values: profileIds },
+    student_security_answers: { column: "student_account_id", values: accountIds },
+  };
+  for (const table of OFFICE_SCOPED_BACKUP_TABLES) {
+    rules[table] = { column: "office_id", values: [officeId] };
+  }
+  if (officeId === "osas") {
+    for (const table of ["student_organizations", "organization_bylaws_versions", "organization_officers", "osas_post_event_reports"]) {
+      tables.push(table);
+      const rows = await dbAll(`SELECT id FROM ${table}`);
+      rules[table] = { column: "id", values: rows.map((row) => row.id) };
+    }
+  }
+  const proposalRows = await dbAll("SELECT id FROM event_proposals WHERE office_id = ?", [officeId]);
+  const requestRows = await dbAll("SELECT id FROM document_requests WHERE office_id = ?", [officeId]);
+  tables.push("transaction_updates");
+  const proposalIds = new Set(proposalRows.map((row) => String(row.id)));
+  const requestIds = new Set(requestRows.map((row) => String(row.id)));
+  rules.transaction_updates = {
+    predicate: (row) => proposalIds.has(row.event_proposal_id) || requestIds.has(row.document_request_id),
+  };
+  return { tables, rules };
 }
 
 export async function executeSystemBackup({ actorId = null, backupType = "Governance" } = {}) {
@@ -475,32 +539,19 @@ async function packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType
       [normOffice]
     );
   } catch (err) {
-    console.warn("[BACKUP] Warning: Could not query documents metadata for structured archiving:", err.message);
+    throw new Error(`Could not query ${normOffice} document metadata for backup: ${err.message}`);
   }
 
-  const officeUploadsDir = path.join(localDir, "storage", normOffice, "uploads");
-  const officeBaseDir = path.join(localDir, "storage", normOffice);
-  const legacyUploadsDir = path.join(localDir, "uploads");
+  const officeUploadsDir = getOfficeUploadsDir(normOffice);
 
   for (const row of (docRows || [])) {
-    if (!row.storage_filename) continue;
-
-    let diskPath = null;
-    const pathInOffice = path.join(officeUploadsDir, row.storage_filename);
-    const pathInLegacy = path.join(legacyUploadsDir, row.storage_filename);
-    const pathInBaseOffice = path.join(officeBaseDir, row.storage_filename);
-
-    if (fs.existsSync(pathInOffice)) {
-      diskPath = pathInOffice;
-    } else if (fs.existsSync(pathInLegacy)) {
-      diskPath = pathInLegacy;
-    } else if (fs.existsSync(pathInBaseOffice)) {
-      diskPath = pathInBaseOffice;
+    if (!row.storage_filename) throw new Error(`Backup cannot continue: document #${row.id} has no stored file`);
+    if (path.basename(row.storage_filename) !== row.storage_filename) {
+      throw new Error(`Backup cannot continue: document #${row.id} has an invalid stored filename`);
     }
 
-    if (!diskPath) {
-      continue;
-    }
+    const diskPath = path.join(officeUploadsDir, row.storage_filename);
+    if (!fs.existsSync(diskPath)) throw new Error(`Backup cannot continue: document #${row.id} is missing from ${officeUploadsDir}`);
 
     const dupKey = `${row.student_no || row.organization_id || "gen"}_${row.doc_type}`;
     const dupIndex = seenDocCounts.get(dupKey) || 0;
@@ -603,7 +654,56 @@ async function packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType
         sha256,
       });
     } catch (readErr) {
-      console.error(`[BACKUP] Failed reading ${diskPath}:`, readErr.message);
+      throw new Error(`Backup cannot read document #${row.id}: ${readErr.message}`);
+    }
+  }
+
+  if (normOffice === "osas") {
+    const references = await dbAll(
+      `SELECT 'event proposal' AS kind, id, storage_filename AS filename FROM event_proposals
+        WHERE office_id = ? AND storage_filename IS NOT NULL
+       UNION ALL SELECT 'post-event narrative', id, narrative_storage_filename FROM osas_post_event_reports
+       UNION ALL SELECT 'post-event liquidation', id, liquidation_storage_filename FROM osas_post_event_reports
+        WHERE liquidation_storage_filename IS NOT NULL`,
+      [normOffice],
+    );
+    for (const reference of references) {
+      const filename = reference.filename;
+      if (!filename || path.basename(filename) !== filename || !fs.existsSync(path.join(officeUploadsDir, filename))) {
+        throw new Error(`Backup cannot continue: ${reference.kind} #${reference.id} is missing from ${officeUploadsDir}`);
+      }
+    }
+
+    const bylawsDir = path.join(localDir, "storage", "osas", "bylaws");
+    const bylaws = await dbAll("SELECT id, storage_filename FROM organization_bylaws_versions");
+    const seenBylaws = new Set();
+    for (const bylawsVersion of bylaws) {
+      const filename = bylawsVersion.storage_filename;
+      if (!filename || path.basename(filename) !== filename || !fs.existsSync(path.join(bylawsDir, filename))) {
+        throw new Error(`Backup cannot continue: bylaws version #${bylawsVersion.id} is missing from ${bylawsDir}`);
+      }
+      if (seenBylaws.has(filename)) continue;
+      seenBylaws.add(filename);
+      const bytes = fs.readFileSync(path.join(bylawsDir, filename));
+      const archivePath = `records/_bylaws/${filename}`;
+      zip.addFile(archivePath, bytes);
+      manifestRecords.push({
+        documentId: null,
+        officeId: normOffice,
+        entityType: "Bylaws",
+        entityId: String(bylawsVersion.id),
+        entityName: filename,
+        academicYear: "",
+        programOrCategory: "Bylaws",
+        section: "",
+        docType: "Bylaws",
+        physicalLocation: null,
+        originalFilename: filename,
+        storageFilename: filename,
+        archivePath,
+        sizeBytes: bytes.length,
+        sha256: computeBufferSha256(bytes),
+      });
     }
   }
 
@@ -611,9 +711,6 @@ async function packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType
   const scanDirectories = [
     { dir: officeUploadsDir, targetSubfolder: "records/_raw_assets" },
   ];
-  if (normOffice === "registrar") {
-    scanDirectories.push({ dir: legacyUploadsDir, targetSubfolder: "records/_raw_assets" });
-  }
 
   for (const { dir, targetSubfolder } of scanDirectories) {
     if (fs.existsSync(dir)) {
@@ -649,7 +746,7 @@ async function packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType
           }
         }
       } catch (scanErr) {
-        console.warn(`[BACKUP] Failed scanning unmapped directory ${dir}:`, scanErr.message);
+        throw new Error(`Backup cannot scan ${dir}: ${scanErr.message}`);
       }
     }
   }
@@ -683,42 +780,8 @@ export async function executeOfficeBackup({ officeId, actorId = null, backupType
   const localDir = getLocalDir();
   const tempDbPath = path.join(localDir, `${normOffice}-backup-temp-${Date.now()}.sql`);
 
-  // Target tables based on office partition
-  let officeTables = [];
-  if (normOffice === "registrar") {
-    officeTables = [
-      "students",
-      "student_office_memberships",
-      "student_accounts",
-      "student_security_answers",
-      "documents",
-      "document_requests",
-      "document_types",
-      "courses",
-      "sections",
-      "ingest_queue",
-      "scan_sessions",
-      "scan_session_incoming",
-      "recognition_templates",
-      "transaction_updates",
-    ];
-  } else if (normOffice === "osas") {
-    officeTables = [
-      "event_proposals",
-      "transaction_updates",
-      "courses",
-      "sections",
-    ];
-  } else {
-    // Default / general office
-    officeTables = [
-      "transaction_updates",
-      "courses",
-      "sections",
-    ];
-  }
-
-  dumpPostgresTables(officeTables, tempDbPath);
+  const { tables: officeTables, rules } = await officeBackupTablesAndRules(normOffice);
+  dumpPostgresTables(officeTables, tempDbPath, rules);
 
   // Create ZIP archive
   const zip = new AdmZip();
@@ -890,24 +953,27 @@ export function restorePostgresSql(sqlContent) {
     }
 
     try {
+      const target = dockerPostgresTarget();
       execFileSync(
         "docker",
         [
           "exec",
+          "-e", "PGPASSWORD",
           "-i",
           "pupsj-rms-postgres",
           "psql",
           "-v",
           "ON_ERROR_STOP=1",
           "--username",
-          "pupsj_rms",
+          target.user,
           "--dbname",
-          "pupsj_rms",
+          target.database,
         ],
         {
           input: sqlContent,
           maxBuffer: 100 * 1024 * 1024,
           stdio: ["pipe", "pipe", "pipe"],
+          env: { ...process.env, PGPASSWORD: target.password },
         }
       );
     } catch (dockerError) {
@@ -1122,18 +1188,45 @@ export async function executeRestoreBackup(
   }
 
   const normUserOffice = String(userOffice || "").toLowerCase().trim();
+  const backupManifestEntry = entries.find(
+    (entry) => !entry.isDirectory && entry.entryName === "manifest.json"
+  );
+  let backupManifest = null;
+  if (backupManifestEntry) {
+    try {
+      backupManifest = JSON.parse(backupManifestEntry.getData().toString("utf8"));
+    } catch {
+      throw new Error("Backup manifest is invalid.");
+    }
+  }
+  const officeBackupId = backupManifest?.scope === "office" ? String(backupManifest.officeId || "").toLowerCase() : null;
+  if (officeBackupId && !isSuper && officeBackupId !== normUserOffice) {
+    throw new Error("Backup belongs to another office.");
+  }
+  if (officeBackupId) {
+    const scopedSql = scopeOfficeDump(dataSql, Object.fromEntries(targetTables.map((table) => [
+      table,
+      { predicate: (row) => !("office_id" in row) || row.office_id === officeBackupId },
+    ])));
+    if (scopedSql !== dataSql) throw new Error("Backup database dump contains records from another office.");
+    if (officeBackupId !== "osas" && targetTables.some((table) =>
+      ["student_organizations", "organization_bylaws_versions", "organization_officers", "osas_post_event_reports"].includes(table)
+    )) {
+      throw new Error("Backup contains OSAS records for another office.");
+    }
+  }
   if (!isSuper) {
     if (!normUserOffice) {
       throw new Error("An office-scoped administrator must have an office assignment.");
     }
-    if (normUserOffice === "osas") {
+    if (!officeBackupId && normUserOffice === "osas") {
       const hasRegistrarOnlyTables = targetTables.some((t) =>
         ["students", "student_accounts", "student_security_answers", "documents", "document_requests", "recognition_templates"].includes(t)
       );
       if (hasRegistrarOnlyTables) {
         throw new Error("Unauthorized: You cannot restore Registrar records to OSAS.");
       }
-    } else if (normUserOffice === "registrar") {
+    } else if (!officeBackupId && normUserOffice === "registrar") {
       const hasOsasOnlyTables = targetTables.some((t) => ["event_proposals"].includes(t));
       if (hasOsasOnlyTables) {
         throw new Error("Unauthorized: You cannot restore OSAS records to the Registrar office.");
@@ -1171,17 +1264,7 @@ export async function executeRestoreBackup(
   const localDir = getLocalDir();
   let extractedFileCount = 0;
 
-  const manifestEntry = entries.find(
-    (e) => !e.isDirectory && (e.entryName === "manifest.json" || e.entryName.endsWith("/manifest.json"))
-  );
-  let manifest = null;
-  if (manifestEntry) {
-    try {
-      manifest = JSON.parse(manifestEntry.getData().toString("utf8"));
-    } catch (e) {
-      console.warn("[RESTORE] Failed to parse manifest.json, using fallback extraction:", e.message);
-    }
-  }
+  const manifest = backupManifest;
 
   if (manifest?.records && Array.isArray(manifest.records) && manifest.records.length > 0) {
     const handledEntryNames = new Set(["db.sql", "manifest.json", "RECORDS_CATALOG.csv"]);
@@ -1194,41 +1277,40 @@ export async function executeRestoreBackup(
 
       const zipEntry = entries.find((e) => !e.isDirectory && e.entryName.replace(/\\/g, "/") === normArchivePath);
       if (!zipEntry) {
-        console.warn(`[RESTORE] Archive entry not found for manifest path: ${record.archivePath}`);
-        continue;
+        throw new Error(`Backup archive is missing a manifest file: ${record.archivePath}`);
       }
 
       const targetOffice = String(record.officeId || normUserOffice || manifest.officeId || "registrar").toLowerCase();
 
-      if (!isSuper) {
-        if (normUserOffice === "registrar" && targetOffice === "osas") continue;
-        if (normUserOffice === "osas" && targetOffice === "registrar") continue;
+      if (!isSuper && targetOffice !== normUserOffice) {
+        throw new Error(`Backup contains files for another office: ${targetOffice}`);
       }
 
-      const officeUploadsDir = path.join(localDir, "storage", targetOffice, "uploads");
+      const officeUploadsDir = normArchivePath.startsWith("records/_bylaws/") && targetOffice === "osas"
+        ? path.join(localDir, "storage", "osas", "bylaws")
+        : getOfficeUploadsDir(targetOffice);
       const destPath = path.resolve(officeUploadsDir, record.storageFilename);
 
-      const relOffice = path.relative(path.resolve(localDir), destPath);
+      const relOffice = path.relative(path.resolve(officeUploadsDir), destPath);
       if (!relOffice || relOffice.startsWith("..") || path.isAbsolute(relOffice)) {
         throw new Error(`Potentially malicious file path in manifest: ${record.storageFilename}`);
       }
 
+      const archivedBytes = zipEntry.getData();
+      if (record.sha256 && computeBufferSha256(archivedBytes) !== record.sha256) {
+        throw new Error(`Backup file checksum mismatch: ${record.archivePath}`);
+      }
       if (mode === "merge" && fs.existsSync(destPath)) {
+        if (record.sha256 && computeBufferSha256(fs.readFileSync(destPath)) !== record.sha256) {
+          throw new Error(`Existing file conflicts with backup: ${record.storageFilename}`);
+        }
         continue;
       }
 
       fs.mkdirSync(path.dirname(destPath), { recursive: true });
-      fs.writeFileSync(destPath, zipEntry.getData());
+      fs.writeFileSync(destPath, archivedBytes);
       extractedFileCount++;
 
-      // If registrar, also mirror to legacy uploads folder (.local/uploads/<storageFilename>)
-      if (targetOffice === "registrar") {
-        const legacyTarget = path.join(localDir, "uploads", record.storageFilename);
-        if (mode !== "merge" || !fs.existsSync(legacyTarget)) {
-          fs.mkdirSync(path.dirname(legacyTarget), { recursive: true });
-          fs.writeFileSync(legacyTarget, zipEntry.getData());
-        }
-      }
     }
 
     // Any remaining raw assets in the archive that were not in manifest
@@ -1251,7 +1333,10 @@ export async function executeRestoreBackup(
       if (entryName.startsWith("records/_raw_assets/")) {
         const filename = path.basename(entryName);
         const targetOffice = String(normUserOffice || manifest?.officeId || "registrar").toLowerCase();
-        destPath = path.join(localDir, "storage", targetOffice, "uploads", filename);
+        if (!isSuper && targetOffice !== normUserOffice) {
+          throw new Error(`Backup contains files for another office: ${targetOffice}`);
+        }
+        destPath = path.join(getOfficeUploadsDir(targetOffice), filename);
       } else {
         const resolvedRoot = path.resolve(localDir);
         destPath = path.resolve(resolvedRoot, entryName);
@@ -1301,7 +1386,7 @@ export async function executeRestoreBackup(
   // 7. Execute SQL restoration
   let restoreTransactionSql = "";
 
-  if (mode === "merge") {
+  if (mode === "merge" || officeBackupId) {
     // SAFE MERGE / RECONCILIATION:
     // Create temp staging tables, route COPY into staging, then INSERT ... ON CONFLICT DO NOTHING
     const stagingCreates = targetTables
@@ -1315,7 +1400,12 @@ export async function executeRestoreBackup(
     }
 
     const mergeInserts = targetTables
-      .map((tbl) => `INSERT INTO public.${tbl} SELECT * FROM staging_${tbl} ON CONFLICT DO NOTHING;`)
+      .map((tbl) => {
+        if (mode === "overwrite" && officeBackupId && OFFICE_SCOPED_BACKUP_TABLES.has(tbl)) {
+          return `DELETE FROM public.${tbl} WHERE office_id = '${officeBackupId}';\nINSERT INTO public.${tbl} SELECT * FROM staging_${tbl} ON CONFLICT DO NOTHING;`;
+        }
+        return `INSERT INTO public.${tbl} SELECT * FROM staging_${tbl} ON CONFLICT DO NOTHING;`;
+      })
       .join("\n");
 
     restoreTransactionSql = `

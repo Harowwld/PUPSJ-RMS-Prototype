@@ -1,7 +1,10 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
@@ -35,6 +38,7 @@ import { cn } from "@/lib/utils"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
 import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -531,7 +535,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         </div>
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Campus operations search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Search Input with Clear Button & Record Count */}
           <div className="w-full sm:w-[280px] lg:w-[340px] relative group shrink-0">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -566,7 +570,15 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               }}
             />
           </div>
-        </div>
+          <TableScrollControls scrollContainerRef={tableContainerRef}
+            canScrollLeft={canScrollLeft}
+            canScrollRight={canScrollRight}
+            isScrolled={isScrolled}
+            onScrollLeft={scrollLeft}
+            onScrollRight={scrollRight}
+            onResetScroll={resetTableScroll}
+          />
+        </DataViewToolbar>
 
         {/* Active Filter Chips & Horizontal Scroll Controls */}
         <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
@@ -591,17 +603,6 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             />
           </div>
 
-          {/* Horizontal Scroll Controls */}
-          <div className="flex items-center gap-2 shrink-0 select-none ml-auto">
-            <TableScrollControls
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              isScrolled={isScrolled}
-              onScrollLeft={scrollLeft}
-              onScrollRight={scrollRight}
-              onResetScroll={resetTableScroll}
-            />
-          </div>
         </div>
 
         {/* Cross-Department Activity Stream Table */}
@@ -641,7 +642,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               ref={tableContainerRef}
               className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
             >
-              <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+                <Table columns={["identifier", "category", "text", { kind: "text", maxWidth: 340 }, { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[1240px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
@@ -873,69 +874,12 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     )
                   })}
                 </tbody>
-              </table>
+                </Table>
             </div>
           )}
 
           {/* Pagination Footer */}
-          {sortedTransactions.length > 0 && (
-            <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl gap-3">
-              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                <span>
-                  Showing {paginatedTransactions.length} of {sortedTransactions.length} records
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 dark:text-zinc-500 text-[11px]">Rows:</span>
-                  {[10, 20, 50, 100].map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => {
-                        setPageSize(sz)
-                        setPage(1)
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                        pageSize === sz
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-
-                <div className="h-8 min-w-[32px] px-2.5 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 font-bold text-xs flex items-center justify-center text-gray-800 dark:text-zinc-200 shadow-2xs font-sans tabular-nums">
-                  {page}
-                </div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={page >= totalPages || endIndex >= sortedTransactions.length}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} loading={loading} />
         </div>
       </Card>
 
@@ -1261,7 +1205,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     onClick={() => handleOpenPdfPreview(sheetItem)}
                     className="text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border hover:bg-gray-50 dark:hover:bg-zinc-700 shrink-0 h-8 px-3 rounded-xl cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    Preview Document
+                    {PDF_ACTION_LABELS.preview}
                   </Button>
                 </div>
               </div>

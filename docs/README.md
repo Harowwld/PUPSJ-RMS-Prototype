@@ -14,6 +14,13 @@ This directory contains technical specifications, architectural references, and 
 | [`BACKUP_SPEC.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/BACKUP_SPEC.md) | **Security & Disaster Recovery:** 3-2-1 backup strategy, AES-256-GCM encryption standards, and immutable external archiving policy. |
 | [`TECHNOLOGY_STACK.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/TECHNOLOGY_STACK.md) | **Architecture & Dependencies:** Current framework (Next.js 16 / React 19), PostgreSQL 16 container, Tailwind CSS v4 design tokens, and package dependencies. |
 
+## UI & Implementation References
+
+| Document | Description |
+| :--- | :--- |
+| [`ui-patterns/superadmin-departments-stations.md`](ui-patterns/superadmin-departments-stations.md) | Reusable page-level reference for title summaries, divider-connected tabs, record toolbars, rounded controls, configurable columns, sorting/grouping, and bounded text truncation. |
+| [`../audits/table-consistency-2026-11-02.md`](../audits/table-consistency-2026-11-02.md) | Shared table primitives, density, selection, action, pagination, and width contracts across the application. |
+
 ---
 
 ## 🗄️ Document Archive (`docs/archive/`)

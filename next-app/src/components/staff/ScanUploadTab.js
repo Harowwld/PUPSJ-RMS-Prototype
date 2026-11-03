@@ -583,9 +583,9 @@ export default function ScanUploadTab({
               </span>
               <span
                 className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
-                title={authUser?.inbound_path || ".local/hot-folder/INBOUND"}
+                title={authUser?.inbound_path || `.local/hot-folder/${authUser?.office_id || "registrar"}/INBOUND`}
               >
-                {authUser?.inbound_path || ".local/hot-folder/INBOUND"}
+                {authUser?.inbound_path || `.local/hot-folder/${authUser?.office_id || "registrar"}/INBOUND`}
               </span>
             </div>
           </div>

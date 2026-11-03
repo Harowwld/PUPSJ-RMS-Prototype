@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -14,7 +15,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
       )}
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <table className={cn("w-full text-sm border-separate border-spacing-0", showScope ? "min-w-[1240px]" : "min-w-[1240px]")}>
+        <Table columns={["selection", "date", "status", "text", ...(showScope ? ["text"] : []), "text", "text", "actions"]} className="min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 min-w-12 max-w-12 py-3 px-2.5 text-center">
@@ -49,7 +50,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[52px] border-b border-border dark:border-border last:border-b-0"
+                className="border-b border-border dark:border-border last:border-b-0"
               >
                 <td className="w-12 min-w-12 max-w-12 py-3 px-2.5 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-3.5 rounded mx-auto dark:bg-muted" />
@@ -89,7 +90,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Pagination Footer Skeleton */}

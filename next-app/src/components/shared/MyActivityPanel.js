@@ -26,6 +26,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
 import { cn, formatLogDetails } from "@/lib/utils";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
+import TablePagination from "@/components/shared/TablePagination";
 import LogStatCards from "@/components/admin/audit-logs/StatCards";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
 import {
@@ -288,9 +289,6 @@ export default function MyActivityPanel({ embedded = false }) {
 
   const totalPages = Math.max(1, Math.ceil(total / perPage) || 1);
   const displayPage = Math.min(page, totalPages);
-  const startEntry = total === 0 ? 0 : (displayPage - 1) * perPage + 1;
-  const endEntry = startEntry === 0 ? 0 : (displayPage - 1) * perPage + rows.length;
-
   return (
     <TooltipProvider delayDuration={200}>
       <div
@@ -651,63 +649,7 @@ export default function MyActivityPanel({ embedded = false }) {
         )}
 
         {/* 6. Pagination Footer */}
-        {!error && total > 0 && (
-          <div className="mt-auto flex items-center justify-between gap-4 border-t border-border bg-white p-4 px-6 rounded-b-2xl dark:border-border dark:bg-card">
-            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-              <span>
-                Showing {endEntry} of {total.toLocaleString()}
-              </span>
-
-              <div className="flex items-center gap-2">
-                <span>Rows:</span>
-                {[10, 20, 50, 100].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => {
-                      setPerPage(size);
-                      setPage(1);
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                      perPage === size
-                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                        : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                    )}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 select-none">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={displayPage <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Prev
-              </Button>
-
-              <div className="h-8 w-8 rounded-xl border border-border bg-white flex items-center justify-center text-xs font-bold text-gray-800 dark:border-border dark:bg-zinc-900 dark:text-zinc-200">
-                {displayPage}
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={displayPage >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
+        {!error && <TablePagination label="My activity pages" page={displayPage} pageSize={perPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setPerPage} loading={loading} />}
 
         {/* Log Detail Sheet */}
         <LogDetailSheet

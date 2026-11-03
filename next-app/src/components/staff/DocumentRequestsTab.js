@@ -1,4 +1,6 @@
 "use client";
+import { Table, IdentifierBadge } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 import { Textarea } from "@/components/ui/textarea";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
@@ -44,6 +46,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
 import { formatErrorMessage } from "@/lib/errorUtils";
@@ -148,6 +151,7 @@ export default function DocumentRequestsTab({
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const listRequest = useRef(0);
   const [isManualLoading, setIsManualLoading] = useState(false);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
@@ -279,6 +283,7 @@ export default function DocumentRequestsTab({
 
   const loadList = useCallback(
     async (opts = { showLoading: true }) => {
+      const request = ++listRequest.current;
       const showLoading = opts.showLoading !== false;
       const isManual = opts.manual === true;
       if (isManual) {
@@ -302,6 +307,7 @@ export default function DocumentRequestsTab({
           cache: "no-store",
         });
         const json = await res.json().catch(() => null);
+        if (request !== listRequest.current) return;
         if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load");
 
         if (isManual) {
@@ -312,9 +318,11 @@ export default function DocumentRequestsTab({
           }
         }
 
+        if (request !== listRequest.current) return;
         setRows(Array.isArray(json.data) ? json.data : []);
         setTotal(Number(json.total) || 0);
       } catch (e) {
+        if (request !== listRequest.current) return;
         if (showLoading || isManual) {
           showToast?.(
             formatErrorMessage(e, {
@@ -327,8 +335,10 @@ export default function DocumentRequestsTab({
           setTotal(0);
         }
       } finally {
-        setLoading(false);
-        setIsManualLoading(false);
+        if (request === listRequest.current) {
+          setLoading(false);
+          setIsManualLoading(false);
+        }
       }
     },
     [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, sortBy, sortOrder, showToast, loadSlaStandards]
@@ -353,7 +363,7 @@ export default function DocumentRequestsTab({
 
   useEffect(() => {
     const timer = setTimeout(() => loadList({ showLoading: true }), 0);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); listRequest.current += 1; };
   }, [loadList]);
 
   useEffect(() => {
@@ -950,7 +960,7 @@ export default function DocumentRequestsTab({
 
           {/* 2. Navigation Toolbar */}
           {!error && (
-            <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+            <DataViewToolbar label="Document request search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
               {/* Left: Client Type Segmented Tabs */}
               <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
                 {[
@@ -984,7 +994,7 @@ export default function DocumentRequestsTab({
               </div>
 
               {/* Right: Search Input & Dropdown Popovers Group */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              <div className="flex flex-nowrap items-center gap-3 shrink-0">
                 {/* Search Input */}
                 <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -1014,8 +1024,9 @@ export default function DocumentRequestsTab({
                   totalCount={total}
                   filteredCount={displayedRows.length}
                 />
+                <TableScrollControls scrollContainerRef={tableContainerRef} isScrolledX={isScrolledX} onResetScroll={resetScroll} onScrollLeft={() => scrollLeft(400)} onScrollRight={() => scrollRight(400)} />
               </div>
-            </div>
+            </DataViewToolbar>
           )}
 
           {/* 3. Active Filter Chips & Scroll Controls Row */}
@@ -1028,12 +1039,6 @@ export default function DocumentRequestsTab({
                   className="p-0 border-0"
                 />
               </div>
-              <TableScrollControls
-                isScrolledX={isScrolledX}
-                onResetScroll={resetScroll}
-                onScrollLeft={() => scrollLeft(400)}
-                onScrollRight={() => scrollRight(400)}
-              />
             </div>
           )}
 
@@ -1098,7 +1103,7 @@ export default function DocumentRequestsTab({
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <table className="w-full text-sm border-separate border-spacing-0 min-w-[1240px]">
+                <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "text", "status", "text", "date", "actions"]} className="min-w-[1240px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
@@ -1188,6 +1193,7 @@ export default function DocumentRequestsTab({
                         return (
                           <tr
                             key={r.id}
+                            selected={selectedId === r.id}
                             className={cn(
                               "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
                               selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20"
@@ -1235,9 +1241,9 @@ export default function DocumentRequestsTab({
                               </div>
                               <div className="flex items-center gap-1.5 mt-1 min-w-0 overflow-hidden text-xs font-normal text-[#8E8E93] dark:text-zinc-500">
                                 {r.student_no ? (
-                                  <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap shrink-0">
+                                  <IdentifierBadge>
                                     {r.student_no}
-                                  </span>
+                                  </IdentifierBadge>
                                 ) : (
                                   <span className="italic text-xs text-amber-600 dark:text-amber-400 shrink-0">No Student ID</span>
                                 )}
@@ -1300,68 +1306,13 @@ export default function DocumentRequestsTab({
                         );
                       })}
                   </tbody>
-                </table>
+                </Table>
               </div>
             )}
           </div>
 
           {/* 5. Apple HIG Pagination Footer */}
-          {total > 0 && (
-            <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
-              <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300 select-none">
-                <span>
-                  Showing {rows.length} of {total.toLocaleString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span>Rows:</span>
-                  {[10, 20, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setItemsPerPage(size);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-0",
-                        itemsPerPage === size
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 select-none">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Prev
-                </Button>
-
-                <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                  {page}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination label="Document request pages" page={page} pageSize={itemsPerPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
         </Card>
 
         {/* 6. Request Detail Sheet Slide-Over Drawer */}

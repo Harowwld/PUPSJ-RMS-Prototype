@@ -1,6 +1,7 @@
 "use client";
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
@@ -43,6 +44,7 @@ import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import TablePagination from "@/components/shared/TablePagination";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
 import { AlertCircleIcon as EmptyAlertCircleIcon, NotificationOff01Icon as EmptyNotificationOff01Icon, Search01Icon as EmptySearch01Icon, TickDouble01Icon as EmptyTickDouble01Icon, Alert01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, LinkSquare01Icon, Mail01Icon, TickDouble01Icon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -182,7 +184,7 @@ export default function NotificationsTab({
 
   // Pagination
   const [page, setPage] = useUrlPage();
-  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Side Sheet Details state
   const [selectedNotif, setSelectedNotif] = useState(null);
@@ -848,64 +850,7 @@ export default function NotificationsTab({
           )}
 
           {/* 5. Pagination Footer */}
-          {!isLoading && !error && total > 0 && (
-            <div className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-border bg-white p-4 px-6 rounded-b-2xl dark:border-border dark:bg-card">
-              <div className="flex items-center gap-8">
-                <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                  <span>
-                    Showing {items.length} of {total.toLocaleString()} notifications
-                  </span>
-
-                  <div className="flex items-center gap-1.5 border-l border-border pl-6 dark:border-border">
-                    <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                    <div className="flex items-center gap-1">
-                      {[15, 25, 50, 100].map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => {
-                            setItemsPerPage(size);
-                            setPage(1);
-                          }}
-                          className={`px-2 py-0.5 rounded-lg text-[12px] font-normal cursor-pointer transition-colors border-0 ${
-                            itemsPerPage === size
-                              ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
-                              : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex shrink-0 items-center gap-3">
-                <button
-                  type="button"
-                  disabled={displayPage <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                >
-                  Prev
-                </button>
-
-                <div className="flex h-8 min-w-[32px] items-center justify-center rounded-xl border border-border/80 bg-white px-2.5 text-[12px] font-semibold text-gray-900 dark:border-border dark:bg-card dark:text-zinc-100">
-                  {displayPage}
-                </div>
-
-                <button
-                  type="button"
-                  disabled={displayPage >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+          {!isLoading && !error && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
         </Card>
 
         {/* 6. Sliding Detail Sheet */}
@@ -1199,7 +1144,7 @@ export default function NotificationsTab({
                           studentName: selectedNotif.student_name,
                         })}
                       >
-                        Open PDF Preview
+                        {PDF_ACTION_LABELS.preview}
                       </Button>
                     </div>
 
@@ -1276,7 +1221,7 @@ export default function NotificationsTab({
                     rel="noreferrer"
                     className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
-                    Download File
+                    {selectedNotif?.mime_type?.startsWith("image/") ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}
                   </a>
                 )}
               </div>

@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import { downloadDocument } from "@/lib/documentDownload";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Select } from "@/components/ui/select";
@@ -207,25 +210,29 @@ export function AttachedFileCard({
                 onPreview(item);
               }}
               className="w-7 h-7 rounded-lg bg-white/95 hover:bg-white text-gray-800 dark:bg-zinc-800/90 dark:hover:bg-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs border border-gray-200/50 dark:border-zinc-700/50"
-              title="Preview file"
-              aria-label="Preview file"
+              title={PDF_ACTION_LABELS.preview}
+              aria-label={PDF_ACTION_LABELS.preview}
             >
               <ViewIcon size="1em" className="text-xs" />
             </button>
           )}
           {downloadUrl && (
-            <a
-              href={downloadUrl}
-              download={filename}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+            <button
+              type="button"
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  await downloadDocument(downloadUrl, filename);
+                } catch (error) {
+                  toast.error("Download Failed", { description: error.message });
+                }
+              }}
               className="w-7 h-7 rounded-lg bg-white/95 hover:bg-white text-gray-800 dark:bg-zinc-800/90 dark:hover:bg-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs border border-gray-200/50 dark:border-zinc-700/50"
-              title="Download file"
-              aria-label="Download file"
+              title={formatConfig.extLabel === "PDF" ? PDF_ACTION_LABELS.download : PDF_ACTION_LABELS.original}
+              aria-label={formatConfig.extLabel === "PDF" ? PDF_ACTION_LABELS.download : PDF_ACTION_LABELS.original}
             >
               <Download01Icon size="1em" className="text-xs" />
-            </a>
+            </button>
           )}
           {!readOnly && onRemove && (
             <button

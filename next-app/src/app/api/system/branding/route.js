@@ -2,24 +2,12 @@ import { NextResponse } from "next/server";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
+import { DEFAULT_BRANDING as BRANDING_DEFAULTS } from "@/lib/institutionalBranding";
+import { getReportFont, isReportFont } from "@/lib/reportFontOptions";
 
 export const BRANDING_SETTING_KEY = "institution_branding_config";
 
-export const DEFAULT_BRANDING = {
-  institutionName: "Polytechnic University of the Philippines",
-  campusName: "San Juan City Campus",
-  tagline: "OFFICIAL ACADEMIC ARCHIVES & RECORDS",
-  jurisdictionHeader: "Republic of the Philippines",
-  documentCodePrefix: "PUPSJ",
-  brandColor: "#7A1E28",
-  logoUrl: "/assets/pup-logo.webp",
-  fallbackLogoUrl: "/assets/branding/black-icon.png",
-  logoBase64: null,
-  secondaryLogoUrl: null,
-  secondaryLogoBase64: null,
-  signatoryRegistrarTitle: "",
-  signatoryHeadTitle: "",
-};
+export const DEFAULT_BRANDING = BRANDING_DEFAULTS;
 
 function deriveDocumentPrefix(institutionName = "", campusName = "") {
   const getInitials = (str) => {
@@ -118,6 +106,7 @@ function sanitizeBranding(raw) {
     tagline,
     documentCodePrefix,
     brandColor,
+    reportFont: getReportFont(raw.reportFont).value,
     logoUrl,
     fallbackLogoUrl,
     logoBase64,
@@ -173,6 +162,9 @@ export async function PUT(req) {
     }
     if (body.reset !== undefined && typeof body.reset !== "boolean") {
       return NextResponse.json({ ok: false, error: "reset must be a boolean" }, { status: 400 });
+    }
+    if (body.reportFont !== undefined && !isReportFont(body.reportFont)) {
+      return NextResponse.json({ ok: false, error: "Choose a supported report font." }, { status: 400 });
     }
 
     if (body.reset) {

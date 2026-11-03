@@ -2,8 +2,16 @@ import { encryptPII } from "./piiEncryption.js";
 import crypto from "node:crypto";
 import { query, queryOne, transaction } from "./postgres.js";
 import { hashPassword } from "./passwordHash.js";
+import { getOfficeUploadsDir, getOfficeHotFolderDirs, getScannerVisibleInboundDir } from "./officePaths.js";
 export const DEFAULT_STAFF_PASSWORD=process.env.DEFAULT_STAFF_PASSWORD||"pupstaff";
 export const getDefaultOfficeAdminId=id=>`PUP${String(id||"").trim().toUpperCase()}-001`;
+const withFixedPaths = (office) => office && ({
+  ...office,
+  storage_path: getOfficeUploadsDir(office.id),
+  inbound_path: getOfficeHotFolderDirs(office.id).inbound,
+  scanner_host_path: getScannerVisibleInboundDir(office.id),
+  scanner_watching: Boolean(office.status === "Active" && process.env.HOT_FOLDER_INGEST_TOKEN && office.last_station_ping && Date.now() - new Date(office.last_station_ping).getTime() < 30000),
+});
 let columnsEnsured = false;
 export async function ensureOfficeStationColumns() {
   if (columnsEnsured) return;
@@ -27,12 +35,12 @@ export async function listOffices({status,q}={}){
   const f=[],p=[];
   if(status){f.push(`status=$${p.length+1}`);p.push(status);}
   if(q){f.push(`(id ILIKE $${p.length+1} OR name ILIKE $${p.length+1} OR short_name ILIKE $${p.length+1})`);p.push(`%${q}%`);}
-  return query(`SELECT * FROM offices ${f.length?"WHERE "+f.join(" AND "):""} ORDER BY created_at`,p);
+  return (await query(`SELECT * FROM offices ${f.length?"WHERE "+f.join(" AND "):""} ORDER BY created_at`,p)).map(withFixedPaths);
 }
 
 export async function getOfficeById(id){
   await ensureOfficeStationColumns();
-  return queryOne("SELECT * FROM offices WHERE id=$1",[id]);
+  return withFixedPaths(await queryOne("SELECT * FROM offices WHERE id=$1",[id]));
 }
 export async function createDefaultOfficeAdmin({officeId,shortName}){const id=getDefaultOfficeAdminId(officeId),email=`admin.${officeId}@pup.local`;const e=await queryOne("SELECT * FROM staff WHERE id=$1 OR email=$2",[id,encryptPII(email.toLowerCase())]);if(e)return {id:e.id,email:e.email,defaultPassword:null,created:false};await query("INSERT INTO staff(id,office_id,fname,lname,role,section,status,email,password_hash,password_last_changed,updated_at) VALUES($1,$2,$3,'Admin','Admin','Administrative','Active',$4,$5,NOW(),NOW())",[id,officeId,encryptPII(shortName||officeId),encryptPII("Admin"),encryptPII(email),hashPassword(DEFAULT_STAFF_PASSWORD)]);return {id,email,defaultPassword:DEFAULT_STAFF_PASSWORD,created:true};}
 export async function createOffice({
@@ -44,10 +52,8 @@ export async function createOffice({
   accent_color,
   status,
   station_name,
-  storage_path,
   ingest_token,
   scanner_model,
-  inbound_path,
   adminEmail,
   moduleIds,
 }) {
@@ -70,7 +76,7 @@ export async function createOffice({
     throw error;
   }
 
-  const defaultStorage = storage_path || `.local/storage/${oid}/uploads`;
+  const defaultStorage = getOfficeUploadsDir(oid);
   const email = String(adminEmail || `admin.${oid}@pup.local`).trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     const error = new Error("A valid email address is required for the office administrator account.");
@@ -80,7 +86,7 @@ export async function createOffice({
   const defaultStation = station_name || `${oid.toUpperCase()}-STATION-01`;
   const defaultToken = ingest_token || `token_${oid}_${crypto.randomBytes(8).toString("hex")}`;
   const defaultScanner = scanner_model || "High-Speed Document Scanner";
-  const defaultInbound = inbound_path || ".local/hot-folder/INBOUND";
+  const defaultInbound = getOfficeHotFolderDirs(oid).inbound;
 
   return transaction(async ({ query: run, queryOne: runOne }) => {
     const duplicate = await runOne("SELECT id FROM offices WHERE id = $1", [oid]);
@@ -93,7 +99,7 @@ export async function createOffice({
     const officeStatus = status === "Inactive" ? "Inactive" : "Active";
     await run(
       `INSERT INTO offices(id, name, short_name, description, icon, accent_color, status, station_name, storage_path, inbound_path, ingest_token, scanner_model, last_station_ping)
-       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NULL)`,
       [oid, name, short_name, description || null, icon || null, accent_color || "#800000", officeStatus, defaultStation, defaultStorage, defaultInbound, defaultToken, defaultScanner]
     );
 
@@ -125,8 +131,9 @@ export async function createOffice({
     const office = await runOne("SELECT * FROM offices WHERE id = $1", [oid]);
     return { office, admin };
   }).then(({ office, admin }) => {
-    Object.defineProperty(office, "_admin", { value: admin, enumerable: false });
-    return office;
+    const result = withFixedPaths(office);
+    Object.defineProperty(result, "_admin", { value: admin, enumerable: false });
+    return result;
   });
 }
 
@@ -141,13 +148,10 @@ export async function updateOffice(id, p) {
        accent_color = COALESCE($5, accent_color),
        status = COALESCE($6, status),
        station_name = COALESCE($7, station_name),
-       storage_path = COALESCE($8, storage_path),
-       inbound_path = COALESCE($9, inbound_path),
-       ingest_token = COALESCE($10, ingest_token),
-       scanner_model = COALESCE($11, scanner_model),
-       last_station_ping = COALESCE($12, last_station_ping),
+       ingest_token = COALESCE($8, ingest_token),
+       scanner_model = COALESCE($9, scanner_model),
        updated_at = NOW() 
-     WHERE id = $13`,
+     WHERE id = $10`,
     [
       p.name !== undefined ? p.name : null,
       p.short_name !== undefined ? p.short_name : null,
@@ -156,11 +160,8 @@ export async function updateOffice(id, p) {
       p.accent_color !== undefined ? p.accent_color : null,
       p.status !== undefined ? p.status : null,
       p.station_name !== undefined ? p.station_name : null,
-      p.storage_path !== undefined ? p.storage_path : null,
-      p.inbound_path !== undefined ? p.inbound_path : null,
       p.ingest_token !== undefined ? p.ingest_token : null,
       p.scanner_model !== undefined ? p.scanner_model : null,
-      p.last_station_ping !== undefined ? p.last_station_ping : null,
       id,
     ]
   );
@@ -169,5 +170,5 @@ export async function updateOffice(id, p) {
 export const deactivateOffice=id=>updateOffice(id,{status:"Inactive"});export const activateOffice=id=>updateOffice(id,{status:"Active"});
 export async function listOfficesWithStats(){
   await ensureOfficeStationColumns();
-  return query("SELECT o.*,(SELECT COUNT(*) FROM office_modules om WHERE om.office_id=o.id AND om.enabled=true)::int module_count,(SELECT COUNT(*) FROM staff s WHERE s.office_id=o.id AND s.status='Active')::int staff_count FROM offices o ORDER BY o.created_at");
+  return (await query("SELECT o.*,(SELECT COUNT(*) FROM office_modules om WHERE om.office_id=o.id AND om.enabled=true)::int module_count,(SELECT COUNT(*) FROM staff s WHERE s.office_id=o.id AND s.status='Active')::int staff_count FROM offices o ORDER BY o.created_at")).map(withFixedPaths);
 }

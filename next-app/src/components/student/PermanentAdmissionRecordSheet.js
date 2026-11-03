@@ -1,6 +1,7 @@
 "use client";
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import React, { useMemo } from "react";
 
 import {
@@ -311,7 +312,7 @@ export default function PermanentAdmissionRecordSheet({
                     className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
                     <ViewIcon size="1em" className="text-xs mr-1" />
-                    <span>View Digital Copy</span>
+                    <span>{PDF_ACTION_LABELS.preview}</span>
                   </Button>
                 )}
               </div>

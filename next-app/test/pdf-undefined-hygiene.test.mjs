@@ -1,5 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { installReportAssets } from "./helpers/reportAssets.mjs";
+
+test.beforeEach(installReportAssets);
 import {
   generateAuditLogsPdf,
   generateDigitizationCompliancePdf,
@@ -10,9 +14,17 @@ import {
 } from "../src/lib/pdfGenerator.js";
 
 async function blobToText(blob) {
-  const arrayBuffer = await blob.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  return buffer.toString("binary");
+  const pdf = await getDocument({ data: new Uint8Array(await blob.arrayBuffer()), useSystemFonts: false }).promise;
+  try {
+    const pages = [];
+    for (let page = 1; page <= pdf.numPages; page++) {
+      const content = await (await pdf.getPage(page)).getTextContent();
+      pages.push(content.items.map((item) => item.str).join(" "));
+    }
+    return pages.join(" ");
+  } finally {
+    await pdf.destroy();
+  }
 }
 
 function assertNoUndefined(text, context) {

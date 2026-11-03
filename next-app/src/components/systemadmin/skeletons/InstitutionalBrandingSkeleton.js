@@ -36,6 +36,13 @@ export default function InstitutionalBrandingSkeleton() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column (lg:col-span-7): Settings Forms */}
             <div className="lg:col-span-7 space-y-5">
+              <div className="rounded-2xl border border-border bg-white p-6 shadow-2xs dark:bg-card space-y-4">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-8 w-full" />
+              </div>
               {/* 1. Official Institutional Seal / Logo Upload Box First */}
               <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
                 <div className="space-y-1">
@@ -138,7 +145,7 @@ export default function InstitutionalBrandingSkeleton() {
               </div>
             </div>
 
-            {/* Right Column (lg:col-span-5): Live PDF Simulator (Sticky) */}
+            {/* Right Column (lg:col-span-5): Document Preview */}
             <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-6">
               <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
                 <div className="flex items-center justify-between">
@@ -149,7 +156,7 @@ export default function InstitutionalBrandingSkeleton() {
                   <Skeleton className="h-6 w-24 rounded-full dark:bg-muted" />
                 </div>
                 {/* Simulated A4 Canvas Sheet */}
-                <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-6 flex flex-col items-center justify-between min-h-[500px] shadow-xs">
+                <div className="rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-950 p-6 flex flex-col items-center justify-between h-[620px] shadow-xs">
                   <div className="w-full flex flex-col items-center gap-3 border-b border-border dark:border-border pb-4">
                     <Skeleton className="w-12 h-12 rounded-full dark:bg-muted" />
                     <Skeleton className="h-3.5 w-48 rounded dark:bg-muted" />

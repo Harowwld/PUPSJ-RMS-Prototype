@@ -1,7 +1,10 @@
 "use client"
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 
 import useUrlPage from "@/hooks/useUrlPage"
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia, EmptyContent } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import useTableScroll from "@/hooks/useTableScroll"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
@@ -67,7 +71,7 @@ export default function OfficeDocumentsTable({
 
   return (
     <div className={containerClasses}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-border">
+      <DataViewToolbar label={`${officeLabel} document search and controls`} className="border-b border-border px-6 py-4 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-border">
         <div>
           <h2 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50">{officeLabel} Documents</h2>
           <p className="mt-1 text-[13px] text-[#8E8E93] dark:text-zinc-400">
@@ -90,7 +94,7 @@ export default function OfficeDocumentsTable({
             </div>
           </div>
           {visibleRows.length > 0 && (
-            <TableScrollControls
+            <TableScrollControls scrollContainerRef={tableContainerRef}
               isScrolledX={isScrolledX}
               onResetScroll={resetScroll}
               onScrollLeft={() => scrollLeft(400)}
@@ -98,7 +102,7 @@ export default function OfficeDocumentsTable({
             />
           )}
         </div>
-      </div>
+      </DataViewToolbar>
 
       {visibleRows.length === 0 ? (
         <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
@@ -136,7 +140,7 @@ export default function OfficeDocumentsTable({
             ref={tableContainerRef}
             className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
           >
-            <table className="w-full text-sm border-collapse min-w-[960px]">
+            <Table columns={[officeLabel === "OSAS" ? "text" : "identifier", "text", { kind: "text", maxWidth: 340 }, "year", "status", "actions"]} className="min-w-[960px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                   <th className="w-[16%] min-w-[150px] p-4">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
@@ -214,75 +218,22 @@ export default function OfficeDocumentsTable({
                             <button
                               type="button"
                               onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
-                              aria-label="Preview Document"
+                              aria-label={PDF_ACTION_LABELS.preview}
                               className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                             >
                               <ViewIcon size="1em" className="text-[16px]" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent>Preview Document</TooltipContent>
+                          <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
                         </Tooltip>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           </div>
-          <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none rounded-b-2xl">
-            <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
-              <span>
-                Showing {visibleRows.length} of {rows.length.toLocaleString()}
-              </span>
-              <div className="flex items-center gap-2">
-                <span>Rows:</span>
-                <div className="flex items-center gap-1">
-                  {[10, 20, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setPageSize(size)
-                        setPage(1)
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                        pageSize === size
-                          ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                          : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
-                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Prev
-              </Button>
-              <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                {page}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <TablePagination label="Office document pages" page={page} pageSize={pageSize} totalCount={rows.length} displayedCount={visibleRows.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         </>
       )}
     </div>

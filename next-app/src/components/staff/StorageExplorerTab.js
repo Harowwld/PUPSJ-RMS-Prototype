@@ -17,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton"
+import TablePagination from "@/components/shared/TablePagination";
 import { Cancel01Icon, File02Icon, FolderOpenIcon, Target01Icon, ViewOffIcon, WarehouseIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function getStudentNoYear(studentNo) {
@@ -91,11 +92,6 @@ export default function StorageExplorerTab({
     }, 0)
     return () => clearTimeout(timer)
   }, [selectedCabinet, activeStudent, locatorModel?.cabinets])
-
-  const totalRoomsPages = useMemo(() => {
-    const rCount = (locatorModel?.rooms || []).length
-    return Math.ceil(rCount / roomsPerPage) || 1
-  }, [locatorModel?.rooms, roomsPerPage])
 
   const paginatedRooms = useMemo(() => {
     const rooms = locatorModel?.rooms || []
@@ -387,64 +383,7 @@ export default function StorageExplorerTab({
                   </div>
                 </div>
 
-                {(locatorModel?.rooms || []).length > 10 && (
-                  <div className="flex items-center justify-between border-t border-border bg-white p-4 px-6 dark:border-border dark:bg-card mt-auto select-none">
-                    <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
-                      <span>
-                        Showing {paginatedRooms.length} of {(locatorModel?.rooms || []).length.toLocaleString()}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span>Rows:</span>
-                        <div className="flex items-center gap-1">
-                          {[6, 12, 18, 24].map((size) => (
-                            <button
-                              key={size}
-                              type="button"
-                              onClick={() => {
-                                setRoomsPerPage(size);
-                                setRoomsPage(1);
-                              }}
-                              className={cn(
-                                "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
-                                roomsPerPage === size
-                                  ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
-                              )}
-                            >
-                              {size}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={roomsPage <= 1}
-                        onClick={() => setRoomsPage((p) => Math.max(1, p - 1))}
-                        className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                      >
-                        Prev
-                      </Button>
-
-                      <div className="h-8 w-8 rounded-xl border border-[#e5e5ea] dark:border-border flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
-                        {roomsPage}
-                      </div>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={roomsPage >= totalRoomsPages}
-                        onClick={() => setRoomsPage((p) => Math.min(totalRoomsPages, p + 1))}
-                        className="text-xs text-gray-900 dark:text-zinc-300 disabled:opacity-40 cursor-pointer rounded-xl h-8 px-3"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                {(locatorModel?.rooms || []).length > 0 && <TablePagination label="Storage room pages" page={roomsPage} pageSize={roomsPerPage} totalCount={locatorModel.rooms.length} displayedCount={paginatedRooms.length} onPageChange={setRoomsPage} onPageSizeChange={setRoomsPerPage} />}
               </div>
             ) : locatorModel?.kind === "cabinets" ? (
               <div className="px-8 pb-8 w-full">

@@ -20,7 +20,6 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import RecognitionTemplateSkeleton from "@/components/admin/skeletons/RecognitionTemplateSkeleton"
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone"
@@ -79,7 +78,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const sampleInputRef = useRef(null)
   const importInputRef = useRef(null)
 
-  const load = useCallback(async (showNotification = false) => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const [typesResponse, templatesResponse] = await Promise.all([
@@ -90,9 +89,6 @@ export default function RecognitionTemplatesTab({ showToast }) {
       const templatesData = await templatesResponse.json()
       setDocTypes(Array.isArray(typesData.data) ? typesData.data.filter((type) => type.status !== "Archived") : [])
       setTemplates(Array.isArray(templatesData.data) ? templatesData.data : [])
-      if (showNotification) {
-        showToast?.({ title: "Templates Refreshed", description: "Recognition templates have been updated." })
-      }
     } catch (error) {
       showToast?.(formatErrorMessage(error, "Failed to Load Templates"), true)
     } finally {
@@ -516,11 +512,6 @@ export default function RecognitionTemplatesTab({ showToast }) {
               >
                 Export Templates
               </Button>
-              <RefreshButton
-                onRefresh={() => load(true)}
-                isLoading={loading}
-                title="Refresh Templates"
-              />
             </div>
           }
         />

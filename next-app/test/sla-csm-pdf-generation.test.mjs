@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { installReportAssets } from "./helpers/reportAssets.mjs";
+
+test.beforeEach(installReportAssets);
 import {
   generateSLACompliancePdf,
   generateCSMReportPdf,

@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { useState, useEffect } from "react"
 
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import {
   Tooltip,
   TooltipContent,
@@ -206,12 +208,13 @@ export default function RateLimitingTab() {
 
       {/* Recent Violations */}
       <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-        <div className="flex items-center justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
+        <DataViewToolbar label="Recent violations table controls" className="justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
           <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
             Recent Rate Limit Violations
           </h3>
           {data.recentViolations.length > 0 && (
             <TableScrollControls
+              scrollContainerRef={violationsScroll.tableContainerRef}
               canScrollLeft={violationsScroll.canScrollLeft}
               canScrollRight={violationsScroll.canScrollRight}
               isScrolled={violationsScroll.isScrolled}
@@ -220,7 +223,7 @@ export default function RateLimitingTab() {
               onResetScroll={violationsScroll.resetScroll}
             />
           )}
-        </div>
+        </DataViewToolbar>
         <div>
           {data.recentViolations.length === 0 ? (
             <EmptyState
@@ -234,7 +237,7 @@ export default function RateLimitingTab() {
               ref={violationsScroll.tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
-              <table className="w-full text-sm border-collapse min-w-[700px]">
+              <Table columns={["category", "identifier", "text", "number", "date", "actions"]} className="min-w-[700px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className="w-[20%] p-4">
@@ -302,7 +305,7 @@ export default function RateLimitingTab() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
             </div>
           )}
         </div>
@@ -312,10 +315,11 @@ export default function RateLimitingTab() {
 
   const renderConfigurations = () => (
     <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-      <div className="flex items-center justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
+      <DataViewToolbar label="Rate limit configuration table controls" className="justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Rate Limit Configurations</h3>
         {data.configs.length > 0 && (
           <TableScrollControls
+            scrollContainerRef={configsScroll.tableContainerRef}
             canScrollLeft={configsScroll.canScrollLeft}
             canScrollRight={configsScroll.canScrollRight}
             isScrolled={configsScroll.isScrolled}
@@ -324,12 +328,12 @@ export default function RateLimitingTab() {
             onResetScroll={configsScroll.resetScroll}
           />
         )}
-      </div>
+      </DataViewToolbar>
       <div
         ref={configsScroll.tableContainerRef}
         className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
       >
-        <table className="w-full text-sm border-collapse min-w-[550px]">
+        <Table columns={["category", "number", "number", "actions"]} className="min-w-[550px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
               <th className="w-[42%] p-4">
@@ -373,17 +377,18 @@ export default function RateLimitingTab() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     </div>
   )
 
   const renderSuspiciousIPs = () => (
     <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-      <div className="flex items-center justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
+      <DataViewToolbar label="Suspicious IP table controls" className="justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Suspicious IP Addresses</h3>
         {suspiciousIPs.length > 0 && (
           <TableScrollControls
+            scrollContainerRef={suspiciousScroll.tableContainerRef}
             canScrollLeft={suspiciousScroll.canScrollLeft}
             canScrollRight={suspiciousScroll.canScrollRight}
             isScrolled={suspiciousScroll.isScrolled}
@@ -392,7 +397,7 @@ export default function RateLimitingTab() {
             onResetScroll={suspiciousScroll.resetScroll}
           />
         )}
-      </div>
+      </DataViewToolbar>
       <div>
         {suspiciousIPs.length === 0 ? (
           <EmptyState
@@ -406,7 +411,7 @@ export default function RateLimitingTab() {
             ref={suspiciousScroll.tableContainerRef}
             className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
           >
-            <table className="w-full text-sm border-collapse min-w-[650px]">
+            <Table columns={["text", "status", "number", "number", "date"]} className="min-w-[650px]">
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                   <th className="w-[24%] p-4">
@@ -443,7 +448,7 @@ export default function RateLimitingTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           </div>
         )}
       </div>

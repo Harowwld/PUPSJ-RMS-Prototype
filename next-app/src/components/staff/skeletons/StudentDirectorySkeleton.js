@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
@@ -63,9 +64,9 @@ export default function StudentDirectorySkeleton() {
 
         {/* 5. Main Data Table */}
         <div className="w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-x-auto">
-          <table className="w-full text-sm border-collapse min-w-[1100px]">
+          <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
             <thead className="border-b border-border bg-gray-50/90 dark:bg-zinc-900/90">
-              <tr className="h-11">
+              <tr>
                 <th className="w-12 p-4 text-center">
                   <Skeleton className="h-4 w-4 mx-auto rounded" />
                 </th>
@@ -97,7 +98,7 @@ export default function StudentDirectorySkeleton() {
             </thead>
             <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
               {Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i} className="h-14">
+                <tr key={i}>
                   <td className="w-12 p-4 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-4 mx-auto rounded" />
                   </td>
@@ -128,7 +129,7 @@ export default function StudentDirectorySkeleton() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
 
         {/* 6. Pagination Footer */}

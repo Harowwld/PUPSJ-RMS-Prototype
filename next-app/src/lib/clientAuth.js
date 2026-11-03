@@ -2,6 +2,12 @@ let inFlightSessionRequest = null;
 let inFlightRefresh = null;
 let nativeFetch = null;
 const sessionListeners = new Set();
+const principalListeners = new Set();
+
+export function subscribeClientPrincipal(listener) {
+  principalListeners.add(listener);
+  return () => principalListeners.delete(listener);
+}
 
 function fetchDirect(input, init) {
   return (nativeFetch || globalThis.fetch)(input, init);
@@ -22,6 +28,9 @@ async function readSession() {
     headers: { "Cache-Control": "no-cache, no-store, must-revalidate", Pragma: "no-cache", Expires: "0" },
   });
   const data = (await response.json().catch(() => null))?.data || null;
+  if (response.ok || response.status === 401 || response.status === 403) {
+    for (const listener of principalListeners) listener(response.ok ? data : null);
+  }
   if (response.ok && data?.sessionExpiresAt) publishExpiry(data.sessionExpiresAt);
   return { ok: response.ok, status: response.status, data };
 }
@@ -126,5 +135,6 @@ export function getClientSession() {
 
 export function invalidateClientSession() {
   inFlightSessionRequest = null;
+  for (const listener of principalListeners) listener(null);
   publishExpiry(null);
 }

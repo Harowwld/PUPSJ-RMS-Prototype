@@ -15,7 +15,7 @@ This guide establishes the mandatory UI/UX standards, component blueprints, and 
 
 ## 2. Border Radius Token Hierarchy
 
-**Typography ownership:** Plus Jakarta Sans is the only app font. It is loaded in the root layout and inherited by all app text, controls, previews, print views, and code-like labels. Do not introduce monospace, serif, or separate system font families. Use `tabular-nums` to align numeric IDs and timestamps while keeping the same typeface. Component utilities own sizes, weights, and line heights; do not add universal `!important` typography rules. Shared Input and Select default to 13px and preserve explicit caller sizes. Heading/table defaults stay in Tailwind's base layer so utilities can override them.
+**Typography ownership:** Plus Jakarta Sans is the app interface font. It is loaded in the root layout and inherited by controls, preview toolbars, and code-like labels. Generated PDF reports use the font selected in Institutional Branding, embedded in regular and bold weights throughout the document. Do not apply the PDF font to the surrounding app interface. Use `tabular-nums` to align interface IDs and timestamps. Component utilities own sizes, weights, and line heights; do not add universal `!important` typography rules. Shared Input and Select default to 13px and preserve explicit caller sizes. Heading/table defaults stay in Tailwind's base layer so utilities can override them.
 
 Follow this strict sizing hierarchy across all pages and components:
 
@@ -141,19 +141,21 @@ Keep related fields together in a responsive grid. On narrow screens, let the gr
 Use `SheetPagination` from `@/components/shared/SheetPagination` for every sheet pager. It matches the table controls: compact ghost `Prev` / `Next` buttons with a bordered current-page indicator. Keep the existing record callbacks, accessible entity-specific labels, and disabled conditions.
 
 - Record-detail sheets use `compact` with the current record index plus one and the record count. Header controls may wrap onto another line on narrow screens.
-- List sheets use the full layout with `Showing {displayCount} of {totalCount}`, `Rows: 10 / 20 / 50 / 100`, and page navigation. Reset to the first page when the row count changes.
+- List sheets use the full layout with `Showing X–Y of Z`, `Rows: 10 / 20 / 50 / 100`, and page navigation. Pass `pageSize` to calculate the range accurately, including the last partial page. Reset to the first page when the row count changes.
 - Keep pagination outside the sheet's action footer. Do not copy table-container divider lines or tinted footer backgrounds into sheets.
 - Do not build separate arrow-button/zero-padded counters or outlined previous/next layouts for sheets.
 
-### 3.6 Generated Report Previews
+### 3.6 PDF Preview Modals
 
-Use `ReportPreviewDialog` from `@/components/shared/ReportPreviewDialog` for generated reports. Its layout is extracted from the Compliance Analysis report preview and is shared by the compliance summary, individual student report, and incomplete-records list.
+Use `PDFPreviewModal` from `@/components/shared/PDFPreviewModal` for records, attachments, and generated reports. All PDF preview dialogs use this one shell; page components provide the document, context, and existing download/logging callbacks.
 
 - Use a specific title such as `Student Records Report Preview`, plus a short report description. The header uses `px-6 py-5` and a single close control.
 - Keep the PDF canvas edge to edge inside the full-inspection dialog. The common viewer supplies loading and retry states, the shared PDF zoom policy below, and fullscreen behavior.
-- Place the fullscreen control at the footer's left. Actions on the right are outlined `Close`, outlined `Print Report`, and primary `Download Report`. The footer uses `px-6 py-4` and wraps on narrow screens.
+- Place the fullscreen control at the footer's left. Actions on the right are outlined `Close`, outlined `Print PDF`, and primary `Download PDF`. The footer uses `px-6 py-4`, wraps on narrow screens, and supplies at least 44px mobile controls.
 - Printing waits for the active PDF frame to load. Downloads use the same PDF URL or the caller's existing download handler, preserving filenames, logging, and feedback.
-- The caller owns report generation and object-URL cleanup. Route every dismissal through its `onClose` handler so footer, header, Escape, and backdrop dismissal release the same resources.
+- Use `headerActions` for contextual controls such as the SLA/CSM report switcher. Preserve the common header, canvas, footer, focus behavior, and action order.
+- Use `usePdfPreviewSession` for page-owned report generation. Closing or unmounting cancels pending generations and releases the current object URL. Route every dismissal through `onClose` so footer, header, Escape, and backdrop dismissal release the same resources.
+- Import `PDF_ACTION_LABELS` from `@/lib/pdfPreview`: `Preview PDF` opens a preview, `Print PDF` opens the print dialog, and `Download PDF` saves the displayed PDF. Use `Download Original` only for the original image or an unsupported source format. Do not label a preview-opening action `Export PDF Report`.
 
 ### 3.7 Document PDF Preview & Zoom
 
@@ -161,10 +163,22 @@ All full document and report previews use `PDFPreview` from `@/components/shared
 
 - Open desktop previews at **100%**, rather than stretching the paper to the available width. Containers narrower than 820px fit the whole page so mobile views and embedded panels show the paper without horizontal clipping.
 - Use `PDFPreviewModal` for opening records, scanned documents, and attachments. It shares file loading, missing-file recovery, and replacement behavior with embedded `ResilientPDFViewer` panels.
-- Image attachments and scans are converted to a temporary PDF for viewing in the same preview. Original downloads retain the uploaded file and filename; conversion does not alter stored files. Unsupported formats receive an explicit download state.
-- Use `ReportPreviewDialog` for generated reports, with the same `PDFPreview` body. Preview, printing, and downloading must use the generated PDF rather than separate HTML print layouts.
+- Image attachments and scans are converted to a temporary PDF for viewing in the same preview. `Download PDF` saves that PDF; `Download Original` preserves the uploaded file and filename. Conversion does not alter stored files. Unsupported formats receive an explicit original-download state.
+- Use `PDFPreviewModal` for generated reports, with the same `PDFPreview` body. Preview, printing, and downloading must use the generated PDF rather than separate HTML print layouts.
+- File-card downloads use the download callback or `downloadDocument` to save received bytes. Do not use `window.open` as a download fallback or bypass the preview for non-PDF attachments.
 - Pass the source URL to the shared component. Do not create page-specific PDF iframes or append `view=FitH` / custom zoom fragments. The shared helper preserves page destinations and enforces the opening zoom.
 - Keep document thumbnails and OCR/template editing canvases in their existing editing or navigation roles. Their full document preview actions open the shared PDF preview.
+
+### 3.8 Generated Institutional Reports
+
+- Build every generated report with `createReportDocument` from `@/lib/reportDocument`. Report generators supply their data and sections; they do not implement separate letterheads, font registration, table themes, or page footers.
+- Use A4 portrait for narrative reports and landscape for wide lists. Shared page margins are 54pt; reserve 72pt at the bottom for footer clearance. Body text is 10.5pt with 1.4 line spacing, section headings are 11.5pt bold, and data tables use 9pt text (8.5pt for dense matrices).
+- The letterhead contains the institutional seals, jurisdiction, school, campus, and office. Follow it with the report title, generation date, scope/coverage metadata, numbered sections, and relevant data. Use the configured signatory titles where a review/signature area is appropriate; leave signatures blank.
+- Tables use black text, light gray column headings, thin rules, repeated headings on continuation pages, wrapped cell text, and right-aligned numeric columns. Use document tables rather than dashboard metric cards.
+- Every page has a document reference, generation timestamp, and `Page X of Y`. Continuation pages include the institution and report title. Avoid orphaned section headings, clipped text, and tables overlapping footers.
+- `reportFont` is stored with institutional branding. Available families are Plus Jakarta Sans, Arial-compatible Liberation Sans, and Times New Roman-compatible Liberation Serif. All fonts are self-hosted and embedded in the PDF. Keep option labels explicit about compatible fonts.
+- The branding screen previews the actual generated sample PDF, including unsaved changes. Save Branding applies the settings to subsequent generated reports. Resolve current branding before generating a report, with cached branding available when offline.
+- Describe the recorded data and the selected coverage. Missing measurements display `N/A` or an explicit empty state; do not manufacture metrics, signatures, certification statements, or legal conclusions.
 
 ---
 
@@ -208,8 +222,8 @@ import { Add01Icon } from "hugeicons-react";
 </Button>
 ```
 
-### 4.4 Universal Header Refresh Action
-Never use a text button that says "Refresh". Use the project's squircle `<RefreshButton />`:
+### 4.4 Selective Data Refresh Action
+Use a refresh control when data may change outside the current screen and users need a way to pull in those changes, such as live queues, notifications, audit feeds, and operations monitoring. Routine settings and reference screens should load when opened and update after save without a refresh control. When refresh is needed, use the project's squircle `<RefreshButton />` instead of a text-only button:
 ```jsx
 import { RefreshButton } from "@/components/shared/RefreshButton";
 
@@ -218,18 +232,17 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 Renders an accessible 40×40px `rounded-xl` icon-only squircle with hover feedback and spinning indicator.
 
 ### 4.5 Table / Row Inline Actions
-For row-level table actions, use compact `rounded-lg` buttons:
+Use a fixed 48px action column with one control, following section 9. A single action renders directly; multiple actions use the shared menu. Supply a specific label and retain the existing authorization, disabled state, callback, and confirmation:
 ```jsx
 import { PencilEdit01Icon } from "hugeicons-react";
+import { TableActions } from "@/components/shared/TableActions";
 
-<button
-  type="button"
-  onClick={() => handleEdit(row)}
-  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
-  title="Edit"
->
-  <PencilEdit01Icon size={16} aria-hidden="true" />
-</button>
+<TableActions
+  label={`Actions for ${row.studentNo}`}
+  actions={[
+    { label: "Edit Student", icon: PencilEdit01Icon, onClick: () => handleEdit(row) },
+  ]}
+/>
 ```
 
 ---
@@ -724,7 +737,173 @@ Before finalizing any new page, tab, or modal, verify the following:
 - [ ] **No Static Icons on Primary Buttons**: Does the main action button have clean text without leading plus/trash icons?
 - [ ] **Border Radius Standards**: Outer cards are `rounded-2xl`, inputs & buttons are `rounded-xl`, small items are `rounded-lg`.
 - [ ] **Secondary Button Outlines**: Dismissal buttons use `variant="outline"` with a crisp border, not borderless ghost.
-- [ ] **Universal Refresh Squircle**: Is data refresh handled via `<RefreshButton />` instead of a text "Refresh" button?
+- [ ] **Selective Refresh**: Does this screen need to reload data changed by other people or background work? If yes, use `<RefreshButton />`; otherwise omit a refresh control.
 - [ ] **Standard Search Input with Live Count**: Does the search bar include a leading Hugeicons magnifying glass with focus color transition, generous padding (`pl-8 pr-16`), a trailing live count badge (`text-[11px] font-sans tabular-nums pointer-events-none`), and an inline Hugeicons clear button?
 - [ ] **Edge-to-Edge Line-Attached Alerts**: Are alert/warning banners attached directly to container divider lines (`border-b` / `border-t`, zero outer margins `mx-0`, no floating `rounded-xl` island cards) taking up the line space edge-to-edge?
 - [ ] **Dark Mode Parity**: Are dark variants (`dark:border-white/10`, `dark:bg-card`, `dark:text-zinc-50`) present on all containers?
+- [ ] **Table Contract**: Does every table use section 9's shared primitives, density, column kinds, action width, truncation, and pagination? Do skeletons match the live columns?
+
+---
+
+## 9. Tables: Layout, Density, Content, and Pagination
+
+This is the canonical table contract for every portal, including embedded tables, import previews, audit logs, compliance tables, matrices, and loading skeletons. Existing workflows, authorization, filters, data fetching, and record selection remain owned by their feature.
+
+### 9.1 Shared Components and Page Anatomy
+
+Use `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `TableText`, `IdentifierBadge`, and `TableStatus` from `@/components/ui/table`. `Table` renders a semantic table without adding another card border or scroll container.
+
+Use this order inside the existing card:
+
+1. Page title and primary actions.
+2. Scope tabs or category tabs, when present.
+3. One `DataViewToolbar` line for data controls, preserving the live search-result count. Keep this exact left-to-right order: **search → view options → combined filters → date shortcuts/date pickers → horizontal-scroll controls (only when the table overflows)**. Omit absent controls without changing the order of the rest. Do not split those controls into a second toolbar row. On narrow screens, the same row scrolls horizontally; individual controls keep their natural width. Row density is a single account preference in Account Settings, not a per-table toolbar control.
+4. Active filter chips directly below the toolbar, when present.
+5. A single horizontally scrollable table viewport.
+6. `TablePagination`, outside the content viewport and attached to the card's bottom content boundary.
+
+Keep the card `min-w-0`, `rounded-2xl`, and themed, with one outer border. Table headers, row dividers, hover colors, and focus states come from the shared table system. Do not reintroduce global `th`/`thead` overrides or important typography rules. Preserve high-contrast mode.
+
+`DataViewToolbar` from `@/components/shared/DataViewToolbar` provides the shared, single-line control region. It accepts `children`, `label`, and `className`. Put search, view selectors, combined filters, date controls, and `TableScrollControls` in this same component in the order above. Give `TableScrollControls` the scroll viewport ref; it measures overflow and stays hidden when all columns fit. Its left/right buttons disable at their respective scroll edges. Do not add density selectors to table toolbars. Short static dialog tables inherit the saved density without a separate selector. Active-filter chips remain immediately below the toolbar and above the table viewport.
+
+### 9.2 Row Density
+
+Use the label **Row density**, with these exact names and values:
+
+| Value | UI label | Minimum body-row height | Cell vertical padding |
+|---|---|---:|---:|
+| `compact` | Compact | 40px | 4px |
+| `normal` | Normal | 52px | 8px |
+| `comfortable` | Comfortable | 64px | 12px |
+
+Expose the shared `TableDensityControl` once in Account Settings → Preferences. The selected value is stored per authenticated user and principal type, updates mounted tables together, and survives navigation and reload. Tables use Normal when the setting is missing or invalid. Do not place density controls beside individual tables.
+
+Normal is the default. Header rows are 40px in every density. Heights are CSS pixels before application zoom. Multiline cells, touch controls, and existing secondary information may increase a row's height; never clip or hide useful details to force a preset. Expanded rows and spanning empty/error states size naturally.
+
+`TablePreferencesProvider` sits above the portals. `useTablePreferences()` returns `{ density, setDensity, ready }`. One browser preference applies to every table and skeleton for the authenticated person. The storage key includes staff/student principal type and user ID; do not add a global fallback that shares another account's setting. Invalid values default to Normal. Storage failures retain a usable in-memory setting. Other tabs synchronize through browser storage events. No account-preferences endpoint or database field is required.
+
+`Table` accepts a `density` override for isolated previews; production data tables inherit the user's setting.
+
+### 9.3 Column Declaration and Alignment
+
+Declare the ordered columns on `Table` using semantic kinds. An entry is a kind string or `{ kind, width, maxWidth, align }`. Numeric widths are CSS pixels. Header and body cells receive the same alignment and control widths.
+
+| Kind | Data | Alignment | Presentation |
+|---|---|---|---|
+| `selection` | Row checkbox or expansion control | Center | Fixed 48px |
+| `identifier` | Student number, staff ID, request/ticket ID, record code | Left | Neutral identifier badge |
+| `text` | Names, titles, descriptions, filenames, locations | Left | Primary/secondary text hierarchy |
+| `date` | Timestamps and dates | Left | App font; aligned digits where useful |
+| `status` | Workflow or account state | Center | Shared semantic status badge |
+| `year` | Year, batch, academic year | Center | Plain text |
+| `category` | Short classification or matrix control | Center | Existing meaningful classification/control |
+| `number` | Counts, bytes, totals, percentages | Right | Plain text with aligned digits |
+| `actions` | Record actions | Center | Fixed 48px; one button or menu |
+
+Keep sort controls aligned with their header's data. Sorting remains feature-owned; expose `aria-sort` on sortable headers. Do not use badges for ordinary quantities. Identifiers remain left-aligned even when mostly numeric.
+
+The shared `Table` accepts native structural children (`thead`, `tbody`, `tr`, `th`, `td`) as a migration adapter and applies the declared column contract. New code should use the shared primitives. Custom components returning rows must render `TableRow`; custom header components must render `TableHead` and forward their `tableColumn` prop. Keep column declarations synchronized with conditional and repeated columns. Do not infer semantic kinds from displayed headings.
+
+### 9.4 Sizing, Sticky Columns, and Truncation
+
+- Ordinary record tables use content-aware layout at `w-full`; the browser distributes available width from content and column count. Declare suitable minimum table widths and retain a single `overflow-x-auto` viewport. Toolbars and pagination must not scroll horizontally with the data.
+- Selection and action columns are exactly **48px** in both header and body. The Actions heading is visually hidden but available to assistive technology. Do not add outer-cell padding that expands the column.
+- The action column sticks to the right. Sticky headers and identity columns must have opaque theme-aware backgrounds, appropriate stacking, and matching column offsets.
+- Keep short categorical, year, and numeric columns content-sized. Use `{ kind: "text", maxWidth: 340 }` for designated long-text fields. These columns can use available width up to **340px**, then truncate at the cell boundary. This is a cap, not a universal width for every column.
+- `TableText` uses `w-full min-w-0 truncate`. Keep every intervening flex/grid wrapper shrinkable. Remove nested arbitrary text caps such as `max-w-[120px]` that truncate before the actual column border.
+- Use an ellipsis for single-line names, emails, titles, filenames, and identifiers. Provide the full value through the existing detail view or an accessible tooltip. Do not rely on a mouse-only title for information that has no other accessible path.
+- Preserve existing secondary lines. Use the same app font for identifiers and timestamps; never introduce monospace.
+- Use `layout="matrix"` for repeating requirement/office columns. Keep their explicit widths and sticky identity columns; do not collapse matrices into ordinary fixed-layout records or remove interactive document/switch controls.
+
+### 9.5 Typography and Badges
+
+| Element | Standard |
+|---|---|
+| Header | 12px / 16px, semibold |
+| Primary cell text | 13px / 20px, medium |
+| Secondary cell text | 12px / 16px, regular, muted |
+| Identifier badge | 24px high, `rounded-lg`, 12px medium, neutral surface, `tabular-nums` |
+| Status badge | Minimum 24px high, `rounded-full`, 12px medium, semantic tone |
+| Missing value | `N/A` |
+
+`TableStatus` preserves the domain label. Approved/active/completed states use success, declined/rejected/error states use danger, pending/warning states use warning, and processing/ready states use info. Archived, cancelled, and unfamiliar states use neutral. Pass an explicit `tone` when the domain's meaning requires one. Color must be accompanied by a readable status label.
+
+### 9.6 Row Actions
+
+Use `TableActions` with an `actions` array containing `{ label, icon, onClick, disabled }` entries; entries may be omitted conditionally to preserve permissions. A single action renders directly with a tooltip. Two or more actions render a single horizontal triple-dot menu trigger. The action column has no visible heading; its visually hidden heading remains “Actions” for assistive technology. The migration adapter also accepts existing native/Button controls and their Tooltip labels, preserving handlers and disabled state.
+
+Desktop controls are 28×28px, `rounded-lg`, with explicit 16px Hugeicons. Coarse-pointer targets are 44×44px inside the same 48px column. Icon-only controls require accessible names, tooltips, and visible focus. Menu keyboard navigation, Escape, and focus return must work. Action interactions must not trigger row navigation, expansion, or selection. Destructive actions retain their existing confirmation.
+
+### 9.6.1 Row Selection
+
+Use `TableRow selected={isSelected}` when selection is managed separately from a checkbox. A row may also derive its selected state from a checked checkbox in a declared `selection` cell. Select All applies the existing page and eligibility scope in one state update. The selected surface covers every cell, including sticky identity and action cells, in the same render. Do not stagger cell backgrounds or leave sticky cells on the unselected surface.
+
+### 9.7 Pagination
+
+Use `TablePagination` from `@/components/shared/TablePagination` for every paginated table, card grid, or list:
+
+| Prop | Meaning |
+|---|---|
+| `page`, `pageSize` | Controlled current page and rows per page; default 1 and 10 |
+| `totalCount` | Total filtered result count, including server-side totals |
+| `displayedCount` | Optional number of loaded rows on this page |
+| `onPageChange(page)` | Feature's page setter/navigation callback |
+| `onPageSizeChange(size)` | Feature's rows-per-page callback |
+| `loading` | Disables navigation while a request is pending |
+| `label` | Entity-specific accessible navigation label |
+| `borderless` | Removes the table-footer divider for dialog/sheet placement |
+
+The footer shows **Showing X–Y of Z**, **Rows: 10 / 20 / 50 / 100**, and **Prev / current page / Next**. The empty result is **Showing 0 of 0**, on page 1 with both navigation buttons disabled. The page indicator's accessible name includes the total page count. Range counts use the filtered total, never the original unfiltered count.
+
+Reset page to 1 when filters or page size change. Clamp out-of-range pages after deletion or a shrinking result set. Disable interaction during loading and prevent stale requests from updating newer results. Keep existing URL navigation and server limit/offset behavior. Table, card, and list views for the same collection share the same page, page size, range, and footer. Keep the footer visible for empty paginated results when the feature is not loading or in an error state. Small static collections and small static tables do not need artificial pagination.
+
+`LogPagination` and `BackupPagination` are compatibility adapters over this component. `SheetPagination` shares `PageControls` and `PageSizeControls` while preserving divider-free sheet spacing and compact record-to-record navigation. Do not duplicate footer markup.
+
+### 9.8 Record Table Example
+
+```jsx
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableText } from "@/components/ui/table";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import TablePagination from "@/components/shared/TablePagination";
+import { ViewIcon } from "hugeicons-react";
+
+<div className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-white dark:bg-card">
+  <DataViewToolbar label="Student search and filters" className="border-b border-border px-6 py-3">
+    {searchInput}
+    {viewOptions}
+    {combinedFilters}
+    {dateControls}
+    <TableScrollControls {...scrollControls} scrollContainerRef={tableContainerRef} />
+  </DataViewToolbar>
+  {activeFilters}
+  <div ref={tableContainerRef} className="min-w-0 overflow-x-auto">
+    <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "year", "status", "number", "actions"]} className="min-w-[800px]">
+      <TableHeader>
+        <TableRow><TableHead>Student No.</TableHead><TableHead>Full Name</TableHead><TableHead>Year</TableHead><TableHead>Status</TableHead><TableHead>Files</TableHead><TableHead>Actions</TableHead></TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.studentNo}>
+            <TableCell>{row.studentNo}</TableCell>
+            <TableCell><TableText>{row.name}</TableText></TableCell>
+            <TableCell>{row.year || "N/A"}</TableCell>
+            <TableCell>{row.status || "N/A"}</TableCell>
+            <TableCell>{row.fileCount}</TableCell>
+            <TableCell><button type="button" aria-label="View Student" onClick={() => openStudent(row)}><ViewIcon size={16} aria-hidden="true" /></button></TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+  <TablePagination label="Student pages" page={page} pageSize={pageSize} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setPageSize} loading={loading} />
+</div>
+```
+
+### 9.9 Loading, Empty, Error, and Verification
+
+Skeletons use `Table` and the same semantic column order, control widths, minimum table width, sticky offsets, and inherited density as live data. Do not hardcode a separate skeleton row height or render multiple action placeholders in a 48px column.
+
+Preserve specific no-records, no-matches, loading, and error states from section 5.10. Spanning state/detail rows are exempt from ordinary data-row height. Keep the pagination footer visible for an empty paginated result; show recovery actions where relevant.
+
+Verify every changed table in both themes and high contrast, at desktop and mobile widths and application zoom. Include long/unbroken text, missing fields, large counts, partial and empty pages, density persistence/account isolation, keyboard actions, selection, sticky intersections, and request races. Run `node --test test/table-presentation.test.mjs test/table-inventory.test.mjs` and `node e2e/table-standards.browser.mjs` for shared behavior, then the relevant feature checks and production build. The inventory check rejects native tables outside the primitive, missing column declarations, and mismatched static headers.

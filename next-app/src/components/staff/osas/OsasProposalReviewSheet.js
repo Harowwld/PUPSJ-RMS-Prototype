@@ -1,5 +1,6 @@
 "use client";
 import SheetPagination from "@/components/shared/SheetPagination";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
@@ -372,7 +373,7 @@ export default function OsasProposalReviewSheet({
                     type="button"
                     variant="outline"
                     size="sm"
-                    title="Preview Constitution & By-Laws"
+                    title={PDF_ACTION_LABELS.preview}
                     className="h-8 px-3 text-xs font-semibold rounded-lg border-emerald-300 dark:border-emerald-800 bg-white dark:bg-zinc-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 cursor-pointer shadow-2xs shrink-0"
                     onClick={() => {
                       setPdfPreviewData?.({

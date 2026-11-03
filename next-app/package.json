@@ -19,6 +19,7 @@
     "reset-db:demo-accounts": "node scripts/reset-db.mjs --confirm --demo-accounts-only",
     "reset-rate-limit": "node scripts/reset-rate-limit.mjs",
     "db:migrate": "node scripts/run-migrations.mjs",
+    "db:migrate:office-folders": "node scripts/migrate-office-folders.mjs --confirm",
     "db:migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.mjs",
     "db:backup": "node scripts/backup-postgres.mjs",
     "db:verify": "node scripts/verify-local-postgres.mjs",

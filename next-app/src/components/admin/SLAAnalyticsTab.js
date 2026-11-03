@@ -1,12 +1,13 @@
 "use client"
-import PDFPreview from "@/components/shared/PDFPreview"
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 
 
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
+import React, { useEffect, useState, useMemo, useCallback } from "react"
 import {
   Card,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import SlaKpiSkeleton from "@/components/admin/skeletons/SlaKpiSkeleton"
 import SlaChartsSkeleton from "@/components/admin/skeletons/SlaChartsSkeleton"
 import { Button } from "@/components/ui/button"
@@ -18,13 +19,6 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { 
   generateSLACompliancePdf, 
@@ -51,8 +45,7 @@ import {
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
-import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, Cancel01Icon, File02Icon, Files01Icon, HourglassIcon, Loading01Icon, StarIcon, TableIcon} from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, File02Icon, Files01Icon, HourglassIcon, Loading01Icon, StarIcon, TableIcon} from "hugeicons-react";
 const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
@@ -61,15 +54,13 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const [error, setError] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
-  const [previewFrameReady, setPreviewFrameReady] = useState(false)
-  const pdfPreviewFrameRef = useRef(null)
+  const previewSession = usePdfPreviewSession();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isExportingCsv, setIsExportingCsv] = useState(false)
   const [previewReportType, setPreviewReportType] = useState("sla") // "sla", "csm", "comprehensive"
 
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
 
   const loadData = useCallback(async (isManual = false) => {
     if (isManual) {
@@ -137,40 +128,42 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
     if (!data || loading) return;
     setIsGeneratingPdf(true);
     setPreviewReportType(type);
-    setPreviewFrameReady(false);
+    const request = previewSession.begin();
     try {
       const blob = await generateBlobForType(type);
-      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-      const url = URL.createObjectURL(blob);
+      const url = previewSession.createUrl(blob, request);
+      if (!url) return;
       setPdfPreviewUrl(url);
       setReportOpen(true);
     } catch (e) {
+      if (!previewSession.isCurrent(request)) return;
       console.error("PDF Preview generation failed:", e);
       showToast?.(formatErrorMessage(e, "Preview Failed"), true);
     } finally {
-      setIsGeneratingPdf(false);
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
   };
 
   const handleSwitchPreviewReport = async (newType) => {
     if (newType === previewReportType || !data) return;
     setIsGeneratingPdf(true);
-    setPreviewReportType(newType);
-    setPreviewFrameReady(false);
+    const request = previewSession.begin();
     try {
       const blob = await generateBlobForType(newType);
-      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-      const url = URL.createObjectURL(blob);
+      const url = previewSession.createUrl(blob, request);
+      if (!url) return;
       setPdfPreviewUrl(url);
+      setPreviewReportType(newType);
     } catch (e) {
+      if (!previewSession.isCurrent(request)) return;
       console.error("Failed to switch report preview:", e);
       showToast?.(formatErrorMessage(e, "Report Switch Failed"), true);
     } finally {
-      setIsGeneratingPdf(false);
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
   };
 
-  const handlePrint = async () => {
+  const handleDownloadPdf = async () => {
     let basePrefix = "PROCESSING-TIME";
     let reportLabel = "Citizen's Charter Processing Time Report";
     if (previewReportType === "csm") {
@@ -218,26 +211,6 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
     showToast?.({ title: "Report Downloaded", description: `The ${reportLabel} has been successfully downloaded.` });
   };
 
-  const handlePrintReport = () => {
-    const printWindow = pdfPreviewFrameRef.current?.contentWindow
-    if (!printWindow || !previewFrameReady) {
-      showToast?.({ title: "Report Not Ready", description: "Wait for the report preview to finish loading, then try printing." }, true)
-      return
-    }
-
-    try {
-      printWindow.focus()
-      printWindow.print()
-      onLogAction?.({
-        action: "Print Report",
-        details: `opened print dialog for ${previewReportType} report`,
-        entityType: "Report",
-      })
-    } catch (e) {
-      console.error("Report printing failed:", e)
-      showToast?.(formatErrorMessage(e, "Report Printing Failed"), true)
-    }
-  }
 
   const handleCsvExport = async (type = "comprehensive") => {
     setIsExportingCsv(true);
@@ -363,7 +336,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                         <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
                       ) : (
                         <>
-                          <span>Export PDF Report</span>
+                          <span>{PDF_ACTION_LABELS.preview}</span>
                           <ArrowDown01Icon size="1em" className="text-[10px] text-white/80 dark:text-zinc-900/80" />
                         </>
                       )}
@@ -516,180 +489,51 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         </div>
       </Card>
 
-      {/* Report Preview Modal */}
-      <Dialog
+      <PDFPreviewModal
         open={reportOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
-            setPdfPreviewUrl(null)
-            setPreviewFrameReady(false)
-            setIsFullscreenPreview(false)
-          }
-          setReportOpen(open)
+        onClose={() => {
+          previewSession.cancel();
+          setIsGeneratingPdf(false);
+          setPdfPreviewUrl(null)
+          setReportOpen(false)
         }}
-      >
-        <DialogContent 
-          data-light-only
-          hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col gap-0 overflow-hidden rounded-2xl border border-border p-0 font-jakarta shadow-2xl transition-all duration-normal ease-standard xl:max-w-[1400px] dark:border-border bg-white dark:bg-card"
-        >
-          <DialogHeader 
-            className="flex shrink-0 flex-col items-stretch justify-between gap-3 px-6 py-4 sm:flex-row sm:items-center"
-          >
-            <div className="min-w-0 flex flex-col gap-0.5">
-              <DialogTitle className="text-left">
-                {previewReportType === "csm"
-                  ? "Client Satisfaction Measurement (CSM) Report"
-                  : previewReportType === "comprehensive"
-                  ? "Combined Processing Time and Client Satisfaction Report"
-                  : "Citizen's Charter Processing Time Report"}
-              </DialogTitle>
-              <p className="text-left text-[13px] font-normal text-gray-500 dark:text-zinc-400">
-                Reporting Coverage: {startDate || "Earliest Records"} – {endDate || "Present"}
-              </p>
-            </div>
-
-            {/* Seamless Report Switcher Inside Modal */}
-            <div className="mx-2 flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-gray-300/60 bg-gray-200/80 p-1 dark:border-white/5 dark:bg-zinc-800">
+        title={previewReportType === "csm"
+          ? "Client Satisfaction Measurement (CSM) Report"
+          : previewReportType === "comprehensive"
+            ? "Combined Processing Time and Client Satisfaction Report"
+            : "Citizen's Charter Processing Time Report"}
+        description={"Reporting Coverage: " + (startDate || "Earliest Records") + " to " + (endDate || "Present")}
+        pdfUrl={pdfBlobUrl}
+        isPreparing={isGeneratingPdf}
+        onDownload={handleDownloadPdf}
+        onPrint={() => onLogAction?.({ action: "Print Report", details: "opened print dialog for " + previewReportType + " report", entityType: "Report" })}
+        onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}
+        headerActions={
+          <div role="group" aria-label="Report type" className="flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-border bg-gray-100 p-1 dark:bg-zinc-800">
+            {[
+              ["sla", "On-Time Processing"],
+              ["csm", "Client Ratings (CSM)"],
+              ["comprehensive", "Combined"],
+            ].map(([type, label]) => (
               <button
+                key={type}
                 type="button"
-                onClick={() => handleSwitchPreviewReport("sla")}
+                onClick={() => handleSwitchPreviewReport(type)}
                 disabled={isGeneratingPdf}
+                aria-pressed={previewReportType === type}
                 className={cn(
-                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
-                  previewReportType === "sla"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                  "min-h-11 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:min-h-8",
+                  previewReportType === type
+                    ? "bg-white text-gray-900 shadow-xs dark:bg-zinc-700 dark:text-white"
                     : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
-                On-Time Processing
+                {label}
               </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchPreviewReport("csm")}
-                disabled={isGeneratingPdf}
-                className={cn(
-                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
-                  previewReportType === "csm"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                Client Ratings (CSM)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchPreviewReport("comprehensive")}
-                disabled={isGeneratingPdf}
-                className={cn(
-                  "px-3 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon",
-                  previewReportType === "comprehensive"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                Combined
-              </button>
-            </div>
-            
-            <div className="flex shrink-0 items-center gap-1.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-                aria-label={isFullscreenPreview ? "Exit fullscreen preview" : "Enter fullscreen preview"}
-                title={isFullscreenPreview ? "Exit fullscreen" : "Enter fullscreen"}
-                className="h-10 w-10 rounded-xl border-0 p-0 text-gray-500 shadow-none transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
-              >
-                <AppIcon className={isFullscreenPreview ? " ArrowShrink01Icon text-[16px]" : " ArrowExpand01Icon text-[16px]"} />
-              </Button>
-              <DialogClose asChild>
-                <button
-                  type="button"
-                  aria-label="Close report preview"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-0 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:text-gray-400 dark:hover:bg-zinc-800 dark:hover:text-white cursor-pointer"
-                >
-                  <Cancel01Icon size="1em" className="text-base" />
-                </button>
-              </DialogClose>
-            </div>
-          </DialogHeader>
-
-          <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
-            {pdfBlobUrl ? (
-              <div className={cn("relative h-full w-full transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
-                {isFullscreenPreview && (
-                  <div className="absolute right-4 top-4 z-[10000]">
-                    <Button
-                      variant="default"
-                      size="icon"
-                      onClick={() => setIsFullscreenPreview(false)}
-                      className="h-11 w-11 rounded-full border-0 bg-black/50 text-white hover:bg-black/70"
-                    >
-                      <Cancel01Icon size="1em"  className="text-lg"></Cancel01Icon>
-                    </Button>
-                  </div>
-                )}
-                {!previewFrameReady && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10 dark:bg-card">
-                    <div className="w-full max-w-2xl space-y-4">
-                      <Skeleton className="h-8 w-64 dark:bg-muted" />
-                      <Skeleton className="h-4 w-full dark:bg-muted" />
-                      <Skeleton className="h-[60vh] w-full dark:bg-muted" />
-                    </div>
-                  </div>
-                )}
-                <PDFPreview
-                  ref={pdfPreviewFrameRef}
-                  src={pdfBlobUrl}
-                  className="h-full w-full border-none"
-                  onReadyChange={setPreviewFrameReady}
-                  title="Processing Time Report Preview"
-                />
-              </div>
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
-                <div className="flex flex-col items-center gap-4">
-                  <Loading01Icon size="1em"  className="animate-spin text-xl text-pup-maroon dark:text-primary" />
-                  <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
-                    Generating Report Preview...
-                  </p>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
-
-          <div className="flex shrink-0 items-center justify-end gap-2.5 px-6 py-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setReportOpen(false)}
-              className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-            >
-              Close
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrintReport}
-              disabled={!pdfBlobUrl || !previewFrameReady || isGeneratingPdf}
-              className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 disabled:opacity-50 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-            >
-              Print Report
-            </Button>
-            <Button
-              type="button"
-              onClick={handlePrint}
-              disabled={!pdfBlobUrl}
-              className="h-10 px-5 disabled:opacity-50"
-            >
-              Download Report
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        }
+      />
     </div>
   )
 })

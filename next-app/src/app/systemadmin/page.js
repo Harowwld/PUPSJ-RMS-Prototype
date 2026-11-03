@@ -10,16 +10,15 @@ import MyActivityPanel from "@/components/shared/MyActivityPanel"
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel"
 import { SystemAdminGuard, useAuthUser } from "@/components/shared/AuthGuard"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
-import { Skeleton } from "@/components/ui/skeleton"
-import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
-import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
+import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
 import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
 import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
 import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
 import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
 import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
+import OfficeManagementPageSkeleton from "@/components/systemadmin/skeletons/OfficeManagementPageSkeleton"
 import { getClientSession } from "@/lib/clientAuth"
 import { formatErrorMessage } from "@/lib/errorUtils"
 
@@ -46,63 +45,11 @@ const SYSTEMADMIN_NAV_ITEMS = [
   { key: "backups", label: "Platform Backups", iconClass: " CloudUploadIcon" },
 ]
 
-function TabLoadingSkeleton() {
-  return (
-    <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up font-jakarta">
-      {/* ONE Single Container Card */}
-      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] min-h-[500px] isolate">
-        {/* Header */}
-        <div className="p-6 flex items-center justify-between">
-          <div className="space-y-1.5">
-            <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
-            <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
-            <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
-          </div>
-        </div>
-
-        {/* Top KPI Stat Cards */}
-        <div className="px-6 pb-6">
-          <KpiStatCardsSkeleton count={3} />
-        </div>
-
-        {/* Toolbar Row */}
-        <div className="h-14 border-t border-border dark:border-border p-4 px-6 flex items-center justify-between bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
-            <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
-          </div>
-          <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
-        </div>
-
-        {/* Table Body Rows */}
-        <div className="p-6 space-y-4 flex-1 rounded-b-2xl">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-12 border-b border-border dark:border-border flex items-center justify-between last:border-b-0">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
-                <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
-              </div>
-              <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
-              <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 const OfficeManagementTab = dynamic(() => import("@/components/systemadmin/OfficeManagementTab"), {
-  loading: () => <TabLoadingSkeleton />,
+  loading: () => <OfficeManagementPageSkeleton />,
 })
 const InstitutionalBrandingTab = dynamic(() => import("@/components/systemadmin/InstitutionalBrandingTab"), {
   loading: () => <InstitutionalBrandingSkeleton />,
-})
-const ModuleConfigTab = dynamic(() => import("@/components/systemadmin/ModuleConfigTab"), {
-  loading: () => <ModuleConfigSkeleton />,
 })
 const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaffTab"), {
   loading: () => <GlobalStaffSkeleton />,
@@ -128,7 +75,7 @@ const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "se
 function SystemAdminLoadingSkeleton() {
   return (
     <DashboardShellSkeleton items={SYSTEMADMIN_NAV_ITEMS}>
-      <TabLoadingSkeleton />
+      <OfficeManagementPageSkeleton />
     </DashboardShellSkeleton>
   )
 }

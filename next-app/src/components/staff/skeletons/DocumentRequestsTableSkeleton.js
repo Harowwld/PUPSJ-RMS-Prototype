@@ -1,4 +1,5 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -12,7 +13,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
         : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
     )}>
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <table className="w-full text-sm border-collapse min-w-[1000px]">
+        <Table columns={["identifier", "text", "text", "status", "text", "date", "actions"]} className="min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="py-3 px-4 w-[8%]">
@@ -42,7 +43,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[60px] border-b border-border dark:border-border last:border-b-0"
+                className="border-b border-border dark:border-border last:border-b-0"
               >
                 {/* ID */}
                 <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70">
@@ -101,7 +102,7 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Pagination Footer */}

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
-import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
@@ -22,7 +21,6 @@ import { Add01Icon, Alert01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight
 export default function LandingPageCmsTab({ showToast }) {
   const [currentSection, setCurrentSection] = useState("hero") // 'hero' | 'workflow' | 'catalog' | 'faq' | 'footer'
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
@@ -84,9 +82,8 @@ export default function LandingPageCmsTab({ showToast }) {
     window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
   }
 
-  const fetchHero = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true)
-    else setLoading(true)
+  const fetchHero = useCallback(async () => {
+    setLoading(true)
     try {
       const res = await fetch("/api/landing/hero", { cache: "no-store" })
       const json = await res.json()
@@ -100,7 +97,6 @@ export default function LandingPageCmsTab({ showToast }) {
       notify("Network error fetching hero settings", true)
     } finally {
       setLoading(false)
-      if (isRefresh) setRefreshing(false)
     }
   }, [notify])
 
@@ -415,11 +411,6 @@ export default function LandingPageCmsTab({ showToast }) {
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
               <div className="flex items-center gap-2.5 flex-wrap">
-                <RefreshButton
-                  onRefresh={() => fetchHero(true)}
-                  isLoading={refreshing}
-                  title="Refresh Hero Settings"
-                />
 
                 <Button
                   type="button"

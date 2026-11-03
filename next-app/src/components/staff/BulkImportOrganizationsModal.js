@@ -1,4 +1,6 @@
 "use client";
+import { Table } from "@/components/ui/table";
+import TablePagination from "@/components/shared/TablePagination";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 
@@ -17,6 +19,7 @@ import { cn, formatTitleCase } from "@/lib/utils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { Alert01Icon, Alert02Icon, Archive01Icon, CancelCircleIcon, CheckmarkCircle01Icon, CloudUploadIcon, Loading01Icon, Search01Icon } from "hugeicons-react";
 
 
@@ -39,7 +42,7 @@ export default function BulkImportOrganizationsModal({
   const [csvDropActive, setCsvDropActive] = useState(false);
 
   const [csvPage, setCsvPage] = useState(1);
-  const [csvRowsPerPage] = useState(10);
+  const [csvRowsPerPage, setCsvRowsPerPage] = useState(10);
   const [localCsvSearch, setLocalCsvSearch] = useState("");
   const [csvSearch, setCsvSearch] = useState("");
 
@@ -519,7 +522,7 @@ export default function BulkImportOrganizationsModal({
                 <span>Bulk Assign Location to Selected ({selectedCount}):</span>
               </div>
 
-              <div className="flex items-center gap-4">
+              <DataViewToolbar label="Bulk location assignment and table controls" className="gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Room:</span>
                   <Select
@@ -573,13 +576,13 @@ export default function BulkImportOrganizationsModal({
                   Apply
                 </Button>
 
-                <TableScrollControls
+                <TableScrollControls scrollContainerRef={tableContainerRef}
                   canScrollLeft={canScrollLeft}
                   canScrollRight={canScrollRight}
                   onScrollLeft={() => scrollTable("left")}
                   onScrollRight={() => scrollTable("right")}
                 />
-              </div>
+              </DataViewToolbar>
             </div>
 
             {/* Table */}
@@ -587,7 +590,7 @@ export default function BulkImportOrganizationsModal({
               ref={tableContainerRef}
               className="flex-1 min-h-0 w-full overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
             >
-              <table className="w-full text-xs border-collapse min-w-[1260px]">
+                    <Table columns={["selection", "identifier", "text", "category", "text", "category", "category", "category", "status"]} className="min-w-[1260px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="w-12 min-w-[48px] p-3 text-center">
@@ -726,44 +729,11 @@ export default function BulkImportOrganizationsModal({
                     );
                   })}
                 </tbody>
-              </table>
+                    </Table>
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-2.5 border-t border-border flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 shrink-0 bg-white dark:bg-card">
-                <span>
-                  Showing {(csvPage - 1) * csvRowsPerPage + 1} to{" "}
-                  {Math.min(csvPage * csvRowsPerPage, filteredCsvRows.length)} of{" "}
-                  {filteredCsvRows.length} entries
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={csvPage <= 1}
-                    onClick={() => setCsvPage((p) => p - 1)}
-                    className="h-7 px-2.5 text-xs rounded-lg border-border"
-                  >
-                    Prev
-                  </Button>
-                  <span className="px-2 font-medium">
-                    {csvPage} / {totalPages}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={csvPage >= totalPages}
-                    onClick={() => setCsvPage((p) => p + 1)}
-                    className="h-7 px-2.5 text-xs rounded-lg border-border"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            <TablePagination borderless label="Organizations import preview pages" page={csvPage} pageSize={csvRowsPerPage} totalCount={filteredCsvRows.length} onPageChange={setCsvPage} onPageSizeChange={setCsvRowsPerPage} />
           </div>
         )}
 

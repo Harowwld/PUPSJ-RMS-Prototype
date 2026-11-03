@@ -1,9 +1,10 @@
 "use client"
+import { Table } from "@/components/ui/table";
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "" }) {
+export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "", scope = "office" }) {
   return (
     <div
       className={cn(
@@ -15,7 +16,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
       )}
     >
       <div className="w-full flex-[1_0_auto] overflow-x-auto select-none show-scrollbar pb-2">
-        <table className="w-full text-sm border-collapse min-w-[1050px]">
+        <Table columns={["selection", "text", "number", "date", ...(scope === "office" ? ["category"] : []), "actions"]} className="min-w-[1240px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 py-3 px-4 text-center align-middle sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
@@ -30,9 +31,9 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
               <th className="py-3 px-4 w-[18%]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[22%] text-center">
+              {scope === "office" && <th className="py-3 px-4 w-[22%] text-center">
                 <Skeleton className="h-3.5 w-16 mx-auto dark:bg-muted" />
-              </th>
+              </th>}
               <th className="py-3 px-4 pr-6 w-28 text-right">
                 <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
               </th>
@@ -42,7 +43,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr
                 key={i}
-                className="h-[52px] border-b border-border dark:border-border last:border-b-0"
+                className="border-b border-border dark:border-border last:border-b-0"
               >
                 <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white dark:bg-card">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
@@ -66,9 +67,9 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
                     <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
+                {scope === "office" && <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-[22px] w-14 rounded-full mx-auto dark:bg-muted" />
-                </td>
+                </td>}
                 <td className="py-3 px-4 pr-6 align-middle text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
@@ -78,7 +79,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Pagination Footer Skeleton */}

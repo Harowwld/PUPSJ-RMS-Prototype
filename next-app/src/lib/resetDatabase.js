@@ -6,6 +6,7 @@ import { hashPassword } from "./passwordHash.js";
 import { encryptPII } from "./piiEncryption.js";
 import { invalidateOcrStudentRoster } from "./ocrStudentRoster.js";
 import { clearDynamicOffices } from "./roleUtils.js";
+import { getOfficeUploadsDir, getOfficeHotFolderDirs } from "./officePaths.js";
 
 /**
  * Wipes all application tables in the database without seeding extra data.
@@ -45,7 +46,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
         'Active',
         'REG-ARCHIVE-PC01',
         '.local/storage/registrar/uploads',
-        '.local/hot-folder/INBOUND',
+        '.local/hot-folder/registrar/INBOUND',
         NULL,
         'Fujitsu fi-7160 Batch Duplex',
         NULL,
@@ -63,7 +64,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
         'Active',
         'OSAS-OPERATIONS-PC01',
         '.local/storage/osas/uploads',
-        '.local/hot-folder/INBOUND',
+        '.local/hot-folder/osas/INBOUND',
         NULL,
         'Canon imageFORMULA Flatbed/ADF',
         NULL,
@@ -72,6 +73,12 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
         NOW()
       )
     `);
+    for (const officeId of ["registrar", "osas"]) {
+      await txQuery(
+        "UPDATE offices SET storage_path = $1, inbound_path = $2 WHERE id = $3",
+        [getOfficeUploadsDir(officeId), getOfficeHotFolderDirs(officeId).inbound, officeId],
+      );
+    }
 
     // Seed default baseline office_modules
     await txQuery(`
