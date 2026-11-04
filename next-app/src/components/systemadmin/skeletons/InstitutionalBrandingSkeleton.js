@@ -3,7 +3,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
-import DataViewToolbar from "@/components/shared/DataViewToolbar"
 
 export default function InstitutionalBrandingSkeleton() {
   return (
@@ -19,19 +18,20 @@ export default function InstitutionalBrandingSkeleton() {
           }
           description="Configure your official university seal, school credentials, administrative letterhead, and color theme for all official reports."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          actions={
+            <div aria-hidden="true" className="flex shrink-0 items-center gap-2">
+              <Skeleton className="h-8 w-44 shrink-0 rounded-full dark:bg-muted" />
+              <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-32 shrink-0 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
+            </div>
+          }
         />
-        <DataViewToolbar label="Institutional identity actions" className="gap-2 border-t border-border bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-          <Skeleton aria-hidden="true" className="h-8 w-44 shrink-0 rounded-full dark:bg-muted" />
-          <div aria-hidden="true" className="ml-auto flex shrink-0 items-center gap-2">
-            <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
-            <Skeleton className="h-9 w-32 shrink-0 rounded-xl dark:bg-muted" />
-            <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
-          </div>
-        </DataViewToolbar>
 
-        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl border-t border-border dark:border-border">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column (lg:col-span-7): Settings Forms */}
             <div className="lg:col-span-7 space-y-5">
@@ -132,14 +132,16 @@ export default function InstitutionalBrandingSkeleton() {
                   <Skeleton className="h-4 w-56 rounded dark:bg-muted" />
                   <Skeleton className="h-3 w-72 rounded dark:bg-muted" />
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <Skeleton key={i} className="h-11 rounded-xl dark:bg-muted" />
-                  ))}
-                </div>
-                <div className="flex items-center gap-3 pt-1">
-                  <Skeleton className="h-10 w-12 rounded-xl dark:bg-muted" />
-                  <Skeleton className="h-10 flex-1 rounded-xl dark:bg-muted" />
+                <div className="space-y-4 rounded-2xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-950/40 sm:p-5">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
+                      <Skeleton key={i} className="size-12 rounded-full dark:bg-muted" />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 pt-3 border-t border-border">
+                    <Skeleton className="size-12 rounded-full dark:bg-muted" />
+                    <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
+                  </div>
                 </div>
               </div>
             </div>

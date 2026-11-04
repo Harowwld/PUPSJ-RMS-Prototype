@@ -243,11 +243,10 @@ export default function LogDetailSheet({
                 {severityInfo && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
+                      "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
                       severityInfo.classes
                     )}
                   >
-                    <span className={cn("w-1.5 h-1.5 rounded-full", severityInfo.dotClass)} />
                     {severityInfo.label}
                   </span>
                 )}
@@ -296,11 +295,10 @@ export default function LogDetailSheet({
                   {severityInfo && (
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border",
                         severityInfo.classes
                       )}
                     >
-                      <span className={cn("w-1.5 h-1.5 rounded-full", severityInfo.dotClass)} />
                       {severityInfo.label}
                     </span>
                   )}
@@ -449,21 +447,6 @@ export default function LogDetailSheet({
 
         {/* Executive Action Bar Footer */}
         <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
-          <div>
-            {selectedLog && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleCopy?.(JSON.stringify(selectedLog, null, 2), "Log JSON")}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-2"
-                title="Copy activity record data"
-              >
-                <Copy01Icon size="1em" className="text-sm" />
-                <span>Copy Record Data</span>
-              </Button>
-            )}
-          </div>
-
           <Button
             type="button"
             variant="outline"
@@ -472,6 +455,20 @@ export default function LogDetailSheet({
           >
             Close
           </Button>
+
+          <div>
+            {selectedLog && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleCopy?.(JSON.stringify(selectedLog, null, 2), "Log JSON")}
+                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                title="Copy activity record data"
+              >
+                Copy Record Data
+              </Button>
+            )}
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

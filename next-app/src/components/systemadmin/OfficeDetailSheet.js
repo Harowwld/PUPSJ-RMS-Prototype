@@ -308,18 +308,12 @@ export default function OfficeDetailSheet({
             <div className="flex items-center gap-2 shrink-0">
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs select-none",
+                  "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs select-none",
                   isActive
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40"
                     : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
                 )}
               >
-                <span
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full",
-                    isActive ? "bg-emerald-500" : "bg-gray-400"
-                  )}
-                />
                 {isActive ? "Active" : "Archived"}
               </span>
             </div>
@@ -422,12 +416,11 @@ export default function OfficeDetailSheet({
                         {displayOffice.station_name}
                       </span>
                       <span className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-medium",
+                        "inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium",
                         displayOffice.scanner_watching
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60"
                           : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
                       )}>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", displayOffice.scanner_watching ? "bg-emerald-500" : "bg-gray-400")} />
                         {displayOffice.scanner_watching ? "Watching" : "Not watching"}
                       </span>
                     </div>

@@ -22,6 +22,9 @@ export async function GET(req) {
     const offset = parseInt(searchParams.get("offset") || "0");
     const search = searchParams.get("search") || "";
     const requestedOfficeId = searchParams.get("officeId") || "";
+    const excludeOfficeId = isSystemAdminRole(access.user.role)
+      ? (searchParams.get("excludeOfficeId") || "")
+      : "";
     const officeId = isSystemAdminRole(access.user.role)
       ? requestedOfficeId
       : getPrincipalOfficeId(access.user);
@@ -29,7 +32,9 @@ export async function GET(req) {
       return createAuthErrorResponse("Office scope is required", 403);
     }
     const severity = searchParams.get("severity") || "";
+    const excludeSeverity = searchParams.get("excludeSeverity") || "";
     const role = searchParams.get("role") || "";
+    const excludeRole = searchParams.get("excludeRole") || "";
     const startDate = searchParams.get("startDate") || "";
     const endDate = searchParams.get("endDate") || "";
     const sortBy = searchParams.get("sortBy") || "created_at";
@@ -40,8 +45,11 @@ export async function GET(req) {
       offset,
       search,
       officeId,
+      excludeOfficeId,
       severity,
+      excludeSeverity,
       role,
+      excludeRole,
       startDate,
       endDate,
       sortBy,

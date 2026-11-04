@@ -2266,16 +2266,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     </span>
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full border",
+                        "inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border",
                         getOrgStatusBadgeClass(selectedOrgForOfficers?.status)
                       )}
                     >
-                      <span
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          getOrgStatusDotClass(selectedOrgForOfficers?.status)
-                        )}
-                      />
                       {selectedOrgForOfficers?.status}
                     </span>
                   </div>
@@ -2391,16 +2385,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       </div>
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border",
+                          "inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border",
                           getOrgStatusBadgeClass(orgForm.status)
                         )}
                       >
-                        <span
-                          className={cn(
-                            "w-1.5 h-1.5 rounded-full",
-                            getOrgStatusDotClass(orgForm.status)
-                          )}
-                        />
                         {orgForm.status}
                       </span>
                     </div>
@@ -2907,7 +2895,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               )}
             </div>
 
-            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end gap-2.5">
+            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
               <Button
                 type="button"
                 variant="outline"

@@ -1,5 +1,6 @@
 "use client"
 import useViewPreference from "@/hooks/useViewPreference"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table, TableStatus } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -33,8 +34,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
@@ -47,7 +47,7 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Loading01Icon, ViewIcon, Search01Icon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Loading01Icon, UserIcon, ViewIcon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -161,6 +161,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     severity: [],
     office: [],
   })
+  const [filterRules, setFilterRules] = useViewPreference("logs", "filterRules", [])
   const [startDate, setStartDate] = useViewPreference("logs", "startDate", "")
   const [endDate, setEndDate] = useViewPreference("logs", "endDate", "")
 
@@ -178,7 +179,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   // Auto-reset scroll to start when page, limit, search, or filters change
   useEffect(() => {
     resetTableScroll();
-  }, [page, limit, search, logFilters, startDate, endDate, resetTableScroll]);
+  }, [page, limit, search, logFilters, filterRules, startDate, endDate, resetTableScroll]);
 
   const lastUrlStateRef = useRef({
     page: !isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1,
@@ -289,22 +290,74 @@ export default function GlobalAuditLogsTab({ showToast }) {
     return [{ id: "office", label: "Scope / Partition", options: officeOptions }]
   }, [offices])
 
-  const auditFilterFields = useMemo(() => [{
-    key: "office",
-    label: "Scope",
-    icon: Building01Icon,
-    type: "multi",
-    operators: [{ value: "is_any", label: "is any of" }],
-    options: logFilterGroups[0]?.options || [],
-  }], [logFilterGroups])
+  const auditFilterFields = useMemo(() => [
+    {
+      key: "office",
+      label: "Scope",
+      icon: Building01Icon,
+      options: logFilterGroups[0]?.options || [],
+    },
+    {
+      key: "role",
+      label: "Role",
+      icon: UserIcon,
+      options: [
+        { value: "SuperAdmin", label: "SuperAdmin" },
+        { value: "Admin", label: "Admin" },
+        { value: "Staff", label: "Staff" },
+        { value: "Student", label: "Student" },
+        { value: "System", label: "System" },
+      ],
+    },
+    {
+      key: "severity",
+      label: "Severity",
+      icon: EmptyAlertCircleIcon,
+      options: [
+        { value: "INFO", label: "Information" },
+        { value: "WARNING", label: "Warning" },
+        { value: "CRITICAL", label: "Critical" },
+      ],
+    },
+  ], [logFilterGroups])
 
+  const buildFilterQueryParams = useCallback(() => {
+    const includeOffices = [
+      ...(logFilters.office || []),
+      ...filterRules.filter((r) => r.fieldKey === "office" && r.operator !== "is_not" && r.value).flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)]),
+    ]
+    const excludeOffices = filterRules
+      .filter((r) => r.fieldKey === "office" && r.operator === "is_not" && r.value)
+      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)])
+    const includeRoles = filterRules
+      .filter((r) => r.fieldKey === "role" && r.operator !== "is_not" && r.value)
+      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)])
+    const excludeRoles = filterRules
+      .filter((r) => r.fieldKey === "role" && r.operator === "is_not" && r.value)
+      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)])
+    const includeSeverities = [
+      ...(logFilters.severity || []),
+      ...filterRules.filter((r) => r.fieldKey === "severity" && r.operator !== "is_not" && r.value).flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)]),
+    ]
+    const excludeSeverities = filterRules
+      .filter((r) => r.fieldKey === "severity" && r.operator === "is_not" && r.value)
+      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)])
+
+    return {
+      officeStr: [...new Set(includeOffices)].join(","),
+      excludeOfficeStr: [...new Set(excludeOffices)].join(","),
+      roleStr: [...new Set(includeRoles)].join(","),
+      excludeRoleStr: [...new Set(excludeRoles)].join(","),
+      sevStr: [...new Set(includeSeverities)].join(","),
+      excludeSevStr: [...new Set(excludeSeverities)].join(","),
+    }
+  }, [logFilters, filterRules])
 
   const fetchLogs = useCallback(
     async (isManual = false, currentOffices = null) => {
       const request = ++logsRequest.current
-      const officeStr = (logFilters.office || []).join(",")
-      const sevStr = (logFilters.severity || []).join(",")
-      const logsKey = `audit_logs_${page}_${limit}_${officeStr}_${sevStr}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
+      const { officeStr, excludeOfficeStr, roleStr, excludeRoleStr, sevStr, excludeSevStr } = buildFilterQueryParams()
+      const logsKey = `audit_logs_${page}_${limit}_${officeStr}_${excludeOfficeStr}_${roleStr}_${excludeRoleStr}_${sevStr}_${excludeSevStr}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
       if (!isManual) {
         const cached = getCachedData(logsKey)
         if (cached) {
@@ -322,14 +375,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
       try {
         const offset = (page - 1) * limit
         const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
+        const excludeOfficeQuery = excludeOfficeStr ? `&excludeOfficeId=${encodeURIComponent(excludeOfficeStr)}` : ""
+        const roleQuery = roleStr ? `&role=${encodeURIComponent(roleStr)}` : ""
+        const excludeRoleQuery = excludeRoleStr ? `&excludeRole=${encodeURIComponent(excludeRoleStr)}` : ""
         const severityQuery = sevStr ? `&severity=${encodeURIComponent(sevStr)}` : ""
+        const excludeSeverityQuery = excludeSevStr ? `&excludeSeverity=${encodeURIComponent(excludeSevStr)}` : ""
         const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
         const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
         const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
         const sortQuery = `&sortBy=${sortBy}&sortOrder=${sortOrder}`
 
         const res = await fetch(
-          `/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${severityQuery}${searchQuery}${startQuery}${endQuery}${sortQuery}`
+          `/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${excludeOfficeQuery}${roleQuery}${excludeRoleQuery}${severityQuery}${excludeSeverityQuery}${searchQuery}${startQuery}${endQuery}${sortQuery}`
         )
         const json = await res.json()
         if (request !== logsRequest.current) return
@@ -392,7 +449,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         }
       }
     },
-    [page, limit, logFilters, search, startDate, endDate, sortBy, sortOrder, showToast, updateUrl]
+    [page, limit, buildFilterQueryParams, search, startDate, endDate, sortBy, sortOrder, showToast, updateUrl]
   )
 
   useEffect(() => {
@@ -434,75 +491,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
     updateUrl(1, search)
   }
 
-  const handleQuickRange = (range) => {
-    if (activeShortcut === range) {
-      setStartDate("")
-      setEndDate("")
-      setPage(1)
-      updateUrl(1, search)
-      return
-    }
-
-    const end = new Date()
-    let start = new Date()
-
-    switch (range) {
-      case "today":
-        start.setHours(0, 0, 0, 0)
-        break
-      case "yesterday":
-        start.setDate(start.getDate() - 1)
-        start.setHours(0, 0, 0, 0)
-        end.setDate(end.getDate() - 1)
-        end.setHours(23, 59, 59, 999)
-        break
-      case "last7":
-        start.setDate(start.getDate() - 6)
-        start.setHours(0, 0, 0, 0)
-        break
-      case "last30":
-        start.setDate(start.getDate() - 29)
-        start.setHours(0, 0, 0, 0)
-        break
-    }
-
-    setStartDate(format(start, "yyyy-MM-dd"))
-    setEndDate(format(end, "yyyy-MM-dd"))
-    setPage(1)
-    updateUrl(1, search)
-  }
-
-  const activeShortcut = (() => {
-    if (!startDate || !endDate) return null
-    const todayStr = format(new Date(), "yyyy-MM-dd")
-
-    if (startDate === todayStr && endDate === todayStr) return "today"
-
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yestStr = format(yesterday, "yyyy-MM-dd")
-    if (startDate === yestStr && endDate === yestStr) return "yesterday"
-
-    const last7 = new Date()
-    last7.setDate(last7.getDate() - 6)
-    if (startDate === format(last7, "yyyy-MM-dd") && endDate === todayStr) return "last7"
-
-    const last30 = new Date()
-    last30.setDate(last30.getDate() - 29)
-    if (startDate === format(last30, "yyyy-MM-dd") && endDate === todayStr) return "last30"
-
-    return null
-  })()
-
   const fetchAllForExport = async () => {
-    const officeStr = (logFilters.office || []).join(",")
-    const sevStr = (logFilters.severity || []).join(",")
+    const { officeStr, excludeOfficeStr, roleStr, excludeRoleStr, sevStr, excludeSevStr } = buildFilterQueryParams()
     const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
+    const excludeOfficeQuery = excludeOfficeStr ? `&excludeOfficeId=${encodeURIComponent(excludeOfficeStr)}` : ""
+    const roleQuery = roleStr ? `&role=${encodeURIComponent(roleStr)}` : ""
+    const excludeRoleQuery = excludeRoleStr ? `&excludeRole=${encodeURIComponent(excludeRoleStr)}` : ""
     const sevQuery = sevStr ? `&severity=${encodeURIComponent(sevStr)}` : ""
+    const excludeSevQuery = excludeSevStr ? `&excludeSeverity=${encodeURIComponent(excludeSevStr)}` : ""
     const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
     const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
     const res = await fetch(
-      `/api/audit-logs/global?limit=50000&search=${encodeURIComponent(search)}${officeQuery}${sevQuery}${startQuery}${endQuery}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+      `/api/audit-logs/global?limit=50000&search=${encodeURIComponent(search)}${officeQuery}${excludeOfficeQuery}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}&sortBy=${sortBy}&sortOrder=${sortOrder}`
     )
     const json = await res.json()
     if (!res.ok || !json.ok) throw new Error(json.error || "Export failed")
@@ -672,11 +672,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
     setLocalSearch("")
     setSearch("")
     setLogFilters((current) => ({ ...current, office: [] }))
+    setFilterRules([])
     setStartDate("")
     setEndDate("")
     setPage(1)
     updateUrl(1, "")
-  }, [setEndDate, setLocalSearch, setLogFilters, setStartDate, updateUrl])
+  }, [setEndDate, setFilterRules, setLocalSearch, setLogFilters, setStartDate, updateUrl])
 
   const totalPages = Math.ceil(total / limit) || 1
   const displayPage = Math.min(page, totalPages)
@@ -689,6 +690,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const hasActiveFilters =
     localSearch !== "" ||
     (logFilters.office?.length > 0) ||
+    filterRules.length > 0 ||
     startDate !== "" ||
     endDate !== ""
 
@@ -699,179 +701,71 @@ export default function GlobalAuditLogsTab({ showToast }) {
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="Shield01Icon"
-            title="Platform Activity History"
-            description={
-              loading && total === 0
-                ? <Skeleton className="mt-1 h-4 w-52" />
-                : (
-                    <span className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                      <span>Track every institutional action, approval, and system event across the platform.</span>
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                        {total.toLocaleString()} matching recorded actions
-                      </span>
-                    </span>
-                  )
+            title={
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span>Platform Activity History</span>
+                {loading && total === 0 ? (
+                  <Skeleton aria-hidden="true" className="h-3.5 w-40 rounded dark:bg-muted" />
+                ) : (
+                  <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                    {total.toLocaleString()} {total === 1 ? "recorded action" : "recorded actions"}
+                  </span>
+                )}
+              </div>
             }
+            description="Track every institutional action, approval, and system event across the platform."
             showBorder={false}
-            className="px-6 py-5"
+            className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            actions={
+              <div className="flex shrink-0 items-center gap-2">
+                <RefreshButton onRefresh={() => fetchLogs(true)} isLoading={isManualLoading} title="Refresh Activity History" className="h-9 w-9" />
+                <Button type="button" variant="outline" onClick={handleDownloadCSV} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs">
+                  {isExporting ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Exporting...</> : "Export CSV"}
+                </Button>
+                <Button type="button" onClick={handlePreviewPDF} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs">
+                  {isGeneratingPdf ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Generating...</> : PDF_ACTION_LABELS.preview}
+                </Button>
+              </div>
+            }
           />
 
-          <div role="group" aria-label="Activity severity" className="flex items-end gap-5 border-b border-border px-6 dark:border-border">
-            {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => (
-              <button
-                key={value || "all"}
-                type="button"
-                aria-pressed={(logFilters.severity[0] || "") === value}
-                onClick={() => {
-                  setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
-                  setPage(1)
-                  updateUrl(1, search)
-                }}
-                className={cn("relative flex h-9 items-center px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon", (logFilters.severity[0] || "") === value ? "text-pup-maroon dark:text-red-400 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-current" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}
-              >
-                {label}
-              </button>
-            ))}
+          <div role="group" aria-label="Activity severity" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
+            {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => {
+              const isActive = (logFilters.severity[0] || "") === value
+              return (
+                <button
+                  key={value || "all"}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
+                    setPage(1)
+                    updateUrl(1, search)
+                  }}
+                  className={cn("relative inline-flex shrink-0 items-center px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 cursor-pointer", isActive ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}
+                >
+                  {label}
+                  {isActive && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
+                </button>
+              )
+            })}
           </div>
 
           <DataViewToolbar label="Platform activity search, filters, sorting, columns, and dates" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-            {/* Search Input with Pure Number Count (Left side) */}
-            <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-              <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Search logs by actor, action, details..."
-                aria-label="Search platform activity history"
-                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+            {/* Search & Scroll Controls (Left side) */}
+            <div className="flex min-w-0 items-center gap-2">
+              <DashboardSearch
                 value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape" && localSearch) {
-                    handleClearSearch()
-                  }
-                }}
+                onChange={setLocalSearch}
+                onClear={handleClearSearch}
+                placeholder="Search logs by actor, action, details..."
+                label="Search platform activity history"
+                count={total}
+                loading={loading && total === 0}
+                className="flex-1 sm:w-64 min-w-[200px] max-w-sm"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
-                {localSearch && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    aria-label="Clear search"
-                    title="Clear search"
-                    className="flex h-5 w-5 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-                  >
-                    <Cancel01Icon size="1em" className="text-[11px]" />
-                  </button>
-                )}
-                <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums pointer-events-none">
-                  {loading && total === 0 ? <Skeleton className="h-3 w-6" /> : total.toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {/* Filter controls (Right side) */}
-            <div className="flex shrink-0 items-center gap-2">
-              <FilterPopover
-                fields={auditFilterFields}
-                filters={logFilters.office.length ? [{ id: "audit-offices", fieldKey: "office", operator: "is_any", value: logFilters.office }] : []}
-                onFiltersChange={(rules) => {
-                  setLogFilters((current) => ({ ...current, office: rules.flatMap((rule) => Array.isArray(rule.value) ? rule.value : [rule.value]) }))
-                  setPage(1)
-                  updateUrl(1, search)
-                }}
-                maxRulesPerField={1}
-                entityLabel="activity"
-              />
-              <SortPopover options={SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1); updateUrl(1, search) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1); updateUrl(1, search) }} />
-              <ColumnsPopover columns={OPTIONAL_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
-
-              {/* Time Shortcuts */}
-              <div className="flex h-9 items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border dark:border-border shrink-0">
-                {[
-                  { key: "today", label: "Today" },
-                  { key: "yesterday", label: "Yest." },
-                  { key: "last7", label: "7d" },
-                  { key: "last30", label: "30d" },
-                ].map((range) => {
-                  const isActive = activeShortcut === range.key
-                  return (
-                    <button
-                      key={range.key}
-                      type="button"
-                      onClick={() => handleQuickRange(range.key)}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                        isActive
-                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                      )}
-                    >
-                      {range.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Date pickers */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <div className="w-[105px]">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
-                          !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                        )}
-                      >
-                        {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate ? parseDateLocal(startDate) : undefined}
-                        onSelect={(date) => {
-                          setStartDate(date ? format(date, "yyyy-MM-dd") : "")
-                          setPage(1)
-                          updateUrl(1, search)
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
-                <div className="w-[105px]">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
-                          !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                        )}
-                      >
-                        {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate ? parseDateLocal(endDate) : undefined}
-                        onSelect={(date) => {
-                          setEndDate(date ? format(date, "yyyy-MM-dd") : "")
-                          setPage(1)
-                          updateUrl(1, search)
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
               <TableScrollControls scrollContainerRef={tableContainerRef}
                 canScrollLeft={canScrollLeft}
                 canScrollRight={canScrollRight}
@@ -882,19 +776,57 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 controlSize="md"
               />
             </div>
+
+            {/* Filter controls (Right side) */}
             <div className="ml-auto flex shrink-0 items-center gap-2">
-              <RefreshButton onRefresh={() => fetchLogs(true)} isLoading={isManualLoading} title="Refresh Activity History" className="h-9 w-9" />
-              <Button type="button" variant="outline" onClick={handleDownloadCSV} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-3 text-xs">
-                {isExporting ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Exporting...</> : "Export CSV"}
-              </Button>
-              <Button type="button" onClick={handlePreviewPDF} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-3 text-xs">
-                {isGeneratingPdf ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Generating...</> : PDF_ACTION_LABELS.preview}
-              </Button>
+              <FilterPopover
+                fields={auditFilterFields}
+                filters={filterRules}
+                onFiltersChange={(rules) => {
+                  setFilterRules(rules)
+                  setPage(1)
+                  updateUrl(1, search)
+                }}
+                entityLabel="activity"
+              />
+              <SortPopover options={SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1); updateUrl(1, search) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1); updateUrl(1, search) }} />
+              <ColumnsPopover columns={OPTIONAL_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+
+              <DateRangeFilterButton
+                startDate={startDate}
+                endDate={endDate}
+                onApply={({ startDate: newStart, endDate: newEnd }) => {
+                  setStartDate(newStart)
+                  setEndDate(newEnd)
+                  setPage(1)
+                  updateUrl(1, search)
+                }}
+                onClear={() => {
+                  setStartDate("")
+                  setEndDate("")
+                  setPage(1)
+                  updateUrl(1, search)
+                }}
+                disableFutureDates={true}
+              />
             </div>
           </DataViewToolbar>
 
           {/* Active Filter Chips Row */}
           <ActiveFilterChips
+            chips={filterRules.map((rule) => {
+              const field = auditFilterFields.find((f) => f.key === rule.fieldKey)
+              const valLabel = field?.options?.find((opt) => String(opt.value) === String(rule.value))?.label || rule.value
+              return {
+                id: rule.id,
+                label: `${field?.label || rule.fieldKey} ${rule.operator === "is_not" ? "is not" : "is"} ${valLabel}`,
+                onRemove: () => {
+                  setFilterRules((current) => current.filter((item) => item.id !== rule.id))
+                  setPage(1)
+                  updateUrl(1, search)
+                },
+              }
+            })}
             groups={logFilterGroups}
             selected={logFilters}
             onRemove={(groupId, val) => {
@@ -981,7 +913,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               </Empty>
             </div>
           ) : (
-            <div className="flex-[1_0_auto] min-w-0 overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col">
+            <div className="flex-[1_0_auto] min-w-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col">
               <div
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
@@ -1056,7 +988,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       {showColumn("details") && <th className="p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         Description
                       </th>}
-                      {showColumn("ip") && <th>IP Address</th>}
+                      {showColumn("ip") && <th className="p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">IP Address</th>}
                       <th className="w-12 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         <span className="sr-only">Actions</span>
                       </th>
@@ -1073,6 +1005,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           const d = new Date(log.created_at || log.time)
                           if (isNaN(d.getTime())) return log.created_at || log.time
                           return d.toLocaleString("en-US", {
+                            timeZone: "Asia/Manila",
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -1090,6 +1023,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           <tr
                             selected={Boolean(isSelected)}
                             onClick={() => toggleRow(log.id)}
+                            onDoubleClick={(e) => {
+                              if (e.target.closest("button, input, a")) return
+                              setSelectedLog(log)
+                            }}
                             className={cn(
                               "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:bg-card dark:hover:bg-zinc-800/40 select-none cursor-pointer",
                               isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
@@ -1111,7 +1048,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             </td>
 
                             {/* Timestamp */}
-                            <td className="p-4 align-middle text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-300 tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {formattedTimestamp}
                             </td>
 
@@ -1139,7 +1076,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                                   <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
                                     {formatTitleCase(log.actor)}
                                   </span>
-                                  <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
+                                  <span className="truncate text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
                                     {log.role}
                                   </span>
                                 </div>
@@ -1148,7 +1085,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
                             {/* Scope */}
                             {showColumn("office_id") && <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
-                              <TableStatus value={log.scope} tone={log.office_id ? "neutral" : "info"} className="text-[10px]" title={log.officeName} />
+                              <TableStatus value={log.scope} tone={log.office_id ? "neutral" : "info"} className="text-[11px]" title={log.officeName} />
                             </td>}
 
                             {/* Action */}
@@ -1160,7 +1097,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             {showColumn("details") && <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-500 dark:text-zinc-400" title={formatLogDetails(log.details) || "N/A"}>
+                                  <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300" title={formatLogDetails(log.details) || "N/A"}>
                                     {formatLogDetails(log.details) || "N/A"}
                                   </span>
                                 </TooltipTrigger>
@@ -1174,7 +1111,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             </td>}
 
                             {/* Actions: View Details in Sheet */}
-                            {showColumn("ip") && <td className="p-4 tabular-nums">{log.ip || "N/A"}</td>}
+                            {showColumn("ip") && <td className="p-4 text-xs font-normal text-gray-700 dark:text-zinc-300 tabular-nums">{log.ip || "N/A"}</td>}
                             <td className="w-12 px-2 align-middle text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-center">
                                 <Tooltip>

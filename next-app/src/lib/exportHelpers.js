@@ -333,3 +333,30 @@ export const downloadOrganizationComplianceCsv = (data, onLogAction, fileName, o
     entityType: "Report",
   })
 }
+
+/**
+ * Generic CSV exporter for tabular rows
+ * @param {string} filename - Target download filename
+ * @param {string[]} headers - Array of column header titles
+ * @param {Array<Array<any>>} rows - 2D array of row cells
+ */
+export const exportRowsToCsv = (filename, headers, rows) => {
+  if (!filename || !Array.isArray(headers) || !Array.isArray(rows)) return;
+  const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
+  const lines = [
+    headers.map(q).join(","),
+    ...rows.map((row) => row.map(q).join(",")),
+  ];
+
+  const blob = new Blob([lines.join("\n")], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

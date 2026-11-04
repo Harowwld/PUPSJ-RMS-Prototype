@@ -352,13 +352,12 @@ export default function ServiceStandardsSheet({
                     </span>
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
+                        "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
                         isModified
                           ? "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
                           : "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
                       )}
                     >
-                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", isModified ? "bg-amber-500" : "bg-emerald-500")} />
                       {isModified ? "Unsaved Changes" : "Active Standard"}
                     </span>
                   </div>
@@ -622,22 +621,22 @@ export default function ServiceStandardsSheet({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setConfirmResetOpen(true)}
-              disabled={saving || loading}
+              onClick={() => onOpenChange?.(false)}
+              disabled={saving}
               className="h-10 px-4"
             >
-              Restore Defaults
+              Cancel
             </Button>
 
             <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange?.(false)}
-                disabled={saving}
+                onClick={() => setConfirmResetOpen(true)}
+                disabled={saving || loading}
                 className="h-10 px-4"
               >
-                Cancel
+                Restore Defaults
               </Button>
               <Button
                 type="button"

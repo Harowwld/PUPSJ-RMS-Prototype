@@ -321,25 +321,23 @@ export default function LandingFaqCmsView({ showToast }) {
         <PageHeader
           icon=" HelpCircleIcon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
-              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {faqData.faqs.length} questions</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · FAQ Section
-              </span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">{faqData.faqs.length} questions · FAQ Section</span>
             </div>
           }
           description="Manage frequently asked questions, detailed answers, and category tags."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#faq", "_blank")}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Preview Portal
               </Button>
@@ -349,7 +347,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Restore Defaults
               </Button>
@@ -358,7 +356,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save FAQ Content"}
               </Button>
@@ -436,27 +434,20 @@ export default function LandingFaqCmsView({ showToast }) {
                 </div>
               </div>
               {/* Header Action Bar */}
-              <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-900/30 xl:flex-row xl:items-center xl:justify-between">
-                <div className="shrink-0">
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                    <span>Questions &amp; Answers List</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-sans tabular-nums">
-                      {faqData.faqs.length}/{MAX_FAQ_ITEMS}
-                    </span>
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Expand any question below to edit its text, category, or order.
-                  </p>
-                </div>
+              <div className="flex min-w-0 flex-col rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
+                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="shrink-0">
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
+                      <span>Questions &amp; Answers List</span>
+                      <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
+                        {faqData.faqs.length}/{MAX_FAQ_ITEMS}
+                      </span>
+                    </h3>
+                    <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
+                      Expand any question below to edit its text, category, or order.
+                    </p>
+                  </div>
 
-                <DataViewToolbar label="FAQ search, category filter, and add question" className="w-full gap-2 xl:ml-auto xl:w-auto">
-<DashboardSearch value={questionSearch} onChange={setQuestionSearch} count={filteredFaqs.length} label="Search questions and answers" placeholder="Search questions and answers" className="w-[min(280px,45vw)] min-w-[200px]" />
-                  <FilterPopover
-                    fields={[{ key: "category", label: "Category", options: uniqueCategories.map((category) => ({ value: category, label: category })) }]}
-                    filters={categoryFilters}
-                    onFiltersChange={setCategoryFilters}
-                    entityLabel="questions"
-                  />
                   <Button
                     type="button"
                     disabled={faqData.faqs.length >= MAX_FAQ_ITEMS}
@@ -466,6 +457,18 @@ export default function LandingFaqCmsView({ showToast }) {
                   >
                     Add Question
                   </Button>
+                </div>
+
+                <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-gray-50/40 px-4 py-3 dark:bg-zinc-900/30">
+                  <DashboardSearch value={questionSearch} onChange={setQuestionSearch} count={filteredFaqs.length} label="Search questions and answers" placeholder="Search questions and answers" className="w-[min(280px,45vw)] min-w-[200px]" />
+                  <div className="ml-auto flex shrink-0 items-center gap-2">
+                    <FilterPopover
+                      fields={[{ key: "category", label: "Category", options: uniqueCategories.map((category) => ({ value: category, label: category })) }]}
+                      filters={categoryFilters}
+                      onFiltersChange={setCategoryFilters}
+                      entityLabel="questions"
+                    />
+                  </div>
                 </DataViewToolbar>
               </div>
 

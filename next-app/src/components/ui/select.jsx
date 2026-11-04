@@ -35,15 +35,15 @@ const Select = React.forwardRef(({
   const selected = items.find(option => String(option.value) === String(currentValue))
   const content = (
     <Primitive.Positioner align={align} sideOffset={4} alignItemWithTrigger={false} collisionPadding={12} className="z-[9999] outline-none">
-      <Primitive.Popup data-slot="select-popup" className={cn("w-[var(--anchor-width)] min-w-[min(14rem,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-gray-700 shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200", menuClassName)}>
-        {title && <div className="px-3 py-2 text-xs font-semibold">{title}</div>}
-        <Primitive.List className="max-h-[min(15rem,var(--available-height))] overflow-y-auto overflow-x-hidden p-1.5 outline-none">
+      <Primitive.Popup data-slot="select-popup" className={cn("w-[var(--anchor-width)] min-w-[min(10rem,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-gray-700 shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200", menuClassName)}>
+        {title && <div className="px-2.5 py-1.5 text-[11px] font-semibold text-gray-900 dark:text-zinc-100 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">{title}</div>}
+        <Primitive.List className="max-h-[min(15rem,var(--available-height))] overflow-y-auto overflow-x-hidden p-1 space-y-0.5 outline-none">
           {options.map((option, index) => option.isHeader ? (
-            <div key={`heading-${index}`} role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-medium text-gray-500 dark:text-zinc-400">{option.label}</div>
+            <div key={`heading-${index}`} role="presentation" className="px-2 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">{option.label}</div>
           ) : (
-            <Primitive.Item key={`${option.value}-${index}`} value={option.value} disabled={option.disabled} className={cn("flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs font-normal outline-none data-highlighted:bg-gray-100 data-selected:bg-gray-100 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-zinc-800 dark:data-selected:bg-zinc-800", optionClassName)}>
+            <Primitive.Item key={`${option.value}-${index}`} value={option.value} disabled={option.disabled} className={cn("min-h-[30px] flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-1.25 text-xs font-medium outline-none data-highlighted:bg-gray-100 data-selected:bg-gray-100 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-zinc-800 dark:data-selected:bg-zinc-800", optionClassName)}>
               <Primitive.ItemText className="min-w-0 flex-1 truncate">{option.label}</Primitive.ItemText>
-              <Primitive.ItemIndicator><Tick01Icon size={14} aria-hidden="true" /></Primitive.ItemIndicator>
+              <Primitive.ItemIndicator><Tick01Icon size={13} aria-hidden="true" /></Primitive.ItemIndicator>
             </Primitive.Item>
           ))}
         </Primitive.List>

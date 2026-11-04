@@ -782,6 +782,28 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     }
   }
 
+  const handleCopyEmails = () => {
+    const selectedMembers = staff.filter((m) => selectedIds.has(m.id))
+    const emails = selectedMembers.map((m) => m.email).filter(Boolean)
+    if (emails.length === 0) {
+      showToast?.("No email addresses found for selected personnel", true)
+      return
+    }
+    navigator.clipboard.writeText(emails.join("; "))
+    showToast?.(`Copied ${emails.length} email address${emails.length === 1 ? "" : "es"} to clipboard`)
+  }
+
+  const handleCopyIds = () => {
+    const selectedMembers = staff.filter((m) => selectedIds.has(m.id))
+    const ids = selectedMembers.map((m) => m.id).filter(Boolean)
+    if (ids.length === 0) {
+      showToast?.("No IDs found for selected personnel", true)
+      return
+    }
+    navigator.clipboard.writeText(ids.join(", "))
+    showToast?.(`Copied ${ids.length} employee ID${ids.length === 1 ? "" : "s"} to clipboard`)
+  }
+
   const stats = useMemo(() => {
     const total = staff.length
     const active = staff.filter((s) => s.status === "Active").length
@@ -857,35 +879,40 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="UserSearch01Icon"
-          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Global Personnel Directory</span><span className="text-xs font-normal text-gray-500 dark:text-zinc-400">{stats.total} personnel · {stats.assignedOffices} offices · {stats.admins} administrators</span></div>}
+          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Global Personnel Directory</span><span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">{stats.total.toLocaleString()} personnel · {stats.assignedOffices.toLocaleString()} offices · {stats.admins.toLocaleString()} administrators</span></div>}
           description="Manage system access, office assignments, and authorization settings for all administrators and records staff."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-
+          actions={
+            <div className="flex shrink-0 items-center gap-2">
+              <RefreshButton onRefresh={handleManualRefresh} isLoading={isManualLoading} title="Refresh Staff Directory" className="h-9 w-9" />
+              <Button onClick={handleOpenCreate} className="h-9 shrink-0 px-4">Register Personnel</Button>
+            </div>
+          }
         />
 
-        <div role="group" aria-label="Personnel status" className="flex items-end gap-5 border-b border-border px-6 dark:border-border">
+        <div role="group" aria-label="Personnel status" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
           {[["Active", "Active", stats.active], ["Inactive", "Archived", stats.inactive]].map(([value, label, count]) => (
-            <button key={value} type="button" aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)} className={cn("relative flex h-9 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon", statusFilter === value ? "text-pup-maroon dark:text-red-400 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-current" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-              {label} <span className="tabular-nums text-[11px] font-normal">{count}</span>
+            <button key={value} type="button" aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 cursor-pointer", statusFilter === value ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+              {label} <span className="font-sans tabular-nums text-[10px] font-normal text-gray-400 dark:text-zinc-500">{count}</span>
+              {statusFilter === value && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
             </button>
           ))}
         </div>
 
         <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-          <div className="flex min-w-0 flex-[1_0_auto] items-center gap-2">
-<DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID or email..." />
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID or email..." />
+            <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />
+          </div>
+
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={setFilterRules} entityLabel="personnel" />
             <SortPopover options={[{ key: "name", label: "Name" }, { key: "id", label: "Employee ID" }, { key: "email", label: "Email" }, { key: "office", label: "Office" }, { key: "role", label: "Role" }, { key: "section", label: "Section" }, { key: "last_active", label: "Last Sign-in" }, { key: "totp_enabled", label: "Two-step Verification" }, { key: "created_at", label: "Date Added" }, { key: "updated_at", label: "Last Updated" }]} sortBy={sortBy} onSortByChange={(value) => { setSortBy(value); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
             <GroupPopover options={[{ key: "office", label: "Office", icon: Building01Icon }, { key: "role", label: "Role", icon: EmptyUserGroupIcon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
             <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
-            <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} />
-          </div>
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <RefreshButton onRefresh={handleManualRefresh} isLoading={isManualLoading} title="Refresh Staff Directory" className="h-9 w-9" />
-            <Button onClick={handleOpenCreate} className="h-9 px-4">Register Personnel</Button>
           </div>
         </DataViewToolbar>
 
@@ -912,11 +939,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             setFilterRules([])
             setPage(1)
           }}
-          className="bg-white dark:bg-card px-6 py-2.5"
+          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
         />
 
         {/* Content Section: Directory Table inside the single Card */}
-        <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
+        <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {filteredStaff.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -1016,7 +1043,17 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         </th>
                       )}
                       {visibleColumns.includes("email") && (
-                        <th className="p-4"><button onClick={() => handleSort("email")} className="group flex items-center text-xs font-semibold text-gray-500 dark:text-zinc-400">Email <SortIndicator column="email" sortBy={sortBy} sortOrder={sortOrder} /></button></th>
+                        <th className="p-4">
+                          <button
+                            onClick={() => handleSort("email")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              sortBy === "email" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Email <SortIndicator column="email" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
                       )}
                       {visibleColumns.includes("office") && (
                         <th className="p-4 w-[20%]">
@@ -1068,7 +1105,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
                     {groupedStaff.map(([groupLabel, members]) => <Fragment key={groupLabel || "all"}>
-                      {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 3} className="bg-gray-50 px-6 py-2 text-xs font-semibold text-gray-600 dark:bg-zinc-900 dark:text-zinc-300">{groupLabel} <span className="ml-2 tabular-nums font-normal">{members.length}</span></td></tr>}
+                      {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 3} className="bg-gray-50/90 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">{groupLabel} <span className="ml-2 font-sans tabular-nums font-normal text-gray-400 dark:text-zinc-500">{members.length}</span></td></tr>}
                       {members.map((member) => {
                         const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
                         const isSelf = member.id === authUser?.id
@@ -1079,10 +1116,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             key={member.id}
                             data-selected={isSelected}
                             onClick={(e) => !isSelf && toggleSelect(member.id, e)}
+                            onDoubleClick={(e) => {
+                              if (e.target.closest("button, input, a")) return
+                              setInspectMember(member)
+                            }}
                             className={cn(
-                              "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
-                              !isSelf && "cursor-pointer",
-
+                              "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer"
                             )}
                           >
                             <td
@@ -1108,26 +1147,26 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             {visibleColumns.includes("name") && (
                               <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                                 <div className="flex flex-col min-w-0">
-                                  <span className={cn("text-[14px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
+                                  <span className={cn("text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
                                     {getStaffCleanName(member)} {isSelf && "(You)"}
                                   </span>
                                 </div>
                               </td>
                             )}
                             {visibleColumns.includes("email") && (
-                              <td className="p-4 align-middle"><div className="w-full min-w-0 truncate text-xs text-gray-600 dark:text-zinc-300" title={getStaffCleanEmail(member)}>{getStaffCleanEmail(member)}</div></td>
+                              <td className="p-4 align-middle"><div className="w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300" title={getStaffCleanEmail(member)}>{getStaffCleanEmail(member)}</div></td>
                             )}
                             {visibleColumns.includes("office") && (
                               <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 {office ? (
                                   <span
-                                    className="systemadmin-office-badge inline-flex min-h-6 w-fit items-center justify-center rounded-full px-2.5 text-xs font-medium border-0 select-none"
+                                    className="systemadmin-office-badge inline-flex min-h-6 w-fit items-center justify-center rounded-full px-2.5 text-[11px] font-medium border-0 select-none"
                                     style={{ "--office-accent": office.accent_color || "#800000" }}
                                   >
                                     {office.short_name}
                                   </span>
                                 ) : (
-                                  <span className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                                  <span className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
                                     Platform Level
                                   </span>
                                 )}
@@ -1137,7 +1176,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 <div
                                   className={cn(
-                                    "inline-flex items-center gap-1.5 w-fit justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide border",
+                                    "inline-flex items-center w-fit justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide border",
                                     member.role === "SystemAdmin" || member.role === "SuperAdmin"
                                       ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
                                       : member.role === "Admin"
@@ -1145,27 +1184,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                         : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
                                   )}
                                 >
-                                  <span className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
-                                    member.role === "SystemAdmin" || member.role === "SuperAdmin"
-                                      ? "bg-purple-400 dark:bg-purple-600"
-                                      : member.role === "Admin"
-                                        ? "bg-red-500"
-                                        : "bg-amber-500"
-                                  )} />
                                   <span>{member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}</span>
                                 </div>
                               </td>
                             )}
                             {visibleColumns.includes("section") && (
                               <td className="p-4 align-middle">
-                                <span className="block w-full min-w-0 truncate text-xs text-gray-700 dark:text-zinc-300" title={member.section || "No section assigned"}>
+                                <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300" title={member.section || "No section assigned"}>
                                   {member.section || "No section assigned"}
                                 </span>
                               </td>
                             )}
                             {visibleColumns.includes("last_active") && (
-                              <td className="p-4 align-middle whitespace-nowrap text-xs tabular-nums text-gray-600 dark:text-zinc-300" title={member.last_active ? formatPHDateTime(member.last_active) : "Never logged in"}>
+                              <td className="p-4 align-middle whitespace-nowrap text-xs font-normal tabular-nums text-gray-600 dark:text-zinc-300" title={member.last_active ? formatPHDateTime(member.last_active) : "Never logged in"}>
                                 {member.last_active ? formatPHDateTime(member.last_active) : "Never logged in"}
                               </td>
                             )}
@@ -1182,12 +1213,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               </td>
                             )}
                             {visibleColumns.includes("created_at") && (
-                              <td className="p-4 align-middle whitespace-nowrap text-xs tabular-nums text-gray-600 dark:text-zinc-300" title={member.created_at ? formatPHDateTime(member.created_at) : "Date unavailable"}>
+                              <td className="p-4 align-middle whitespace-nowrap text-xs font-normal tabular-nums text-gray-600 dark:text-zinc-300" title={member.created_at ? formatPHDateTime(member.created_at) : "Date unavailable"}>
                                 {member.created_at ? formatPHDateTime(member.created_at) : "Date unavailable"}
                               </td>
                             )}
                             {visibleColumns.includes("updated_at") && (
-                              <td className="p-4 align-middle whitespace-nowrap tabular-nums">
+                              <td className="p-4 align-middle whitespace-nowrap text-xs font-normal tabular-nums text-gray-600 dark:text-zinc-300">
                                 {member.updated_at ? formatPHDateTime(member.updated_at) : "N/A"}
                               </td>
                             )}
@@ -1769,29 +1800,28 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             onClick={() => {
                               const m = inspectMember
                               setInspectMember(null)
-                              handleOpenEdit(m)
-                            }}
-                            className="h-10 px-4"
-                          >
-                            Edit Profile
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const m = inspectMember
-                              setInspectMember(null)
                               setArchiveTarget(m)
                             }}
                             className="h-10 px-4"
                           >
                             Archive Personnel
                           </Button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              const m = inspectMember
+                              setInspectMember(null)
+                              handleOpenEdit(m)
+                            }}
+                            className="h-10 px-4"
+                          >
+                            Edit Profile
+                          </Button>
                         </>
                       ) : (
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="success"
                           onClick={() => {
                             const m = inspectMember
                             setInspectMember(null)
@@ -1814,16 +1844,29 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       {/* Floating Action Bar */}
       <FloatingActionBar
         selectedCount={selectedIds.size}
+        entityName="personnel"
         onCancel={() => setSelectedIds(new Set())}
-        onAction={() => {
-          if (statusFilter === "Active") {
-            setBulkArchiveOpen(true)
-          } else {
-            setBulkRestoreOpen(true)
-          }
+        primaryAction={{
+          label: statusFilter === "Active" ? "Archive Personnel" : "Restore Personnel",
+          variant: statusFilter === "Active" ? "danger" : "success",
+          onClick: () => {
+            if (statusFilter === "Active") {
+              setBulkArchiveOpen(true)
+            } else {
+              setBulkRestoreOpen(true)
+            }
+          },
         }}
-        actionLabel={statusFilter === "Active" ? "Archive Personnel" : "Restore Personnel"}
-        actionVariant={statusFilter === "Active" ? "danger" : "success"}
+        secondaryActions={[
+          {
+            label: "Copy Emails",
+            onClick: handleCopyEmails,
+          },
+          {
+            label: "Copy Employee IDs",
+            onClick: handleCopyIds,
+          },
+        ]}
       />
     </div>
   )

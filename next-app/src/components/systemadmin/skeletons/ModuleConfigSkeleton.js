@@ -188,8 +188,10 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
           title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Department Features &amp; Permissions</span><Placeholder className="h-3.5 w-44 rounded" /></div>}
           description="Turn system features on or off for each department."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          actions={<Placeholder className="h-9 w-9 shrink-0 rounded-xl" />}
         />
         <div aria-hidden="true" className="flex items-end gap-x-5 overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
           <div className="flex h-9 shrink-0 items-stretch">
@@ -200,8 +202,11 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
           </div>
         </div>
         <DataViewToolbar label="Feature search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-          <div aria-hidden="true" className="flex min-w-0 flex-1 items-center gap-2">
-            <div className="relative w-[min(320px,30vw)] min-w-[190px] shrink-0"><Placeholder className="h-9 w-full rounded-xl" /><Placeholder className="absolute right-3 top-1/2 h-3 w-6 -translate-y-1/2 rounded" /></div>
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="relative w-[min(320px,30vw)] min-w-[190px] shrink-0"><Placeholder className="h-9 w-full rounded-xl" /><Placeholder className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded" /></div>
+            {viewMode === "matrix" && <Placeholder className="h-9 w-[72px] shrink-0 rounded-xl" />}
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <Placeholder className="h-9 w-20 shrink-0 rounded-xl" />
             {viewMode === "matrix" && <><Placeholder className="h-9 w-36 shrink-0 rounded-xl" /><Placeholder className="h-9 w-32 shrink-0 rounded-xl" />{visibleOfficeCount > 1 && <Placeholder className="h-9 w-24 shrink-0 rounded-xl" />}</>}
           </div>

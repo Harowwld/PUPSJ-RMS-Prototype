@@ -1148,11 +1148,11 @@ export default function Header({ authUser, onLogout, children }) {
             </DropdownMenuTrigger>
             
             {/* Popover content with Three-Zone Architecture */}
-            <DropdownMenuContent align="end" sideOffset={8} className="w-80 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-72 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none">
               {/* 1. Header Zone */}
-              <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between text-left">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
+              <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-3.5 py-2.5 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between text-left">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative h-8 w-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
                     {currentAvatarFilename && !imageError ? (
                       <img 
                         src={`/api/account/avatar?id=${authUser.id}&t=${avatarTimestamp}`}
@@ -1164,10 +1164,10 @@ export default function Header({ authUser, onLogout, children }) {
                     )}
                   </div>
                   <div className="min-w-0 flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                       {displayName}
                     </span>
-                    <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 truncate">
+                    <span className="text-[10px] font-normal text-gray-500 dark:text-zinc-400 truncate">
                       {authUser?.email || authUser?.username}
                     </span>
                   </div>
@@ -1178,10 +1178,10 @@ export default function Header({ authUser, onLogout, children }) {
               </div>
 
               {/* 2. Body Zone */}
-              <DropdownMenuGroup className="p-1.5 flex flex-col gap-0.5">
+              <DropdownMenuGroup className="p-1 flex flex-col gap-0.5">
                 <DropdownMenuItem
                   className={cn(
-                    "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
+                    "cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 transition-colors outline-none",
                     isSettingsActive
                       ? "text-gray-900 bg-gray-100 dark:text-zinc-50 dark:bg-zinc-800"
                       : "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
@@ -1195,7 +1195,7 @@ export default function Header({ authUser, onLogout, children }) {
                 {!isActivityActive && (
                   <DropdownMenuItem
                     className={cn(
-                      "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
+                      "cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 transition-colors outline-none",
                       "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                     )}
                     onClick={openMyActivity}
@@ -1208,7 +1208,7 @@ export default function Header({ authUser, onLogout, children }) {
                 {!isSuperAdmin && hasAdminRights && (
                   <DropdownMenuItem
                     onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
-                    className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 transition-colors outline-none"
+                    className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 transition-colors outline-none"
                   >
                     <AppIcon className={cn(
                       "text-sm shrink-0",
@@ -1220,11 +1220,11 @@ export default function Header({ authUser, onLogout, children }) {
               </DropdownMenuGroup>
 
               {/* 3. Footer Zone */}
-              <div className="p-1.5 border-t-[0.5px] border-border dark:border-white/10">
+              <div className="p-1 border-t-[0.5px] border-border dark:border-white/10">
                 <button
                   type="button"
                   onClick={handleLogoutAction}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none"
+                  className="w-full flex items-center justify-center gap-2 py-1.5 px-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer transition-colors border-0 outline-none"
                 >
                   <Logout01Icon size="1em" className="text-sm" />
                   <span>Sign Out</span>

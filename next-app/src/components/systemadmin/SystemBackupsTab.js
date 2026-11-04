@@ -746,11 +746,89 @@ export default function SystemBackupsTab({ showToast }) {
           {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0 flex flex-col">
             <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
-              <PageHeader title={<span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">Platform Backups <span className="text-xs font-normal text-gray-500 dark:text-zinc-400 tabular-nums">{isLoading ? "Loading backups…" : `${backups.length} ${backups.length === 1 ? "archive" : "archives"}`}</span></span>} description="Create and restore full system backups, manage scheduled snapshots, and sync to external hardware." showBorder={false} />
-              <div role="group" aria-label="Backup type" className="flex items-end gap-5 border-b border-border px-6 dark:border-border">
+              <PageHeader
+                icon="Database01Icon"
+                title={
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span>Platform Backups</span>
+                    <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                      {isLoading ? "Loading backups…" : `${backups.length.toLocaleString()} ${backups.length === 1 ? "archive" : "archives"}`}
+                    </span>
+                  </div>
+                }
+                description="Create and restore full system backups, manage scheduled snapshots, and sync to external hardware."
+                showBorder={false}
+                className="p-6"
+                titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+                descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+                actions={
+                  <div className="flex shrink-0 items-center gap-2">
+                    <RefreshButton
+                      onRefresh={() => fetchData(true)}
+                      isLoading={isManualLoading}
+                      title="Refresh Governance Backups"
+                      className="h-9 w-9"
+                    />
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleToggleStatusSidebar()}
+                      className="h-9 px-4"
+                      title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
+                    >
+                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        restoreFileRef.current &&
+                        restoreFileRef.current.click()
+                      }
+                      disabled={localLoading.uploading}
+                      className="h-9 px-4"
+                    >
+                      {localLoading.uploading ? (
+                        <span className="flex items-center gap-1.5">
+                          <Loading01Icon size="1em" className="animate-spin text-xs" />
+                          <span>Restoring...</span>
+                        </span>
+                      ) : (
+                        "Restore Backup"
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleGenerateBackup()}
+                      disabled={localLoading.generating}
+                      className="h-9 px-4 cursor-pointer"
+                    >
+                      {localLoading.generating ? (
+                        <span className="flex items-center gap-1.5">
+                          <Loading01Icon size="1em" className="animate-spin text-xs" />
+                          <span>Creating...</span>
+                        </span>
+                      ) : (
+                        "Create Backup"
+                      )}
+                    </Button>
+                    <input
+                      ref={restoreFileRef}
+                      type="file"
+                      className="hidden"
+                      accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
+                      onChange={handleRestoreFileChangeLocal}
+                    />
+                  </div>
+                }
+              />
+              <div role="group" aria-label="Backup type" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
                 {[{ value: "all", label: "All Types", count: backups.length }, ...backupTypes.map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length }))].map(({ value, label, count }) => (
-                  <button key={value} type="button" aria-pressed={backupTypeFilter === value} onClick={() => { setBackupTypeFilter(value); setPage(1) }} className={cn("relative flex h-9 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon", backupTypeFilter === value ? "text-pup-maroon dark:text-red-400 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-current" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                    {label}<span className="tabular-nums text-[11px] font-normal">{count}</span>
+                  <button key={value} type="button" aria-pressed={backupTypeFilter === value} onClick={() => { setBackupTypeFilter(value); setPage(1) }} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", backupTypeFilter === value ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
+                    <span>{label}</span>
+                    <span className="font-sans tabular-nums text-[10px] font-normal text-gray-400 dark:text-zinc-500">{count}</span>
+                    {backupTypeFilter === value && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
                   </button>
                 ))}
               </div>
@@ -778,65 +856,6 @@ export default function SystemBackupsTab({ showToast }) {
                   <ColumnsPopover columns={PLATFORM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
                 </>}
                 scrollControls={<TableScrollControls scrollContainerRef={tableScrollRef} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />}
-                actions={<div className="flex items-center gap-2">
-                  <RefreshButton
-                    onRefresh={() => fetchData(true)}
-                    isLoading={isManualLoading}
-                    title="Refresh Governance Backups"
-                    className="h-9 w-9"
-                  />
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleToggleStatusSidebar()}
-                    className="h-9 px-4"
-                    title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
-                  >
-                    {statusSidebarOpen ? "Hide Status" : "Show Status"}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      restoreFileRef.current &&
-                      restoreFileRef.current.click()
-                    }
-                    disabled={localLoading.uploading}
-                    className="h-9 px-4"
-                  >
-                    {localLoading.uploading ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loading01Icon size="1em" className="animate-spin text-xs" />
-                        <span>Restoring...</span>
-                      </span>
-                    ) : (
-                      "Restore Backup"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => handleGenerateBackup()}
-                    disabled={localLoading.generating}
-                    className="h-9 px-4 cursor-pointer"
-                  >
-                    {localLoading.generating ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loading01Icon size="1em" className="animate-spin text-xs" />
-                        <span>Creating...</span>
-                      </span>
-                    ) : (
-                      "Create Backup"
-                    )}
-                  </Button>
-                  <input
-                    ref={restoreFileRef}
-                    type="file"
-                    className="hidden"
-                    accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
-                    onChange={handleRestoreFileChangeLocal}
-                  />
-                </div>}
               />
 
               <AutoBackupSchedule showToast={showToast} scope="system" embedded={true} />
@@ -860,7 +879,7 @@ export default function SystemBackupsTab({ showToast }) {
                     }
                   }] : [])]}
                   onClearAll={handleClearFilters}
-                  className="bg-white dark:bg-card px-6 py-2.5"
+                  className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
                 />
               )}
 
@@ -890,7 +909,7 @@ export default function SystemBackupsTab({ showToast }) {
                   </CardContent>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col min-h-0 rounded-b-2xl overflow-hidden">
+                <div className="flex-1 flex flex-col min-h-0 rounded-b-2xl border-t border-border dark:border-border overflow-hidden">
                   <PlatformBackupTable backups={filteredBackups} rows={sortedAndPaginatedBackups} visibleColumns={visibleColumns} selectedIds={selectedBackupIds} onSelectAll={(checked, rows) => setSelectedBackupIds((current) => checked ? Array.from(new Set([...current, ...rows.map((row) => row.id)])) : current.filter((id) => !rows.some((row) => row.id === id)))} onToggle={handleToggleRow} onSort={handleSort} sortBy={sortBy} sortOrder={sortOrder} onDownload={handleDownloadBackup} onDelete={handleDeletePrompt} onCreate={handleGenerateBackup} isFilterActive={isFilterActive} onClearFilters={handleClearFilters} page={page} pageSize={itemsPerPage} onPageChange={setPage} onPageSizeChange={setItemsPerPage} scrollRef={tableScrollRef} groups={groups} />
                 </div>
               )}
@@ -924,14 +943,31 @@ export default function SystemBackupsTab({ showToast }) {
           )}
         </div>
 
-        {/* Floating Action Bar for batch deletion */}
+        {/* Floating Action Bar for batch deletion & utilities */}
         <FloatingActionBar
           selectedCount={selectedBackupIds.length}
-          selectionStatus="Selected Backups"
+          entityName="archive"
           onCancel={() => setSelectedBackupIds([])}
-          onAction={() => handleDeletePrompt(selectedBackupIds)}
-          actionLabel="Delete Selected"
-          actionIcon="Delete01Icon"
+          primaryAction={{
+            label: "Delete Selected",
+            variant: "danger",
+            onClick: () => handleDeletePrompt(selectedBackupIds),
+          }}
+          secondaryActions={[
+            {
+              label: "Copy Filenames",
+              onClick: () => {
+                const selectedBackups = backups.filter((b) => selectedBackupIds.includes(b.id))
+                const filenames = selectedBackups.map((b) => b.filename).filter(Boolean)
+                if (filenames.length === 0) {
+                  showToast?.("No archive filenames found for selection", true)
+                  return
+                }
+                navigator.clipboard.writeText(filenames.join("\n"))
+                showToast?.(`Copied ${filenames.length} archive filename${filenames.length === 1 ? "" : "s"} to clipboard`)
+              },
+            },
+          ]}
         />
 
         {/* Delete System Backup Confirmation Modal */}

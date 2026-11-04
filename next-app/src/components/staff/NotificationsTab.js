@@ -940,11 +940,10 @@ export default function NotificationsTab({
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border",
+                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border",
                             ui.badgeClass
                           )}
                         >
-                          <AppIcon className={cn("text-xs ", ui.icon)} />
                           {ui.label}
                         </span>
                       </div>
@@ -1025,18 +1024,12 @@ export default function NotificationsTab({
                             <div className="flex items-center gap-2">
                               <span
                                 className={cn(
-                                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold",
+                                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
                                   selectedNotif.is_read
                                     ? "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
                                     : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50"
                                 )}
                               >
-                                <span
-                                  className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
-                                    selectedNotif.is_read ? "bg-gray-400" : "bg-blue-500"
-                                  )}
-                                />
                                 {selectedNotif.is_read ? "Read" : "Unread"}
                               </span>
                               <button
@@ -1170,7 +1163,16 @@ export default function NotificationsTab({
 
             {/* Executive Action Bar Footer */}
             <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
-              <div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSheetOpen(false)}
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Close
+              </Button>
+
+              <div className="flex items-center gap-2.5">
                 {selectedNotif?.entity_type === "document_request" && onNavigateTab ? (
                   <Button
                     type="button"
@@ -1179,10 +1181,9 @@ export default function NotificationsTab({
                       setSheetOpen(false);
                       onNavigateTab("requests");
                     }}
-                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    <LinkSquare01Icon size="1em" className="text-sm" />
-                    <span>Open in Requests</span>
+                    Open in Requests
                   </Button>
                 ) : selectedNotif?.approval_status === "Declined" && onRescan ? (
                   <Button
@@ -1202,17 +1203,6 @@ export default function NotificationsTab({
                     <span>Rescan Document</span>
                   </Button>
                 ) : null}
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setSheetOpen(false)}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  Close
-                </Button>
 
                 {(selectedNotif?.entity_type === "document" || selectedNotif?.metadata?.document_id) && (
                   <a

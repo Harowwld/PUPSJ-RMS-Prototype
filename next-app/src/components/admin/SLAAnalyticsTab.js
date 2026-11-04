@@ -287,7 +287,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
                   >
                     {/* Zone 1: Header */}
-                    <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                    <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Export Dataset
                       </span>
@@ -349,7 +349,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                     className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
                   >
                     {/* Zone 1: Header */}
-                    <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
+                    <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Official Report
                       </span>

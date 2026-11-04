@@ -425,7 +425,6 @@ export default function StudentProfileSheet({
                           : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
                       )}
                     >
-                      <span className={cn("w-1.5 h-1.5 rounded-full mr-1", isArchived ? "bg-amber-500" : "bg-emerald-500")} />
                       {student.status || "Active"}
                     </Badge>
                   </InfoRow>
@@ -482,7 +481,6 @@ export default function StudentProfileSheet({
                           : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
                       )}
                     >
-                      <span className={cn("w-1.5 h-1.5 rounded-full mr-1", isArchived ? "bg-amber-500" : "bg-emerald-500")} />
                       {student.status || "Active"}
                     </Badge>
                   </InfoRow>
@@ -870,7 +868,16 @@ export default function StudentProfileSheet({
 
         {/* Executive Footer - Clean Action Bar */}
         <SheetFooter className="shrink-0 flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+          >
+            Close
+          </Button>
+
+          <div className="flex flex-wrap items-center gap-2.5">
             {isArchived ? (
               onRestoreStudent && (
                 <Button
@@ -900,18 +907,7 @@ export default function StudentProfileSheet({
                 </Button>
               )
             )}
-          </div>
-
-          <div className="ml-auto flex flex-wrap items-center gap-2.5">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-          >
-            Close
-          </Button>
-          {!isOrg && <Button onClick={() => setReportOpen(true)}>{PDF_ACTION_LABELS.preview}</Button>}
+            {!isOrg && <Button onClick={() => setReportOpen(true)}>{PDF_ACTION_LABELS.preview}</Button>}
           </div>
         </SheetFooter>
       </SheetContent>

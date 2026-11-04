@@ -218,18 +218,12 @@ export default function PermanentAdmissionRecordSheet({
               <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border",
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border",
                     isSubmitted
                       ? "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40"
                       : "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40"
                   )}
                 >
-                  <span
-                    className={cn(
-                      "w-1.5 h-1.5 rounded-full shrink-0",
-                      isSubmitted ? "bg-emerald-500" : "bg-amber-500"
-                    )}
-                  />
                   {isSubmitted ? "Archived & Verified" : "Pending Submission"}
                 </span>
               </InfoRow>
@@ -311,8 +305,7 @@ export default function PermanentAdmissionRecordSheet({
                     onClick={() => onPreviewDocument(item)}
                     className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
                   >
-                    <ViewIcon size="1em" className="text-xs mr-1" />
-                    <span>{PDF_ACTION_LABELS.preview}</span>
+                    {PDF_ACTION_LABELS.preview}
                   </Button>
                 )}
               </div>
@@ -321,7 +314,7 @@ export default function PermanentAdmissionRecordSheet({
         </div>
 
         {/* 4. Sheet Footer */}
-        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
           <Button
             type="button"
             variant="outline"

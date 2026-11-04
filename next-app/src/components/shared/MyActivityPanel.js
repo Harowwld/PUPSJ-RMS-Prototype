@@ -7,12 +7,12 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import {
   Tooltip,
   TooltipContent,
@@ -168,59 +168,6 @@ export default function MyActivityPanel({ embedded = false }) {
     refreshStats();
   }, [refresh, refreshStats]);
 
-  const handleQuickRange = (range) => {
-    const end = new Date();
-    let start = new Date();
-
-    switch (range) {
-      case "today":
-        start.setHours(0, 0, 0, 0);
-        break;
-      case "yesterday":
-        start.setDate(start.getDate() - 1);
-        start.setHours(0, 0, 0, 0);
-        end.setDate(end.getDate() - 1);
-        end.setHours(23, 59, 59, 999);
-        break;
-      case "last7":
-        start.setDate(start.getDate() - 6);
-        start.setHours(0, 0, 0, 0);
-        break;
-      case "last30":
-        start.setDate(start.getDate() - 29);
-        start.setHours(0, 0, 0, 0);
-        break;
-      default:
-        break;
-    }
-
-    setStartDate(format(start, "yyyy-MM-dd"));
-    setEndDate(format(end, "yyyy-MM-dd"));
-    setPage(1);
-  };
-
-  const activeShortcut = (() => {
-    if (!startDate || !endDate) return null;
-    const todayStr = format(new Date(), "yyyy-MM-dd");
-
-    if (startDate === todayStr && endDate === todayStr) return "today";
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yestStr = format(yesterday, "yyyy-MM-dd");
-    if (startDate === yestStr && endDate === yestStr) return "yesterday";
-
-    const last7 = new Date();
-    last7.setDate(last7.getDate() - 6);
-    if (startDate === format(last7, "yyyy-MM-dd") && endDate === todayStr) return "last7";
-
-    const last30 = new Date();
-    last30.setDate(last30.getDate() - 29);
-    if (startDate === format(last30, "yyyy-MM-dd") && endDate === todayStr) return "last30";
-
-    return null;
-  })();
-
   const handleClearFilters = () => {
     setLocalSearch("");
     setSearch("");
@@ -343,25 +290,23 @@ export default function MyActivityPanel({ embedded = false }) {
         </div>
 
         {/* 3. Search & Filter Toolbar */}
-        <div className="px-6 py-4 border-t border-border dark:border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-wrap">
-          <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-            </div>
-            <Input
-              type="text"
-              placeholder="Search action, details, IP..."
-              className="h-9 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              disabled={loading}
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-              {total.toLocaleString()}
-            </div>
-          </div>
+        <DataViewToolbar label="Personal activity search, severity filter, and date range" className="gap-2 border-t border-border dark:border-border bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30">
+          <DashboardSearch
+            value={localSearch}
+            onChange={setLocalSearch}
+            onClear={() => {
+              setLocalSearch("");
+              setSearch("");
+              setPage(1);
+            }}
+            placeholder="Search action, details, IP..."
+            label="Search personal activity history"
+            count={total}
+            loading={loading && total === 0}
+            className="flex-1 sm:w-64 min-w-[200px] max-w-sm"
+          />
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <MultiCriteriaFilter
               title="Filter Logs"
               buttonLabel="Filter"
@@ -373,89 +318,23 @@ export default function MyActivityPanel({ embedded = false }) {
               }}
             />
 
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
-              {[
-                { key: "today", label: "Today" },
-                { key: "yesterday", label: "Yest." },
-                { key: "last7", label: "7d" },
-                { key: "last30", label: "30d" },
-              ].map((range) => {
-                const isActive = activeShortcut === range.key;
-                return (
-                  <button
-                    key={range.key}
-                    type="button"
-                    onClick={() => handleQuickRange(range.key)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                      isActive
-                        ? "bg-pup-maroon text-white dark:bg-red-600 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                  >
-                    {range.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-[105px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                        !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                      )}
-                    >
-                      {startDate ? format(parseDateLocal(startDate), "MMM d") : "Start"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate ? parseDateLocal(startDate) : undefined}
-                      onSelect={(date) => {
-                        setStartDate(date ? format(date, "yyyy-MM-dd") : "");
-                        setPage(1);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <span className="text-[12px] text-gray-400 dark:text-zinc-500">→</span>
-              <div className="w-[105px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 px-2.5 cursor-pointer",
-                        !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                      )}
-                    >
-                      {endDate ? format(parseDateLocal(endDate), "MMM d") : "End"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate ? parseDateLocal(endDate) : undefined}
-                      onSelect={(date) => {
-                        setEndDate(date ? format(date, "yyyy-MM-dd") : "");
-                        setPage(1);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
+            <DateRangeFilterButton
+              startDate={startDate}
+              endDate={endDate}
+              onApply={({ startDate: newStart, endDate: newEnd }) => {
+                setStartDate(newStart);
+                setEndDate(newEnd);
+                setPage(1);
+              }}
+              onClear={() => {
+                setStartDate("");
+                setEndDate("");
+                setPage(1);
+              }}
+              disableFutureDates={true}
+            />
           </div>
-        </div>
+        </DataViewToolbar>
 
         {/* Active Filter Chips */}
         <ActiveFilterChips
