@@ -10,7 +10,9 @@ export default function AppIcon({ name, icon, className, size = "1em", fallback,
     || classTokens.map((token) => token.replace(/^ph-/i, "")).find((token) => Object.prototype.hasOwnProperty.call(iconComponents, token));
   const rawIconValue = icon ?? name ?? classIconName;
   const iconValue = typeof rawIconValue === "string" ? rawIconValue.trim().replace(/^ph-/i, "") : rawIconValue;
-  const IconComponent = typeof iconValue === "function" ? iconValue : iconComponents[iconValue] || iconComponents[fallback];
+  const IconComponent = (typeof iconValue === "function" || (typeof iconValue === "object" && iconValue !== null))
+    ? iconValue
+    : iconComponents[iconValue] || iconComponents[fallback];
   if (!IconComponent) return null;
 
   const resolvedClassName = classTokens.filter((token) => token !== classIconName && token !== `ph-${classIconName}`).join(" ");

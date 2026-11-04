@@ -23,6 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -45,6 +46,7 @@ import OfficeTableControls from "@/components/systemadmin/OfficeTableControls"
 import OfficeActionsMenu from "@/components/systemadmin/OfficeActionsMenu"
 import { Add01Icon, Archive01Icon as EmptyArchive01Icon, Building01Icon, Building02Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, ComputerIcon, Copy01Icon, Folder01Icon, LayoutGridIcon, UserSearch01Icon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+import ColorSelector, { REFERENCE_ACCENT_COLORS } from "@/components/ui/color-selector";
 // Stored icons may use either the " Cancel01Icon" or " Cancel01Icon" prefix, so compare by bare icon name.
 const iconKey = (value = "") => String(value).trim().split(/\s+/).pop().replace(/^(|ph)-/, "")
 
@@ -101,7 +103,7 @@ const PRESET_ICONS = [
 ]
 
 // Expanded institutional branding colors palette
-const PRESET_COLORS = [
+const OFFICE_COLOR_PRESETS = [
   { name: "PUP Maroon", hex: "#800000" },
   { name: "Crimson Red", hex: "#b91c1c" },
   { name: "Ruby Rose", hex: "#e11d48" },
@@ -170,13 +172,8 @@ function OfficeStatusBadge({ isActive }) {
     <span
       data-slot="table-status"
       data-tone={isActive ? "success" : "neutral"}
-      className="inline-flex min-h-6 max-w-full items-center justify-center gap-1.5 rounded-full border border-transparent px-2.5 py-1 text-[11px] font-medium"
+      className="inline-flex min-h-6 max-w-full items-center justify-center rounded-full border border-transparent px-2.5 py-1 text-[11px] font-medium"
     >
-      <span
-        aria-hidden="true"
-        className="status-dot h-2 w-2 shrink-0 rounded-full"
-        style={{ backgroundColor: isActive ? "#34d399" : "#a1a1aa" }}
-      />
       {label}
     </span>
   )
@@ -841,6 +838,17 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     }
   }
 
+  const handleCopyCodes = () => {
+    const selectedOffices = offices.filter((o) => selectedIds.has(o.id))
+    const codes = selectedOffices.map((o) => o.short_name || o.id).filter(Boolean)
+    if (codes.length === 0) {
+      showToast("No department codes found for selection", true)
+      return
+    }
+    navigator.clipboard.writeText(codes.join(", "))
+    showToast(`Copied ${codes.length} department code${codes.length === 1 ? "" : "s"} to clipboard`)
+  }
+
   const updatePage = useCallback((newPage) => {
     const validPage = Math.max(1, Math.min(totalPages, newPage))
     setPage(validPage)
@@ -884,6 +892,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          actions={
+            <div className="flex shrink-0 items-center gap-2">
+              <RefreshButton onRefresh={handleManualRefresh} isLoading={isManualLoading} title="Refresh Offices & Modules" className="h-9 w-9" />
+              <Button onClick={handleOpenCreate} className="h-9 shrink-0 px-4">Add Department</Button>
+            </div>
+          }
         />
 
         <div className="flex items-end gap-x-5 overflow-x-auto px-6 scrollbar-none border-b border-border dark:border-white/10">
@@ -940,9 +954,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             onScrollRight: scrollRight,
             onResetScroll: resetScroll,
           }}
-          onRefresh={handleManualRefresh}
-          isRefreshing={isManualLoading}
-          onAddDepartment={handleOpenCreate}
         />
 
         <ActiveFilterChips
@@ -1318,7 +1329,14 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       </th>)}
                       {tableColumns.filter(({ key }) => ["created_at", "updated_at"].includes(key) && visibleColumns.includes(key)).map(({ key, label }) => (
                         <th key={key} aria-sort={sortBy === key ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>
-                          <button type="button" onClick={() => handleSort(key)} className="group inline-flex items-center text-xs font-semibold">
+                          <button
+                            type="button"
+                            onClick={() => handleSort(key)}
+                            className={cn(
+                              "group inline-flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              sortBy === key ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
                             {label}<SortIndicator column={key} sortBy={sortBy} sortOrder={sortOrder} />
                           </button>
                         </th>
@@ -1330,7 +1348,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
                     {groupedOffices.map((group) => <Fragment key={group.key}>
-                      {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><th colSpan={orderedVisibleColumnKeys.length + 2} className="px-4 py-2 text-left text-[11px] font-semibold text-gray-600 dark:text-zinc-300">{group.label}<span className="ml-2 font-sans tabular-nums text-gray-400">{group.offices.length}</span></th></tr>}
+                      {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><th colSpan={orderedVisibleColumnKeys.length + 2} className="px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200">{group.label}<span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.offices.length}</span></th></tr>}
                       {group.offices.map((office) => {
                         const accent = office.accent_color || "#800000"
                         const isActive = String(office.status || "").trim().toLowerCase() === "active"
@@ -1340,6 +1358,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             key={office.id}
                             selected={isSelected}
                             onClick={(e) => toggleSelect(office.id, e)}
+                            onDoubleClick={(e) => {
+                              if (e.target.closest("button, input, a")) return
+                              setSelectedOfficeIdForDetail(office.id)
+                            }}
                             className={cn(
                               "group border-b-[0.5px] border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none cursor-pointer",
                               !isActive && "bg-gray-50/40 dark:bg-zinc-900/20 opacity-75",
@@ -1383,10 +1405,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   <AppIcon className={office.icon || " Building02Icon"} fallback="Building02Icon" />
                                 </div>
                                 <div>
-                                  <span className="font-bold text-gray-900 dark:text-zinc-50 block text-xs leading-tight group-hover/dept:text-pup-maroon dark:group-hover/dept:text-red-400 transition-colors">
+                                  <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-[13px] leading-tight group-hover/dept:text-pup-maroon dark:group-hover/dept:text-red-400 transition-colors">
                                     {office.short_name}
                                   </span>
-                                  <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                                  <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                                     ID: {office.id}
                                   </span>
                                 </div>
@@ -1395,11 +1417,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                             {visibleColumns.includes("office") && (<td className="p-4 align-middle overflow-hidden max-w-[420px] border-r border-border/70 dark:border-border/70">
                               <div className="w-full min-w-0">
-                                <span className="font-semibold text-gray-900 dark:text-zinc-100 block text-xs truncate" title={office.name}>
+                                <span className="font-medium text-gray-900 dark:text-zinc-100 block text-[13px] truncate" title={office.name}>
                                   {office.name}
                                 </span>
                                 <span
-                                  className="mt-0.5 block min-w-0 truncate text-[11px] text-gray-400 dark:text-zinc-500"
+                                  className="mt-0.5 block min-w-0 truncate text-[11px] font-normal text-gray-500 dark:text-zinc-400"
                                   style={{ width: "100%", maxWidth: 415 }}
                                   title={office.description || "No description provided."}
                                 >
@@ -1409,12 +1431,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             </td>)}
 
                             {visibleColumns.includes("station") && (<td className="p-4 align-middle max-w-[280px] whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="text-[11px] space-y-1">
-                                <div className="flex min-w-0 items-center gap-1.5 text-gray-800 dark:text-zinc-200 font-medium">
+                              <div className="space-y-0.5">
+                                <div className="flex min-w-0 items-center gap-1.5 text-xs text-gray-700 dark:text-zinc-300 font-medium">
                                   <ComputerIcon size="1em" className="text-gray-400 dark:text-zinc-500 text-xs shrink-0"></ComputerIcon>
                                   <span className="min-w-0 truncate">{office.station_name || "Unassigned"}</span>
                                 </div>
-                                <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
+                                <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-normal text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
                                   <span className="min-w-0 truncate" title={office.storage_path || `.local/storage/${office.id}`}>
                                     {office.storage_path || `.local/storage/${office.id}`}
                                   </span>
@@ -1473,7 +1495,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             )}
 
                             {["created_at", "updated_at"].filter((key) => visibleColumns.includes(key)).map((key) => (
-                              <td key={key} className="p-4 align-middle whitespace-nowrap tabular-nums">
+                              <td key={key} className="p-4 align-middle whitespace-nowrap text-xs font-normal text-gray-600 dark:text-zinc-300 tabular-nums">
                                 {office[key] ? formatPHDateTime(office[key]) : "N/A"}
                               </td>
                             ))}
@@ -1868,7 +1890,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                 </div>
               </div>
 
-              {/* Row 6: Expanded Branding Theme Colors & Live Preview */}
+              {/* Row 6: Branding Theme Colors */}
               <div className="space-y-2 pt-1 border-t border-border dark:border-border">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -1879,82 +1901,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </span>
                 </div>
 
-                <div className="p-4 sm:p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-4">
-                  {/* Expanded Swatches Grid */}
-                  <div className="grid grid-cols-6 sm:grid-cols-9 gap-3">
-                    {PRESET_COLORS.map(c => {
-                      const isSelected = form.accent_color?.toLowerCase() === c.hex.toLowerCase()
-                      return (
-                        <button
-                          key={c.hex}
-                          type="button"
-                          title={`${c.name} (${c.hex})`}
-                          onClick={() => setForm(prev => ({ ...prev, accent_color: c.hex }))}
-                          data-color={c.hex}
-                          data-background-color={c.hex}
-                          style={{ backgroundColor: c.hex }}
-                          className={cn(
-                            "rms-style-background-color",
-                            "h-9 rounded-xl border transition-all cursor-pointer flex items-center justify-center shadow-2xs",
-                            isSelected
-                              ? "ring-2 ring-slate-900 ring-offset-2 dark:ring-white dark:ring-offset-zinc-950 scale-105"
-                              : "border-black/10 hover:scale-105"
-                          )}
-                        >
-                          {isSelected && (
-                            <AppIcon className=" Tick01Icon text-white text-xs drop-shadow-sm font-bold"></AppIcon>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {/* Custom Color Input & Live Preview */}
-                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 pt-3 border-t border-border dark:border-border">
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex items-center">
-                        <div
-                          className="w-10 h-10 rounded-xl border border-border dark:border-border shadow-2xs flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 overflow-hidden shrink-0 group relative"
-                          style={{ backgroundColor: form.accent_color?.match(/^#[0-9a-fA-F]{6}$/) ? form.accent_color : "#800000" }}
-                        >
-                          <input
-                            type="color"
-                            value={form.accent_color?.match(/^#[0-9a-fA-F]{6}$/) ? form.accent_color : "#800000"}
-                            onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer p-0 border-0"
-                            title="Choose custom color"
-                            aria-label="Custom color picker"
-                          />
-                          <AppIcon className=" PaintBoardIcon text-white text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></AppIcon>
-                        </div>
-                      </div>
-                      <Input
-                        value={form.accent_color}
-                        onChange={(e) => setForm(prev => ({ ...prev, accent_color: e.target.value }))}
-                        placeholder="#800000"
-                        className="h-10 w-32 rounded-xl bg-white border border-border font-sans tabular-nums text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
-                      />
-                    </div>
-
-                    {/* Live Department Badge Preview */}
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        Live Preview:
-                      </span>
-                      <div
-                        className="rms-office-accent flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold shadow-2xs"
-                        data-color={form.accent_color}
-                        style={{
-                          color: form.accent_color || "#800000",
-                          backgroundColor: `color-mix(in srgb, ${form.accent_color || "#800000"} 12%, transparent)`,
-                          borderColor: `color-mix(in srgb, ${form.accent_color || "#800000"} 25%, transparent)`,
-                        }}
-                      >
-                        <AppIcon className={cn(form.icon || " Building02Icon", "text-sm")} fallback="Building02Icon"></AppIcon>
-                        <span>{form.short_name || "Department"}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="p-3.5 sm:p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-4">
+                  <ColorSelector
+                    label={null}
+                    value={form.accent_color}
+                    onChange={(hex) => setForm((prev) => ({ ...prev, accent_color: hex }))}
+                    presets={OFFICE_COLOR_PRESETS}
+                    columns={12}
+                    showCustom
+                    showHexInput
+                  />
                 </div>
               </div>
             </div>
@@ -2082,16 +2038,25 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       {/* Floating Action Bar */}
       <FloatingActionBar
         selectedCount={selectedIds.size}
+        entityName="department"
         onCancel={() => setSelectedIds(new Set())}
-        onAction={() => {
-          if (statusFilter === "Active") {
-            setBulkArchiveOpen(true)
-          } else {
-            setBulkRestoreOpen(true)
-          }
+        primaryAction={{
+          label: statusFilter === "Active" ? "Archive Departments" : "Restore Departments",
+          variant: statusFilter === "Active" ? "danger" : "success",
+          onClick: () => {
+            if (statusFilter === "Active") {
+              setBulkArchiveOpen(true)
+            } else {
+              setBulkRestoreOpen(true)
+            }
+          },
         }}
-        actionLabel={statusFilter === "Active" ? "Archive Departments" : "Restore Departments"}
-        actionVariant={statusFilter === "Active" ? "danger" : "success"}
+        secondaryActions={[
+          {
+            label: "Copy Codes",
+            onClick: handleCopyCodes,
+          },
+        ]}
       />
 
       {/* Office Detail Sheet Drawer */}

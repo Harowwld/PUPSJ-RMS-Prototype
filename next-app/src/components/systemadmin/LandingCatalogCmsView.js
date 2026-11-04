@@ -343,25 +343,23 @@ export default function LandingCatalogCmsView({ showToast }) {
         <PageHeader
           icon=" LibraryIcon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
-              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {catalogData.items.length} documents</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · Academic Document Catalog
-              </span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">{catalogData.items.length} documents · Academic Document Catalog</span>
             </div>
           }
           description="Configure authentic university credentials, document codes, client eligibility tags, and filing requirements for the Apple-style carousel."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#catalog", "_blank")}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Preview Portal
               </Button>
@@ -371,7 +369,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Restore Defaults
               </Button>
@@ -380,7 +378,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Catalog Content"}
               </Button>

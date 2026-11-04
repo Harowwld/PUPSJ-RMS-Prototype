@@ -187,7 +187,7 @@ export async function listBackups(filters = {}) {
     if (startDate.includes("T") || startDate.includes(":")) {
       conditions.push(`created_at >= ?::timestamptz`);
     } else {
-      conditions.push(`created_at::date >= ?::date`);
+      conditions.push(`(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date`);
     }
     params.push(startDate);
   }
@@ -196,7 +196,7 @@ export async function listBackups(filters = {}) {
     if (endDate.includes("T") || endDate.includes(":")) {
       conditions.push(`created_at <= ?::timestamptz`);
     } else {
-      conditions.push(`created_at::date <= ?::date`);
+      conditions.push(`(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date`);
     }
     params.push(endDate);
   }

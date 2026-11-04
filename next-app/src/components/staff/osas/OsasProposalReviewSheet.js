@@ -223,18 +223,16 @@ export default function OsasProposalReviewSheet({
                   {selected.verified_org_name || selected.organization_name}
                 </span>
                 {selected.is_verified_officer && (
-                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
-                    <Shield01Icon size="1em" className="text-xs text-emerald-600" />
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40">
                     Verified Officer
                   </span>
                 )}
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
                     getProposalStatusBadgeClass(selected.status)
                   )}
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", getProposalStatusDotClass(selected.status))} />
                   {selected.status}
                 </span>
               </div>
@@ -317,11 +315,10 @@ export default function OsasProposalReviewSheet({
               <InfoRow icon="PieChartIcon" label="Current Stage">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
                     getProposalStatusBadgeClass(selected.status)
                   )}
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", getProposalStatusDotClass(selected.status))} />
                   {selected.status}
                 </span>
               </InfoRow>
@@ -491,8 +488,7 @@ export default function OsasProposalReviewSheet({
                   onClick={() => handleOpenPdfPreview?.(selected)}
                   className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs shrink-0"
                 >
-                  <ViewIcon size="1em" className="mr-1.5 text-xs" />
-                  <span>Inspect PDF</span>
+                  Inspect PDF
                 </Button>
               </div>
             )}

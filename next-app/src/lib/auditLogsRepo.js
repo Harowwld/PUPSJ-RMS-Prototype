@@ -325,22 +325,55 @@ export async function createGlobalAuditLog(data) {
   await sysDbRun(sql, [actor, role, officeId, action, details, severity, user_agent, entity_type, entity_id, ip]);
 }
 
-function applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search }) {
+function expandAuditRoleList(raw) {
+  const list = Array.isArray(raw) ? raw : String(raw).split(",").map((s) => s.trim()).filter(Boolean);
+  const expanded = new Set();
+  for (const r of list) {
+    if (r === "SuperAdmin" || r === "SystemAdmin") {
+      expanded.add("SuperAdmin");
+      expanded.add("SystemAdmin");
+    } else {
+      expanded.add(r);
+    }
+  }
+  return [...expanded];
+}
+
+function applyGlobalAuditWhereClauses(whereClauses, params, { officeId, excludeOfficeId, severity, excludeSeverity, role, excludeRole, startDate, endDate, search }) {
   if (officeId && officeId !== "All") {
     const rawList = Array.isArray(officeId) ? officeId : String(officeId).split(",").map((s) => s.trim()).filter(Boolean);
     const hasGlobal = rawList.includes("global");
     const specificOffices = rawList.filter((o) => o !== "global");
 
     if (hasGlobal && specificOffices.length > 0) {
-      whereClauses.push(`(office_id IS NULL OR office_id IN (${specificOffices.map(() => "?").join(", ")}))`);
+      whereClauses.push(`(office_id IS NULL OR office_id = '' OR office_id IN (${specificOffices.map(() => "?").join(", ")}))`);
       params.push(...specificOffices);
     } else if (hasGlobal) {
-      whereClauses.push("office_id IS NULL");
+      whereClauses.push("(office_id IS NULL OR office_id = '')");
     } else if (specificOffices.length === 1) {
       whereClauses.push("office_id = ?");
       params.push(specificOffices[0]);
     } else if (specificOffices.length > 1) {
       whereClauses.push(`office_id IN (${specificOffices.map(() => "?").join(", ")})`);
+      params.push(...specificOffices);
+    }
+  }
+
+  if (excludeOfficeId) {
+    const rawList = Array.isArray(excludeOfficeId) ? excludeOfficeId : String(excludeOfficeId).split(",").map((s) => s.trim()).filter(Boolean);
+    const hasGlobal = rawList.includes("global");
+    const specificOffices = rawList.filter((o) => o !== "global");
+
+    if (hasGlobal && specificOffices.length > 0) {
+      whereClauses.push(`(office_id IS NOT NULL AND office_id <> '' AND office_id NOT IN (${specificOffices.map(() => "?").join(", ")}))`);
+      params.push(...specificOffices);
+    } else if (hasGlobal) {
+      whereClauses.push("office_id IS NOT NULL AND office_id <> ''");
+    } else if (specificOffices.length === 1) {
+      whereClauses.push("(office_id IS NULL OR office_id <> ?)");
+      params.push(specificOffices[0]);
+    } else if (specificOffices.length > 1) {
+      whereClauses.push(`(office_id IS NULL OR office_id NOT IN (${specificOffices.map(() => "?").join(", ")}))`);
       params.push(...specificOffices);
     }
   }
@@ -356,13 +389,35 @@ function applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity
     }
   }
 
+  if (excludeSeverity) {
+    const sevList = Array.isArray(excludeSeverity) ? excludeSeverity : String(excludeSeverity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("(severity IS NULL OR severity <> ?)");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`(severity IS NULL OR severity NOT IN (${sevList.map(() => "?").join(", ")}))`);
+      params.push(...sevList);
+    }
+  }
+
   if (role && role !== "All") {
-    const roleList = Array.isArray(role) ? role : String(role).split(",").map((s) => s.trim()).filter(Boolean);
+    const roleList = expandAuditRoleList(role);
     if (roleList.length === 1) {
       whereClauses.push("role = ?");
       params.push(roleList[0]);
     } else if (roleList.length > 1) {
       whereClauses.push(`role IN (${roleList.map(() => "?").join(", ")})`);
+      params.push(...roleList);
+    }
+  }
+
+  if (excludeRole) {
+    const roleList = expandAuditRoleList(excludeRole);
+    if (roleList.length === 1) {
+      whereClauses.push("(role IS NULL OR role <> ?)");
+      params.push(roleList[0]);
+    } else if (roleList.length > 1) {
+      whereClauses.push(`(role IS NULL OR role NOT IN (${roleList.map(() => "?").join(", ")}))`);
       params.push(...roleList);
     }
   }
@@ -392,8 +447,11 @@ export async function listGlobalAuditLogs(options = {}) {
   const offset = options.offset !== undefined ? options.offset : 0;
   const search = options.search || "";
   const officeId = options.officeId || options.office_id || "";
+  const excludeOfficeId = options.excludeOfficeId || "";
   const severity = options.severity || "";
+  const excludeSeverity = options.excludeSeverity || "";
   const role = options.role || "";
+  const excludeRole = options.excludeRole || "";
   const startDate = options.startDate || "";
   const endDate = options.endDate || "";
   const sortBy = options.sortBy || "created_at";
@@ -403,7 +461,7 @@ export async function listGlobalAuditLogs(options = {}) {
   let params = [];
   let whereClauses = [];
 
-  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search });
+  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, excludeOfficeId, severity, excludeSeverity, role, excludeRole, startDate, endDate, search });
 
   if (whereClauses.length > 0) {
     query += " WHERE " + whereClauses.join(" AND ");
@@ -430,8 +488,11 @@ export async function listGlobalAuditLogs(options = {}) {
 export async function countGlobalAuditLogs(options = {}) {
   const search = options.search || "";
   const officeId = options.officeId || options.office_id || "";
+  const excludeOfficeId = options.excludeOfficeId || "";
   const severity = options.severity || "";
+  const excludeSeverity = options.excludeSeverity || "";
   const role = options.role || "";
+  const excludeRole = options.excludeRole || "";
   const startDate = options.startDate || "";
   const endDate = options.endDate || "";
 
@@ -439,7 +500,7 @@ export async function countGlobalAuditLogs(options = {}) {
   let params = [];
   let whereClauses = [];
 
-  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, severity, role, startDate, endDate, search });
+  applyGlobalAuditWhereClauses(whereClauses, params, { officeId, excludeOfficeId, severity, excludeSeverity, role, excludeRole, startDate, endDate, search });
 
   if (whereClauses.length > 0) {
     query += " WHERE " + whereClauses.join(" AND ");

@@ -13,8 +13,7 @@ import { Card } from "@/components/ui/card"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import RecordsReviewTableSkeleton from "@/components/admin/skeletons/RecordsReviewTableSkeleton"
 import { format } from "date-fns"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import {
@@ -659,67 +658,6 @@ export default function DigitalRecordsReviewTab({
     }
   }, [records])
 
-  const activeShortcut = useMemo(() => {
-    if (!dateFrom || !dateTo) return null
-    const todayStr = format(new Date(), "yyyy-MM-dd")
-    
-    // Check Today
-    if (dateFrom === todayStr && dateTo === todayStr) return "Today"
-    
-    // Check Yesterday
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = format(yesterday, "yyyy-MM-dd")
-    if (dateFrom === yesterdayStr && dateTo === yesterdayStr) return "Yesterday"
-    
-    // Check 7 days
-    const last7 = new Date()
-    last7.setDate(last7.getDate() - 7)
-    const last7Str = format(last7, "yyyy-MM-dd")
-    if (dateFrom === last7Str && dateTo === todayStr) return "7 days"
-    
-    // Check 30 days
-    const last30 = new Date()
-    last30.setDate(last30.getDate() - 30)
-    const last30Str = format(last30, "yyyy-MM-dd")
-    if (dateFrom === last30Str && dateTo === todayStr) return "30 days"
-    
-    return null
-  }, [dateFrom, dateTo])
-
-  const handleShortcutClick = (range) => {
-    if (activeShortcut === range) {
-      setDateFrom("")
-      setDateTo("")
-      setCurrentPage(1)
-      return
-    }
-    const end = new Date()
-    let start = new Date()
-    switch (range) {
-      case "Today":
-        start.setHours(0, 0, 0, 0)
-        break
-      case "Yesterday":
-        start.setDate(start.getDate() - 1)
-        start.setHours(0, 0, 0, 0)
-        end.setDate(end.getDate() - 1)
-        end.setHours(23, 59, 59, 999)
-        break
-      case "7 days":
-        start.setDate(start.getDate() - 7)
-        start.setHours(0, 0, 0, 0)
-        break
-      case "30 days":
-        start.setDate(start.getDate() - 30)
-        start.setHours(0, 0, 0, 0)
-        break
-    }
-    setDateFrom(format(start, "yyyy-MM-dd"))
-    setDateTo(format(end, "yyyy-MM-dd"))
-    setCurrentPage(1)
-  }
-
   const handleClearFilters = () => {
     setLocalSearch("")
     setSearchQuery("")
@@ -1045,89 +983,22 @@ export default function DigitalRecordsReviewTab({
               buttonLabel="Filter Records"
             />
 
-            {/* Time Shortcuts */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
-              {[
-                { key: "Today", label: "Today" },
-                { key: "Yesterday", label: "Yest." },
-                { key: "7 days", label: "7d" },
-                { key: "30 days", label: "30d" },
-              ].map((range) => {
-                const isActive = activeShortcut === range.key
-                return (
-                  <button
-                    key={range.key}
-                    type="button"
-                    onClick={() => handleShortcutClick(range.key)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                      isActive
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                  >
-                    {range.label}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Date range picker */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-[105px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
-                        !dateFrom ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                      )}
-                    >
-                      {dateFrom ? format(new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00"), "MMM d") : "Start"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateFrom ? new Date(dateFrom.includes("T") ? dateFrom : dateFrom + "T00:00:00") : undefined}
-                      onSelect={(date) => {
-                        setDateFrom(date ? format(date, "yyyy-MM-dd") : "")
-                        setCurrentPage(1)
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <span className="text-[11px] text-gray-400 dark:text-zinc-500">→</span>
-              <div className="w-[105px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full justify-start rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-left text-xs font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 px-2.5",
-                        !dateTo ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
-                      )}
-                    >
-                      {dateTo ? format(new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00"), "MMM d") : "End"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl border-[0.5px] border-border bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateTo ? new Date(dateTo.includes("T") ? dateTo : dateTo + "T00:00:00") : undefined}
-                      onSelect={(date) => {
-                        setDateTo(date ? format(date, "yyyy-MM-dd") : "")
-                        setCurrentPage(1)
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
+            {/* Date Range Modal Trigger */}
+            <DateRangeFilterButton
+              startDate={dateFrom}
+              endDate={dateTo}
+              onApply={({ startDate, endDate }) => {
+                setDateFrom(startDate)
+                setDateTo(endDate)
+                setCurrentPage(1)
+              }}
+              onClear={() => {
+                setDateFrom("")
+                setDateTo("")
+                setCurrentPage(1)
+              }}
+              disableFutureDates={true}
+            />
 
             {/* Horizontal Scroll Navigation */}
             <TableScrollControls scrollContainerRef={tableContainerRef}

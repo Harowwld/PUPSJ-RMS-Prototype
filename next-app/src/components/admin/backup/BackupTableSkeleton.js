@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "", scope = "office", visibleColumns = PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key) }) {
-  if (scope === "platform") return <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl">
+  if (scope === "platform") return <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl border-t border-border dark:border-border">
     <div className="min-h-0 flex-1 overflow-x-auto"><Table columns={platformBackupSchema(visibleColumns)}><TableHeader><TableRow>
       <TableHead><Skeleton className="mx-auto h-4 w-4" /></TableHead><TableHead><Skeleton className="h-3.5 w-28" /></TableHead>
       {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => <TableHead key={key}><Skeleton className="h-3.5 w-20" /></TableHead>)}

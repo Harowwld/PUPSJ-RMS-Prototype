@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, ReloadIcon } from "hugeicons-react";
+import { ArrowLeft01Icon, ArrowRight01Icon, ReloadIcon } from "hugeicons-react";
 
 
 /**
@@ -25,8 +25,7 @@ export default function TableScrollControls({
   canScrollLeft,
   canScrollRight,
   className,
-  controlSize = "sm",
-  label = "Scroll columns:",
+  controlSize = "md",
   scrollTargetLabel = "table",
 }) {
   const isScrolledX = propIsScrolledX ?? propIsScrolled ?? false;
@@ -110,12 +109,6 @@ export default function TableScrollControls({
 
   return (
     <div data-slot="table-scroll-controls" className={cn("flex max-w-full flex-nowrap items-center gap-2 shrink-0 select-none", className)}>
-      {label && (
-        <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-zinc-500 mr-1">
-          <ArrowLeftRightIcon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-          <span>{label}</span>
-        </div>
-      )}
       <Button
         type="button"
         variant="outline"

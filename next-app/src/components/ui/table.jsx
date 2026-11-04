@@ -200,6 +200,7 @@ function TableHead({ className, children, kind = "text", align, width, maxWidth,
 
 function TableCell({ className, children, kind = "text", align, width, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {
   const spanning = Number(props.colSpan) > 1;
+  const alignment = align || (["status", "year", "category", "actions", "selection"].includes(kind) ? "center" : kind === "number" ? "right" : "left");
   let content = children;
   if (!spanning && !["actions", "selection"].includes(kind) && (children == null || children === "" || ["—", "–", "-"].includes(tableText(children)))) content = "N/A";
   if (!spanning && kind === "identifier") content = <IdentifierBadge>{content}</IdentifierBadge>;
@@ -209,7 +210,7 @@ function TableCell({ className, children, kind = "text", align, width, maxWidth,
   if (!spanning && ["text", "date", "category"].includes(kind) && (typeof children === "string" || typeof children === "number")) {
     content = <span className="block w-full min-w-0 truncate" title={String(children)}>{children}</span>;
   }
-  if (!spanning && maxWidth && !["identifier", "status", "actions", "selection"].includes(kind)) content = <div className="w-full min-w-0" style={{ maxWidth }}>{content}</div>;
+  if (!spanning && maxWidth && !["identifier", "status", "actions", "selection"].includes(kind)) content = <div className={cn("w-full min-w-0", alignment === "center" && "mx-auto", alignment === "right" && "ml-auto")} style={{ maxWidth }}>{content}</div>;
   return <td data-slot="table-cell" data-kind={kind} className={cn("px-4 text-[13px] font-normal text-gray-900 dark:text-zinc-100", className)} style={cellStyle({ kind, align, width, maxWidth, paddingX, paddingLeft, paddingRight, style, colSpan: props.colSpan })} {...props}>{content}</td>;
 }
 function selectionContent(children, label) {

@@ -1677,8 +1677,7 @@ export default function OSASOrganizationComplianceView({
                     <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
                       {selectedOrgForOfficers?.category || "Student Org"}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
                       {selectedOrgForOfficers?.status || "Active"}
                     </span>
                   </div>
@@ -1715,8 +1714,7 @@ export default function OSASOrganizationComplianceView({
                   />
 
                   <InfoRow icon="PieChartIcon" label="Accreditation Status">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
                       {selectedOrgForOfficers?.status || "Active"}
                     </span>
                   </InfoRow>
@@ -1870,7 +1868,7 @@ export default function OSASOrganizationComplianceView({
             </div>
 
             {/* STICKY SHEET FOOTER */}
-            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end shrink-0">
+            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between shrink-0">
               <Button
                 type="button"
                 variant="outline"

@@ -265,6 +265,14 @@ export default function SecurityQuestionsTab({ showToast }) {
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          actions={
+            <div className="flex shrink-0 items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setBulkModalOpen(true)} disabled={saving} className="h-9 rounded-xl px-4">Import Questions</Button>
+              <Button size="sm" onClick={() => handleSave()} disabled={saving} className="h-9 rounded-xl px-4">
+                {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving Questions...</span> : "Save Questions"}
+              </Button>
+            </div>
+          }
         />
 
         <div role="group" aria-label="Question scope" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 dark:border-white/10">
@@ -276,19 +284,13 @@ export default function SecurityQuestionsTab({ showToast }) {
           ))}
         </div>
 
-        <DataViewToolbar label="Security question search and actions" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+        <DataViewToolbar label="Security question search" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
           <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} label="Search security questions" placeholder="Search questions..." className="w-[min(320px,60vw)]" />
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setBulkModalOpen(true)} disabled={saving} className="h-9 rounded-xl px-4">Import Questions</Button>
-            <Button size="sm" onClick={() => handleSave()} disabled={saving} className="h-9 rounded-xl px-4">
-              {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving Questions...</span> : "Save Questions"}
-            </Button>
-          </div>
         </DataViewToolbar>
-        <ActiveFilterChips searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={() => setSearch("")} className="px-5 py-2.5" />
+        <ActiveFilterChips searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={() => setSearch("")} className="border-t border-border dark:border-border px-5 py-2.5" />
 
         {/* Questions Form Area */}
-        <div className="p-6 flex-[1_0_auto] flex flex-col">
+        <div className="p-6 flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
           <div className="w-full space-y-4">
               {visibleQuestions.length === 0 && <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center text-xs text-gray-500 dark:text-zinc-400">No questions match this view. Change the scope or search to find a question.</div>}
               {visibleQuestions.map(({ question: q, index: i }) => {

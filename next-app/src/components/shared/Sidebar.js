@@ -3,7 +3,7 @@
 
 import { EmptyState } from "@/components/ui/empty";
 import { Search01Icon , ArrowUp01Icon, DashboardSquare01Icon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon} from "hugeicons-react";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,6 @@ import {
   isSystemAdminRole,
   hasAdminPrivileges,
 } from "@/lib/roleUtils";
-import { matchesSearchQuery } from "@/lib/searchUtils";
 import {
   getHighContrastPreference,
   toggleHighContrastPreference,
@@ -46,6 +45,7 @@ import {
 } from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
 import AppIcon from "@/components/ui/app-icon";
+import CommandPalette from "@/components/shared/CommandPalette";
 // Icon map for navigation items
 const ICON_MAP = {
   // Admin views
@@ -103,7 +103,6 @@ export default function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sidebarRef = useRef(null);
-  const commandInputRef = useRef(null);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,8 +113,6 @@ export default function Sidebar({
   const [showSessionExpired, setShowSessionExpired] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [focusedIndex, setFocusedIndex] = useState(0);
 
   const [isMac] = useState(() =>
     typeof window !== "undefined"
@@ -149,19 +146,10 @@ export default function Sidebar({
     return () => window.removeEventListener("avatar-changed", handleAvatarChanged);
   }, []);
 
-  // Global shortcuts: (Cmd+K / Ctrl+K for command palette, Cmd+B / Ctrl+B for sidebar toggle)
+  // Global shortcuts: (Cmd+B / Ctrl+B for sidebar toggle)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setCommandOpen((prev) => {
-          if (!prev) {
-            setSearchQuery("");
-            setFocusedIndex(0);
-          }
-          return !prev;
-        });
-      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent("toggle-sidebar"));
       }
@@ -173,23 +161,11 @@ export default function Sidebar({
   // External trigger for command palette
   useEffect(() => {
     const handleOpenCommand = () => {
-      setSearchQuery("");
-      setFocusedIndex(0);
       setCommandOpen(true);
     };
     window.addEventListener("open-command-palette", handleOpenCommand);
     return () => window.removeEventListener("open-command-palette", handleOpenCommand);
   }, []);
-
-  // Autofocus search input when command palette opens
-  useEffect(() => {
-    if (commandOpen) {
-      const timer = setTimeout(() => {
-        commandInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [commandOpen]);
 
   // Session & contrast listeners
   useEffect(() => {
@@ -358,7 +334,7 @@ export default function Sidebar({
     );
   };
 
-  const handleLogoutAction = () => {
+  const handleLogoutAction = useCallback(() => {
     if (typeof window !== "undefined") {
       document.documentElement.style.setProperty("--brand-accent", "#800000");
       document.documentElement.style.setProperty("--brand-foreground", "#ffffff");
@@ -370,14 +346,18 @@ export default function Sidebar({
       return;
     }
     fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
-    localStorage.setItem("pup-logout", Date.now().toString());
-    window.location.href = "/login";
-  };
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pup-logout", Date.now().toString());
+      window.location.href = "/login";
+    }
+  }, [onLogout]);
 
-  const handleSessionExpiredRedirect = () => {
+  const handleSessionExpiredRedirect = useCallback(() => {
     setShowSessionExpired(false);
-    window.location.href = "/login";
-  };
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }, []);
 
   const isSettingsActive =
     (searchParams?.get("view") === "settings" &&
@@ -504,9 +484,8 @@ export default function Sidebar({
         : "requests";
   const activeTabKey = currentTab || defaultTab;
 
-  // Structured Command Palette items
-  const { filteredGroups, flatSuggestions } = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+  // Structured Navigation items for Mobile Drawer
+  const filteredGroups = useMemo(() => {
     const enabledModules = new Set(authUser?.enabled_modules || []);
     const hasModuleFilter =
       Array.isArray(authUser?.enabled_modules) && authUser.enabled_modules.length > 0;
@@ -1097,24 +1076,8 @@ export default function Sidebar({
       ],
     };
 
-    const allCandidateGroups = [...candidateGroups, controlsGroup, accountGroup];
-
-    const filtered = allCandidateGroups
-      .map((group) => {
-        if (!q) return group;
-        const matchingItems = group.items.filter((item) =>
-          matchesSearchQuery([item.label, item.breadcrumb, item.keywords, group.title], searchQuery)
-        );
-        return { ...group, items: matchingItems };
-      })
-      .filter((group) => group.items.length > 0);
-
-    return {
-      filteredGroups: filtered,
-      flatSuggestions: filtered.flatMap((g) => g.items),
-    };
+    return [...candidateGroups, controlsGroup, accountGroup];
   }, [
-    searchQuery,
     activeView,
     authUser,
     isStudent,
@@ -1126,9 +1089,7 @@ export default function Sidebar({
   ]);
 
   const handleSelectSuggestion = (item) => {
-    setSearchQuery("");
     setCommandOpen(false);
-    setFocusedIndex(0);
 
     if (item.action === "toggle-sidebar") {
       window.dispatchEvent(new CustomEvent("toggle-sidebar"));
@@ -1221,40 +1182,13 @@ export default function Sidebar({
     }
   };
 
-  const handleCommandKeyDown = (e) => {
-    if (flatSuggestions.length === 0) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setFocusedIndex((prev) => (prev + 1) % flatSuggestions.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setFocusedIndex((prev) => (prev - 1 + flatSuggestions.length) % flatSuggestions.length);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const targetItem = flatSuggestions[focusedIndex] || flatSuggestions[0];
-      if (targetItem) handleSelectSuggestion(targetItem);
-    } else if (e.key === "Escape") {
-      setCommandOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    if (commandOpen) {
-      const el = document.getElementById(`command-item-${focusedIndex}`);
-      if (el) {
-        el.scrollIntoView({ block: "nearest" });
-      }
-    }
-  }, [focusedIndex, commandOpen]);
-
   // Profile Popover Content (Shared between Desktop & Mobile)
   const renderProfileMenuContent = () => (
     <>
       {/* 1. Header Zone */}
-      <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-4 py-3 border-b-[0.5px] border-border dark:border-white/10 flex items-center text-left">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="relative h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
+      <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-3.5 py-2.5 border-b-[0.5px] border-border dark:border-white/10 flex items-center text-left">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="relative h-8 w-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
             {currentAvatarFilename && !imageError ? (
               <img
                 src={`/api/account/avatar?id=${authUser?.id}&t=${avatarTimestamp}`}
@@ -1266,10 +1200,10 @@ export default function Sidebar({
             )}
           </div>
           <div className="min-w-0 flex flex-col">
-            <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100 truncate">
+            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
               {displayName}
             </span>
-            <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 truncate">
+            <span className="text-[10px] font-normal text-gray-500 dark:text-zinc-400 truncate">
               {authUser?.email || authUser?.username}
             </span>
           </div>
@@ -1277,10 +1211,10 @@ export default function Sidebar({
       </div>
 
       {/* 2. Body Zone */}
-      <DropdownMenuGroup className="p-1.5 flex flex-col gap-0.5">
+      <DropdownMenuGroup className="p-1 flex flex-col gap-0.5">
         {(isSettingsActive || isActivityActive) && (
           <DropdownMenuItem
-            className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+            className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
             onClick={handleMainDashboardClick}
           >
             <DashboardSquare01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400 shrink-0" />
@@ -1290,7 +1224,7 @@ export default function Sidebar({
 
         <DropdownMenuItem
           className={cn(
-            "cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 transition-colors outline-none",
+            "cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 transition-colors outline-none",
             isSettingsActive
               ? "text-gray-900 bg-gray-100 dark:text-zinc-50 dark:bg-zinc-800"
               : "text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
@@ -1303,7 +1237,7 @@ export default function Sidebar({
 
         {!isActivityActive && (
           <DropdownMenuItem
-            className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+            className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
             onClick={openMyActivity}
             >
             <Time01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
@@ -1314,7 +1248,7 @@ export default function Sidebar({
         {!isSuperAdmin && hasAdminRights && (
           <DropdownMenuItem
             onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
-            className="cursor-pointer rounded-xl flex items-center gap-2.5 text-xs font-medium py-2 px-3 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 transition-colors outline-none"
+            className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-200 transition-colors outline-none"
           >
             <AppIcon
               className={cn(
@@ -1330,11 +1264,11 @@ export default function Sidebar({
       </DropdownMenuGroup>
 
       {/* 3. Footer Zone */}
-      <div className="p-1.5 border-t-[0.5px] border-border dark:border-white/10">
+      <div className="p-1 border-t-[0.5px] border-border dark:border-white/10">
         <button
           type="button"
           onClick={handleLogoutAction}
-          className="w-full flex items-center justify-start gap-2.5 py-2 px-3 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl cursor-pointer transition-colors border-0 outline-none"
+          className="w-full flex items-center justify-start gap-2 py-1.5 px-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer transition-colors border-0 outline-none"
         >
           <Logout01Icon size="1em" className="text-sm" />
           <span>Sign Out</span>
@@ -1386,11 +1320,7 @@ export default function Sidebar({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => {
-              setSearchQuery("");
-              setFocusedIndex(0);
-              setCommandOpen(true);
-            }}
+            onClick={() => setCommandOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
             aria-label="Search views"
           >
@@ -1525,21 +1455,17 @@ export default function Sidebar({
           <div className="w-full mb-2 shrink-0">
             <button
               type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setFocusedIndex(0);
-                setCommandOpen(true);
-              }}
-              title={`Search views & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
-              className="group w-full h-[36px] px-2.5 flex items-center justify-between rounded-xl bg-gray-100/80 hover:bg-gray-200/80 dark:bg-zinc-900/60 dark:hover:bg-zinc-800/80 border border-gray-200/80 hover:border-gray-300 dark:border-white/10 dark:hover:border-white/20 transition-all cursor-pointer shadow-2xs select-none active:scale-[0.99]"
+              onClick={() => setCommandOpen(true)}
+              title={`Search views, records & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
+              className="group w-full h-[36px] px-2.5 flex items-center justify-between rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] border border-black/[0.06] hover:border-black/10 dark:border-white/10 dark:hover:border-white/20 transition-all cursor-pointer shadow-2xs select-none active:scale-[0.99]"
             >
               <div className="flex items-center gap-2 min-w-0 text-gray-500 dark:text-zinc-400">
                 <Search01Icon size="1em" className="text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400 shrink-0" />
                 <span className="text-xs font-normal truncate text-gray-600 dark:text-zinc-300">
-                  Search views...
+                  Search views, records...
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-1.5 h-4.5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded shadow-2xs leading-none shrink-0">
+              <kbd className="inline-flex items-center justify-center px-1.5 h-4.5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none shrink-0">
                 {isMac ? "⌘K" : "Ctrl K"}
               </kbd>
             </button>
@@ -1547,15 +1473,11 @@ export default function Sidebar({
         ) : (
           <button
             type="button"
-            onClick={() => {
-              setSearchQuery("");
-              setFocusedIndex(0);
-              setCommandOpen(true);
-            }}
-            title={`Search views & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
-            className="flex w-[38px] h-[38px] items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 cursor-pointer transition-all duration-150 ease-out mx-auto mb-2 group"
+            onClick={() => setCommandOpen(true)}
+            title={`Search views, records & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
+            className="flex w-[38px] h-[38px] items-center justify-center rounded-xl text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] border border-black/[0.05] dark:border-white/10 active:scale-95 cursor-pointer transition-all duration-150 ease-out mx-auto mb-2 group shadow-2xs"
           >
-            <Search01Icon size="1em" className="text-[19px] transition-transform group-hover:scale-105" />
+            <Search01Icon size="1em" className="text-[17px] transition-transform group-hover:scale-105 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
           </button>
         )}
 
@@ -1964,188 +1886,19 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* COMMAND PALETTE MODAL */}
-      <Dialog open={commandOpen} onOpenChange={setCommandOpen}>
-        <DialogContent
-          hideClose={true}
-          className="sm:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200/90 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 shadow-2xl backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-3 px-5 py-4">
-            <Search01Icon size="1em" className="text-xl text-pup-maroon dark:text-red-400 shrink-0" />
-            <input
-              ref={commandInputRef}
-              type="text"
-              aria-label="Search views and actions"
-              placeholder="Type a sidebar view or action to navigate..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setFocusedIndex(0);
-              }}
-              onKeyDown={handleCommandKeyDown}
-              className="flex-1 bg-transparent border-0 outline-none text-[16px] font-normal text-gray-900 dark:text-zinc-50 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
-            />
-            <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded select-none">
-              ESC
-            </kbd>
-          </div>
-
-          <div className="max-h-[450px] overflow-y-auto p-2 [scrollbar-width:thin]">
-            {filteredGroups.length > 0 ? (
-              (() => {
-                let currentGlobalIndex = 0;
-                return filteredGroups.map((group) => (
-                  <div key={group.id} className="mb-2.5 last:mb-0">
-                    <div className="px-3 pt-2 pb-1 text-[11.5px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
-                      <span className="flex items-center gap-1.5">
-                        <span>{group.title}</span>
-                      </span>
-                      {group.badge && (
-                        <span className="font-semibold text-[9.5px] text-gray-400 dark:text-zinc-500">
-                          {group.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      {group.items.map((item) => {
-                        const globalIdx = currentGlobalIndex++;
-                        const isFocused = focusedIndex === globalIdx;
-                        const itemKey = item.section
-                          ? `${item.view}-${item.section}`
-                          : item.view || item.url || item.action || item.label;
-                        const isActiveTab =
-                          item.view &&
-                          !item.section &&
-                          item.view === activeTabKey &&
-                          (isStudent
-                            ? pathname?.startsWith("/student")
-                            : activeView === "systemadmin"
-                              ? pathname?.startsWith("/systemadmin") ||
-                              pathname?.startsWith("/superadmin")
-                              : activeView === "admin"
-                                ? pathname?.startsWith("/admin")
-                                : pathname?.startsWith("/staff"));
-
-                        return (
-                          <button
-                            id={`command-item-${globalIdx}`}
-                            key={itemKey}
-                            type="button"
-                            onClick={() => handleSelectSuggestion(item)}
-                            onMouseEnter={() => setFocusedIndex(globalIdx)}
-                            className={cn(
-                              "w-full text-left flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer border-0 outline-none select-none",
-                              isFocused
-                                ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-50 shadow-2xs"
-                                : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100/70 dark:hover:bg-white/5"
-                            )}
-                          >
-                            <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                              <div
-                                className={cn(
-                                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                                  isFocused
-                                    ? "bg-pup-maroon text-white dark:bg-white dark:text-zinc-900"
-                                    : "bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400"
-                                )}
-                              >
-                                <AppIcon className={cn(item.icon, "text-[16px]")} title={item.label} />
-                              </div>
-                              <div className="flex flex-col min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[14px] font-medium truncate">
-                                    {item.label}
-                                  </span>
-                                  {isActiveTab && (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                                      Active
-                                    </span>
-                                  )}
-                                </div>
-                                {item.breadcrumb && (
-                                  <span className="text-[11.5px] text-gray-400 dark:text-zinc-500 font-normal truncate mt-0.5">
-                                    {item.breadcrumb}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              {item.shortcut && (
-                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-sans tabular-nums font-bold bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 rounded border border-gray-200 dark:border-zinc-700">
-                                  {item.shortcut}
-                                </kbd>
-                              )}
-                              {isFocused && (
-                                <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400 flex items-center gap-1">
-                                  <span>Select</span>
-                                  <kbd className="px-1 py-0.5 rounded bg-pup-maroon/10 dark:bg-white/10 text-[9px] font-sans tabular-nums">
-                                    ↵
-                                  </kbd>
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ));
-              })()
-            ) : (
-              <EmptyState
-                variant="compact"
-                icon={Search01Icon}
-                title="No Matching Views or Actions Found"
-                description="Try searching for a sidebar section, view name, or control."
-              />
-            )}
-          </div>
-
-          <div className="flex items-center justify-between px-4 py-2.5 text-[11px] text-gray-500 dark:text-zinc-400 select-none">
-            <div className="flex items-center gap-3.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
-                  ↑
-                </kbd>
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
-                  ↓
-                </kbd>
-                <span>navigate</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
-                  ↵
-                </kbd>
-                <span>select</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
-                  ESC
-                </kbd>
-                <span>close</span>
-              </span>
-              <span className="hidden md:flex items-center gap-1 text-[10px] text-gray-400">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
-                  {isMac ? "⌘B" : "CTRL B"}
-                </kbd>
-                <span>sidebar</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 font-medium text-gray-400 dark:text-zinc-500 text-[10px]">
-              <span>
-                {isStudent
-                  ? "Student Portal"
-                  : activeView === "systemadmin"
-                    ? "System Admin"
-                    : activeView === "admin"
-                      ? "Office Admin"
-                      : "Staff"}
-              </span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* COMMAND PALETTE (SPOTLIGHT / RAYCAST / APPLE HIG STYLE) */}
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        authUser={authUser}
+        activeView={activeView}
+        isStudent={isStudent}
+        isSuperAdmin={isSuperAdmin}
+        hasAdminRights={hasAdminRights}
+        onLogout={handleLogoutAction}
+        onViewSwitch={handleViewSwitch}
+        onMainDashboard={handleMainDashboardClick}
+      />
 
       {/* Mobile Navigation Drawer */}
       <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
@@ -2189,20 +1942,18 @@ export default function Sidebar({
               type="button"
               onClick={() => {
                 setMobileDrawerOpen(false);
-                setSearchQuery("");
-                setFocusedIndex(0);
                 setCommandOpen(true);
               }}
-              className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl bg-gray-100/80 hover:bg-gray-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 dark:text-zinc-400 text-xs border border-gray-200/80 dark:border-white/10 transition-colors cursor-pointer select-none"
+              className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-gray-500 dark:text-zinc-400 text-xs border border-black/[0.06] dark:border-white/10 transition-colors cursor-pointer select-none shadow-2xs active:scale-[0.99]"
             >
               <div className="flex items-center gap-2.5">
                 <Search01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                 <span className="font-medium text-gray-700 dark:text-zinc-200">
-                  Search views, actions...
+                  Search views, records...
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-1.5 h-5 text-[9px] font-bold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none">
-                {isMac ? "⌘K" : "CTRL K"}
+              <kbd className="inline-flex items-center justify-center px-1.5 h-5 text-[9px] font-bold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none">
+                {isMac ? "⌘K" : "Ctrl K"}
               </kbd>
             </button>
           </div>

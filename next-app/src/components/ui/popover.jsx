@@ -60,7 +60,7 @@ function PopoverHeader({
     <div
       data-slot="popover-header"
       className={cn(
-        "flex items-center justify-between px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 text-sm",
+        "flex items-center justify-between px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 text-xs",
         className
       )}
       {...props}
@@ -75,7 +75,7 @@ function PopoverBody({
   return (
     <div
       data-slot="popover-body"
-      className={cn("p-3 space-y-3", className)}
+      className={cn("p-2.5 space-y-2", className)}
       {...props}
     />
   );
@@ -89,7 +89,7 @@ function PopoverFooter({
     <div
       data-slot="popover-footer"
       className={cn(
-        "flex items-center justify-between px-4 py-2.5 border-t-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 text-xs text-gray-600 dark:text-zinc-400",
+        "flex items-center justify-between px-3.5 py-2 border-t-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 text-xs text-gray-600 dark:text-zinc-400",
         className
       )}
       {...props}
@@ -104,7 +104,7 @@ function PopoverTitle({
   return (
     <PopoverPrimitive.Title
       data-slot="popover-title"
-      className={cn("text-sm font-semibold text-gray-900 dark:text-zinc-100", className)}
+      className={cn("text-xs font-semibold text-gray-900 dark:text-zinc-100", className)}
       {...props} />
   );
 }

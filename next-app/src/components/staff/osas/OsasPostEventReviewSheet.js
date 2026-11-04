@@ -214,11 +214,10 @@ export default function OsasPostEventReviewSheet({
                 </span>
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
                     getPostEventStatusBadgeClass(selectedPostEvent.status)
                   )}
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", getPostEventStatusDotClass(selectedPostEvent.status))} />
                   {selectedPostEvent.status}
                 </span>
               </div>
@@ -293,11 +292,10 @@ export default function OsasPostEventReviewSheet({
               <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
                     getPostEventStatusBadgeClass(selectedPostEvent.status)
                   )}
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", getPostEventStatusDotClass(selectedPostEvent.status))} />
                   {selectedPostEvent.status}
                 </span>
               </InfoRow>
@@ -389,8 +387,7 @@ export default function OsasPostEventReviewSheet({
                     });
                   }}
                 >
-                  <ViewIcon size="1em" className="mr-1.5 text-xs" />
-                  <span>Inspect Narrative</span>
+                  Inspect Narrative
                 </Button>
               </div>
 
@@ -427,8 +424,7 @@ export default function OsasPostEventReviewSheet({
                       });
                     }}
                   >
-                    <ViewIcon size="1em" className="mr-1.5 text-xs" />
-                    <span>Inspect Liquidation</span>
+                    Inspect Liquidation
                   </Button>
                 ) : (
                   <span className="text-[11px] text-gray-400 italic">No file attached</span>

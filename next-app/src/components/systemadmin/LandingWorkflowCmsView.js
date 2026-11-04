@@ -328,25 +328,23 @@ export default function LandingWorkflowCmsView({ showToast }) {
         <PageHeader
           icon="GitMergeIcon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
-              <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">· {workflowData.steps.length} steps</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · Workflow &amp; Steps
-              </span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">{workflowData.steps.length} steps · Workflow &amp; Steps</span>
             </div>
           }
           description="Manage public portal process workflow, student application steps, and left-column narrative."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#workflow", "_blank")}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Preview Portal
               </Button>
@@ -356,7 +354,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 variant="outline"
                 onClick={() => setResetModalOpen(true)}
                 disabled={saving}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Restore Defaults
               </Button>
@@ -365,7 +363,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Workflow Content"}
               </Button>

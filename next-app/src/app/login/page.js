@@ -1224,7 +1224,7 @@ export default function Home() {
                 className="w-80 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border-[0.5px] border-border dark:border-white/10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
               >
                 {/* Header */}
-                <div className="px-4 py-3 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
+                <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
                   <div className="flex items-center gap-2">
                     
                     <div>

@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import {
   Empty,
@@ -114,6 +115,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   const [matrix, setMatrix] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useViewPreference("modules", "searchQuery", "")
   const [filterClauses, setFilterClauses] = useViewPreference("modules", "filterClauses", [])
   const [officeFilter, setOfficeFilter] = useViewPreference("modules", "officeFilter", "Active") // "Active" | "Archived"
@@ -291,6 +293,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
   }
 
   const fetchMatrix = useCallback(async (isSilent = false) => {
+    if (isSilent) setRefreshing(true)
     try {
       const cached = getCachedData("systemadmin_module_matrix")
       if (cached && !isSilent) {
@@ -318,6 +321,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       }
     } finally {
       setLoading(false)
+      if (isSilent) setRefreshing(false)
     }
   }, [setSelectedOfficeId, initialOfficeId, showToast])
 
@@ -717,8 +721,12 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           </div>}
           description="Turn system features on or off for each department."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          actions={
+            <RefreshButton onRefresh={() => { fetchMatrix(true); loadDemoAccountSetting() }} isLoading={refreshing} title="Refresh Features & Permissions" className="h-9 w-9" />
+          }
         />
 
         <div className="flex items-end gap-x-5 overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
@@ -743,8 +751,11 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
         </div>
 
         <DataViewToolbar label="Feature search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-<DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} label="Search features" placeholder="Search features by name, description..." />
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} label="Search features" placeholder="Search features by name, description..." />
+            {viewMode === "matrix" && visibleMatrixOffices.length > 0 && <TableScrollControls scrollContainerRef={matrixTableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetMatrixScroll} />}
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <FilterPopover fields={moduleFilterFields} filters={filterClauses} onFiltersChange={setFilterClauses} entityLabel="features" />
             {viewMode === "matrix" && <>
               <SortPopover
@@ -767,7 +778,6 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                   setHiddenOfficeIds(filteredOffices.filter((office) => !visibleIds.includes(office.id)).map((office) => office.id))
                 }}
               />}
-              {visibleMatrixOffices.length > 0 && <TableScrollControls scrollContainerRef={matrixTableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetMatrixScroll} />}
             </>}
           </div>
         </DataViewToolbar>
@@ -1361,11 +1371,12 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 <tbody className="divide-y divide-border dark:divide-border">
                   {matrixGroups.map((group) => (
                     <Fragment key={group.key}>
-                      {group.label && <tr className="bg-gray-100/70 dark:bg-zinc-950/60">
-                        <td colSpan={visibleMatrixOffices.length + 1} className="sticky left-0 border-y border-border/50 bg-gray-100/90 px-4 py-2.5 pl-6 text-xs font-semibold text-gray-800 dark:bg-zinc-950/90 dark:text-zinc-200">
+                      {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
+                        <td colSpan={visibleMatrixOffices.length + 1} className="sticky left-0 border-y border-border/50 bg-gray-50/90 px-4 py-2 pl-6 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">
                           <div className="flex items-center gap-2">
                             {group.key === "staff" ? <Contact01Icon size={14} aria-hidden="true" className="text-blue-600 dark:text-blue-400" /> : <Shield01Icon size={14} aria-hidden="true" className="text-pup-maroon dark:text-red-400" />}
-                            <span>{group.label} ({group.modules.length})</span>
+                            <span>{group.label}</span>
+                            <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.modules.length}</span>
                           </div>
                         </td>
                       </tr>}
@@ -1523,21 +1534,21 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
           </div>
           <div className="w-full min-w-0 flex-1 overflow-hidden">
             <div className="flex w-full min-w-0 items-center justify-between gap-3">
-              <span className="min-w-0 flex-1 truncate font-semibold text-xs text-gray-900 dark:text-zinc-100" title={m.name}>
+              <span className="min-w-0 flex-1 truncate font-semibold text-[13px] text-gray-900 dark:text-zinc-100" title={m.name}>
                 {m.name}
               </span>
               <span className="flex min-w-0 max-w-[55%] shrink-0 items-center justify-end gap-2">
                 {isSystem && (
-                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
                     Required
                   </span>
                 )}
-                <span className="min-w-0 truncate text-[10px] font-medium text-gray-400 dark:text-zinc-500" title={getModuleTargetText(m)}>
+                <span className="min-w-0 truncate text-[11px] font-normal text-gray-400 dark:text-zinc-500" title={getModuleTargetText(m)}>
                   ({getModuleTargetText(m)})
                 </span>
               </span>
             </div>
-            <p className="min-w-0 truncate text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5 leading-relaxed" title={m.description || "Standard system feature."}>
+            <p className="min-w-0 truncate text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-relaxed" title={m.description || "Standard system feature."}>
               {m.description || "Standard system feature."}
             </p>
           </div>

@@ -17,15 +17,15 @@ export default function SecurityQuestionsSkeleton() {
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="mt-[4px] text-[13px] font-normal text-gray-900 dark:text-zinc-300"
+          actions={<div aria-hidden="true" className="flex shrink-0 gap-2"><Skeleton className="h-9 w-32 rounded-xl" /><Skeleton className="h-9 w-32 rounded-xl" /></div>}
         />
         <div className="flex h-9 items-stretch overflow-hidden border-b border-border px-6 dark:border-white/10">
           {["All", "Required", "Optional"].map((label, index) => <div key={label} className="relative flex items-center gap-2 px-3 text-xs font-semibold text-gray-500 dark:text-zinc-400">{label}<Skeleton className="h-3 w-5 rounded" />{index === 0 && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}</div>)}
         </div>
-        <DataViewToolbar label="Security question search and actions" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+        <DataViewToolbar label="Security question search" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
           <Skeleton className="h-9 w-[min(320px,60vw)] min-w-[190px] shrink-0 rounded-xl" />
-          <div className="ml-auto flex shrink-0 gap-2"><Skeleton className="h-9 w-32 rounded-xl" /><Skeleton className="h-9 w-32 rounded-xl" /></div>
         </DataViewToolbar>
-        <div aria-busy="true" className="flex flex-[1_0_auto] flex-col space-y-4 p-6">
+        <div aria-busy="true" className="flex flex-[1_0_auto] flex-col space-y-4 border-t border-border p-6 dark:border-border">
           {[1, 2].map((i) => <div key={i} className="space-y-2.5 rounded-2xl border border-border bg-gray-50/30 p-4 dark:bg-zinc-900/40">
             <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Skeleton className="h-6 w-6 rounded-lg" /><Skeleton className="h-4 w-20 rounded" /><Skeleton className="h-5 w-16 rounded-full" /></div><div className="flex gap-2"><Skeleton className="h-8 w-36 rounded-xl" /><Skeleton className="h-8 w-8 rounded-xl" /></div></div>
             <Skeleton className="h-10.5 w-full rounded-xl" />

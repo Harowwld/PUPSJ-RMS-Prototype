@@ -1109,8 +1109,7 @@ export default function StudentOverviewTab({
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
                 <InfoRow icon="PieChartIcon" label="Clearance Status">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40">
                     {selectedPostEventDetail?.status || "Submitted"}
                   </span>
                 </InfoRow>
@@ -1165,7 +1164,7 @@ export default function StudentOverviewTab({
             )}
           </div>
 
-          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <Button
               type="button"
               variant="outline"

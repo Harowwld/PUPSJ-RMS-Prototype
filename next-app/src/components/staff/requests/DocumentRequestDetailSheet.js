@@ -304,11 +304,10 @@ export default function DocumentRequestDetailSheet({
                   )}
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0",
+                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0",
                       getRequestStatusBadgeClass(detail.status)
                     )}
                   >
-                    <span className={cn("w-1.5 h-1.5 rounded-full", getRequestStatusDotClass(detail.status))} />
                     {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
                   </span>
                 </div>
@@ -400,13 +399,11 @@ export default function DocumentRequestDetailSheet({
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           {detail.spa_verified ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                              <CheckmarkCircle01Icon size="1em" className="text-xs" />
+                            <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                               SPA Verified
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                              <Clock01Icon size="1em" className="text-xs" />
+                            <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                               Verification Pending
                             </span>
                           )}
@@ -464,8 +461,7 @@ export default function DocumentRequestDetailSheet({
                           <span className="font-semibold text-gray-900 dark:text-zinc-100">
                             {charter.deadlineFormatted}
                           </span>
-                          <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold", charter.badgeClass)}>
-                            <Clock01Icon size={16} className={cn("", charter.icon || "")} />
+                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold", charter.badgeClass)}>
                             {charter.label}
                           </span>
                         </div>
@@ -513,11 +509,10 @@ export default function DocumentRequestDetailSheet({
                   >
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
                         getRequestStatusBadgeClass(detail.status)
                       )}
                     >
-                      <span className={cn("w-1.5 h-1.5 rounded-full", getRequestStatusDotClass(detail.status))} />
                       {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
                     </span>
                   </InfoRow>
@@ -740,8 +735,17 @@ export default function DocumentRequestDetailSheet({
 
         {/* Executive Footer - Clean Action Bar */}
         <SheetFooter className="shrink-0 p-4 px-6 flex items-center justify-between gap-3 flex-row">
-          <div>
-            {hasEdits && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+          >
+            Close
+          </Button>
+
+          {hasEdits && (
+            <div className="flex items-center gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -751,19 +755,6 @@ export default function DocumentRequestDetailSheet({
               >
                 Reset Changes
               </Button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              Close
-            </Button>
-            {hasEdits && (
               <Button
                 type="button"
                 className="h-10 px-5 cursor-pointer disabled:opacity-50"
@@ -772,8 +763,8 @@ export default function DocumentRequestDetailSheet({
               >
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

@@ -181,7 +181,7 @@ export default function MultiCriteriaFilter({
           )}
         >
           {/* Popover Header */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
+          <div className="flex items-center justify-between px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
             <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
               {headerTitle || title || "Filter Records"}
             </span>

@@ -14,24 +14,30 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { REPORT_FONT_OPTIONS } from "@/lib/reportFontOptions"
 import { DEFAULT_BRANDING, resolveBranding } from "@/lib/institutionalBranding"
 import PageHeader from "@/components/shared/PageHeader"
-import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
 import { generateSampleBrandingPdf, deriveDocumentPrefix } from "@/lib/pdfGenerator"
-import { AlertCircleIcon, Tick01Icon } from "hugeicons-react";
+import { AlertCircleIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+import ColorSelector from "@/components/ui/color-selector";
 const DEFAULT_PUP_LOGO = "/assets/pup-logo.webp"
 const OFFICIAL_FALLBACK_LOGO = "/assets/branding/black-icon.png"
 const BRANDING_CACHE_KEY = "institution_branding_cache"
 
 const COLOR_PRESETS = [
-  { label: "PUP Maroon", hex: "#7A1E28" },
-  { label: "State Blue", hex: "#1E40AF" },
-  { label: "University Emerald", hex: "#15803D" },
-  { label: "Heritage Crimson", hex: "#991B1B" },
-  { label: "Academic Navy", hex: "#0F172A" },
-  { label: "Institutional Gold", hex: "#B45309" },
+  { name: "PUP Maroon", hex: "#7A1E28" },
+  { name: "State Blue", hex: "#1E40AF" },
+  { name: "University Emerald", hex: "#15803D" },
+  { name: "Heritage Crimson", hex: "#991B1B" },
+  { name: "Academic Navy", hex: "#0F172A" },
+  { name: "Institutional Gold", hex: "#B45309" },
+  { name: "Royal Indigo", hex: "#4338CA" },
+  { name: "Polytechnic Teal", hex: "#0D9488" },
+  { name: "Regal Purple", hex: "#6D28D9" },
+  { name: "Classic Cerulean", hex: "#2563EB" },
+  { name: "Executive Amber", hex: "#D97706" },
+  { name: "Academic Slate", hex: "#334155" },
 ]
 
 export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
@@ -377,13 +383,11 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-        />
-        <DataViewToolbar label="Institutional identity actions" className="gap-2 border-t border-border bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-            <span className={cn("inline-flex h-8 shrink-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold", isDirty ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300")} role="status" aria-live="polite">
-              <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", isDirty ? "bg-amber-500" : "bg-emerald-500")} />
-              {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
-            </span>
-            <div className="ml-auto flex shrink-0 items-center gap-2">
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={cn("inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-semibold", isDirty ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300")} role="status" aria-live="polite">
+                {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
+              </span>
 
               <Button
                 type="button"
@@ -414,10 +418,11 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                 {saving ? "Saving Changes..." : "Save Branding"}
               </Button>
             </div>
-        </DataViewToolbar>
+          }
+        />
 
         {/* Content Body */}
-        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
+        <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl border-t border-border dark:border-border">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* LEFT COLUMN (7 cols): Settings Configuration */}
@@ -432,7 +437,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <Select id="report-font" value={branding.reportFont || "jakarta"} onChange={(event) => setBranding((previous) => ({ ...previous, reportFont: event.target.value }))} className="h-11 w-full sm:h-10" aria-describedby="report-font-help">
                     {REPORT_FONT_OPTIONS.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
                   </Select>
-                  <p id="report-font-help" className="mt-2 text-xs text-gray-500 dark:text-zinc-400">Arial and Times New Roman options use embedded compatible fonts, Liberation Sans and Liberation Serif. The app interface keeps its current font.</p>
+                  <p id="report-font-help" className="mt-2 text-xs text-gray-500 dark:text-zinc-400">All options embed standard institutional TrueType fonts (Plus Jakarta Sans, Arial/Liberation Sans, Times/Liberation Serif, Noto Sans, Noto Serif, Inter, Open Sans, DejaVu Serif, DejaVu Sans). The app interface keeps its current font.</p>
                 </div>
               </div>
               
@@ -754,53 +759,24 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                 </div>
 
                 <div className="space-y-4 rounded-2xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-950/40 sm:p-5">
-                  <div>
-                    <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:text-zinc-400">Recommended University Presets</span>
-                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                      {COLOR_PRESETS.map((preset) => {
-                        const isSelected = branding.brandColor.toUpperCase() === preset.hex.toUpperCase()
-                        return <button key={preset.hex} type="button" onClick={() => setBranding((prev) => ({ ...prev, brandColor: preset.hex }))} aria-label={`${preset.label}, ${preset.hex}`} aria-pressed={isSelected} title={`${preset.label} (${preset.hex})`} style={{ backgroundColor: preset.hex }} className={cn("flex h-9 items-center justify-center rounded-xl border border-black/10 shadow-2xs transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:ring-offset-2", isSelected && "ring-2 ring-slate-900 ring-offset-2 dark:ring-white dark:ring-offset-zinc-950")}>
-                          {isSelected && <Tick01Icon size={16} aria-hidden="true" className="text-white drop-shadow-sm" />}
-                        </button>
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-3 sm:flex-nowrap">
-                    <div className="flex items-center gap-3">
-                    <div className="relative flex h-10 w-10 shrink-0 items-center overflow-hidden rounded-xl border border-border shadow-2xs focus-within:ring-2 focus-within:ring-pup-maroon focus-within:ring-offset-2" style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(branding.brandColor) ? branding.brandColor : DEFAULT_BRANDING.brandColor }}>
-                      <input
-                        type="color"
-                        value={/^#[0-9a-fA-F]{6}$/.test(branding.brandColor) ? branding.brandColor : DEFAULT_BRANDING.brandColor}
-                        onChange={(e) =>
-                          setBranding((prev) => ({
-                            ...prev,
-                            brandColor: e.target.value.toUpperCase(),
-                          }))
-                        }
-                        aria-label="Choose custom brand color"
-                        className="absolute inset-0 h-full w-full cursor-pointer border-0 p-0 opacity-0"
-                      />
-                    </div>
-                    <div className="w-32">
-                      <Input
-                        aria-label="Brand color hex code"
-                        aria-invalid={!/^#[0-9a-fA-F]{6}$/.test(branding.brandColor)}
-                        value={branding.brandColor}
-                        onChange={(e) =>
-                          setBranding((prev) => ({
-                            ...prev,
-                            brandColor: e.target.value.toUpperCase(),
-                          }))
-                        }
-                        placeholder="#7A1E28"
-                        maxLength={7}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums font-semibold dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
-                      />
-                    </div>
-                  </div>
-                    <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">Report accent</span>
-                  </div>
-                  {!/^#[0-9a-fA-F]{6}$/.test(branding.brandColor) && <p className="text-xs text-red-600 dark:text-red-400">Enter a six-digit hex color, such as #7A1E28.</p>}
+                  <ColorSelector
+                    label={null}
+                    value={branding.brandColor}
+                    onChange={(hex) =>
+                      setBranding((prev) => ({
+                        ...prev,
+                        brandColor: hex.toUpperCase(),
+                      }))
+                    }
+                    presets={COLOR_PRESETS}
+                    showCustom
+                    showHexInput
+                    errorText={
+                      !/^#[0-9a-fA-F]{6}$/.test(branding.brandColor)
+                        ? "Enter a six-digit hex color, such as #7A1E28."
+                        : null
+                    }
+                  />
                 </div>
               </div>
 

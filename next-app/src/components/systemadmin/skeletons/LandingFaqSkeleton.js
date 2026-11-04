@@ -59,25 +59,30 @@ export default function LandingFaqSkeleton() {
               </div>
             </div>
             {/* Header Action Bar */}
-            <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-900/30 xl:flex-row xl:items-center xl:justify-between">
-              <div className="shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Questions &amp; Answers List
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-sans tabular-nums">
-                    8/16
-                  </span>
+            <div className="flex min-w-0 flex-col rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
+              <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                      Questions &amp; Answers List
+                    </span>
+                    <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
+                      8/16
+                    </span>
+                  </div>
+                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
+                    Expand any question below to edit its text, category, or order.
+                  </p>
                 </div>
-                <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300 mt-0.5">
-                  Expand any question below to edit its text, category, or order.
-                </p>
+
+                <Skeleton className="h-9 w-32 shrink-0 rounded-xl dark:bg-muted" />
               </div>
 
-              <DataViewToolbar label="FAQ search, category filter, and add question" className="w-full gap-2 xl:ml-auto xl:w-auto">
+              <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-gray-50/40 px-4 py-3 dark:bg-zinc-900/30">
                 <Skeleton className="h-9 w-[min(280px,45vw)] min-w-[200px] rounded-xl dark:bg-muted" />
-                <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
-                <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+                </div>
               </DataViewToolbar>
             </div>
 

@@ -3517,7 +3517,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <Button
               variant="outline"
               onClick={() => setSelectedRequestForDetail(null)}
@@ -3766,7 +3766,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-end">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <Button
               variant="outline"
               onClick={() => setSelectedProposalForDetail(null)}
