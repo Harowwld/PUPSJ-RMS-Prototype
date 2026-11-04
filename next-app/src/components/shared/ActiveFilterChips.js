@@ -1,22 +1,45 @@
 "use client";
 
 import React from "react";
-
 import { cn } from "@/lib/utils";
-import { Cancel01Icon } from "hugeicons-react";
+import {
+  Cancel01Icon,
+  FilterIcon,
+  Search01Icon,
+  Calendar01Icon,
+} from "hugeicons-react";
 
+/**
+ * Helper to determine Apple-style contextual icon for filter tokens
+ */
+function getChipIcon(chip, groupLabel, label) {
+  const combined = `${chip.type || ""} ${groupLabel || ""} ${label || ""}`.toLowerCase();
+
+  if (combined.includes("search")) {
+    return <Search01Icon size={12} aria-hidden="true" className="shrink-0 text-gray-400 dark:text-zinc-500" />;
+  }
+
+  if (combined.includes("date") || combined.includes("range") || combined.includes("→") || combined.includes("created")) {
+    return <Calendar01Icon size={12} aria-hidden="true" className="shrink-0 text-pup-maroon dark:text-red-400" />;
+  }
+
+  return <FilterIcon size={11} aria-hidden="true" className="shrink-0 text-gray-400 dark:text-zinc-500" />;
+}
 
 /**
  * ActiveFilterChips
- * Renders dismissible chips for currently applied multi-criteria filters,
- * optional search queries, and a "Clear all" button.
+ * Apple-styled filter token strip.
+ * Renders lightweight, fluid capsules with clear category scopes, contextual icons,
+ * micro-dismiss targets, and a clean "Clear all" action.
  *
+ * @param {Array} chips - Direct chip descriptors [{ id, label, groupLabel, onRemove }]
  * @param {Array} groups - [{ id: "status", label: "Status", options: [{ value, label }] }]
  * @param {Object} selected - { status: ["pending"], category: ["admission"] }
  * @param {Function} onRemove - (groupId, value) => void
  * @param {Function} onClearAll - () => void
  * @param {string} searchQuery - Optional search string
  * @param {Function} onClearSearch - Optional callback to clear search
+ * @param {Array} extraChips - Extra chips [{ key, label, groupLabel, onRemove, onClear }]
  * @param {string} className - Optional container styling
  */
 export default function ActiveFilterChips({
@@ -49,7 +72,8 @@ export default function ActiveFilterChips({
   if (searchQuery && searchQuery.trim().length > 0) {
     chips.push({
       type: "search",
-      label: `Search: "${searchQuery.trim()}"`,
+      groupLabel: "Search",
+      label: `"${searchQuery.trim()}"`,
       onClear: onClearSearch,
     });
   }
@@ -91,48 +115,89 @@ export default function ActiveFilterChips({
 
   return (
     <div
+      role="region"
+      aria-label="Active filters"
       className={cn(
-        "flex flex-wrap items-center gap-1.5 px-6 py-2.5 border-t border-border dark:border-border bg-white dark:bg-card animate-in fade-in-50 duration-200",
+        "flex flex-wrap items-center gap-1.5 px-5 py-2 border-t border-border/80 dark:border-border/60 bg-gray-50/50 dark:bg-zinc-900/40 animate-in fade-in-50 duration-150",
         className
       )}
     >
-      <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 mr-1 select-none">
-        Active Filters:
-      </span>
+      {/* Apple-style Filter Counter Badge */}
+      <div className="flex items-center gap-1.5 select-none mr-1 shrink-0">
+        <span className="text-[11px] font-medium tracking-normal text-gray-500 dark:text-zinc-400">
+          Filters
+        </span>
+        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-200/70 dark:bg-zinc-800 px-1 text-[10px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300">
+          {chips.length}
+        </span>
+      </div>
 
-      {chips.map((chip, idx) => (
-        <span
-          key={`${chip.type}-${chip.groupId || ""}-${chip.value || idx}`}
-          className="inline-flex items-center gap-1.5 h-6 pl-2 pr-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-border/70 dark:border-border text-[11px] font-medium transition-all hover:border-border dark:hover:border-white/20 select-none shadow-2xs"
-        >
-          {chip.groupLabel && (
-            <span className="text-gray-400 dark:text-zinc-500 font-normal">
-              {chip.groupLabel}:
+      {/* Filter Tokens */}
+      {chips.map((chip, idx) => {
+        let displayGroupLabel = chip.groupLabel;
+        let displayLabel = chip.label;
+
+        // Auto-split strings like "Range: Oct 1 - Oct 31" into GroupLabel + Label if not already separated
+        if (!displayGroupLabel && typeof displayLabel === "string") {
+          const colonIndex = displayLabel.indexOf(": ");
+          if (colonIndex > 0 && colonIndex < 20) {
+            displayGroupLabel = displayLabel.slice(0, colonIndex).trim();
+            displayLabel = displayLabel.slice(colonIndex + 2).trim();
+          }
+        }
+
+        const icon = getChipIcon(chip, displayGroupLabel, displayLabel);
+
+        return (
+          <span
+            key={`${chip.type}-${chip.groupId || ""}-${chip.value || idx}`}
+            className="inline-flex items-center gap-1.5 h-6.5 pl-2.5 pr-1 rounded-full bg-white dark:bg-zinc-800 border border-black/[0.08] dark:border-white/[0.12] text-gray-700 dark:text-zinc-200 text-xs font-normal shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-all hover:border-black/[0.16] dark:hover:border-white/20 select-none active:scale-[0.98]"
+          >
+            {icon}
+
+            {displayGroupLabel && (
+              <>
+                <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 truncate max-w-[120px]">
+                  {displayGroupLabel}
+                </span>
+                <span className="text-gray-300 dark:text-zinc-600 select-none text-[10px]" aria-hidden="true">
+                  ·
+                </span>
+              </>
+            )}
+
+            <span className="font-medium text-[11px] text-gray-900 dark:text-zinc-100 max-w-[220px] truncate">
+              {displayLabel}
             </span>
-          )}
-          <span className="font-semibold text-gray-800 dark:text-zinc-100 max-w-[160px] truncate">
-            {chip.label}
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                chip.onClear?.();
+              }}
+              className="w-4 h-4 ml-0.5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-700/80 active:scale-90 transition-all cursor-pointer"
+              aria-label={`Remove filter: ${displayGroupLabel ? `${displayGroupLabel} ` : ""}${displayLabel}`}
+            >
+              <Cancel01Icon size={10} className="shrink-0" />
+            </button>
           </span>
+        );
+      })}
+
+      {/* Clear All Action */}
+      {chips.length > 0 && onClearAll && (
+        <div className="flex items-center ml-0.5 shrink-0">
+          <div className="h-3 w-px bg-gray-200 dark:bg-zinc-800 mx-1" aria-hidden="true" />
           <button
             type="button"
-            onClick={chip.onClear}
-            className="w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer ml-0.5"
-            aria-label={`Remove ${chip.groupLabel ? `${chip.groupLabel} filter` : "filter"} ${chip.label}`}
+            onClick={onClearAll}
+            title="Clear all active filters"
+            className="inline-flex items-center h-6 px-2 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer select-none"
           >
-            <Cancel01Icon size="1em" className="text-[10px]" />
+            Clear all
           </button>
-        </span>
-      ))}
-
-      {chips.length > 0 && onClearAll && (
-        <button
-          type="button"
-          onClick={onClearAll}
-          title="Clear all active filters"
-          className="text-[11px] font-medium text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 dark:hover:text-red-300 hover:underline cursor-pointer ml-1 py-0.5 px-1.5 transition-colors select-none"
-        >
-          Clear Filters
-        </button>
+        </div>
       )}
     </div>
   );
