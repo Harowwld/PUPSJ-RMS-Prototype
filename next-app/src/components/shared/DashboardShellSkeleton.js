@@ -42,16 +42,26 @@ export default function DashboardShellSkeleton({ items = [], children }) {
         <aside className="hidden md:flex sticky top-0 h-full w-[275px] shrink-0 flex-col overflow-hidden bg-white/25 px-3 py-3 backdrop-blur-xl dark:bg-zinc-950/25">
           {/* 1. Top Row: Logo + Collapse Button */}
           <div className="mb-4 flex h-[40px] w-full shrink-0 items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-[22px] w-[22px] shrink-0 rounded dark:bg-muted" />
-              <Skeleton className="h-4 w-[88px] rounded dark:bg-muted" />
+            <div className="flex items-center min-w-0">
+              <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+                <Skeleton className="h-[22px] w-[22px] shrink-0 rounded dark:bg-muted" />
+              </div>
+              <Skeleton className="ml-1.5 h-4 w-[88px] rounded dark:bg-muted" />
             </div>
             <Skeleton className="h-[34px] w-[34px] shrink-0 rounded-lg dark:bg-muted" />
           </div>
 
           {/* 2. Command Palette Trigger */}
           <div className="mb-2 w-full shrink-0">
-            <Skeleton className="h-[36px] w-full rounded-xl dark:bg-muted" />
+            <div className="flex h-[38px] w-full items-center justify-between rounded-xl border border-black/[0.06] bg-black/[0.04] pl-1 pr-2.5 dark:border-white/10 dark:bg-white/[0.06]">
+              <div className="flex items-center min-w-0">
+                <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+                  <Skeleton className="h-4 w-4 shrink-0 rounded dark:bg-muted" />
+                </div>
+                <Skeleton className="ml-1.5 h-3.5 w-[130px] rounded dark:bg-muted" />
+              </div>
+              <Skeleton className="h-5 w-8 rounded-full dark:bg-muted" />
+            </div>
           </div>
 
           {/* 3. Navigation Items */}
@@ -68,10 +78,12 @@ export default function DashboardShellSkeleton({ items = [], children }) {
               return (
                 <div
                   key={item.key}
-                  className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1"
+                  className="flex h-[40px] w-full shrink-0 items-center rounded-xl px-1"
                 >
-                  <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
-                  <Skeleton className="h-3.5 w-[140px] rounded dark:bg-muted" />
+                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+                    <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
+                  </div>
+                  <Skeleton className="ml-1.5 h-3.5 w-[140px] rounded dark:bg-muted" />
                 </div>
               )
             })}
@@ -79,13 +91,15 @@ export default function DashboardShellSkeleton({ items = [], children }) {
 
           {/* 4. Bottom: Profile Menu */}
           <div className="mt-auto flex w-full shrink-0 justify-center border-t border-gray-200/80 pt-2 dark:border-white/10">
-            <div className="flex w-full items-center gap-2.5 rounded-xl p-1.5">
-              <Skeleton className="h-9 w-9 shrink-0 rounded-full dark:bg-muted" />
-              <div className="flex min-w-0 flex-1 flex-col gap-1 leading-tight">
+            <div className="flex w-full items-center rounded-xl px-1 py-1.5">
+              <div className="flex h-9 w-[38px] shrink-0 items-center justify-center">
+                <Skeleton className="h-9 w-9 shrink-0 rounded-full dark:bg-muted" />
+              </div>
+              <div className="ml-1.5 flex min-w-0 flex-1 flex-col gap-1 leading-tight">
                 <Skeleton className="h-3 w-[104px] rounded dark:bg-muted" />
                 <Skeleton className="h-2.5 w-[76px] rounded dark:bg-muted" />
               </div>
-              <Skeleton className="h-3 w-3 shrink-0 rounded dark:bg-muted" />
+              <Skeleton className="mr-1 h-3 w-3 shrink-0 rounded dark:bg-muted" />
             </div>
           </div>
         </aside>

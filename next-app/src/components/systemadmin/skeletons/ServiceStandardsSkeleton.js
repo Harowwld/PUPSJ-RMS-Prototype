@@ -39,10 +39,10 @@ export default function ServiceStandardsSkeleton() {
             {/* Context Banner */}
             <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border/70">
               <div className="flex items-center gap-2.5 flex-1">
-                <Skeleton className="h-6 w-6 rounded-lg dark:bg-muted shrink-0" />
+                <Skeleton className="h-6 w-6 rounded-full dark:bg-muted shrink-0" />
                 <Skeleton className="h-3.5 w-3/4 rounded dark:bg-muted" />
               </div>
-              <Skeleton className="h-6 w-28 rounded-lg dark:bg-muted shrink-0 ml-4" />
+              <Skeleton className="h-6 w-28 rounded-full dark:bg-muted shrink-0 ml-4" />
             </div>
           </div>
 
@@ -104,7 +104,7 @@ export default function ServiceStandardsSkeleton() {
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                     <div className="flex items-center gap-3">
-                      <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted shrink-0" />
+                      <Skeleton className="h-8 w-8 rounded-full dark:bg-muted shrink-0" />
                       <div className="space-y-1">
                         <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
                         <Skeleton className="h-2.5 w-24 rounded dark:bg-muted" />

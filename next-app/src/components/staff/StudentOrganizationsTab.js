@@ -1592,12 +1592,27 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
               </div>
 
-              <div role="group" aria-label="Organization view" className="flex shrink-0 items-center gap-1 rounded-xl border border-border/60 bg-gray-100/80 p-1 dark:bg-zinc-800/60">
-                {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => (
-                  <button key={mode} type="button" onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode} className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors", viewMode === mode ? "bg-pup-maroon text-white shadow-xs" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                    <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />{label}
-                  </button>
-                ))}
+              <div role="group" aria-label="Organization view" className="inline-flex shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+                {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => {
+                  const isSelected = viewMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setViewMode(mode)}
+                      aria-pressed={isSelected}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
+                        isSelected
+                          ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                      )}
+                    >
+                      <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Multi-Criteria Filter Popover */}
@@ -2208,7 +2223,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             side="right"
             size="default"
             showCloseButton={false}
-            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
           >
             <SheetHeader className="shrink-0 p-0">
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -2243,7 +2258,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       setSelectedOrgForOfficers(null);
                       setEditingOrg(null);
                     }}
-                    className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                    className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                     aria-label="Close"
                     title="Close"
                   >
@@ -2293,14 +2308,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
             {/* Sub-tab segmented switcher */}
             <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+              <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
                 <button
                   type="button"
                   onClick={() => setSheetSubTab("info")}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
                     sheetSubTab === "info"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
@@ -2312,9 +2327,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   type="button"
                   onClick={() => setSheetSubTab("officers")}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
                     sheetSubTab === "officers"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
@@ -2325,7 +2340,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
                       sheetSubTab === "officers"
                         ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                     )}
                   >
                     {officersList.length}
@@ -2336,9 +2351,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   type="button"
                   onClick={() => setSheetSubTab("cbl")}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
                     sheetSubTab === "cbl"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                 >
@@ -2349,7 +2364,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
                       sheetSubTab === "cbl"
                         ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                     )}
                   >
                     {bylawsHistory.length}
@@ -2622,7 +2637,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           disabled={addingOfficer}
                           className="h-9 px-5 cursor-pointer disabled:opacity-50"
                         >
-                          {addingOfficer ? "Authorizing..." : "Authorize Officer"}
+                          {addingOfficer ? "Authorizing Officer…" : "Authorize Officer"}
                         </Button>
                       </div>
                     </form>
@@ -2735,7 +2750,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 onClick={() => setOfficerToRemove(officer)}
                                 className="h-8 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-border dark:border-border rounded-lg cursor-pointer active:scale-95 transition-all shrink-0"
                               >
-                                Revoke
+                                Revoke Access
                               </Button>
                             </div>
                           );
@@ -2815,7 +2830,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               }
                               className="h-8 px-3 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg shrink-0 cursor-pointer active:scale-95 transition-all"
                             >
-                              Preview
+                              Preview Charter
                             </Button>
                           </div>
 
@@ -2864,7 +2879,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 onClick={() => openCblReviewDialog(ver, "Declined")}
                                 className="h-8 px-3 text-xs font-semibold rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 cursor-pointer active:scale-95 transition-all"
                               >
-                                Decline
+                                Decline Charter
                               </Button>
                               <Button
                                 type="button"
@@ -2874,7 +2889,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 title="Request Revision"
                                 className="h-8 px-3 text-xs font-semibold rounded-lg text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 cursor-pointer active:scale-95 transition-all"
                               >
-                                Revise
+                                Request Revision
                               </Button>
                               <Button
                                 type="button"
@@ -2883,7 +2898,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 title="Approve & Ratify Charter"
                                 className="h-8 px-3.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
-                                Approve
+                                Approve Charter
                               </Button>
                             </div>
                           )}
@@ -2915,7 +2930,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   disabled={savingOrg}
                   className="h-10 px-5 cursor-pointer disabled:opacity-50"
                 >
-                  {savingOrg ? "Saving..." : "Save Organization Details"}
+                  {savingOrg ? "Saving Organization Details…" : "Save Organization Details"}
                 </Button>
               )}
             </SheetFooter>
@@ -3102,10 +3117,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   className="h-10 px-5 cursor-pointer disabled:opacity-50"
                 >
                   {savingOrg
-                    ? "Saving..."
+                    ? "Saving Organization…"
                     : editingOrg
-                    ? "Update"
-                    : "Register"}
+                    ? "Update Organization"
+                    : "Register Organization"}
                 </Button>
               </DialogFooter>
             </form>
@@ -3161,7 +3176,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   title="Archive Constitution & By-Laws"
                   className="h-10 px-5 cursor-pointer disabled:opacity-50"
                 >
-                  {uploadingCbl ? "Uploading..." : "Upload Charter"}
+                  {uploadingCbl ? "Uploading Charter…" : "Upload Charter"}
                 </Button>
               </DialogFooter>
             </form>
@@ -3241,7 +3256,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   {cblReviewSubmitting ? (
                     <>
                       <Loading01Icon size="1em" className="ph animate-spin text-sm" />
-                      <span>Saving...</span>
+                      <span>Submitting Review…</span>
                     </>
                   ) : (
                     <span>

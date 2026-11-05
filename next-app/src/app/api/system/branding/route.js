@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
-import { DEFAULT_BRANDING as BRANDING_DEFAULTS } from "@/lib/institutionalBranding";
+import { DEFAULT_BRANDING as BRANDING_DEFAULTS, BRANDING_UPLOAD_LIMITS } from "@/lib/institutionalBranding";
 import { getReportFont, isReportFont } from "@/lib/reportFontOptions";
 
 export const BRANDING_SETTING_KEY = "institution_branding_config";
@@ -66,7 +66,7 @@ function sanitizeBranding(raw) {
   if (
     typeof raw.logoBase64 === "string" &&
     raw.logoBase64.startsWith("data:image/") &&
-    raw.logoBase64.length <= 4 * 1024 * 1024 // 4MB safety limit
+    raw.logoBase64.length <= BRANDING_UPLOAD_LIMITS.maxBase64Length
   ) {
     logoBase64 = raw.logoBase64;
   }
@@ -78,7 +78,7 @@ function sanitizeBranding(raw) {
   if (
     typeof raw.secondaryLogoBase64 === "string" &&
     raw.secondaryLogoBase64.startsWith("data:image/") &&
-    raw.secondaryLogoBase64.length <= 4 * 1024 * 1024
+    raw.secondaryLogoBase64.length <= BRANDING_UPLOAD_LIMITS.maxBase64Length
   ) {
     secondaryLogoBase64 = raw.secondaryLogoBase64;
   }
@@ -88,6 +88,11 @@ function sanitizeBranding(raw) {
     : typeof raw.secondaryLogoUrl === "string" && raw.secondaryLogoUrl.trim() !== ""
     ? raw.secondaryLogoUrl.trim()
     : null;
+
+  const signatoryPreparerTitle =
+    typeof raw.signatoryPreparerTitle === "string"
+      ? raw.signatoryPreparerTitle.trim().slice(0, 80)
+      : "";
 
   const signatoryRegistrarTitle =
     typeof raw.signatoryRegistrarTitle === "string"
@@ -112,6 +117,7 @@ function sanitizeBranding(raw) {
     logoBase64,
     secondaryLogoUrl,
     secondaryLogoBase64,
+    signatoryPreparerTitle,
     signatoryRegistrarTitle,
     signatoryHeadTitle,
   };
@@ -173,7 +179,7 @@ export async function PUT(req) {
       return NextResponse.json({ ok: false, error: "Enter a six-digit brand color, such as #7A1E28." }, { status: 400 });
     }
     for (const field of ["logoBase64", "secondaryLogoBase64"]) {
-      if (typeof body[field] === "string" && body[field].length > 4 * 1024 * 1024) {
+      if (typeof body[field] === "string" && body[field].length > BRANDING_UPLOAD_LIMITS.maxBase64Length) {
         return NextResponse.json({ ok: false, error: "The uploaded seal is too large. Choose a smaller image." }, { status: 400 });
       }
     }

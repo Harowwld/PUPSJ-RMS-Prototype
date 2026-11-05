@@ -63,7 +63,7 @@ test('CommandPalette Implements macOS Two-Pane Inspector Preview', () => {
 
   // Split view
   assert.ok(
-    code.includes('md:flex') && (code.includes('md:w-[330px]') || code.includes('lg:w-[360px]')),
+    code.includes('md:flex') && (code.includes('md:w-[360px]') || code.includes('lg:w-[390px]')),
     'CommandPalette must include desktop inspector preview panel with increased width'
   )
   assert.ok(
@@ -218,10 +218,12 @@ test('CommandPalette Badges and Buttons Align With Apple HIG and Repository Stan
 
   // Secondary action button: outlined text only, standard styling, no leading icons like Copy01Icon
   assert.ok(
-    code.includes('variant="outline"') && code.includes('Copy {focusedItem.type === "student"'),
+    (code.includes('variant="outline"') && code.includes('Copy {focusedItem.type === "student"')) ||
+    (code.includes('<CopyButton') && code.includes('focusedItem.type === "student" ? "Student No" : "Identifier"')),
     'Secondary action button must be outlined text-only'
   )
   assert.ok(
+    code.includes('border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700') ||
     code.includes('border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700'),
     'Secondary action button must follow standard Apple outlined styling'
   )
@@ -231,16 +233,16 @@ test('CommandPalette Badges and Buttons Align With Apple HIG and Repository Stan
   )
 })
 
-test('CommandPalette Avatar and Icon Preview Are Rounded-Full with Increased Width', () => {
+test('CommandPalette Avatar and Icon Preview Are Rounded-Full with Compact Geometry', () => {
   const palettePath = path.join(ROOT_DIR, 'src/components/shared/CommandPalette.js')
   const code = fs.readFileSync(palettePath, 'utf8')
 
   assert.ok(
-    code.includes('w-20 h-20 rounded-full'),
-    'Inspector avatar and icon preview must be rounded-full with increased w-20 h-20 geometry'
+    code.includes('size-12 rounded-full'),
+    'Inspector avatar and icon preview must be rounded-full with balanced size-12 geometry'
   )
   assert.ok(
-    code.includes('sm:max-w-3xl') && code.includes('md:max-w-[840px]'),
+    code.includes('sm:max-w-4xl') && code.includes('lg:max-w-[1000px]'),
     'CommandPalette modal must have increased width'
   )
 })
@@ -257,5 +259,39 @@ test('CommandPalette Global Ctrl+K Handler Prevents Double-Toggle Glitch', () =>
     code.includes('setIsPaletteOpen(!isPaletteOpen)'),
     'Ctrl+K handler must cleanly toggle boolean state without racing'
   )
+})
+
+test('ProfileAvatar Implements Standardized macOS Fallback Styling and SuperAdmin Adoption', () => {
+  const avatarPath = path.join(ROOT_DIR, 'src/components/shared/ProfileAvatar.jsx')
+  const avatarUiPath = path.join(ROOT_DIR, 'src/components/ui/avatar.jsx')
+  const staffTabPath = path.join(ROOT_DIR, 'src/components/systemadmin/GlobalStaffTab.js')
+  const officeSheetPath = path.join(ROOT_DIR, 'src/components/systemadmin/OfficeDetailSheet.js')
+  const auditTabPath = path.join(ROOT_DIR, 'src/components/systemadmin/GlobalAuditLogsTab.js')
+
+  // 1. ProfileAvatar macOS styling
+  assert.ok(fs.existsSync(avatarPath), 'ProfileAvatar.jsx must exist')
+  const avatarCode = fs.readFileSync(avatarPath, 'utf8')
+  assert.ok(avatarCode.includes('MAC_AVATAR_THEMES'), 'ProfileAvatar must define macOS avatar theme palettes')
+  assert.ok(avatarCode.includes('shadow-[inset_0_1px_0_0_rgba(255,255,255,0.45)'), 'ProfileAvatar must include macOS specular highlight')
+  assert.ok(avatarCode.includes('bg-gradient-to-b from-blue-400'), 'ProfileAvatar must have Apple vibrant gradients')
+
+  // 2. AvatarFallback base styling
+  const avatarUiCode = fs.readFileSync(avatarUiPath, 'utf8')
+  assert.ok(avatarUiCode.includes('shadow-[inset_0_1px_0_0_rgba(255,255,255,0.45)'), 'AvatarFallback must include macOS specular rim lighting')
+
+  // 3. GlobalStaffTab uses ProfileAvatar in table and slide-over
+  const staffCode = fs.readFileSync(staffTabPath, 'utf8')
+  assert.ok(staffCode.includes('import ProfileAvatar from "@/components/shared/ProfileAvatar"'), 'GlobalStaffTab must import ProfileAvatar')
+  assert.ok(staffCode.includes('<ProfileAvatar') && staffCode.includes('staffId={member.id}'), 'GlobalStaffTab table must render ProfileAvatar for staff')
+  assert.ok(staffCode.includes('staffId={inspectMember.id}'), 'GlobalStaffTab slide-over must render ProfileAvatar for inspectMember')
+
+  // 4. OfficeDetailSheet uses ProfileAvatar for stationed personnel
+  const officeCode = fs.readFileSync(officeSheetPath, 'utf8')
+  assert.ok(officeCode.includes('import ProfileAvatar from "@/components/shared/ProfileAvatar"'), 'OfficeDetailSheet must import ProfileAvatar')
+  assert.ok(officeCode.includes('<ProfileAvatar') && officeCode.includes('staffId={staff.id}'), 'OfficeDetailSheet must render ProfileAvatar for stationed staff')
+
+  // 5. GlobalAuditLogsTab uses AuditActorAvatar
+  const auditCode = fs.readFileSync(auditTabPath, 'utf8')
+  assert.ok(auditCode.includes('<AuditActorAvatar'), 'GlobalAuditLogsTab must render AuditActorAvatar')
 })
 

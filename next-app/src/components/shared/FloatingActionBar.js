@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontalIcon } from "hugeicons-react"
 import { cn } from "@/lib/utils"
+import { SPRING_PRESS, useAppReducedMotion } from "@/lib/motion"
 
 const getActionVariant = (variant) =>
   ["danger", "success", "warning", "default", "outline", "ghost", "destructive"].includes(variant)
@@ -132,7 +134,10 @@ export default function FloatingActionBar({
     return () => window.removeEventListener("keydown", onKeyDown, true)
   }, [mounted, forceMount, count, limit, handleCancel])
 
-  if ((!mounted && !forceMount) || count <= limit) return null
+  const shouldReduceMotion = useAppReducedMotion()
+  const isVisible = (mounted || forceMount) && count > limit
+
+  if (count <= limit && !mounted && !forceMount) return null
 
   // Resolve Primary Action
   let resolvedPrimary = primaryAction
@@ -323,36 +328,44 @@ export default function FloatingActionBar({
   const entityLabel = formatEntityLabel(count, entityName, selectionStatus)
 
   const content = (
-    <div
-      role="region"
-      aria-label="Selection batch actions"
-      className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in fade-in-0 slide-in-from-bottom-4 duration-200"
-    >
-      <div
-        className={cn(
-          "flex min-w-[320px] max-w-[calc(100vw-2rem)] items-center gap-3 rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl py-2 px-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-none select-none",
-          className
-        )}
-      >
-        {/* Left Zone: Apple-style Token Pill with Counter & Plain Entity Label */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="inline-flex h-5.5 min-w-5.5 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-1.5 text-xs font-semibold tabular-nums text-gray-800 dark:text-zinc-200 border border-gray-200/60 dark:border-white/10">
-            {count}
-          </span>
-          <span className="text-xs font-medium text-gray-800 dark:text-zinc-100 whitespace-nowrap">
-            {entityLabel}
-          </span>
-        </div>
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          role="region"
+          aria-label="Selection batch actions"
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20, scale: shouldReduceMotion ? 1 : 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 16, scale: shouldReduceMotion ? 1 : 0.96 }}
+          transition={shouldReduceMotion ? { duration: 0.1 } : SPRING_PRESS}
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+        >
+          <div
+            className={cn(
+              "flex min-w-[320px] max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white/92 dark:bg-zinc-900/92 backdrop-blur-2xl py-2 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.14),0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.08)] select-none",
+              className
+            )}
+          >
+            {/* Left Zone: Apple-style Token Pill with Counter & Plain Entity Label */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-flex h-5.5 min-w-5.5 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-1.5 text-xs font-semibold tabular-nums text-gray-800 dark:text-zinc-200 border border-gray-200/60 dark:border-white/10">
+                {count}
+              </span>
+              <span className="text-xs font-medium text-gray-800 dark:text-zinc-100 whitespace-nowrap">
+                {entityLabel}
+              </span>
+            </div>
 
-        {/* Vertical Hairline Divider */}
-        <div className="w-[1px] bg-black/10 dark:bg-white/10 h-4.5 shrink-0" aria-hidden="true" />
+            {/* Vertical Hairline Divider */}
+            <div className="w-[1px] bg-black/10 dark:bg-white/10 h-4.5 shrink-0" aria-hidden="true" />
 
-        {/* Right Zone: Action Buttons */}
-        <div className="flex items-center gap-2 ml-auto flex-1 justify-end">
-          {renderActionButtons()}
-        </div>
-      </div>
-    </div>
+            {/* Right Zone: Action Buttons */}
+            <div className="flex items-center gap-2 ml-auto flex-1 justify-end">
+              {renderActionButtons()}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 
   if (typeof document === "undefined" || forceMount) {

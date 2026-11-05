@@ -996,7 +996,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           open={Boolean(deleteTemplateId)}
           title="Delete OCR Configuration"
           message="This permanently deletes the saved OCR configuration. This action cannot be undone."
-          confirmLabel="Delete"
+          confirmLabel="Delete Configuration"
           confirmVariant="danger"
           onCancel={() => setDeleteTemplateId(null)}
           onConfirm={deleteTemplate}
@@ -1007,7 +1007,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           open={Boolean(archiveTemplateId)}
           title="Archive OCR Configuration"
           message="Archiving this configuration will remove it from active recognition routing. You can restore it anytime from the Archived tab."
-          confirmLabel="Archive"
+          confirmLabel="Archive Configuration"
           confirmVariant="warning"
           isArchiveModal={true}
           onCancel={() => setArchiveTemplateId(null)}
@@ -1019,7 +1019,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           open={Boolean(restoreTemplateId)}
           title="Restore OCR Configuration"
           message="Restoring this template configuration will re-activate it for automated OCR document processing."
-          confirmLabel="Restore"
+          confirmLabel="Restore Configuration"
           confirmVariant="success"
           isRestoreModal={true}
           onCancel={() => setRestoreTemplateId(null)}

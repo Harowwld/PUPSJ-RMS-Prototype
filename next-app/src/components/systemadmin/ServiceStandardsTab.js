@@ -74,16 +74,16 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
   const canIncrease = current < max;
 
   return (
-    <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/80 dark:border-border shrink-0 ml-4 select-none">
+    <div className="flex items-center gap-1.5 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shrink-0 ml-4 select-none">
       <button
         type="button"
         disabled={!canDecrease}
         onClick={() => onAdjust(-1)}
         aria-label={`Decrease ${label} turnaround days`}
         className={cn(
-          "w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 shadow-2xs transition-all",
+          "w-7 h-7 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all",
           canDecrease
-            ? "hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer active:scale-90"
+            ? "hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-90"
             : "opacity-40 cursor-not-allowed pointer-events-none"
         )}
       >
@@ -98,9 +98,9 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
         onClick={() => onAdjust(1)}
         aria-label={`Increase ${label} turnaround days`}
         className={cn(
-          "w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 shadow-2xs transition-all",
+          "w-7 h-7 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all",
           canIncrease
-            ? "hover:bg-gray-50 dark:hover:bg-zinc-600 cursor-pointer active:scale-90"
+            ? "hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-90"
             : "opacity-40 cursor-not-allowed pointer-events-none"
         )}
       >
@@ -305,7 +305,7 @@ export default function ServiceStandardsTab({ showToast }) {
             <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
               Turnaround Framework Presets
             </span>
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 overflow-x-auto">
+            <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] overflow-x-auto">
               {PRESETS.map((p) => {
                 const isSelected = activePreset?.id === p.id;
                 return (
@@ -314,9 +314,9 @@ export default function ServiceStandardsTab({ showToast }) {
                     type="button"
                     onClick={() => handleApplyPreset(p)}
                     className={cn(
-                      "flex-1 min-w-[130px] px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap text-center select-none active:scale-[0.98]",
+                      "flex-1 min-w-[130px] px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer whitespace-nowrap text-center select-none active:scale-[0.98]",
                       isSelected
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+                        ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                     )}
                   >
@@ -329,14 +329,14 @@ export default function ServiceStandardsTab({ showToast }) {
             {/* Active Preset Context Banner */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border/70 text-xs">
               <div className="flex items-start gap-2.5">
-                <div className="h-6 w-6 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                <div className="h-6 w-6 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-xs shrink-0 mt-0.5">
                   <CovidInfoIcon size="1em" className="text-xs" />
                 </div>
                 <span className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
                   {activePreset?.description}
                 </span>
               </div>
-              <span className="text-xs font-sans tabular-nums font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-1 rounded-lg border border-border/70 shrink-0 self-start sm:self-auto shadow-2xs">
+              <span className="text-xs font-sans tabular-nums font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-border/70 shrink-0 self-start sm:self-auto shadow-2xs">
                 {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
               </span>
             </div>
@@ -372,8 +372,8 @@ export default function ServiceStandardsTab({ showToast }) {
                 </span>
               </div>
 
-              {/* Working Days Toggle Row */}
-              <div className="flex items-center justify-between p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-card">
+              {/* Working Days Toggle Row (Apple Inset Grouped Style) */}
+              <div className="flex items-center justify-between p-4 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-card shadow-2xs">
                 <div className="flex flex-col gap-0.5 max-w-[80%]">
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     Business Days (Monday – Friday) Only
@@ -395,8 +395,8 @@ export default function ServiceStandardsTab({ showToast }) {
                 />
               </div>
 
-              {/* Tier Stepper Rows */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card divide-y divide-border/60 overflow-hidden shadow-2xs">
+              {/* Tier Stepper Rows (Apple Inset Grouped Style) */}
+              <div className="rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-card divide-y divide-black/[0.06] dark:divide-white/[0.08] overflow-hidden shadow-2xs">
                 {/* Simple */}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex flex-col gap-1">
@@ -499,7 +499,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 {/* Milestone 1: Simple */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0 border border-emerald-100 dark:border-emerald-900/30">
+                    <div className="h-8 w-8 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0 border border-emerald-100 dark:border-emerald-900/30">
                       <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -524,7 +524,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 {/* Milestone 2: Complex */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center text-sm shrink-0 border border-amber-100 dark:border-amber-900/30">
+                    <div className="h-8 w-8 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center text-sm shrink-0 border border-amber-100 dark:border-amber-900/30">
                       <Archive01Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -549,7 +549,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 {/* Milestone 3: Technical */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 flex items-center justify-center text-sm shrink-0 border border-purple-100 dark:border-purple-900/30">
+                    <div className="h-8 w-8 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 flex items-center justify-center text-sm shrink-0 border border-purple-100 dark:border-purple-900/30">
                       <Certificate01Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">

@@ -693,7 +693,7 @@ export default function DocTypesTab({
                                         title: "Archive Document Type",
                                         message:
                                           "This document type will be hidden from new registrations but its history will be preserved.",
-                                        confirmLabel: "Archive",
+                                        confirmLabel: "Archive Document Type",
                                         variant: "warning",
                                         buttonIcon: " Archive01Icon",
                                         icon: " Archive01Icon",
@@ -828,7 +828,7 @@ export default function DocTypesTab({
                 disabled={repeat.saving}
                 className="h-10 px-5 disabled:opacity-50 cursor-pointer border-0"
               >
-                {repeat.saving ? "Creating..." : "Create"}
+                {repeat.saving ? "Adding Document Type…" : "Add Document Type"}
               </Button>
             </DialogFooter>
           </form>

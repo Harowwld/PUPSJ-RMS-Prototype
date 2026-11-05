@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAppReducedMotion, SPRING_LAYOUT, EASE_OUT } from "@/lib/motion";
 import {
   Cancel01Icon,
   FilterIcon,
@@ -53,6 +55,7 @@ export default function ActiveFilterChips({
   extraChips = [],
   className,
 }) {
+  const shouldReduceMotion = useAppReducedMotion();
   // Collect all active chip items
   const chips = [];
 
@@ -133,57 +136,72 @@ export default function ActiveFilterChips({
       </div>
 
       {/* Filter Tokens */}
-      {chips.map((chip, idx) => {
-        let displayGroupLabel = chip.groupLabel;
-        let displayLabel = chip.label;
+      <AnimatePresence mode="popLayout">
+        {chips.map((chip, idx) => {
+          let displayGroupLabel = chip.groupLabel;
+          let displayLabel = chip.label;
 
-        // Auto-split strings like "Range: Oct 1 - Oct 31" into GroupLabel + Label if not already separated
-        if (!displayGroupLabel && typeof displayLabel === "string") {
-          const colonIndex = displayLabel.indexOf(": ");
-          if (colonIndex > 0 && colonIndex < 20) {
-            displayGroupLabel = displayLabel.slice(0, colonIndex).trim();
-            displayLabel = displayLabel.slice(colonIndex + 2).trim();
+          // Auto-split strings like "Range: Oct 1 - Oct 31" into GroupLabel + Label if not already separated
+          if (!displayGroupLabel && typeof displayLabel === "string") {
+            const colonIndex = displayLabel.indexOf(": ");
+            if (colonIndex > 0 && colonIndex < 20) {
+              displayGroupLabel = displayLabel.slice(0, colonIndex).trim();
+              displayLabel = displayLabel.slice(colonIndex + 2).trim();
+            }
           }
-        }
 
-        const icon = getChipIcon(chip, displayGroupLabel, displayLabel);
+          const icon = getChipIcon(chip, displayGroupLabel, displayLabel);
 
-        return (
-          <span
-            key={`${chip.type}-${chip.groupId || ""}-${chip.value || idx}`}
-            className="inline-flex items-center gap-1.5 h-6.5 pl-2.5 pr-1 rounded-full bg-white dark:bg-zinc-800 border border-black/[0.08] dark:border-white/[0.12] text-gray-700 dark:text-zinc-200 text-xs font-normal shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-all hover:border-black/[0.16] dark:hover:border-white/20 select-none active:scale-[0.98]"
-          >
-            {icon}
-
-            {displayGroupLabel && (
-              <>
-                <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 truncate max-w-[120px]">
-                  {displayGroupLabel}
-                </span>
-                <span className="text-gray-300 dark:text-zinc-600 select-none text-[10px]" aria-hidden="true">
-                  ·
-                </span>
-              </>
-            )}
-
-            <span className="font-medium text-[11px] text-gray-900 dark:text-zinc-100 max-w-[220px] truncate">
-              {displayLabel}
-            </span>
-
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                chip.onClear?.();
-              }}
-              className="w-4 h-4 ml-0.5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-700/80 active:scale-90 transition-all cursor-pointer"
-              aria-label={`Remove filter: ${displayGroupLabel ? `${displayGroupLabel} ` : ""}${displayLabel}`}
+          return (
+            <motion.span
+              layout={!shouldReduceMotion}
+              key={`${chip.type}-${chip.groupId || ""}-${chip.value || idx}`}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : {
+                      opacity: 0,
+                      scale: 0.85,
+                      transition: { duration: 0.14, ease: EASE_OUT },
+                    }
+              }
+              transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+              className="inline-flex items-center gap-1.5 h-6.5 pl-2.5 pr-1 rounded-full bg-white dark:bg-zinc-800 border border-black/[0.08] dark:border-white/[0.12] text-gray-700 dark:text-zinc-200 text-xs font-normal shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-colors hover:border-black/[0.16] dark:hover:border-white/20 select-none active:scale-[0.98]"
             >
-              <Cancel01Icon size={10} className="shrink-0" />
-            </button>
-          </span>
-        );
-      })}
+              {icon}
+
+              {displayGroupLabel && (
+                <>
+                  <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 truncate max-w-[120px]">
+                    {displayGroupLabel}
+                  </span>
+                  <span className="text-gray-300 dark:text-zinc-600 select-none text-[10px]" aria-hidden="true">
+                    ·
+                  </span>
+                </>
+              )}
+
+              <span className="font-medium text-[11px] text-gray-900 dark:text-zinc-100 max-w-[220px] truncate">
+                {displayLabel}
+              </span>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  chip.onClear?.();
+                }}
+                className="w-4 h-4 ml-0.5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-700/80 active:scale-90 transition-all cursor-pointer"
+                aria-label={`Remove filter: ${displayGroupLabel ? `${displayGroupLabel} ` : ""}${displayLabel}`}
+              >
+                <Cancel01Icon size={10} className="shrink-0" />
+              </button>
+            </motion.span>
+          );
+        })}
+      </AnimatePresence>
 
       {/* Clear All Action */}
       {chips.length > 0 && onClearAll && (

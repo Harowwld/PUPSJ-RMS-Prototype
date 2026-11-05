@@ -138,7 +138,7 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
             sideOffset={8}
           >
             {/* 1. Header Zone */}
-            <div className="flex items-center justify-between px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">
+            <div className="flex items-center justify-between px-4.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
               <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                 Folder Color
               </span>
@@ -1612,7 +1612,7 @@ export default function RecordsArchiveTab({
             ? `Restore record for ${restoreTarget?.name} (${restoreTarget?.acronym || restoreTarget?.studentNo})? This will make the organization active and visible in all modules again.`
             : `Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`
         }
-        confirmLabel="Restore"
+        confirmLabel={isOsas ? "Restore Organization" : "Restore Student Record"}
         variant="success"
         isRestoreModal={true}
         onConfirm={async () => {
@@ -1643,7 +1643,7 @@ export default function RecordsArchiveTab({
             ? `Archive record for ${archiveTarget?.name} (${archiveTarget?.acronym || archiveTarget?.studentNo})? This organization record will be moved to archives.`
             : `Archive record for ${archiveTarget?.name} (${archiveTarget?.studentNo})? This student record will be moved to archives.`
         }
-        confirmLabel="Archive"
+        confirmLabel={isOsas ? "Archive Organization" : "Archive Student Record"}
         variant="warning"
         onConfirm={async () => {
           if (archiveTarget) {

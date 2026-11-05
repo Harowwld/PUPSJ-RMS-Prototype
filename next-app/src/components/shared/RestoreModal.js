@@ -150,15 +150,15 @@ export default function RestoreModal({
             <label className="text-[11px] font-semibold uppercase tracking-[0.05em] text-gray-500 dark:text-zinc-400">
               Restoration Strategy
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 dark:border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setMode("merge")}
                 className={cn(
-                  "p-3.5 rounded-lg text-left transition-all cursor-pointer select-none active:scale-[0.99] border",
+                  "p-3.5 rounded-xl text-left transition-all duration-150 cursor-pointer select-none active:scale-[0.98] border",
                   mode === "merge"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs ring-1 ring-emerald-500/20 dark:ring-emerald-400/20 border-emerald-500/40"
-                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-emerald-500/30 dark:ring-emerald-400/30 border-emerald-500/50"
+                    : "border-black/[0.08] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.03] text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -176,10 +176,10 @@ export default function RestoreModal({
                 type="button"
                 onClick={() => setMode("overwrite")}
                 className={cn(
-                  "p-3.5 rounded-lg text-left transition-all cursor-pointer select-none active:scale-[0.99] border",
+                  "p-3.5 rounded-xl text-left transition-all duration-150 cursor-pointer select-none active:scale-[0.98] border",
                   mode === "overwrite"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs ring-1 ring-red-500/20 dark:ring-red-400/20 border-red-500/40"
-                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-red-500/30 dark:ring-red-400/30 border-red-500/50"
+                    : "border-black/[0.08] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.03] text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -326,10 +326,10 @@ export default function RestoreModal({
             {isLoading ? (
               <>
                 <Loading01Icon size="1em" className="animate-spin text-xs mr-1.5" />
-                <span>Restoring...</span>
+                <span>Restoring Records…</span>
               </>
             ) : (
-              <span>{mode === "merge" ? "Merge" : "Overwrite"}</span>
+              <span>{mode === "merge" ? "Merge Records" : "Overwrite Database"}</span>
             )}
           </Button>
         </DialogFooter>

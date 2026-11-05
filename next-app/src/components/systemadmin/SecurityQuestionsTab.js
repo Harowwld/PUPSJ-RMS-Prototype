@@ -275,17 +275,38 @@ export default function SecurityQuestionsTab({ showToast }) {
           }
         />
 
-        <div role="group" aria-label="Question scope" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 dark:border-white/10">
-          {[["all", "All"], ["required", "Required"], ["optional", "Optional"]].map(([key, label]) => (
-            <button key={key} type="button" onClick={() => setScope(key)} aria-pressed={scope === key} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon", scope === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-              {label}<span className="tabular-nums text-[10px] text-gray-400 dark:text-zinc-500">{counts[key]}</span>
-              {scope === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-            </button>
-          ))}
+        <div role="group" aria-label="Question scope" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+            {[["all", "All"], ["required", "Required"], ["optional", "Optional"]].map(([key, label]) => {
+              const isSelected = scope === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setScope(key)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <span>{label}</span>
+                  <span className={cn(
+                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
+                    isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
+                  )}>
+                    {counts[key]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <DataViewToolbar label="Security question search" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} label="Search security questions" placeholder="Search questions..." className="w-[min(320px,60vw)]" />
+          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} label="Search security questions" placeholder="Search questions..." />
         </DataViewToolbar>
         <ActiveFilterChips searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={() => setSearch("")} className="border-t border-border dark:border-border px-5 py-2.5" />
 
@@ -309,7 +330,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                     {/* Top Row: Question label & Controls */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-sans tabular-nums text-xs border border-border dark:border-border shadow-2xs">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-sans tabular-nums text-xs border border-border dark:border-border shadow-2xs">
                           {i + 1}
                         </span>
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">

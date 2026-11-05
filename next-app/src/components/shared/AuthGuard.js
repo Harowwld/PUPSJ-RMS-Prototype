@@ -11,6 +11,9 @@ import {
   applyHighContrastClass,
   getHighContrastPreference,
   setHighContrastPreference,
+  applyReduceMotionClass,
+  getReduceMotionPreference,
+  setReduceMotionPreference,
 } from "@/lib/accessibility"
 
 export const AuthUserContext = createContext(null)
@@ -65,7 +68,7 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
           }
         }
 
-        // Setup accessibility scaling and high contrast preferences
+        // Setup accessibility scaling, high contrast, and reduce motion preferences
         if (user && user.id) {
           let highContrast = user.preferences?.high_contrast;
           if (typeof highContrast === "boolean") {
@@ -73,6 +76,14 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
           } else {
             highContrast = getHighContrastPreference(user.id);
             applyHighContrastClass(highContrast);
+          }
+
+          let reduceMotion = user.preferences?.reduce_motion;
+          if (typeof reduceMotion === "boolean") {
+            setReduceMotionPreference(reduceMotion, user.id);
+          } else {
+            reduceMotion = getReduceMotionPreference(user.id);
+            applyReduceMotionClass(reduceMotion);
           }
         }
 
@@ -106,6 +117,8 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
     const handleStorageChange = () => {
       const highContrast = getHighContrastPreference();
       applyHighContrastClass(highContrast);
+      const reduceMotion = getReduceMotionPreference();
+      applyReduceMotionClass(reduceMotion);
     };
     window.addEventListener("storage", handleStorageChange);
     return () => {

@@ -229,11 +229,11 @@ export default function ConfirmModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className={cn(
-          "sm:max-w-lg p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0"
+          "sm:max-w-lg p-0 overflow-hidden bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 shadow-[0_24px_54px_rgba(0,0,0,0.18),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_28px_64px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] rounded-[22px] gap-0"
         )}
       >
         <DialogHeader className={cn(
-          "p-6 min-w-0",
+          "px-5 pt-5 pb-3 min-w-0",
           (selectedItems.length > 0 || isVerificationEnabled) && "pb-0"
         )}>
           <div className="flex items-start gap-4 w-full">
@@ -245,21 +245,21 @@ export default function ConfirmModal({
                 {displayMessage}
               </DialogDescription>
               {note && (
-                <p className={cn(
-                  "mt-3 text-[12px] font-normal",
+                <div className={cn(
+                  "mt-2.5 p-2.5 px-3 rounded-xl border text-[12px] font-normal leading-relaxed",
                   isRegistrationModal
-                    ? "text-gray-500 dark:text-zinc-400"
-                    : "text-amber-700 dark:text-amber-300"
+                    ? "bg-gray-50/80 border-gray-200/80 text-gray-600 dark:bg-zinc-800/60 dark:border-zinc-700/80 dark:text-zinc-300"
+                    : "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300"
                 )}>
                   {note}
-                </p>
+                </div>
               )}
             </div>
           </div>
         </DialogHeader>
 
         {(selectedItems.length > 0 || isVerificationEnabled) && (
-          <div className={cn("p-6 space-y-5 bg-white min-w-0 dark:bg-card", isAppleStyled && "px-6 pt-2 pb-4")}>
+          <div className={cn("px-5 py-3 space-y-3.5 bg-transparent min-w-0", isAppleStyled && "pt-1.5 pb-3")}>
             {selectedItems.length > 0 && (
               <div>
                 <p className={cn(
@@ -511,12 +511,12 @@ export default function ConfirmModal({
           </div>
         )}
 
-        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
+        <DialogFooter className="px-5 pb-5 pt-2 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
             {cancelLabel}

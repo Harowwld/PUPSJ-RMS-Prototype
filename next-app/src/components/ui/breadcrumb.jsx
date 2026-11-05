@@ -26,7 +26,7 @@ function BreadcrumbList({
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "flex flex-wrap items-center gap-1.5 text-sm wrap-break-word text-muted-foreground",
+        "flex flex-wrap items-center gap-1.5 text-xs font-medium wrap-break-word text-gray-500 dark:text-zinc-400",
         className
       )}
       {...props} />
@@ -53,7 +53,7 @@ function BreadcrumbLink({
   return useRender({
     defaultTagName: "a",
     props: mergeProps({
-      className: cn("transition-colors hover:text-foreground", className),
+      className: cn("transition-colors text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 cursor-pointer", className),
     }, props),
     render,
     state: {
@@ -72,7 +72,7 @@ function BreadcrumbPage({
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn("font-normal text-foreground", className)}
+      className={cn("font-semibold text-gray-900 dark:text-zinc-100", className)}
       {...props} />
   );
 }
@@ -87,10 +87,10 @@ function BreadcrumbSeparator({
       data-slot="breadcrumb-separator"
       role="presentation"
       aria-hidden="true"
-      className={cn("[&>svg]:size-3.5", className)}
+      className={cn("text-gray-400 dark:text-zinc-600 [&>svg]:size-3 shrink-0 select-none", className)}
       {...props}>
       {children ?? (
-        <ChevronRightIcon size={16} />
+        <ChevronRightIcon size={12} />
       )}
     </li>
   );

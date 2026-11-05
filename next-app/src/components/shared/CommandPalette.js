@@ -9,9 +9,13 @@ import {
   getHighContrastPreference,
   toggleHighContrastPreference,
   HIGH_CONTRAST_EVENT,
+  getReduceMotionPreference,
+  toggleReduceMotionPreference,
+  REDUCE_MOTION_EVENT,
 } from "@/lib/accessibility";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import CopyButton from "@/components/shared/CopyButton";
 import AppIcon from "@/components/ui/app-icon";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import {
@@ -160,6 +164,10 @@ export default function CommandPalette({
   const [isHighContrast, setIsHighContrast] = useState(() =>
     typeof window !== "undefined" ? getHighContrastPreference(authUser?.id) : false
   );
+  // Reduce motion state initialized lazily
+  const [isReduceMotion, setIsReduceMotion] = useState(() =>
+    typeof window !== "undefined" ? getReduceMotionPreference(authUser?.id) : false
+  );
 
   // Recent commands from localStorage initialized lazily
   const [recentCommands, setRecentCommands] = useState(() => {
@@ -186,15 +194,24 @@ export default function CommandPalette({
       : false
   );
 
-  // Sync high contrast mode state on custom event
+  // Sync high contrast & reduce motion state on custom events
   useEffect(() => {
     const handleContrastChange = (e) => {
       if (e.detail && typeof e.detail.enabled === "boolean") {
         setIsHighContrast(e.detail.enabled);
       }
     };
+    const handleMotionChange = (e) => {
+      if (e.detail && typeof e.detail.enabled === "boolean") {
+        setIsReduceMotion(e.detail.enabled);
+      }
+    };
     window.addEventListener(HIGH_CONTRAST_EVENT, handleContrastChange);
-    return () => window.removeEventListener(HIGH_CONTRAST_EVENT, handleContrastChange);
+    window.addEventListener(REDUCE_MOTION_EVENT, handleMotionChange);
+    return () => {
+      window.removeEventListener(HIGH_CONTRAST_EVENT, handleContrastChange);
+      window.removeEventListener(REDUCE_MOTION_EVENT, handleMotionChange);
+    };
   }, []);
 
   // Debounce search query for live database calls
@@ -1029,6 +1046,18 @@ export default function CommandPalette({
           description:
             "Toggle enhanced tactile borders, increased text boldness, and maximum contrast ratios.",
         },
+        {
+          id: "ctrl-toggle-motion",
+          label: isReduceMotion ? "Disable Reduce Motion" : "Enable Reduce Motion",
+          action: "toggle-motion",
+          icon: Activity01Icon,
+          scope: "actions",
+          breadcrumb: "Accessibility • Motion",
+          keywords:
+            "reduce motion animation speed disable animations disable motion spring transitions accessibility",
+          description:
+            "Minimize interface transitions, remove layout travel and eliminate spring overshoot.",
+        },
         ...(!isStudent
           ? [
               {
@@ -1252,6 +1281,7 @@ export default function CommandPalette({
     isMac,
     pathname,
     isHighContrast,
+    isReduceMotion,
     liveStudents,
     liveRequests,
   ]);
@@ -1376,6 +1406,17 @@ export default function CommandPalette({
           description: next
             ? "Tactile borders and maximum contrast readability active."
             : "Standard interface contrast restored.",
+        });
+        return;
+      }
+
+      if (item.action === "toggle-motion") {
+        const next = toggleReduceMotionPreference(authUser?.id);
+        setIsReduceMotion(next);
+        toast.success(next ? "Reduce Motion Enabled" : "Reduce Motion Disabled", {
+          description: next
+            ? "Interface animations minimized and spring overshoot eliminated."
+            : "Standard fluid spring transitions restored.",
         });
         return;
       }
@@ -1550,7 +1591,7 @@ export default function CommandPalette({
       <DialogContent
         hideClose={true}
         className={cn(
-          "p-0 gap-0 overflow-hidden rounded-[20px] max-w-full sm:max-w-3xl md:max-w-[840px] lg:max-w-[880px] w-full",
+          "p-0 gap-0 overflow-hidden rounded-[20px] max-w-full sm:max-w-4xl md:max-w-5xl lg:max-w-[1000px] w-full",
           "border border-black/[0.08] dark:border-white/10",
           "bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl",
           "shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.7)]",
@@ -1613,7 +1654,7 @@ export default function CommandPalette({
         {/* SCOPE FILTER PILLS BAR (RAYCAST / SPOTLIGHT TABS)                 */}
         {/* ----------------------------------------------------------------- */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-black/[0.05] dark:border-white/[0.06] bg-black/[0.015] dark:bg-white/[0.01]">
-          <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          <div className="inline-flex items-center gap-1 p-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] overflow-x-auto [scrollbar-width:none]">
             {SCOPE_TABS.map((tab) => {
               const isActive = activeScope === tab.id;
               return (
@@ -1625,10 +1666,10 @@ export default function CommandPalette({
                     setFocusedIndex(0);
                   }}
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs transition-all cursor-pointer select-none font-medium flex items-center gap-1.5",
+                    "px-3 py-0.5 rounded-full text-xs transition-all duration-150 cursor-pointer select-none font-medium flex items-center gap-1.5 active:scale-[0.98]",
                     isActive
-                      ? "bg-pup-maroon text-white dark:bg-white dark:text-zinc-900 shadow-xs font-semibold scale-[1.02]"
-                      : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] font-semibold"
+                      : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100"
                   )}
                 >
                   <span>{tab.label}</span>
@@ -1648,7 +1689,7 @@ export default function CommandPalette({
         {/* ----------------------------------------------------------------- */}
         {/* MAIN BODY: TWO-PANE LAYOUT (LIST + INSPECTOR PREVIEW)             */}
         {/* ----------------------------------------------------------------- */}
-        <div className="flex flex-col md:flex-row h-[480px] min-h-0">
+        <div className="flex flex-col md:flex-row h-[500px] min-h-0">
           {/* LEFT COLUMN: LIST RESULTS */}
           <div className="flex-1 min-w-0 overflow-y-auto p-2.5 [scrollbar-width:thin] border-r border-black/[0.06] dark:border-white/[0.08]">
             {/* Empty search: Show Recent Commands if available */}
@@ -1858,20 +1899,20 @@ export default function CommandPalette({
           </div>
 
           {/* RIGHT COLUMN: SPOTLIGHT INSPECTOR PREVIEW PANEL (MD+ SCREENS) */}
-          <div className="hidden md:flex md:w-[330px] lg:w-[360px] shrink-0 min-w-0 flex-col justify-between p-6 bg-black/[0.015] dark:bg-white/[0.01] overflow-y-auto border-l border-black/[0.06] dark:border-white/[0.08]">
+          <div className="hidden md:flex md:w-[360px] lg:w-[390px] shrink-0 min-w-0 flex-col justify-between p-6 bg-black/[0.015] dark:bg-white/[0.01] overflow-y-auto border-l border-black/[0.06] dark:border-white/[0.08]">
             {focusedItem ? (
               <div className="flex flex-col">
-                {/* Large spotlight icon badge or Student Avatar (Rounded-Full with Increased Width) */}
+                {/* Spotlight icon badge or Student Avatar (Rounded-Full) */}
                 {focusedItem.type === "student" ? (
                   <ProfileAvatar
                     studentNo={focusedItem.studentNo || focusedItem.badge}
                     name={focusedItem.label}
                     initials={getInitials(focusedItem.label)}
-                    className="w-20 h-20 rounded-full text-xl font-bold shadow-xs mb-4 border border-black/10 dark:border-white/10 shrink-0 overflow-hidden"
+                    className="size-12 rounded-full text-sm font-bold shadow-xs mb-3.5 border border-black/10 dark:border-white/10 shrink-0 overflow-hidden"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pup-maroon/15 via-pup-maroon/5 to-transparent dark:from-white/15 dark:to-transparent border border-pup-maroon/15 dark:border-white/10 flex items-center justify-center text-pup-maroon dark:text-red-400 shadow-xs mb-4 shrink-0">
-                    <PaletteIcon icon={focusedItem.icon || ArrowRight01Icon} size="2.2em" className="text-3xl" />
+                  <div className="size-12 rounded-full bg-gradient-to-b from-red-500 via-rose-700 to-pup-darkMaroon text-white border border-black/10 dark:border-white/15 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.45),0_1px_2px_rgba(0,0,0,0.12)] flex items-center justify-center mb-3.5 shrink-0">
+                    <PaletteIcon icon={focusedItem.icon || ArrowRight01Icon} size="1.4em" className="text-xl drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]" />
                   </div>
                 )}
 
@@ -1986,13 +2027,11 @@ export default function CommandPalette({
                 </Button>
 
                 {focusedItem.badge && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleCopyIdentifier(focusedItem.badge)}
-                    className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  >
-                    Copy {focusedItem.type === "student" ? "Student No" : "Identifier"}
-                  </Button>
+                  <CopyButton
+                    textToCopy={focusedItem.badge}
+                    entityName={focusedItem.type === "student" ? "Student No" : "Identifier"}
+                    className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  />
                 )}
               </div>
             )}

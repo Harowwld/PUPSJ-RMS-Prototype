@@ -4,6 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useAppReducedMotion, EASE_OUT } from "@/lib/motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -110,6 +112,7 @@ export const MAX_STEPS = 7
 export const MIN_STEPS = 2
 
 export default function LandingWorkflowCmsView({ showToast }) {
+  const shouldReduceMotion = useAppReducedMotion()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-workflow", "activeTab", "content") // 'content' | 'preview'
@@ -542,7 +545,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
                           {/* Step Number Badge */}
-                          <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                          <div className="w-9 h-9 rounded-full bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                             {String(idx + 1).padStart(2, "0")}
                           </div>
 
@@ -611,8 +614,16 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       </div>
 
                       {/* Step Details Body */}
-                      {isExpanded && (
-                        <div className="p-5 border-t border-border dark:border-border space-y-4">
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div
+                            initial={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: EASE_OUT }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-5 border-t border-border dark:border-border space-y-4">
                           {/* Step Main Title */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
@@ -683,7 +694,9 @@ export default function LandingWorkflowCmsView({ showToast }) {
                             </div>
                           </div>
                         </div>
+                      </motion.div>
                       )}
+                    </AnimatePresence>
                     </div>
                   )
                 })}

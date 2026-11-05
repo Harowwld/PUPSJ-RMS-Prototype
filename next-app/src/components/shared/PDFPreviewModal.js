@@ -85,7 +85,7 @@ function PDFPreviewContent({
                 type="button"
                 aria-label="Close PDF preview"
                 disabled={isFullscreen}
-                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:h-7 sm:w-7 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+                className="size-7 rounded-full bg-black/[0.05] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-all flex items-center justify-center cursor-pointer border-0 shrink-0"
               >
                 <Cancel01Icon size={16} aria-hidden="true" />
               </button>
@@ -134,7 +134,7 @@ function PDFPreviewContent({
           )}
         </div>
 
-        <div data-pdf-preview-footer className={cn("flex shrink-0 flex-wrap items-center gap-2.5 px-6 py-4", isFullscreen && "hidden")}>
+        <div data-pdf-preview-footer className={cn("flex shrink-0 flex-wrap items-center gap-2.5 px-6 py-3.5 border-t border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30", isFullscreen && "hidden")}>
           <Button
             ref={fullscreenButtonRef}
             variant="ghost"

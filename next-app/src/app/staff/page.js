@@ -10,10 +10,7 @@ import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import GlobalFailedBatchReviewModal from "@/components/staff/GlobalFailedBatchReviewModal";
-import {
-  Tabs,
-  TabsContent,
-} from "@/components/ui/tabs";
+import { ContentSwap } from "@/components/ui/motion";
 import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
 import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
 import { cn } from "@/lib/utils";
@@ -1960,10 +1957,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       </div>
 
 
-      <Tabs
-        value={view}
-        onValueChange={switchView}
-        orientation={authUser?.preferences?.navigation_layout === "topbar" ? "horizontal" : "vertical"}
+      <div
         className={cn(
           "gap-0 relative flex min-h-0 overflow-hidden",
           authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-col md:flex-row"
@@ -2033,7 +2027,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               view === "batch_review" ? "flex-1 h-full min-h-0 [&>*]:flex-1" : "flex-[1_0_auto] min-w-0 [&>*]:flex-[1_0_auto]"
             )}
           >
-            <TabsContent value="students" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", view === "batch_review" ? "h-full flex-1" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
+            {view === "students" && (
             <StudentDirectoryTab
               authUser={authUser}
               loading={!storageLayout || loading}
@@ -2049,9 +2044,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               fetchData={fetchData}
               showToast={showToast}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="search" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "search" && (
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -2156,9 +2151,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               authUser={authUser}
               onRescan={handleRescan}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="storage" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "storage" && (
             <StorageExplorerTab
               loading={!storageLayout}
               locatorModel={locatorModel}
@@ -2175,9 +2170,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onSwitchView={setView}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="upload" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "upload" && (
             <ScanUploadTab
               authUser={authUser}
               isOsas={isOsas}
@@ -2250,13 +2245,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onPreviewDocument={handlePreviewDocument}
               onOpenBatchReview={() => switchView("batch_review")}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="batch_review" className="w-full h-full min-h-0 flex-1 flex flex-col overflow-hidden m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
-            <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
-          </TabsContent>
+          {view === "batch_review" && (
+            <div className="w-full h-full min-h-0 flex-1 flex flex-col overflow-hidden m-0 border-0">
+              <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
+            </div>
+          )}
 
-          <TabsContent value="requests" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "requests" && (
             <DocumentRequestsTab
               students={students}
               courses={courses}
@@ -2266,44 +2263,45 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onLocateOnMap={goToStorageMapFromRequest}
               showToast={showToast}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="osas_monitoring" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "osas_monitoring" && (
             <OsasMonitoringTab showToast={showToast} />
-          </TabsContent>
+          )}
 
-          <TabsContent value="organizations" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "organizations" && (
             <StudentOrganizationsTab showToast={showToast} />
-          </TabsContent>
+          )}
 
-          <TabsContent value="documents" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "documents" && (
             <DocumentsTab
               courses={courses}
               staffDocs={staffDocs}
               onPreviewDocument={handlePreviewDocument}
               onRescan={handleRescan}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="notifications" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "notifications" && (
             <NotificationsTab
               onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
               onPreviewDocument={handlePreviewDocument}
               onRescan={handleRescan}
               onNavigateTab={switchView}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="activity" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "activity" && (
             <MyActivityPanel />
-          </TabsContent>
+          )}
 
-          <TabsContent value="settings" className="w-full min-w-0 flex-[1_0_auto] flex flex-col m-0 border-0 focus-visible:ring-0 focus-visible:outline-none">
+          {view === "settings" && (
             <AccountSettingsPanel />
-          </TabsContent>
+          )}
+            </ContentSwap>
           </div>
         </main>
-      </Tabs>
+      </div>
 
       <PDFPreviewModal
         open={previewOpen}
@@ -2333,7 +2331,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         message={authUser?.office_id === "osas"
           ? `You are about to move ${selectedStudentIds.size} student organization(s) to the system archive.`
           : `You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
-        confirmLabel="Archive"
+        confirmLabel="Archive Records"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkArchive}
         onCancel={() => setBulkArchiveOpen(false)}
@@ -2347,7 +2345,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         message={authUser?.office_id === "osas"
           ? `You are about to restore ${selectedStudentIds.size} student organization(s) to active status.`
           : `You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
-        confirmLabel="Restore"
+        confirmLabel="Restore Records"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkRestore}
         onCancel={() => setBulkRestoreOpen(false)}

@@ -573,7 +573,7 @@ export default function BulkImportOrganizationsModal({
                   disabled={selectedCount === 0}
                   className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 border-border text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer disabled:opacity-50"
                 >
-                  Apply
+                  Apply Location
                 </Button>
 
                 <TableScrollControls scrollContainerRef={tableContainerRef}
@@ -765,7 +765,7 @@ export default function BulkImportOrganizationsModal({
             {csvLoading ? (
               <span className="flex items-center gap-2">
                 <Loading01Icon size="1em" className="animate-spin text-sm" />
-                <span>Importing...</span>
+                <span>Importing Organizations…</span>
               </span>
             ) : (
               `Import ${selectedCount > 0 ? selectedCount : ""} Organizations`

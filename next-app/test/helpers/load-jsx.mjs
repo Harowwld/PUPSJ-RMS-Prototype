@@ -25,8 +25,8 @@ export function loadJsx(relativePath) {
       const base = specifier.startsWith("@/")
         ? path.join("src", specifier.slice(2))
         : path.relative(appRoot, path.resolve(path.dirname(filename), specifier));
-      const resolved = [base, `${base}.js`, `${base}.jsx`]
-        .find((candidate) => fs.existsSync(path.join(appRoot, candidate)));
+      const resolved = [base, `${base}.js`, `${base}.jsx`, path.join(base, "index.js"), path.join(base, "index.jsx")]
+        .find((candidate) => fs.existsSync(path.join(appRoot, candidate)) && fs.statSync(path.join(appRoot, candidate)).isFile());
       if (!resolved) throw new Error(`Cannot resolve ${specifier}`);
       return loadJsx(resolved);
     }

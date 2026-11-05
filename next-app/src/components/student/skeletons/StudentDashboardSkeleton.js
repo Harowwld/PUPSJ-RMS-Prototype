@@ -56,7 +56,7 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
           {/* 3. Navigation Items */}
           <div className="flex min-h-0 w-full flex-1 flex-col gap-[2px] pt-1">
             {/* Overview item */}
-            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-xl px-1">
               <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
               <Skeleton className="h-3.5 w-[110px] rounded dark:bg-muted" />
             </div>
@@ -66,11 +66,11 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
               <Skeleton className="h-2.5 w-[124px] rounded dark:bg-muted" />
             </div>
 
-            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-xl px-1">
               <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
               <Skeleton className="h-3.5 w-[150px] rounded dark:bg-muted" />
             </div>
-            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-xl px-1">
               <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
               <Skeleton className="h-3.5 w-[140px] rounded dark:bg-muted" />
             </div>
@@ -80,7 +80,7 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
               <Skeleton className="h-2.5 w-[118px] rounded dark:bg-muted" />
             </div>
 
-            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-[8px] px-1">
+            <div className="flex h-[40px] w-full shrink-0 items-center gap-1.5 rounded-xl px-1">
               <Skeleton className="h-[21px] w-[21px] shrink-0 rounded dark:bg-muted" />
               <Skeleton className="h-3.5 w-[130px] rounded dark:bg-muted" />
             </div>

@@ -27,7 +27,7 @@ export default function DashboardSearch({
   }
 
   return (
-    <div className={cn("group relative w-[min(320px,30vw)] min-w-[190px] shrink-0", className)}>
+    <div className={cn("group relative w-72 sm:w-80 shrink-0", className)}>
       <Search01Icon size={14} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-red-400" />
       <Input
         type="search"
@@ -37,7 +37,7 @@ export default function DashboardSearch({
         aria-label={resolvedLabel}
         placeholder={placeholder}
         className={cn(
-          "h-9 border-gray-200 bg-white pl-8 text-xs shadow-none dark:border-white/10 dark:bg-zinc-800 [@media(pointer:coarse)]:h-11 [&::-webkit-search-cancel-button]:hidden",
+          "h-9 w-full max-w-none border-gray-200 bg-white pl-8 text-xs shadow-none dark:border-white/10 dark:bg-zinc-800 [@media(pointer:coarse)]:h-11 [&::-webkit-search-cancel-button]:hidden",
           value ? "pr-20" : "pr-12"
         )}
       />

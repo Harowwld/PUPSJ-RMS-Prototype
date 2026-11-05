@@ -392,7 +392,7 @@ export default function BulkImportQuestionsModal({
                     }}
                     className="h-9 px-4"
                   >
-                    Browse
+                    Browse Files
                   </Button>
                 </div>
               </div>
@@ -406,7 +406,7 @@ export default function BulkImportQuestionsModal({
                   onClick={handleDownloadTemplate}
                   className="h-7 px-2 text-[11px] font-semibold text-pup-maroon hover:text-pup-darkMaroon dark:text-red-400 hover:bg-transparent underline cursor-pointer p-0 shadow-none border-0"
                 >
-                  Template
+                  Download Template
                 </Button>
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function BulkImportQuestionsModal({
                   onClick={() => fileInputRef.current?.click()}
                   className="h-8 px-3 shrink-0"
                 >
-                  Change
+                  Change File
                 </Button>
               </div>
 
@@ -452,7 +452,7 @@ export default function BulkImportQuestionsModal({
                     >
                       <div className="flex items-center gap-2">
                         {/* Index Badge */}
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-sans tabular-nums text-xs border border-border dark:border-border shadow-2xs shrink-0">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold font-sans tabular-nums text-xs border border-border dark:border-border shadow-2xs shrink-0">
                           {index + 1}
                         </span>
 

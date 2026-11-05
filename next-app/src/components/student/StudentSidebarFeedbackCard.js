@@ -97,7 +97,7 @@ export default function StudentSidebarFeedbackCard({
           onClick={handleDismiss}
           aria-label="Dismiss feedback reminder"
           title="Dismiss reminder"
-          className="flex h-6 w-6 items-center justify-center rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/10 dark:hover:text-zinc-200 transition-colors cursor-pointer active:scale-90"
+          className="size-6 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-90 border border-black/[0.04] dark:border-white/[0.08]"
         >
           <Cancel01Icon size="1em" className="text-[13px]" />
         </button>

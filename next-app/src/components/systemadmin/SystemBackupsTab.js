@@ -823,14 +823,34 @@ export default function SystemBackupsTab({ showToast }) {
                   </div>
                 }
               />
-              <div role="group" aria-label="Backup type" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-                {[{ value: "all", label: "All Types", count: backups.length }, ...backupTypes.map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length }))].map(({ value, label, count }) => (
-                  <button key={value} type="button" aria-pressed={backupTypeFilter === value} onClick={() => { setBackupTypeFilter(value); setPage(1) }} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", backupTypeFilter === value ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                    <span>{label}</span>
-                    <span className="font-sans tabular-nums text-[10px] font-normal text-gray-400 dark:text-zinc-500">{count}</span>
-                    {backupTypeFilter === value && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-                  </button>
-                ))}
+              <div role="group" aria-label="Backup type" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+                <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+                  {[{ value: "all", label: "All Types", count: backups.length }, ...backupTypes.map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length }))].map(({ value, label, count }) => {
+                    const isSelected = backupTypeFilter === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => { setBackupTypeFilter(value); setPage(1) }}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                          isSelected
+                            ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                        )}
+                      >
+                        <span>{label}</span>
+                        <span className={cn(
+                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
+                          isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
+                        )}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {/* Standard Filter Toolbar */}
               <BackupFilters

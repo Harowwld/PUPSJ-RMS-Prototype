@@ -2,6 +2,7 @@
 
 
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { CopyButton } from "@/components/shared/CopyButton"
 import { Alert01Icon, UserIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function DefaultPasswordModal({
@@ -70,25 +72,21 @@ export default function DefaultPasswordModal({
               Temporary Password
             </label>
             <div className="relative">
-              <div className="rounded-brand border-2 border-amber-200 bg-amber-50 p-4 dark:bg-amber-950/30">
-                <p className="text-center text-xl font-semibold tracking-wider break-all text-amber-900">
+              <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.04] p-4 text-center">
+                <p className="font-sans tabular-nums text-xl font-semibold tracking-wider break-all text-gray-900 dark:text-zinc-50 select-all">
                   {password}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-semibold transition-all ${ copied ? "border-2 border-green-200 bg-green-100 text-green-700" : "border-red-200 bg-white text-pup-maroon dark:text-primary shadow-sm hover:bg-red-50" } dark:bg-card`}
-              >
-                <AppIcon
-                  className={` ${copied ? "Tick01Icon" : "Copy01Icon"} text-sm`}
-                ></AppIcon>
-                {copied ? "Copied" : "Copy"}
-              </button>
+              <CopyButton
+                textToCopy={password}
+                entityName="Password"
+                size="sm"
+                className="absolute top-1/2 right-3 -translate-y-1/2 h-8 px-3.5 rounded-full text-xs shadow-2xs"
+              />
             </div>
-            <p className="text-xs font-medium text-amber-700">
-              <Alert01Icon size={16}  className="mr-1"></Alert01Icon>
-              User must change this password on first login.
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400 flex items-center">
+              <Alert01Icon size={14} className="mr-1.5 shrink-0" />
+              <span>User must change this password on first login.</span>
             </p>
           </div>
         </div>

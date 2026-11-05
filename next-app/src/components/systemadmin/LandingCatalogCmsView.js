@@ -498,7 +498,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         >
                           <div
                             className={cn(
-                              "w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-xl flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
+                              "w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-full flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
                               isSelected
                                 ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
                                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"

@@ -731,26 +731,32 @@ export default function GlobalAuditLogsTab({ showToast }) {
             }
           />
 
-          <div role="group" aria-label="Activity severity" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-            {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => {
-              const isActive = (logFilters.severity[0] || "") === value
-              return (
-                <button
-                  key={value || "all"}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => {
-                    setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
-                    setPage(1)
-                    updateUrl(1, search)
-                  }}
-                  className={cn("relative inline-flex shrink-0 items-center px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 cursor-pointer", isActive ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}
-                >
-                  {label}
-                  {isActive && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-                </button>
-              )
-            })}
+          <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+              {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => {
+                const isActive = (logFilters.severity[0] || "") === value
+                return (
+                  <button
+                    key={value || "all"}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => {
+                      setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
+                      setPage(1)
+                      updateUrl(1, search)
+                    }}
+                    className={cn(
+                      "inline-flex items-center px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                      isActive
+                        ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                    )}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <DataViewToolbar label="Platform activity search, filters, sorting, columns, and dates" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
@@ -764,7 +770,6 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 label="Search platform activity history"
                 count={total}
                 loading={loading && total === 0}
-                className="flex-1 sm:w-64 min-w-[200px] max-w-sm"
               />
               <TableScrollControls scrollContainerRef={tableContainerRef}
                 canScrollLeft={canScrollLeft}

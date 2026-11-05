@@ -21,11 +21,11 @@
 .data-view-toolbar [data-slot="table-scroll-controls"] { flex-wrap: nowrap; }
 .data-view-toolbar [data-slot="table-scroll-controls"] > * { flex-shrink: 0; }
 .dark .data-view-toolbar { scrollbar-color: #52525b transparent; }
-:where(.data-view-toolbar) :is(input, select) { max-width: min(20rem, 45vw); }
+:where(.data-view-toolbar) :is(input, select) { max-width: min(20rem, 100%); }
 :where(div:not(.data-view-toolbar)):has(> [data-slot="table-scroll-controls"]) { min-width: 0; flex-wrap: wrap; }
 .data-view-toolbar :where(div):has(> [data-slot="table-scroll-controls"]) { flex-wrap: nowrap; }
 .dark .app-table {
-  --table-divider: #3f3f46;
+  --table-divider: rgb(255 255 255 / 8%);
   --table-surface: var(--card, #18181b);
   --table-header: #18181b;
 }

@@ -62,7 +62,7 @@ function TooltipPortal({ tooltip }) {
       data-top={`${coords.top}px`}
       data-left={`${coords.left}px`}
       style={{ top: coords.top, left: coords.left }}
-      className={`rms-tooltip rms-tooltip-positioned px-2.5 py-1.5 rounded-[8px] text-[12px] font-medium tracking-tight text-white dark:text-zinc-100 bg-black/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/10 dark:border-border select-none text-center max-w-[240px] whitespace-pre-line ${mounted ? "rms-tooltip-visible" : "rms-tooltip-hidden"}`}
+      className={`rms-tooltip rms-tooltip-positioned px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-tight leading-snug text-white bg-gray-950/85 dark:bg-zinc-850/90 backdrop-blur-xl shadow-[0_4px_14px_rgba(0,0,0,0.22),0_1px_3px_rgba(0,0,0,0.12)] border border-white/15 dark:border-white/10 select-none text-center max-w-[260px] whitespace-pre-line ${mounted ? "rms-tooltip-visible" : "rms-tooltip-hidden"}`}
     >
       {text}
     </div>

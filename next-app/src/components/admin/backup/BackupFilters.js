@@ -47,7 +47,6 @@ export default function BackupFilters({
           label="Search archive filename"
           count={backupTotal}
           loading={isLoading}
-          className="flex-1 sm:w-64 min-w-[200px] max-w-sm"
         />
         {scrollControls}
       </div>

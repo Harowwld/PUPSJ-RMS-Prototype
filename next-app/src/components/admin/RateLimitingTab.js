@@ -481,7 +481,7 @@ export default function RateLimitingTab() {
         </div>
 
         {/* Apple Segmented Controls */}
-        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border w-fit">
+        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] w-fit select-none overflow-x-auto">
           {[
             { id: "overview", label: "Overview", icon: DashboardSpeed01Icon },
             { id: "configs", label: "Configurations", icon: LockIcon },
@@ -492,14 +492,14 @@ export default function RateLimitingTab() {
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
+                "inline-flex items-center gap-2 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 select-none active:scale-[0.98]",
                 activeTab === tab.id
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
               )}
             >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
+              <tab.icon size="1em" className="text-sm shrink-0" />
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>

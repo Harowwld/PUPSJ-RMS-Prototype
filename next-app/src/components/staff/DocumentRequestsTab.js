@@ -1708,10 +1708,10 @@ export default function DocumentRequestsTab({
                   {submitting ? (
                     <>
                       <Loading01Icon size="1em" className="animate-spin text-sm" />
-                      Saving...
+                      Creating Request…
                     </>
                   ) : (
-                    "Create"
+                    "Create Request"
                   )}
                 </Button>
               </DialogFooter>
@@ -1846,7 +1846,7 @@ export default function DocumentRequestsTab({
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 onClick={() => setReopenModalOpen(false)}
                 disabled={reopenSubmitting}
               >
@@ -1858,7 +1858,7 @@ export default function DocumentRequestsTab({
                 onClick={handleConfirmReopen}
                 disabled={reopenSubmitting || reopenReason.trim().length < 5}
               >
-                {reopenSubmitting ? "Reopening..." : "Confirm Reopen"}
+                {reopenSubmitting ? "Reopening Request…" : "Reopen Request"}
               </Button>
             </DialogFooter>
           </DialogContent>

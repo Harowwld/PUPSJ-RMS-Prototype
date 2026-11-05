@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useAppReducedMotion, EASE_OUT } from "@/lib/motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -180,6 +182,7 @@ function OfficeStatusBadge({ isActive }) {
 }
 
 export default function OfficeManagementTab({ showToast, onSwitchTab }) {
+  const shouldReduceMotion = useAppReducedMotion()
   const [offices, setOffices] = useState([])
   const [storageRoot, setStorageRoot] = useState(".local")
   const [scannerHostRoot, setScannerHostRoot] = useState(".local/hot-folder")
@@ -900,28 +903,60 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           }
         />
 
-        <div className="flex items-end gap-x-5 overflow-x-auto px-6 scrollbar-none border-b border-border dark:border-white/10">
-          <div role="group" aria-label="Department status" className="flex h-9 shrink-0 items-stretch">
-            {[{ key: "Active", label: "Active", count: stats.active }, { key: "Inactive", label: "Archived", count: stats.inactive }].map(({ key, label, count }) => (
-              <button key={key} type="button" onClick={() => setStatusFilter(key)} aria-pressed={statusFilter === key}
-                className={cn("relative inline-flex items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", statusFilter === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                {label}{loading ? (
-                  <Skeleton aria-hidden="true" className="h-3 w-6 rounded dark:bg-muted" />
-                ) : (
-                  <span className="font-sans tabular-nums text-[10px] text-gray-400 dark:text-zinc-500">{count}</span>
-                )}
-                {statusFilter === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-              </button>
-            ))}
+        <div className="flex items-center justify-between gap-4 overflow-x-auto px-6 py-2.5 scrollbar-none border-b border-border/80 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-white/10">
+          <div role="group" aria-label="Department status" className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+            {[{ key: "Active", label: "Active", count: stats.active }, { key: "Inactive", label: "Archived", count: stats.inactive }].map(({ key, label, count }) => {
+              const isSelected = statusFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStatusFilter(key)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <span>{label}</span>
+                  {loading ? (
+                    <Skeleton aria-hidden="true" className="h-3 w-5 rounded-full dark:bg-muted" />
+                  ) : (
+                    <span className={cn(
+                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
+                      isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
+                    )}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          <div role="group" aria-label="Department display" className="flex h-9 shrink-0 items-stretch">
-            {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => (
-              <button key={mode} type="button" onClick={() => setLayoutView(mode)} aria-pressed={layoutView === mode}
-                className={cn("relative inline-flex items-center gap-1.5 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", layoutView === mode ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />{label}
-                {layoutView === mode && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-              </button>
-            ))}
+
+          <div role="group" aria-label="Department display" className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none ml-auto">
+            {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => {
+              const isSelected = layoutView === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setLayoutView(mode)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1039,7 +1074,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         <div className="flex items-start gap-3 min-w-0">
                           <div
                             className={cn(
-                              "h-11 w-11 rounded-xl flex items-center justify-center border text-xl shadow-2xs shrink-0 transition-all",
+                              "h-11 w-11 rounded-full flex items-center justify-center border text-xl shadow-2xs shrink-0 transition-all",
                               isActive
                                 ? "border-border dark:border-white/10"
                                 : "bg-gray-100 text-gray-400 border-border dark:bg-zinc-800 dark:text-zinc-500"
@@ -1213,7 +1248,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     className="group flex min-h-[300px] w-full cursor-pointer select-none flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-8 text-gray-500 shadow-2xs transition-all hover:border-pup-maroon/40 hover:bg-pup-maroon/5 hover:text-pup-maroon dark:border-border dark:hover:bg-red-500/5 dark:hover:text-red-400"
                     aria-label="Add a department"
                   >
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-xl shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-xl shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
                       <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400" />
                     </span>
                     <span className="text-center">
@@ -1390,7 +1425,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               >
                                 <div
                                   className={cn(
-                                    "h-8 w-8 rounded-lg flex items-center justify-center border text-sm shadow-2xs shrink-0 transition-transform group-hover/dept:scale-105",
+                                    "h-8 w-8 rounded-full flex items-center justify-center border text-sm shadow-2xs shrink-0 transition-transform group-hover/dept:scale-105",
                                     isActive
                                       ? "rms-office-accent"
                                       : "border-black/10 bg-gray-100/80 text-[#8e8e93]"
@@ -1664,7 +1699,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <div className="p-4 sm:p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3.5">
                 <div className="flex items-center justify-between pb-2.5 border-b border-border dark:border-border">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
+                    <div className="h-7 w-7 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-sm">
                       <ComputerIcon size={16}  ></ComputerIcon>
                     </div>
                     <div>
@@ -1724,7 +1759,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       className="w-full flex items-center justify-between p-3.5 hover:bg-gray-100/60 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer text-left select-none border-0 outline-none"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
                           <AppIcon className=" LayoutGridIcon text-base"></AppIcon>
                         </div>
                         <div>
@@ -1754,8 +1789,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     </button>
 
                     {/* Accordion Content */}
-                    {modulesAccordionOpen && (
-                      <div className="p-4 border-t border-border dark:border-border bg-white/70 dark:bg-zinc-950/70 space-y-3 animate-in fade-in duration-150">
+                    <AnimatePresence initial={false}>
+                      {modulesAccordionOpen && (
+                        <motion.div
+                          initial={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: EASE_OUT }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-4 border-t border-border dark:border-border bg-white/70 dark:bg-zinc-950/70 space-y-3">
                         <div className="flex items-center justify-between text-[11px] text-gray-900 dark:text-zinc-300 pb-1">
                           <span>Select which standard modules should be enabled for this department:</span>
                           <div className="flex items-center gap-2">
@@ -1825,13 +1868,15 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         <div className="text-[10px] text-gray-400 dark:text-zinc-500 italic pt-1 border-t border-border dark:border-border">
                           * Note: Departments only use this standardized system catalog. Custom modules cannot be created per department.
                         </div>
-                      </div>
+                          </div>
+                      </motion.div>
                     )}
+                  </AnimatePresence>
                   </div>
                 ) : (
                   <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/80 dark:bg-zinc-950/40 text-xs text-gray-600 dark:text-zinc-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center shrink-0">
                         <AppIcon className=" LayoutGridIcon text-base"></AppIcon>
                       </div>
                       <div>
@@ -1959,7 +2004,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         }}
         title="Discard Unsaved Changes?"
         message="Opening Compare Features will close this dialog and discard any unsaved changes to this department. Do you want to continue?"
-        confirmLabel="Discard"
+        confirmLabel="Discard Changes"
         cancelLabel="Cancel"
         variant="warning"
         isUnsavedChangesModal={true}
@@ -1973,7 +2018,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isLoading={isArchiving}
         title="Archive Department"
         message={`Are you sure you want to archive ${archiveOfficeTarget?.name || "this department"}? Staff members assigned to this department will not have access until it is restored.`}
-        confirmLabel="Archive"
+        confirmLabel="Archive Department"
         variant="warning"
         isAppleStyled={true}
         isPersonnelModal={true}
@@ -1989,7 +2034,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isLoading={isRestoring}
         title="Restore Department"
         message={`Are you sure you want to restore ${restoreOfficeTarget?.name || "this department"}? Assigned staff members will regain access to their department workspace.`}
-        confirmLabel="Restore"
+        confirmLabel="Restore Department"
         variant="success"
         isAppleStyled={true}
         isPersonnelModal={true}
@@ -2005,7 +2050,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isLoading={bulkArchiveLoading}
         title="Batch Archive Departments"
         message={`${selectedIds.size} department(s) will be archived. Staff members assigned to these departments will not have access until they are restored.`}
-        confirmLabel="Archive"
+        confirmLabel="Archive Selected"
         variant="warning"
         isAppleStyled={true}
         isPersonnelModal={true}
@@ -2024,7 +2069,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         isLoading={bulkRestoreLoading}
         title="Batch Restore Departments"
         message={`${selectedIds.size} department(s) will be reactivated. Assigned staff members will regain access to their department workspace.`}
-        confirmLabel="Restore"
+        confirmLabel="Restore Selected"
         variant="success"
         isAppleStyled={true}
         isPersonnelModal={true}

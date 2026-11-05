@@ -240,7 +240,7 @@ export default function RegisterAccountTab({
                 disabled={isLoading}
                 className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
               >
-                {isLoading ? "Registering..." : "Register"}
+                {isLoading ? "Registering Staff…" : "Register Staff"}
               </Button>
             </DialogFooter>
           </form>

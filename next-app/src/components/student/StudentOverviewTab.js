@@ -650,7 +650,7 @@ export default function StudentOverviewTab({
                       onNavigate?.("odrs");
                     }
                   }}
-                  className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs"
+                  className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs"
                 >
                   View Details
                 </Button>
@@ -930,7 +930,7 @@ export default function StudentOverviewTab({
                             e.stopPropagation();
                             event.onClick();
                           }}
-                          className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs hidden md:inline-flex"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs hidden md:inline-flex"
                         >
                           {event.actionLabel}
                         </Button>
@@ -1042,7 +1042,7 @@ export default function StudentOverviewTab({
           side="right"
           size="default"
           showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
         >
           <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
@@ -1058,7 +1058,7 @@ export default function StudentOverviewTab({
               <button
                 type="button"
                 onClick={() => setSelectedPostEventDetail(null)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -1085,7 +1085,7 @@ export default function StudentOverviewTab({
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Unboxed Event Identity Block */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-lg shrink-0 font-bold border border-blue-500/20 dark:border-blue-900/40 mt-0.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-lg shrink-0 font-bold border border-blue-500/20 dark:border-blue-900/40 mt-0.5 shadow-2xs">
                 <ClipboardIcon size={16}  />
               </div>
               <div className="min-w-0 flex-1">

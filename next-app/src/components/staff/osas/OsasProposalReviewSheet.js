@@ -119,7 +119,7 @@ export default function OsasProposalReviewSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -154,7 +154,7 @@ export default function OsasProposalReviewSheet({
                   setSheetOpen(false);
                   setSelected?.(null);
                 }}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -213,7 +213,7 @@ export default function OsasProposalReviewSheet({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Summary Strip */}
           <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-            <div className="w-12 h-12 rounded-2xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
+            <div className="w-12 h-12 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
               <CalendarCheckIn01Icon size={16}  />
             </div>
             <div className="min-w-0 flex-1">
@@ -347,7 +347,7 @@ export default function OsasProposalReviewSheet({
             {selected.bylaws_filename ? (
               <div className="flex items-center justify-between rounded-xl border border-emerald-200/80 dark:border-emerald-900/30 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
                     <JusticeScale01Icon size="1em" className="text-lg" />
                   </div>
                   <div className="min-w-0">
@@ -389,7 +389,7 @@ export default function OsasProposalReviewSheet({
               </div>
             ) : (
               <div className="flex items-center gap-3 rounded-xl border border-amber-200/80 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-950/20 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shadow-2xs">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shadow-2xs">
                   <Alert02Icon size="1em" className="text-lg" />
                 </div>
                 <div>
@@ -468,7 +468,7 @@ export default function OsasProposalReviewSheet({
             ) : (
               <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
+                  <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
                     <File02Icon size={16}  />
                   </div>
                   <div className="min-w-0">

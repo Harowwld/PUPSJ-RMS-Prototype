@@ -7,6 +7,7 @@ import { TableActions } from "@/components/shared/TableActions";
 
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import CopyButton from "@/components/shared/CopyButton";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
@@ -511,13 +512,38 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           actions={<RefreshButton onRefresh={() => fetchHealth(true)} isLoading={refreshing} title="Refresh Campus Operations" className="h-9 w-9" />}
         />
 
-        <div role="group" aria-label="Operation lifecycle" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-          {[["all", "All", lifecycleCounts.all], ["open", "Open", lifecycleCounts.open], ["closed", "Closed", lifecycleCounts.closed]].map(([key, label, count]) => (
-            <button key={key} type="button" onClick={() => setLifecycle(key)} aria-pressed={lifecycle === key} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", lifecycle === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-              {label}{loading ? <Skeleton aria-hidden="true" className="h-3 w-6 rounded dark:bg-muted" /> : <span className="text-[10px] font-normal tabular-nums text-gray-400 dark:text-zinc-500">{count}</span>}
-              {lifecycle === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-            </button>
-          ))}
+        <div role="group" aria-label="Operation lifecycle" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+            {[["all", "All", lifecycleCounts.all], ["open", "Open", lifecycleCounts.open], ["closed", "Closed", lifecycleCounts.closed]].map(([key, label, count]) => {
+              const isSelected = lifecycle === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setLifecycle(key)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <span>{label}</span>
+                  {loading ? (
+                    <Skeleton aria-hidden="true" className="h-3 w-5 rounded-full dark:bg-muted" />
+                  ) : (
+                    <span className={cn(
+                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
+                      isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
+                    )}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Navigation Toolbar */}
@@ -547,7 +573,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         {/* Full Top-Level Turnaround Standards Institutional Banner */}
         <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 text-xs transition-colors">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon border border-pup-maroon/20 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40 shadow-2xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10 text-pup-maroon border border-pup-maroon/20 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40 shadow-2xs">
               <Timer01Icon size="1em" className="text-lg" />
             </div>
             <div className="min-w-0">
@@ -913,7 +939,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           side="right"
           size="default"
           showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
         >
           <SheetHeader className="shrink-0 p-0">
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -945,7 +971,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <button
                   type="button"
                   onClick={() => setSelectedItem(null)}
-                  className="w-8 h-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  className="size-8 [@media(pointer:coarse)]:size-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                   aria-label="Close"
                   title="Close"
                 >
@@ -1009,7 +1035,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               <div className="flex items-center gap-3.5 min-w-0">
                 <div
                   className={cn(
-                    "size-11 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border shadow-2xs",
+                    "size-11 rounded-full flex items-center justify-center text-xl shrink-0 font-bold border shadow-2xs",
                     sheetItem?.officeId === "registrar"
                       ? "bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40"
                       : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40"
@@ -1245,15 +1271,13 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
             <div>
               {sheetItem && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleCopy(JSON.stringify(sheetItem, null, 2), "Operation Record JSON")}
+                <CopyButton
+                  textToCopy={() => JSON.stringify(sheetItem, null, 2)}
+                  entityName="Record Data"
+                  idleLabel="Copy Record Data"
                   className="h-10 px-4"
                   title="Copy operation record data"
-                >
-                  Copy Record Data
-                </Button>
+                />
               )}
             </div>
           </SheetFooter>

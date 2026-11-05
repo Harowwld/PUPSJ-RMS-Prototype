@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ContentSwap } from "@/components/ui/motion"
 
 import AdminTabSkeleton from "@/components/admin/skeletons/AdminTabSkeleton"
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
@@ -1957,7 +1958,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               "p-2 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]",
               authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1"
             )}
-          >          {view === "directory" && (
+          >
+            <ContentSwap id={view} className="flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]">
+              {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
               officeId={authUser?.office_id || "registrar"}
@@ -2153,6 +2156,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               showToast={showToast}
             />
           )}
+            </ContentSwap>
           </div>
         </main>
       </div>
@@ -2161,7 +2165,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={discardConfirmOpen}
         title="Unsaved Changes"
         message="You have unsaved layout modifications. Navigating away will discard them."
-        confirmLabel="Discard"
+        confirmLabel="Discard Changes"
         variant="warning"
         onConfirm={confirmDiscardChanges}
         onCancel={() => {
