@@ -23,11 +23,16 @@ function Input({
       data-slot="input"
       data-variant={variant}
       className={cn(
-        "h-10 w-full min-w-0 rounded-xl border border-input bg-transparent px-3 py-1 text-[13px] transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        "h-10 w-full min-w-0 rounded-xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm px-3 py-1 text-[13px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] outline-none transition-all duration-150",
+        "file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
+        "focus-visible:outline-none focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 focus-visible:ring-3 focus-visible:ring-pup-maroon/20 dark:focus-visible:ring-red-500/25",
+        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 disabled:bg-black/[0.02] dark:disabled:bg-white/[0.02]",
+        "aria-invalid:border-rose-500 aria-invalid:ring-3 aria-invalid:ring-rose-500/20 dark:aria-invalid:border-rose-400 dark:aria-invalid:ring-rose-400/30",
         variantClassName,
         className
       )}
-      {...props} />
+      {...props}
+    />
   );
 }
 

@@ -228,7 +228,7 @@ export function tableText(children) {
 function IdentifierBadge({ children, className, ...props }) {
   const text = tableText(children);
   if (!text && React.Children.count(children)) return children;
-  return <span data-slot="table-identifier" className={cn("inline-flex h-6 max-w-full items-center overflow-hidden rounded-lg bg-gray-100 px-2 text-xs font-medium text-gray-800 tabular-nums dark:bg-zinc-800 dark:text-zinc-200", className)} {...props}><span className="min-w-0 truncate" title={text || undefined}>{text ? children : "N/A"}</span></span>;
+  return <span data-slot="table-identifier" className={cn("inline-flex h-6 max-w-full items-center overflow-hidden rounded-md border border-black/[0.06] dark:border-white/10 bg-black/[0.03] px-2 text-xs font-semibold text-gray-800 tabular-nums dark:bg-white/[0.06] dark:text-zinc-200 shadow-2xs", className)} {...props}><span className="min-w-0 truncate" title={text || undefined}>{text ? children : "N/A"}</span></span>;
 }
 function statusContent(children, nested = false) {
   if (typeof children === "string" || typeof children === "number") return nested ? children : <TableStatus value={children} />;
@@ -242,7 +242,7 @@ function statusContent(children, nested = false) {
 }
 function TableStatus({ value, tone, children, className, ...props }) {
   const text = value == null ? tableText(children) : String(value);
-  return <span data-slot="table-status" data-tone={tone || tableStatusTone(text)} className={cn("inline-flex min-h-6 max-w-full items-center justify-center gap-1 rounded-full px-2.5 text-xs font-medium", className)} {...props}>{children ?? (text || "N/A")}</span>;
+  return <span data-slot="table-status" data-tone={tone || tableStatusTone(text)} className={cn("inline-flex min-h-6 max-w-full items-center justify-center gap-1 rounded-full px-2.5 text-xs font-semibold tracking-[-0.01em]", className)} {...props}>{children ?? (text || "N/A")}</span>;
 }
 function TableText({ children, secondary = false, constrained = false, className, ...props }) {
   return <div data-slot="table-text" className={cn("w-full min-w-0 truncate", secondary ? "text-xs font-normal text-gray-500 dark:text-zinc-400" : "text-[13px] font-medium", constrained && "max-w-[340px]", className)} title={tableText(children) || undefined} {...props}>{children ?? "N/A"}</div>;
