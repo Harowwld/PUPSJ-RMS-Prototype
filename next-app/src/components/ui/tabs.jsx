@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
+import * as React from "react";
+import { motion } from "framer-motion";
+import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { cva } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
+import { useAppReducedMotion, SPRING_LAYOUT } from "@/lib/motion";
+
+const TabsContext = React.createContext({
+  variant: "default",
+  size: "default",
+});
 
 function Tabs({
   className,
@@ -16,77 +23,125 @@ function Tabs({
       data-slot="tabs"
       orientation={orientation}
       className={cn(
-        "flex gap-2", 
+        "flex gap-2",
         orientation === "horizontal" ? "flex-col" : "flex-row",
         className
       )}
-      {...props} />
+      {...props}
+    />
   );
 }
 
 const tabsListVariants = cva(
-  "inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground data-[orientation=vertical]:flex-col data-[variant=line]:rounded-none",
+  "inline-flex w-fit items-center justify-center p-1 select-none transition-all duration-150 data-[orientation=vertical]:flex-col",
   {
     variants: {
       variant: {
-        default: "bg-muted",
-        line: "gap-1 bg-transparent",
+        default:
+          "rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
+        segmented:
+          "rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
+        capsule:
+          "rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
+        line:
+          "rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
+        pills: "gap-1.5 bg-transparent p-0",
+      },
+      size: {
+        default: "gap-1",
+        sm: "gap-0.5 p-0.5 text-xs",
+        lg: "gap-1.5 p-1.5 text-sm",
       },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
-)
+);
 
 function TabsList({
   className,
   variant = "default",
+  size = "default",
   ...props
 }) {
   return (
-    <TabsPrimitive.List
-      data-slot="tabs-list"
-      data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
-      {...props} />
+    <TabsContext.Provider value={{ variant, size }}>
+      <TabsPrimitive.List
+        data-slot="tabs-list"
+        data-variant={variant}
+        className={cn(tabsListVariants({ variant, size }), className)}
+        {...props}
+      />
+    </TabsContext.Provider>
   );
 }
+
+const tabsTriggerVariants = cva(
+  [
+    "relative inline-flex flex-1 items-center justify-center gap-1.5 border border-transparent whitespace-nowrap select-none",
+    "font-medium tracking-[-0.01em] transition-all duration-150 cursor-pointer",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/30 dark:focus-visible:ring-red-500/40",
+    "disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40",
+    "active:scale-[0.98]",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "data-[orientation=vertical]:w-full data-[orientation=vertical]:justify-start",
+    // Default active state: Apple macOS / iOS segmented control elevated pill
+    "data-active:bg-white dark:data-active:bg-zinc-800 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800",
+    "data-active:text-gray-950 dark:data-active:text-white data-[state=active]:text-gray-950 dark:data-[state=active]:text-white",
+    "data-active:font-semibold data-[state=active]:font-semibold",
+    "data-active:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:data-active:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]",
+    // Inactive text
+    "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100",
+  ],
+  {
+    variants: {
+      size: {
+        default: "h-8 px-3.5 py-1 text-xs sm:text-[13px] rounded-[9px]",
+        sm: "h-7 px-2.5 py-0.5 text-xs rounded-md",
+        lg: "h-9 px-4 py-1.5 text-sm rounded-lg",
+        capsule: "h-8 px-3.5 py-1 text-xs sm:text-[13px] rounded-full",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
+  }
+);
 
 function TabsTrigger({
   asChild,
   children,
   className,
+  size: sizeProp,
   ...props
 }) {
+  const context = React.useContext(TabsContext);
+  const resolvedSize = sizeProp || (context.variant === "capsule" ? "capsule" : context.size);
+
+  const sharedClassName = cn(
+    tabsTriggerVariants({ size: resolvedSize }),
+    className
+  );
+
   if (asChild && React.isValidElement(children)) {
     return (
       <TabsPrimitive.Tab
         data-slot="tabs-trigger"
         render={children}
-        className={cn(
-          "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-          "data-[orientation=vertical]:w-full data-[orientation=vertical]:justify-start",
-          "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30",
-          "data-[variant=line]:bg-transparent data-[variant=line]:data-[state=active]:bg-transparent data-[variant=line]:data-[state=active]:shadow-none dark:data-[variant=line]:data-[state=active]:border-transparent",
-          "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity data-[orientation=horizontal]:after:inset-x-0 data-[orientation=horizontal]:after:bottom-[-5px] data-[orientation=horizontal]:after:h-0.5 data-[orientation=vertical]:after:inset-y-0 data-[orientation=vertical]:after:-right-1 data-[orientation=vertical]:after:w-0.5 data-[variant=line]:data-[state=active]:after:opacity-100",
-          className
-        )}
-        {...props} />
+        className={sharedClassName}
+        {...props}
+      />
     );
   }
+
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
-      className={cn(
-        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "data-[orientation=vertical]:w-full data-[orientation=vertical]:justify-start",
-        "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30",
-        "data-[variant=line]:bg-transparent data-[variant=line]:data-[state=active]:bg-transparent data-[variant=line]:data-[state=active]:shadow-none dark:data-[variant=line]:data-[state=active]:border-transparent",
-        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity data-[orientation=horizontal]:after:inset-x-0 data-[orientation=horizontal]:after:bottom-[-5px] data-[orientation=horizontal]:after:h-0.5 data-[orientation=vertical]:after:inset-y-0 data-[orientation=vertical]:after:-right-1 data-[orientation=vertical]:after:w-0.5 data-[variant=line]:data-[state=active]:after:opacity-100",
-        className
-      )}
-      {...props}>
+      className={sharedClassName}
+      {...props}
+    >
       {children}
     </TabsPrimitive.Tab>
   );
@@ -99,9 +154,81 @@ function TabsContent({
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-    className={cn("flex-1 text-sm outline-none data-[hidden]:hidden", className)}
-      {...props} />
+      className={cn("flex-1 text-sm outline-none data-[hidden]:hidden", className)}
+      {...props}
+    />
   );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }
+/**
+ * High-level Apple Segmented Control helper
+ */
+function SegmentedControl({
+  value,
+  onValueChange,
+  items = [],
+  variant = "segmented",
+  size = "default",
+  className,
+  ...props
+}) {
+  const generatedId = React.useId();
+  const shouldReduceMotion = useAppReducedMotion();
+
+  return (
+    <Tabs
+      value={value}
+      onValueChange={onValueChange}
+      className={cn("w-auto", className)}
+      {...props}
+    >
+      <TabsList variant={variant} size={size}>
+        {items.map((item) => {
+          const isSelected = value === item.value;
+          return (
+            <TabsTrigger
+              key={item.value}
+              value={item.value}
+              disabled={item.disabled}
+              className={cn(
+                "relative z-0",
+                isSelected && "data-active:shadow-none dark:data-active:shadow-none data-[state=active]:shadow-none dark:data-[state=active]:shadow-none"
+              )}
+            >
+              {isSelected && (
+                <motion.span
+                  layoutId={`segmented-pill-${generatedId}`}
+                  transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                  className={cn(
+                    "absolute inset-0 z-0 bg-white dark:bg-zinc-800",
+                    variant === "capsule" ? "rounded-full" : "rounded-[9px]",
+                    "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  )}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                {item.icon && <span className="shrink-0">{item.icon}</span>}
+                <span>{item.label}</span>
+                {item.badge !== undefined && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/10">
+                    {item.badge}
+                  </span>
+                )}
+              </span>
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
+    </Tabs>
+  );
+}
+
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  SegmentedControl,
+  tabsListVariants,
+  tabsTriggerVariants,
+};

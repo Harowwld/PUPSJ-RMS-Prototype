@@ -1,11 +1,24 @@
-import { cn } from "@/lib/utils"
-import AppIcon from "@/components/ui/app-icon"
+"use client";
+
+import React from "react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import AppIcon from "@/components/ui/app-icon";
+import { useAppReducedMotion, EASE_OUT } from "@/lib/motion";
 
 function Empty({ className, variant = "page", ...props }) {
+  const shouldReduceMotion = useAppReducedMotion();
+
   return (
-    <div
+    <motion.div
       data-slot="empty"
       data-variant={variant}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: shouldReduceMotion ? 0.1 : 0.22,
+        ease: EASE_OUT,
+      }}
       className={cn(
         "group/empty flex w-full min-w-0 flex-col items-center justify-center text-center",
         variant === "compact"
@@ -15,7 +28,7 @@ function Empty({ className, variant = "page", ...props }) {
       )}
       {...props}
     />
-  )
+  );
 }
 
 function EmptyHeader({ className, ...props }) {
