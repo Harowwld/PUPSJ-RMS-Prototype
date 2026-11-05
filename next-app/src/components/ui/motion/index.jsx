@@ -1,15 +1,88 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  EASE_OUT,
+  CONTENT_SWAP_ENTER_TRANSITION,
+  CONTENT_SWAP_EXIT_TRANSITION,
+  useAppReducedMotion,
+} from "@/lib/motion";
 
-export function PageTransition({ children, className, ...props }) {
+/**
+ * ContentSwap
+ * Smooth view/tab content swapper.
+ * Conforms to beUI / Apple HIG "Content swap" recipe:
+ * - Old content leaves faster than new content arrives
+ * - Travel is kept to a few pixels (y: 4px)
+ * - Degrades to pure opacity on reduced motion (y: 0)
+ */
+export function ContentSwap({ children, className, id, ...props }) {
+  const shouldReduceMotion = useAppReducedMotion();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={id}
+        initial={{
+          opacity: 0,
+          y: shouldReduceMotion ? 0 : 4,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          transition: shouldReduceMotion
+            ? { duration: 0.1 }
+            : CONTENT_SWAP_ENTER_TRANSITION,
+        }}
+        exit={{
+          opacity: 0,
+          y: shouldReduceMotion ? 0 : -4,
+          transition: shouldReduceMotion
+            ? { duration: 0.08 }
+            : CONTENT_SWAP_EXIT_TRANSITION,
+        }}
+        className={className}
+        {...props}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/**
+ * ContentReveal
+ * Conforms to beUI "Content reveal" recipe:
+ * - Short lift (y: 6px) and restrained blur (4px)
+ * - Finishes quickly (0.2s) before the surface becomes the focus
+ */
+export function ContentReveal({
+  children,
+  className,
+  delay = 0,
+  duration = 0.2,
+  ...props
+}) {
+  const shouldReduceMotion = useAppReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 15 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      initial={{
+        opacity: 0,
+        y: shouldReduceMotion ? 0 : 6,
+        filter: shouldReduceMotion ? "none" : "blur(4px)",
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        transition: {
+          duration: shouldReduceMotion ? 0.1 : duration,
+          delay: shouldReduceMotion ? 0 : delay,
+          ease: EASE_OUT,
+        },
+      }}
       className={className}
       {...props}
     >
@@ -18,12 +91,52 @@ export function PageTransition({ children, className, ...props }) {
   );
 }
 
-export function FadeIn({ children, className, delay = 0, duration = 0.4, ...props }) {
+/**
+ * PageTransition
+ * Top-level page entrance, kept under the 300ms interface ceiling (0.22s).
+ */
+export function PageTransition({ children, className, ...props }) {
+  const shouldReduceMotion = useAppReducedMotion();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+      transition={{
+        duration: shouldReduceMotion ? 0.1 : 0.22,
+        ease: EASE_OUT,
+      }}
+      className={className}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * FadeIn
+ * Restrained opacity entrance (0.2s default).
+ */
+export function FadeIn({
+  children,
+  className,
+  delay = 0,
+  duration = 0.2,
+  ...props
+}) {
+  const shouldReduceMotion = useAppReducedMotion();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration, delay, ease: "easeOut" }}
+      transition={{
+        duration: shouldReduceMotion ? 0.1 : duration,
+        delay: shouldReduceMotion ? 0 : delay,
+        ease: EASE_OUT,
+      }}
       className={className}
       {...props}
     >
@@ -32,12 +145,29 @@ export function FadeIn({ children, className, delay = 0, duration = 0.4, ...prop
   );
 }
 
-export function SlideUp({ children, className, delay = 0, duration = 0.4, yOffset = 20, ...props }) {
+/**
+ * SlideUp
+ * Micro-elevation reveal (8px default travel instead of large jumps).
+ */
+export function SlideUp({
+  children,
+  className,
+  delay = 0,
+  duration = 0.22,
+  yOffset = 8,
+  ...props
+}) {
+  const shouldReduceMotion = useAppReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: yOffset }}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : yOffset }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{
+        duration: shouldReduceMotion ? 0.1 : duration,
+        delay: shouldReduceMotion ? 0 : delay,
+        ease: EASE_OUT,
+      }}
       className={className}
       {...props}
     >
@@ -46,14 +176,26 @@ export function SlideUp({ children, className, delay = 0, duration = 0.4, yOffse
   );
 }
 
-export function StaggerContainer({ children, className, delayChildren = 0, staggerChildren = 0.05, ...props }) {
+/**
+ * StaggerContainer & StaggerItem
+ * Progressive item reveal for lists and cards.
+ */
+export function StaggerContainer({
+  children,
+  className,
+  delayChildren = 0,
+  staggerChildren = 0.04,
+  ...props
+}) {
+  const shouldReduceMotion = useAppReducedMotion();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        delayChildren,
-        staggerChildren,
+        delayChildren: shouldReduceMotion ? 0 : delayChildren,
+        staggerChildren: shouldReduceMotion ? 0 : staggerChildren,
       },
     },
   };
@@ -71,10 +213,27 @@ export function StaggerContainer({ children, className, delayChildren = 0, stagg
   );
 }
 
-export function StaggerItem({ children, className, duration = 0.4, ...props }) {
+export function StaggerItem({
+  children,
+  className,
+  duration = 0.2,
+  ...props
+}) {
+  const shouldReduceMotion = useAppReducedMotion();
+
   const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0, transition: { duration, ease: [0.16, 1, 0.3, 1] } },
+    hidden: {
+      opacity: 0,
+      y: shouldReduceMotion ? 0 : 6,
+    },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: shouldReduceMotion ? 0.1 : duration,
+        ease: EASE_OUT,
+      },
+    },
   };
 
   return (
