@@ -109,7 +109,7 @@ export default function OsasPostEventReviewSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -141,7 +141,7 @@ export default function OsasPostEventReviewSheet({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -200,7 +200,7 @@ export default function OsasPostEventReviewSheet({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Summary Strip */}
           <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center text-xl shrink-0 font-bold border border-purple-500/20 dark:border-purple-800/40 mt-0.5">
+            <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center text-xl shrink-0 font-bold border border-purple-500/20 dark:border-purple-800/40 mt-0.5">
               <AppIcon className=" Invoice01Icon" />
             </div>
             <div className="min-w-0 flex-1">
@@ -394,7 +394,7 @@ export default function OsasPostEventReviewSheet({
               {/* Financial Liquidation Row */}
               <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-emerald-100 dark:border-emerald-900/30">
+                  <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-emerald-100 dark:border-emerald-900/30">
                     <AppIcon className=" Invoice01Icon" />
                   </div>
                   <div className="min-w-0">

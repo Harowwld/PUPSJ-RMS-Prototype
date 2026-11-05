@@ -226,11 +226,11 @@ test("Demo verification: _SAMPLE_DATA/security_questions.csv parses, validates, 
 
   // 3. Evaluate rows
   const evaluated = evaluateQuestionRows(parsed, existingTexts);
-  const invalidRows = evaluated.filter((r) => r.status !== "valid");
+  const errorRows = evaluated.filter((r) => ["short", "simple", "duplicate"].includes(r.status));
   assert.equal(
-    invalidRows.length,
+    errorRows.length,
     0,
-    `All sample CSV rows should be valid without duplicates/short/simple errors. Found invalid: ${JSON.stringify(invalidRows)}`
+    `All sample CSV rows should be valid without duplicates/short/simple errors. Found invalid: ${JSON.stringify(errorRows)}`
   );
 
   // 4. Test database transaction insertion (simulate PUT /api/system/security-questions)

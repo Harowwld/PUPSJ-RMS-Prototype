@@ -677,7 +677,7 @@ export default function BulkImportStudentsModal({
                   disabled={selectedCount === 0 || (!csvBulkRoom && !csvBulkCabinet && !csvBulkDrawer)}
                   className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 border-border text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer disabled:opacity-50 ml-1 shadow-2xs"
                 >
-                  Apply
+                  Apply Location
                 </Button>
 
                 <TableScrollControls scrollContainerRef={tableContainerRef}
@@ -875,7 +875,7 @@ export default function BulkImportStudentsModal({
             {csvLoading ? (
               <span className="flex items-center gap-2">
                 <Loading01Icon size="1em" className="animate-spin text-sm" />
-                <span>Importing...</span>
+                <span>Importing Students…</span>
               </span>
             ) : (
               `Import ${selectedCount > 0 ? selectedCount : ""} Students`

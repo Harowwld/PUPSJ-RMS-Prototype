@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/empty"
 import PDFPreview from "@/components/shared/PDFPreview"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { REPORT_FONT_OPTIONS } from "@/lib/reportFontOptions"
-import { DEFAULT_BRANDING, resolveBranding } from "@/lib/institutionalBranding"
+import { DEFAULT_BRANDING, BRANDING_UPLOAD_LIMITS, resolveBranding } from "@/lib/institutionalBranding"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
@@ -112,17 +112,23 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
     return () => window.removeEventListener("beforeunload", warnBeforeLeaving)
   }, [isDirty])
 
+  const handleDiscardDraft = () => {
+    if (savedBranding) {
+      setBranding(savedBranding)
+      notify("Draft changes discarded. Reverted to saved institutional identity.")
+    }
+  }
+
   // Process File to Base64
   const processImageFile = (file) => {
     if (!file) return
 
-    const validTypes = ["image/png", "image/webp", "image/jpeg", "image/svg+xml"]
-    if (!validTypes.includes(file.type)) {
+    if (!BRANDING_UPLOAD_LIMITS.allowedMimeTypes.includes(file.type)) {
       notify("Please upload a valid image file (PNG, WebP, SVG, or JPEG)", true)
       return
     }
 
-    if (file.size > 3 * 1024 * 1024) {
+    if (file.size > BRANDING_UPLOAD_LIMITS.maxFileSize) {
       notify("Image size must be smaller than 3MB for offline performance", true)
       return
     }
@@ -131,7 +137,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
     reader.onload = (e) => {
       const base64 = e.target?.result
       if (typeof base64 === "string") {
-        if (base64.length > 4 * 1024 * 1024) {
+        if (base64.length > BRANDING_UPLOAD_LIMITS.maxBase64Length) {
           notify("This seal is too large after processing. Choose an image smaller than 3 MB.", true)
           return
         }
@@ -184,13 +190,12 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
   const processSecondaryImageFile = (file) => {
     if (!file) return
 
-    const validTypes = ["image/png", "image/webp", "image/jpeg", "image/svg+xml"]
-    if (!validTypes.includes(file.type)) {
+    if (!BRANDING_UPLOAD_LIMITS.allowedMimeTypes.includes(file.type)) {
       notify("Please upload a valid image file (PNG, WebP, SVG, or JPEG)", true)
       return
     }
 
-    if (file.size > 3 * 1024 * 1024) {
+    if (file.size > BRANDING_UPLOAD_LIMITS.maxFileSize) {
       notify("Image size must be smaller than 3MB for offline performance", true)
       return
     }
@@ -199,7 +204,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
     reader.onload = (e) => {
       const base64 = e.target?.result
       if (typeof base64 === "string") {
-        if (base64.length > 4 * 1024 * 1024) {
+        if (base64.length > BRANDING_UPLOAD_LIMITS.maxBase64Length) {
           notify("This seal is too large after processing. Choose an image smaller than 3 MB.", true)
           return
         }
@@ -263,6 +268,10 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
       setSaving(true)
       const payload = {
         ...branding,
+        tagline: branding.tagline?.trim() || "",
+        signatoryPreparerTitle: branding.signatoryPreparerTitle?.trim().toUpperCase() || "",
+        signatoryRegistrarTitle: branding.signatoryRegistrarTitle?.trim().toUpperCase() || "",
+        signatoryHeadTitle: branding.signatoryHeadTitle?.trim().toUpperCase() || "",
         documentCodePrefix: deriveDocumentPrefix(branding.institutionName, branding.campusName),
       }
       const res = await fetch("/api/system/branding", {
@@ -409,6 +418,18 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                 Restore Defaults
               </Button>
 
+              {isDirty && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDiscardDraft}
+                  disabled={saving}
+                  className="h-9 px-4"
+                >
+                  Discard Draft
+                </Button>
+              )}
+
               <Button
                 type="button"
                 onClick={handleSave}
@@ -427,22 +448,8 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
             
             {/* LEFT COLUMN (7 cols): Settings Configuration */}
             <div className="lg:col-span-7 space-y-5">
-              <div className="rounded-2xl border border-border bg-white p-6 shadow-2xs dark:bg-card space-y-4">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">Report Typography</h3>
-                  <p className="mt-1 text-[12px] text-gray-500 dark:text-zinc-400">Choose the typeface for the letterhead, body, tables, and footers of all generated reports.</p>
-                </div>
-                <div>
-                  <label htmlFor="report-font" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">Report font</label>
-                  <Select id="report-font" value={branding.reportFont || "jakarta"} onChange={(event) => setBranding((previous) => ({ ...previous, reportFont: event.target.value }))} className="h-11 w-full sm:h-10" aria-describedby="report-font-help">
-                    {REPORT_FONT_OPTIONS.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
-                  </Select>
-                  <p id="report-font-help" className="mt-2 text-xs text-gray-500 dark:text-zinc-400">All options embed standard institutional TrueType fonts (Plus Jakarta Sans, Arial/Liberation Sans, Times/Liberation Serif, Noto Sans, Noto Serif, Inter, Open Sans, DejaVu Serif, DejaVu Sans). The app interface keeps its current font.</p>
-                </div>
-              </div>
-              
-              {/* Card 1: Official Institutional Seals & Logos */}
-              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
+              {/* Card 1: Official Institutional Seals & Logos (Apple Inset Grouped Card) */}
+              <div className="rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-none space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Official Institutional Seals &amp; Logos
@@ -454,7 +461,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Primary Seal */}
-                  <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 flex flex-col justify-between gap-3">
+                  <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex flex-col justify-between gap-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 truncate">
@@ -497,7 +504,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         onChange={handleFileChange}
                         className="sr-only"
                       />
-                      <div className="w-14 h-14 rounded-xl flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-border dark:border-border shadow-2xs mb-2">
+                      <div className="w-14 h-14 rounded-full flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-border dark:border-border shadow-2xs mb-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={activeLogoSrc}
@@ -512,13 +519,13 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         {isCustomLogo ? "Replace primary seal" : "Upload primary seal"}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                        PNG, JPEG, WebP, SVG (max 3 MB)
+                        {BRANDING_UPLOAD_LIMITS.acceptedExtensionsDescription}
                       </p>
                     </label>
                   </div>
 
                   {/* Secondary / Regulatory Seal (Optional) */}
-                  <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 flex flex-col justify-between gap-3">
+                  <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex flex-col justify-between gap-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300 truncate">
@@ -569,7 +576,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         className="sr-only"
                       />
                       {hasSecondaryLogo ? (
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-amber-200/60 dark:border-amber-900/40 shadow-2xs mb-2">
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center p-1.5 relative overflow-hidden bg-[repeating-conic-gradient(#f3f4f6_0%_25%,transparent_0%_50%)] [background-size:8px_8px] dark:bg-[repeating-conic-gradient(#18181b_0%_25%,transparent_0%_50%)] border border-amber-200/60 dark:border-amber-900/40 shadow-2xs mb-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={activeSecondaryLogoSrc}
@@ -586,15 +593,15 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         {hasSecondaryLogo ? "Replace secondary seal" : "Add secondary seal"}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                        PNG, JPEG, WebP, SVG (max 3 MB)
+                        {BRANDING_UPLOAD_LIMITS.acceptedExtensionsDescription}
                       </p>
                     </label>
                   </div>
                 </div>
               </div>
 
-              {/* Card 2: Official School Credentials & Administrative Letterhead */}
-              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
+              {/* Card 2: Official School Credentials & Administrative Letterhead (Apple Inset Grouped Card) */}
+              <div className="rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-none space-y-4">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     School Credentials &amp; Letterhead
@@ -683,6 +690,12 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         onChange={(e) =>
                           setBranding((prev) => ({
                             ...prev,
+                            tagline: e.target.value,
+                          }))
+                        }
+                        onBlur={(e) =>
+                          setBranding((prev) => ({
+                            ...prev,
                             tagline: e.target.value.toUpperCase(),
                           }))
                         }
@@ -690,6 +703,28 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         maxLength={100}
                         className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
                       />
+                    </div>
+                  </div>
+
+                  {/* Derived Document Tracking Code Prefix */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-gray-50/50 p-3.5 dark:bg-zinc-950/40">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                          Derived Document Code Prefix
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+                          System Generated
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        Derived from institution and campus designations. Applied to compliance slips, verification records, and report exports.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-sans tabular-nums text-xs font-bold px-3 py-1.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-red-300 border border-pup-maroon/20">
+                        {deriveDocumentPrefix(branding.institutionName, branding.campusName)}-*
+                      </span>
                     </div>
                   </div>
 
@@ -704,15 +739,46 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div>
+                        <label htmlFor="identity-preparer-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                          1. Prepared by
+                        </label>
+                        <Input
+                          id="identity-preparer-title"
+                          value={branding.signatoryPreparerTitle ?? ""}
+                          onChange={(e) =>
+                            setBranding((prev) => ({
+                              ...prev,
+                              signatoryPreparerTitle: e.target.value,
+                            }))
+                          }
+                          onBlur={(e) =>
+                            setBranding((prev) => ({
+                              ...prev,
+                              signatoryPreparerTitle: e.target.value.toUpperCase(),
+                            }))
+                          }
+                          placeholder="Default: ADMINISTRATIVE STAFF"
+                          maxLength={60}
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        />
+                      </div>
+
                       <div>
                         <label htmlFor="identity-registrar-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Records / Registrar Title
+                          2. Reviewed by
                         </label>
                         <Input
                           id="identity-registrar-title"
                           value={branding.signatoryRegistrarTitle ?? ""}
                           onChange={(e) =>
+                            setBranding((prev) => ({
+                              ...prev,
+                              signatoryRegistrarTitle: e.target.value,
+                            }))
+                          }
+                          onBlur={(e) =>
                             setBranding((prev) => ({
                               ...prev,
                               signatoryRegistrarTitle: e.target.value.toUpperCase(),
@@ -726,12 +792,18 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
                       <div>
                         <label htmlFor="identity-head-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Executive Approver Title
+                          3. Noted by
                         </label>
                         <Input
                           id="identity-head-title"
                           value={branding.signatoryHeadTitle ?? ""}
                           onChange={(e) =>
+                            setBranding((prev) => ({
+                              ...prev,
+                              signatoryHeadTitle: e.target.value,
+                            }))
+                          }
+                          onBlur={(e) =>
                             setBranding((prev) => ({
                               ...prev,
                               signatoryHeadTitle: e.target.value.toUpperCase(),
@@ -747,36 +819,54 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                 </div>
               </div>
 
-              {/* Card 3: Brand Color Accent */}
-              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-4">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Official Brand Color Theme
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Primary institutional color applied to university titles, dividing rules, and table header accents.
-                  </p>
+              {/* Card 3: Brand Theme & Typography (Apple Inset Grouped Card) */}
+              <div className="rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-card/90 backdrop-blur-sm p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-none space-y-6">
+                {/* Brand Color Theme Section */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
+                      Official Brand Color Theme
+                    </h3>
+                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Primary institutional color applied to university titles, dividing rules, and table header accents.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 rounded-2xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-950/40 sm:p-5">
+                    <ColorSelector
+                      label={null}
+                      value={branding.brandColor}
+                      onChange={(hex) =>
+                        setBranding((prev) => ({
+                          ...prev,
+                          brandColor: hex.toUpperCase(),
+                        }))
+                      }
+                      presets={COLOR_PRESETS}
+                      showCustom
+                      showHexInput
+                      errorText={
+                        !/^#[0-9a-fA-F]{6}$/.test(branding.brandColor)
+                          ? "Enter a six-digit hex color, such as #7A1E28."
+                          : null
+                      }
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-4 rounded-2xl border border-border bg-gray-50/50 p-4 dark:bg-zinc-950/40 sm:p-5">
-                  <ColorSelector
-                    label={null}
-                    value={branding.brandColor}
-                    onChange={(hex) =>
-                      setBranding((prev) => ({
-                        ...prev,
-                        brandColor: hex.toUpperCase(),
-                      }))
-                    }
-                    presets={COLOR_PRESETS}
-                    showCustom
-                    showHexInput
-                    errorText={
-                      !/^#[0-9a-fA-F]{6}$/.test(branding.brandColor)
-                        ? "Enter a six-digit hex color, such as #7A1E28."
-                        : null
-                    }
-                  />
+                {/* Report Typography Section (Combined below color theme) */}
+                <div className="pt-5 border-t border-border dark:border-border space-y-3.5">
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">Report Typography</h3>
+                    <p className="mt-0.5 text-[12px] text-gray-500 dark:text-zinc-400">Choose the typeface for the letterhead, body, tables, and footers of all generated reports.</p>
+                  </div>
+                  <div>
+                    <label htmlFor="report-font" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">Report font</label>
+                    <Select id="report-font" value={branding.reportFont || "jakarta"} onChange={(event) => setBranding((previous) => ({ ...previous, reportFont: event.target.value }))} className="h-11 w-full sm:h-10" aria-describedby="report-font-help">
+                      {REPORT_FONT_OPTIONS.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
+                    </Select>
+                    <p id="report-font-help" className="mt-2 text-xs text-gray-500 dark:text-zinc-400">All options embed standard institutional TrueType fonts (Plus Jakarta Sans, Arial/Liberation Sans, Times/Liberation Serif, Noto Sans, Noto Serif, Inter, Open Sans, DejaVu Serif, DejaVu Sans). The app interface keeps its current font.</p>
+                  </div>
                 </div>
               </div>
 
@@ -788,7 +878,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">Document Preview</h3>
                   <p className="mt-1 text-[12px] text-gray-500 dark:text-zinc-400">Preview your current settings in the actual report format. Save Branding to apply them to new reports.</p>
                 </div>
-                <div className="relative flex h-[760px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-gray-100 dark:bg-muted" aria-busy={!sampleReady && !sampleError}>
+                <div className="relative flex h-[calc(100vh-190px)] min-h-[560px] max-h-[840px] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-gray-100 dark:bg-muted" aria-busy={!sampleReady && !sampleError}>
                   {sampleError ? (
                     <div className="flex flex-1 items-center justify-center p-5">
                       <EmptyState variant="compact" icon={AlertCircleIcon} title="Preview Unavailable" description={sampleError}>

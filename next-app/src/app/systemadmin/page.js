@@ -23,6 +23,7 @@ import LandingCmsLoadingSkeleton from "@/components/systemadmin/skeletons/Landin
 import { getClientSession } from "@/lib/clientAuth"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { getRoleBranding } from "@/lib/roleBranding"
+import { ContentSwap } from "@/components/ui/motion"
 
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 
@@ -326,26 +327,28 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           <div
             className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]"
           >
-            {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
-            {view === "branding" && <InstitutionalBrandingTab showToast={showToast} onDirtyChange={setBrandingDirty} />}
-            {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
-            {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
-            {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
-            {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
-            {(view === "health" || view === "standards") && (
-              <CampusOperationsTab
-                showToast={showToast}
-                initialStandardsOpen={view === "standards"}
-              />
-            )}
-            {view === "backups" && <SystemBackupsTab showToast={showToast} />}
-            {view === "landing" && <LandingPageCmsTab showToast={showToast} initialSection={searchParams?.get("section")} />}
-            {view === "activity" && <MyActivityPanel />}
-            {view === "settings" && <AccountSettingsPanel />}
+            <ContentSwap id={view} className="flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]">
+              {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}
+              {view === "branding" && <InstitutionalBrandingTab showToast={showToast} onDirtyChange={setBrandingDirty} />}
+              {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
+              {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
+              {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
+              {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
+              {(view === "health" || view === "standards") && (
+                <CampusOperationsTab
+                  showToast={showToast}
+                  initialStandardsOpen={view === "standards"}
+                />
+              )}
+              {view === "backups" && <SystemBackupsTab showToast={showToast} />}
+              {view === "landing" && <LandingPageCmsTab showToast={showToast} initialSection={searchParams?.get("section")} />}
+              {view === "activity" && <MyActivityPanel />}
+              {view === "settings" && <AccountSettingsPanel />}
+            </ContentSwap>
           </div>
         </main>
       </div>
-      <ConfirmModal open={Boolean(pendingBrandingView)} title="Unsaved Changes" message="You have unsaved institutional identity changes. Navigating away will discard them." confirmLabel="Discard" variant="warning" onConfirm={discardBrandingChanges} onCancel={() => setPendingBrandingView(null)} isUnsavedChangesModal={true} />
+      <ConfirmModal open={Boolean(pendingBrandingView)} title="Unsaved Changes" message="You have unsaved institutional identity changes. Navigating away will discard them." confirmLabel="Discard Changes" variant="warning" onConfirm={discardBrandingChanges} onCancel={() => setPendingBrandingView(null)} isUnsavedChangesModal={true} />
     </div>
   )
 }

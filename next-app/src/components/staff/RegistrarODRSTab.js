@@ -505,7 +505,7 @@ export default function RegistrarODRSTab({ showToast }) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-10 px-3.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                          className="h-10 px-3.5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                           onClick={() => {
                             const allowed = ALLOWED_REOPEN_TRANSITIONS[selected.status] || ["InProgress"];
                             setReopenTargetStatus(allowed[0] || "InProgress");
@@ -627,7 +627,7 @@ export default function RegistrarODRSTab({ showToast }) {
             <Button
               type="button"
               variant="outline"
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               onClick={() => setReopenModalOpen(false)}
               disabled={reopenSubmitting}
             >
@@ -639,7 +639,7 @@ export default function RegistrarODRSTab({ showToast }) {
               onClick={handleConfirmReopen}
               disabled={reopenSubmitting || reopenReason.trim().length < 5}
             >
-              {reopenSubmitting ? "Reopening..." : "Confirm Reopen"}
+              {reopenSubmitting ? "Reopening Request…" : "Reopen Request"}
             </Button>
           </DialogFooter>
         </DialogContent>

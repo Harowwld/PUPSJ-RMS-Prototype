@@ -35,7 +35,7 @@ import {
 } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { ZOOM_PERCENTAGES } from "@/hooks/useLayoutZoom";
-import { setHighContrastPreference } from "@/lib/accessibility";
+import { setHighContrastPreference, setReduceMotionPreference } from "@/lib/accessibility";
 import { HelpCircleIcon as EmptyHelpCircleIcon , ArrowRight01Icon, CovidInfoIcon, Loading01Icon, Shield01Icon, SmartPhone01Icon, Tick01Icon, UserIcon} from "hugeicons-react";
 import { Switch } from "@/components/ui/switch";
 import AppIcon from "@/components/ui/app-icon";
@@ -200,6 +200,8 @@ export default function AccountSettingsPanel() {
 
     if (key === "high_contrast") {
       setHighContrastPreference(val, authUser?.id);
+    } else if (key === "reduce_motion") {
+      setReduceMotionPreference(val, authUser?.id);
     }
 
     try {
@@ -217,6 +219,8 @@ export default function AccountSettingsPanel() {
       setUserPreferences(oldPrefs);
       if (key === "high_contrast") {
         setHighContrastPreference(Boolean(oldPrefs.high_contrast), authUser?.id);
+      } else if (key === "reduce_motion") {
+        setReduceMotionPreference(Boolean(oldPrefs.reduce_motion), authUser?.id);
       }
       const errInfo = formatErrorMessage(error, { title: "Preference Update Failed", description: "Could not update your preference." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
@@ -685,22 +689,23 @@ export default function AccountSettingsPanel() {
                 </div>
                 <Skeleton className="w-28 h-10 rounded-xl" />
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1">
-                <div className="p-6 border-b lg:border-b-0 lg:border-r border-border dark:border-border space-y-6 bg-gray-50/40 dark:bg-white/[0.02]">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="w-16 h-16 rounded-full shrink-0" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="w-28 h-4" />
-                      <Skeleton className="w-20 h-3" />
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1">
+                <div className="p-3 sm:p-4 border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 space-y-3 bg-gray-50/50 dark:bg-zinc-900/40">
+                  <div className="px-3 pt-1">
+                    <Skeleton className="w-16 h-3 rounded" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Skeleton className="w-full h-10 rounded-xl" />
                     <Skeleton className="w-full h-10 rounded-xl" />
                     <Skeleton className="w-full h-10 rounded-xl" />
                   </div>
                 </div>
                 <div className="p-8 space-y-6">
-                  <Skeleton className="w-40 h-6" />
+                  <div className="space-y-2">
+                    <Skeleton className="w-40 h-6 rounded" />
+                    <Skeleton className="w-72 h-4 rounded" />
+                  </div>
+                  <Skeleton className="w-full h-28 rounded-2xl" />
                   <Skeleton className="w-full h-32 rounded-xl" />
                   <Skeleton className="w-full h-32 rounded-xl" />
                 </div>
@@ -735,66 +740,19 @@ export default function AccountSettingsPanel() {
               defaultValue="profile"
               value={activeTab}
               onValueChange={handleTabChange}
-              className="grid grid-cols-1 lg:grid-cols-[280px_1fr] flex-1 items-stretch min-h-[600px]"
+              className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1 items-stretch min-h-[600px]"
             >
               {/* Sidebar Navigation */}
-              <aside className="border-b lg:border-b-0 lg:border-r border-border dark:border-border p-6 flex flex-col bg-gray-50/40 dark:bg-white/[0.02]">
+              <aside className="border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 p-3 sm:p-4 flex flex-col bg-gray-50/50 dark:bg-zinc-900/40 shrink-0">
                 <div className="flex flex-col h-full w-full">
-                  {/* Header Section */}
-                  <div className="flex flex-col items-center justify-center w-full mb-8 mt-4">
-                    {/* Avatar: 80px, circular */}
-                    <div className="flex flex-col items-center shrink-0">
-                      <div
-                        className="relative w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-medium shadow-inner overflow-hidden mb-3 select-none"
-                      >
-                        {avatarUrl ? (
-                          <>
-                            <img
-                              src={avatarUrl}
-                              alt=""
-                              className={`w-full h-full object-cover ${avatarLoaded ? "block" : "hidden"}`}
-                              onLoad={() => setAvatarLoaded(true)}
-                              onError={() => {
-                                setAvatarLoaded(false);
-                                setAvatarUrl(null);
-                              }}
-                            />
-                            {!avatarLoaded && (
-                              <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
-                                <UserIcon size="1em"  className="text-[24px] text-gray-400 dark:text-zinc-500" />
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <span>{initials}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Identity Info */}
-                    <div className="flex flex-col items-center justify-center text-center mt-1">
-                      <h3 className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50 leading-tight">
-                        {fname} {lname}
-                      </h3>
-                      <p className="text-lg font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate max-w-[240px]">
-                        {authUser?.role === "Student" && studentNo ? (
-                          <span className="font-sans tabular-nums text-sm text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
-                        ) : (
-                          authUser?.email || authUser?.username
-                        )}
-                      </p>
-                      {authUser?.role && (
-                        <div className="mt-2.5">
-                          <span className="text-sm font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                            {authUser.role === "Student" ? (clientType || "Student") : getOfficeRoleLabel(authUser.role, authUser)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  <div className="px-3 pt-1 pb-2 select-none">
+                    <span className="text-[11px] font-semibold tracking-[0.05em] uppercase text-gray-400 dark:text-zinc-500">
+                      Settings
+                    </span>
                   </div>
 
                   {/* Navigation Menu */}
-                  <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1.5">
+                  <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1 border-0">
                     {[
                       { id: "profile", label: "Profile", icon: "UserCircleIcon" },
                       { id: "security", label: "Security", icon: "Shield01Icon" },
@@ -803,16 +761,16 @@ export default function AccountSettingsPanel() {
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
-                        className="group flex items-center justify-start gap-3 w-full px-3.5 py-2.5 rounded-xl text-[14px] font-semibold tracking-[-0.01em] whitespace-nowrap transition-all outline-none cursor-pointer data-[state=active]:bg-gray-200/60 dark:data-[state=active]:bg-white/10 data-[state=active]:text-gray-900 dark:data-[state=active]:text-zinc-50 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 border border-transparent"
+                        className="group flex items-center justify-start gap-3 w-full h-[40px] px-3.5 rounded-xl text-[13.5px] font-medium outline-none cursor-pointer transition-colors duration-150 select-none border border-transparent data-active:bg-pup-maroon data-active:text-white dark:data-active:bg-zinc-800 dark:data-active:text-white data-active:font-semibold data-active:shadow-xs data-[state=active]:bg-pup-maroon data-[state=active]:text-white dark:data-[state=active]:bg-zinc-800 dark:data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-xs text-gray-700 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:scale-[0.98]"
                       >
-                        <AppIcon  className={cn(
-                          " text-lg shrink-0 transition-colors",
-                          "text-gray-400 group-data-[state=active]:text-gray-900 dark:text-zinc-500 dark:group-data-[state=active]:text-white",
+                        <AppIcon className={cn(
+                          "text-[18px] shrink-0 transition-colors",
+                          "text-gray-400 group-data-active:text-white dark:text-zinc-400 dark:group-data-active:text-white group-data-[state=active]:text-white dark:group-data-[state=active]:text-white",
                           tab.icon
-                        )}></AppIcon>
+                        )} />
                         <span className="truncate text-left">{tab.label}</span>
-                        <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                          <ArrowRight01Icon size="1em"  className="text-sm text-gray-400 dark:text-zinc-400"></ArrowRight01Icon>
+                        <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-active:opacity-100 group-data-[state=active]:opacity-100 transition-opacity">
+                          <ArrowRight01Icon size="1em" className="text-xs text-white/80 dark:text-zinc-300" />
                         </div>
                       </TabsTrigger>
                     ))}
@@ -831,6 +789,58 @@ export default function AccountSettingsPanel() {
                       <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
                         Your name appears across the platform and generated audit certificates.
                       </p>
+                    </div>
+
+                    {/* Relocated Identity Hero Card */}
+                    <div className="mt-6 p-5 sm:p-6 rounded-2xl border border-border dark:border-border/70 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                      {/* Avatar */}
+                      <div className="relative w-20 h-20 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-2xl font-semibold shadow-xs overflow-hidden select-none border border-black/[0.06] dark:border-white/10 ring-4 ring-white dark:ring-zinc-900">
+                        {avatarUrl ? (
+                          <>
+                            <img
+                              src={avatarUrl}
+                              alt=""
+                              className={`w-full h-full object-cover ${avatarLoaded ? "block" : "hidden"}`}
+                              onLoad={() => setAvatarLoaded(true)}
+                              onError={() => {
+                                setAvatarLoaded(false);
+                                setAvatarUrl(null);
+                              }}
+                            />
+                            {!avatarLoaded && (
+                              <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
+                                <UserIcon size="1em" className="text-[24px] text-gray-400 dark:text-zinc-500" />
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span>{initials}</span>
+                        )}
+                      </div>
+
+                      {/* Name, Email / Student No, and Role */}
+                      <div className="flex flex-col items-center sm:items-start text-center sm:text-left min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                          <h4 className="text-xl font-bold tracking-tight text-gray-900 dark:text-zinc-50">
+                            {fname} {lname}
+                          </h4>
+                          {authUser?.role && (
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300 border border-pup-maroon/20 dark:border-red-500/30">
+                              {authUser.role === "Student" ? (clientType || "Student") : getOfficeRoleLabel(authUser.role, authUser)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-normal text-gray-500 dark:text-zinc-400 mt-1 truncate max-w-full">
+                          {authUser?.role === "Student" && studentNo ? (
+                            <span className="font-sans tabular-nums text-gray-700 dark:text-zinc-300 font-medium">{studentNo}</span>
+                          ) : (
+                            authUser?.email || authUser?.username
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-2">
+                          Personal account information and verified institutional directory profile.
+                        </p>
+                      </div>
                     </div>
 
                     <div className="mt-6">
@@ -1499,7 +1509,7 @@ export default function AccountSettingsPanel() {
                         type="button"
                         variant="outline"
                         onClick={() => setShowAllAvatars((prev) => !prev)}
-                        className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                       >
                         {avatarsExpanded ? "Show Fewer Avatars" : "View More Avatars"}
                       </Button>
@@ -1577,11 +1587,12 @@ export default function AccountSettingsPanel() {
                       Accessibility
                     </h3>
                     <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                      Display settings to improve text visibility and readability.
+                      Display settings to improve text visibility, readability, and interface motion.
                     </p>
                   </div>
 
                   <div className="mt-6 space-y-4">
+                    {/* High Contrast Mode */}
                     <div className="p-5 bg-gray-50 rounded-2xl border border-border dark:bg-white/5 dark:border-border flex items-center justify-between gap-6">
                       <div className="space-y-1">
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">High Contrast Mode</h4>
@@ -1593,6 +1604,21 @@ export default function AccountSettingsPanel() {
                         checked={!!userPreferences.high_contrast}
                         onCheckedChange={(checked) => handleAccessibilityToggle("high_contrast", checked)}
                         aria-label="High Contrast Mode"
+                      />
+                    </div>
+
+                    {/* Reduce Motion */}
+                    <div className="p-5 bg-gray-50 rounded-2xl border border-border dark:bg-white/5 dark:border-border flex items-center justify-between gap-6">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Reduce Motion</h4>
+                        <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                          Minimizes interface animations, removes spring overshoot and motion travel while preserving essential state feedback.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={!!userPreferences.reduce_motion}
+                        onCheckedChange={(checked) => handleAccessibilityToggle("reduce_motion", checked)}
+                        aria-label="Reduce Motion"
                       />
                     </div>
                   </div>

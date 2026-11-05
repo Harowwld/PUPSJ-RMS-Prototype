@@ -34,8 +34,8 @@ const CabinetSidebar = memo(({
   const [activeTab, setActiveTab] = React.useState("properties")
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-border shadow-sm select-none dark:border-border dark:shadow-none">
-      <CardHeader className="border-b border-border dark:border-border bg-transparent p-5">
+    <Card className="overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] select-none dark:shadow-none">
+      <CardHeader className="border-b border-black/[0.06] dark:border-white/10 bg-transparent p-5">
         <div>
           <CardTitle className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 mb-1">
             {selectedCabinetIds.size === 0 ? "Selection Details" :
@@ -66,15 +66,15 @@ const CabinetSidebar = memo(({
 
       <CardContent className="p-4">
         {/* Apple Segmented Control */}
-        <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border w-full mb-4">
+        <div className="flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] w-full mb-4">
           <button
             type="button"
             onClick={() => setActiveTab("properties")}
             className={cn(
-              "flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+              "flex-1 py-1 px-3 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer text-center border-0 active:scale-[0.98]",
               activeTab === "properties"
-                ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
             )}
           >
             Properties
@@ -83,10 +83,10 @@ const CabinetSidebar = memo(({
             type="button"
             onClick={() => setActiveTab("history")}
             className={cn(
-              "flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+              "flex-1 py-1 px-3 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer text-center border-0 active:scale-[0.98]",
               activeTab === "history"
-                ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
             )}
           >
             History

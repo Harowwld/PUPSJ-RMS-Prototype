@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { CardTitle, CardDescription } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
 import { Button } from "@/components/ui/button"
+import CopyButton from "@/components/shared/CopyButton"
 import BulkImportSkeleton from "@/components/admin/skeletons/BulkImportSkeleton"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
@@ -176,15 +177,15 @@ export default function BulkImportTab({
                 download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
                 className="inline-flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
-                Download
+                Download Template
               </a>
-              <button
-                type="button"
+              <CopyButton
                 onClick={handleCopySample}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
-              >
-                Copy
-              </button>
+                entityName="Sample CSV"
+                idleLabel="Copy Sample CSV"
+                copiedLabel="Sample CSV Copied!"
+                showToast={false}
+              />
             </div>
 
             {/* Consolidated Dropzone */}
@@ -271,13 +272,13 @@ export default function BulkImportTab({
                 </div>
               </div>
 
-              <div className="flex items-center gap-3.5 text-[12px] text-[#111111] dark:text-zinc-300">
-                <span className="border-r border-border pr-3.5 font-medium text-[#8E8E93] dark:border-border dark:text-zinc-500">
+              <div className="flex items-center gap-3.5 text-[12px] text-gray-900 dark:text-zinc-300">
+                <span className="border-r border-border pr-3.5 font-medium text-gray-500 dark:border-border dark:text-zinc-500">
                   Summary
                 </span>
                 <div className="flex items-center gap-3.5">
-                  <span className="font-normal text-[#111111] dark:text-zinc-300">
-                    {importRows.length} rows detected · <span className={importRows.filter((r) => r.error).length > 0 ? "text-red-600 dark:text-red-400 font-medium" : "text-[#8E8E93] dark:text-zinc-550"}>{importRows.filter((r) => r.error).length} invalid</span>
+                  <span className="font-normal text-gray-900 dark:text-zinc-300">
+                    {importRows.length} rows detected · <span className={importRows.filter((r) => r.error).length > 0 ? "text-red-600 dark:text-red-400 font-medium" : "text-gray-500 dark:text-zinc-400"}>{importRows.filter((r) => r.error).length} invalid</span>
                   </span>
                   <div className="h-3.5 w-[1px] bg-gray-200 dark:bg-zinc-700"></div>
                   <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
@@ -793,13 +794,13 @@ export default function BulkImportTab({
             {/* Architecture */}
             <div className="mb-6">
               <div className="flex items-center gap-[6px] text-[11px] mb-3 mt-0">
-                <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Architecture</span>
+                <span className="font-semibold tracking-[0.05em] text-gray-500 dark:text-zinc-400">Architecture</span>
               </div>
               <div className="inline-flex gap-2">
                 {["Category", "Name", "Code"].map((col) => (
                   <span
                     key={col}
-                    className="bg-[#F2F2F7] rounded-full px-3 py-1 text-[12px] font-medium text-[#111] dark:bg-zinc-800 dark:text-zinc-200 border-0"
+                    className="bg-black/[0.04] dark:bg-white/[0.06] rounded-full px-3 py-1 text-[12px] font-medium text-gray-900 dark:text-zinc-200 border-0"
                   >
                     {col}
                   </span>
@@ -810,21 +811,21 @@ export default function BulkImportTab({
             {/* Data Mapping */}
             <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-border mb-6">
               <div className="flex items-center gap-[6px] text-[11px] mb-3">
-                <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Data Mapping</span>
+                <span className="font-semibold tracking-[0.05em] text-gray-500 dark:text-zinc-400">Data Mapping</span>
               </div>
 
-              <div className="relative rounded-lg bg-[#F2F2F7] dark:bg-zinc-900 p-4 text-[12px] text-[#111] dark:text-zinc-100 leading-[1.6]">
+              <div className="relative rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] p-4 text-[12px] text-gray-900 dark:text-zinc-100 leading-[1.6]">
                 <button
                   onClick={handleCopySample}
-                  className="absolute top-4 right-4 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer flex items-center justify-center"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors border-0 bg-transparent p-0 cursor-pointer flex items-center justify-center"
                   title="Copy Example"
                 >
                   <Copy01Icon size="1em"  className="Copy01Icon text-[14px]"></Copy01Icon>
                 </button>
 
-                <div className="text-[11px] text-[#8E8E93] mb-3 normal-case font-sans">CSV Structure Example</div>
+                <div className="text-[11px] text-gray-500 dark:text-zinc-400 mb-3 normal-case font-sans">CSV Structure Example</div>
                 
-                <span className="font-semibold text-[#111] dark:text-zinc-50 border-b border-black/[0.08] dark:border-border pb-0.5">Category,Name,Code,IsCompliance,IsRequestable</span>
+                <span className="font-semibold text-gray-900 dark:text-zinc-50 border-b border-black/[0.08] dark:border-border pb-0.5">Category,Name,Code,IsCompliance,IsRequestable</span>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">DocumentType,</span>
@@ -839,13 +840,13 @@ export default function BulkImportTab({
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">Course,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
-                    <span className="text-[#E5484D] font-semibold">BSIT</span>
+                    <span className="text-pup-maroon dark:text-red-400 font-semibold">BSIT</span>
                     <span className="text-gray-400 dark:text-zinc-500">,,</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-900 dark:text-zinc-300">Section,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
-                    <span className="text-[#E5484D] font-semibold">BSIT</span>
+                    <span className="text-pup-maroon dark:text-red-400 font-semibold">BSIT</span>
                     <span className="text-gray-400 dark:text-zinc-500">,,</span>
                   </div>
                 </div>
@@ -855,7 +856,7 @@ export default function BulkImportTab({
             {/* Taxonomy Logic */}
             <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-border">
               <div className="flex items-center gap-[6px] text-[11px] mb-3">
-                <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Taxonomy Logic</span>
+                <span className="font-semibold tracking-[0.05em] text-gray-500 dark:text-zinc-400">Taxonomy Logic</span>
               </div>
 
               <div className="flex flex-col gap-4">
@@ -880,14 +881,14 @@ export default function BulkImportTab({
                     key={rule.label}
                     className="flex items-start gap-3"
                   >
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8E8E93] mt-[2px]">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center text-gray-400 dark:text-zinc-500 mt-[2px]">
                       <AppIcon  className={` ${rule.icon} text-[16px]`}></AppIcon>
                     </div>
                     <div>
-                      <div className="text-[13px] font-medium text-[#111] dark:text-zinc-50 leading-tight">
+                      <div className="text-[13px] font-medium text-gray-900 dark:text-zinc-50 leading-tight">
                         {rule.label}
                       </div>
-                      <div className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-0.5 leading-normal">
+                      <div className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal">
                         {rule.desc}
                       </div>
                     </div>

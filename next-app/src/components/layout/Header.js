@@ -29,6 +29,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
@@ -1063,7 +1064,7 @@ export default function Header({ authUser, onLogout, children }) {
   }, [focusedIndex, commandOpen]);
 
   return (
-    <header className="bg-white/75 backdrop-blur-xl dark:bg-zinc-950/75 border-b border-gray-200/80 dark:border-white/10 flex-none z-30 select-none transition-colors duration-200 shadow-[0_1px_6px_rgba(0,0,0,0.02)]">
+    <header className="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border-b border-black/[0.08] dark:border-white/10 flex-none z-30 select-none transition-colors duration-200 shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_1px_3px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset]">
       <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3">
         
@@ -1073,7 +1074,7 @@ export default function Header({ authUser, onLogout, children }) {
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
-              className="md:hidden flex h-10 w-10 min-w-[40px] min-h-[40px] items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 shrink-0"
+              className="md:hidden flex h-9 w-9 min-w-[36px] min-h-[36px] items-center justify-center rounded-xl text-gray-700 hover:bg-black/[0.05] dark:text-zinc-200 dark:hover:bg-white/10 transition-colors cursor-pointer active:scale-95 shrink-0"
               aria-label="Open portal navigation menu"
             >
               <ListViewIcon size="1em" className="text-xl" />
@@ -1108,61 +1109,46 @@ export default function Header({ authUser, onLogout, children }) {
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className="focus:outline-none select-none">
               <div className={cn(
-                "flex items-center gap-2 py-1.5 px-2 sm:pr-3 rounded-xl transition-all border border-transparent cursor-pointer",
-                menuOpen 
-                  ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs" 
-                  : "hover:bg-gray-100/70 dark:hover:bg-zinc-900"
+                "group/pill flex items-center gap-2 py-1 px-1.5 sm:pr-3 rounded-full transition-all duration-150 border cursor-pointer",
+                menuOpen
+                  ? "bg-black/[0.06] dark:bg-white/12 border-black/10 dark:border-white/15 shadow-xs"
+                  : "bg-black/[0.02] dark:bg-white/[0.04] border-black/[0.06] dark:border-white/10 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-[0.98]"
               )}>
-                <div className="relative h-9 w-9 rounded-full bg-white flex items-center justify-center text-[13px] font-bold border overflow-hidden shadow-2xs shrink-0 text-gray-700 dark:bg-zinc-850 dark:text-zinc-300 border-gray-200 dark:border-white/10">
-                  {currentAvatarFilename && !imageError ? (
-                    <>
-                      <img 
-                        src={`/api/account/avatar?id=${authUser.id}&t=${avatarTimestamp}`}
-                        alt=""
-                        className={cn("w-full h-full object-cover scale-[1.2]", imageLoaded ? "block" : "hidden")}
-                        onLoad={() => setImageLoaded(true)}
-                        onError={() => setImageError(true)}
-                      />
-                      {!imageLoaded && (
-                        <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-zinc-800 animate-pulse">
-                          <UserIcon size="1em"  className="text-[14px] text-gray-400 dark:text-zinc-550" />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    initials
-                  )}
-                </div>
+                <ProfileAvatar
+                  id={authUser?.id}
+                  avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
+                  name={displayName}
+                  initials={initials}
+                  className="size-8 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                  fallbackClassName="text-xs"
+                />
 
                 <div className="hidden sm:flex flex-col text-left leading-tight">
-                  <span className="text-[13px] font-bold truncate max-w-[140px] text-gray-800 dark:text-zinc-100">
+                  <span className="text-[13px] font-semibold tracking-[-0.01em] truncate max-w-[140px] text-gray-900 dark:text-zinc-100">
                     {displayName}
                   </span>
-                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
+                  <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                     {displayRole}
                   </span>
                 </div>
 
-                <ArrowDown01Icon size="1em"  className="text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5"></ArrowDown01Icon>
+                <ArrowDown01Icon size="1em" className="text-[11px] text-gray-400 dark:text-zinc-500 shrink-0 ml-0.5 transition-transform duration-150" />
               </div>
             </DropdownMenuTrigger>
             
             {/* Popover content with Three-Zone Architecture */}
-            <DropdownMenuContent align="end" sideOffset={8} className="w-72 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-72 p-0 select-none">
               {/* 1. Header Zone */}
-              <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-3.5 py-2.5 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between text-left">
+              <div className="bg-black/[0.02] dark:bg-white/[0.02] px-4.5 py-3 border-b border-black/[0.06] dark:border-white/10 flex items-center justify-between text-left">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="relative h-8 w-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
-                    {currentAvatarFilename && !imageError ? (
-                      <img 
-                        src={`/api/account/avatar?id=${authUser.id}&t=${avatarTimestamp}`}
-                        alt=""
-                        className="w-full h-full object-cover scale-[1.2]"
-                      />
-                    ) : (
-                      initials
-                    )}
-                  </div>
+                  <ProfileAvatar
+                    id={authUser?.id}
+                    avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
+                    name={displayName}
+                    initials={initials}
+                    className="size-8.5 rounded-full shadow-xs"
+                    fallbackClassName="text-xs"
+                  />
                   <div className="min-w-0 flex flex-col">
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                       {displayName}
@@ -1409,7 +1395,7 @@ export default function Header({ authUser, onLogout, children }) {
 
       {/* Mobile Navigation Drawer */}
       <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
-        <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 max-w-[85vw] bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-white/10 flex flex-col">
+        <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 max-w-[85vw] flex flex-col">
           <SheetHeader className="p-4 flex flex-row items-center gap-2.5">
             <img 
               src={branding.iconSrc}

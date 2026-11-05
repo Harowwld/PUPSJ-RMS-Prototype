@@ -101,7 +101,7 @@ export default function PermanentAdmissionRecordSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -133,7 +133,7 @@ export default function PermanentAdmissionRecordSheet({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -176,7 +176,7 @@ export default function PermanentAdmissionRecordSheet({
           <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
             <div
               className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 font-bold border mt-0.5 shadow-2xs",
+                "w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 font-bold border mt-0.5 shadow-2xs",
                 isSubmitted
                   ? "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-900/40"
                   : "bg-amber-500/10 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-500/20 dark:border-amber-900/40"

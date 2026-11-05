@@ -63,7 +63,7 @@ export default function HealthSidebar({
   if (isLoading && !isManualLoading) {
     return (
       <div className="w-[350px] shrink-0 flex flex-col gap-4">
-        <Card className="flex flex-col border border-border bg-white shadow-sm h-full rounded-2xl overflow-hidden p-6 space-y-6 dark:border-border dark:bg-card dark:shadow-none">
+        <Card className="flex flex-col border border-black/[0.08] dark:border-white/10 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] h-full rounded-2xl overflow-hidden p-6 space-y-6 dark:bg-card dark:shadow-none">
            <Skeleton className="h-12 w-full rounded-xl dark:bg-muted" />
            <Skeleton className="h-[180px] w-full rounded-2xl dark:bg-muted" />
            <div className="space-y-4">
@@ -92,7 +92,7 @@ export default function HealthSidebar({
 
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
-      <Card className="flex flex-col p-0 gap-0 border border-border bg-white shadow-sm rounded-2xl overflow-hidden dark:border-border dark:bg-card dark:shadow-none isolate">
+      <Card className="flex flex-col p-0 gap-0 border border-black/[0.08] dark:border-white/10 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] rounded-2xl overflow-hidden dark:bg-card dark:shadow-none isolate">
         {/* Page Header */}
         <PageHeader
           icon="PieChartIcon"

@@ -19,12 +19,19 @@ export default function CampusOperationsSkeleton() {
           descriptionClassName="mt-[4px] text-[13px] font-normal text-gray-900 dark:text-zinc-300"
           actions={<Skeleton aria-hidden="true" className="h-9 w-9 shrink-0 rounded-xl dark:bg-muted" />}
         />
-        <div aria-hidden="true" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 dark:border-white/10">
-          {["All", "Open", "Closed"].map((label, index) => <div key={label} className={`relative inline-flex items-center gap-2 px-3 text-xs font-semibold ${index === 0 ? "text-pup-maroon dark:text-red-400" : "text-gray-500 dark:text-zinc-400"}`}>{label}<Skeleton className="h-3 w-6 rounded dark:bg-muted" />{index === 0 && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}</div>)}
+        <div aria-hidden="true" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+            {["All", "Open", "Closed"].map((label, index) => (
+              <div key={label} className={`inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full ${index === 0 ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400"}`}>
+                <span>{label}</span>
+                <Skeleton className="h-3 w-5 rounded-full dark:bg-muted" />
+              </div>
+            ))}
+          </div>
         </div>
         <DataViewToolbar label="Campus operations search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
           <div aria-hidden="true" className="flex min-w-0 items-center gap-2">
-            <div className="relative w-[min(320px,30vw)] min-w-[190px] shrink-0"><Skeleton className="h-9 w-full rounded-xl dark:bg-muted" /><Skeleton className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded dark:bg-muted" /></div>
+            <div className="relative w-72 sm:w-80 shrink-0"><Skeleton className="h-9 w-full rounded-xl dark:bg-muted" /><Skeleton className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded dark:bg-muted" /></div>
           </div>
           <div aria-hidden="true" className="ml-auto flex shrink-0 items-center gap-2">
             <Skeleton className="h-9 w-20 shrink-0 rounded-xl dark:bg-muted" />
@@ -34,7 +41,7 @@ export default function CampusOperationsSkeleton() {
           </div>
         </DataViewToolbar>
         <div className="flex flex-col gap-2 border-t border-border bg-gray-50/40 px-6 py-4 dark:bg-zinc-900/30 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" /><div className="space-y-2"><Skeleton className="h-4 w-64 max-w-full rounded dark:bg-muted" /><Skeleton className="h-3 w-80 max-w-full rounded dark:bg-muted" /></div></div>
+          <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-full dark:bg-muted" /><div className="space-y-2"><Skeleton className="h-4 w-64 max-w-full rounded dark:bg-muted" /><Skeleton className="h-3 w-80 max-w-full rounded dark:bg-muted" /></div></div>
           <Skeleton className="h-9 w-40 shrink-0 rounded-xl dark:bg-muted" />
         </div>
         <div aria-busy="true" className="flex flex-[1_0_auto] flex-col overflow-hidden rounded-b-2xl border-t border-border bg-white dark:bg-card">

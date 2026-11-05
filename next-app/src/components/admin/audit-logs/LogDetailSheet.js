@@ -3,6 +3,7 @@
 
 import SheetPagination from "@/components/shared/SheetPagination";
 import { Button } from "@/components/ui/button";
+import CopyButton from "@/components/shared/CopyButton";
 import {
   Sheet,
   SheetContent,
@@ -138,7 +139,7 @@ export default function LogDetailSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -170,7 +171,7 @@ export default function LogDetailSheet({
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -458,15 +459,12 @@ export default function LogDetailSheet({
 
           <div>
             {selectedLog && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleCopy?.(JSON.stringify(selectedLog, null, 2), "Log JSON")}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              <CopyButton
+                textToCopy={() => JSON.stringify(selectedLog, null, 2)}
+                entityName="Record Data"
+                idleLabel="Copy Record Data"
                 title="Copy activity record data"
-              >
-                Copy Record Data
-              </Button>
+              />
             )}
           </div>
         </SheetFooter>

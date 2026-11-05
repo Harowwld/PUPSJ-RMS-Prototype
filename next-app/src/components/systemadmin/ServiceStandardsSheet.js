@@ -284,7 +284,7 @@ export default function ServiceStandardsSheet({
           side="right"
           size="default"
           showCloseButton={false}
-          className="w-full sm:max-w-lg md:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          className="w-full sm:max-w-lg md:max-w-xl flex flex-col h-full p-0 overflow-hidden"
         >
           {/* Header strictly typographic per COMPONENT_STANDARDS.md */}
           <SheetHeader className="shrink-0 p-0">
@@ -300,7 +300,7 @@ export default function ServiceStandardsSheet({
               <button
                 type="button"
                 onClick={() => onOpenChange?.(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -333,7 +333,7 @@ export default function ServiceStandardsSheet({
                 {/* Standard Summary Strip (Unboxed) */}
                 <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="size-11 rounded-2xl flex items-center justify-center text-xl shrink-0 font-bold border shadow-2xs bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40">
+                    <div className="size-11 rounded-full flex items-center justify-center text-xl shrink-0 font-bold border shadow-2xs bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40">
                       <Timer01Icon size={16}  />
                     </div>
                     <div className="min-w-0">

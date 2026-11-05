@@ -161,7 +161,7 @@ export function AttachedFileCard({
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
       className={cn(
-        "group relative flex flex-col w-44 sm:w-48 shrink-0 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-sm p-2 transition-all select-none",
+        "group relative flex flex-col w-44 sm:w-48 shrink-0 rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)] hover:border-black/15 dark:hover:border-white/20 hover:shadow-md p-2 transition-all select-none",
         className
       )}
     >
@@ -169,7 +169,7 @@ export function AttachedFileCard({
       <div
         onClick={() => onPreview && onPreview(item)}
         className={cn(
-          "relative h-24 w-full rounded-xl bg-gray-50/90 dark:bg-zinc-950/80 border border-gray-200/80 dark:border-zinc-800/60 p-3 flex flex-col justify-center gap-1.5 overflow-hidden",
+          "relative h-24 w-full rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.08] p-3 flex flex-col justify-center gap-1.5 overflow-hidden",
           onPreview ? "cursor-pointer" : "cursor-default"
         )}
       >
@@ -193,7 +193,7 @@ export function AttachedFileCard({
         {/* Extension Pill Badge at Bottom-Right */}
         <span
           className={cn(
-            "absolute bottom-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs tracking-tight uppercase select-none z-10",
+            "absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-2xs tracking-wider uppercase select-none z-10",
             formatConfig.badgeBg
           )}
         >
@@ -209,7 +209,7 @@ export function AttachedFileCard({
                 e.stopPropagation();
                 onPreview(item);
               }}
-              className="w-7 h-7 rounded-lg bg-white/95 hover:bg-white text-gray-800 dark:bg-zinc-800/90 dark:hover:bg-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs border border-gray-200/50 dark:border-zinc-700/50"
+              className="size-7.5 rounded-full bg-white/90 hover:bg-white text-gray-800 dark:bg-zinc-800/90 dark:hover:bg-zinc-700 dark:text-zinc-100 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs border border-black/[0.08] dark:border-white/10"
               title={PDF_ACTION_LABELS.preview}
               aria-label={PDF_ACTION_LABELS.preview}
             >
@@ -227,7 +227,7 @@ export function AttachedFileCard({
                   toast.error("Download Failed", { description: error.message });
                 }
               }}
-              className="w-7 h-7 rounded-lg bg-white/95 hover:bg-white text-gray-800 dark:bg-zinc-800/90 dark:hover:bg-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs border border-gray-200/50 dark:border-zinc-700/50"
+              className="size-7.5 rounded-full bg-white/90 hover:bg-white text-gray-800 dark:bg-zinc-800/90 dark:hover:bg-zinc-700 dark:text-zinc-100 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs border border-black/[0.08] dark:border-white/10"
               title={formatConfig.extLabel === "PDF" ? PDF_ACTION_LABELS.download : PDF_ACTION_LABELS.original}
               aria-label={formatConfig.extLabel === "PDF" ? PDF_ACTION_LABELS.download : PDF_ACTION_LABELS.original}
             >
@@ -241,7 +241,7 @@ export function AttachedFileCard({
                 e.stopPropagation();
                 onRemove(item);
               }}
-              className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 dark:bg-red-950/80 dark:hover:bg-red-900 dark:border-red-800/50 dark:text-red-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs"
+              className="size-7.5 rounded-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 dark:bg-red-950/90 dark:hover:bg-red-900 dark:border-red-800/60 dark:text-red-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs"
               title="Remove file"
               aria-label="Remove file"
             >
@@ -313,12 +313,12 @@ export function UploadProgressCard({
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
       className={cn(
-        "w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 flex items-center gap-3 shadow-xs text-gray-900 dark:text-zinc-100",
+        "w-full rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-900 p-3 flex items-center gap-3 shadow-xs text-gray-900 dark:text-zinc-100",
         className
       )}
     >
       {/* Squircle Icon Badge */}
-      <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
+      <div className="size-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
         <Image01Icon size="1em"
           className={cn(
             "text-base",
@@ -332,7 +332,7 @@ export function UploadProgressCard({
         <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 truncate block">
           {filename}
         </p>
-        <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden mt-1.5">
+        <div className="h-1.5 w-full rounded-full bg-black/[0.06] dark:bg-white/10 overflow-hidden mt-1.5">
           <div
             className="h-full bg-emerald-500 rounded-full transition-all duration-300 ease-out"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -628,18 +628,18 @@ export default function FileAttachmentDropzone({
             }
           }}
           className={cn(
-            "group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 sm:p-7 text-center transition-all cursor-pointer select-none",
+            "group relative flex flex-col items-center justify-center rounded-[20px] border border-dashed p-6 sm:p-7 text-center transition-all cursor-pointer select-none",
             isDragging
-              ? "border-pup-maroon bg-pup-maroon/5 ring-4 ring-pup-maroon/10 dark:border-red-500 dark:bg-red-950/20 scale-[1.005]"
-              : "border-gray-300 hover:border-gray-400 bg-gray-50/50 hover:bg-gray-50/90 dark:border-zinc-700/80 dark:hover:border-zinc-600 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/60"
+              ? "border-pup-maroon/70 bg-pup-maroon/[0.04] ring-4 ring-pup-maroon/10 dark:border-red-400/80 dark:bg-red-950/25 dark:ring-red-500/15 scale-[1.01]"
+              : "border-black/15 hover:border-black/25 bg-black/[0.015] hover:bg-black/[0.03] dark:border-white/15 dark:hover:border-white/25 dark:bg-white/[0.015] dark:hover:bg-white/[0.03]"
           )}
         >
           <div
             className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center mb-2.5 transition-transform duration-200 group-hover:scale-105 shadow-xs border",
+              "size-12 rounded-2xl flex items-center justify-center mb-2.5 transition-all duration-200 group-hover:scale-105 shadow-2xs border",
               isDragging
-                ? "bg-pup-maroon text-white border-pup-maroon"
-                : "bg-pup-maroon/10 text-pup-maroon border-pup-maroon/20 dark:bg-pup-maroon/20 dark:text-red-400 dark:border-red-500/30"
+                ? "bg-pup-maroon text-white border-pup-maroon scale-110 shadow-md"
+                : "bg-black/[0.04] text-gray-700 border-black/[0.04] dark:bg-white/[0.08] dark:text-zinc-200 dark:border-white/[0.08]"
             )}
           >
             <CloudUploadIcon size="1em" className="text-2xl" />
@@ -711,10 +711,10 @@ export default function FileAttachmentDropzone({
                 }
               }}
               className={cn(
-                "flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-2.5 px-4 text-center transition-all cursor-pointer select-none",
+                "flex items-center justify-center gap-2 rounded-xl border border-dashed py-2.5 px-4 text-center transition-all cursor-pointer select-none",
                 isDragging
-                  ? "border-pup-maroon bg-pup-maroon/5 ring-2 ring-pup-maroon/10 dark:border-red-400 dark:bg-red-950/20"
-                  : "border-gray-200 hover:border-gray-300 bg-gray-50/40 hover:bg-gray-50/80 dark:border-zinc-800 dark:hover:border-zinc-700 dark:bg-zinc-900/20 dark:hover:bg-zinc-900/40"
+                  ? "border-pup-maroon/70 bg-pup-maroon/[0.04] ring-2 ring-pup-maroon/10 dark:border-red-400 dark:bg-red-950/20"
+                  : "border-black/15 hover:border-black/25 bg-black/[0.015] hover:bg-black/[0.03] dark:border-white/15 dark:hover:border-white/25 dark:bg-white/[0.015] dark:hover:bg-white/[0.03]"
               )}
             >
               <Add01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />

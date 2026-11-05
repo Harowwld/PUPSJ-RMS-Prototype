@@ -155,7 +155,7 @@ export default function DocumentRequestDetailSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -187,7 +187,7 @@ export default function DocumentRequestDetailSheet({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -493,7 +493,7 @@ export default function DocumentRequestDetailSheet({
                           onClick={handleLocateCoordinates}
                           className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
                         >
-                          Locate
+                          Locate Drawer
                         </Button>
                       </div>
                     ) : (
@@ -601,7 +601,7 @@ export default function DocumentRequestDetailSheet({
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-8 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        className="h-8 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                         onClick={() => {
                           const allowed = ALLOWED_REOPEN_TRANSITIONS[detail.status] || ["InProgress"];
                           setReopenTargetStatus?.(allowed[0] || "InProgress");

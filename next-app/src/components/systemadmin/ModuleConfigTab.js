@@ -729,24 +729,56 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           }
         />
 
-        <div className="flex items-end gap-x-5 overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-          <div role="group" aria-label="Department status" className="flex h-9 shrink-0 items-stretch">
-            {[{ key: "Active", count: officeFilterCounts.active }, { key: "Archived", count: officeFilterCounts.archived }].map(({ key, count }) => (
-              <button key={key} type="button" onClick={() => selectOfficeScope(key)} aria-pressed={officeFilter === key}
-                className={cn("relative inline-flex items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", officeFilter === key ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                {key}<span className="text-[10px] font-normal tabular-nums text-gray-400 dark:text-zinc-500">{count}</span>
-                {officeFilter === key && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-              </button>
-            ))}
+        <div className="flex items-center justify-between gap-4 overflow-x-auto border-b border-border/80 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 scrollbar-none dark:border-white/10">
+          <div role="group" aria-label="Department status" className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+            {[{ key: "Active", count: officeFilterCounts.active }, { key: "Archived", count: officeFilterCounts.archived }].map(({ key, count }) => {
+              const isSelected = officeFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => selectOfficeScope(key)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <span>{key}</span>
+                  <span className={cn(
+                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
+                    isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
+                  )}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <div role="group" aria-label="Feature display" className="flex h-9 shrink-0 items-stretch">
-            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => (
-              <button key={mode} type="button" onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode}
-                className={cn("relative inline-flex items-center gap-1.5 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400", viewMode === mode ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                <Icon size={14} aria-hidden="true" />{label}
-                {viewMode === mode && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-              </button>
-            ))}
+
+          <div role="group" aria-label="Feature display" className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none ml-auto">
+            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => {
+              const isSelected = viewMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setViewMode(mode)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <Icon size={14} aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -784,7 +816,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
         <div className="border-t border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 shadow-2xs">
               <UserSwitchIcon size="1em" className="text-lg" />
             </div>
             <div className="min-w-0">
@@ -922,9 +954,9 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                         data-office-id={String(o.id).toLowerCase()}
                         onClick={() => setSelectedOfficeId(o.id)}
                         className={cn(
-                          "p-4 rounded-xl border text-left transition-colors relative flex flex-col justify-between gap-3 cursor-pointer group select-none w-[240px] min-w-[240px] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400",
+                          "p-4 rounded-xl border text-left transition-colors relative flex flex-col justify-between gap-3 cursor-pointer group select-none w-[240px] min-w-[240px] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-zinc-100",
                           isSelected
-                            ? "bg-red-50/60 dark:bg-red-950/20 border-pup-maroon dark:border-red-500"
+                            ? "bg-white dark:bg-zinc-900 border-gray-900 dark:border-zinc-200 shadow-xs ring-1 ring-gray-900/10 dark:ring-white/10"
                             : "bg-white dark:bg-zinc-900/60 border-border dark:border-border hover:border-gray-400 dark:hover:border-zinc-600",
                           isOfficeArchived && !isSelected && "border-dashed bg-gray-50/60 dark:bg-zinc-900/40"
                         )}
@@ -933,7 +965,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           <div className="flex min-w-0 items-center gap-2.5">
                             <div
                               className={cn(
-                                "h-9 w-9 rounded-xl flex items-center justify-center text-sm shrink-0 border",
+                                "h-9 w-9 rounded-full flex items-center justify-center text-sm shrink-0 border",
                               )}
                               style={{
                                 backgroundColor: `${accent}18`,
@@ -948,8 +980,8 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 className={cn(
                                   "truncate text-xs font-bold transition-colors",
                                   isSelected
-                                    ? "text-pup-maroon dark:text-red-400"
-                                    : "text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon"
+                                    ? "text-gray-900 dark:text-zinc-50"
+                                    : "text-gray-900 dark:text-zinc-50 group-hover:text-gray-950 dark:group-hover:text-white"
                                 )}
                               >
                                 {o.short_name}
@@ -971,7 +1003,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 className={cn(
                                   "text-[10px] px-2 py-0.5 rounded-full border-0 font-semibold font-sans tabular-nums transition-colors",
                                   isSelected
-                                    ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white"
+                                    ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
                                 )}
                               >
@@ -985,7 +1017,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           className={cn(
                             "flex items-center justify-between text-[11px] truncate w-full pt-1 border-t transition-colors",
                             isSelected
-                              ? "border-pup-maroon/20 dark:border-red-500/20 text-gray-900 dark:text-zinc-200 font-medium"
+                              ? "border-border/80 dark:border-border text-gray-900 dark:text-zinc-100 font-medium"
                               : "border-border/40 text-gray-600 dark:text-zinc-300"
                           )}
                         >
@@ -1012,7 +1044,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               <div className="p-5 border-b border-border dark:border-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-950/20">
                 <div className="flex items-center gap-3.5">
                   <div
-                    className="h-11 w-11 rounded-xl flex items-center justify-center text-xl shadow-xs shrink-0 border"
+                    className="h-11 w-11 rounded-full flex items-center justify-center text-xl shadow-xs shrink-0 border"
                     style={{
                       backgroundColor: `${currentOffice.accent_color || "#800000"}14`,
                       color: currentOffice.accent_color || "#800000",
@@ -1101,7 +1133,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border dark:border-border gap-2">
                           <div className="flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/30 dark:text-red-400 flex items-center justify-center text-sm">
+                            <div className="h-7 w-7 rounded-full bg-red-50 text-pup-maroon dark:bg-red-950/30 dark:text-red-400 flex items-center justify-center text-sm">
                               <Shield01Icon size={16}  ></Shield01Icon>
                             </div>
                             <div>
@@ -1181,7 +1213,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border dark:border-border gap-2">
                           <div className="flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 flex items-center justify-center text-sm">
+                            <div className="h-7 w-7 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 flex items-center justify-center text-sm">
                               <Contact01Icon size={16}  ></Contact01Icon>
                             </div>
                             <div>
@@ -1436,10 +1468,10 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
   return (
     <div
       className={cn(
-        "min-h-[172px] p-4 rounded-2xl border flex flex-col justify-between gap-4 select-none transition-colors",
+        "min-h-[172px] p-4.5 rounded-2xl border flex flex-col justify-between gap-4 select-none transition-all shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.3)]",
         isEnabled
-          ? "bg-white dark:bg-zinc-900 border-border dark:border-border"
-          : "bg-gray-50/70 dark:bg-zinc-950/40 border-border dark:border-border"
+          ? "bg-white dark:bg-zinc-900/90 border-black/[0.08] dark:border-white/10"
+          : "bg-gray-50/70 dark:bg-zinc-950/40 border-black/[0.05] dark:border-white/[0.06]"
       )}
     >
       <div>
@@ -1447,7 +1479,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           <div className="flex min-w-0 items-center gap-2.5">
             <div
               className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center text-sm shrink-0",
+                "h-8 w-8 rounded-xl flex items-center justify-center text-sm shrink-0 shadow-2xs",
                 isEnabled
                   ? "bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100"
                   : "bg-gray-200/60 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1495,7 +1527,7 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
         </p>
       </div>
 
-      <div className="pt-3 border-t border-border/80 dark:border-border flex items-center justify-between gap-3">
+      <div className="pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between gap-3">
         <span className="text-[11px] font-medium text-gray-600 dark:text-zinc-400">
           {isSystem ? "Always Active (Required)" : isOfficeArchived ? "Locked (Archived Department)" : isEnabled ? "Available to Staff" : "Turned Off"}
         </span>
@@ -1529,7 +1561,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
     <TableRow className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none">
       <td className="p-4 pl-6 align-top sticky left-0 bg-white/95 dark:bg-zinc-900/95 z-10 border-r border-border/70 dark:border-border/70 min-w-[420px] overflow-hidden">
         <div className="flex w-full min-w-0 items-start gap-3">
-          <div className="mt-0.5 h-7 w-7 rounded-lg bg-gray-100 dark:bg-zinc-800/80 flex items-center justify-center text-gray-700 dark:text-zinc-300 text-xs shrink-0">
+          <div className="mt-0.5 h-7 w-7 rounded-full bg-gray-100 dark:bg-zinc-800/80 flex items-center justify-center text-gray-700 dark:text-zinc-300 text-xs shrink-0">
             <AppIcon className={cn(moduleIconClass, "text-sm")}></AppIcon>
           </div>
           <div className="w-full min-w-0 flex-1 overflow-hidden">

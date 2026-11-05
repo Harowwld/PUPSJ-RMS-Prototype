@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/shared/CopyButton";
 import { toast } from "sonner";
 import { Alert01Icon, Cancel01Icon, Download01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -88,7 +89,7 @@ export default function RecoveryCodesModal({
             <button
               type="button"
               onClick={handleClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer shrink-0"
+              className="size-7 rounded-full bg-black/[0.05] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-all flex items-center justify-center cursor-pointer border-0 shrink-0"
               title="Close"
             >
               <Cancel01Icon size="1em" className="text-sm" />
@@ -140,28 +141,22 @@ export default function RecoveryCodesModal({
 
           {/* Quick Action Toolbar */}
           <div className="flex items-center gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCopy}
-              className="flex-1 h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center gap-1.5"
-            >
-              <AppIcon
-                className={
-                  copied
-                    ? " Tick01Icon text-emerald-600 dark:text-emerald-400"
-                    : " Copy01Icon"
-                }
-              />
-              {copied ? "Copied" : "Copy"}
-            </Button>
+            <CopyButton
+              textToCopy={recoveryCodes.join("\n")}
+              entityName="Recovery Codes"
+              idleLabel="Copy Codes"
+              copiedLabel="Codes Copied!"
+              size="sm"
+              className="flex-1 h-9"
+              onClick={onCopy}
+            />
             <Button
               type="button"
               variant="outline"
               onClick={handleDownload}
               className="flex-1 h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center gap-1.5"
             >
-              <Download01Icon size={16}  />
+              <Download01Icon size={16} />
               Download Codes
             </Button>
           </div>

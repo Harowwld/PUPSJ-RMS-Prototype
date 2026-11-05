@@ -222,16 +222,16 @@ export default function LandingBentoCmsView({ showToast }) {
         />
 
         {/* Navigation Tabs */}
-        <div className="flex items-center px-6 py-3 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
+        <div className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
             <button
               type="button"
               onClick={() => setActiveTab("cards")}
               className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
+                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 whitespace-nowrap active:scale-[0.98]",
                 activeTab === "cards"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
               )}
             >
               Bento Cards (5)
@@ -241,10 +241,10 @@ export default function LandingBentoCmsView({ showToast }) {
               type="button"
               onClick={() => setActiveTab("header")}
               className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
+                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 whitespace-nowrap active:scale-[0.98]",
                 activeTab === "header"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
               )}
             >
               Header &amp; Overview
@@ -254,10 +254,10 @@ export default function LandingBentoCmsView({ showToast }) {
               type="button"
               onClick={() => setActiveTab("preview")}
               className={cn(
-                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
+                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 whitespace-nowrap active:scale-[0.98]",
                 activeTab === "preview"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
               )}
             >
               Interactive Bento Preview
@@ -280,7 +280,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 1
                           ? "bg-pup-maroon text-white"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
@@ -428,7 +428,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 2
                           ? "bg-pup-maroon text-white"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
@@ -587,7 +587,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 3
                           ? "bg-pup-maroon text-white"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
@@ -716,7 +716,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 4
                           ? "bg-pup-maroon text-white"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
@@ -845,7 +845,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 5
                           ? "bg-pup-maroon text-white"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"

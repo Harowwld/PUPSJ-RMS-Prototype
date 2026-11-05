@@ -48,7 +48,7 @@ function OfficeTableSkeleton({ count, visibleColumns, groupBy, tableContainerRef
       return (
         <td key={key} className="px-4 py-3 align-middle border-r border-border/70 dark:border-border/70">
           <div className="flex min-w-0 items-center gap-3">
-            <Skeleton className="h-8 w-8 shrink-0 rounded-lg dark:bg-muted" />
+            <Skeleton className="h-8 w-8 shrink-0 rounded-full dark:bg-muted" />
             <div className="min-w-0 flex-1 space-y-1">
               <Skeleton className={cn("h-3.5 rounded dark:bg-muted", index % 2 ? "w-24" : "w-28")} />
               <Skeleton className="h-2.5 w-16 rounded dark:bg-muted" />
@@ -180,7 +180,7 @@ function OfficeCardSkeleton({ archived, index }) {
     >
       <div className="flex items-start justify-between gap-3 p-5 pb-0">
         <div className="flex min-w-0 items-start gap-3">
-          <Skeleton className="h-11 w-11 shrink-0 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-11 w-11 shrink-0 rounded-full dark:bg-muted" />
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex items-center gap-2">
               <Skeleton className={cn("h-4 rounded dark:bg-muted", index % 2 ? "w-24" : "w-28")} />

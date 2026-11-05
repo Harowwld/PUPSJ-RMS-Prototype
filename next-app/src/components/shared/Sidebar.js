@@ -2,9 +2,10 @@
 
 
 import { EmptyState } from "@/components/ui/empty";
-import { Search01Icon , ArrowUp01Icon, DashboardSquare01Icon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon} from "hugeicons-react";
+import { Search01Icon, UnfoldMoreIcon, DashboardSquare01Icon, LayoutLeftIcon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon } from "hugeicons-react";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
@@ -44,6 +45,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import AppIcon from "@/components/ui/app-icon";
 import CommandPalette from "@/components/shared/CommandPalette";
 // Icon map for navigation items
@@ -84,6 +86,15 @@ const ICON_MAP = {
   overview: { icon: " LayoutGridIcon" },
 };
 
+import {
+  SIDEBAR_MORPH_TRANSITION,
+  LABEL_ENTER_TRANSITION,
+  LABEL_EXIT_TRANSITION,
+  SPRING_LAYOUT,
+  SPRING_PRESS,
+  useAppReducedMotion,
+} from "@/lib/motion";
+
 export default function Sidebar({
   open = true,
   items = [],
@@ -103,6 +114,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sidebarRef = useRef(null);
+  const shouldReduceMotion = useAppReducedMotion(authUser?.id);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -113,6 +125,7 @@ export default function Sidebar({
   const [showSessionExpired, setShowSessionExpired] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [hoveredKey, setHoveredKey] = useState(null);
 
   const [isMac] = useState(() =>
     typeof window !== "undefined"
@@ -1186,19 +1199,16 @@ export default function Sidebar({
   const renderProfileMenuContent = () => (
     <>
       {/* 1. Header Zone */}
-      <div className="bg-gray-50/70 dark:bg-zinc-800/50 px-3.5 py-2.5 border-b-[0.5px] border-border dark:border-white/10 flex items-center text-left">
+      <div className="bg-black/[0.02] dark:bg-white/[0.02] px-3.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 flex items-center text-left">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative h-8 w-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-bold border border-border dark:border-white/10 shadow-xs shrink-0 text-gray-800 dark:text-zinc-100 overflow-hidden">
-            {currentAvatarFilename && !imageError ? (
-              <img
-                src={`/api/account/avatar?id=${authUser?.id}&t=${avatarTimestamp}`}
-                alt=""
-                className="w-full h-full object-cover scale-[1.2]"
-              />
-            ) : (
-              initials
-            )}
-          </div>
+          <ProfileAvatar
+            id={authUser?.id}
+            avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
+            name={displayName}
+            initials={initials}
+            className="size-8 rounded-full shadow-xs shrink-0"
+            fallbackClassName="text-xs"
+          />
           <div className="min-w-0 flex flex-col">
             <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
               {displayName}
@@ -1283,12 +1293,12 @@ export default function Sidebar({
       <AccountSetupModal authUser={authUser} />
 
       {/* Mobile Top Bar (< md only) */}
-      <div className="md:hidden flex items-center justify-between w-full h-[52px] px-3 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-gray-200/80 dark:border-white/10 z-20 shrink-0 select-none">
+      <div className="md:hidden flex items-center justify-between w-full h-[52px] px-3 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border-b border-black/[0.08] dark:border-white/10 shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_1px_3px_rgba(0,0,0,0.02)] z-20 shrink-0 select-none">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setMobileDrawerOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 shrink-0"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-700 hover:bg-black/[0.05] dark:text-zinc-200 dark:hover:bg-white/10 transition-colors cursor-pointer active:scale-95 shrink-0"
             aria-label="Open portal navigation menu"
           >
             <ListViewIcon size="1em" className="text-xl" />
@@ -1321,7 +1331,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-600 hover:bg-black/[0.05] dark:text-zinc-400 dark:hover:bg-white/10 transition-colors cursor-pointer active:scale-95"
             aria-label="Search views"
           >
             <Search01Icon size="1em" className="text-lg" />
@@ -1331,17 +1341,17 @@ export default function Sidebar({
             <DropdownMenuTrigger asChild className="focus:outline-none select-none">
               <button
                 type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-zinc-850 text-xs font-bold border border-gray-200 dark:border-white/10 shadow-2xs overflow-hidden"
+                className="flex items-center justify-center rounded-full cursor-pointer active:scale-95 transition-transform"
+                aria-label="Open user profile menu"
               >
-                {currentAvatarFilename && !imageError ? (
-                  <img
-                    src={`/api/account/avatar?id=${authUser?.id}&t=${avatarTimestamp}`}
-                    alt=""
-                    className="w-full h-full object-cover scale-[1.2]"
-                  />
-                ) : (
-                  initials
-                )}
+                <ProfileAvatar
+                  id={authUser?.id}
+                  avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
+                  name={displayName}
+                  initials={initials}
+                  className="size-8 rounded-full shadow-xs"
+                  fallbackClassName="text-xs"
+                />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -1357,47 +1367,65 @@ export default function Sidebar({
       </div>
 
       {/* Main Desktop Sidebar (>= md) */}
-      <aside
+      <motion.aside
         ref={sidebarRef}
-        className={cn(
-          "rms-sidebar z-10 flex-col bg-white/25 backdrop-blur-xl dark:bg-zinc-950/25 select-none sticky top-0 h-full overflow-hidden hidden md:flex shrink-0 will-change-[width] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-          open ? "w-[275px] py-3 px-3" : "w-[60px] py-3 px-2"
-        )}
+        initial={false}
+        animate={{
+          width: open ? 275 : 60,
+          paddingLeft: open ? 12 : 8,
+          paddingRight: open ? 12 : 8,
+        }}
+        transition={shouldReduceMotion ? { duration: 0 } : SIDEBAR_MORPH_TRANSITION}
+        className="rms-sidebar z-10 flex-col bg-white/25 backdrop-blur-xl dark:bg-zinc-950/25 select-none sticky top-0 h-full overflow-hidden hidden md:flex shrink-0 py-3"
       >
         {/* 1. TOP ROW: Logo and Collapse Button */}
         {open ? (
           <div className="flex items-center justify-between w-full h-[40px] px-1 mb-4 shrink-0 select-none">
-            {/* Logo: First thing in the sidebar */}
+            {/* Logo: First thing in the sidebar, icon slot aligned with navigation column */}
             <div
-              className="flex items-center gap-2 cursor-pointer group/logo select-none min-w-0"
+              className="flex items-center cursor-pointer group/logo select-none min-w-0"
               onClick={handleMainDashboardClick}
               title="eManage Dashboard"
             >
-              <img
-                data-sidebar-logo={isSuperAdmin || undefined}
-                src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
-                alt="eManage Logo"
-                className={cn(
-                  "h-[22px] w-[22px] object-contain transition-transform duration-200 group-hover/logo:scale-105 shrink-0",
-                  isStudent && "brightness-0 saturate-100"
-                )}
-                style={
-                  isStudent
-                    ? {
-                      filter:
-                        "brightness(0) saturate(100%) invert(13%) sepia(95%) saturate(3180%) hue-rotate(355deg) brightness(77%) contrast(118%)",
-                    }
-                    : undefined
-                }
-              />
-              <span className="font-bold text-[17px] tracking-tight leading-none text-gray-900 dark:text-zinc-50 group-hover/logo:opacity-80 transition-opacity">
-                eManage
+              <span className="relative w-[38px] h-[38px] flex items-center justify-center shrink-0">
+                <img
+                  data-sidebar-logo={isSuperAdmin || undefined}
+                  src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
+                  alt="eManage Logo"
+                  className={cn(
+                    "h-[22px] w-[22px] object-contain transition-transform duration-200 group-hover/logo:scale-105 shrink-0",
+                    isStudent && "brightness-0 saturate-100"
+                  )}
+                  style={
+                    isStudent
+                      ? {
+                        filter:
+                          "brightness(0) saturate(100%) invert(13%) sepia(95%) saturate(3180%) hue-rotate(355deg) brightness(77%) contrast(118%)",
+                      }
+                      : undefined
+                  }
+                />
               </span>
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
+                    transition={LABEL_ENTER_TRANSITION}
+                    className="font-bold text-[17px] tracking-tight leading-none text-gray-900 dark:text-zinc-50 group-hover/logo:opacity-80 transition-opacity ml-1.5 truncate"
+                  >
+                    eManage
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Collapse Button: Beside the logo */}
-            <button
+            <motion.button
               type="button"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+              transition={SPRING_PRESS}
               onClick={() => {
                 if (typeof window !== "undefined") {
                   window.dispatchEvent(new CustomEvent("toggle-sidebar"));
@@ -1405,15 +1433,17 @@ export default function Sidebar({
               }}
               title={`Collapse Sidebar (${isMac ? "⌘B" : "Ctrl+B"})`}
               aria-label="Collapse Sidebar"
-              className="flex w-[34px] h-[34px] items-center justify-center rounded-lg text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 cursor-pointer transition-all duration-150 ease-out shrink-0"
+              className="flex w-[34px] h-[34px] items-center justify-center rounded-lg text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition-colors duration-150 ease-out shrink-0"
             >
-              <AppIcon className=" SidebarLeft01Icon text-[20px]" />
-            </button>
+              <LayoutLeftIcon size={18} aria-hidden="true" />
+            </motion.button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 w-full mb-4 shrink-0 select-none">
-            <button
+            <motion.button
               type="button"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+              transition={SPRING_PRESS}
               onClick={() => {
                 if (typeof window !== "undefined") {
                   window.dispatchEvent(new CustomEvent("toggle-sidebar"));
@@ -1421,7 +1451,7 @@ export default function Sidebar({
               }}
               title={`Expand Sidebar (${isMac ? "⌘B" : "Ctrl+B"})`}
               aria-label="Expand Sidebar"
-              className="group relative flex w-[34px] h-[34px] items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 cursor-pointer transition-all duration-200 ease-out"
+              className="group relative flex w-[38px] h-[38px] items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition-colors duration-200 ease-out"
             >
               {/* Default resting state: eManage Logo */}
               <img
@@ -1429,7 +1459,7 @@ export default function Sidebar({
                 src={roleBranding.iconSrc || "/assets/images/pup-logo.png"}
                 alt="eManage Logo"
                 className={cn(
-                  "h-[20px] w-[20px] object-contain transition-all duration-200 group-hover:opacity-0 group-hover:scale-75 shrink-0",
+                  "h-[22px] w-[22px] object-contain transition-all duration-200 group-hover:opacity-0 group-hover:scale-75 shrink-0",
                   isStudent && "brightness-0 saturate-100"
                 )}
                 style={
@@ -1444,45 +1474,54 @@ export default function Sidebar({
 
               {/* Dynamic hover state: Expand Sidebar icon */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 text-gray-700 dark:text-zinc-200">
-                <AppIcon className=" SidebarLeftIcon text-[20px]" />
+                <LayoutLeftIcon size={18} aria-hidden="true" />
               </div>
-            </button>
+            </motion.button>
           </div>
         )}
 
-        {/* 2. COMMAND PALETTE: Below the logo & collapse row */}
+        {/* 2. COMMAND PALETTE: Below the logo & collapse row, icon aligned with navigation column */}
         {open ? (
           <div className="w-full mb-2 shrink-0">
-            <button
+            <motion.button
               type="button"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+              transition={SPRING_PRESS}
               onClick={() => setCommandOpen(true)}
               title={`Search views, records & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
-              className="group w-full h-[36px] px-2.5 flex items-center justify-between rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] border border-black/[0.06] hover:border-black/10 dark:border-white/10 dark:hover:border-white/20 transition-all cursor-pointer shadow-2xs select-none active:scale-[0.99]"
+              className="group w-full h-[38px] pl-1 pr-2.5 flex items-center justify-between rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] border border-black/[0.06] hover:border-black/10 dark:border-white/10 dark:hover:border-white/20 transition-all cursor-pointer shadow-2xs select-none"
             >
-              <div className="flex items-center gap-2 min-w-0 text-gray-500 dark:text-zinc-400">
-                <Search01Icon size="1em" className="text-xs transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400 shrink-0" />
-                <span className="text-xs font-normal truncate text-gray-600 dark:text-zinc-300">
+              <div className="flex items-center min-w-0 text-gray-500 dark:text-zinc-400">
+                <span className="relative w-[38px] h-[38px] flex items-center justify-center shrink-0">
+                  <Search01Icon size={16} aria-hidden="true" className="transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400 shrink-0" />
+                </span>
+                <span className="text-xs font-normal truncate text-gray-600 dark:text-zinc-300 ml-1.5">
                   Search views, records...
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-1.5 h-4.5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none shrink-0">
+              <kbd className="inline-flex items-center justify-center px-2 h-5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none shrink-0 select-none">
                 {isMac ? "⌘K" : "Ctrl K"}
               </kbd>
-            </button>
+            </motion.button>
           </div>
         ) : (
-          <button
+          <motion.button
             type="button"
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+            transition={SPRING_PRESS}
             onClick={() => setCommandOpen(true)}
             title={`Search views, records & actions (${isMac ? "⌘K" : "Ctrl+K"})`}
-            className="flex w-[38px] h-[38px] items-center justify-center rounded-xl text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] border border-black/[0.05] dark:border-white/10 active:scale-95 cursor-pointer transition-all duration-150 ease-out mx-auto mb-2 group shadow-2xs"
+            className="flex w-[38px] h-[38px] items-center justify-center rounded-xl text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] border border-black/[0.05] dark:border-white/10 cursor-pointer transition-colors duration-150 ease-out mx-auto mb-2 group shadow-2xs"
           >
-            <Search01Icon size="1em" className="text-[17px] transition-transform group-hover:scale-105 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
-          </button>
+            <Search01Icon size={16} aria-hidden="true" className="transition-transform group-hover:scale-105 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+          </motion.button>
         )}
 
         {/* 3. MIDDLE: The rest of the sidebar content (scrollable) */}
-        <div className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col gap-[2px] items-stretch [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          onMouseLeave={() => setHoveredKey(null)}
+          className="flex-1 min-h-0 overflow-y-auto w-full flex flex-col gap-[2px] items-stretch [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {items.map((item, idx) => {
             if (item.type === "header") {
               return (
@@ -1493,23 +1532,31 @@ export default function Sidebar({
                     idx === 0 ? "mt-1" : "mt-3"
                   )}
                 >
-                  <span
-                    className={cn(
-                      "text-[11.5px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap px-2 block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                      open ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none"
+                  <AnimatePresence initial={false}>
+                    {open ? (
+                      <motion.span
+                        key="header-text"
+                        initial={{ opacity: 0, x: -4 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
+                        transition={LABEL_ENTER_TRANSITION}
+                        className="text-[11.5px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap px-2 block"
+                      >
+                        {item.label}
+                      </motion.span>
+                    ) : (
+                      <motion.div
+                        key="header-divider"
+                        initial={{ opacity: 0, scaleX: 0 }}
+                        animate={{ opacity: 1, scaleX: 1 }}
+                        exit={{ opacity: 0, scaleX: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="w-full flex items-center justify-center"
+                      >
+                        <div className="h-[1px] bg-gray-300/80 dark:bg-zinc-800 w-[24px] rounded-full" />
+                      </motion.div>
                     )}
-                  >
-                    {item.label}
-                  </span>
-
-                  <div
-                    className={cn(
-                      "absolute inset-x-0 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none",
-                      open ? "opacity-0 scale-x-0" : "opacity-100 scale-x-100"
-                    )}
-                  >
-                    <div className="h-[1px] bg-gray-300/80 dark:bg-zinc-800 w-[24px] rounded-full" />
-                  </div>
+                  </AnimatePresence>
                 </div>
               );
             }
@@ -1525,28 +1572,50 @@ export default function Sidebar({
 
               return (
                 <div key={item.key} className="flex flex-col gap-[2px] w-full items-stretch">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => toggleAccordion(item.key)}
+                    onMouseEnter={() => setHoveredKey(item.key)}
                     title={!open ? item.label : undefined}
                     data-tooltip-placement="right"
                     data-background-color={hasActiveChild && !isExpanded ? activeColor : undefined}
-                    style={
-                      hasActiveChild && !isExpanded
-                        ? { backgroundColor: activeColor, color: activeForeground }
-                        : undefined
-                    }
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                    transition={SPRING_PRESS}
                     className={cn(
-                      "flex w-full h-[40px] items-center rounded-[8px] text-[13.5px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                      "flex w-full h-[40px] items-center rounded-xl text-[13.5px] outline-none cursor-pointer transition-colors duration-150 ease-out relative group select-none overflow-hidden shrink-0",
                       open ? "px-1 justify-start" : "px-0 justify-center",
                       hasActiveChild && !isExpanded
-                        ? "font-medium shadow-2xs rms-style-background-color"
-                        : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
+                        ? "font-medium"
+                        : "text-[#1D1D1F] dark:text-zinc-200 group-hover:text-black dark:group-hover:text-white font-normal"
                     )}
                   >
+                    {/* Active highlight morphing pill when collapsed with active child */}
+                    {hasActiveChild && !isExpanded && (
+                      <motion.span
+                        layoutId="sidebar-active-pill"
+                        className="absolute inset-0 rounded-xl shadow-2xs z-0 pointer-events-none"
+                        style={{ backgroundColor: activeColor }}
+                        transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                      />
+                    )}
+
+                    {/* Smooth gliding hover pill */}
+                    <AnimatePresence>
+                      {hoveredKey === item.key && !(hasActiveChild && !isExpanded) && (
+                        <motion.span
+                          layoutId="sidebar-hover-pill"
+                          className="absolute inset-0 rounded-xl bg-black/[0.05] dark:bg-white/[0.06] z-0 pointer-events-none"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                        />
+                      )}
+                    </AnimatePresence>
+
                     <div
                       className={cn(
-                        "flex items-center overflow-hidden",
+                        "flex items-center overflow-hidden relative z-10",
                         open ? "min-w-0 flex-1" : "justify-center w-full"
                       )}
                     >
@@ -1574,50 +1643,90 @@ export default function Sidebar({
                           )}
                         />
                       </span>
-                      {open && (
-                        <span className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 overflow-hidden block">
-                          {item.label}
-                        </span>
-                      )}
+                      <AnimatePresence initial={false}>
+                        {open && (
+                          <motion.span
+                            initial={{ opacity: 0, x: -4 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
+                            transition={LABEL_ENTER_TRANSITION}
+                            style={{
+                              color: hasActiveChild && !isExpanded ? activeForeground : undefined,
+                            }}
+                            className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 truncate relative z-10 block"
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </div>
 
-                    {open && (
-                      <div className="flex items-center gap-1.5 shrink-0 mr-1">
-                        {item.badge > 0 && (
-                          <span
-                            className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                            data-background-color={hasActiveChild && !isExpanded ? activeForeground : activeColor}
-                            data-color={hasActiveChild && !isExpanded ? activeColor : activeForeground}
-                            style={{
-                              backgroundColor:
-                                hasActiveChild && !isExpanded ? activeForeground : activeColor,
-                              color: hasActiveChild && !isExpanded ? activeColor : activeForeground,
-                            }}
-                          >
-                            {item.badge > 99 ? "99+" : item.badge}
-                          </span>
-                        )}
-                        <AppIcon
-                          className={cn(
-                            " ArrowDown01Icon text-xs transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                            isExpanded && "rotate-180"
+                    <AnimatePresence initial={false}>
+                      {open && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 4 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 4, transition: LABEL_EXIT_TRANSITION }}
+                          transition={LABEL_ENTER_TRANSITION}
+                          className="flex items-center gap-1.5 shrink-0 mr-1 relative z-10"
+                        >
+                          {item.badge > 0 && (
+                            <span
+                              className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                              data-background-color={hasActiveChild && !isExpanded ? activeForeground : activeColor}
+                              data-color={hasActiveChild && !isExpanded ? activeColor : activeForeground}
+                              style={{
+                                backgroundColor:
+                                  hasActiveChild && !isExpanded ? activeForeground : activeColor,
+                                color: hasActiveChild && !isExpanded ? activeColor : activeForeground,
+                              }}
+                            >
+                              {item.badge > 99 ? "99+" : item.badge}
+                            </span>
                           )}
-                        />
-                      </div>
-                    )}
-                  </button>
+                          <AppIcon
+                            className={cn(
+                              " ArrowDown01Icon text-xs transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                              isExpanded && "rotate-180"
+                            )}
+                            style={{
+                              color: hasActiveChild && !isExpanded ? activeForeground : undefined,
+                            }}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
 
-                  <div
-                    className={cn(
-                      "overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full",
-                      open && isExpanded
-                        ? "mt-[2px] max-h-[500px] opacity-100"
-                        : "mt-0 max-h-0 opacity-0 pointer-events-none"
-                    )}
-                  >
-                    <div className="flex flex-col gap-[2px] items-stretch">
-                      {item.children.map((child, childIdx) => {
-                        const isActive = activeKey === child.key;
+                  <AnimatePresence initial={false}>
+                    {open && isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{
+                          opacity: 1,
+                          height: "auto",
+                          transition: shouldReduceMotion
+                            ? { duration: 0 }
+                            : {
+                              height: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+                              opacity: { duration: 0.18, delay: 0.03, ease: [0.16, 1, 0.3, 1] },
+                            },
+                        }}
+                        exit={{
+                          opacity: 0,
+                          height: 0,
+                          transition: shouldReduceMotion
+                            ? { duration: 0 }
+                            : {
+                              opacity: { duration: 0.12, ease: [0.16, 1, 0.3, 1] },
+                              height: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
+                            },
+                        }}
+                        className="overflow-hidden w-full mt-[2px]"
+                      >
+                        <div className="flex flex-col gap-[2px] items-stretch">
+                      {item.children.map((child) => {
+                        const isChildActive = activeKey === child.key;
                         const childIconConfig = ICON_MAP[child.key] || {
                           icon: child.iconClass,
                           color: staffIconColor,
@@ -1625,34 +1734,58 @@ export default function Sidebar({
                         const childIconName = child.iconClass || childIconConfig.icon;
 
                         return (
-                          <a
+                          <motion.a
                             key={child.key}
                             data-sidebar-key={child.key}
                             href={`${pathname}?view=${child.key}`}
                             onClick={(e) => handleLinkClick(e, child.key)}
+                            onMouseEnter={() => setHoveredKey(child.key)}
                             title={!open ? child.label : undefined}
                             data-tooltip-placement="right"
-                            data-background-color={isActive ? activeColor : undefined}
-                            data-transition-delay={isExpanded ? `${childIdx * 30}ms` : "0ms"}
-                            style={isActive ? { backgroundColor: activeColor, color: activeForeground } : undefined}
+                            data-background-color={isChildActive ? activeColor : undefined}
+                            whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                            transition={SPRING_PRESS}
                             className={cn(
-                              "rms-style-transition-delay flex w-full h-[40px] items-center rounded-[8px] text-[13.5px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                              "flex w-full h-[40px] items-center rounded-xl text-[13.5px] outline-none cursor-pointer transition-colors duration-150 ease-out relative group select-none overflow-hidden shrink-0",
                               open ? "pl-4 pr-1 justify-start" : "px-0 justify-center",
-                              isActive
-                                ? "font-medium shadow-2xs rms-style-background-color"
-                                : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
+                              isChildActive
+                                ? "font-medium"
+                                : "text-[#1D1D1F] dark:text-zinc-200 group-hover:text-black dark:group-hover:text-white font-normal"
                             )}
                           >
+                            {isChildActive && (
+                              <motion.span
+                                layoutId="sidebar-active-pill"
+                                className="absolute inset-0 rounded-xl shadow-2xs z-0 pointer-events-none"
+                                style={{ backgroundColor: activeColor }}
+                                transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                              />
+                            )}
+
+                            {/* Smooth gliding hover pill */}
+                            <AnimatePresence>
+                              {hoveredKey === child.key && !isChildActive && (
+                                <motion.span
+                                  layoutId="sidebar-hover-pill"
+                                  className="absolute inset-0 rounded-xl bg-black/[0.05] dark:bg-white/[0.06] z-0 pointer-events-none"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                                />
+                              )}
+                            </AnimatePresence>
+
                             <div
                               className={cn(
-                                "flex items-center overflow-hidden",
+                                "flex items-center overflow-hidden relative z-10",
                                 open ? "min-w-0 flex-1" : "justify-center w-full"
                               )}
                             >
                               <span className="w-[38px] h-[38px] flex items-center justify-center shrink-0">
                                 <AppIcon
-                                  data-color={isActive ? activeForeground : staffIconColor}
-                                  style={{ color: isActive ? activeForeground : staffIconColor }}
+                                  data-color={isChildActive ? activeForeground : staffIconColor}
+                                  style={{ color: isChildActive ? activeForeground : staffIconColor }}
                                   className={cn(
                                     "rms-style-color",
                                     childIconName,
@@ -1661,76 +1794,110 @@ export default function Sidebar({
                                   title={child.label}
                                 />
                               </span>
-                              <span
-                                className={cn(
-                                  "whitespace-nowrap font-medium text-[14px] text-left ml-1.5 overflow-hidden block transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                                  open
-                                    ? "opacity-100 max-w-[170px] translate-x-0"
-                                    : "opacity-0 max-w-0 ml-0 -translate-x-3 pointer-events-none"
+                              <AnimatePresence initial={false}>
+                                {open && (
+                                  <motion.span
+                                    initial={{ opacity: 0, x: -4 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
+                                    transition={LABEL_ENTER_TRANSITION}
+                                    style={{ color: isChildActive ? activeForeground : undefined }}
+                                    className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 truncate relative z-10 block"
+                                  >
+                                    {child.label}
+                                  </motion.span>
                                 )}
-                              >
-                                {child.label}
-                              </span>
+                              </AnimatePresence>
                             </div>
-                            <div
-                              className={cn(
-                                "flex items-center shrink-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden",
-                                open
-                                  ? "opacity-100 max-w-[50px] translate-x-0 mr-1"
-                                  : "opacity-0 max-w-0 translate-x-2 pointer-events-none mr-0"
-                              )}
-                            >
-                              {child.badge > 0 && (
-                                <span
-                                  className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                                  data-background-color={isActive ? activeForeground : activeColor}
-                                  data-color={isActive ? activeColor : activeForeground}
-                                  style={{
-                                    backgroundColor: isActive ? activeForeground : activeColor,
-                                    color: isActive ? activeColor : activeForeground,
-                                  }}
+
+                            <AnimatePresence initial={false}>
+                              {open && child.badge > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.8, transition: LABEL_EXIT_TRANSITION }}
+                                  transition={LABEL_ENTER_TRANSITION}
+                                  className="flex items-center shrink-0 mr-1 relative z-10"
                                 >
-                                  {child.badge > 99 ? "99+" : child.badge}
-                                </span>
+                                  <span
+                                    className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                                    data-background-color={isChildActive ? activeForeground : activeColor}
+                                    data-color={isChildActive ? activeColor : activeForeground}
+                                    style={{
+                                      backgroundColor: isChildActive ? activeForeground : activeColor,
+                                      color: isChildActive ? activeColor : activeForeground,
+                                    }}
+                                  >
+                                    {child.badge > 99 ? "99+" : child.badge}
+                                  </span>
+                                </motion.div>
                               )}
-                            </div>
-                          </a>
+                            </AnimatePresence>
+                          </motion.a>
                         );
                       })}
                     </div>
-                  </div>
-                </div>
-              );
-            }
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        }
 
-            const isActive = activeKey === item.key;
-            const iconConfig = ICON_MAP[item.key] || {
+        const isActive = activeKey === item.key;
+        const iconConfig = ICON_MAP[item.key] || {
               icon: item.iconClass,
               color: staffIconColor,
             };
             const iconName = item.iconClass || iconConfig.icon;
 
             return (
-              <a
+              <motion.a
                 key={item.key}
                 data-sidebar-key={item.key}
                 href={`${pathname}?view=${item.key}`}
                 onClick={(e) => handleLinkClick(e, item.key)}
+                onMouseEnter={() => setHoveredKey(item.key)}
                 title={!open ? item.label : undefined}
                 data-tooltip-placement="right"
                 data-background-color={isActive ? activeColor : undefined}
-                style={isActive ? { backgroundColor: activeColor, color: activeForeground } : undefined}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                transition={SPRING_PRESS}
                 className={cn(
-                  "flex w-full h-[40px] items-center rounded-[8px] text-[13.5px] outline-none cursor-pointer transition-colors duration-200 ease-out relative group select-none overflow-hidden shrink-0",
+                  "flex w-full h-[40px] items-center rounded-xl text-[13.5px] outline-none cursor-pointer transition-colors duration-150 ease-out relative group select-none overflow-hidden shrink-0",
                   open ? "px-1 justify-start" : "px-0 justify-center",
                   isActive
-                    ? "font-medium shadow-2xs rms-style-background-color"
-                    : "text-[#1D1D1F] dark:text-zinc-200 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/5 font-normal"
+                    ? "font-medium"
+                    : "text-[#1D1D1F] dark:text-zinc-200 group-hover:text-black dark:group-hover:text-white font-normal"
                 )}
               >
+                {/* Active sliding pill morphing across navigation items */}
+                {isActive && (
+                  <motion.span
+                    layoutId="sidebar-active-pill"
+                    className="absolute inset-0 rounded-xl shadow-2xs z-0 pointer-events-none"
+                    style={{ backgroundColor: activeColor }}
+                    transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                  />
+                )}
+
+                {/* Smooth gliding hover pill */}
+                <AnimatePresence>
+                  {hoveredKey === item.key && !isActive && (
+                    <motion.span
+                      layoutId="sidebar-hover-pill"
+                      className="absolute inset-0 rounded-xl bg-black/[0.05] dark:bg-white/[0.06] z-0 pointer-events-none"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                    />
+                  )}
+                </AnimatePresence>
+
                 <div
                   className={cn(
-                    "flex items-center overflow-hidden",
+                    "flex items-center overflow-hidden relative z-10",
                     open ? "min-w-0 flex-1" : "justify-center w-full"
                   )}
                 >
@@ -1756,16 +1923,31 @@ export default function Sidebar({
                       )}
                     />
                   </span>
-                  {open && (
-                    <span className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 overflow-hidden block">
-                      {item.label}
-                    </span>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -4 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
+                        transition={LABEL_ENTER_TRANSITION}
+                        style={{ color: isActive ? activeForeground : undefined }}
+                        className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 truncate relative z-10 block"
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {open && (
-                  <div className="flex items-center shrink-0 mr-1">
-                    {item.badge > 0 && (
+                <AnimatePresence initial={false}>
+                  {open && item.badge > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8, transition: LABEL_EXIT_TRANSITION }}
+                      transition={LABEL_ENTER_TRANSITION}
+                      className="flex items-center shrink-0 mr-1 relative z-10"
+                    >
                       <span
                         className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
                         data-background-color={isActive ? activeForeground : activeColor}
@@ -1777,10 +1959,10 @@ export default function Sidebar({
                       >
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
-                    )}
-                  </div>
-                )}
-              </a>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.a>
             );
           })}
         </div>
@@ -1799,76 +1981,63 @@ export default function Sidebar({
             <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
               <DropdownMenuTrigger asChild className="focus:outline-none select-none w-full">
                 {open ? (
-                  <button
+                  <motion.button
                     type="button"
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                    transition={SPRING_PRESS}
                     className={cn(
-                      "group flex items-center gap-2.5 w-full p-1.5 rounded-xl transition-all cursor-pointer select-none text-left border border-transparent",
+                      "group flex items-center w-full p-1 sm:pr-3 rounded-full transition-all duration-150 cursor-pointer select-none text-left border",
                       menuOpen
-                        ? "bg-gray-100 dark:bg-zinc-850 border-gray-200/80 dark:border-white/10 shadow-2xs"
-                        : "hover:bg-gray-100/80 dark:hover:bg-zinc-900/80"
+                        ? "bg-black/[0.06] dark:bg-white/12 border-black/10 dark:border-white/15 shadow-xs"
+                        : "bg-black/[0.02] dark:bg-white/[0.04] border-black/[0.06] dark:border-white/10 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
                     )}
                   >
-                    {/* Avatar */}
-                    <div className="relative h-9 w-9 rounded-full bg-white dark:bg-zinc-850 flex items-center justify-center text-[13px] font-bold border border-gray-200 dark:border-white/10 shadow-2xs shrink-0 text-gray-700 dark:text-zinc-300 overflow-hidden">
-                      {currentAvatarFilename && !imageError ? (
-                        <>
-                          <img
-                            src={`/api/account/avatar?id=${authUser?.id}&t=${avatarTimestamp}`}
-                            alt=""
-                            className={cn(
-                              "w-full h-full object-cover scale-[1.2]",
-                              imageLoaded ? "block" : "hidden"
-                            )}
-                            onLoad={() => setImageLoaded(true)}
-                            onError={() => setImageError(true)}
-                          />
-                          {!imageLoaded && (
-                            <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-zinc-800 animate-pulse">
-                              <UserIcon size="1em" className="text-[14px] text-gray-400 dark:text-zinc-500" />
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        initials
-                      )}
+                    <div className="w-[38px] h-9 flex items-center justify-center shrink-0">
+                      <ProfileAvatar
+                        id={authUser?.id}
+                        avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
+                        name={displayName}
+                        initials={initials}
+                        className="size-8 rounded-full shadow-xs shrink-0"
+                        fallbackClassName="text-xs"
+                      />
                     </div>
 
                     {/* User info */}
-                    <div className="flex-1 min-w-0 flex flex-col leading-tight">
-                      <span className="text-[13px] font-bold text-gray-900 dark:text-zinc-100 truncate">
+                    <div className="flex-1 min-w-0 flex flex-col leading-tight ml-2">
+                      <span className="text-[13px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100 truncate">
                         {displayName}
                       </span>
-                      <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 truncate">
+                      <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate">
                         {displayRole}
                       </span>
                     </div>
 
-                    {/* Upward Caret icon */}
-                    <ArrowUp01Icon size="1em" className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0 ml-1 transition-transform group-hover:text-gray-600 dark:group-hover:text-zinc-300" />
-                  </button>
+                    {/* Upper-lower pointer icon (selector) */}
+                    <UnfoldMoreIcon size="1em" className="text-[14px] text-gray-400 dark:text-zinc-500 shrink-0 ml-1 mr-1 transition-colors group-hover:text-gray-600 dark:group-hover:text-zinc-300" />
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
                     type="button"
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+                    transition={SPRING_PRESS}
                     title={`${displayName} (${displayRole})`}
                     className={cn(
-                      "flex w-[38px] h-[38px] items-center justify-center rounded-xl transition-all cursor-pointer mx-auto",
+                      "flex w-[38px] h-[38px] items-center justify-center rounded-full transition-all cursor-pointer mx-auto",
                       menuOpen
-                        ? "bg-gray-100 dark:bg-zinc-850 border border-gray-200/80 dark:border-white/10 shadow-2xs"
-                        : "hover:bg-gray-100/80 dark:hover:bg-zinc-900/80"
+                        ? "bg-black/[0.06] dark:bg-white/12 ring-1 ring-black/10 dark:ring-white/15 shadow-xs"
+                        : "hover:bg-black/[0.04] dark:hover:bg-white/[0.08]"
                     )}
                   >
-                    <div className="relative h-8 w-8 rounded-full bg-white dark:bg-zinc-850 flex items-center justify-center text-xs font-bold border border-gray-200 dark:border-white/10 shadow-2xs shrink-0 text-gray-700 dark:text-zinc-300 overflow-hidden">
-                      {currentAvatarFilename && !imageError ? (
-                        <img
-                          src={`/api/account/avatar?id=${authUser?.id}&t=${avatarTimestamp}`}
-                          alt=""
-                          className="w-full h-full object-cover scale-[1.2]"
-                        />
-                      ) : (
-                        initials
-                      )}
-                    </div>
-                  </button>
+                    <ProfileAvatar
+                      id={authUser?.id}
+                      avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
+                      name={displayName}
+                      initials={initials}
+                      className="size-8 rounded-full shadow-xs shrink-0"
+                      fallbackClassName="text-xs"
+                    />
+                  </motion.button>
                 )}
               </DropdownMenuTrigger>
 
@@ -1884,7 +2053,7 @@ export default function Sidebar({
             </DropdownMenu>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* COMMAND PALETTE (SPOTLIGHT / RAYCAST / APPLE HIG STYLE) */}
       <CommandPalette
@@ -1904,7 +2073,7 @@ export default function Sidebar({
       <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
         <SheetContent
           side="left"
-          className="w-[310px] sm:w-[360px] p-0 max-w-[85vw] bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-white/10 flex flex-col"
+          className="w-[310px] sm:w-[360px] p-0 max-w-[85vw] flex flex-col"
         >
           <SheetHeader className="p-4 flex flex-row items-center gap-2.5">
             <img
@@ -1952,7 +2121,7 @@ export default function Sidebar({
                   Search views, records...
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-1.5 h-5 text-[9px] font-bold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none">
+              <kbd className="inline-flex items-center justify-center px-2 h-5 text-[9px] font-bold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none">
                 {isMac ? "⌘K" : "Ctrl K"}
               </kbd>
             </button>

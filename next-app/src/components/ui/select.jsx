@@ -35,13 +35,13 @@ const Select = React.forwardRef(({
   const selected = items.find(option => String(option.value) === String(currentValue))
   const content = (
     <Primitive.Positioner align={align} sideOffset={4} alignItemWithTrigger={false} collisionPadding={12} className="z-[9999] outline-none">
-      <Primitive.Popup data-slot="select-popup" className={cn("w-[var(--anchor-width)] min-w-[min(10rem,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-gray-700 shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200", menuClassName)}>
-        {title && <div className="px-2.5 py-1.5 text-[11px] font-semibold text-gray-900 dark:text-zinc-100 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40">{title}</div>}
-        <Primitive.List className="max-h-[min(15rem,var(--available-height))] overflow-y-auto overflow-x-hidden p-1 space-y-0.5 outline-none">
+      <Primitive.Popup data-slot="select-popup" className={cn("w-[var(--anchor-width)] min-w-[min(10rem,calc(100vw-24px))] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white/92 dark:bg-zinc-900/92 backdrop-blur-2xl p-0 text-gray-700 shadow-[0_16px_36px_rgba(0,0,0,0.12),inset_0_1px_0_0_rgba(255,255,255,0.7)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.08)] outline-none dark:text-zinc-200", menuClassName)}>
+        {title && <div className="px-4.5 py-2.5 text-[11px] font-semibold text-gray-900 dark:text-zinc-100 border-b border-black/[0.06] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">{title}</div>}
+        <Primitive.List className="max-h-[min(15rem,var(--available-height))] overflow-y-auto overflow-x-hidden p-1.5 space-y-0.5 outline-none">
           {options.map((option, index) => option.isHeader ? (
-            <div key={`heading-${index}`} role="presentation" className="px-2 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">{option.label}</div>
+            <div key={`heading-${index}`} role="presentation" className="px-3 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">{option.label}</div>
           ) : (
-            <Primitive.Item key={`${option.value}-${index}`} value={option.value} disabled={option.disabled} className={cn("min-h-[30px] flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-1.25 text-xs font-medium outline-none data-highlighted:bg-gray-100 data-selected:bg-gray-100 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-zinc-800 dark:data-selected:bg-zinc-800", optionClassName)}>
+            <Primitive.Item key={`${option.value}-${index}`} value={option.value} disabled={option.disabled} className={cn("min-h-[30px] flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none transition-colors duration-100 data-highlighted:bg-black/[0.05] data-selected:bg-black/[0.05] data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-white/10 dark:data-selected:bg-white/10", optionClassName)}>
               <Primitive.ItemText className="min-w-0 flex-1 truncate">{option.label}</Primitive.ItemText>
               <Primitive.ItemIndicator><Tick01Icon size={13} aria-hidden="true" /></Primitive.ItemIndicator>
             </Primitive.Item>

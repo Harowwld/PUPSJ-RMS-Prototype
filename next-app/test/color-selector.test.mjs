@@ -127,6 +127,21 @@ test("InstitutionalBrandingTab renders ColorSelector with the new look and origi
     /const COLOR_PRESETS = \[[\s\S]*?PUP Maroon[\s\S]*?State Blue[\s\S]*?University Emerald[\s\S]*?Heritage Crimson[\s\S]*?Academic Navy[\s\S]*?Institutional Gold/,
     "Must preserve the original institutional brand color presets"
   );
+  assert.match(
+    content,
+    /Discard Draft/,
+    "InstitutionalBrandingTab must render Discard Draft action for unsaved drafts"
+  );
+  assert.match(
+    content,
+    /identity-preparer-title/,
+    "InstitutionalBrandingTab must render signatory preparer title field"
+  );
+  assert.match(
+    content,
+    /Derived Document Code Prefix/,
+    "InstitutionalBrandingTab must render derived document tracking prefix card"
+  );
   assert.ok(
     !content.includes("Recommended University Presets"),
     "Old ad-hoc presets grid should be replaced by ColorSelector"

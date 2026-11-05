@@ -1224,9 +1224,11 @@ export default function Home() {
                 className="w-80 p-0 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border-[0.5px] border-border dark:border-white/10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
               >
                 {/* Header */}
-                <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 flex items-center justify-between bg-gray-50/60 dark:bg-zinc-800/40">
+                <div className="px-4.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
                   <div className="flex items-center gap-2">
-                    
+                    <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                      <AppIcon className=" FlashIcon text-xs" fallback="UserSearch01Icon" />
+                    </div>
                     <div>
                       <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-tight leading-none">
                         Demo Personas
@@ -1249,7 +1251,9 @@ export default function Home() {
                       disabled={isLoading}
                       className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-gray-100/80 dark:hover:bg-zinc-800/80 transition-all duration-150 active:scale-[0.98] cursor-pointer group disabled:opacity-50 disabled:cursor-wait"
                     >
-                      
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${acc.accent}`}>
+                        <AppIcon className={` ${acc.icon} text-xs`} fallback="UserSearch01Icon" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1.5">
                           <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate">

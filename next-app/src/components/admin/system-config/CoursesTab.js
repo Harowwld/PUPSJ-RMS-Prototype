@@ -653,7 +653,7 @@ export default function CoursesTab({
                                         title: "Archive Degree Program",
                                         message:
                                           "This degree program will be hidden from new registrations but its history will be preserved.",
-                                        confirmLabel: "Archive",
+                                        confirmLabel: "Archive Program",
                                         variant: "warning",
                                         buttonIcon: " Archive01Icon",
                                         icon: " Archive01Icon",
@@ -821,7 +821,7 @@ export default function CoursesTab({
                 disabled={repeat.saving}
                 className="h-10 px-5 cursor-pointer border-0"
               >
-                {repeat.saving ? "Creating..." : "Create"}
+                {repeat.saving ? "Creating Program…" : "Create Program"}
               </Button>
             </DialogFooter>
           </form>

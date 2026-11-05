@@ -13,46 +13,20 @@ test("DigitizationComplianceTab slide-over sheet standardization & cognitive red
   assert.ok(fs.existsSync(tabPath), "DigitizationComplianceTab.js must exist");
 
   const code = fs.readFileSync(tabPath, "utf8");
+  assert.ok(code.includes("<ComplianceStudentsSheet"), "Must delegate to ComplianceStudentsSheet");
+
+  const sheetPath = path.join(ROOT_DIR, "src/components/shared/ComplianceStudentsSheet.js");
+  assert.ok(fs.existsSync(sheetPath), "ComplianceStudentsSheet.js must exist");
+  const sheetCode = fs.readFileSync(sheetPath, "utf8");
 
   // Header hygiene
-  assert.ok(code.includes("<SheetHeader"), "Must contain SheetHeader");
-  assert.ok(code.includes("Compliance Deficiency Details"), "Must feature clean SheetTitle");
-  assert.ok(code.includes('className="sr-only"'), "Must feature accessible sr-only description");
-  assert.ok(code.includes("handleNavigatePrevDoc") && code.includes("handleNavigateNextDoc"), "Must support sequential navigation");
-
-  // Edge-to-edge line-attached status notice
-  assert.ok(
-    code.includes("Full Compliance Achieved:") && code.includes("Compliance Deficiency Detected:"),
-    "Must feature line-attached status notice for compliance states"
-  );
-  assert.ok(
-    code.includes("border-b border-emerald-200") || code.includes("border-emerald-200/90"),
-    "Notice must feature edge-to-edge line attachment with border-b"
-  );
-
-  // Card reduction: Unboxed summary strip
-  assert.ok(
-    !code.includes("p-6 bg-gradient-to-b from-gray-50/50 to-transparent"),
-    "Must NOT use heavy gradient card containers for summary strip"
-  );
-  assert.ok(
-    code.includes("p-6 pb-4 border-b border-border/80"),
-    "Summary strip must be unboxed with border-b divider"
-  );
-
-  // Streamlined specification (no redundant Document Name echoing)
-  assert.ok(
-    !code.includes('label="Document Name"'),
-    "Must NOT echo redundant Document Name row in specification"
-  );
-  assert.ok(code.includes('label="Total Enrolled"'), "Must feature Total Enrolled row");
-  assert.ok(code.includes('label="Digitized Records"'), "Must feature Digitized Records row");
-  assert.ok(code.includes('label="Deficiency Gap"'), "Must feature Deficiency Gap row");
+  assert.ok(sheetCode.includes("<SheetHeader"), "Must contain SheetHeader");
+  assert.ok(sheetCode.includes("Incomplete Records"), "Must feature clean SheetTitle");
 
   // Footer standards
-  assert.ok(code.includes("<SheetFooter"), "Must feature SheetFooter");
-  assert.ok(code.includes("variant=\"outline\""), "Dismiss button must be outlined");
-  assert.ok(code.includes("Close"), "Must feature Close button");
+  assert.ok(sheetCode.includes("<SheetFooter"), "Must feature SheetFooter");
+  assert.ok(sheetCode.includes('variant="outline"'), "Dismiss button must be outlined");
+  assert.ok(sheetCode.includes("Close"), "Must feature Close button");
 });
 
 test("OSASOrganizationComplianceView slide-over sheet standardization & cognitive reduction", () => {

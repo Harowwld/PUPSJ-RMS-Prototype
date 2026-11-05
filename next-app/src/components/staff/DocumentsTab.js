@@ -502,7 +502,7 @@ export default function DocumentsTab({
                             setMatrixPage(1);
                             setSelectedKpi(null);
                           }}
-                          className="w-full h-8 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
+                          className="w-full h-8 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
                         >
                           Filter Compliant Records
                         </Button>
@@ -623,7 +623,7 @@ export default function DocumentsTab({
                             setMatrixPage(1);
                             setSelectedKpi(null);
                           }}
-                          className="w-full h-8 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
+                          className="w-full h-8 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
                         >
                           Filter Incomplete Records
                         </Button>
@@ -730,7 +730,7 @@ export default function DocumentsTab({
                             handleClearMatrixFilters();
                             setSelectedKpi(null);
                           }}
-                          className="w-full h-8 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
+                          className="w-full h-8 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
                         >
                           Reset Matrix Filters
                         </Button>

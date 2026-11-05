@@ -33,8 +33,10 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet"
 import PageHeader from "@/components/shared/PageHeader"
+import ProfileAvatar from "@/components/shared/ProfileAvatar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import CopyButton from "@/components/shared/CopyButton"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Select } from "@/components/ui/select"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
@@ -893,13 +895,34 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           }
         />
 
-        <div role="group" aria-label="Personnel status" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-          {[["Active", "Active", stats.active], ["Inactive", "Archived", stats.inactive]].map(([value, label, count]) => (
-            <button key={value} type="button" aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)} className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 cursor-pointer", statusFilter === value ? "text-pup-maroon dark:text-red-400" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-              {label} <span className="font-sans tabular-nums text-[10px] font-normal text-gray-400 dark:text-zinc-500">{count}</span>
-              {statusFilter === value && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}
-            </button>
-          ))}
+        <div role="group" aria-label="Personnel status" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+            {[["Active", "Active", stats.active], ["Inactive", "Archived", stats.inactive]].map(([value, label, count]) => {
+              const isSelected = statusFilter === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setStatusFilter(value)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    isSelected
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                  )}
+                >
+                  <span>{label}</span>
+                  <span className={cn(
+                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
+                    isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
+                  )}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
@@ -1140,16 +1163,25 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               )}
                             </td>
                             <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
                                 {member.id}
                               </span>
                             </td>
                             {visibleColumns.includes("name") && (
                               <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                                <div className="flex flex-col min-w-0">
-                                  <span className={cn("text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
-                                    {getStaffCleanName(member)} {isSelf && "(You)"}
-                                  </span>
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <ProfileAvatar
+                                    staffId={member.id}
+                                    name={getStaffCleanName(member)}
+                                    initials={`${member.fname?.charAt(0) || ""}${member.lname?.charAt(0) || ""}`.toUpperCase() || "ST"}
+                                    className="size-7 rounded-full border shadow-2xs shrink-0"
+                                    fallbackClassName="text-[11px] font-bold"
+                                  />
+                                  <div className="flex flex-col min-w-0">
+                                    <span className={cn("text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
+                                      {getStaffCleanName(member)} {isSelf && "(You)"}
+                                    </span>
+                                  </div>
                                 </div>
                               </td>
                             )}
@@ -1409,9 +1441,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <span>Saving Changes...</span>
                   </span>
                 ) : isEditing ? (
-                  "Save"
+                  "Save Changes"
                 ) : (
-                  "Register"
+                  "Register Personnel"
                 )}
               </Button>
             </DialogFooter>
@@ -1441,16 +1473,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
 
           <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(tempPassword)
-                showToast("Password copied to clipboard")
-              }}
-              variant="outline"
+            <CopyButton
+              textToCopy={tempPassword}
+              entityName="Password"
               className="h-10 px-4"
-            >
-              Copy Password
-            </Button>
+            />
             <Button
               onClick={() => setPwDialogOpen(false)}
               className="h-10 px-5 cursor-pointer"
@@ -1553,7 +1580,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           side="right"
           size="default"
           showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden motion-safe:animate-in motion-safe:slide-in-from-right duration-300 ease-out"
+          className="w-full sm:max-w-md md:max-w-lg flex flex-col h-full p-0 overflow-hidden"
         >
           {inspectMember && (() => {
             const office = (Array.isArray(offices) ? offices : []).find(o => o.id === inspectMember.office_id)
@@ -1596,7 +1623,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       <button
                         type="button"
                         onClick={() => setInspectMember(null)}
-                        className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                        className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                         aria-label="Close Personnel Details"
                         title="Close"
                       >
@@ -1639,14 +1666,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {/* Identity Summary Strip (Unboxed) */}
                   <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base shadow-sm shrink-0 select-none text-white"
-                        style={{
-                          backgroundColor: office?.accent_color || (isSysAdmin ? "#1f2937" : "#800000"),
-                        }}
-                      >
-                        {initials}
-                      </div>
+                      <ProfileAvatar
+                        staffId={inspectMember.id}
+                        name={getStaffCleanName(inspectMember)}
+                        initials={initials}
+                        className="size-12 rounded-full border shadow-2xs shrink-0"
+                        fallbackClassName="text-base font-bold"
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">

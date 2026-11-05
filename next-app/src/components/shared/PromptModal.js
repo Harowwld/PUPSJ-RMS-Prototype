@@ -82,15 +82,15 @@ export default function PromptModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleCancel()}>
-      <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-lg dark:border-border dark:bg-card gap-0">
-        <DialogHeader className="p-6 pb-0 min-w-0">
+      <DialogContent className="overflow-hidden rounded-[22px] border border-black/[0.08] dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-[0_24px_54px_rgba(0,0,0,0.18),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_28px_64px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] p-0 sm:max-w-lg gap-0">
+        <DialogHeader className="px-5 pt-5 pb-0 min-w-0">
           <div className="flex items-start gap-4 w-full">
             <div className="min-w-0 flex-1">
               <DialogTitle>
                 {title}
               </DialogTitle>
               {message ? (
-                <DialogDescription className="mt-1">
+                <DialogDescription className="mt-1.5">
                   {message}
                 </DialogDescription>
               ) : null}
@@ -98,7 +98,7 @@ export default function PromptModal({
           </div>
         </DialogHeader>
 
-        <div className={cn("space-y-5 p-6 min-w-0 bg-white dark:bg-card", isDeclineModal && "pb-4")}>
+        <div className={cn("space-y-4 px-5 py-3.5 min-w-0", isDeclineModal && "pb-3")}>
           {itemsList && itemsList.length > 0 && (
             <div className="relative w-full">
               <p className="text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
@@ -155,12 +155,12 @@ export default function PromptModal({
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
+        <DialogFooter className="px-5 pb-5 pt-1.5 flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
             {cancelLabel}

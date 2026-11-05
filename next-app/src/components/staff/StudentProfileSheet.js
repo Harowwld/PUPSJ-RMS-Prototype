@@ -242,7 +242,7 @@ export default function StudentProfileSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -274,7 +274,7 @@ export default function StudentProfileSheet({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                 aria-label="Close"
                 title="Close"
               >
@@ -349,7 +349,7 @@ export default function StudentProfileSheet({
                   onEditStudent?.(student);
                 }}
                 title={student?.category || student?.rawOrg ? "Edit Organization Information" : "Edit Student Information"}
-                className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-8 px-3 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 {student?.category || student?.rawOrg ? "Edit Organization" : "Edit Student"}
               </Button>
@@ -528,7 +528,7 @@ export default function StudentProfileSheet({
                     }}
                     className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
                   >
-                    Locate
+                    Locate Drawer
                   </Button>
                 </div>
               </InfoRow>
@@ -562,14 +562,14 @@ export default function StudentProfileSheet({
 
               {/* View Switcher: Checklist vs Files (Students only) */}
               {!isOrg && (
-                <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5">
+                <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
                   <button
                     type="button"
                     onClick={() => setComplianceView("checklist")}
                     className={cn(
-                      "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                      "px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
                       complianceView === "checklist"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
                     )}
                   >
@@ -579,9 +579,9 @@ export default function StudentProfileSheet({
                     type="button"
                     onClick={() => setComplianceView("files")}
                     className={cn(
-                      "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
+                      "px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
                       complianceView === "files"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                        ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
                     )}
                   >
@@ -607,7 +607,7 @@ export default function StudentProfileSheet({
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div
                           className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs shadow-2xs",
+                            "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs shadow-2xs",
                             isApproved
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40"
                               : isPending
@@ -724,7 +724,7 @@ export default function StudentProfileSheet({
                     className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/30 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/30 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
                         <File02Icon size="1em" className="text-base" />
                       </div>
                       <div className="min-w-0 flex-1">

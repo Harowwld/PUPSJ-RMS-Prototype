@@ -1,6 +1,7 @@
 "use client";
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { useEffect, useState, useMemo, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -199,7 +200,7 @@ export default function OfficeDetailSheet({
         side="right"
         size="default"
         showCloseButton={false}
-        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden"
       >
         <SheetHeader className="shrink-0 p-0">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -228,13 +229,13 @@ export default function OfficeDetailSheet({
                 />
               )}
 
-              {/* Accessible Squircle Close Button */}
+              {/* Apple Circular Close Button */}
               <button
                 type="button"
                 onClick={handleClose}
                 aria-label="Close"
                 title="Close"
-                className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
               >
                 <Cancel01Icon size="1em" className="text-sm" />
               </button>
@@ -275,9 +276,9 @@ export default function OfficeDetailSheet({
           {/* Summary Strip (Unboxed) */}
           <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
             <div className="flex items-center gap-3.5 min-w-0">
-              {/* Brand Accent Squircle Tile */}
+              {/* Brand Accent Circular Tile */}
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center border text-xl shadow-xs shrink-0 transition-transform"
+                className="w-12 h-12 rounded-full flex items-center justify-center border text-xl shadow-xs shrink-0 transition-transform"
                 style={{
                   color: accent,
                   backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`,
@@ -563,9 +564,12 @@ export default function OfficeDetailSheet({
                       className="flex items-center justify-between p-2.5 rounded-xl border border-border dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 hover:bg-gray-100/60 dark:hover:bg-zinc-800/60 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-xs text-gray-700 dark:text-zinc-200 shrink-0">
-                          {initials}
-                        </div>
+                        <ProfileAvatar
+                          staffId={staff.id}
+                          name={`${staff.fname} ${staff.lname}`}
+                          initials={initials}
+                          className="size-8 rounded-full border shadow-2xs shrink-0"
+                        />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -657,7 +661,7 @@ export default function OfficeDetailSheet({
                       className="p-2.5 rounded-xl border border-border dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 flex items-center justify-between gap-2"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-6 h-6 rounded-lg bg-pup-maroon/10 dark:bg-white/10 text-pup-maroon dark:text-zinc-200 flex items-center justify-center shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-pup-maroon/10 dark:bg-white/10 text-pup-maroon dark:text-zinc-200 flex items-center justify-center shrink-0">
                           <Tick01Icon size={16} className={mod.icon || ""} />
                         </div>
                         <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">

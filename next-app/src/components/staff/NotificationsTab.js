@@ -578,24 +578,24 @@ export default function NotificationsTab({
           {/* 2. Navigation Toolbar: Read / Unread Tabs ONLY */}
           <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
             {/* Left: Segmented Control Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab("unread")}
                 className={cn(
-                  "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                  "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                   activeTab === "unread"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                    ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                    : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
                 )}
               >
                 <span>Unread</span>
                 <span
                   className={cn(
-                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
                     activeTab === "unread"
-                      ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 border border-pup-maroon/20 dark:border-red-500/30"
-                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                      ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
+                      : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
                   )}
                 >
                   {unreadCount}
@@ -605,19 +605,19 @@ export default function NotificationsTab({
                 type="button"
                 onClick={() => setActiveTab("read")}
                 className={cn(
-                  "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                  "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                   activeTab === "read"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                    ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                    : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
                 )}
               >
                 <span>Read</span>
                 <span
                   className={cn(
-                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
                     activeTab === "read"
-                      ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
-                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                      ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
+                      : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
                   )}
                 >
                   {readCount}
@@ -865,7 +865,7 @@ export default function NotificationsTab({
             side="right"
             size="default"
             showCloseButton={false}
-            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden focus:outline-none focus-visible:outline-none"
+            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden focus:outline-none focus-visible:outline-none"
           >
             <SheetHeader className="shrink-0 p-0">
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -897,7 +897,7 @@ export default function NotificationsTab({
                   <button
                     type="button"
                     onClick={() => setSheetOpen(false)}
-                    className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                    className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                     aria-label="Close"
                     title="Close"
                   >
@@ -909,7 +909,7 @@ export default function NotificationsTab({
 
             {/* Scrollable Sheet Body - 1 Column Standard Layout */}
             {selectedNotif ? (
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white dark:bg-card">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Event Summary Strip */}
                 {(() => {
                   const ui = getNotificationVisuals(selectedNotif);

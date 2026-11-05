@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAppReducedMotion, EASE_OUT } from "@/lib/motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -78,6 +79,7 @@ const STANDARD_CATEGORIES = [
 ]
 
 export default function LandingFaqCmsView({ showToast }) {
+  const shouldReduceMotion = useAppReducedMotion()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-faq", "activeTab", "content") // 'content' | 'preview'
@@ -460,7 +462,7 @@ export default function LandingFaqCmsView({ showToast }) {
                 </div>
 
                 <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-gray-50/40 px-4 py-3 dark:bg-zinc-900/30">
-                  <DashboardSearch value={questionSearch} onChange={setQuestionSearch} count={filteredFaqs.length} label="Search questions and answers" placeholder="Search questions and answers" className="w-[min(280px,45vw)] min-w-[200px]" />
+                  <DashboardSearch value={questionSearch} onChange={setQuestionSearch} count={filteredFaqs.length} label="Search questions and answers" placeholder="Search questions and answers" />
                   <div className="ml-auto flex shrink-0 items-center gap-2">
                     <FilterPopover
                       fields={[{ key: "category", label: "Category", options: uniqueCategories.map((category) => ({ value: category, label: category })) }]}
@@ -499,7 +501,7 @@ export default function LandingFaqCmsView({ showToast }) {
                         className="px-4 py-3 bg-gray-50/70 dark:bg-zinc-950/40 flex items-center justify-between cursor-pointer select-none gap-3"
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <span className="w-6 h-6 rounded-lg bg-pup-maroon text-white text-[11px] font-bold font-sans tabular-nums flex items-center justify-center shrink-0">
+                          <span className="w-6 h-6 rounded-full bg-pup-maroon text-white text-[11px] font-bold font-sans tabular-nums flex items-center justify-center shrink-0">
                             {String(originalIdx + 1).padStart(2, "0")}
                           </span>
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
@@ -565,8 +567,16 @@ export default function LandingFaqCmsView({ showToast }) {
                       </div>
 
                       {/* Expandable Form Body */}
-                      {isExpanded && (
-                        <div className="p-4 sm:p-5 border-t border-border dark:border-border space-y-4 bg-white dark:bg-zinc-900/40">
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div
+                            initial={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: EASE_OUT }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 sm:p-5 border-t border-border dark:border-border space-y-4 bg-white dark:bg-zinc-900/40">
                           {/* Question Input */}
                           <div>
                             <div className="flex justify-between items-center mb-1.5">
@@ -690,7 +700,9 @@ export default function LandingFaqCmsView({ showToast }) {
                             </div>
                           </div>
                         </div>
-                      )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                     </div>
                   )
                 })}

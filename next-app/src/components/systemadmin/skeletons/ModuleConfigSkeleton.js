@@ -29,7 +29,7 @@ function DepartmentSelectorSkeleton() {
             <div key={index} className="flex w-[240px] min-w-[240px] flex-col justify-between gap-3 rounded-xl border border-border bg-white p-4 dark:bg-zinc-900/60">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <Placeholder className="h-9 w-9 shrink-0 rounded-xl" />
+                  <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
                   <div className="space-y-1.5">
                     <Placeholder className="h-3 w-16 rounded" />
                     <Placeholder className="h-2.5 w-12 rounded" />
@@ -54,7 +54,7 @@ function FeatureCardSkeleton() {
       <div>
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <Placeholder className="h-8 w-8 shrink-0 rounded-lg" />
+            <Placeholder className="h-8 w-8 shrink-0 rounded-full" />
             <div className="space-y-1.5">
               <Placeholder className="h-3.5 w-28 rounded" />
               <Placeholder className="h-2.5 w-36 rounded" />
@@ -80,7 +80,7 @@ function FeatureGroupSkeleton({ label }) {
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
         <div className="flex items-center gap-2.5">
-          <Placeholder className="h-7 w-7 rounded-lg" />
+          <Placeholder className="h-7 w-7 rounded-full" />
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">{label}</h4>
@@ -108,7 +108,7 @@ function DepartmentViewSkeleton() {
       <div className="flex flex-[1_0_auto] flex-col bg-white dark:bg-card">
         <div className="flex flex-col justify-between gap-4 border-b border-border bg-gray-50/40 p-5 dark:bg-zinc-950/20 md:flex-row md:items-center">
           <div className="flex min-w-0 items-center gap-3.5">
-            <Placeholder className="h-11 w-11 shrink-0 rounded-xl" />
+            <Placeholder className="h-11 w-11 shrink-0 rounded-full" />
             <div className="min-w-0 space-y-2">
               <div className="flex items-center gap-2"><Placeholder className="h-4 w-52 max-w-full rounded" /><Placeholder className="h-5 w-14 rounded-full" /></div>
               <Placeholder className="h-3 w-72 max-w-full rounded" />
@@ -163,7 +163,7 @@ function MatrixViewSkeleton({ groupBy, officeCount }) {
             {Array.from({ length: group ? 3 : 6 }, (_, rowIndex) => <tr key={rowIndex}>
               <td className="sticky left-0 z-10 min-w-[420px] border-r border-border bg-white p-4 pl-6 dark:bg-zinc-900/95">
                 <div className="flex min-w-0 items-start gap-3">
-                  <Placeholder className="h-7 w-7 shrink-0 rounded-lg" />
+                  <Placeholder className="h-7 w-7 shrink-0 rounded-full" />
                   <div className="min-w-0 flex-1 space-y-1.5">
                     <div className="flex items-center justify-between gap-3"><Placeholder className="h-3.5 w-32 max-w-[45%] rounded" /><div className="flex min-w-0 max-w-[55%] items-center gap-2"><Placeholder className="h-4 w-14 shrink-0 rounded-full" /><Placeholder className="h-3 w-32 max-w-full rounded" /></div></div>
                     <Placeholder className="h-3 w-64 max-w-full rounded" />
@@ -193,17 +193,27 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={<Placeholder className="h-9 w-9 shrink-0 rounded-xl" />}
         />
-        <div aria-hidden="true" className="flex items-end gap-x-5 overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-          <div className="flex h-9 shrink-0 items-stretch">
-            {["Active", "Archived"].map((label) => <div key={label} className={cn("relative inline-flex items-center gap-2 px-3 text-xs font-semibold", officeFilter === label ? "text-pup-maroon dark:text-red-400" : "text-gray-500 dark:text-zinc-400")}>{label}<Placeholder className="h-3 w-6 rounded" />{officeFilter === label && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}</div>)}
+        <div aria-hidden="true" className="flex items-center justify-between gap-4 overflow-x-auto border-b border-border/80 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 scrollbar-none dark:border-white/10">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+            {["Active", "Archived"].map((label) => (
+              <div key={label} className={cn("inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", officeFilter === label ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
+                <span>{label}</span>
+                <Placeholder className="h-3 w-5 rounded-full" />
+              </div>
+            ))}
           </div>
-          <div className="flex h-9 shrink-0 items-stretch">
-            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => <div key={mode} className={cn("relative inline-flex items-center gap-1.5 px-3 text-xs font-semibold", viewMode === mode ? "text-pup-maroon dark:text-red-400" : "text-gray-500 dark:text-zinc-400")}><Icon size={14} aria-hidden="true" />{label}{viewMode === mode && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}</div>)}
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] ml-auto">
+            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => (
+              <div key={mode} className={cn("inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", viewMode === mode ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
+                <Icon size={14} aria-hidden="true" />
+                <span>{label}</span>
+              </div>
+            ))}
           </div>
         </div>
         <DataViewToolbar label="Feature search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <div className="relative w-[min(320px,30vw)] min-w-[190px] shrink-0"><Placeholder className="h-9 w-full rounded-xl" /><Placeholder className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded" /></div>
+            <div className="relative w-72 sm:w-80 shrink-0"><Placeholder className="h-9 w-full rounded-xl" /><Placeholder className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded" /></div>
             {viewMode === "matrix" && <Placeholder className="h-9 w-[72px] shrink-0 rounded-xl" />}
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -213,7 +223,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
         </DataViewToolbar>
         <div className="flex flex-col justify-between gap-4 border-t border-border bg-gray-50/40 px-6 py-4 dark:bg-zinc-900/30 sm:flex-row sm:items-center">
           <div className="flex min-w-0 items-center gap-3.5">
-            <Placeholder className="h-10 w-10 shrink-0 rounded-xl" />
+            <Placeholder className="h-10 w-10 shrink-0 rounded-full" />
             <div className="min-w-0 space-y-1.5">
               <div className="flex items-center gap-2"><span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Public Login Demo Accounts</span><span className="rounded-full border border-amber-200/60 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/30 dark:text-amber-300">Prototype Access</span></div>
               <p className="text-xs text-gray-500 dark:text-zinc-400">Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.</p>

@@ -64,6 +64,7 @@ import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedb
 import { Skeleton } from "@/components/ui/skeleton";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { ContentSwap } from "@/components/ui/motion";
 import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
@@ -1277,7 +1278,7 @@ function StudentDashboard() {
               className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full"
             >
               <div className="w-full flex flex-[1_0_auto] flex-col [&>*]:flex-[1_0_auto]">
-
+                <ContentSwap id={view} className="w-full flex flex-[1_0_auto] flex-col [&>*]:flex-[1_0_auto]">
               {view === "overview" ? (
                 <StudentOverviewTab
                   authUser={me}
@@ -3041,6 +3042,7 @@ function StudentDashboard() {
                   )}
                 </Card>
               )}
+                </ContentSwap>
               </div>
             </div>
           </main>
@@ -3056,7 +3058,7 @@ function StudentDashboard() {
           side="right"
           size="default"
           showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
         >
           <SheetHeader className="shrink-0 p-0">
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -3088,7 +3090,7 @@ function StudentDashboard() {
                 <button
                   type="button"
                   onClick={() => setSelectedRequestForDetail(null)}
-                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                   aria-label="Close"
                   title="Close"
                 >
@@ -3156,7 +3158,7 @@ function StudentDashboard() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Request Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
                 <File02Icon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
@@ -3270,7 +3272,7 @@ function StudentDashboard() {
                     title="Edit Feedback"
                     className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
                   >
-                    Edit
+                    Edit Feedback
                   </button>
                 </div>
 
@@ -3345,7 +3347,7 @@ function StudentDashboard() {
                   title="Rate Experience"
                   className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                 >
-                  Rate
+                  Rate Service
                 </Button>
               </div>
             ) : null}
@@ -3538,7 +3540,7 @@ function StudentDashboard() {
           side="right"
           size="default"
           showCloseButton={false}
-          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta bg-white dark:bg-card border-l border-border dark:border-border p-0 shadow-2xl overflow-hidden"
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
         >
           <SheetHeader className="shrink-0 p-0">
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -3570,7 +3572,7 @@ function StudentDashboard() {
                 <button
                   type="button"
                   onClick={() => setSelectedProposalForDetail(null)}
-                  className="w-8 h-8 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/5 dark:border-white/10 shadow-2xs"
+                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
                   aria-label="Close"
                   title="Close"
                 >
@@ -3628,7 +3630,7 @@ function StudentDashboard() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Proposal Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
                 <CalendarCheckIn01Icon size={16}  />
               </div>
               <div className="min-w-0 flex-1">

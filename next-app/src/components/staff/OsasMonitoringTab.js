@@ -1344,12 +1344,27 @@ export default function OsasMonitoringTab({ showToast }) {
             </div>
 
             {(activeStream === "proposals" || activeStream === "post_events") && (
-              <div role="group" aria-label="OSAS submission view" className="flex shrink-0 items-center gap-1 rounded-xl border border-border/60 bg-gray-100/80 p-1 dark:bg-zinc-800/60">
-                {[{ mode: "list", label: "List" }, { mode: "table", label: "Table" }, { mode: "kanban", label: "Kanban" }].map(({ mode, label }) => (
-                  <button key={mode} type="button" onClick={() => handleViewModeChange(mode)} aria-pressed={viewMode === mode} className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors", viewMode === mode ? "bg-pup-maroon text-white shadow-xs" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
-                    <ViewModeIcon mode={mode} className="text-sm" />{label}
-                  </button>
-                ))}
+              <div role="group" aria-label="OSAS submission view" className="inline-flex shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+                {[{ mode: "list", label: "List" }, { mode: "table", label: "Table" }, { mode: "kanban", label: "Kanban" }].map(({ mode, label }) => {
+                  const isSelected = viewMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => handleViewModeChange(mode)}
+                      aria-pressed={isSelected}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
+                        isSelected
+                          ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
+                      )}
+                    >
+                      <ViewModeIcon mode={mode} className="text-sm" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
 

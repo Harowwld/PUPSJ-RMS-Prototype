@@ -223,7 +223,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
                       variant="outline"
                       onClick={() => retry(row.id)}
                       disabled={retryingId !== null || dismissingId !== null || clearingAll}
-                      className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       {retryingId === row.id ? "Retrying..." : "Retry"}
                     </Button>
@@ -259,7 +259,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
             type="button"
             variant="outline"
             onClick={() => handleOpenChange(false)}
-            className="h-10 rounded-xl px-4 text-xs font-semibold border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-10 rounded-xl px-4 text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

@@ -665,24 +665,24 @@ export default function StaffDirectoryTab({
         {/* Navigation Toolbar */}
         <DataViewToolbar label="Staff search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
           {/* Left: Active vs Archived Segmented Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
             <button
               type="button"
               onClick={() => handleTabChange("active")}
               className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                 activeTab === "active"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
               )}
             >
               <span>Active</span>
               <span
                 className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
                   activeTab === "active"
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                    ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
+                    : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
                 )}
               >
                 {officeStaff.filter((s) => s.status !== "Archived").length}
@@ -692,19 +692,19 @@ export default function StaffDirectoryTab({
               type="button"
               onClick={() => handleTabChange("archived")}
               className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
+                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                 activeTab === "archived"
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
+                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
               )}
             >
               <span>Archived</span>
               <span
                 className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
                   activeTab === "archived"
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                    ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
+                    : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
                 )}
               >
                 {officeStaff.filter((s) => s.status === "Archived").length}

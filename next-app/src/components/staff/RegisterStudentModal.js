@@ -399,10 +399,10 @@ export default function RegisterStudentModal({
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
-                  Registering...
+                  Registering Student…
                 </span>
               ) : (
-                "Register"
+                "Register Student"
               )}
             </Button>
           </DialogFooter>

@@ -313,7 +313,7 @@ export function DateRangePickerContent({
     <div className="flex flex-col">
       {/* Optional Popover Header matching Filter by Header in OfficeTableControls */}
       {showHeader && (
-        <PopoverHeader className="px-3.5 py-2 border-b border-border dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/50 flex items-center justify-between">
+        <PopoverHeader className="px-4.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between">
           <PopoverTitle className="text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400">
             Filter by date range
           </PopoverTitle>
@@ -543,7 +543,7 @@ export function DateRangePickerContent({
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-8 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-8 px-3 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>

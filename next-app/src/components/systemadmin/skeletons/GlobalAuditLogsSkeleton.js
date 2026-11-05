@@ -30,11 +30,17 @@ export default function GlobalAuditLogsSkeleton() {
             </div>
           }
         />
-        <div aria-hidden="true" className="flex h-9 items-stretch overflow-x-auto border-b border-border px-6 scrollbar-none dark:border-white/10">
-          {[["All Levels", true], ["Information", false], ["Warning", false], ["Critical", false]].map(([label, active]) => <div key={label} className={`relative inline-flex items-center px-3 text-xs font-semibold ${active ? "text-pup-maroon dark:text-red-400" : "text-gray-500 dark:text-zinc-400"}`}>{label}{active && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-pup-maroon dark:bg-red-400" />}</div>)}
+        <div aria-hidden="true" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+            {[["All Levels", true], ["Information", false], ["Warning", false], ["Critical", false]].map(([label, active]) => (
+              <div key={label} className={`inline-flex items-center px-3.5 py-1 text-xs font-semibold rounded-full ${active ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400"}`}>
+                {label}
+              </div>
+            ))}
+          </div>
         </div>
         <div className="flex items-center justify-between gap-2 overflow-hidden bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
-          <Skeleton className="h-9 w-64 shrink-0 rounded-xl" />
+          <div className="relative w-72 sm:w-80 shrink-0"><Skeleton className="h-9 w-full rounded-xl dark:bg-muted" /><Skeleton className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded dark:bg-muted" /></div>
           <div className="ml-auto flex shrink-0 items-center gap-2">
             {["w-20", "w-28", "w-24", "w-32"].map((width, i) => <Skeleton key={i} className={`h-9 shrink-0 rounded-xl ${width}`} />)}
           </div>

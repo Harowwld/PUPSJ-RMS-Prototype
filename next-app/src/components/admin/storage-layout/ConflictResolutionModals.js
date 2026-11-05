@@ -234,7 +234,7 @@ const ConflictResolutionModals = memo(({
               onClick={openApplyPreview}
               className="h-10 px-5 cursor-pointer border-0"
             >
-              Continue
+              Preview Reassignment
             </Button>
           </DialogFooter>
         </DialogContent>

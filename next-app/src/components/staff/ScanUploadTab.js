@@ -615,7 +615,7 @@ export default function ScanUploadTab({
                 open={clearInboxOpen}
                 title="Clear Scanner Inbox?"
                 message={`This will remove ${hf.rows.length} queued item(s) from the scanner inbox. You can’t undo this.`}
-                confirmLabel="Clear"
+                confirmLabel="Clear Inbox"
                 onConfirm={async () => {
                   await hf.clearInbox()
                   setClearInboxOpen(false)
@@ -629,7 +629,7 @@ export default function ScanUploadTab({
                 open={confirmDropOpen}
                 title="Replace Loaded Document?"
                 message="An existing document is already loaded in the preview area. Are you sure you want to replace it with the new file?"
-                confirmLabel="Replace"
+                confirmLabel="Replace Document"
                 onConfirm={() => {
                   if (pendingDroppedFile) {
                     handlePdfFileSelect(pendingDroppedFile)
@@ -896,7 +896,7 @@ export default function ScanUploadTab({
 
                           {(windowDragActive || dropActive) && (
                             <div
-                              className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-xs border-2 border-dashed border-white/80 rounded-2xl animate-fade-up"
+                              className="absolute inset-0 z-30 flex items-center justify-center bg-black/35 backdrop-blur-sm border-2 border-dashed border-white/80 rounded-2xl animate-fade-up"
                               onDragOver={(e) => {
                                 e.preventDefault()
                                 setDropActive(true)
