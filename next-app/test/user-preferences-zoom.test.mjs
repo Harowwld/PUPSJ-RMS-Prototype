@@ -122,3 +122,55 @@ test("/api/auth/preferences POST accepts valid zoom_node (0 to 6) and rejects in
   const resStr = await postHandler(reqStr);
   assert.equal(resStr.status, 400);
 });
+
+test("/api/auth/preferences handles reduce_motion validation and persistence", async () => {
+  let savedPreferences = null;
+  const postHandler = await loadRouteHandler("preferences", "POST", {
+    NextResponse: { json: (data, init) => ({ status: init?.status || 200, json: async () => data }) },
+    requireAuth: async () => ({ user: { id: "staff-1", principalType: "staff" } }),
+    createAuthErrorResponse: (msg, status) => ({ status, error: msg }),
+    getStaffById: async () => ({ id: "staff-1", preferences: "{}" }),
+    parseStaffPreferences: (val) => (typeof val === "string" ? JSON.parse(val || "{}") : val || {}),
+    updateStaffPreferences: async (userId, prefs) => {
+      savedPreferences = prefs;
+      return { reduce_motion: prefs.reduce_motion };
+    },
+    writeAuditLog: async () => {},
+  });
+
+  // Valid: reduce_motion = true
+  const reqTrue = new Request("http://localhost:3000/api/auth/preferences", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ preferences: { reduce_motion: true } }),
+  });
+  const resTrue = await postHandler(reqTrue);
+  const dataTrue = await resTrue.json();
+  assert.equal(resTrue.status, 200);
+  assert.equal(dataTrue.ok, true);
+  assert.equal(savedPreferences.reduce_motion, true);
+
+  // Valid: reduce_motion = false
+  const reqFalse = new Request("http://localhost:3000/api/auth/preferences", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ preferences: { reduce_motion: false } }),
+  });
+  const resFalse = await postHandler(reqFalse);
+  const dataFalse = await resFalse.json();
+  assert.equal(resFalse.status, 200);
+  assert.equal(dataFalse.ok, true);
+  assert.equal(savedPreferences.reduce_motion, false);
+
+  // Invalid: string ("true")
+  const reqInvalid = new Request("http://localhost:3000/api/auth/preferences", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ preferences: { reduce_motion: "true" } }),
+  });
+  const resInvalid = await postHandler(reqInvalid);
+  const dataInvalid = await resInvalid.json();
+  assert.equal(resInvalid.status, 400);
+  assert.equal(dataInvalid.ok, false);
+  assert.equal(dataInvalid.error, "Invalid value for preference 'reduce_motion'.");
+});

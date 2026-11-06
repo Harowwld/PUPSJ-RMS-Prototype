@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
-export const ZOOM_SCALES = [0.68, 0.75, 0.83, 0.9, 0.97, 1.05, 1.125];
+export const ZOOM_SCALES = [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25];
 export const ZOOM_PERCENTAGES = [75, 83, 92, 100, 108, 117, 125];
 export const DEFAULT_ZOOM_NODE = 3;
 
@@ -207,13 +207,25 @@ export function useLayoutZoom(authUser = null) {
   const scale = ZOOM_SCALES[zoomNode] ?? 1.0;
   const zoomPercentage = ZOOM_PERCENTAGES[zoomNode] ?? 100;
 
-  const zoomStyle = useMemo(() => ({
-    transform: `scale(${scale})`,
-    transformOrigin: "top left",
-    width: `${100 / scale}%`,
-    height: `${100 / scale}%`,
-    flex: "none",
-  }), [scale]);
+  const zoomStyle = useMemo(() => {
+    // When zoom is at standard 100% (scale is 1.0), omit CSS transform and fractional dimensions.
+    // This allows the browser to run native 60fps compositor scrolling and avoids full-viewport resampling,
+    // while maintaining 100% viewport width and height across all flex parent layouts.
+    if (scale === 1.0) {
+      return {
+        width: "100%",
+        height: "100%",
+        flex: "1 1 0%",
+      };
+    }
+    return {
+      transform: `scale(${scale})`,
+      transformOrigin: "top left",
+      width: `${100 / scale}%`,
+      height: `${100 / scale}%`,
+      flex: "none",
+    };
+  }, [scale]);
 
   return {
     zoomNode,
