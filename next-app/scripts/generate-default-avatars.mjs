@@ -23,6 +23,68 @@ const PALETTES = [
   { label: "Coral", colors: ["#ff7f50", "#ffd1dc", "#20b2aa", "#264653", "#e9c46a"] },
 ];
 
+export const APPLE_AVATAR_NAMES = [
+  // Seed 1 (Ada)
+  "Cupertino",
+  "Monterey",
+  "Sequoia",
+  "Mojave",
+  "Sonoma",
+  "Tangerine",
+  "Space Black",
+  "Rose Gold",
+
+  // Seed 2 (Bryn)
+  "Infinite Loop",
+  "Pacific Blue",
+  "Redwood",
+  "Desert Titanium",
+  "Deep Purple",
+  "Ruby",
+  "Midnight",
+  "Sandstone",
+
+  // Seed 3 (Cato)
+  "Apple Park",
+  "Catalina",
+  "Alpine Green",
+  "Joshua Tree",
+  "Ventura",
+  "Lime",
+  "Starlight",
+  "Coastal",
+
+  // Seed 4 (Dara)
+  "Bondi",
+  "Sierra Blue",
+  "Big Sur",
+  "Solstice",
+  "Nebula",
+  "Prism",
+  "Natural Titanium",
+  "Laguna",
+
+  // Seed 5 (Eli)
+  "Keynote",
+  "Tahoe",
+  "Muir Woods",
+  "El Capitan",
+  "Quartz",
+  "Spectra",
+  "Graphite",
+  "Carmel",
+
+  // Seed 6 (Fenn)
+  "Heritage",
+  "Aqua",
+  "Sage",
+  "Yosemite",
+  "Iris",
+  "Aurora",
+  "Silver",
+  "Malibu",
+];
+
 function uniquifyIds(svg, prefix) {
   const ids = [...svg.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
   let out = svg;
@@ -42,7 +104,7 @@ const entries = [];
 let id = FIRST_ID;
 for (const seedName of SEEDS) {
   for (const palette of PALETTES) {
-    const name = `Avatar ${id}`;
+    const name = APPLE_AVATAR_NAMES[id - 1] || `Avatar ${id}`;
     const seed = `${seedName}-${palette.label}`;
     const markup = renderToStaticMarkup(
       React.createElement(Avatar, { name: seed, variant: VARIANT, colors: palette.colors, size: 40, title: true })

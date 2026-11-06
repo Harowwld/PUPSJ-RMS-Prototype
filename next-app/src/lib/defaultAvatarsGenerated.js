@@ -2,338 +2,338 @@
 export const GENERATED_AVATARS = [
   {
     "id": 1,
-    "name": "Avatar 1",
-    "alt": "Avatar 1",
+    "name": "Cupertino",
+    "alt": "Cupertino",
     "rgb": "128, 0, 0",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 1</title><mask id=\"av1-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av1-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e8a317\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(151 18 18) scale(1.1)\" fill=\"#f5c518\" rx=\"6\"></rect><g transform=\"translate(7 0) rotate(-1 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Cupertino</title><mask id=\"av1-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av1-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e8a317\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(151 18 18) scale(1.1)\" fill=\"#f5c518\" rx=\"6\"></rect><g transform=\"translate(7 0) rotate(-1 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 2,
-    "name": "Avatar 2",
-    "alt": "Avatar 2",
+    "name": "Monterey",
+    "alt": "Monterey",
     "rgb": "11, 61, 145",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 2</title><mask id=\"av2-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av2-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#00bfa6\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(3 5) rotate(161 18 18) scale(1.2)\" fill=\"#1e90ff\" rx=\"36\"></rect><g transform=\"translate(-1 1) rotate(-1 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Monterey</title><mask id=\"av2-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av2-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#00bfa6\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(3 5) rotate(161 18 18) scale(1.2)\" fill=\"#1e90ff\" rx=\"36\"></rect><g transform=\"translate(-1 1) rotate(-1 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 3,
-    "name": "Avatar 3",
-    "alt": "Avatar 3",
+    "name": "Sequoia",
+    "alt": "Sequoia",
     "rgb": "27, 94, 32",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 3</title><mask id=\"av3-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av3-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#66bb6a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-4 8) rotate(308 18 18) scale(1.2)\" fill=\"#f1f8e9\" rx=\"36\"></rect><g transform=\"translate(-4 4) rotate(8 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Sequoia</title><mask id=\"av3-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av3-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#66bb6a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-4 8) rotate(308 18 18) scale(1.2)\" fill=\"#f1f8e9\" rx=\"36\"></rect><g transform=\"translate(-4 4) rotate(8 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 4,
-    "name": "Avatar 4",
-    "alt": "Avatar 4",
+    "name": "Mojave",
+    "alt": "Mojave",
     "rgb": "255, 107, 53",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 4</title><mask id=\"av4-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av4-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f7c59f\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 1) rotate(173 18 18) scale(1.2)\" fill=\"#004e89\" rx=\"6\"></rect><g transform=\"translate(3.5 -5) rotate(3 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Mojave</title><mask id=\"av4-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av4-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f7c59f\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 1) rotate(173 18 18) scale(1.2)\" fill=\"#004e89\" rx=\"6\"></rect><g transform=\"translate(3.5 -5) rotate(3 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 5,
-    "name": "Avatar 5",
-    "alt": "Avatar 5",
+    "name": "Sonoma",
+    "alt": "Sonoma",
     "rgb": "106, 76, 147",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 5</title><mask id=\"av5-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av5-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 6) rotate(162 18 18) scale(1)\" fill=\"#e0aaff\" rx=\"36\"></rect><g transform=\"translate(-2 0) rotate(2 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Sonoma</title><mask id=\"av5-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av5-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 6) rotate(162 18 18) scale(1)\" fill=\"#e0aaff\" rx=\"36\"></rect><g transform=\"translate(-2 0) rotate(2 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 6,
-    "name": "Avatar 6",
-    "alt": "Avatar 6",
+    "name": "Tangerine",
+    "alt": "Tangerine",
     "rgb": "255, 89, 94",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 6</title><mask id=\"av6-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av6-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff595e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(242 18 18) scale(1.2)\" fill=\"#8ac926\" rx=\"36\"></rect><g transform=\"translate(-2 -2) rotate(2 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Tangerine</title><mask id=\"av6-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av6-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff595e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(242 18 18) scale(1.2)\" fill=\"#8ac926\" rx=\"36\"></rect><g transform=\"translate(-2 -2) rotate(2 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 7,
-    "name": "Avatar 7",
-    "alt": "Avatar 7",
+    "name": "Space Black",
+    "alt": "Space Black",
     "rgb": "31, 41, 55",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 7</title><mask id=\"av7-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av7-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1f2937\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(142 18 18) scale(1.1)\" fill=\"#9ca3af\" rx=\"36\"></rect><g transform=\"translate(-6 -3) rotate(2 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Space Black</title><mask id=\"av7-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av7-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1f2937\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(142 18 18) scale(1.1)\" fill=\"#9ca3af\" rx=\"36\"></rect><g transform=\"translate(-6 -3) rotate(2 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 8,
-    "name": "Avatar 8",
-    "alt": "Avatar 8",
+    "name": "Rose Gold",
+    "alt": "Rose Gold",
     "rgb": "255, 127, 80",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 8</title><mask id=\"av8-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av8-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#264653\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(270 18 18) scale(1)\" fill=\"#ff7f50\" rx=\"6\"></rect><g transform=\"translate(6 -2) rotate(0 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Rose Gold</title><mask id=\"av8-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av8-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#264653\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(270 18 18) scale(1)\" fill=\"#ff7f50\" rx=\"6\"></rect><g transform=\"translate(6 -2) rotate(0 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 9,
-    "name": "Avatar 9",
-    "alt": "Avatar 9",
+    "name": "Infinite Loop",
+    "alt": "Infinite Loop",
     "rgb": "128, 0, 0",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 9</title><mask id=\"av9-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av9-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#fff4d6\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(0 8) rotate(264 18 18) scale(1)\" fill=\"#e8a317\" rx=\"36\"></rect><g transform=\"translate(0 4) rotate(4 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Infinite Loop</title><mask id=\"av9-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av9-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#fff4d6\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(0 8) rotate(264 18 18) scale(1)\" fill=\"#e8a317\" rx=\"36\"></rect><g transform=\"translate(0 4) rotate(4 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 10,
-    "name": "Avatar 10",
-    "alt": "Avatar 10",
+    "name": "Pacific Blue",
+    "alt": "Pacific Blue",
     "rgb": "11, 61, 145",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 10</title><mask id=\"av10-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av10-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1e90ff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 8) rotate(318 18 18) scale(1)\" fill=\"#e0f4ff\" rx=\"6\"></rect><g transform=\"translate(4 4) rotate(8 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Pacific Blue</title><mask id=\"av10-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av10-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1e90ff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 8) rotate(318 18 18) scale(1)\" fill=\"#e0f4ff\" rx=\"6\"></rect><g transform=\"translate(4 4) rotate(8 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 11,
-    "name": "Avatar 11",
-    "alt": "Avatar 11",
+    "name": "Redwood",
+    "alt": "Redwood",
     "rgb": "27, 94, 32",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 11</title><mask id=\"av11-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av11-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#a5d6a7\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 3) rotate(251 18 18) scale(1.2)\" fill=\"#66bb6a\" rx=\"6\"></rect><g transform=\"translate(3 -5) rotate(-1 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Redwood</title><mask id=\"av11-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av11-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#a5d6a7\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 3) rotate(251 18 18) scale(1.2)\" fill=\"#66bb6a\" rx=\"6\"></rect><g transform=\"translate(3 -5) rotate(-1 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 12,
-    "name": "Avatar 12",
-    "alt": "Avatar 12",
+    "name": "Desert Titanium",
+    "alt": "Desert Titanium",
     "rgb": "255, 107, 53",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 12</title><mask id=\"av12-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av12-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1a659e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-2 6) rotate(26 18 18) scale(1.2)\" fill=\"#f7c59f\" rx=\"36\"></rect><g transform=\"translate(-2 3) rotate(-6 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Desert Titanium</title><mask id=\"av12-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av12-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1a659e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-2 6) rotate(26 18 18) scale(1.2)\" fill=\"#f7c59f\" rx=\"36\"></rect><g transform=\"translate(-2 3) rotate(-6 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 13,
-    "name": "Avatar 13",
-    "alt": "Avatar 13",
+    "name": "Deep Purple",
+    "alt": "Deep Purple",
     "rgb": "106, 76, 147",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 13</title><mask id=\"av13-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av13-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(37 18 18) scale(1.1)\" fill=\"#e0aaff\" rx=\"6\"></rect><g transform=\"translate(3.5 -1) rotate(-7 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Deep Purple</title><mask id=\"av13-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av13-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(37 18 18) scale(1.1)\" fill=\"#e0aaff\" rx=\"6\"></rect><g transform=\"translate(3.5 -1) rotate(-7 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 14,
-    "name": "Avatar 14",
-    "alt": "Avatar 14",
+    "name": "Ruby",
+    "alt": "Ruby",
     "rgb": "255, 89, 94",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 14</title><mask id=\"av14-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av14-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff595e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(237 18 18) scale(1)\" fill=\"#8ac926\" rx=\"6\"></rect><g transform=\"translate(3.5 -3) rotate(-7 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Ruby</title><mask id=\"av14-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av14-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff595e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(237 18 18) scale(1)\" fill=\"#8ac926\" rx=\"6\"></rect><g transform=\"translate(3.5 -3) rotate(-7 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 15,
-    "name": "Avatar 15",
-    "alt": "Avatar 15",
+    "name": "Midnight",
+    "alt": "Midnight",
     "rgb": "31, 41, 55",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 15</title><mask id=\"av15-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av15-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1f2937\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(337 18 18) scale(1.1)\" fill=\"#9ca3af\" rx=\"6\"></rect><g transform=\"translate(3.5 -2) rotate(-7 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Midnight</title><mask id=\"av15-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av15-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1f2937\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(337 18 18) scale(1.1)\" fill=\"#9ca3af\" rx=\"6\"></rect><g transform=\"translate(3.5 -2) rotate(-7 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 16,
-    "name": "Avatar 16",
-    "alt": "Avatar 16",
+    "name": "Sandstone",
+    "alt": "Sandstone",
     "rgb": "255, 127, 80",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 16</title><mask id=\"av16-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av16-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#20b2aa\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 -5) rotate(209 18 18) scale(1.2)\" fill=\"#e9c46a\" rx=\"36\"></rect><g transform=\"translate(-1 -3) rotate(9 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Sandstone</title><mask id=\"av16-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av16-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#20b2aa\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 -5) rotate(209 18 18) scale(1.2)\" fill=\"#e9c46a\" rx=\"36\"></rect><g transform=\"translate(-1 -3) rotate(9 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 17,
-    "name": "Avatar 17",
-    "alt": "Avatar 17",
+    "name": "Apple Park",
+    "alt": "Apple Park",
     "rgb": "128, 0, 0",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 17</title><mask id=\"av17-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av17-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#5a0000\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(260 18 18) scale(1.2)\" fill=\"#800000\" rx=\"36\"></rect><g transform=\"translate(-4 5) rotate(0 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Apple Park</title><mask id=\"av17-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av17-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#5a0000\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(260 18 18) scale(1.2)\" fill=\"#800000\" rx=\"36\"></rect><g transform=\"translate(-4 5) rotate(0 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 18,
-    "name": "Avatar 18",
-    "alt": "Avatar 18",
+    "name": "Catalina",
+    "alt": "Catalina",
     "rgb": "11, 61, 145",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 18</title><mask id=\"av18-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av18-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e0f4ff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(250 18 18) scale(1.1)\" fill=\"#0b3d91\" rx=\"6\"></rect><g transform=\"translate(2 -2) rotate(0 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Catalina</title><mask id=\"av18-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av18-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e0f4ff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(250 18 18) scale(1.1)\" fill=\"#0b3d91\" rx=\"6\"></rect><g transform=\"translate(2 -2) rotate(0 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 19,
-    "name": "Avatar 19",
-    "alt": "Avatar 19",
+    "name": "Alpine Green",
+    "alt": "Alpine Green",
     "rgb": "27, 94, 32",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 19</title><mask id=\"av19-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av19-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#66bb6a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(1 7) rotate(343 18 18) scale(1.1)\" fill=\"#f1f8e9\" rx=\"36\"></rect><g transform=\"translate(-7 3.5) rotate(3 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Alpine Green</title><mask id=\"av19-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av19-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#66bb6a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(1 7) rotate(343 18 18) scale(1.1)\" fill=\"#f1f8e9\" rx=\"36\"></rect><g transform=\"translate(-7 3.5) rotate(3 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 20,
-    "name": "Avatar 20",
-    "alt": "Avatar 20",
+    "name": "Joshua Tree",
+    "alt": "Joshua Tree",
     "rgb": "255, 107, 53",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 20</title><mask id=\"av20-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av20-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f7c59f\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 8) rotate(118 18 18) scale(1.1)\" fill=\"#004e89\" rx=\"6\"></rect><g transform=\"translate(4 4) rotate(8 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Joshua Tree</title><mask id=\"av20-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av20-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f7c59f\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 8) rotate(118 18 18) scale(1.1)\" fill=\"#004e89\" rx=\"6\"></rect><g transform=\"translate(4 4) rotate(8 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 21,
-    "name": "Avatar 21",
-    "alt": "Avatar 21",
+    "name": "Ventura",
+    "alt": "Ventura",
     "rgb": "106, 76, 147",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 21</title><mask id=\"av21-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av21-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e0aaff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 -5) rotate(129 18 18) scale(1)\" fill=\"#ff9ecd\" rx=\"36\"></rect><g transform=\"translate(-1 -1) rotate(9 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Ventura</title><mask id=\"av21-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av21-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e0aaff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 -5) rotate(129 18 18) scale(1)\" fill=\"#ff9ecd\" rx=\"36\"></rect><g transform=\"translate(-1 -1) rotate(9 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 22,
-    "name": "Avatar 22",
-    "alt": "Avatar 22",
+    "name": "Lime",
+    "alt": "Lime",
     "rgb": "255, 89, 94",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 22</title><mask id=\"av22-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av22-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#8ac926\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 9) rotate(169 18 18) scale(1.1)\" fill=\"#6a4c93\" rx=\"36\"></rect><g transform=\"translate(-1 4.5) rotate(-9 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Lime</title><mask id=\"av22-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av22-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#8ac926\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 9) rotate(169 18 18) scale(1.1)\" fill=\"#6a4c93\" rx=\"36\"></rect><g transform=\"translate(-1 4.5) rotate(-9 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 23,
-    "name": "Avatar 23",
-    "alt": "Avatar 23",
+    "name": "Starlight",
+    "alt": "Starlight",
     "rgb": "31, 41, 55",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 23</title><mask id=\"av23-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av23-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#9ca3af\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 9) rotate(269 18 18) scale(1.2)\" fill=\"#f9fafb\" rx=\"36\"></rect><g transform=\"translate(-5 4.5) rotate(-9 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Starlight</title><mask id=\"av23-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av23-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#9ca3af\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-5 9) rotate(269 18 18) scale(1.2)\" fill=\"#f9fafb\" rx=\"36\"></rect><g transform=\"translate(-5 4.5) rotate(-9 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 24,
-    "name": "Avatar 24",
-    "alt": "Avatar 24",
+    "name": "Coastal",
+    "alt": "Coastal",
     "rgb": "255, 127, 80",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 24</title><mask id=\"av24-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av24-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e9c46a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(3 5) rotate(141 18 18) scale(1)\" fill=\"#ffd1dc\" rx=\"36\"></rect><g transform=\"translate(-5 1) rotate(1 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Coastal</title><mask id=\"av24-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av24-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e9c46a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(3 5) rotate(141 18 18) scale(1)\" fill=\"#ffd1dc\" rx=\"36\"></rect><g transform=\"translate(-5 1) rotate(1 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 25,
-    "name": "Avatar 25",
-    "alt": "Avatar 25",
+    "name": "Bondi",
+    "alt": "Bondi",
     "rgb": "128, 0, 0",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 25</title><mask id=\"av25-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av25-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#5a0000\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 -1) rotate(175 18 18) scale(1.1)\" fill=\"#800000\" rx=\"6\"></rect><g transform=\"translate(7 -5) rotate(5 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Bondi</title><mask id=\"av25-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av25-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#5a0000\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 -1) rotate(175 18 18) scale(1.1)\" fill=\"#800000\" rx=\"6\"></rect><g transform=\"translate(7 -5) rotate(5 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 26,
-    "name": "Avatar 26",
-    "alt": "Avatar 26",
+    "name": "Sierra Blue",
+    "alt": "Sierra Blue",
     "rgb": "11, 61, 145",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 26</title><mask id=\"av26-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av26-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#00bfa6\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(251 18 18) scale(1.2)\" fill=\"#1e90ff\" rx=\"6\"></rect><g transform=\"translate(3 6) rotate(-1 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Sierra Blue</title><mask id=\"av26-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av26-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#00bfa6\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(251 18 18) scale(1.2)\" fill=\"#1e90ff\" rx=\"6\"></rect><g transform=\"translate(3 6) rotate(-1 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 27,
-    "name": "Avatar 27",
-    "alt": "Avatar 27",
+    "name": "Big Sur",
+    "alt": "Big Sur",
     "rgb": "27, 94, 32",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 27</title><mask id=\"av27-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av27-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f1f8e9\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(350 18 18) scale(1.2)\" fill=\"#1b5e20\" rx=\"6\"></rect><g transform=\"translate(6 4) rotate(0 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Big Sur</title><mask id=\"av27-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av27-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f1f8e9\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(350 18 18) scale(1.2)\" fill=\"#1b5e20\" rx=\"6\"></rect><g transform=\"translate(6 4) rotate(0 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 28,
-    "name": "Avatar 28",
-    "alt": "Avatar 28",
+    "name": "Solstice",
+    "alt": "Solstice",
     "rgb": "255, 107, 53",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 28</title><mask id=\"av28-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av28-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#004e89\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 -1) rotate(215 18 18) scale(1.2)\" fill=\"#ff6b35\" rx=\"6\"></rect><g transform=\"translate(7 -6) rotate(-5 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Solstice</title><mask id=\"av28-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av28-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#004e89\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 -1) rotate(215 18 18) scale(1.2)\" fill=\"#ff6b35\" rx=\"6\"></rect><g transform=\"translate(7 -6) rotate(-5 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 29,
-    "name": "Avatar 29",
-    "alt": "Avatar 29",
+    "name": "Nebula",
+    "alt": "Nebula",
     "rgb": "106, 76, 147",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 29</title><mask id=\"av29-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av29-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e0aaff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(0 8) rotate(204 18 18) scale(1)\" fill=\"#ff9ecd\" rx=\"36\"></rect><g transform=\"translate(-4 4) rotate(4 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Nebula</title><mask id=\"av29-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av29-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e0aaff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(0 8) rotate(204 18 18) scale(1)\" fill=\"#ff9ecd\" rx=\"36\"></rect><g transform=\"translate(-4 4) rotate(4 18 18)\"><path d=\"M13,19 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 30,
-    "name": "Avatar 30",
-    "alt": "Avatar 30",
+    "name": "Prism",
+    "alt": "Prism",
     "rgb": "255, 89, 94",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 30</title><mask id=\"av30-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av30-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff595e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(6 2) rotate(332 18 18) scale(1.2)\" fill=\"#8ac926\" rx=\"6\"></rect><g transform=\"translate(4 0) rotate(2 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Prism</title><mask id=\"av30-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av30-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff595e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(6 2) rotate(332 18 18) scale(1.2)\" fill=\"#8ac926\" rx=\"6\"></rect><g transform=\"translate(4 0) rotate(2 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 31,
-    "name": "Avatar 31",
-    "alt": "Avatar 31",
+    "name": "Natural Titanium",
+    "alt": "Natural Titanium",
     "rgb": "31, 41, 55",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 31</title><mask id=\"av31-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av31-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1f2937\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(6 2) rotate(232 18 18) scale(1.1)\" fill=\"#9ca3af\" rx=\"6\"></rect><g transform=\"translate(0 -1) rotate(2 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Natural Titanium</title><mask id=\"av31-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av31-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1f2937\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(6 2) rotate(232 18 18) scale(1.1)\" fill=\"#9ca3af\" rx=\"6\"></rect><g transform=\"translate(0 -1) rotate(2 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 32,
-    "name": "Avatar 32",
-    "alt": "Avatar 32",
+    "name": "Laguna",
+    "alt": "Laguna",
     "rgb": "255, 127, 80",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 32</title><mask id=\"av32-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av32-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#264653\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(0 18 18) scale(1)\" fill=\"#ff7f50\" rx=\"36\"></rect><g transform=\"translate(0 0) rotate(0 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Laguna</title><mask id=\"av32-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av32-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#264653\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(0 18 18) scale(1)\" fill=\"#ff7f50\" rx=\"36\"></rect><g transform=\"translate(0 0) rotate(0 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 33,
-    "name": "Avatar 33",
-    "alt": "Avatar 33",
+    "name": "Keynote",
+    "alt": "Keynote",
     "rgb": "128, 0, 0",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 33</title><mask id=\"av33-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av33-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e8a317\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(251 18 18) scale(1.2)\" fill=\"#f5c518\" rx=\"6\"></rect><g transform=\"translate(3 3) rotate(-1 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Keynote</title><mask id=\"av33-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av33-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e8a317\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(251 18 18) scale(1.2)\" fill=\"#f5c518\" rx=\"6\"></rect><g transform=\"translate(3 3) rotate(-1 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 34,
-    "name": "Avatar 34",
-    "alt": "Avatar 34",
+    "name": "Tahoe",
+    "alt": "Tahoe",
     "rgb": "11, 61, 145",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 34</title><mask id=\"av34-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av34-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1e90ff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 7) rotate(133 18 18) scale(1.1)\" fill=\"#e0f4ff\" rx=\"6\"></rect><g transform=\"translate(3.5 3.5) rotate(3 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Tahoe</title><mask id=\"av34-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av34-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1e90ff\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 7) rotate(133 18 18) scale(1.1)\" fill=\"#e0f4ff\" rx=\"6\"></rect><g transform=\"translate(3.5 3.5) rotate(3 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 35,
-    "name": "Avatar 35",
-    "alt": "Avatar 35",
+    "name": "Muir Woods",
+    "alt": "Muir Woods",
     "rgb": "27, 94, 32",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 35</title><mask id=\"av35-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av35-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#a5d6a7\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(6 -2) rotate(256 18 18) scale(1.1)\" fill=\"#66bb6a\" rx=\"6\"></rect><g transform=\"translate(0 -3) rotate(6 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Muir Woods</title><mask id=\"av35-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av35-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#a5d6a7\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(6 -2) rotate(256 18 18) scale(1.1)\" fill=\"#66bb6a\" rx=\"6\"></rect><g transform=\"translate(0 -3) rotate(6 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 36,
-    "name": "Avatar 36",
-    "alt": "Avatar 36",
+    "name": "El Capitan",
+    "alt": "El Capitan",
     "rgb": "255, 107, 53",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 36</title><mask id=\"av36-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av36-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1a659e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(31 18 18) scale(1.1)\" fill=\"#f7c59f\" rx=\"6\"></rect><g transform=\"translate(7 1) rotate(1 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>El Capitan</title><mask id=\"av36-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av36-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1a659e\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(5 5) rotate(31 18 18) scale(1.1)\" fill=\"#f7c59f\" rx=\"6\"></rect><g transform=\"translate(7 1) rotate(1 18 18)\"><path d=\"M13,20 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"13\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"21\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 37,
-    "name": "Avatar 37",
-    "alt": "Avatar 37",
+    "name": "Quartz",
+    "alt": "Quartz",
     "rgb": "106, 76, 147",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 37</title><mask id=\"av37-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av37-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(42 18 18) scale(1)\" fill=\"#e0aaff\" rx=\"36\"></rect><g transform=\"translate(-2 -6) rotate(2 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Quartz</title><mask id=\"av37-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av37-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(42 18 18) scale(1)\" fill=\"#e0aaff\" rx=\"36\"></rect><g transform=\"translate(-2 -6) rotate(2 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 38,
-    "name": "Avatar 38",
-    "alt": "Avatar 38",
+    "name": "Spectra",
+    "alt": "Spectra",
     "rgb": "255, 89, 94",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 38</title><mask id=\"av38-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av38-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#8ac926\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 0) rotate(214 18 18) scale(1.1)\" fill=\"#6a4c93\" rx=\"6\"></rect><g transform=\"translate(4 -4) rotate(-4 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Spectra</title><mask id=\"av38-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av38-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#8ac926\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 0) rotate(214 18 18) scale(1.1)\" fill=\"#6a4c93\" rx=\"6\"></rect><g transform=\"translate(4 -4) rotate(-4 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 39,
-    "name": "Avatar 39",
-    "alt": "Avatar 39",
+    "name": "Graphite",
+    "alt": "Graphite",
     "rgb": "31, 41, 55",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 39</title><mask id=\"av39-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av39-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#9ca3af\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 0) rotate(114 18 18) scale(1)\" fill=\"#f9fafb\" rx=\"6\"></rect><g transform=\"translate(4 -5) rotate(-4 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Graphite</title><mask id=\"av39-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av39-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#9ca3af\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(8 0) rotate(114 18 18) scale(1)\" fill=\"#f9fafb\" rx=\"6\"></rect><g transform=\"translate(4 -5) rotate(-4 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 40,
-    "name": "Avatar 40",
-    "alt": "Avatar 40",
+    "name": "Carmel",
+    "alt": "Carmel",
     "rgb": "255, 127, 80",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 40</title><mask id=\"av40-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av40-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff7f50\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(242 18 18) scale(1.2)\" fill=\"#20b2aa\" rx=\"36\"></rect><g transform=\"translate(-2 -4) rotate(-2 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Carmel</title><mask id=\"av40-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av40-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ff7f50\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(2 2) rotate(242 18 18) scale(1.2)\" fill=\"#20b2aa\" rx=\"36\"></rect><g transform=\"translate(-2 -4) rotate(-2 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 41,
-    "name": "Avatar 41",
-    "alt": "Avatar 41",
+    "name": "Heritage",
+    "alt": "Heritage",
     "rgb": "128, 0, 0",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 41</title><mask id=\"av41-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av41-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#5a0000\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(330 18 18) scale(1)\" fill=\"#800000\" rx=\"6\"></rect><g transform=\"translate(2 -1) rotate(0 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Heritage</title><mask id=\"av41-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av41-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#5a0000\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(4 4) rotate(330 18 18) scale(1)\" fill=\"#800000\" rx=\"6\"></rect><g transform=\"translate(2 -1) rotate(0 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 42,
-    "name": "Avatar 42",
-    "alt": "Avatar 42",
+    "name": "Aqua",
+    "alt": "Aqua",
     "rgb": "11, 61, 145",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 42</title><mask id=\"av42-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av42-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#87cefa\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(0 0) rotate(104 18 18) scale(1.2)\" fill=\"#00bfa6\" rx=\"36\"></rect><g transform=\"translate(0 -6) rotate(4 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Aqua</title><mask id=\"av42-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av42-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#87cefa\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(0 0) rotate(104 18 18) scale(1.2)\" fill=\"#00bfa6\" rx=\"36\"></rect><g transform=\"translate(0 -6) rotate(4 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"10\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"24\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 43,
-    "name": "Avatar 43",
-    "alt": "Avatar 43",
+    "name": "Sage",
+    "alt": "Sage",
     "rgb": "27, 94, 32",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 43</title><mask id=\"av43-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av43-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#66bb6a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(1 1) rotate(83 18 18) scale(1.2)\" fill=\"#f1f8e9\" rx=\"36\"></rect><g transform=\"translate(-3 -3) rotate(-3 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Sage</title><mask id=\"av43-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av43-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#66bb6a\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(1 1) rotate(83 18 18) scale(1.2)\" fill=\"#f1f8e9\" rx=\"36\"></rect><g transform=\"translate(-3 -3) rotate(-3 18 18)\"><path d=\"M15 21c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 44,
-    "name": "Avatar 44",
-    "alt": "Avatar 44",
+    "name": "Yosemite",
+    "alt": "Yosemite",
     "rgb": "255, 107, 53",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 44</title><mask id=\"av44-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av44-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f7c59f\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-4 8) rotate(308 18 18) scale(1.2)\" fill=\"#004e89\" rx=\"36\"></rect><g transform=\"translate(-4 4) rotate(-8 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Yosemite</title><mask id=\"av44-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av44-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#f7c59f\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-4 8) rotate(308 18 18) scale(1.2)\" fill=\"#004e89\" rx=\"36\"></rect><g transform=\"translate(-4 4) rotate(-8 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#FFFFFF\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 45,
-    "name": "Avatar 45",
-    "alt": "Avatar 45",
+    "name": "Iris",
+    "alt": "Iris",
     "rgb": "106, 76, 147",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 45</title><mask id=\"av45-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av45-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(297 18 18) scale(1)\" fill=\"#e0aaff\" rx=\"6\"></rect><g transform=\"translate(3.5 0) rotate(7 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Iris</title><mask id=\"av45-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av45-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#6a4c93\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 -3) rotate(297 18 18) scale(1)\" fill=\"#e0aaff\" rx=\"6\"></rect><g transform=\"translate(3.5 0) rotate(7 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#000000\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"12\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"22\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 46,
-    "name": "Avatar 46",
-    "alt": "Avatar 46",
+    "name": "Aurora",
+    "alt": "Aurora",
     "rgb": "255, 89, 94",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 46</title><mask id=\"av46-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av46-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1982c4\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-1 5) rotate(185 18 18) scale(1.2)\" fill=\"#ff595e\" rx=\"36\"></rect><g transform=\"translate(-1 0) rotate(-5 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Aurora</title><mask id=\"av46-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av46-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#1982c4\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-1 5) rotate(185 18 18) scale(1.2)\" fill=\"#ff595e\" rx=\"36\"></rect><g transform=\"translate(-1 0) rotate(-5 18 18)\"><path d=\"M13,21 a1,0.75 0 0,0 10,0\" fill=\"#000000\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#000000\"></rect></g></g></svg>"
   },
   {
     "id": 47,
-    "name": "Avatar 47",
-    "alt": "Avatar 47",
+    "name": "Silver",
+    "alt": "Silver",
     "rgb": "31, 41, 55",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 47</title><mask id=\"av47-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av47-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e5e7eb\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-1 -1) rotate(85 18 18) scale(1.1)\" fill=\"#1f2937\" rx=\"36\"></rect><g transform=\"translate(-5 -1) rotate(-5 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Silver</title><mask id=\"av47-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av47-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#e5e7eb\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(-1 -1) rotate(85 18 18) scale(1.1)\" fill=\"#1f2937\" rx=\"36\"></rect><g transform=\"translate(-5 -1) rotate(-5 18 18)\"><path d=\"M15 20c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"14\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"20\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   },
   {
     "id": 48,
-    "name": "Avatar 48",
-    "alt": "Avatar 48",
+    "name": "Malibu",
+    "alt": "Malibu",
     "rgb": "255, 127, 80",
-    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Avatar 48</title><mask id=\"av48-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av48-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ffd1dc\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 1) rotate(213 18 18) scale(1)\" fill=\"#264653\" rx=\"6\"></rect><g transform=\"translate(3.5 0) rotate(3 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
+    "svgString": "<svg viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\"><title>Malibu</title><mask id=\"av48-_R_0_\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"0\" width=\"36\" height=\"36\"><rect width=\"36\" height=\"36\" rx=\"72\" fill=\"#FFFFFF\"></rect></mask><g mask=\"url(#av48-_R_0_)\"><rect width=\"36\" height=\"36\" fill=\"#ffd1dc\"></rect><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" transform=\"translate(7 1) rotate(213 18 18) scale(1)\" fill=\"#264653\" rx=\"6\"></rect><g transform=\"translate(3.5 0) rotate(3 18 18)\"><path d=\"M15 19c2 1 4 1 6 0\" stroke=\"#FFFFFF\" fill=\"none\" stroke-linecap=\"round\"></path><rect x=\"11\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect><rect x=\"23\" y=\"14\" width=\"1.5\" height=\"2\" rx=\"1\" stroke=\"none\" fill=\"#FFFFFF\"></rect></g></g></svg>"
   }
 ];
