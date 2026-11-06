@@ -3,7 +3,7 @@
   border-spacing: 0;
   --table-divider: var(--color-gray-200, #e5e7eb);
   --table-surface: #fff;
-  --table-header: #f9fafb;
+  --table-header: #fff;
 }
 .data-view-toolbar {
   display: flex;

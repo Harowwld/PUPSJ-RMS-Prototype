@@ -1249,7 +1249,7 @@ export default function OsasMonitoringTab({ showToast }) {
   return (
     <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Active Filters, Table & Kanban */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Page Header */}
         <PageHeader
           icon="CalendarCheckIn01Icon"
@@ -1267,8 +1267,8 @@ export default function OsasMonitoringTab({ showToast }) {
         />
 
         {/* 2. Stream, Search, Filter, and Horizontal Scroll Toolbar */}
-        <DataViewToolbar label="OSAS stream, search, and filters" className="border-t border-border dark:border-border bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30 gap-3">
-          <div className="flex w-full items-center gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-gray-200/60 p-1 scrollbar-none dark:border-border dark:bg-zinc-800/80 xl:w-fit">
+        <DataViewToolbar label="OSAS stream, search, and filters" className="border-t border-border dark:border-border bg-white px-5 py-3 dark:bg-card gap-3">
+          <div className="grid grid-flow-col auto-cols-fr items-center gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-gray-200/60 p-1 scrollbar-none dark:border-border dark:bg-zinc-800/80 xl:w-fit">
             <button
               type="button"
               onClick={() => {
@@ -1280,7 +1280,7 @@ export default function OsasMonitoringTab({ showToast }) {
               }}
               aria-pressed={activeStream === "proposals"}
               className={cn(
-                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 activeStream === "proposals"
                   ? "bg-pup-maroon text-white shadow-xs"
                   : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -1303,7 +1303,7 @@ export default function OsasMonitoringTab({ showToast }) {
               }}
               aria-pressed={activeStream === "post_events"}
               className={cn(
-                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
+                "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 activeStream === "post_events"
                   ? "bg-pup-maroon text-white shadow-xs"
                   : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -1344,7 +1344,7 @@ export default function OsasMonitoringTab({ showToast }) {
             </div>
 
             {(activeStream === "proposals" || activeStream === "post_events") && (
-              <div role="group" aria-label="OSAS submission view" className="inline-flex shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+              <div role="group" aria-label="OSAS submission view" className="inline-grid grid-flow-col auto-cols-fr shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
                 {[{ mode: "list", label: "List" }, { mode: "table", label: "Table" }, { mode: "kanban", label: "Kanban" }].map(({ mode, label }) => {
                   const isSelected = viewMode === mode;
                   return (
@@ -1354,7 +1354,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       onClick={() => handleViewModeChange(mode)}
                       aria-pressed={isSelected}
                       className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
+                        "inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
                         isSelected
                           ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                           : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"

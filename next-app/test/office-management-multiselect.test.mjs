@@ -144,20 +144,12 @@ test("OfficeManagementTab.js and OfficeGridSkeleton.js file verification", async
   assert.match(skeletonContent, /<th className=["']w-12 p-4 text-center align-middle["']>/);
   assert.match(skeletonContent, /<td className=["']w-12 p-4 align-middle text-center["']>/);
 
-  // Verify Grid card top banner uses accent color, includes icon, and has no right watermark
-  assert.match(officeContent, /\{\/\* Office Accent Banner \*\/\}/);
-  assert.match(officeContent, /rounded-t-\[15px\]/);
-  assert.match(officeContent, /linear-gradient\(135deg, \$\{accent\}/);
-  assert.match(officeContent, /const accent = office\.accent_color \|\| "#800000"/);
-  assert.match(officeContent, /rounded-2xl flex flex-col justify-between p-0 py-0 gap-0/);
-  // Verify icon is inside the banner and right-side watermark is removed
-  assert.match(officeContent, /\{\/\* Office Accent Banner \*\/\}[\s\S]*?<HugeIcon[\s\S]*?office\.icon/);
-  assert.ok(!officeContent.includes("Ambient watermark"), "Right-side watermark icon should be removed");
+  // Verify FloatingActionBar includes secondary copy action
+  assert.match(officeContent, /label: "Copy Codes"/);
+  assert.match(officeContent, /copiedLabel: "Copied Codes"/);
 
-  // Verify Skeleton grid card has matching banner skeleton with icon and border radius
-  assert.match(skeletonContent, /\{\/\* Top Banner Skeleton \*\/\}/);
-  assert.match(skeletonContent, /h-\[72px\] w-full rounded-t-\[15px\]/);
-  assert.match(skeletonContent, /rounded-2xl flex flex-col justify-between p-0 py-0 gap-0/);
-  assert.match(skeletonContent, /\{\/\* Top Banner Skeleton \*\/\}[\s\S]*?<Skeleton className=["']h-11 w-11 rounded-xl/);
+  // Verify storage path copy action is wired with interactive feedback
+  assert.match(officeContent, /handleCopyStoragePath/);
+  assert.match(officeContent, /copiedStorageId === office\.id/);
 });
 

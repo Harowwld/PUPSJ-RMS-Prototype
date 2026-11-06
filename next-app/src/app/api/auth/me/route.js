@@ -201,6 +201,7 @@ export async function GET(req) {
       navigation_layout: "sidebar",
       skip_registration_confirmation: false,
       high_contrast: false,
+      reduce_motion: false,
       zoom_node: 3,
     };
 

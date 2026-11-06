@@ -570,7 +570,7 @@ export default function AccountSetupModal({ authUser }) {
                     </div>
                   </div>
                   <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                    Selected: Avatar {selectedAvatarId}
+                    Selected: {DEFAULT_AVATARS.find((a) => a.id === selectedAvatarId)?.name || `Avatar ${selectedAvatarId}`}
                   </span>
                 </div>
 

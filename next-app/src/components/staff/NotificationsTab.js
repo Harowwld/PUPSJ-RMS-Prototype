@@ -522,7 +522,7 @@ export default function NotificationsTab({
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* Main Card Container encapsulating Header, Toolbar, Feed & Pagination */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
             icon="Notification01Icon"
@@ -576,14 +576,14 @@ export default function NotificationsTab({
           />
 
           {/* 2. Navigation Toolbar: Read / Unread Tabs ONLY */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+          <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
             {/* Left: Segmented Control Tabs */}
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none overflow-x-auto">
+            <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab("unread")}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                   activeTab === "unread"
                     ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                     : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
@@ -605,7 +605,7 @@ export default function NotificationsTab({
                 type="button"
                 onClick={() => setActiveTab("read")}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                   activeTab === "read"
                     ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                     : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
@@ -1058,7 +1058,7 @@ export default function NotificationsTab({
                                     className={cn(
                                       "text-xs",
                                       copiedKey === "student_no"
-                                        ? " Tick01Icon text-emerald-600"
+                                        ? " Tick01Icon text-gray-600 dark:text-zinc-300"
                                         : " Copy01Icon"
                                     )}
                                   />
@@ -1218,7 +1218,26 @@ export default function NotificationsTab({
             </SheetFooter>
           </SheetContent>
         </Sheet>
-        <PDFPreviewModal open={!!pdfPreview} onClose={() => setPdfPreview(null)} preview={pdfPreview} />
+        <PDFPreviewModal
+          open={!!pdfPreview}
+          onClose={() => setPdfPreview(null)}
+          preview={pdfPreview}
+          onUpdate={
+            selectedNotif && onRescan && !selectedNotif.source_type
+              ? () => {
+                  setPdfPreview(null);
+                  setSheetOpen(false);
+                  onRescan(
+                    selectedNotif.student_no,
+                    selectedNotif.doc_type,
+                    selectedNotif.entity_id || selectedNotif.metadata?.document_id,
+                    selectedNotif.original_filename,
+                    selectedNotif.mime_type
+                  );
+                }
+              : undefined
+          }
+        />
       </div>
     </TooltipProvider>
   );

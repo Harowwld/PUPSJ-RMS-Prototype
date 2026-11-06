@@ -1,6 +1,6 @@
-# PUPSJ-RMS Documentation Directory
+# PUPSJ-RKS Documentation Directory
 
-This directory contains technical specifications, architectural references, and quality verification documents for the **PUPSJ Records Management System (PUPSJ-RMS)** prototype.
+This directory contains technical specifications, architectural references, and quality verification documents for the **PUPSJ Records Keeping System (PUPSJ-RKS)** prototype.
 
 ---
 

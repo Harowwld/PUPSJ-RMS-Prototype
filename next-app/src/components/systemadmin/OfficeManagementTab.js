@@ -46,7 +46,7 @@ import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
 import useTableScroll from "@/hooks/useTableScroll"
 import OfficeTableControls from "@/components/systemadmin/OfficeTableControls"
 import OfficeActionsMenu from "@/components/systemadmin/OfficeActionsMenu"
-import { Add01Icon, Archive01Icon as EmptyArchive01Icon, Building01Icon, Building02Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, ComputerIcon, Copy01Icon, Folder01Icon, LayoutGridIcon, UserSearch01Icon, Search01Icon } from "hugeicons-react";
+import { Add01Icon, Archive01Icon as EmptyArchive01Icon, Building01Icon, Building02Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, ComputerIcon, Copy01Icon, Folder01Icon, LayoutGridIcon, UserSearch01Icon, Search01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import ColorSelector, { REFERENCE_ACCENT_COLORS } from "@/components/ui/color-selector";
 // Stored icons may use either the " Cancel01Icon" or " Cancel01Icon" prefix, so compare by bare icon name.
@@ -202,6 +202,17 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [layoutView, setLayoutView] = useViewPreference("offices", "layoutView", "grid")
   const [visibleColumns, setVisibleColumns] = useViewPreference("offices", "visibleColumns", ["department", "office", "station", "staff", "modules", "status"])
   const [groupBy, setGroupBy] = useViewPreference("offices", "groupBy", "none")
+  const [copiedStorageId, setCopiedStorageId] = useState(null)
+
+  const handleCopyStoragePath = useCallback((path, officeId) => {
+    if (!path) return
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(path)
+      showToast("Storage path copied to clipboard")
+      setCopiedStorageId(officeId)
+      setTimeout(() => setCopiedStorageId((curr) => (curr === officeId ? null : curr)), 2000)
+    }
+  }, [showToast])
 
   // Multi-Selection State & Batch Actions
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -875,7 +886,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon=" Building01Icon"
           title={
@@ -903,8 +914,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           }
         />
 
-        <div className="flex items-center justify-between gap-4 overflow-x-auto px-6 py-2.5 scrollbar-none border-b border-border/80 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-white/10">
-          <div role="group" aria-label="Department status" className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+        <div className="flex items-center justify-between gap-4 overflow-x-auto px-6 py-2.5 scrollbar-none border-b border-border bg-white dark:bg-card dark:border-white/10">
+          <div role="group" aria-label="Department status" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
             {[{ key: "Active", label: "Active", count: stats.active }, { key: "Inactive", label: "Archived", count: stats.inactive }].map(({ key, label, count }) => {
               const isSelected = statusFilter === key;
               return (
@@ -914,7 +925,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   onClick={() => setStatusFilter(key)}
                   aria-pressed={isSelected}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
                     isSelected
                       ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -936,7 +947,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             })}
           </div>
 
-          <div role="group" aria-label="Department display" className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none ml-auto">
+          <div role="group" aria-label="Department display" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none ml-auto">
             {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => {
               const isSelected = layoutView === mode;
               return (
@@ -946,7 +957,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   onClick={() => setLayoutView(mode)}
                   aria-pressed={isSelected}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
                     isSelected
                       ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -1161,15 +1172,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    if (navigator?.clipboard?.writeText) {
-                                      navigator.clipboard.writeText(storagePath)
-                                      showToast("Storage path copied to clipboard")
-                                    }
+                                    handleCopyStoragePath(storagePath, office.id)
                                   }}
                                   className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                                   title="Copy path"
                                 >
-                                  <Copy01Icon size="1em" className="text-[11px]" />
+                                  {copiedStorageId === office.id ? (
+                                    <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                                  ) : (
+                                    <Copy01Icon size="1em" className="text-[11px]" />
+                                  )}
                                 </button>
                               </div>
                             </div>
@@ -1479,15 +1491,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation()
-                                      if (navigator?.clipboard?.writeText) {
-                                        navigator.clipboard.writeText(office.storage_path || `.local/storage/${office.id}`)
-                                        showToast("Storage path copied to clipboard")
-                                      }
+                                      handleCopyStoragePath(office.storage_path || `.local/storage/${office.id}`, office.id)
                                     }}
                                     className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                                     title="Copy storage path"
                                   >
-                                    <Copy01Icon size="1em" className="text-[11px]" />
+                                    {copiedStorageId === office.id ? (
+                                      <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                                    ) : (
+                                      <Copy01Icon size="1em" className="text-[11px]" />
+                                    )}
                                   </button>
                                 </div>
                               </div>
@@ -2099,6 +2112,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         secondaryActions={[
           {
             label: "Copy Codes",
+            copiedLabel: "Copied Codes",
             onClick: handleCopyCodes,
           },
         ]}

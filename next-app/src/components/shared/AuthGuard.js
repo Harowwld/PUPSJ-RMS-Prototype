@@ -14,6 +14,12 @@ import {
   applyReduceMotionClass,
   getReduceMotionPreference,
   setReduceMotionPreference,
+  applyFontSizeClass,
+  getFontSizePreference,
+  setFontSizePreference,
+  applyPointerCursorClass,
+  getPointerCursorPreference,
+  setPointerCursorPreference,
 } from "@/lib/accessibility"
 
 export const AuthUserContext = createContext(null)
@@ -68,7 +74,7 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
           }
         }
 
-        // Setup accessibility scaling, high contrast, and reduce motion preferences
+        // Setup accessibility scaling, high contrast, reduce motion, font size, and pointer cursor preferences
         if (user && user.id) {
           let highContrast = user.preferences?.high_contrast;
           if (typeof highContrast === "boolean") {
@@ -84,6 +90,22 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
           } else {
             reduceMotion = getReduceMotionPreference(user.id);
             applyReduceMotionClass(reduceMotion);
+          }
+
+          let fontSize = user.preferences?.font_size;
+          if (fontSize) {
+            setFontSizePreference(fontSize, user.id);
+          } else {
+            fontSize = getFontSizePreference(user.id);
+            applyFontSizeClass(fontSize);
+          }
+
+          let pointerCursor = user.preferences?.pointer_cursor;
+          if (typeof pointerCursor === "boolean") {
+            setPointerCursorPreference(pointerCursor, user.id);
+          } else {
+            pointerCursor = getPointerCursorPreference(user.id);
+            applyPointerCursorClass(pointerCursor);
           }
         }
 
@@ -119,6 +141,10 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
       applyHighContrastClass(highContrast);
       const reduceMotion = getReduceMotionPreference();
       applyReduceMotionClass(reduceMotion);
+      const fontSize = getFontSizePreference();
+      applyFontSizeClass(fontSize);
+      const pointerCursor = getPointerCursorPreference();
+      applyPointerCursorClass(pointerCursor);
     };
     window.addEventListener("storage", handleStorageChange);
     return () => {

@@ -21,18 +21,6 @@ export default function DefaultPasswordModal({
   userName,
   password,
 }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(password)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Ignore copy errors
-    }
-  }
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-md dark:border-border dark:bg-card gap-0">
@@ -81,7 +69,7 @@ export default function DefaultPasswordModal({
                 textToCopy={password}
                 entityName="Password"
                 size="sm"
-                className="absolute top-1/2 right-3 -translate-y-1/2 h-8 px-3.5 rounded-full text-xs shadow-2xs"
+                className="absolute top-1/2 right-3 -translate-y-1/2 h-8 rounded-full px-3 py-1 text-xs font-semibold shadow-2xs"
               />
             </div>
             <p className="text-xs font-medium text-amber-700 dark:text-amber-400 flex items-center">

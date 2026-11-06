@@ -115,7 +115,7 @@ function OfficeTableSkeleton({ count, visibleColumns, groupBy, tableContainerRef
         <Table columns={tableColumns} className="min-w-[960px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 backdrop-blur-xs dark:bg-zinc-900/90">
             <tr className="h-11 select-none text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-              <th className="w-12 px-2 py-3 text-center align-middle">
+              <th className="w-12 p-4 text-center align-middle">
                 <Skeleton className="mx-auto h-4 w-4 rounded dark:bg-muted" />
               </th>
               {visibleColumns.map(renderHeader)}
@@ -136,7 +136,7 @@ function OfficeTableSkeleton({ count, visibleColumns, groupBy, tableContainerRef
                   </tr>
                 )}
                 <tr key={`row-${index}`} className="border-b border-border last:border-b-0 dark:border-border">
-                  <td className="w-12 px-2 py-3 text-center align-middle border-r border-border/70 dark:border-border/70">
+                  <td className="w-12 p-4 align-middle text-center">
                     <Skeleton className="mx-auto h-4 w-4 rounded dark:bg-muted" />
                   </td>
                   {visibleColumns.map((key) => renderCell(key, index))}

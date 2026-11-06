@@ -461,7 +461,7 @@ export default function LandingFaqCmsView({ showToast }) {
                   </Button>
                 </div>
 
-                <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-gray-50/40 px-4 py-3 dark:bg-zinc-900/30">
+                <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-white px-4 py-3 dark:bg-card">
                   <DashboardSearch value={questionSearch} onChange={setQuestionSearch} count={filteredFaqs.length} label="Search questions and answers" placeholder="Search questions and answers" />
                   <div className="ml-auto flex shrink-0 items-center gap-2">
                     <FilterPopover

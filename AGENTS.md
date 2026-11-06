@@ -1,6 +1,6 @@
 # PUPSJ Records Keeping System Prototype — Agent & Maintainer Guide
 
-This document provides comprehensive orientation to the **PUPSJ Records Management System** prototype: architecture, data model, API structure, authentication, conventions, and operational details. The runnable app lives under **`next-app/`**.
+This document provides comprehensive orientation to the **PUPSJ Records Keeping System** prototype: architecture, data model, API structure, authentication, conventions, and operational details. The runnable app lives under **`next-app/`**.
 
 ---
 

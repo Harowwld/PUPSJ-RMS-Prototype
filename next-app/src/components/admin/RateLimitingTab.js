@@ -208,7 +208,7 @@ export default function RateLimitingTab() {
 
       {/* Recent Violations */}
       <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-        <DataViewToolbar label="Recent violations table controls" className="justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
+        <DataViewToolbar label="Recent violations table controls" className="justify-between border-b border-border bg-white px-5 py-3 dark:border-border dark:bg-card">
           <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
             Recent Rate Limit Violations
           </h3>
@@ -315,7 +315,7 @@ export default function RateLimitingTab() {
 
   const renderConfigurations = () => (
     <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-      <DataViewToolbar label="Rate limit configuration table controls" className="justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
+      <DataViewToolbar label="Rate limit configuration table controls" className="justify-between border-b border-border bg-white px-5 py-3 dark:border-border dark:bg-card">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Rate Limit Configurations</h3>
         {data.configs.length > 0 && (
           <TableScrollControls
@@ -384,7 +384,7 @@ export default function RateLimitingTab() {
 
   const renderSuspiciousIPs = () => (
     <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-xs dark:border-border dark:bg-card">
-      <DataViewToolbar label="Suspicious IP table controls" className="justify-between border-b border-border bg-gray-50/75 px-5 py-3 dark:border-border dark:bg-white/5">
+      <DataViewToolbar label="Suspicious IP table controls" className="justify-between border-b border-border bg-white px-5 py-3 dark:border-border dark:bg-card">
         <h3 className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Suspicious IP Addresses</h3>
         {suspiciousIPs.length > 0 && (
           <TableScrollControls

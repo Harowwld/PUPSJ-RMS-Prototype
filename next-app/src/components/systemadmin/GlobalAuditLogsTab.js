@@ -698,7 +698,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full min-w-0 gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="Shield01Icon"
             title={
@@ -731,8 +731,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
             }
           />
 
-          <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+          <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+            <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
               {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => {
                 const isActive = (logFilters.severity[0] || "") === value
                 return (
@@ -746,7 +746,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       updateUrl(1, search)
                     }}
                     className={cn(
-                      "inline-flex items-center px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                      "inline-flex items-center justify-center px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
                       isActive
                         ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -759,7 +759,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             </div>
           </div>
 
-          <DataViewToolbar label="Platform activity search, filters, sorting, columns, and dates" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+          <DataViewToolbar label="Platform activity search, filters, sorting, columns, and dates" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
             {/* Search & Scroll Controls (Left side) */}
             <div className="flex min-w-0 items-center gap-2">
               <DashboardSearch

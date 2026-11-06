@@ -243,7 +243,7 @@ export default function MyActivityPanel({ embedded = false }) {
         className={cn(
           "animate-in fade-in duration-normal",
           !embedded &&
-            "flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
+            "flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
         )}
       >
         {/* 1. Page Header */}
@@ -290,7 +290,7 @@ export default function MyActivityPanel({ embedded = false }) {
         </div>
 
         {/* 3. Search & Filter Toolbar */}
-        <DataViewToolbar label="Personal activity search, severity filter, and date range" className="gap-2 border-t border-border dark:border-border bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Personal activity search, severity filter, and date range" className="gap-2 border-t border-border dark:border-border bg-white px-5 py-3 dark:bg-card">
           <DashboardSearch
             value={localSearch}
             onChange={setLocalSearch}

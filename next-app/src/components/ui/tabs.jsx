@@ -40,9 +40,9 @@ const tabsListVariants = cva(
         default:
           "rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
         segmented:
-          "rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
+          "inline-grid grid-flow-col auto-cols-fr rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
         capsule:
-          "rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
+          "inline-grid grid-flow-col auto-cols-fr rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
         line:
           "rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] backdrop-blur-md text-gray-500 dark:text-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]",
         pills: "gap-1.5 bg-transparent p-0",

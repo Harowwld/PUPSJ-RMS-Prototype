@@ -20,6 +20,9 @@ importers:
       '@marcosdemik/liquidglass':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@mesh-gradient/react':
+        specifier: ^2.0.2
+        version: 2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       adm-zip:
         specifier: ^0.6.1
         version: 0.6.1
@@ -650,6 +653,15 @@ packages:
 
   '@marcosdemik/liquidglass@2.0.5':
     resolution: {integrity: sha512-Wih7GQLZdF6uPmf7/C9uFw5gT05P/1152ovr/2iVlHeMnqP9YjJ6Dnvx5WIH3veWhkR+tBRqq2KpPnuth1xWvg==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@mesh-gradient/core@2.0.2':
+    resolution: {integrity: sha512-mqVu1NWiAaNBCOm7djseKXucNj3ds9mOKKXl0rS8glBg/UfSK1kle33K75HW316J/EwLim8GIx24DxYcQsNjdA==}
+
+  '@mesh-gradient/react@2.0.2':
+    resolution: {integrity: sha512-h5XtbYsk+9GSbXhvN9Ecl5aqZTsFbWOp8BLKVeMohFrsqFlnQcOo1mOw9xrt5a5tQJJw+qKH7KUjsyI3J88rHA==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -4582,6 +4594,14 @@ snapshots:
   '@marcosdemik/liquidglass@2.0.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       gsap: 3.15.0
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
+  '@mesh-gradient/core@2.0.2': {}
+
+  '@mesh-gradient/react@2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@mesh-gradient/core': 2.0.2
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 

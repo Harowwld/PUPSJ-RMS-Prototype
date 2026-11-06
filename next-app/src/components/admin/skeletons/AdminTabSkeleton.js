@@ -7,7 +7,7 @@ export default function AdminTabSkeleton({ showStats = true }) {
   return (
     <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up select-none">
       {/* Main Container Card */}
-      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] min-h-[500px] isolate font-jakarta">
+      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] min-h-[500px] isolate font-jakarta">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
@@ -31,7 +31,7 @@ export default function AdminTabSkeleton({ showStats = true }) {
         )}
 
         {/* Toolbar / Filter Row */}
-        <div className="flex items-center justify-between p-4 px-6 border-t border-border dark:border-border bg-gray-50/40 dark:bg-white/[0.02]">
+        <div className="flex items-center justify-between p-4 px-6 border-t border-border dark:border-border bg-white dark:bg-card">
           <div className="flex items-center gap-3">
             <Skeleton className="h-9 w-64 rounded-lg dark:bg-muted" />
             <Skeleton className="h-9 w-32 rounded-lg dark:bg-muted" />

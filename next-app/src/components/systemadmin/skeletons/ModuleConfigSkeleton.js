@@ -183,7 +183,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
   const visibleOfficeCount = Math.max(1, officeCount)
   return (
     <div className="flex w-full flex-[1_0_auto] flex-col gap-6 font-jakarta animate-fade-up select-none">
-      <Card className="isolate flex h-auto w-full flex-[1_0_auto] flex-col gap-0 overflow-visible rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
+      <Card className="isolate flex h-auto w-full flex-[1_0_auto] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
         <PageHeader
           title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Department Features &amp; Permissions</span><Placeholder className="h-3.5 w-44 rounded" /></div>}
           description="Turn system features on or off for each department."
@@ -193,25 +193,25 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={<Placeholder className="h-9 w-9 shrink-0 rounded-xl" />}
         />
-        <div aria-hidden="true" className="flex items-center justify-between gap-4 overflow-x-auto border-b border-border/80 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 scrollbar-none dark:border-white/10">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+        <div aria-hidden="true" className="flex items-center justify-between gap-4 overflow-x-auto border-b border-border px-6 py-2.5 bg-white dark:bg-card scrollbar-none dark:border-white/10">
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
             {["Active", "Archived"].map((label) => (
-              <div key={label} className={cn("inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", officeFilter === label ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
+              <div key={label} className={cn("inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", officeFilter === label ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
                 <span>{label}</span>
                 <Placeholder className="h-3 w-5 rounded-full" />
               </div>
             ))}
           </div>
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] ml-auto">
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] ml-auto">
             {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => (
-              <div key={mode} className={cn("inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", viewMode === mode ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
+              <div key={mode} className={cn("inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", viewMode === mode ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
                 <Icon size={14} aria-hidden="true" />
                 <span>{label}</span>
               </div>
             ))}
           </div>
         </div>
-        <DataViewToolbar label="Feature search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+        <DataViewToolbar label="Feature search and filters" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
             <div className="relative w-72 sm:w-80 shrink-0"><Placeholder className="h-9 w-full rounded-xl" /><Placeholder className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded" /></div>
             {viewMode === "matrix" && <Placeholder className="h-9 w-[72px] shrink-0 rounded-xl" />}
@@ -221,7 +221,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
             {viewMode === "matrix" && <><Placeholder className="h-9 w-36 shrink-0 rounded-xl" /><Placeholder className="h-9 w-32 shrink-0 rounded-xl" />{visibleOfficeCount > 1 && <Placeholder className="h-9 w-24 shrink-0 rounded-xl" />}</>}
           </div>
         </DataViewToolbar>
-        <div className="flex flex-col justify-between gap-4 border-t border-border bg-gray-50/40 px-6 py-4 dark:bg-zinc-900/30 sm:flex-row sm:items-center">
+        <div className="flex flex-col justify-between gap-4 border-t border-border bg-white px-6 py-4 dark:bg-card sm:flex-row sm:items-center">
           <div className="flex min-w-0 items-center gap-3.5">
             <Placeholder className="h-10 w-10 shrink-0 rounded-full" />
             <div className="min-w-0 space-y-1.5">

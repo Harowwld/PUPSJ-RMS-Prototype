@@ -1,8 +1,8 @@
-# Comprehensive Codebase Audit: Thesis Table 5 (Requirements – Features Matrix) vs. PUPSJ-RMS Prototype
+# Comprehensive Codebase Audit: Thesis Table 5 (Requirements – Features Matrix) vs. PUPSJ-RKS Prototype
 
 > **Audit Date:** September 2026
 > **Target Object:** Table 5. Requirements – Features Matrix (Manuscript / Thesis Specification)
-> **System Analyzed:** PUPSJ Records Management System (PUPSJ-RMS Prototype)
+> **System Analyzed:** PUPSJ Records Keeping System (PUPSJ-RKS Prototype)
 > **Primary Source Verification:** Validated directly against PostgreSQL migrations (`001_initial.sql` to `041_student_security_answers.sql`), Next.js 16 App Router API endpoints (`src/app/api/**`), backend data repositories (`src/lib/*Repo.js`), and React 19 UI components (`src/components/**`).
 
 ---
@@ -22,7 +22,7 @@ The 8-feature by 5-requirement matrix presented in **Table 5** contains **four v
    - `F1: Login` and `F2: Manage User accounts` have **zero checkmarks**. In formal software engineering (IEEE 830 / ISO/IEC/IEEE 29148), an empty row indicates an unmapped "orphan feature". This occurred because the thesis defined R1–R5 as domain-specific records modules, omitting a **User Authentication & Security Module (RBAC)**.
    - `F6: Dashboard Analytics` has **zero checkmarks**. In the codebase, the primary analytics engine is the **Digitization Compliance Matrix** (`DigitizationComplianceTab.js`), which evaluates **R1: Record Digitization Module**. Leaving F6 blank is an omission of core functionality.
 4. **Scope Truncation:**
-   - Table 5 lists only 8 features, whereas the actual PUPSJ-RMS codebase implements **15 full enterprise modules**, including the Online Document Request System (ODRS), Scanner Hot-Folder Ingestion Feeder, 2D Floor Plan Layout Editor, Multi-Office Tenancy, and Tamper-Evident Audit Logging (see `docs/FEATURE_REQUIREMENT_MATRIX.md`).
+   - Table 5 lists only 8 features, whereas the actual PUPSJ-RKS codebase implements **15 full enterprise modules**, including the Online Document Request System (ODRS), Scanner Hot-Folder Ingestion Feeder, 2D Floor Plan Layout Editor, Multi-Office Tenancy, and Tamper-Evident Audit Logging (see `docs/FEATURE_REQUIREMENT_MATRIX.md`).
 
 ---
 
@@ -114,7 +114,7 @@ The 8-feature by 5-requirement matrix presented in **Table 5** contains **four v
   - Digital Retrieval: [`StudentDirectoryTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/StudentDirectoryTab.js), [`/api/students?q=...`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/api/students/route.js).
   - Physical Retrieval & 2D Floor Plan: [`RecordsArchiveTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/RecordsArchiveTab.js), [`StorageExplorerTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/StorageExplorerTab.js), and [`RoomMap2D.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/staff/RoomMap2D.js). When a user searches for a student, the 2D blueprint animates and highlights the specific Room, Cabinet (A–H), and Drawer (1–4).
 * **Audit Finding:**
-  - **Fully Aligned (Exact Match):** The dual checkmark under R2 (physical location visualization) and R4 (database search and retrieval) accurately reflects the dual-retrieval design of PUPSJ-RMS.
+  - **Fully Aligned (Exact Match):** The dual checkmark under R2 (physical location visualization) and R4 (database search and retrieval) accurately reflects the dual-retrieval design of PUPSJ-RKS.
   - *Note:* In the manuscript, the label for F8 was sliced across a table break ("F8: Search/R" and "etrieve Records"); this is a typography/formatting issue.
 
 ---
@@ -164,5 +164,5 @@ The 8-feature by 5-requirement matrix presented in **Table 5** contains **four v
 2. **If asked: "Why were Login and User Management empty in your original matrix?"**
    *Response:* "Table 5 originally categorized only the core domain-specific records management requirements (R1–R5). Login and User Management are cross-cutting foundational security requirements that gate access to the entire application. We have revised the matrix to include R6 (User Authentication & RBAC) so that every functional capability has 100% formal traceability."
 
-3. **If asked: "What does Dashboard Analytics actually do if it had no checkmarks?"
-   *Response:* "The core dashboard in PUPSJ-RMS is the **Digitization Compliance Analytics** tab (`DigitizationComplianceTab.js`). It evaluates whether students have satisfied mandatory admission credentials (PSA Birth Certificate, Form 137, Good Moral), tracking compliance rates across degree programs and year levels. It directly measures and validates **R1: Record Digitization Module**."
+3. **If asked: "What does Dashboard Analytics actually do if it had no checkmarks?"**
+   *Response:* "The core dashboard in PUPSJ-RKS is the **Digitization Compliance Analytics** tab (`DigitizationComplianceTab.js`). It evaluates whether students have satisfied mandatory admission credentials (PSA Birth Certificate, Form 137, Good Moral), tracking compliance rates across degree programs and year levels. It directly measures and validates **R1: Record Digitization Module**."

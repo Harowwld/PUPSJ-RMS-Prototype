@@ -17,7 +17,7 @@ import {
  * - Travel is kept to a few pixels (y: 4px)
  * - Degrades to pure opacity on reduced motion (y: 0)
  */
-export function ContentSwap({ children, className, id, ...props }) {
+export function ContentSwap({ children, className, id, style, ...props }) {
   const shouldReduceMotion = useAppReducedMotion();
 
   return (
@@ -32,17 +32,21 @@ export function ContentSwap({ children, className, id, ...props }) {
           opacity: 1,
           y: 0,
           transition: shouldReduceMotion
-            ? { duration: 0.1 }
+            ? { duration: 0.05 }
             : CONTENT_SWAP_ENTER_TRANSITION,
         }}
         exit={{
           opacity: 0,
           y: shouldReduceMotion ? 0 : -4,
           transition: shouldReduceMotion
-            ? { duration: 0.08 }
+            ? { duration: 0.04 }
             : CONTENT_SWAP_EXIT_TRANSITION,
         }}
         className={className}
+        style={{
+          willChange: shouldReduceMotion ? undefined : "opacity, transform",
+          ...style,
+        }}
         {...props}
       >
         {children}

@@ -46,9 +46,9 @@ test("FloatingActionBar - formats entity pluralization and renders Apple dock st
   // Primary action button (text-only, no leading icon)
   assert.match(html, /<button[^>]*><span>Archive Personnel<\/span><\/button>/);
 
-  // Secondary actions (text-only, no leading icons)
-  assert.match(html, /<button[^>]*><span>Copy Emails<\/span><\/button>/);
-  assert.match(html, /<button[^>]*><span>Copy IDs<\/span><\/button>/);
+  // Secondary actions (text-only, interactive copy swapping structure)
+  assert.match(html, /title="Copy Emails"[^>]*>[\s\S]*?Copied[\s\S]*?Copy Emails/);
+  assert.match(html, /title="Copy IDs"[^>]*>[\s\S]*?Copied[\s\S]*?Copy IDs/);
 
   // Overflow trigger button
   assert.match(html, /aria-label="More batch actions"/);
@@ -123,4 +123,26 @@ test("FloatingActionBar - Escape key dismisses when checkbox is active and does 
   };
   handleEscape(mockTextInput, () => { textCancelled = true; });
   assert.equal(textCancelled, false, "Must not cancel selection when typing in text input");
+});
+
+test("FloatingActionBar - secondary copy actions implement zero-layout-shift quiet label swapping", () => {
+  const html = renderToStaticMarkup(React.createElement(FloatingActionBar, {
+    selectedCount: 2,
+    entityName: "records",
+    forceMount: true,
+    onCancel: () => {},
+    secondaryActions: [
+      { label: "Copy Codes", onClick: () => {}, copiedLabel: "Copied Codes" },
+      { label: "Export CSV", onClick: () => {} },
+    ],
+  }));
+
+  // Copy action must render aria-live="polite" and zero-layout-shift grid
+  assert.match(html, /aria-live="polite"/);
+  assert.match(html, /class="[^"]*inline-grid[^"]*"/);
+  assert.match(html, /Copied Codes/);
+  assert.match(html, /Copy Codes/);
+
+  // Non-copy action must render plain label
+  assert.match(html, /<span>Export CSV<\/span>/);
 });

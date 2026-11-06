@@ -315,7 +315,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
 
   return (
     <div className="flex flex-[1_0_auto] min-w-0 flex-col gap-4 w-full animate-fade-up font-jakarta select-none">
-      <Card className="flex min-w-0 flex-[1_0_auto] flex-col gap-0 rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
+      <Card className="flex min-w-0 flex-[1_0_auto] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
       <LandingCmsSectionTabs section={currentSection} onSelect={handleSelectSection} />
 
       {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} />}

@@ -297,7 +297,7 @@ export default function CoursesTab({
         />
 
         {/* Navigation Toolbar */}
-        <DataViewToolbar label="Course search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Course search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
           {/* Active / Archived Segmented Tabs */}
           <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
             <button

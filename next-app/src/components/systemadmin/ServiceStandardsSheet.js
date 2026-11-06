@@ -382,14 +382,14 @@ export default function ServiceStandardsSheet({
                           className={cn(
                             "flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer select-none active:scale-[0.98]",
                             isSelected
-                              ? "border-pup-maroon/80 dark:border-red-500/80 bg-red-50/20 dark:bg-red-950/20 ring-1 ring-pup-maroon/20 dark:ring-red-500/20"
+                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
                               : "border-border/80 hover:border-gray-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/50"
                           )}
                         >
                           <div className="flex items-center justify-between w-full">
                             <span className={cn(
                               "text-xs font-semibold",
-                              isSelected ? "text-pup-maroon dark:text-red-400" : "text-gray-900 dark:text-zinc-100"
+                              isSelected ? "text-gray-950 dark:text-zinc-50 font-bold" : "text-gray-900 dark:text-zinc-100"
                             )}>
                               {p.name}
                             </span>

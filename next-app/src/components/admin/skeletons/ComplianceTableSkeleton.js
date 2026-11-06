@@ -15,7 +15,7 @@ export default function ComplianceTableSkeleton({ rowCount = 6, embedded = false
       )}
     >
       {/* Table Toolbar Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-border dark:border-border bg-white dark:bg-card">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-4 w-32 rounded dark:bg-muted" />
           <Skeleton className="h-3 w-16 rounded dark:bg-muted" />

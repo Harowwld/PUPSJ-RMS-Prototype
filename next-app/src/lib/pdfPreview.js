@@ -5,6 +5,7 @@ export const PDF_ACTION_LABELS = Object.freeze({
   print: "Print PDF",
   download: "Download PDF",
   original: "Download Original",
+  update: "Update Document",
 })
 
 export function getPdfPreviewSrc(src, compact = false) {

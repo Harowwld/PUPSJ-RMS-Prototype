@@ -1,6 +1,6 @@
 # Linux Startup Rules for AI Agents
 
-When preparing, starting, or running the PUPSJ Records Management System in a Linux environment (e.g., CachyOS, Arch Linux, Ubuntu, Debian), AI agents **MUST** adhere to the following startup sequence:
+When preparing, starting, or running the PUPSJ Records Keeping System in a Linux environment (e.g., CachyOS, Arch Linux, Ubuntu, Debian), AI agents **MUST** adhere to the following startup sequence:
 
 ## Required Execution Flow
 

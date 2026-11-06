@@ -70,7 +70,7 @@ export default function LogFilters({
 
 
   return (
-    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap">
       {/* Search Input with Pure Number Count (Left side) */}
       <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">

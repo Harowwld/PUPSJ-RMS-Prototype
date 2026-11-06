@@ -1,5 +1,5 @@
 # System Update Log: May 2026
-## PUP E-Manage Records Management System
+## PUP E-Manage Records Keeping System
 
 This document summarizes the major enhancements and architectural changes implemented to improve system security, operational efficiency, and user experience.
 

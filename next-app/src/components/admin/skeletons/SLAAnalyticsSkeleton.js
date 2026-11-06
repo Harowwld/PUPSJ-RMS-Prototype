@@ -8,7 +8,7 @@ export default function SLAAnalyticsSkeleton() {
   return (
     <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up select-none font-jakarta">
       {/* Main Container Card */}
-      <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] isolate">
+      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] isolate">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-3">
@@ -31,7 +31,7 @@ export default function SLAAnalyticsSkeleton() {
         </div>
 
         {/* Toolbar / Date Filter Skeleton */}
-        <div className="flex items-center justify-between p-4 px-6 border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="flex items-center justify-between p-4 px-6 border-t border-border dark:border-border bg-white dark:bg-card">
           <Skeleton className="h-9 w-48 rounded-xl dark:bg-muted" />
           <Skeleton className="h-9 w-60 rounded-xl dark:bg-muted" />
         </div>

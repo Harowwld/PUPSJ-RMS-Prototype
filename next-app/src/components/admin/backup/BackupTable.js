@@ -147,7 +147,7 @@ export default function BackupTable({
         </div>
       ) : (
         <div className="w-full flex-[1_0_auto] flex flex-col">
-          <DataViewToolbar label="Backup table controls" className="justify-between gap-4 px-6 py-2.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
+          <DataViewToolbar label="Backup table controls" className="justify-between gap-4 px-6 py-2.5 bg-white dark:bg-card border-b border-border dark:border-border">
             <span className="text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               Showing {sortedAndPaginatedBackups.length} of {backups.length} {backups.length === 1 ? "backup" : "backups"}
             </span>

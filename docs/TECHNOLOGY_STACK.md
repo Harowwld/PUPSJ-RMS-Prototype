@@ -1,4 +1,4 @@
-# PUPSJ RMS Prototype — Complete Technology Stack Documentation
+# PUPSJ RKS Prototype — Complete Technology Stack Documentation
 
 > [!NOTE]
 > For operational developer guides, startup sequences, and agent conventions, see [`AGENTS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/AGENTS.md).

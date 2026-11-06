@@ -1017,15 +1017,15 @@ export default function SystemConfigTab({
           onValueChange={setActiveSubTab}
           className="flex flex-[1_0_auto] flex-col w-full"
         >
-          <Card className="p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-[1_0_auto] flex-col isolate font-jakarta">
+          <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-[1_0_auto] flex-col isolate font-jakarta">
             {/* Top Section Switcher Bar inside One-Card Container */}
-            <div className="flex items-center px-6 py-3.5 border-b border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30 rounded-t-2xl">
-              <div className="flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
+            <div className="flex items-center px-6 py-3.5 border-b border-border dark:border-border bg-white dark:bg-card rounded-t-2xl">
+              <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("document-types")}
                   className={cn(
-                    "flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                    "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                     activeSubTab === "document-types"
                       ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
@@ -1039,7 +1039,7 @@ export default function SystemConfigTab({
                   type="button"
                   onClick={() => setActiveSubTab("degree-programs")}
                   className={cn(
-                    "flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                    "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                     activeSubTab === "degree-programs"
                       ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
@@ -1054,7 +1054,7 @@ export default function SystemConfigTab({
                     type="button"
                     onClick={() => setActiveSubTab("course-blocks")}
                     className={cn(
-                      "flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                      "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                       activeSubTab === "course-blocks"
                         ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                         : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
@@ -1069,7 +1069,7 @@ export default function SystemConfigTab({
                   type="button"
                   onClick={() => setActiveSubTab("bulk-import")}
                   className={cn(
-                    "flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                    "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                     activeSubTab === "bulk-import"
                       ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"

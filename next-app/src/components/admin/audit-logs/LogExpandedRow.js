@@ -1,11 +1,18 @@
 "use client"
 
-
+import { useState } from "react";
 import { formatLogDetails } from "@/lib/utils";
-import { AlignBoxBottomCenterIcon, Copy01Icon, File02Icon, WifiFullSignalIcon } from "hugeicons-react";
+import { AlignBoxBottomCenterIcon, Copy01Icon, File02Icon, WifiFullSignalIcon, Tick01Icon } from "hugeicons-react";
 
 
 export default function LogExpandedRow({ log, handleCopy }) {
+  const [copiedKey, setCopiedKey] = useState(null);
+  const handleCopyField = (text, label, key) => {
+    if (!text) return;
+    handleCopy?.(text, label);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((curr) => curr === key ? null : curr), 2000);
+  };
   const formattedDescription = (() => {
     const text = formatLogDetails(log?.details) || "No known description";
     const parts = text.split(/'([^']+)'/g);
@@ -57,11 +64,15 @@ export default function LogExpandedRow({ log, handleCopy }) {
               <div className="flex items-center gap-[6px]">
                 <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{log.ip || "::1"}</span>
                 <button 
-                  onClick={() => handleCopy(log.ip, "IP Address")}
+                  onClick={() => handleCopyField(log.ip, "IP Address", "ip")}
                   aria-label="Copy IP Address"
                   className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                 >
-                  <Copy01Icon size="1em"  className="text-[14px]"></Copy01Icon>
+                  {copiedKey === "ip" ? (
+                    <Tick01Icon size="1em" className="text-[14px] text-gray-700 dark:text-zinc-200" />
+                  ) : (
+                    <Copy01Icon size="1em" className="text-[14px]" />
+                  )}
                 </button>
               </div>
             </div>
@@ -97,11 +108,15 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">{log.entityId || "N/A"}</span>
                 {log.entityId && (
                   <button 
-                    onClick={() => handleCopy(log.entityId, "Reference ID")}
+                    onClick={() => handleCopyField(log.entityId, "Reference ID", "ref_id")}
                     aria-label="Copy Reference ID"
                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
                   >
-                    <Copy01Icon size="1em"  className="text-[14px]"></Copy01Icon>
+                    {copiedKey === "ref_id" ? (
+                      <Tick01Icon size="1em" className="text-[14px] text-gray-700 dark:text-zinc-200" />
+                    ) : (
+                      <Copy01Icon size="1em" className="text-[14px]" />
+                    )}
                   </button>
                 )}
               </div>

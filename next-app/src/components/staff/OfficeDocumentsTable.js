@@ -71,7 +71,7 @@ export default function OfficeDocumentsTable({
 
   return (
     <div className={containerClasses}>
-      <DataViewToolbar label={`${officeLabel} document search and controls`} className="border-b border-border px-6 py-4 bg-gray-50/40 dark:bg-zinc-900/30 dark:border-border">
+      <DataViewToolbar label={`${officeLabel} document search and controls`} className="border-b border-border px-6 py-4 bg-white dark:bg-card dark:border-border">
         <div>
           <h2 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50">{officeLabel} Documents</h2>
           <p className="mt-1 text-[13px] text-[#8E8E93] dark:text-zinc-400">

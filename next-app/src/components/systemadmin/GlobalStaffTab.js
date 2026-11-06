@@ -56,7 +56,7 @@ import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Clock01Icon, Copy01Icon, Loading01Icon, Search01Icon, Archive01Icon } from "hugeicons-react";
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Clock01Icon, Copy01Icon, Loading01Icon, Search01Icon, Archive01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -135,6 +135,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   // Detail Sheet & Dialogs
   const [inspectMember, setInspectMember] = useState(null)
+  const [copiedInspectField, setCopiedInspectField] = useState(null)
+  const handleCopyInspectField = (text, fieldKey, toastLabel) => {
+    if (!text) return
+    navigator.clipboard.writeText(String(text))
+    showToast(`${toastLabel} copied to clipboard`)
+    setCopiedInspectField(fieldKey)
+    setTimeout(() => setCopiedInspectField((current) => current === fieldKey ? null : current), 2000)
+  }
   const [formOpen, setFormOpen] = useState(false)
   const { attachForm, ...repeat } = useCreateAnother(formOpen)
   const [isEditing, setIsEditing] = useState(false)
@@ -878,7 +886,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
-      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="UserSearch01Icon"
           title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Global Personnel Directory</span><span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">{stats.total.toLocaleString()} personnel · {stats.assignedOffices.toLocaleString()} offices · {stats.admins.toLocaleString()} administrators</span></div>}
@@ -895,8 +903,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           }
         />
 
-        <div role="group" aria-label="Personnel status" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+        <div role="group" aria-label="Personnel status" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
             {[["Active", "Active", stats.active], ["Inactive", "Archived", stats.inactive]].map(([value, label, count]) => {
               const isSelected = statusFilter === value;
               return (
@@ -906,7 +914,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   aria-pressed={isSelected}
                   onClick={() => setStatusFilter(value)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
                     isSelected
                       ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -925,7 +933,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </div>
         </div>
 
-        <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+        <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
             <DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID or email..." />
             <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />
@@ -1717,9 +1725,23 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                       <div className="py-2.5 flex items-center justify-between text-xs">
                         <span className="font-medium text-gray-500 dark:text-zinc-400">Employee ID</span>
-                        <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800">
-                          {inspectMember.id}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800">
+                            {inspectMember.id}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyInspectField(inspectMember.id, "id", "Employee ID")}
+                            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            title="Copy Employee ID"
+                          >
+                            {copiedInspectField === "id" ? (
+                              <Tick01Icon size="1em" className="text-xs text-gray-700 dark:text-zinc-200" />
+                            ) : (
+                              <Copy01Icon size="1em" className="text-xs" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                       <div className="py-2.5 flex items-center justify-between text-xs gap-3">
                         <span className="font-medium text-gray-500 dark:text-zinc-400 shrink-0">Official Email</span>
@@ -1729,14 +1751,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           </span>
                           <button
                             type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(getStaffCleanEmail(inspectMember))
-                              showToast("Email address copied to clipboard")
-                            }}
+                            onClick={() => handleCopyInspectField(getStaffCleanEmail(inspectMember), "email", "Email address")}
                             className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                             title="Copy Email"
                           >
-                            <Copy01Icon size="1em" className="text-xs" />
+                            {copiedInspectField === "email" ? (
+                              <Tick01Icon size="1em" className="text-xs text-gray-700 dark:text-zinc-200" />
+                            ) : (
+                              <Copy01Icon size="1em" className="text-xs" />
+                            )}
                           </button>
                         </div>
                       </div>
@@ -1804,6 +1827,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       View History
                     </Button>
                   </div>
+
+                  <CopyButton
+                    textToCopy={() => JSON.stringify(inspectMember, null, 2)}
+                    entityName="Personnel Data"
+                    idleLabel="Copy Personnel Data"
+                    size="sm"
+                    title="Copy personnel record data"
+                    className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  />
                 </div>
 
                 <SheetFooter className="p-4 px-6 flex items-center justify-between gap-2">
@@ -1886,10 +1918,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         secondaryActions={[
           {
             label: "Copy Emails",
+            copiedLabel: "Copied Emails",
             onClick: handleCopyEmails,
           },
           {
             label: "Copy Employee IDs",
+            copiedLabel: "Copied IDs",
             onClick: handleCopyIds,
           },
         ]}

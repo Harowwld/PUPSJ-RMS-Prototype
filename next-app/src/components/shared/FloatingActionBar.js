@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,87 @@ function formatEntityLabel(count, entityName, selectionStatus) {
   }
   const plural = clean.endsWith("s") ? clean : `${clean}s`
   return `${(count === 1 ? clean : plural).toLowerCase()} selected`
+}
+
+function FloatingSecondaryActionButton({ act, isBusy }) {
+  const [copied, setCopied] = useState(false)
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
+  if (!act || !act.label) return null
+  const actDisabled = act.disabled || isBusy || act.isBusy
+  const isCopy =
+    act.isCopy ||
+    Boolean(act.copiedLabel) ||
+    Boolean(act.textToCopy) ||
+    act.label?.trim().toLowerCase().startsWith("copy")
+
+  const resolvedCopiedLabel = act.copiedLabel || "Copied"
+
+  const handleClick = async (e) => {
+    if (actDisabled) return
+    if (act.textToCopy) {
+      try {
+        const text = typeof act.textToCopy === "function" ? await act.textToCopy() : act.textToCopy
+        if (text != null && navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(String(text))
+        }
+      } catch (err) {
+        console.error("Clipboard copy failed", err)
+      }
+    }
+    act.onClick?.(e)
+    if (isCopy) {
+      setCopied(true)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        setCopied(false)
+      }, 2000)
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      variant={act.variant || "outline"}
+      size="sm"
+      onClick={handleClick}
+      disabled={actDisabled}
+      aria-live={isCopy ? "polite" : undefined}
+      title={act.title || act.label}
+      className="flex h-8.5 items-center justify-center rounded-xl px-3 text-xs font-medium border border-border dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+    >
+      {isCopy ? (
+        <span className="inline-grid grid-cols-1 grid-rows-1 place-items-center w-full">
+          <span
+            aria-hidden={!copied}
+            className={cn(
+              "col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-150 select-none",
+              copied ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+          >
+            {resolvedCopiedLabel}
+          </span>
+          <span
+            aria-hidden={copied}
+            className={cn(
+              "col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-150 select-none",
+              copied ? "opacity-0 pointer-events-none" : "opacity-100"
+            )}
+          >
+            {act.label}
+          </span>
+        </span>
+      ) : (
+        <span>{act.label}</span>
+      )}
+    </Button>
+  )
 }
 
 /**
@@ -240,24 +321,9 @@ export default function FloatingActionBar({
     return (
       <div className="flex items-center gap-2">
         {/* Secondary Quick Action Buttons */}
-        {resolvedSecondary.map((act, idx) => {
-          if (!act || !act.label) return null
-          const actDisabled = act.disabled || isBusy || act.isBusy
-          return (
-            <Button
-              key={act.label || idx}
-              type="button"
-              variant={act.variant || "outline"}
-              size="sm"
-              onClick={act.onClick}
-              disabled={actDisabled}
-              title={act.title || act.label}
-              className="flex h-8.5 items-center justify-center rounded-xl px-3 text-xs font-medium border border-border dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
-            >
-              <span>{act.label}</span>
-            </Button>
-          )
-        })}
+        {resolvedSecondary.map((act, idx) => (
+          <FloatingSecondaryActionButton key={act?.label || idx} act={act} isBusy={isBusy} />
+        ))}
 
         {/* Primary Semantic Action Button */}
         {resolvedPrimary && resolvedPrimary.label && (

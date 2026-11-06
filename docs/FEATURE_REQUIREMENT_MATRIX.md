@@ -1,9 +1,9 @@
-# PUPSJ Records Management System (PUPSJ-RMS)
+# PUPSJ Records Keeping System (PUPSJ-RKS)
 ## Feature Requirement Matrix (FRM) & Technical Specification
 
 > **Document Version:** 1.0.0
 > **Last Updated:** September 2026
-> **Target System:** PUPSJ-RMS Prototype (PostgreSQL 16 + Next.js 16 App Router)
+> **Target System:** PUPSJ-RKS Prototype (PostgreSQL 16 + Next.js 16 App Router)
 > **Primary Source Verification:** Derived directly from active codebase routes, database migrations (`migrations/001_initial.sql` to `migrations/041_student_security_answers.sql`), repository implementations (`src/lib/*Repo.js`), and React UI components (`src/components/*`).
 
 ---
@@ -40,7 +40,7 @@ In software engineering and systems architecture, a **Feature Requirement Matrix
 
 ## 2. Master Feature-to-Requirements Traceability Matrix
 
-The table below presents the primary mapping across all 15 operational features of the PUPSJ Records Management System:
+The table below presents the primary mapping across all 15 operational features of the PUPSJ Records Keeping System:
 
 | Feature ID | Feature Name | Primary Subsystem Modules | Core Requirements Summary | User Roles | Primary Implementation Artifacts |
 |---|---|---|---|---|---|
@@ -434,7 +434,7 @@ The table below presents the primary mapping across all 15 operational features 
 
 ## 4. Module Registry Mapping (Database Seed)
 
-In PUPSJ-RMS, modules are registered in the PostgreSQL `modules` table (seeded via `migrations/016_seed_all_modules.sql`, `migrations/034_add_student_directory_module.sql`, and `migrations/039_rename_alumni_requests_module.sql`). The table below outlines how each module maps to features:
+In PUPSJ-RKS, modules are registered in the PostgreSQL `modules` table (seeded via `migrations/016_seed_all_modules.sql`, `migrations/034_add_student_directory_module.sql`, and `migrations/039_rename_alumni_requests_module.sql`). The table below outlines how each module maps to features:
 
 | Module Identifier (`modules.id`) | Display Name | Category | Sidebar Group | System Locked? | Corresponding Features | Target React Component (`component_key`) |
 |---|---|---|---|---|---|---|

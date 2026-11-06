@@ -521,7 +521,7 @@ function DigitizationComplianceContent({
   return (
     <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up font-jakarta">
       {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="PieChartIcon"
           title="Compliance Analysis"
@@ -823,7 +823,7 @@ function DigitizationComplianceContent({
         ) : null}
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap">
           {/* Search Input (Left side) */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
             <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
@@ -1134,7 +1134,7 @@ function DigitizationComplianceContent({
             "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border",
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <DataViewToolbar label="Program compliance table controls" className="justify-between gap-6 px-6 py-3.5 bg-gray-50/40 dark:bg-zinc-900/30 border-b border-border dark:border-border">
+            <DataViewToolbar label="Program compliance table controls" className="justify-between gap-6 px-6 py-3.5 bg-white dark:bg-card border-b border-border dark:border-border">
               <div className="flex items-center gap-2.5">
                 <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
                   Program Breakdown

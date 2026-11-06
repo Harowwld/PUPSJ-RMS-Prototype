@@ -217,7 +217,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
         className={cn(
           "w-full p-5 animate-pulse",
           embedded
-            ? "border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30"
+            ? "border-t border-border dark:border-border bg-white dark:bg-card"
             : "rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-xs",
           className
         )}
@@ -247,7 +247,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
       className={cn(
         "w-full overflow-hidden transition-colors duration-200",
         embedded
-          ? "border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/30"
+          ? "border-t border-border dark:border-border bg-white dark:bg-card"
           : "rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-xs",
         className
       )}

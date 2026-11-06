@@ -745,7 +745,7 @@ export default function SystemBackupsTab({ showToast }) {
 
           {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0 flex flex-col">
-            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
               <PageHeader
                 icon="Database01Icon"
                 title={
@@ -823,8 +823,8 @@ export default function SystemBackupsTab({ showToast }) {
                   </div>
                 }
               />
-              <div role="group" aria-label="Backup type" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
-                <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+              <div role="group" aria-label="Backup type" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+                <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
                   {[{ value: "all", label: "All Types", count: backups.length }, ...backupTypes.map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length }))].map(({ value, label, count }) => {
                     const isSelected = backupTypeFilter === value;
                     return (
@@ -834,7 +834,7 @@ export default function SystemBackupsTab({ showToast }) {
                         aria-pressed={isSelected}
                         onClick={() => { setBackupTypeFilter(value); setPage(1) }}
                         className={cn(
-                          "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                          "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
                           isSelected
                             ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                             : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -976,6 +976,7 @@ export default function SystemBackupsTab({ showToast }) {
           secondaryActions={[
             {
               label: "Copy Filenames",
+              copiedLabel: "Copied Filenames",
               onClick: () => {
                 const selectedBackups = backups.filter((b) => selectedBackupIds.includes(b.id))
                 const filenames = selectedBackups.map((b) => b.filename).filter(Boolean)

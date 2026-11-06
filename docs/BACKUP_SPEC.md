@@ -1,5 +1,5 @@
 # Institutional Backup & Disaster Recovery Specification
-## PUP E-Manage Records Management System
+## PUP E-Manage Records Keeping System
 
 This document outlines the architecture, security protocols, and operational workflows of the system's backup infrastructure. The system is designed to ensure maximum data integrity and institutional continuity through automated, encrypted redundancy.
 

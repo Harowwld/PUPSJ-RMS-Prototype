@@ -4,7 +4,7 @@ import { cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const cardVariants = cva(
-  "group/card flex flex-col overflow-visible rounded-2xl text-sm transition-colors text-card-foreground",
+  "group/card flex flex-col overflow-hidden rounded-2xl text-sm transition-colors text-card-foreground",
   {
     variants: {
       variant: {

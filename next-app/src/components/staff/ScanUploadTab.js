@@ -531,7 +531,7 @@ export default function ScanUploadTab({
         id="view-upload"
         className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto focus:outline-none animate-fade-up"
       >
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="FingerPrintScanIcon"
             title="Scan & Upload"

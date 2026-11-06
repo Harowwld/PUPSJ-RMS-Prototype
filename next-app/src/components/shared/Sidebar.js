@@ -262,6 +262,13 @@ export default function Sidebar({
     authUser?.username && !authUser.username.startsWith("enc:v1:") ? authUser.username.trim() : "";
 
   const displayName = (() => {
+    const fmt = authUser?.preferences?.display_name_format;
+    if (cleanFirst && cleanLast) {
+      if (fmt === "first_only") return cleanFirst;
+      if (fmt === "last_only") return cleanLast;
+      if (fmt === "last_first") return `${cleanLast}, ${cleanFirst}`;
+      return `${cleanFirst} ${cleanLast}`;
+    }
     const fromParts = [cleanFirst, cleanLast].filter(Boolean).join(" ").trim();
     if (fromParts) return fromParts;
     if (cleanName) return cleanName;
@@ -1321,7 +1328,11 @@ export default function Sidebar({
                   : undefined
               }
             />
-            <span className="font-bold text-[17px] tracking-tight leading-none text-gray-900 dark:text-zinc-50">
+            <span
+              data-sidebar-title
+              style={{ fontSize: "calc(17px * var(--app-font-scale, 1))" }}
+              className="font-bold text-[17px] tracking-tight leading-none text-gray-900 dark:text-zinc-50"
+            >
               eManage
             </span>
           </div>
@@ -1413,6 +1424,8 @@ export default function Sidebar({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
                     transition={LABEL_ENTER_TRANSITION}
+                    data-sidebar-title
+                    style={{ fontSize: "calc(17px * var(--app-font-scale, 1))" }}
                     className="font-bold text-[17px] tracking-tight leading-none text-gray-900 dark:text-zinc-50 group-hover/logo:opacity-80 transition-opacity ml-1.5 truncate"
                   >
                     eManage
@@ -1495,11 +1508,17 @@ export default function Sidebar({
                 <span className="relative w-[38px] h-[38px] flex items-center justify-center shrink-0">
                   <Search01Icon size={16} aria-hidden="true" className="transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400 shrink-0" />
                 </span>
-                <span className="text-xs font-normal truncate text-gray-600 dark:text-zinc-300 ml-1.5">
+                <span
+                  style={{ fontSize: "calc(12px * var(--app-font-scale, 1))" }}
+                  className="text-xs font-normal truncate text-gray-600 dark:text-zinc-300 ml-1.5"
+                >
                   Search views, records...
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-2 h-5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none shrink-0 select-none">
+              <kbd
+                style={{ fontSize: "calc(9.5px * var(--app-font-scale, 1))" }}
+                className="inline-flex items-center justify-center px-2 h-5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none shrink-0 select-none"
+              >
                 {isMac ? "⌘K" : "Ctrl K"}
               </kbd>
             </motion.button>
@@ -1540,6 +1559,8 @@ export default function Sidebar({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
                         transition={LABEL_ENTER_TRANSITION}
+                        data-sidebar-header
+                        style={{ fontSize: "calc(11.5px * var(--app-font-scale, 1))" }}
                         className="text-[11.5px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap px-2 block"
                       >
                         {item.label}
@@ -1650,8 +1671,10 @@ export default function Sidebar({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
                             transition={LABEL_ENTER_TRANSITION}
+                            data-sidebar-label
                             style={{
                               color: hasActiveChild && !isExpanded ? activeForeground : undefined,
+                              fontSize: "calc(14px * var(--app-font-scale, 1))",
                             }}
                             className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 truncate relative z-10 block"
                           >
@@ -1679,6 +1702,7 @@ export default function Sidebar({
                                 backgroundColor:
                                   hasActiveChild && !isExpanded ? activeForeground : activeColor,
                                 color: hasActiveChild && !isExpanded ? activeColor : activeForeground,
+                                fontSize: "calc(10px * var(--app-font-scale, 1))",
                               }}
                             >
                               {item.badge > 99 ? "99+" : item.badge}
@@ -1801,7 +1825,11 @@ export default function Sidebar({
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
                                     transition={LABEL_ENTER_TRANSITION}
-                                    style={{ color: isChildActive ? activeForeground : undefined }}
+                                    data-sidebar-label
+                                    style={{
+                                      color: isChildActive ? activeForeground : undefined,
+                                      fontSize: "calc(14px * var(--app-font-scale, 1))",
+                                    }}
                                     className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 truncate relative z-10 block"
                                   >
                                     {child.label}
@@ -1826,6 +1854,7 @@ export default function Sidebar({
                                     style={{
                                       backgroundColor: isChildActive ? activeForeground : activeColor,
                                       color: isChildActive ? activeColor : activeForeground,
+                                      fontSize: "calc(10px * var(--app-font-scale, 1))",
                                     }}
                                   >
                                     {child.badge > 99 ? "99+" : child.badge}
@@ -1930,7 +1959,11 @@ export default function Sidebar({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -4, transition: LABEL_EXIT_TRANSITION }}
                         transition={LABEL_ENTER_TRANSITION}
-                        style={{ color: isActive ? activeForeground : undefined }}
+                        data-sidebar-label
+                        style={{
+                          color: isActive ? activeForeground : undefined,
+                          fontSize: "calc(14px * var(--app-font-scale, 1))",
+                        }}
                         className="whitespace-nowrap font-medium text-[14px] text-left ml-1.5 truncate relative z-10 block"
                       >
                         {item.label}
@@ -1955,6 +1988,7 @@ export default function Sidebar({
                         style={{
                           backgroundColor: isActive ? activeForeground : activeColor,
                           color: isActive ? activeColor : activeForeground,
+                          fontSize: "calc(10px * var(--app-font-scale, 1))",
                         }}
                       >
                         {item.badge > 99 ? "99+" : item.badge}
@@ -2005,10 +2039,18 @@ export default function Sidebar({
 
                     {/* User info */}
                     <div className="flex-1 min-w-0 flex flex-col leading-tight ml-2">
-                      <span className="text-[13px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100 truncate">
+                      <span
+                        data-sidebar-user-name
+                        style={{ fontSize: "calc(13px * var(--app-font-scale, 1))" }}
+                        className="text-[13px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100 truncate"
+                      >
                         {displayName}
                       </span>
-                      <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate">
+                      <span
+                        data-sidebar-user-role
+                        style={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}
+                        className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate"
+                      >
                         {displayRole}
                       </span>
                     </div>
@@ -2130,7 +2172,10 @@ export default function Sidebar({
           <div className="flex-1 overflow-y-auto p-3 space-y-4 [scrollbar-width:thin]">
             {filteredGroups.map((group) => (
               <div key={group.id} className="space-y-1">
-                <div className="px-2.5 py-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                <div
+                  style={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}
+                  className="px-2.5 py-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider"
+                >
                   {group.title}
                 </div>
                 <div className="flex flex-col gap-0.5">

@@ -314,3 +314,75 @@ export const getOrgBannerGradientClasses = (gradientId) => {
   return preset ? preset.classes : BANNER_GRADIENT_PRESETS[0].classes;
 };
 
+export const APPLE_WALLPAPER_PRESETS = [
+  {
+    id: "sequoia",
+    name: "Crimson Dawn",
+    theme: "Aurora Wave",
+    colors: ["#800000", "#ea580c", "#7c3aed", "#1e1b4b"],
+    cssGradient: "radial-gradient(at 10% 20%, #800000 0px, transparent 55%), radial-gradient(at 80% 0%, #ea580c 0px, transparent 50%), radial-gradient(at 50% 80%, #7c3aed 0px, transparent 55%), #1e1b4b",
+    tagline: "Dynamic crimson, warm amber, and deep violet gradient",
+  },
+  {
+    id: "sonoma",
+    name: "Golden Horizon",
+    theme: "Emerald Dusk",
+    colors: ["#065f46", "#0284c7", "#eab308", "#0f172a"],
+    cssGradient: "radial-gradient(at 0% 0%, #065f46 0px, transparent 55%), radial-gradient(at 100% 40%, #0284c7 0px, transparent 55%), radial-gradient(at 40% 100%, #eab308 0px, transparent 55%), #0f172a",
+    tagline: "Calm forest emerald, ocean azure, and sunrise gold",
+  },
+  {
+    id: "ventura",
+    name: "Solar Bloom",
+    theme: "Warm Coral",
+    colors: ["#ea580c", "#db2777", "#f59e0b", "#311006"],
+    cssGradient: "radial-gradient(at 20% 30%, #ea580c 0px, transparent 55%), radial-gradient(at 85% 20%, #db2777 0px, transparent 55%), radial-gradient(at 50% 90%, #f59e0b 0px, transparent 55%), #311006",
+    tagline: "Radiant amber flame, rose fuchsia, and warm burgundy",
+  },
+  {
+    id: "monterey",
+    name: "Northern Twilight",
+    theme: "Violet Dusk",
+    colors: ["#6366f1", "#a855f7", "#ec4899", "#09090b"],
+    cssGradient: "radial-gradient(at 10% 90%, #6366f1 0px, transparent 55%), radial-gradient(at 90% 10%, #a855f7 0px, transparent 55%), radial-gradient(at 50% 50%, #ec4899 0px, transparent 55%), #09090b",
+    tagline: "Luminescent indigo, electric purple, and vibrant rose",
+  },
+  {
+    id: "heritage",
+    name: "PUP Heritage",
+    theme: "Velvet Maroon",
+    colors: ["#800000", "#991b1b", "#5a0000", "#1f0303"],
+    cssGradient: "radial-gradient(at 15% 15%, #991b1b 0px, transparent 60%), radial-gradient(at 85% 85%, #5a0000 0px, transparent 60%), radial-gradient(at 50% 50%, #800000 0px, transparent 70%), #1f0303",
+    tagline: "Official institutional crimson velvet",
+  },
+  {
+    id: "bigsur",
+    name: "Chromatic Wave",
+    theme: "Spectrum Flow",
+    colors: ["#2563eb", "#059669", "#dc2626", "#1e1b4b"],
+    cssGradient: "radial-gradient(at 20% 20%, #2563eb 0px, transparent 55%), radial-gradient(at 80% 30%, #059669 0px, transparent 55%), radial-gradient(at 60% 80%, #dc2626 0px, transparent 55%), #1e1b4b",
+    tagline: "Multi-color blend of cobalt, emerald, and scarlet",
+  },
+  {
+    id: "obsidian",
+    name: "Obsidian Titanium",
+    theme: "Midnight Slate",
+    colors: ["#18181b", "#27272a", "#3f3f46", "#09090b"],
+    cssGradient: "radial-gradient(at 50% 10%, #27272a 0px, transparent 70%), radial-gradient(at 80% 80%, #3f3f46 0px, transparent 70%), #09090b",
+    tagline: "Minimalist graphite, charcoal, and dark obsidian metal",
+  },
+  {
+    id: "icelight",
+    name: "Cyber Aurora",
+    theme: "Neon Frost",
+    colors: ["#06b6d4", "#0ea5e9", "#6366f1", "#020617"],
+    cssGradient: "radial-gradient(at 10% 20%, #06b6d4 0px, transparent 55%), radial-gradient(at 80% 20%, #0ea5e9 0px, transparent 55%), radial-gradient(at 50% 90%, #6366f1 0px, transparent 55%), #020617",
+    tagline: "High-contrast electric cyan, sky azure, and cool violet",
+  },
+];
+
+export const getAppleWallpaperPreset = (wallpaperId) => {
+  const preset = APPLE_WALLPAPER_PRESETS.find((p) => p.id === wallpaperId);
+  return preset || APPLE_WALLPAPER_PRESETS[0];
+};
+
