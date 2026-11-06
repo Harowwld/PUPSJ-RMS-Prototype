@@ -7,7 +7,7 @@ import { updateStaff } from "@/lib/staffRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
-import { isDefaultAvatarId, getDefaultAvatarSvg } from "@/lib/defaultAvatars";
+import { isDefaultAvatarId, getDefaultAvatarSvg, getDefaultAvatar } from "@/lib/defaultAvatars";
 
 export const runtime = "nodejs";
 
@@ -269,8 +269,9 @@ export async function POST(req) {
       removeAvatarFile(oldFilename);
     }
 
+    const avatarMeta = defaultAvatarId ? getDefaultAvatar(defaultAvatarId) : null;
     const actionDetails = defaultAvatarId
-      ? `selected default profile avatar (Avatar ${defaultAvatarId})`
+      ? `selected default profile avatar (${avatarMeta?.name || `Avatar ${defaultAvatarId}`})`
       : `uploaded custom profile avatar icon for account`;
 
     if (sessionUser.type === "student") {
