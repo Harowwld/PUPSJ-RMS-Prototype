@@ -158,6 +158,169 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
     stage = (matchesStage2 || !!descContent || type === "success" || type === "info" || type === "loading") ? 2 : 1;
   }
 
+// Helper subcomponent for individual Apple fluid toast with physical spring motion and swipe-to-dismiss
+const ToastItem = ({
+  t,
+  type,
+  stage,
+  titleContent,
+  descContent,
+  safeOptions,
+  lowerTitle,
+  isDismissable,
+}) => {
+  const [dragOffset, setDragOffset] = React.useState(0);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStartY = React.useRef(null);
+  const isDraggingRef = React.useRef(false);
+
+  const handlePointerDown = (e) => {
+    // Prevent drag if touching an interactive button or link
+    if (e.target.closest("button") || e.target.closest("a")) return;
+    dragStartY.current = e.clientY;
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    try {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDraggingRef.current || dragStartY.current === null) return;
+    const delta = e.clientY - dragStartY.current;
+    if (delta < 0) {
+      // Direct 1:1 manipulation upward
+      setDragOffset(delta);
+    } else {
+      // Apple rubber-band resistance when pulling downward
+      setDragOffset(delta * 0.22);
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
+    // Apple swipe-up dismissal threshold (flick or swipe up > 22px)
+    if (dragOffset < -22) {
+      hotToast.dismiss(t.id);
+    } else {
+      // Spring snap-back to rest
+      setDragOffset(0);
+    }
+    dragStartY.current = null;
+  };
+
+  // Apple spring fluid entry (360ms with subtle overshoot) & swift upward retraction exit (200ms)
+  const animationClass = t.visible 
+    ? "animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]" 
+    : "animate-[apple-toast-slide-up_200ms_cubic-bezier(0.4,0,0.2,1)_forwards]";
+
+  return (
+    <div 
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      style={{
+        transform: dragOffset !== 0 ? `translate3d(0, ${dragOffset}px, 0)` : undefined,
+        transition: isDragging ? "none" : "transform 260ms cubic-bezier(0.16, 1, 0.3, 1)",
+        touchAction: "none",
+      }}
+      className={`rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
+    >
+      {/* Left Icon (Stage 2, 3, 5) */}
+      {(stage === 2 || stage === 3 || stage === 5) && (
+        <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs transition-transform duration-200 active:scale-95 ${
+          type === "error" || type === "warning" ? "bg-[#e30000]" :
+          type === "info" ? "bg-blue-500" :
+          type === "loading" ? "bg-zinc-800 dark:bg-zinc-700" :
+          "bg-[#16a34a]"
+        }`}>
+          {type === "error" || type === "warning" ? (
+            <Alert02Icon size="1em" className="text-[14px] text-white" />
+          ) : type === "info" ? (
+            <CovidInfoIcon size="1em" className="text-[14px] text-white" />
+          ) : type === "loading" ? (
+            <Loading01Icon size="1em" className="animate-spin text-[14px] text-white" />
+          ) : (
+            <Tick01Icon size="1em" className="text-[14px] text-white" />
+          )}
+        </div>
+      )}
+      
+      {/* Text Block */}
+      <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
+        {React.isValidElement(titleContent) ? (
+          titleContent
+        ) : (
+          <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
+            {titleContent}
+          </span>
+        )}
+        {descContent && (
+          typeof descContent === "string" || typeof descContent === "number" ? (
+            <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-snug break-words">
+              {descContent}
+            </span>
+          ) : (
+            descContent
+          )
+        )}
+      </div>
+      
+      {/* Action Button (Stage 4, 5, or any toast with safeOptions.action) */}
+      {safeOptions.action && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            safeOptions.action.onClick?.(e);
+            hotToast.dismiss(t.id);
+          }}
+          className={`relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ${
+            (stage === 3 || isDismissable) ? "ml-auto" : "ml-auto"
+          }`}
+        >
+          <span className={
+            String(safeOptions.action.label || "").toLowerCase() === "undo"
+              ? "text-[#16a34a] dark:text-emerald-400"
+              : (safeOptions.action.destructive || lowerTitle.includes("returned"))
+                ? "text-[#e30000] dark:text-red-400"
+                : "text-blue-600 dark:text-blue-400"
+          }>
+            {safeOptions.action.label}
+          </span>
+        </button>
+      )}
+
+      {/* Dismiss Button (Stage 3 or any dismissable toast) */}
+      {(stage === 3 || isDismissable) && (
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            hotToast.dismiss(t.id);
+          }}
+          className={`relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-90 flex items-center justify-center cursor-pointer shrink-0 ${
+            safeOptions.action ? "ml-1" : "ml-auto"
+          } border-none outline-none transition-all`}
+          aria-label="Dismiss notification"
+        >
+          <Cancel01Icon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
+        </button>
+      )}
+    </div>
+  );
+};
+
   const duration = safeOptions.duration !== undefined
     ? safeOptions.duration
     : type === "loading"
@@ -167,100 +330,18 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
         : 3000;
 
   return hotToast.custom(
-    (t) => {
-      // Entry and exit animations
-      const animationClass = t.visible 
-        ? "animate-[apple-toast-slide-down_200ms_cubic-bezier(0.16,1,0.3,1)_forwards]" 
-        : "animate-[apple-toast-slide-up_200ms_cubic-bezier(0.16,1,0.3,1)_forwards]";
-
-      return (
-        <div 
-          className={`rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto ${animationClass}`}
-        >
-          {/* Left Icon (Stage 2, 3, 5) */}
-          {(stage === 2 || stage === 3 || stage === 5) && (
-            <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs ${
-              type === "error" || type === "warning" ? "bg-[#e30000]" :
-              type === "info" ? "bg-blue-500" :
-              type === "loading" ? "bg-zinc-800 dark:bg-zinc-700" :
-              "bg-[#16a34a]"
-            }`}>
-              {type === "error" || type === "warning" ? (
-                <Alert02Icon size="1em"  className="text-[14px] text-white" />
-              ) : type === "info" ? (
-                <CovidInfoIcon size="1em"  className="text-[14px] text-white" />
-              ) : type === "loading" ? (
-                <Loading01Icon size="1em"  className="animate-spin text-[14px] text-white" />
-              ) : (
-                <Tick01Icon size="1em"  className="text-[14px] text-white" />
-              )}
-            </div>
-          )}
-          
-          {/* Text Block */}
-          <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
-            {React.isValidElement(titleContent) ? (
-              titleContent
-            ) : (
-              <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
-                {titleContent}
-              </span>
-            )}
-            {descContent && (
-              typeof descContent === "string" || typeof descContent === "number" ? (
-                <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-snug break-words">
-                  {descContent}
-                </span>
-              ) : (
-                descContent
-              )
-            )}
-          </div>
-          
-          {/* Action Button (Stage 4, 5, or any toast with safeOptions.action) */}
-          {safeOptions.action && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                safeOptions.action.onClick?.(e);
-                hotToast.dismiss(t.id);
-              }}
-              className={`relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-colors ${
-                (stage === 3 || isDismissable) ? "ml-auto" : "ml-auto"
-              }`}
-            >
-              <span className={
-                String(safeOptions.action.label || "").toLowerCase() === "undo"
-                  ? "text-[#16a34a] dark:text-emerald-400"
-                  : (safeOptions.action.destructive || lowerTitle.includes("returned"))
-                    ? "text-[#e30000] dark:text-red-400"
-                    : "text-blue-600 dark:text-blue-400"
-              }>
-                {safeOptions.action.label}
-              </span>
-            </button>
-          )}
-
-          {/* Dismiss Button (Stage 3 or any dismissable toast) */}
-          {(stage === 3 || isDismissable) && (
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                hotToast.dismiss(t.id);
-              }}
-              className={`relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0 ${
-                safeOptions.action ? "ml-1" : "ml-auto"
-              } border-none outline-none transition-colors`}
-              aria-label="Dismiss notification"
-            >
-              <Cancel01Icon size="1em"  className="text-gray-500 dark:text-zinc-400 text-xs" />
-            </button>
-          )}
-        </div>
-      );
-    },
+    (t) => (
+      <ToastItem
+        t={t}
+        type={type}
+        stage={stage}
+        titleContent={titleContent}
+        descContent={descContent}
+        safeOptions={safeOptions}
+        lowerTitle={lowerTitle}
+        isDismissable={isDismissable}
+      />
+    ),
     {
       id: safeOptions.id,
       duration: duration,
@@ -341,7 +422,7 @@ const Toaster = () => {
     >
       {/* Invisible hover bridge to prevent jitter when moving mouse between expanded toasts */}
       {expanded && visibleToasts.length > 1 && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[350px] h-[300px] pointer-events-auto bg-transparent z-0" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[320px] pointer-events-auto bg-transparent z-0" />
       )}
       {toasts.map((toastItem) => {
         const stackIndex = visibleToasts.findIndex(t => t.id === toastItem.id);
@@ -350,18 +431,21 @@ const Toaster = () => {
         // react-hot-toast puts newest toasts at index 0 for top-* positions.
         let effIndex = stackIndex === -1 ? 0 : stackIndex;
 
-        const scale = isVisible ? (expanded ? 1 : 1 - (effIndex * 0.05)) : 0.9;
-        // If expanded, push them down by 70px each so they don't overlap. Otherwise layer them tightly.
-        const translateY = isVisible ? (expanded ? effIndex * 70 : effIndex * 14) : -20;
-        const opacity = isVisible ? (effIndex >= 3 && !expanded ? 0 : 1) : 0;
+        // Apple fluid spring depth calculation:
+        // Stacked: index 0 is full size; index 1 peeks down 10px with 0.94 scale; index 2 peeks 20px with 0.88 scale
+        // Expanded (on hover): toasts cascade downward with 58px step, full scale (1.0), and full brightness
+        const scale = isVisible ? (expanded ? 1 : Math.max(0.86, 1 - (effIndex * 0.06))) : 0.90;
+        const translateY = isVisible ? (expanded ? effIndex * 58 : effIndex * 10) : -24;
+        const opacity = isVisible ? (effIndex >= 3 && !expanded ? 0 : (expanded ? 1 : Math.max(0.70, 1 - effIndex * 0.14))) : 0;
         const zIndex = 100 - effIndex;
+        const filter = isVisible && !expanded && effIndex > 0
+          ? `brightness(${Math.max(0.85, 1 - effIndex * 0.05)})`
+          : "none";
 
-        // Note: remove animationClass so we don't conflict with inline transforms, 
-        // the wrapper will handle the smooth transition using CSS!
         const content = typeof toastItem.message === "function"
           ? toastItem.message(toastItem)
           : (
-            <div className="rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+            <div className="rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]">
               <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
                 <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
                   {typeof toastItem.message === "string" ? toastItem.message : String(toastItem.message || "")}
@@ -373,10 +457,12 @@ const Toaster = () => {
         return (
           <div
             key={toastItem.id}
-            className="absolute top-0 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="absolute top-0 transition-all duration-380 ease-[cubic-bezier(0.16,1,0.3,1)]"
             style={{
               opacity: opacity,
-              transform: `translateY(${translateY}px) scale(${scale})`,
+              transform: `translate3d(0, ${translateY}px, 0) scale(${scale})`,
+              transformOrigin: "top center",
+              filter: filter,
               zIndex: zIndex,
               pointerEvents: isVisible ? "auto" : "none"
             }}
